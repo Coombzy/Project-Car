@@ -1,7 +1,5 @@
-# Project Car
+# Project Car App
 
-This folder contains the backed-up files for the Project Car application.
+Modular, compartmentalized app with swappable modules (chat, cameras, etc.).
 
-Hermes is responsible for keeping this folder synchronized with the latest Project Car code and assets.
-
-Last updated: July 9, 2026
+See architecture document for details.
