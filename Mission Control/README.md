@@ -2,4 +2,6 @@
 
 Main daily interface and orchestration hub.
 
-See architecture document for details.
+Modular structure with swappable components.
+
+See Modular-Architecture.md for details.
