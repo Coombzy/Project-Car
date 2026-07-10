@@ -16,6 +16,7 @@ Things that need **Ben’s action, decision, approval, or physical presence**.
 
 ## P1 — This week / high value
 
+- [ ] **Call Capital One and get account activated**
 - [ ] **Approve Mission Control Phase 0 secrets** — strong `POSTGRES_PASSWORD` / `NEXTCLOUD_ADMIN_PASSWORD` in `mission-control/docker/.env` (don’t commit)
 - [ ] **Prove remote access from phone** to Nextcloud / Discord / agent once stack is up
 - [ ] **Confirm Matrix for Phase 1 vs Discord-only interim** (open decision)
