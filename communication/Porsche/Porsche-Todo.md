@@ -2,7 +2,7 @@
 
 **Owner:** Porsche (Hermes agent / default profile)  
 **Maintained under:** `Coombzy/Automation/communication/Porsche/`  
-**Last updated:** 2026-07-10
+**Last updated:** 2026-07-11
 
 Work Porsche should execute autonomously (or with Ben only when blocked).
 
@@ -21,8 +21,8 @@ Work Porsche should execute autonomously (or with Ben only when blocked).
 
 ## P1 — Agent / fleet infrastructure
 
-- [ ] **Get Doc Hakosuka online on Discord** — Hermes gateway running on Doc (M1 Max) and responding in the server
-- [ ] **Get Porsche + Doc into a shared Discord channel** — dedicated fleet channel (or existing room) where both agents can coordinate; confirm allowlist + home/channel routing
+- [ ] **Get Doc Hakosuka online on Discord** — Hermes gateway on Doc (M1 Max); home `#doc-garage` for Doc↔Ben 1:1 (same role as `#porsche-garage` for Porsche)
+- [ ] **Fleet shared channel `#tire-shop` (Turbocharger Springs)** — Ben + Porsche + Doc + McKing multi-agent room; require @mention; McKing still TBD online
 - [ ] **Remote access / Hermes Android pairing support** — document + implement Ben-facing path (Code Mater bridge notes already started)
 - [ ] **Security audit + hardening on Porsche** — when Ben re-enables daily audit cron or requests manual run (cloud-dependent crons currently paused)
 - [ ] **Continue Qwen3.6-27B local model setup** (conversion + testing) on appropriate machine
