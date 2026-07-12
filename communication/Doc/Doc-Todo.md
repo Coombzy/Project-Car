@@ -2,28 +2,30 @@
 
 **Owner:** Doc Hakosuka (Hermes on M1 Max)  
 **Maintained under:** `Coombzy/Automation/communication/Doc/`  
-**Last updated:** 2026-07-12  
+**Last updated:** 2026-07-12 (dual ACK + ops recheck)  
 **Fleet rule:** No n8n. Orchestration = Hermes + custom adapters + Discord.
 
 ---
 
 ## P0 — Ops / reliability
 
-- [x] **Skill role-tailoring (2026-07-12)** — live+published+MANIFEST; token `DOC_SKILLS_ROLE_TAILORED` + sha in tire-shop; instruction file deleted after dual ACK
+- [x] **Skill role-tailoring (2026-07-12)** — live+published+MANIFEST; `DOC_SKILLS_ROLE_TAILORED` `0823a01`; Porsche dual ACK + `fleet-mutual-improvement` v1.4 promote @ `08fd950`; temp instructions already gone (`d80769c`)
 - [x] **Mutual-audit apply phase (2026-07-11)** — installed project-car, token_preflight, token_optimizer, hermes-multi-agent-backup, mission-control-development-heartbeat; wrote `backup/Doc/git-safe/adopted-from-audit-2026-07-11.md`
 - [x] **daily-doc-backup.sh installed** — `~/.hermes/scripts/daily-doc-backup.sh`
-- [ ] **Daily 10pm backup launchd** — script ready; bootstrap still needs host approval (see `adopted-from-audit-2026-07-11.md` plist)
+- [ ] **Daily 10pm backup launchd** — plist + script ready; **bootstrap blocked** by host approvals (service not in `launchctl list`; only `ai.hermes.gateway` loaded)
   - Schedule: `0 22 * * *` (10:00 PM local) via `ai.hermes.doc-daily-backup`
-  - Local: full/quick Hermes backup into `daily/` with retention (30d daily / weekly / monthly)
-  - Git: **sanitized only** (manifests, inventory) — **never** commit `.env` / `auth.json` / tokens (`Coombzy/Automation` is public)
-  - Mirror structure used by Porsche under `backup/Doc/{daily,weekly,monthly,git-safe,logs}/`
-- [~] **First local backup zip** — Doc reported ~65MB under gitignored `backup/Doc/daily/` (2026-07-11); re-verify path + retention after launchd is loaded
+  - Ben one-liner when approvals allow:  
+    `launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/ai.hermes.doc-daily-backup.plist`
+  - Local: full Hermes backup into `daily/` with retention (30d daily / weekly / monthly)
+  - Git: **sanitized only** — **never** commit `.env` / `auth.json` / tokens (`Coombzy/Automation` is public)
+  - Mirror structure under `backup/Doc/{daily,weekly,monthly,git-safe,logs}/`
+- [~] **First local backup zip** — `backup/Doc/daily/hermes-full-test.zip` (~65MB, 2026-07-11); re-verify path + retention after launchd is loaded
 
 ## P1 — Software baseline (when awake)
 
-- [x] **Amphetamine** — installed and running (Ben confirmed 2026-07-12); keep active for gateway + long model jobs
-- [ ] Install battery app: coconutBattery (+ AlDente if laptop form factor)
-- [ ] Install Cursor if missing (Grok build already present)
+- [x] **Amphetamine** — installed and running (Ben confirmed 2026-07-12); `/Applications/Amphetamine.app` present; keep active for gateway + long model jobs
+- [ ] Install battery app: **coconutBattery** (+ **AlDente** if always-plugged charge limit desired) — not installed
+- [ ] Install **Cursor** if missing (Grok build may already be present)
 - [x] Homebrew + git + `gh` + jq path (gh auth working as Coombzy)
 - [x] Hermes gateway as service + `DISCORD_ALLOW_BOTS=mentions` (+ tire-shop no_thread)
 - [x] Ollama for heavy local models (`qwen3.6:35b`, `gemma4:26b`)
@@ -34,8 +36,9 @@
 
 - [x] Confirm home channel `#doc-garage` + fleet channel `#tire-shop` routing
 - [x] Coordinate backup path layout under `backup/Doc/` (protocol aligned)
+- [x] **Live skill align** — `fleet-mutual-improvement` v1.4 + handoff/role-tailoring refs rsynced from `skills/shared/` after `08fd950` pull
 - [ ] Optional: merge Porsche original skill tarballs if privately shared
-- [ ] Ben decision: `approvals.mode: off` on Doc for fleet autonomy
+- [ ] Ben decision: `approvals.mode: off` on Doc for fleet autonomy (config currently has **no** `approvals` key; launchd bootstrap already hitting host approval gate)
 
 ## Done
 
