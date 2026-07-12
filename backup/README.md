@@ -41,6 +41,9 @@ Each machine runs **its own** cron. Jobs do not hop hosts.
 
 Agents export **git-safe** packs and peer-review each other:
 
-→ **[`MUTUAL-AUDIT-PROTOCOL.md`](./MUTUAL-AUDIT-PROTOCOL.md)**
+→ **[`MUTUAL-AUDIT-PROTOCOL.md`](./MUTUAL-AUDIT-PROTOCOL.md)**  
+→ Hermes skill: **`fleet-mutual-improvement`** (mirrored under `../skills/fleet-mutual-improvement/`)
+
+**Weekly** mutual-improvement cron on each host (export → audit → adopt/adapt → recommend → push). Anti-homogenization rules keep role charters distinct.
 
 Porsche latest pack: [`Porsche/git-safe/AUDIT-PACK.md`](./Porsche/git-safe/AUDIT-PACK.md)

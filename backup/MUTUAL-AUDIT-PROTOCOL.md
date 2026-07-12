@@ -1,8 +1,23 @@
 # Mutual agent audit protocol (Porsche ↔ Doc ↔ McKing)
 
-**Purpose:** Each agent exports a **git-safe** inventory of what makes it useful; peers review and adopt improvements without sharing secrets.
+**Purpose:** Continuous mutual improvement — each agent exports a **git-safe** pack, peer-audits, **adopts+adapts** role-fit ideas, and **recommends** improvements that deepen the peer’s charter. Agents must **not** converge into the same agent.
 
+**Skill (runbook):** `fleet-mutual-improvement` (Hermes skill on each host)  
 **Repo:** `Coombzy/Automation` is **public**. Assume every file is world-readable.
+
+---
+
+## 0. Weekly loop (product)
+
+| Cadence | What |
+|---------|------|
+| **Weekly** | Full mutual-improvement run via skill (export → audit → adopt/adapt → recommend → push → one Discord summary) |
+| **On demand** | Same skill when Ben asks or after large skill/config changes |
+| **Not daily** | Avoid cost/noise busywork |
+
+Each **machine runs its own** job. Jobs do not hop hosts.
+
+**Cron:** prefer Sunday local morning; keep **paused** while fleet cloud crons are paused unless Ben resumes or pins a local model.
 
 ---
 
@@ -11,7 +26,7 @@
 | Layer | Path | Git? | Contents |
 |-------|------|------|----------|
 | **Full local** | `backup/<Agent>/{daily,weekly,monthly}/` | **No** (gitignored) | `hermes profile export`, full archives |
-| **Git-safe** | `backup/<Agent>/git-safe/` | **Yes** | inventories, skill lists, redacted config, non-secret scripts, audit reports |
+| **Git-safe** | `backup/<Agent>/git-safe/` | **Yes** | inventories, skill lists, redacted config, non-secret scripts, audit + adoption + recommendation reports |
 
 Never put on git:
 
@@ -19,7 +34,7 @@ Never put on git:
 - Full profile `.tar.gz` exports (often embed secrets)
 - Raw session DBs / private chat dumps
 - Detailed security-incident / 2FA / recovery notes
-- Mesh private keys, SSH keys, passwords
+- Mesh private keys, SSH keys, passwords, hardware serials
 
 ---
 
@@ -31,102 +46,99 @@ Under `backup/<Agent>/git-safe/`:
 |------|--------|
 | `inventory-latest.json` | Agent (overwrite each export) |
 | `inventory-YYYY-MM-DD.json` | Agent (dated snapshot) |
-| `AUDIT-PACK.md` | Agent (human-readable summary) |
+| `AUDIT-PACK.md` | Agent (human-readable + **charter** + will-not-become) |
 | `peer-audit-of-<Other>-YYYY-MM-DD.md` | Peer reviewer |
-| `adopted-from-audit-YYYY-MM-DD.md` | Owner after applying peer suggestions |
+| `adopted-from-audit-YYYY-MM-DD.md` | Owner after applying changes |
+| `recommendations-from-<Peer>-YYYY-MM-DD.md` | Peer → subject recommendations |
+
+Inventory should be **Doc-shaped**: hardware (no serials), local_llm, always_on_notes, discord_role_notes, skills, redacted config, scripts, memory hashes/previews only.
 
 ---
 
-## 3. Export checklist (each agent, on its own machine)
+## 3. Role identity locks (anti-homogenization)
 
-1. Pull latest `Automation` repo.
-2. Build inventory:
-   - skill paths + short descriptions
-   - redacted `config.yaml` structure (keys only / secrets scrubbed)
-   - non-secret scripts under `~/.hermes/scripts/`
-   - cron *schedules and purposes* (no embedded credentials)
-   - role, home Discord channel, hardware notes
-   - **sanitized** memory previews or hashes only (not full personal/security text)
-3. Write `AUDIT-PACK.md` with:
-   - unique strengths
-   - gaps / “what I want from peers”
-4. Commit **only** `git-safe/` + protocol docs. Push.
-5. Ping peer in `#tire-shop` (or garage threads): “git-safe export ready for audit.”
+| Agent | Charter | Must not become |
+|-------|---------|-----------------|
+| **Porsche** | Coordinator / Ben PA / fleet planner / travel host (M4 Pro 24GB) | Doc-style heavy-model primary; skill-parity clone |
+| **Doc** | Specialist / heavy compute / local LLM / domain+research (M1 Max 64GB) | Second PA / Ben scheduler |
+| **McKing** | Coding + GPU + storage backend | PA clone or pure chat twin |
 
----
+**Rules**
 
-## 4. Peer audit checklist
+1. Restate charter every run before adopting anything.
+2. **Adapt** ideas to hardware/role — never blind-copy model sizes or persona.
+3. Skill count parity is **not** a goal. Unique skills are healthy.
+4. Every peer audit needs **Do not copy** + **divergence health** (me-only / peer-only skill counts).
+5. Every run publishes **recommendations for the peer** that improve *their* job (two-way improvement).
+6. Ben alone rewrites charters or approves security-sensitive exposure.
 
-When reviewing the other agent’s pack, look for:
-
-1. **Skills** you lack that match your role (or are universal fleet skills)
-2. **Scripts / cron patterns** that improve reliability
-3. **Config patterns** (approvals, compression, delegation, toolsets) worth copying
-4. **Workflow conventions** (todos on GitHub, heartbeats, Discord routing)
-5. **Mistakes / drift** (secrets nearly committed, n8n reintroduced, cloud crons against policy)
-6. **McKing handoff** notes useful for later clone-scaffold
-
-Write findings as:
-
-```markdown
-# Peer audit: <Reviewer> → <Subject> (YYYY-MM-DD)
-
-## Steal / adopt (high value)
-- ...
-
-## Nice-to-have
-- ...
-
-## Do not copy (role mismatch or risk)
-- ...
-
-## Security notes
-- ...
-
-## Suggested concrete actions for <Subject>
-1. ...
-```
-
-Save under **reviewer’s** or **subject’s** `git-safe/` as agreed; default:
-
-`backup/<Subject>/git-safe/peer-audit-of-<Subject>-YYYY-MM-DD.md` authored by reviewer.
+Full skill: `fleet-mutual-improvement` → `references/role-identity-cards.md`.
 
 ---
 
-## 5. Apply phase
+## 4. Export checklist (each agent, on its own machine)
 
-Subject agent:
-
-1. Reads peer audit
-2. Applies safe improvements (skills, docs, scripts, memory facts that are non-secret)
-3. Writes `adopted-from-audit-YYYY-MM-DD.md` (adopted / deferred / rejected + why)
-4. Pushes; thanks peer in Discord
-
-**Ben remains decision-maker** for security, spending, and major architecture.
+1. Pull latest Automation repo.
+2. Build inventory (public-safe fields only).
+3. Write `AUDIT-PACK.md` with charter, strengths, gaps, will-not-become.
+4. Commit **only** git-safe + protocol docs. Push (or bundle if no auth).
+5. Ping peer in `#tire-shop` with real `@` mention when ready.
 
 ---
 
-## 6. Cadence while Ben is away (6 weeks)
+## 5. Peer audit + adopt + recommend
+
+**Audit gates (all must pass to self-adopt):** role-fit · hardware-fit · non-clone · net value · security.
+
+**Phases (skill):** preflight → self export → peer intake → peer audit → self adoption → recommendations-for-peer → publish + single Discord status → stop (no ack-loop).
+
+**Weakness countermeasures**
+
+| Weakness | Countermeasure |
+|----------|----------------|
+| Inventory without skill files | Adapted skill_manage create/patch or private skill share — don’t claim install without files |
+| Push blocked | Bundle / Ben `gh auth` / peer with write access |
+| Homogenization | Charter + do-not-copy + divergence counts |
+| Busywork | Require real delta or evidence-based no-op |
+| Cloud cost | Weekly only; pause with fleet cloud policy |
+| Discord loops | One status post; inline mentions only |
+
+---
+
+## 6. Discord coordination
+
+- 1:1: `#porsche-garage` / `#doc-garage` / `#mcking-garage`
+- Fleet: `#tire-shop` (id `1524975356656746547`), mention-only
+- `DISCORD_ALLOW_BOTS=mentions` + `bots_require_inline_mention=true`
+- Prefer **no auto-thread** on tire-shop (`no_thread_channels`)
+- Bot wake-up needs literal `<@bot_id>` in body
+
+---
+
+## 7. Cadence while Ben is away
 
 | When | Who | What |
 |------|-----|------|
-| ASAP once | Porsche + Doc | First git-safe export each |
-| Within 48h of peer export | Peer | Write peer-audit doc |
-| After audit | Owner | Adopt + report |
-| Weekly (optional) | Both | Re-export if skills/config changed a lot |
-| McKing online later | McKing | Join same protocol |
+| Weekly (when cron resumed) | Each online agent | Full skill run |
+| ASAP if peer pack missing | Peer | Export + push |
+| McKing online later | McKing | Join same skill/protocol |
 
-Cloud cron cost policy still applies: prefer local models / manual exports until local LLM fleet ready.
+Cloud cron cost policy still applies until local LLM fleet ready.
 
 ---
 
-## 7. Discord coordination
+## 8. Install skill on a host
 
-- 1:1 agent work: `#porsche-garage` / `#doc-garage`
-- Cross-agent audit handoff: `#tire-shop` with `@mentions` (needs `DISCORD_ALLOW_BOTS=mentions` where bot-to-bot is required)
-- Ben always has veto on security-sensitive adoption
+```bash
+# If skill lives on Porsche, copy tree to peer:
+# ~/.hermes/skills/autonomous-ai-agents/fleet-mutual-improvement/
+
+# Or re-create from this protocol + skill text in Automation Docs if mirrored.
+```
+
+Doc/McKing should install the same skill name so weekly crons load it.
 
 ---
 
 **Last updated:** 2026-07-11  
-**Status:** Active for Porsche + Doc; McKing when online
+**Status:** Active protocol + `fleet-mutual-improvement` skill; weekly cron created on Porsche **paused** until Ben resumes
