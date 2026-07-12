@@ -36,3 +36,11 @@ Daily **10:00 PM local** (`0 22 * * *`) per agent machine:
 | McKing | `communication/McKing/McKing-Todo.md` |
 
 Each machine runs **its own** cron. Jobs do not hop hosts.
+
+## Mutual audit (Porsche ↔ Doc)
+
+Agents export **git-safe** packs and peer-review each other:
+
+→ **[`MUTUAL-AUDIT-PROTOCOL.md`](./MUTUAL-AUDIT-PROTOCOL.md)**
+
+Porsche latest pack: [`Porsche/git-safe/AUDIT-PACK.md`](./Porsche/git-safe/AUDIT-PACK.md)
