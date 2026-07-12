@@ -11,7 +11,7 @@ Threat bias: **local API exposure, long-lived agent tools, large model disk priv
    # config often: OLLAMA_HOST=127.0.0.1:11434
    ```
 2. **Hermes perms** — `chmod 700 ~/.hermes`; secrets/DB/config/logs `600` where appropriate.
-3. **Stay-awake** — Amphetamine (or equivalent) for gateway + long model jobs. Open ops: see `communication/Doc/Doc-Todo.md` (Amphetamine + battery app still pending).
+3. **Stay-awake** — **Amphetamine installed + running** (Ben confirmed 2026-07-12). Keep session active for gateway + long model jobs. Remaining baseline: battery app (coconutBattery / AlDente if laptop) — see `communication/Doc/Doc-Todo.md`.
 4. **Single Tailscale** — App stack preferred; stop Homebrew userspace duplicate.
 5. **Model disk privacy** — model weights + caches are large; keep on encrypted volume (FileVault); do not sync secrets into public git with inventories.
 6. **Long-lived tool blast radius** — supervise destructive shell; prefer `secure-ai` profile for high-risk experiments.

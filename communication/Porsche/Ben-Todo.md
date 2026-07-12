@@ -2,7 +2,7 @@
 
 **Owner:** Ben (Coombsy)  
 **Maintained by:** Porsche under `communication/Porsche/`  
-**Last updated:** 2026-07-11 (mutual-audit close)
+**Last updated:** 2026-07-12 (Amphetamine confirmed on Doc)
 
 Things that need **Ben’s action, decision, approval, or physical presence**.
 
@@ -19,10 +19,10 @@ Things that need **Ben’s action, decision, approval, or physical presence**.
 
 - [ ] **Call Capital One and get account activated**
 - [x] **Bring Doc Hakosuka (M1 Max) online / reachable** — Discord + `#tire-shop` bot routing working 2026-07-11; mutual-audit packs exchanged
-- [ ] **On Doc (when awake): install Amphetamine** — keep machine awake for Hermes gateway / long model runs
+- [x] **On Doc: Amphetamine** — installed and running (Ben confirmed 2026-07-12); keep machine awake for Hermes gateway / long model runs
 - [ ] **On Doc (when awake): install battery app** — prefer **coconutBattery** (health) and/or **AlDente** (charge limit if laptop form factor)
 - [ ] **On Doc (when awake): install Cursor if missing** — Grok build already present; Cursor for heavy coding sessions
-- [ ] **On Doc (when awake): complete Doc software baseline** (see Porsche-Todo Doc stack) — Tailscale verify, monitoring; Homebrew/gh/Ollama/gateway largely done
+- [ ] **On Doc (when awake): complete Doc software baseline** (see Porsche-Todo Doc stack) — Tailscale verify, monitoring; Homebrew/gh/Ollama/gateway/Amphetamine done
 - [ ] **On Doc (when awake): load 10pm backup launchd** — script ready (`daily-doc-backup.sh`); bootstrap was approval-blocked (see Doc adopted-from-audit). One Terminal pass after approvals decision.
 - [ ] **Approve Mission Control Phase 0 secrets** — strong `POSTGRES_PASSWORD` / `NEXTCLOUD_ADMIN_PASSWORD` in `mission-control/docker/.env` (don’t commit)
 - [ ] **Prove remote access from phone** to Nextcloud / Discord / agent once stack is up

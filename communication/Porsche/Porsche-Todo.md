@@ -2,7 +2,7 @@
 
 **Owner:** Porsche (Hermes agent / default profile)  
 **Maintained under:** `Coombzy/Automation/communication/Porsche/`  
-**Last updated:** 2026-07-11
+**Last updated:** 2026-07-12
 
 Work Porsche should execute autonomously (or with Ben only when blocked).
 
@@ -26,7 +26,7 @@ Work Porsche should execute autonomously (or with Ben only when blocked).
 - [x] **Mutual-audit loop (Porsche ↔ Doc)** — both git-safe packs, peer audits, and `adopted-from-audit-2026-07-11.md` on GitHub (2026-07-11)
 - [ ] **Fleet daily 10pm backups** — scaffold OK; Porsche has `daily-porsche-backup.sh` + gateway launchd; Doc has script, **launchd bootstrap still open** (approval-blocked); McKing offline until Ben home
 - [ ] **Doc software baseline (when Doc awake)** — remaining:
-  - Amphetamine (prevent sleep)
+  - [x] Amphetamine (prevent sleep) — installed + running (Ben 2026-07-12)
   - Battery app: coconutBattery (+ AlDente if MacBook form factor)
   - Cursor if not installed (Grok build already present)
   - [x] Homebrew + git + `gh` + `jq` (Doc)

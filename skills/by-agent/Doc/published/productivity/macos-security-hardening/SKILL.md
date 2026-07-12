@@ -44,11 +44,11 @@ When auditing **this** Mac (or any Doc-class lab host), run the standard checks 
 
 1. Ollama bind = localhost only; report any non-loopback listeners for model APIs.
 2. Hermes 700/600 hygiene; state.db/logs often wrongly 644.
-3. Stay-awake baseline (Amphetamine pending on Doc-Todo) + single Tailscale.
+3. Stay-awake baseline (**Amphetamine installed + running** 2026-07-12) + single Tailscale.
 4. Model disk / cache privacy under FileVault.
 5. Low-risk auto-fix only; high-risk still Ben-gated.
 6. Report — no serials in public repos.
-7. Open ops: Amphetamine + battery app — `communication/Doc/Doc-Todo.md`.
+7. Open ops: battery app still open — Amphetamine done. See `communication/Doc/Doc-Todo.md`.
 
 ## Typical workflow
 1. **Baseline platform controls** — SIP, FileVault, Gatekeeper, firewall + stealth, Remote Login, Screen Sharing, software updates, Activation Lock / authenticated root.

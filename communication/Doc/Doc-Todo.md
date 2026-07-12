@@ -21,7 +21,7 @@
 
 ## P1 — Software baseline (when awake)
 
-- [ ] Install Amphetamine (prevent sleep during gateway / model jobs)
+- [x] **Amphetamine** — installed and running (Ben confirmed 2026-07-12); keep active for gateway + long model jobs
 - [ ] Install battery app: coconutBattery (+ AlDente if laptop form factor)
 - [ ] Install Cursor if missing (Grok build already present)
 - [x] Homebrew + git + `gh` + jq path (gh auth working as Coombzy)
