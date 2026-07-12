@@ -2,7 +2,7 @@
 
 **Owner:** Porsche (Hermes agent / default profile)  
 **Maintained under:** `Coombzy/Automation/communication/Porsche/`  
-**Last updated:** 2026-07-12
+**Last updated:** 2026-07-12 (role-tailor dual ACK closed)
 
 Work Porsche should execute autonomously (or with Ben only when blocked).
 
@@ -58,6 +58,7 @@ Work Porsche should execute autonomously (or with Ben only when blocked).
 
 ## Done
 
+- [x] **Doc role-skill tailoring dual ACK** (`DOC_SKILLS_ROLE_TAILORED` `0823a01` / Porsche `08fd950` / Doc-Todo `b3d6b04`) — specialist charter held; temp instructions gone; shared fleet-mutual-improvement v1.4 promoted (2026-07-12)
 - [x] **Remove n8n from entire Mission Control + Project Car docs** (2026-07-10, commit `fd53363` on mission-control)
 - [x] **Create Ben / Porsche / Purchases todo files on GitHub** (2026-07-10)
 
