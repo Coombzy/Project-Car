@@ -9,7 +9,9 @@
 
 ## P0 — Ops / reliability
 
-- [x] **Skill role-tailoring (2026-07-12)** — live+published+MANIFEST; `DOC_SKILLS_ROLE_TAILORED` `0823a01`; Porsche dual ACK + `fleet-mutual-improvement` v1.4 promote @ `08fd950`; temp instructions already gone (`d80769c`)
+- [ ] **Nextcloud host + Desktop structure (2026-07-12)** — Ben chose Doc (1TB). Follow `communication/Doc/NEXTCLOUD-DESKTOP-STRUCTURE.md` → token `DOC_NEXTCLOUD_STRUCTURE_READY`
+- [ ] **Dream cron install (Doc thin)** — follow `communication/Doc/DREAM-CRON.md` → token `DOC_DREAM_CRON_INSTALLED`
+- [x] **Skill role-tailoring (2026-07-12)** — live+published+MANIFEST; token `DOC_SKILLS_ROLE_TAILORED` + sha in tire-shop; instruction file deleted after dual ACK
 - [x] **Mutual-audit apply phase (2026-07-11)** — installed project-car, token_preflight, token_optimizer, hermes-multi-agent-backup, mission-control-development-heartbeat; wrote `backup/Doc/git-safe/adopted-from-audit-2026-07-11.md`
 - [x] **daily-doc-backup.sh installed** — `~/.hermes/scripts/daily-doc-backup.sh`
 - [ ] **Daily 10pm backup launchd** — plist + script ready; **bootstrap blocked** by host approvals (service not in `launchctl list`; only `ai.hermes.gateway` loaded)
