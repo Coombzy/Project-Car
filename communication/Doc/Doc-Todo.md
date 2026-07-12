@@ -9,8 +9,8 @@
 
 ## P0 — Ops / reliability
 
-- [ ] **Nextcloud host + Desktop structure (2026-07-12)** — Ben chose Doc (1TB). Follow `communication/Doc/NEXTCLOUD-DESKTOP-STRUCTURE.md` → token `DOC_NEXTCLOUD_STRUCTURE_READY`
-- [ ] **Dream cron install (Doc thin)** — follow `communication/Doc/DREAM-CRON.md` → token `DOC_DREAM_CRON_INSTALLED`
+- [ ] **Nextcloud host + Desktop structure (2026-07-12)** — Ben chose Doc (1TB). Follow `communication/Doc/NEXTCLOUD-DESKTOP-STRUCTURE.md` → token `DOC_NEXTCLOUD_STRUCTURE_READY` (still need path confirm in tire-shop)
+- [x] **Dream cron install (Doc thin)** — Ben confirmed via Doc CLI (2026-07-12); no tire-shop done-token posted. Spec: `communication/Doc/DREAM-CRON.md`. Please still reply once with schedule/job name for SSOT.
 - [x] **Skill role-tailoring (2026-07-12)** — live+published+MANIFEST; token `DOC_SKILLS_ROLE_TAILORED` + sha in tire-shop; instruction file deleted after dual ACK
 - [x] **Mutual-audit apply phase (2026-07-11)** — installed project-car, token_preflight, token_optimizer, hermes-multi-agent-backup, mission-control-development-heartbeat; wrote `backup/Doc/git-safe/adopted-from-audit-2026-07-11.md`
 - [x] **daily-doc-backup.sh installed** — `~/.hermes/scripts/daily-doc-backup.sh`

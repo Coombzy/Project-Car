@@ -13,6 +13,7 @@ Work Porsche should execute autonomously (or with Ben only when blocked).
 ## P0 — Active ops
 
 - [x] **Porsche orchestrator dream cron** — `porsche-dream-orchestrator` Mon/Wed/Fri 22:00; prompt in `communication/Porsche/DREAM-CRON.md`; local digests `~/Documents/Fleet-Memory/Dreams/Porsche/`
+- [x] **Doc dream cron (thin)** — Ben confirmed CLI install 2026-07-12 (no Discord token); still want schedule/job name for SSOT
 - [ ] **Doc Nextcloud host bring-up** — structure handoff open (`communication/Doc/NEXTCLOUD-DESKTOP-STRUCTURE.md`); full NC Docker later
 - [ ] **Maintain these three GitHub lists** (`Ben-Todo.md`, `Porsche-Todo.md`, `Purchases.md`) as the source of truth for todos
 - [ ] **Keep Project Car docs in sync** (Desktop `Project-Car-Docs` ↔ skill refs ↔ GitHub `Docs/` when changed)
