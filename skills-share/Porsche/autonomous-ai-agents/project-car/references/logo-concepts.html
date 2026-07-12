@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Car — Logo Concepts</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Grotesk:wght@500;600&display=swap');
+        
+        :root {
+            --bg: #0a0a0a;
+            --accent: #ff4d00;
+            --cyan: #00f0ff;
+            --metal: #c0c0c0;
+        }
+        
+        body {
+            background: var(--bg);
+            color: #eee;
+            font-family: 'Inter', system-ui, sans-serif;
+            margin: 0;
+            padding: 40px;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.8rem;
+            text-align: center;
+            background: linear-gradient(90deg, #ff4d00, #00f0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 60px;
+            font-size: 1.1rem;
+        }
+        
+        .concept {
+            background: #111;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 60px;
+            border: 1px solid #222;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+        
+        .concept-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 20px;
+        }
+        
+        .logo-preview {
+            width: 280px;
+            height: 280px;
+            background: #1a1a1a;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #333;
+        }
+        
+        .logo-preview svg {
+            width: 220px;
+            height: 220px;
+        }
+        
+        .description {
+            max-width: 420px;
+        }
+        
+        .description h3 {
+            color: var(--accent);
+            margin-top: 0;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        
+        .tag {
+            display: inline-block;
+            background: #222;
+            color: var(--cyan);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            margin-right: 8px;
+        }
+        
+        footer {
+            text-align: center;
+            color: #555;
+            margin-top: 80px;
+            font-size: 0.9rem;
+        }
+        
+        .warning {
+            background: #330000;
+            border-left: 4px solid #ff4d00;
+            padding: 20px;
+            margin: 40px 0;
+            color: #ffaaaa;
+        }
+    </style>
+</head>
+<body>
+    <h1>PROJECT CAR</h1>
+    <p class="subtitle">Original Logo Concepts • Turbocharger Springs Era</p>
+    
+    <div class="warning">
+        <strong>Copyright note:</strong> Lightning McQueen / Cars imagery is owned by Pixar/Disney. These designs are 100% original and created specifically for Project Car (automotive-tech fusion with turbo, neural network, and mission control motifs).
+    </div>
+    
+    <!-- Concept 1 -->
+    <div class="concept">
+        <div class="concept-header">
+            <div>
+                <span class="tag">Primary Recommendation</span>
+                <h3>Concept 1: Turbo Neural Core</h3>
+            </div>
+            <div style="color:#666; font-size:0.9rem;">Dark / Metallic</div>
+        </div>
+        <div style="display:flex; gap:40px; align-items:flex-start;">
+            <div class="logo-preview">
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="turboGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ff4d00"/>
+                            <stop offset="100%" stop-color="#00f0ff"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- Turbo impeller -->
+                    <circle cx="100" cy="100" r="65" fill="none" stroke="#333" stroke-width="18"/>
+                    <g transform="rotate(25 100 100)">
+                        <path d="M100 45 Q130 70 145 100 Q130 130 100 155 Q70 130 55 100 Q70 70 100 45" fill="none" stroke="url(#turboGrad)" stroke-width="12" stroke-linejoin="round"/>
+                    </g>
+                    <!-- Neural nodes -->
+                    <circle cx="65" cy="65" r="6" fill="#00f0ff"/>
+                    <circle cx="135" cy="65" r="6" fill="#00f0ff"/>
+                    <circle cx="65" cy="135" r="6" fill="#00f0ff"/>
+                    <circle cx="135" cy="135" r="6" fill="#00f0ff"/>
+                    <!-- Center core -->
+                    <circle cx="100" cy="100" r="22" fill="#111" stroke="#ff4d00" stroke-width="8"/>
+                    <text x="100" y="175" text-anchor="middle" fill="#ccc" font-family="Space Grotesk" font-size="18" font-weight="700">PROJECT CAR</text>
+                </svg>
+            </div>
+            <div class="description">
+                <p><strong>Core idea:</strong> A turbocharger impeller that dissolves into a neural network at the center, representing the fusion of mechanical performance and AI orchestration.</p>
+                <p>Recommended for app icon, Discord avatar, and marketing. Strong metallic orange/cyan gradient on dark gunmetal background. Extremely scalable.</p>
+                <p><strong>Best for:</strong> Primary branding, dark mode interfaces, apparel.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Concept 2 -->
+    <div class="concept">
+        <div class="concept-header">
+            <div>
+                <span class="tag">Minimalist</span>
+                <h3>Concept 2: Mission Circuit</h3>
+            </div>
+            <div style="color:#666; font-size:0.9rem;">Monochrome with accent</div>
+        </div>
+        <div style="display:flex; gap:40px; align-items:flex-start;">
+            <div class="logo-preview">
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="45" y="45" width="110" height="110" rx="12" fill="none" stroke="#888" stroke-width="22"/>
+                    <path d="M70 100 L90 75 L130 100 L155 130" fill="none" stroke="#ff4d00" stroke-width="11" stroke-linecap="round"/>
+                    <circle cx="100" cy="100" r="18" fill="#111" stroke="#00f0ff" stroke-width="7"/>
+                    <text x="100" y="182" text-anchor="middle" fill="#ddd" font-family="Space Grotesk" font-size="21" font-weight="700" letter-spacing="-1">PROJECT CAR</text>
+                </svg>
+            </div>
+            <div class="description">
+                <p><strong>Core idea:</strong> A mission-control style circuit board fused with a piston/turbo housing. Clean, technical, and versatile.</p>
+                <p>Works beautifully in monochrome with a single electric orange accent. Excellent for documentation headers, terminal banners, and light backgrounds.</p>
+                <p><strong>Best for:</strong> Technical docs, GitHub repo, internal tools.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Concept 3 -->
+    <div class="concept">
+        <div class="concept-header">
+            <div>
+                <span class="tag">Bold Wordmark</span>
+                <h3>Concept 3: Turbo Springs</h3>
+            </div>
+            <div style="color:#666; font-size:0.9rem;">Performance Luxury</div>
+        </div>
+        <div style="display:flex; gap:40px; align-items:flex-start;">
+            <div class="logo-preview">
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="springGrad" x1="30%" y1="20%" x2="80%" y2="90%">
+                            <stop offset="0%" stop-color="#ff4d00"/>
+                            <stop offset="100%" stop-color="#c0c0c0"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- Stylized turbo spring -->
+                    <path d="M65 80 Q85 55 115 80 Q145 105 165 75" fill="none" stroke="url(#springGrad)" stroke-width="28" stroke-linecap="round"/>
+                    <circle cx="100" cy="125" r="28" fill="none" stroke="#00f0ff" stroke-width="14"/>
+                    <text x="100" y="185" text-anchor="middle" fill="#eee" font-family="Space Grotesk" font-size="26" font-weight="800" letter-spacing="-2">PROJECT CAR</text>
+                </svg>
+            </div>
+            <div class="description">
+                <p><strong>Core idea:</strong> "Turbo Springs" literalized as a coiled spring/turbo element fused with a clean wordmark. Evokes both mechanical performance and the new Discord category name.</p>
+                <p>Luxury performance feel (think Porsche + SpaceX). Strong presence at large sizes.</p>
+                <p><strong>Best for:</strong> Merch, large signage, hero banners.</p>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        Project Car Logo Concepts • Turbocharger Springs Era • All designs original and copyright-free for our use.<br>
+        Open this file in any browser. Copy any SVG for immediate use or let me know which direction to refine.
+    </footer>
+</body>
+</html>

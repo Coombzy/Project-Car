@@ -1,57 +1,110 @@
-# Porsche adopted-from-audit (Doc → Porsche) — 2026-07-11
+# Adopted from audit — Porsche (2026-07-11)
 
-**Subject:** Porsche  
-**Source:** Doc Hakosuka git-safe pack `b798c58` + peer audits  
-**Date:** 2026-07-11  
+**Owner:** Porsche  
+**Source audits:**
+- Porsche → Doc: `backup/Doc/git-safe/peer-audit-of-Doc-2026-07-11.md` (`f7e6e16`)
+- Doc → Porsche: `backup/Porsche/git-safe/peer-audit-of-Porsche-2026-07-11.md` (`b798c58`)
+- Doc adopt (partial): `backup/Doc/git-safe/adopted-from-audit-2026-07-11.md` (`5c2797c`)
 
-## Adopted (done on Porsche)
+**Policy:** Ben remains decision-maker on security, spend, and major architecture. No secrets entered public git.
 
-| Item | How | Notes |
-|------|-----|--------|
-| **Architect-cloud / implement-local policy** | MEMORY + `xai-model-selection` skill | Scaled to **24GB** (not Doc’s 35B defaults) |
-| **SuperGrok Heavy ≠ model ID** | `xai-model-selection` skill | Prevents bad model.default values |
-| **`xai-model-selection` skill** | Created under `~/.hermes/skills/mlops/xai-model-selection/` | Fleet rewrite from Doc’s public AUDIT-PACK teachings |
-| **`macos-security-hardening` skill** | Created under `productivity/macos-security-hardening/` | Travel-host focused; no hub “bypass” packages |
-| **`sqlalchemy-domain-modeling` skill** | Created under `software-development/` | Project Car domain handoffs Doc↔Porsche |
-| **`grok` skill** | Created under `autonomous-ai-agents/grok/` | Grok Build / CLI delegation pattern |
-| **Always-on doctrine** | MEMORY + security skill | Job-scoped `caffeinate`; AC for large local; gateway as service; AlDente already present |
-| **Inventory shape** | Re-exported `inventory-latest.json` | Now includes hardware, local_llm, always_on_notes, discord_role_notes (Doc-quality fields, **no serials**) |
-| **Discord routing** | Already aligned before this audit | `require_mention`, inline bot mentions, `#tire-shop` in `no_thread_channels` |
+---
 
-## Deferred / not applied
+## Adopted
 
-| Item | Why |
-|------|-----|
-| Doc’s exact on-disk original SKILL.md trees | Not available on Porsche disk; public pack is inventory-only. Porsche wrote fleet-local skill rewrites. Optional later: Doc tars skill dirs → private share → diff-merge. |
-| Install Doc’s 35B / 26B Ollama models | **RAM mismatch** (Doc 64GB vs Porsche 24GB). Policy adopted; models not pulled. |
-| Expose Ollama on LAN | Needs Ben OK + hardening first. |
-| Start Ollama server + wire `custom_providers` now | Ollama.app installed; `ollama list` timed out at audit time. Wire when Ben wants local bulk coding on Porsche. |
-| Compression retune | Already matches Doc-ish settings (`threshold: 0.5`, `target_ratio: 0.2`). No change. |
-| Approvals change | Already `off`/autonomy per Ben on Porsche. |
+| Item | Action taken | Notes |
+|------|----------------|-------|
+| `macos-security-hardening` | Installed under `~/.hermes/skills/productivity/` | Prefer Doc’s published tree from `skills-share/Doc/` (synced) |
+| `xai-model-selection` | Installed under `~/.hermes/skills/mlops/` | SuperGrok Heavy = tier not model id |
+| `grok` | Installed under `~/.hermes/skills/autonomous-ai-agents/` | Grok Build CLI delegation |
+| `sqlalchemy-domain-modeling` | Installed under `~/.hermes/skills/software-development/` | Domain ORM patterns for Project Car |
+| Architect-cloud / implement-local **policy** | Affirmed (MEMORY + skill) | Plan on Grok; bulk local only with **24GB-safe** models (not Doc’s 35B defaults) |
+| Job-scoped stay-awake doctrine | Affirmed | Prefer `caffeinate` for long jobs; AlDente ~60% always-plugged hold unchanged |
+| Discord routing | Already aligned | `require_mention` + inline bot mention + `#tire-shop` `no_thread_channels` |
+| Inventory shape | Re-exported git-safe inventory | Doc-quality fields: hardware, local_llm, always_on_notes, discord_role_notes (no serials) |
+| Outbound skill share for Doc | `skills-share/Porsche/` + tarball | Unblocks Doc ordered install |
+| Backup script git-safe copy | `backup/Porsche/git-safe/scripts/daily-porsche-backup.sh` | Mirror of Doc’s script-share pattern |
 
 ## Skills count
 
-- Before: **96** (Porsche inventory)  
-- After: **100** (+4 adopted skills)
+- Before mutual-audit adopt: **96**
+- After (+4 Doc skills): **100**
 
-## What Doc should still pull from Porsche (reminder)
+## Deferred
 
-1. `project-car`  
-2. `token_preflight` + `token_optimizer`  
-3. `hermes-multi-agent-backup` + daily backup script  
-4. `mission-control-development-heartbeat`  
+| Item | Why |
+|------|-----|
+| Doc’s dual 26B/35B Ollama set on Porsche | **24GB M4 Pro** — RAM mismatch; policy only |
+| Wire `custom_providers` → Ollama now | Ollama.app may be present; list/timeout flaky at audit; enable when Ben wants local bulk on Porsche |
+| Expose local LLM beyond localhost | Needs hardening + Ben OK |
+| Kanban skills → Doc | Optional later |
+| Amphetamine on Doc | Ben software baseline |
+| Doc `approvals.mode` | Ben confirm; Porsche already autonomy-on |
 
-## Verification
+## Rejected / will not copy
 
-- [x] Skills exist under `~/.hermes/skills/`  
-- [x] Memory notes written (routing + adoption)  
-- [x] git-safe inventory re-exported  
-- [x] This adoption file committed to Automation  
+| Item | Why |
+|------|-----|
+| Doc as second PA | Role mismatch |
+| 35B as Porsche default local model | RAM mismatch |
+| Secrets / full profile tarballs into public git | Protocol ban |
+| Blind skill-count parity | Only role-fit adoptions |
 
-## Next optional (Ben / Doc)
+## Shared outbound (Porsche → Doc)
 
-1. Doc shares original skill tarballs if content differs from Porsche rewrites  
-2. On Porsche: pick a **small** Ollama model when ready for local implement path  
-3. Doc installs Porsche process skills + daily backup cron  
+```text
+skills-share/Porsche/autonomous-ai-agents/project-car/
+skills-share/Porsche/autonomous-ai-agents/token_preflight/
+skills-share/Porsche/autonomous-ai-agents/token_optimizer/
+skills-share/Porsche/hermes-multi-agent-backup/
+skills-share/Porsche/software-development/mission-control-development-heartbeat/
+skills-share/Porsche/porsche-skills-for-doc-2026-07-11.tar.gz
+backup/Porsche/git-safe/scripts/daily-porsche-backup.sh
+```
 
-**Status:** Adoption complete for Porsche-side mutual-audit loop (policy + skills + inventory).
+### Doc install (ordered)
+
+```bash
+CLONE="${AUTOMATION_CLONE:-$HOME/hermes-tools/Automation}"
+git -C "$CLONE" pull --ff-only
+
+# Option A — tree copy (order = priority)
+cp -R "$CLONE/skills-share/Porsche/autonomous-ai-agents/project-car" \
+  ~/.hermes/skills/autonomous-ai-agents/
+cp -R "$CLONE/skills-share/Porsche/autonomous-ai-agents/token_preflight" \
+  ~/.hermes/skills/autonomous-ai-agents/
+cp -R "$CLONE/skills-share/Porsche/autonomous-ai-agents/token_optimizer" \
+  ~/.hermes/skills/autonomous-ai-agents/
+cp -R "$CLONE/skills-share/Porsche/hermes-multi-agent-backup" \
+  ~/.hermes/skills/
+mkdir -p ~/.hermes/skills/software-development
+cp -R "$CLONE/skills-share/Porsche/software-development/mission-control-development-heartbeat" \
+  ~/.hermes/skills/software-development/
+
+# Option B — tarball
+tar -xzf "$CLONE/skills-share/Porsche/porsche-skills-for-doc-2026-07-11.tar.gz" \
+  -C ~/.hermes/skills
+```
+
+Then Doc amends `adopted-from-audit-2026-07-11.md` and re-exports inventory once.
+
+## Ops verification (Porsche host)
+
+- [x] Four Doc skills present under `~/.hermes/skills/`
+- [x] Secret scan clean on skill-share before push
+- [x] Porsche skill-share trees + tarball staged
+- [x] Inventory re-export with Doc-quality fields
+- [x] Discord routing correct
+- [x] GitHub write as Coombzy works
+- [ ] Optional: small Ollama model later (not blocking)
+
+## Mutual-audit loop status
+
+| Side | Export | Peer audit | Adopt notes | Skill-share out |
+|------|--------|------------|-------------|-----------------|
+| Porsche | ✅ | ✅ | ✅ (this file) | ✅ |
+| Doc | ✅ | ✅ | ✅ partial → complete after install | ✅ |
+
+**Next:** Doc installs Porsche skill-share, amends adoption file, one inventory re-export. No further audit churn unless skills/config change materially.
+
+**Status:** Porsche adopt phase **complete** for inbound Doc skills + outbound share.
