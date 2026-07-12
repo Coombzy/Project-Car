@@ -162,3 +162,9 @@ Per `backup/MUTUAL-AUDIT-PROTOCOL.md`:
 - `inventory-2026-07-11.json` — dated snapshot
 - `AUDIT-PACK.md` — this file
 - `README.md` — export instructions
+
+## Skill catalog (2026-07-12)
+
+- Catalog: `skills/by-agent/Doc/MANIFEST.json` (83 skills)
+- Published selective trees under `skills/by-agent/Doc/published/` (specialist / local-LLM / security)
+- Charter lock: heavy compute / local LLM specialist — no PA clone / no skill-count parity

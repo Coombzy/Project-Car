@@ -50,4 +50,5 @@ cp -R "$SRC"/* "$DEST"/
 
 ## Doc / McKing
 
-Fill `by-agent/Doc` and `by-agent/McKing` the same way on those hosts.
+- **Doc:** catalog + selective `published/` live under `by-agent/Doc/` (specialist / heavy compute)
+- **McKing:** fill `by-agent/McKing` the same way on that host.
