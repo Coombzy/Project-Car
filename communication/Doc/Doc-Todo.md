@@ -2,13 +2,14 @@
 
 **Owner:** Doc Hakosuka (Hermes on M1 Max)  
 **Maintained under:** `Coombzy/Automation/communication/Doc/`  
-**Last updated:** 2026-07-11  
+**Last updated:** 2026-07-12  
 **Fleet rule:** No n8n. Orchestration = Hermes + custom adapters + Discord.
 
 ---
 
 ## P0 — Ops / reliability
 
+- [ ] **Skill role-tailoring (2026-07-12)** — follow temporary `communication/Doc/ROLE-SKILL-TAILORING-INSTRUCTIONS.md` → done token `DOC_SKILLS_ROLE_TAILORED` + sha; then file is deleted
 - [x] **Mutual-audit apply phase (2026-07-11)** — installed project-car, token_preflight, token_optimizer, hermes-multi-agent-backup, mission-control-development-heartbeat; wrote `backup/Doc/git-safe/adopted-from-audit-2026-07-11.md`
 - [x] **daily-doc-backup.sh installed** — `~/.hermes/scripts/daily-doc-backup.sh`
 - [ ] **Daily 10pm backup launchd** — script ready; bootstrap still needs host approval (see `adopted-from-audit-2026-07-11.md` plist)
