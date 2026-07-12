@@ -1,76 +1,54 @@
 ---
 name: token_preflight
-description: "Use when starting a large or multi-step job that might burn cloud tokens (especially Grok). Ultra-light pre-flight: estimate size, pick light/medium/heavy optimization tier, and decide local vs cloud before the expensive loop starts."
+description: Ultra-lightweight pre-flight checker. Estimates tokens and recommends optimization tier (light/medium/heavy) with minimal overhead. v0.2.0.
 version: 0.2.0
-author: Doc Hakosuka (adopted from Porsche fleet mutual-audit)
+author: Porsche (for Ben)
 license: MIT
-platforms: [linux, macos]
 metadata:
   hermes:
-    tags: [tokens, cost, preflight, grok, local-llm]
-    related_skills: [token_optimizer, xai-model-selection, project-car]
+    tags: [tokens, optimization, preflight, estimation, tier-selection]
+    related_skills: [token_optimizer]
+    category: autonomous-ai-agents
 ---
 
-# Token preflight (lightweight)
+# token_preflight
 
-## Overview
+Ultra-light pre-flight gatekeeper. Decides tier before calling heavier optimization skills.
 
-Cheap gate **before** a long agent loop. Prefer this over jumping straight into multi-tool cloud runs.
+## Tiers
+- **light**: Basic hygiene only (< ~600 tokens, simple queries)
+- **medium**: Balanced (default for most work, 600–3500 tokens or moderate signals)
+- **heavy**: Maximum effort (> 3500 tokens, complex code/multi-step workflows)
 
-## When to Use
+## Procedure (Minimal)
+1. **Token Estimation** (character-based): `chars / 4`. Add +15% if code blocks/files detected. Add +10% if multiple tools or "multi-step"/"plan"/"refactor" phrases present.
+2. **Flags**: `user_override`, `code_detected`, `multi_step`, `context_heavy`.
+3. **Decide** using this table (user override takes precedence):
 
-- Task looks multi-file, multi-tool, research-heavy, or likely >~20 tool calls
-- Default model is cloud (Grok / SuperGrok) and bulk work is possible locally
-- User mentions cost, budget, or “don’t burn tokens”
+| Estimated Tokens | Signals                          | Tier   |
+|------------------|----------------------------------|--------|
+| < 600            | No strong signals                | light  |
+| 600–3500         | code_detected or multi_step      | medium |
+| > 3500           | Any complex signals              | heavy  |
 
-**Don’t use for:** one-shot factual answers, single file peek, or already-local-only jobs.
+4. Return minimal JSON (or full response if `mode=full`).
 
-## Procedure
-
-1. **Classify task**
-   - *Plan/architect/ambiguous product* → cloud OK (Grok 4.5)
-   - *Bulk implement/refactor/test* → prefer local Ollama if model is installed
-   - *Hybrid* → plan cloud, implement local
-
-2. **Rough size signals** (no exact tokenizer required)
-   - Files to touch (1 / 2–5 / 6+)
-   - Need full-repo search? (yes/no)
-   - Expected tool rounds (≤5 / 5–20 / 20+)
-   - Context already large? (session long / big paste)
-
-3. **Pick tier**
-
-| Tier | When | Action |
-|------|------|--------|
-| **light** | ≤5 tools, 1–2 files | Stay on current model; no optimizer pass |
-| **medium** | 5–20 tools or multi-file | Prefer local for implement; compress pastes; avoid re-reading huge files |
-| **heavy** | 20+ tools, repo-wide, or research synthesis | Load `token_optimizer`; local bulk; cloud only for architecture / hard decisions |
-
-4. **Local availability check** (timeout ≤5s)
-
-```bash
-ollama list 2>/dev/null | head -20
+## Output (default: minimal)
+```json
+{
+  "recommended_tier": "medium",
+  "estimated_tokens": 1240,
+  "reasoning": "Moderate task with code and multi-step signals",
+  "confidence": "high",
+  "key_signals": ["code_detected", "multi_step"],
+  "mode": "minimal"
+}
 ```
 
-If needed local model missing → stay cloud **or** tell Ben, don’t pretend.
+## Rules
+- Pure heuristics only. No model calls in base path.
+- Respect explicit user phrases like "use heavy" or "token_light".
+- When called internally by other skills, use `mode=minimal`.
+- Full examples, detailed rules, and reference material are in `REFERENCE.md`.
 
-5. **State the plan in one short line** (to user or self-log):  
-   `preflight: tier=medium · route=local-implement · model=qwen3.6:35b`
-
-## Doc defaults (M1 Max 64GB)
-
-- Local ready: `qwen3.6:35b`, `gemma4:26b`
-- Cloud default: `grok-4.5` via xai-oauth
-- SuperGrok Heavy = **tier/priority**, not a model id
-
-## Common Pitfalls
-
-1. Skipping preflight then re-reading the same 2k-line files ten times on cloud.
-2. Forcing 35B local when Ollama is hung — time out and fall back.
-3. Using multi-agent cloud debate for pure mechanical edits.
-
-## Verification
-
-- [ ] Tier chosen and routing stated
-- [ ] Local list checked if local route selected
-- [ ] Heavy jobs load `token_optimizer` next
+**v0.2.0** — Slimmed down (under 2.2 KB), improved estimation, flattened logic, ultra-light minimal mode.

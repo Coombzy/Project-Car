@@ -1,102 +1,92 @@
 ---
 name: mission-control-development-heartbeat
-description: "Use when running a stateful autonomous development heartbeat for Mission Control / Project Car: read prior state, do focused coding work, verify, write state, commit when appropriate, and report on Discord with confidence + hardware notes."
-version: 1.0.0
-author: Doc Hakosuka (from Automation Docs/heartbeat-standards + Porsche mutual-audit)
-license: MIT
-platforms: [linux, macos]
-metadata:
-  hermes:
-    tags: [heartbeat, mission-control, autonomous, project-car]
-    related_skills: [project-car, token_preflight, token_optimizer, fleet-driven-development]
+description: Stateful autonomous development heartbeat for Mission Control / Project Car. Runs scheduled cron jobs that read previous state, perform focused coding work (Matrix + Nextcloud first), auto-commit to git, write handoff notes, and deliver structured progress reports to Discord.
+version: 1.2
+author: Porsche
+tags: [heartbeat, autonomous, cron, mission-control, project-car, git, stateful]
 ---
 
-# Mission Control development heartbeat
+# Mission Control Development Heartbeat
 
-## Overview
+This skill implements a reliable, stateful autonomous development loop for building Mission Control (which evolves into Project Car).
 
-Canonical loop: **Read → Act → Verify → Write → Report**  
-Full fleet standard: `Coombzy/Automation/Docs/heartbeat-standards.md`
+## Core Pattern
 
-Doc runs heartbeats as **specialist/heavy compute**, usually on local models for bulk work. Porsche owns fleet scheduling; Doc owns execution quality when assigned.
+The heartbeat follows a strict loop on every run:
 
-## When to Use
+1. **Read state** — Read `mission-control/HEARTBEAT_NOTE.md`
+2. **Read backlog** — Read and update `mission-control/TASKS.md` (enforces priority order)
+3. **Do focused work** — Create files, folders, code, Docker configs, integrations. **All automation and orchestration must be done via custom code** — Hermes heartbeats, cron, webhooks, and first-party adapters only. **No n8n or similar no-code workflow tools** (Ben hard ban 2026-07-10; stack already purged).
+4. **Git commit** — `git add . && git commit -m "Heartbeat: ..."` (initialize repo if needed)
+5. **Write new state** — Update `HEARTBEAT_NOTE.md` with status + next tasks
+6. **Report** — Deliver structured progress report to Discord
 
-- Scheduled or on-demand autonomous coding ticks for Project Car / Mission Control
-- Overnight or multi-hour implementation slices with durable state
-- Continuing work from a prior heartbeat note/commit
+**Path Rule**: All work must use safe, writable paths only (currently `~/Documents/mission-control/`). Never attempt creation in restricted locations.
 
-**Don’t use for:** one-off chat questions, PA scheduling, or security/spend decisions (escalate to Ben).
+**Compose services (current scaffold, post-n8n purge):** `postgres`, `nextcloud`, `matrix-synapse` (placeholder), `mission-control-app`. Do **not** add an `n8n` service, `n8n_data` volume, `N8N_*` env vars, or an `n8n/` workflows directory. Dashboard orchestration panel is **Hermes Agents**, not n8n.
 
-## Loop steps (completion criteria)
+**Chat Implementation Rule**: Chat features must be built as native, integrated functionality using Matrix protocol/code components (custom frontend + backend integration). Do not deploy standalone Matrix instances for users to interact with.
 
-### 1. Read
+**Doc sync on stack changes:** If services or orchestration assumptions change, also update project-car skill references + Desktop + Obsidian (and GitHub `Docs/` when available). See project-car `references/stack-exclusions.md`.
 
-Load: prior heartbeat note, `Doc-Todo.md`, relevant AGENTS/docs, last commit.
+## Priority Order (Strict)
 
-Done when: goal + constraints + last progress are explicit.
+1. Matrix + Nextcloud integration (first)
+2. Unified dashboard
+3. Calendar / schedule features
+4. Tool tracking (late Phase 1)
 
-### 2. Act
+## Recommended Cron Job Settings
 
-Do the smallest vertical slice toward the goal.  
-Autonomy levels (fleet):
+- Interval: Every 2 hours (recommended)
+- Delivery: Discord (preferred channel)
+- Max runs: Configurable (start with 12–24)
+- Model: Current default (grok-4.3 or equivalent)
 
-- L1 full auto: clear local tasks, low risk
-- L2 supervised: ambiguity → peer/Porsche review before commit
-- L3 human: security, financial, production access, or high uncertainty → **Ben**
+## Required Files
 
-Done when: code/docs changed with intent matched to slice.
+- `mission-control/HEARTBEAT_NOTE.md` — State handoff between runs
+- `mission-control/TASKS.md` — Prioritized backlog
 
-### 3. Verify
+## Standardized Report Format
 
-Run tests/linters/checklists for the slice. Hardware: prefer Doc for large-context local; McKing for GPU; don’t overload.
-
-Done when: success criteria checked (pass/fail recorded).
-
-### 4. Write
-
-Update state note (goal, progress, confidence 0–100, commit hash, model used, budget notes).  
-Commit code when L1/L2 allows.
-
-Done when: state persisted (repo note and/or gitignored local state + GitHub todo if needed).
-
-### 5. Report
-
-Discord: success concise; failures detailed. Include confidence, hardware, links. `@Ben` only for L3/escalation. `@Porsche` when handoff required.
-
-Done when: message sent if channel available (`hermes send`).
-
-## Cost routing inside heartbeats
-
-- Preflight with `token_preflight`
-- Bulk implement local; architect/supervise cloud
-- Token/cost budget per tick; stop if thrashing
-
-## State fields (minimum)
-
-```markdown
-# Heartbeat YYYY-MM-DD HH:MM
-goal:
-slice:
-confidence: 0-100
-hardware: Doc M1 Max
-model:
-commit:
-verify:
-next:
+```
+**Heartbeat Report**
+- Run #: [number]
+- Focus: [current priority]
+- Status: [what was accomplished]
+- Files/Folders Changed: [list]
+- Git Commit: [hash or "none"]
+- Decisions/Blockers: [any]
+- Next Tasks: [from TASKS.md]
 ```
 
-## Common Pitfalls
+## Error Handling
 
-1. Heartbeating without success criteria.
-2. Cloud for every mechanical edit.
-3. Silent failures (no Discord on fail).
-4. Scope creep past one slice.
-5. Committing secrets / public unsafe backups.
+- Attempt one retry on failure
+- Log error clearly
+- Write failure note to `HEARTBEAT_NOTE.md`
+- Stop run cleanly
 
-## Verification
+## Pitfalls
 
-- [ ] 5-step loop completed
-- [ ] Verify step not skipped
-- [ ] State written
-- [ ] Report sent on fail (and success summary if expected)
+1. **Re-adding n8n** — old docs/templates may still tempt it. Reject. Use Hermes/custom adapters only.
+2. **Blind global replace of “n8n”** — can turn “no n8n” into nonsense. Prefer targeted edits; leave explicit ban lines intact.
+3. **Working only in mission-control/** — architecture/integration text also lives under project-car skill references and Desktop Project-Car-Docs; keep service inventory aligned.
+4. **Violating priority order** — never start Tool Tracking or dashboard polish before Matrix + Nextcloud foundation work.
+5. **Confusing ops todos with TASKS.md** — Ben’s personal/fleet todos (`Coombzy/Automation/communication/Porsche/*.md`) are separate from MC engineering `TASKS.md`. Heartbeats update `TASKS.md` / `HEARTBEAT_NOTE.md`; ops list changes belong on GitHub ops todos (project-car `references/ops-todos.md`).
+
+## Usage
+
+Create or update a cron job using the `cronjob` tool with the prompt pattern from this skill.
+
+Example job name: `mission-control-heartbeat-1`
+
+## Future Improvements
+
+- Multiple specialized heartbeats (integration vs frontend vs planning)
+- Milestone approval checkpoints
+- Health checks before starting work
+- Multi-agent delegation within heartbeats
+
+This pattern enables Porsche (or other agents) to make consistent, traceable progress on Mission Control without constant user input.

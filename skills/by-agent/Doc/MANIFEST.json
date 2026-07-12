@@ -1,6 +1,6 @@
 {
   "agent": "Doc",
-  "updated_at": "2026-07-12T02:05:52.491315+00:00",
+  "updated_at": "2026-07-12T02:08:08.326540+00:00",
   "skills_root_note": "~/.hermes/skills on agent host",
   "count": 83,
   "policy": "MANIFEST is public catalog. Full SKILL.md copies only under by-agent/<Agent>/published/ when share_class allows and agent opts in (or weekly mutual-improvement promotes them).",
@@ -115,27 +115,27 @@
     {
       "name": "project-car",
       "path": "autonomous-ai-agents/project-car/SKILL.md",
-      "description": "Use when working on any aspect of Project Car (membership hoist/tool shop OS, multi-agent mission control, fleet ops, or related business apps). Loads team structure, routing, Discord conventions, documentation hierarchy, and Doc’s coding standards for tokens/bookings/billing/access.",
-      "bytes": 5018,
-      "sha256_16": "61caaf3b4f607187",
+      "description": "Use when working on any aspect of Project Car (the multi-agent mission control/business application). Loads the canonical team structure, naming conventions, operational preferences, hosting plans, and single source of truth for all coordination as Porsche.",
+      "bytes": 17513,
+      "sha256_16": "483d4fcd712ef67e",
       "share_class": "eligible_full_copy",
       "flags": []
     },
     {
       "name": "token_optimizer",
       "path": "autonomous-ai-agents/token_optimizer/SKILL.md",
-      "description": "Use when you need proactive token reduction before or during expensive cloud calls (especially Grok): context hygiene, local-model offload, smarter tool use, and compression choices. Heavier companion to token_preflight.",
-      "bytes": 3332,
-      "sha256_16": "b3af37e2345b9194",
+      "description": "Use when you need proactive token reduction, pre-flight estimation, smart compression, or local-model-assisted optimization before expensive cloud calls (especially Grok). Provides configurable aggressiveness and post-task savings reporting.",
+      "bytes": 8006,
+      "sha256_16": "6ef6c3ca828fc033",
       "share_class": "eligible_full_copy",
       "flags": []
     },
     {
       "name": "token_preflight",
       "path": "autonomous-ai-agents/token_preflight/SKILL.md",
-      "description": "Use when starting a large or multi-step job that might burn cloud tokens (especially Grok). Ultra-light pre-flight: estimate size, pick light/medium/heavy optimization tier, and decide local vs cloud before the expensive loop starts.",
-      "bytes": 2763,
-      "sha256_16": "dce6cb19cb6fc09b",
+      "description": "Ultra-lightweight pre-flight checker. Estimates tokens and recommends optimization tier (light/medium/heavy) with minimal overhead. v0.2.0.",
+      "bytes": 2126,
+      "sha256_16": "1ec7a7a29ae9cc76",
       "share_class": "eligible_full_copy",
       "flags": []
     },
@@ -338,7 +338,7 @@
       "sha256_16": "6b49a0655a581092",
       "share_class": "catalog_only",
       "flags": [
-        "password:"
+        "api_key"
       ]
     },
     {
@@ -384,9 +384,9 @@
     {
       "name": "hermes-multi-agent-backup",
       "path": "hermes-multi-agent-backup/SKILL.md",
-      "description": "Use when organizing, scheduling, or restoring Hermes backups across Doc/Porsche/McKing: daily/weekly/monthly local retention plus public git-safe inventories in Coombzy/Automation. Never commit secrets.",
-      "bytes": 2485,
-      "sha256_16": "f9c0c440190fe8de",
+      "description": "Organize, schedule, and retain Hermes profile backups across multiple agents on different hardware; git-safe mutual-audit packs for public repos; daily/weekly/monthly retention.",
+      "bytes": 5183,
+      "sha256_16": "8303a7eb2b14a8d9",
       "share_class": "catalog_only",
       "flags": [
         "api_key"
@@ -686,9 +686,9 @@
     {
       "name": "mission-control-development-heartbeat",
       "path": "software-development/mission-control-development-heartbeat/SKILL.md",
-      "description": "Use when running a stateful autonomous development heartbeat for Mission Control / Project Car: read prior state, do focused coding work, verify, write state, commit when appropriate, and report on Discord with confidence + hardware notes.",
-      "bytes": 3204,
-      "sha256_16": "61e2d86656e666d2",
+      "description": "Stateful autonomous development heartbeat for Mission Control / Project Car. Runs scheduled cron jobs that read previous state, perform focused coding work (Matrix + Nextcloud first), auto-commit to git, write handoff notes, and deliver structured progress reports to Discord.",
+      "bytes": 4611,
+      "sha256_16": "29e7ae1d3bed60fc",
       "share_class": "eligible_full_copy",
       "flags": []
     },

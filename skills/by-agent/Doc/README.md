@@ -20,9 +20,9 @@ This is a **catalog** (name, path, description, hash). Full skill bodies for fle
 | `grok` | `autonomous-ai-agents/grok/SKILL.md` | 12990 | `a19ba446be039abb` | eligible_full_copy |
 | `hermes-agent` | `autonomous-ai-agents/hermes-agent/SKILL.md` | 51586 | `083e305e004fc82c` | catalog_only |
 | `opencode` | `autonomous-ai-agents/opencode/SKILL.md` | 7259 | `afb3ea1f1b430070` | catalog_only |
-| `project-car` | `autonomous-ai-agents/project-car/SKILL.md` | 5018 | `61caaf3b4f607187` | eligible_full_copy |
-| `token_optimizer` | `autonomous-ai-agents/token_optimizer/SKILL.md` | 3332 | `b3af37e2345b9194` | eligible_full_copy |
-| `token_preflight` | `autonomous-ai-agents/token_preflight/SKILL.md` | 2763 | `dce6cb19cb6fc09b` | eligible_full_copy |
+| `project-car` | `autonomous-ai-agents/project-car/SKILL.md` | 17513 | `483d4fcd712ef67e` | eligible_full_copy |
+| `token_optimizer` | `autonomous-ai-agents/token_optimizer/SKILL.md` | 8006 | `6ef6c3ca828fc033` | eligible_full_copy |
+| `token_preflight` | `autonomous-ai-agents/token_preflight/SKILL.md` | 2126 | `1ec7a7a29ae9cc76` | eligible_full_copy |
 | `computer-use` | `computer-use/SKILL.md` | 11179 | `33fdce112f142cd3` | eligible_full_copy |
 | `architecture-diagram` | `creative/architecture-diagram/SKILL.md` | 5830 | `0e7e2736aafe052e` | eligible_full_copy |
 | `ascii-art` | `creative/ascii-art/SKILL.md` | 10556 | `b69fdd300045a3e6` | eligible_full_copy |
@@ -49,7 +49,7 @@ This is a **catalog** (name, path, description, hash). Full skill bodies for fle
 | `github-issues` | `github/github-issues/SKILL.md` | 9315 | `c1be1ca373adebd8` | eligible_full_copy |
 | `github-pr-workflow` | `github/github-pr-workflow/SKILL.md` | 10035 | `2461c0a678c2cc66` | eligible_full_copy |
 | `github-repo-management` | `github/github-repo-management/SKILL.md` | 13733 | `d70d999ddf231f9e` | catalog_only |
-| `hermes-multi-agent-backup` | `hermes-multi-agent-backup/SKILL.md` | 2485 | `f9c0c440190fe8de` | catalog_only |
+| `hermes-multi-agent-backup` | `hermes-multi-agent-backup/SKILL.md` | 5183 | `8303a7eb2b14a8d9` | catalog_only |
 | `gif-search` | `media/gif-search/SKILL.md` | 2720 | `a8349043740a8805` | catalog_only |
 | `heartmula` | `media/heartmula/SKILL.md` | 6412 | `d6f8322ba9ab4756` | eligible_full_copy |
 | `songsee` | `media/songsee/SKILL.md` | 2336 | `d9d8d1394c630bd8` | eligible_full_copy |
@@ -81,7 +81,7 @@ This is a **catalog** (name, path, description, hash). Full skill bodies for fle
 | `openhue` | `smart-home/openhue/SKILL.md` | 2713 | `550f94848d10ab82` | eligible_full_copy |
 | `xurl` | `social-media/xurl/SKILL.md` | 15518 | `8b1899dc7188328a` | eligible_full_copy |
 | `hermes-agent-skill-authoring` | `software-development/hermes-agent-skill-authoring/SKILL.md` | 10651 | `7d3aa79739df5c17` | eligible_full_copy |
-| `mission-control-development-heartbeat` | `software-development/mission-control-development-heartbeat/SKILL.md` | 3204 | `61e2d86656e666d2` | eligible_full_copy |
+| `mission-control-development-heartbeat` | `software-development/mission-control-development-heartbeat/SKILL.md` | 4611 | `29e7ae1d3bed60fc` | eligible_full_copy |
 | `node-inspect-debugger` | `software-development/node-inspect-debugger/SKILL.md` | 10929 | `f2f72c0c9e67143e` | eligible_full_copy |
 | `plan` | `software-development/plan/SKILL.md` | 8974 | `399038641c1905f4` | eligible_full_copy |
 | `python-debugpy` | `software-development/python-debugpy/SKILL.md` | 13172 | `ce7e38367ea54fb8` | eligible_full_copy |
@@ -93,36 +93,22 @@ This is a **catalog** (name, path, description, hash). Full skill bodies for fle
 | `test-driven-development` | `software-development/test-driven-development/SKILL.md` | 10306 | `39361054f58ecc8d` | eligible_full_copy |
 | `yuanbao` | `yuanbao/SKILL.md` | 3795 | `239e4875f511124f` | eligible_full_copy |
 
-## Notable fleet / specialist skills
-- `autonomous-ai-agents/fleet-mutual-improvement/SKILL.md` — Use when running weekly fleet mutual-audit (Porsche↔Doc↔McKing): export git-safe packs, peer-audit, adopt/adapt ideas without role homogeniz
-- `autonomous-ai-agents/fleet-mutual-audit/SKILL.md` — Use when Doc/Porsche/McKing (or fleet peers) export git-safe Hermes inventories, peer-audit each other, or push sanitized packs to the publi
-- `autonomous-ai-agents/project-car/SKILL.md` — Use when working on any aspect of Project Car (membership hoist/tool shop OS, multi-agent mission control, fleet ops, or related business ap
+## Notable fleet skills
+- `autonomous-ai-agents/fleet-mutual-improvement/SKILL.md` — Use when running weekly fleet mutual-audit (Porsche↔Doc↔McKing): export git-safe packs, peer-audit, adopt/adapt ideas wi
+- `autonomous-ai-agents/project-car/SKILL.md` — Use when working on any aspect of Project Car (the multi-agent mission control/business application). Loads the canonica
 - `autonomous-ai-agents/grok/SKILL.md` — Delegate coding to xAI Grok Build CLI (features, PRs).
-- `autonomous-ai-agents/token_optimizer/SKILL.md` — Use when you need proactive token reduction before or during expensive cloud calls (especially Grok): context hygiene, local-model offload, 
-- `autonomous-ai-agents/token_preflight/SKILL.md` — Use when starting a large or multi-step job that might burn cloud tokens (especially Grok). Ultra-light pre-flight: estimate size, pick ligh
-- `mlops/xai-model-selection/SKILL.md` — Use when choosing Grok/xAI models, SuperGrok tiers, multi-agent vs single flagship, or comparing Grok releases for Hermes routing.
+- `autonomous-ai-agents/token_optimizer/SKILL.md` — Use when you need proactive token reduction, pre-flight estimation, smart compression, or local-model-assisted optimizat
+- `autonomous-ai-agents/token_preflight/SKILL.md` — Ultra-lightweight pre-flight checker. Estimates tokens and recommends optimization tier (light/medium/heavy) with minima
+- `mlops/xai-model-selection/SKILL.md` — Use when choosing Grok/xAI models, SuperGrok tiers, multi-agent vs single flagship, or comparing Grok releases for Herme
 - `mlops/inference/llama-cpp/SKILL.md` — llama.cpp local GGUF inference + HF Hub model discovery.
-- `productivity/macos-security-hardening/SKILL.md` — Hardening macOS for high-performance local AI workloads (Ollama, Hermes, local LLMs) while maintaining fluid multi-device operation.
-- `software-development/sqlalchemy-domain-modeling/SKILL.md` — Use when building a full set of SQLAlchemy ORM models (greenfield or new module). Covers Enum ordering, multi-FK relationships, nullable dis
-- `software-development/mission-control-development-heartbeat/SKILL.md` — Use when running a stateful autonomous development heartbeat for Mission Control / Project Car: read prior state, do focused coding work, ve
-- `hermes-multi-agent-backup/SKILL.md` — Use when organizing, scheduling, or restoring Hermes backups across Doc/Porsche/McKing: daily/weekly/monthly local retention plus public git
+- `productivity/macos-security-hardening/SKILL.md` — Hardening macOS for high-performance local AI workloads (Ollama, Hermes, local LLMs) while maintaining fluid multi-devic
+- `software-development/sqlalchemy-domain-modeling/SKILL.md` — Use when building a full set of SQLAlchemy ORM models (greenfield or new module). Covers Enum ordering, multi-FK relatio
+- `software-development/mission-control-development-heartbeat/SKILL.md` — Stateful autonomous development heartbeat for Mission Control / Project Car. Runs scheduled cron jobs that read previous
+- `hermes-multi-agent-backup/SKILL.md` — Organize, schedule, and retain Hermes profile backups across multiple agents on different hardware; git-safe mutual-audi
 
 ## Published (full trees peers can install)
 
-Selective — Doc promotes specialist / local-LLM / security skills that are richer on this host (not a full dump).
-
-| Relpath | Why published |
-|---------|---------------|
-| `productivity/macos-security-hardening` | Doc original (richer than Porsche rewrite) |
-| `mlops/xai-model-selection` | Routing policy + SuperGrok notes |
-| `autonomous-ai-agents/grok` | Grok Build CLI + fleet routing |
-| `software-development/sqlalchemy-domain-modeling` | Domain modeling patterns |
-| `autonomous-ai-agents/project-car` | Doc specialist Project Car skill |
-| `autonomous-ai-agents/token_preflight` + `token_optimizer` | Token guardrails |
-| `autonomous-ai-agents/fleet-mutual-*` | Mutual audit / improvement |
-| `software-development/mission-control-development-heartbeat` | MC heartbeat |
-| `hermes-multi-agent-backup` | Fleet backup |
-| `mlops/inference/*`, `huggingface-hub`, `lm-evaluation-harness` | Local LLM specialist stack |
+See `published/` — Doc promotes specialist / local-LLM / security skills that are richer on this host.
 
 Install example:
 ```bash
@@ -130,7 +116,3 @@ SRC=skills/by-agent/Doc/published/mlops/xai-model-selection
 DEST=~/.hermes/skills/mlops/xai-model-selection
 mkdir -p "$DEST" && cp -R "$SRC"/* "$DEST"/
 ```
-
-## Charter lock
-
-Doc stays **heavy compute / local LLM specialist** — not a second PA. Unique skills are healthy; no skill-count parity.
