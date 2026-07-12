@@ -41,23 +41,23 @@ Community sometimes memes "4.20" for 4.5. That is not the model ID.
 
 Story: efficiency / $/task (list $2/$6 + fewer tokens) more than pure #1 pass rates. A/B on real workloads.
 
-## vs local Qwen3-Coder (Ben’s Mac)
+## Local models by fleet host (do not mix)
 
-| Variant | Fits M1 Max 64GB? | vs Grok 4.5 coding |
-|---|---|---|
-| Qwen3-Coder 30B A3B / qwen3.6:35b | Yes (sweet spot) | Clearly weaker agentically; fine as implementer under Grok plans |
-| Qwen3-Coder-Next ~80B-A3B | Maybe if quantized | Stronger open; still not full 4.5 agent class |
-| Qwen3-Coder 480B A35B | No (server/API) | Closer on classic SWE Verified; usually trails 4.5 on hard agent suites |
-
-With Grok plan + review tickets, expect ~70–85% of implementation tokens on local Qwen for normal feature work.
+| Host | RAM | Local class that fits | vs Grok 4.5 coding |
+|---|---|---|---|
+| **Porsche** M4 Pro | **24GB** | **7B–14B** instruct/coder only (drafts/summaries) | Not a bulk implementer; hand hard code to Doc or Grok |
+| **Doc** M1 Max | **64GB** | Qwen3-Coder 30B A3B / `qwen3.6:35b` / gemma4:26b class | Weaker agentically than 4.5; fine as implementer under Grok plans (~70–85% implement tokens) |
+| **McKing** i9+5080 | system+VRAM | CUDA / vLLM large locals when home | Lab/GPU path |
+| Qwen3-Coder-Next ~80B-A3B | needs big quant / more RAM | Maybe on Doc if quantized carefully | Still not full 4.5 agent class |
+| Qwen3-Coder 480B A35B | server/API | No on laptops | Closer on classic SWE Verified; usually trails 4.5 on hard agent suites |
 
 ## Auth separation
 
 - Hermes x_search / chat OAuth ≠ `grok` CLI (`~/.grok/auth.json` via `grok login`).
 - Grok Build: SuperGrok or X Premium+ OAuth preferred; `XAI_API_KEY` is pay-as-you-go fallback.
 
-## Ben routing preference
+## Ben routing preference (fleet)
 
 - Architecture / high-level / review → Grok 4.5 (or multi-agent when research debate is the point).
-- Implementation / bulk → local Ollama (`qwen3.6:35b` or Qwen3-Coder 30B).
-- Human = Ben; agent = Doc Hakosuka.
+- Implementation / bulk → **host-sized local** (Doc 26B–35B; Porsche 7B–14B drafts only) or handoff to the right agent.
+- Human = Ben; agents = Porsche (PA/coordinator), Doc (specialist), McKing (coding/GPU when home).

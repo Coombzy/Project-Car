@@ -1,12 +1,23 @@
 ---
 name: sqlalchemy-domain-modeling
-description: Use when building a full set of SQLAlchemy ORM models (greenfield or new module). Covers Enum ordering, multi-FK relationships, nullable discipline, indexes, and post-generation verification. Triggers on requests for "SQLAlchemy models", "ORM schema", "domain models", or when fixing broken FK chains / circular enum imports.
+description: Use when building a full set of SQLAlchemy ORM models (greenfield or new module). Covers Enum ordering, multi-FK relationships, nullable discipline, indexes, and post-generation verification. On Porsche: review/handoff skill — bulk domain implement belongs to Doc.
 trigger: When creating a new set of ORM models; when asked about SQLAlchemy 2.0 migrations; when fixing broken multi-FK relationships or circular enum imports.
+version: 1.1.0
 ---
 
 # SQLAlchemy 2.0 Domain Modeling Skill
 
 Produce production-grade SQLAlchemy 2.0 model sets using declarative\_base, Mapped/mapped\_column — not the legacy functional `declarative_base()`. Designed for greenfield domain models: IoT access-control → tools/hoist → token economy → incident detection → billing pipelines.
+
+## Fleet role gate (read first)
+
+| Agent | How to use this skill |
+|-------|------------------------|
+| **Porsche** (PA / coordinator, 24GB) | **Review + ticket + HANDOFF.** Use patterns below to audit Doc’s models, write acceptance checks, and catch multi-FK mistakes in review. Do **not** own multi-hour ORM module builds on this host. |
+| **Doc** (specialist, 64GB) | **Primary implementer.** Full model sets, migrations, Project Car domain packs. |
+| **McKing** | Only if coding-lab task is explicitly assigned; not default domain owner. |
+
+**Porsche default action for “build the full domain models”:** draft goal/non-goals + entity list + FK risks → `@Doc` HANDOFF in `#tire-shop` with paths and verify commands. Stay for architecture arbitration with Ben.
 
 ## Pre-flight checklist
 

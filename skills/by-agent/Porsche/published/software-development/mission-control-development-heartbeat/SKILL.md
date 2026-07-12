@@ -1,7 +1,7 @@
 ---
 name: mission-control-development-heartbeat
-description: Stateful autonomous development heartbeat for Mission Control / Project Car. Runs scheduled cron jobs that read previous state, perform focused coding work (Matrix + Nextcloud first), auto-commit to git, write handoff notes, and deliver structured progress reports to Discord.
-version: 1.2
+description: Stateful autonomous development heartbeat for Mission Control / Project Car. Porsche supervises/schedules; Doc owns bulk local implement ticks. Read state → focused work → git commit → handoff note → Discord report.
+version: 1.3
 author: Porsche
 tags: [heartbeat, autonomous, cron, mission-control, project-car, git, stateful]
 ---
@@ -10,13 +10,23 @@ tags: [heartbeat, autonomous, cron, mission-control, project-car, git, stateful]
 
 This skill implements a reliable, stateful autonomous development loop for building Mission Control (which evolves into Project Car).
 
+## Fleet split (do not homogenize)
+
+| Agent | Heartbeat role |
+|-------|----------------|
+| **Porsche** | **Supervise / plan / integrate.** Prioritize backlog, write tickets, small glue commits, Discord reports, Ben interface. Prefer architecture on Grok; avoid overnight bulk cloud burns for domain code. Hand multi-file implement slices to **Doc**. |
+| **Doc** | **Bulk implement ticks** on M1 Max (local 26B–35B when useful): domain models, backend modules, long coding sessions. Still follows read→code→commit→note. |
+| **McKing** | Future coding-lab / GPU heartbeats when online — not default MC owner. |
+
+If Porsche is about to start a multi-hour ORM/feature implement loop, **stop and HANDOFF to Doc** unless Ben explicitly assigns Porsche.
+
 ## Core Pattern
 
 The heartbeat follows a strict loop on every run:
 
 1. **Read state** — Read `mission-control/HEARTBEAT_NOTE.md`
 2. **Read backlog** — Read and update `mission-control/TASKS.md` (enforces priority order)
-3. **Do focused work** — Create files, folders, code, Docker configs, integrations. **All automation and orchestration must be done via custom code** — Hermes heartbeats, cron, webhooks, and first-party adapters only. **No n8n or similar no-code workflow tools** (Ben hard ban 2026-07-10; stack already purged).
+3. **Do focused work** — Create files, folders, code, Docker configs, integrations. **All automation and orchestration must be done via custom code** — Hermes heartbeats, cron, webhooks, and first-party adapters only. **No n8n or similar no-code workflow tools** (Ben hard ban 2026-07-10; stack already purged). On Porsche: prefer planning, glue, docs, small fixes; route bulk domain to Doc.
 4. **Git commit** — `git add . && git commit -m "Heartbeat: ..."` (initialize repo if needed)
 5. **Write new state** — Update `HEARTBEAT_NOTE.md` with status + next tasks
 6. **Report** — Deliver structured progress report to Discord
@@ -38,10 +48,11 @@ The heartbeat follows a strict loop on every run:
 
 ## Recommended Cron Job Settings
 
-- Interval: Every 2 hours (recommended)
+- Interval: Every 2 hours (recommended) — **task-dependent**; complex/high-risk needs supervision
 - Delivery: Discord (preferred channel)
 - Max runs: Configurable (start with 12–24)
-- Model: Current default (grok-4.3 or equivalent)
+- Model: Porsche supervise ticks → Grok 4.5 (or current flagship); Doc implement ticks → local large + Grok for plan/review
+- Cloud fleet crons **paused** until Ben re-enables; prefer local-friendly Doc ticks when cloud is paused
 
 ## Required Files
 
@@ -75,6 +86,8 @@ The heartbeat follows a strict loop on every run:
 3. **Working only in mission-control/** — architecture/integration text also lives under project-car skill references and Desktop Project-Car-Docs; keep service inventory aligned.
 4. **Violating priority order** — never start Tool Tracking or dashboard polish before Matrix + Nextcloud foundation work.
 5. **Confusing ops todos with TASKS.md** — Ben’s personal/fleet todos (`Coombzy/Automation/communication/Porsche/*.md`) are separate from MC engineering `TASKS.md`. Heartbeats update `TASKS.md` / `HEARTBEAT_NOTE.md`; ops list changes belong on GitHub ops todos (project-car `references/ops-todos.md`).
+6. **Porsche doing Doc’s job** — bulk domain implement / long local coding on 24GB instead of HANDOFF.
+7. **Identical overnight cloud burns on both hosts** — cost + role drift.
 
 ## Usage
 

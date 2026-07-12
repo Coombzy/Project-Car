@@ -31,6 +31,19 @@ for interactive sessions.
 - Batch issue fixing
 - Any task where you'd otherwise reach for Codex / Claude Code but want Grok
 
+### Porsche (this host) — keep thin
+
+Porsche is **PA / coordinator**, not the primary coding agent.
+
+| Use Grok Build CLI here when… | Prefer instead… |
+|-------------------------------|-----------------|
+| Small one-shot coding spike Ben assigned **to Porsche** | Headless `-p` only; tight scope |
+| Need a quick local refactor while coordinating | Headless `-p` with short prompt |
+| Multi-hour feature / domain ORM / bulk PR farm | **Hand to Doc** (or McKing when home) via `#tire-shop` HANDOFF |
+| Architecture-only | Hermes Grok chat (`xai-model-selection`) — not Build CLI |
+
+Do **not** become a second full-time coding agent because this skill is installed.
+
 ## Prerequisites
 
 - **Install (preferred):** `npm install -g @xai-official/grok`

@@ -1,7 +1,7 @@
 ---
 name: fleet-mutual-improvement
 description: "Use when running weekly fleet mutual-audit (Porsche↔Doc↔McKing): export git-safe packs, peer-audit, adopt/adapt ideas without role homogenization, recommend peer improvements, commit adoption notes."
-version: 1.0.0
+version: 1.3.0
 author: Porsche + Ben (Project Car fleet)
 license: MIT
 platforms: [macos, linux]
@@ -156,11 +156,20 @@ For each approved item:
 3. Prefer **thin skills + memory facts** over dumping peer SOUL
 4. Write `backup/<You>/git-safe/adopted-from-audit-YYYY-MM-DD.md`:
    - Adopted (what/how/adapted)
-   - Deferred
+   - Deferred (with blocker: skill payload / Ben / hardware)
    - Rejected + why (role lock)
    - Recommendations sent to peer (summary)
 
-**Completion criterion:** at least one of (a) real skill/config/memory change, (b) explicit “no beneficial delta this week” with evidence from diff. Never empty cheerleading.
+**Partial adopt is valid** when peer skill trees are still missing: ship process/ops items + outbound `skills-share/`, mark inbound skills **Deferred**, do not invent “installed” without files on disk.
+
+**Skill payloads (inventory is not enough):** peer `inventory-latest.json` only lists skill *names*. To actually install peer-authored skills:
+
+1. Peer publishes under `Automation/skills-share/<Peer>/…` (trees + optional `.tar.gz`) — see `references/skills-share.md`
+2. You `git pull`, **secret-scan**, then `cp -R` or `tar -xzf … -C ~/.hermes/skills`
+3. Verify paths exist under `~/.hermes/skills/` before claiming adopt complete
+4. Prefer ordered install lists from peer audit (role-fit first, not full tree dump)
+
+**Completion criterion:** at least one of (a) real skill/config/memory change, (b) explicit “no beneficial delta this week” with evidence from diff, (c) partial adopt + outbound skill-share unblocking peer. Never empty cheerleading.
 
 ### Phase 5 — Peer recommendation packet (done when: recommendations file pushed)
 
@@ -215,7 +224,7 @@ Use real `<@bot_id>` mentions for bot wake-up. Prefer parent `#tire-shop` (no du
 
 | Known weakness | Rule |
 |----------------|------|
-| Inventory without skill payload | Prefer adopt via skill_manage; if peer skill missing, write **adapted** skill from public teachings OR request private skill tar — never claim “installed” without files |
+| Inventory without skill payload | Publish/install via `skills-share/<Agent>/` trees+tarball; else adapted rewrite from public teachings; never claim “installed” without `~/.hermes/skills/.../SKILL.md` |
 | Git push blocked | Bundle / Ben auth / peer with write access; never drop work on the floor |
 | Homogenization | Charter restated every run; Do-not-copy section mandatory; divergence counts mandatory |
 | Busywork audits | Require adoption report with real delta or evidence-based no-op |
@@ -246,7 +255,16 @@ When McKing comes online: same skill, charter = coding+storage, first run is exp
 5. **Skipping recommendations-for-peer** — loop becomes one-way theft  
 6. **Dual-@ auto-thread races** — post status in parent tire-shop with no_thread policy  
 7. **Declaring success without files** — no commit, no adoption note  
-8. **Running daily** — cost + noise; weekly is the product
+8. **Running daily** — cost + noise; weekly is the product  
+9. **Inventory without skill-share** — peer cannot install; always ship installable trees or mark Deferred explicitly  
+10. **Claiming “installed” without path verify** — `ls ~/.hermes/skills/.../SKILL.md` before Discord claim  
+11. **Git write missing mid-loop** — Phase 0 auth check; else format-patch/bundle + peer-with-write; Doc 2026-07-11 blocked until `gh auth login`  
+12. **Approval friction on audit scripts** — prefer small non-heredoc steps or Ben-confirmed `approvals.mode`; do not thrash the same inventory script after pack is already committed  
+13. **Re-export churn** — one inventory re-export **after** skill installs; not every intermediate step  
+14. **Stale MANIFEST after adopt** — live disk hashes ≠ catalog hashes → peers think you still run thin rewrites; refresh MANIFEST + `published/` same session  
+15. **Dual fleet-audit skills** — running `fleet-mutual-audit` and `fleet-mutual-improvement` in parallel confuses done-when; one runbook only  
+16. **published/ full dump** — catalog lists everything; `published/` is selective specialist/fleet trees only  
+17. **project-car fork** — peers may publish thinner specialist overlays; **Porsche `project-car` remains coordination SSOT**; Doc keeps a short implementer overlay, not a second constitution
 
 ## Verification Checklist
 
@@ -260,26 +278,61 @@ When McKing comes online: same skill, charter = coding+storage, first run is exp
 - [ ] Single Discord summary with real mentions  
 - [ ] No recursive cron created  
 
-## Skill catalog (Automation/skills)
+## Skill catalog vs skill-share (two layers → prefer published)
 
-Fleet skill visibility without dumping entire trees every week:
+| Layer | Path | Purpose |
+|-------|------|---------|
+| **Catalog** | `Automation/skills/by-agent/<Agent>/MANIFEST.json` + `README.md` | Machine + human list of **all** skills (name/path/desc/bytes/sha256_16/share_class/flags) |
+| **Published** | `Automation/skills/by-agent/<Agent>/published/` | **Preferred installable** full trees peers should steal (selective — not full dump) |
+| **Skill-share** | `Automation/skills-share/<Agent>/…` | Audit-era install channel (trees + optional `.tar.gz`). Keep for tarballs; prefer `published/` for ongoing peer install |
+
+First mutual-audit close (2026-07-11) proved inventory-only packs **block** adopt until installable bodies exist. Catalog onboarding (2026-07-12 Doc) proved the stable shape:
 
 ```
-skills/
-  shared/                      # fleet-wide full skills
-  by-agent/<Agent>/
-    MANIFEST.json              # all skills: name, path, description, hash
-    README.md
-    published/                 # full SKILL.md trees opted for sharing
+skills/by-agent/<Agent>/
+  MANIFEST.json   # full catalog
+  README.md       # table + charter lock
+  published/      # selective full trees only
 ```
 
-**Weekly export:** always refresh your `MANIFEST.json`. Promote full skill bodies to `published/` only when useful for peers (or when recommending install). Default stays **catalog-only** to avoid public-repo bloat and secret risk.
+**Install preference (going forward):** `by-agent/<Peer>/published/<relpath>` → `~/.hermes/skills/<relpath>`. Use `skills-share/` when a dated tarball is easier; do not maintain two divergent copies of the same skill without noting which is canonical.
+
+**share_class honesty:** if a skill is under `published/`, set `share_class: eligible_full_copy` (or document intentional override). Do not leave promoted trees as `catalog_only`.
+
+**After you install peer trees:** re-hash live `~/.hermes/skills` into **your** MANIFEST the same session and refresh **your** `published/` copies of those trees so peers do not download your thin rewrites. Stale MANIFEST after adopt = false divergence signal.
+
+**MANIFEST field contract** (match peers): `name` from frontmatter `name:` (not always folder name), `path` relative to `~/.hermes/skills`, `description`, `bytes`, `sha256_16`, `share_class`, `flags`. Skip garbage/template skill names (e.g. `my-skill-name # …`).
+
+**Skill-share rules:** no secrets; secret-scan before push; role-fit install only; update `skills-share/README.md` install examples. Detail: `references/skills-share.md`.
+
+**Weekly export:** refresh MANIFEST; promote bodies to `published/` (and optionally skill-share) only when a peer needs install. **No skill-count parity** — Doc ~80s specialist vs Porsche ~100 coordinator is healthy.
+
+### Dual runbook ban: `fleet-mutual-audit` vs this skill
+
+Doc may still carry `fleet-mutual-audit` (older twin). **Do not dual-run both weekly.** Canonical process skill = **`fleet-mutual-improvement`**.
+
+**Absorbed (2026-07-12):** mechanical inventory field list, redaction rules, probe timeouts, Discord public IDs, and close-out skeleton live in `references/export-checklist.md`. Treat `fleet-mutual-audit` as deprecated alias if still installed — do not maintain two weekly procedures.
+
+**Porsche role during weekly run:** coordinator hygiene (MANIFEST refresh, published/ honesty, handoff quality, travel-host notes). Do **not** adopt Doc specialist stacks for parity.
+
+### Catalog review when Ben asks “what can you steal / improve?”
+
+Answer in **two columns** (see `references/catalog-and-role-adapt.md`):
+
+1. **Adapt for ME** — peer skills reshaped to *my* charter/hardware  
+2. **Recommend for PEER** — changes that make *them* better at *their* job  
+
+Never a single undifferentiated “install list.”
 
 ## Related paths
 
 - Protocol: `Automation/backup/MUTUAL-AUDIT-PROTOCOL.md`  
 - Packs: `Automation/backup/{Porsche,Doc,McKing}/git-safe/`  
+- Skill-share: `Automation/skills-share/{Porsche,Doc,McKing}/` + `skills-share/README.md`  
 - Skill catalogs: `Automation/skills/by-agent/{Porsche,Doc,McKing}/`  
 - Templates: `references/templates.md`  
 - Role cards: `references/role-identity-cards.md`  
-- Cron prompt: `references/weekly-cron-prompt.md`
+- Cron prompt: `references/weekly-cron-prompt.md`  
+- Skill-share layout: `references/skills-share.md`  
+- Catalog + role-adapt review: `references/catalog-and-role-adapt.md`  
+- Export checklist (absorbed from mutual-audit): `references/export-checklist.md`

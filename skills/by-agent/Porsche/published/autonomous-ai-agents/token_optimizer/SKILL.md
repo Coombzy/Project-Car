@@ -1,7 +1,7 @@
 ---
 name: token_optimizer
 description: Use when you need proactive token reduction, pre-flight estimation, smart compression, or local-model-assisted optimization before expensive cloud calls (especially Grok). Provides configurable aggressiveness and post-task savings reporting.
-version: 1.0.0
+version: 1.1.0
 author: Porsche (for Ben)
 license: MIT
 metadata:
@@ -22,7 +22,16 @@ Proactive, provider-aware token optimization skill for Hermes. Performs pre-flig
 - After a task completes, to analyze what was optimized and how much was saved.
 - When using Grok via the Responses API and you want to maximize prompt cache effectiveness.
 
-**Do not use** for trivial single-turn queries or when the user has explicitly disabled optimization.
+**Do not use** for trivial single-turn queries, when the user has explicitly disabled optimization, or for **pure local-Ollama jobs** with no cloud model about to run (see `token_preflight` `local_only`).
+
+## Porsche PA aggressiveness
+
+| Context | Default aggressiveness | Notes |
+|---------|------------------------|-------|
+| Multi-tool fleet / PA day on Grok | **balanced → aggressive** | Prefer GitHub todos & short Discord handoffs over re-ingesting long chat |
+| Single Ben question, small scope | light / skip | Don't tax latency |
+| About to hand bulk work to Doc | light | Spend tokens on a tight HANDOFF ticket, not full implement on Porsche |
+| Doc host pure local implement | skip optimizer | Preflight already no-ops |
 
 ## Procedure
 
