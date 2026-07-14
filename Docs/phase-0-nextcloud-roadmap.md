@@ -1,0 +1,1 @@
+UPDATED: Networking (Headscale) added to Phase 0 as parallel/ immediate follow-up to Nextcloud for remote access proof. Critical for travel usability of MC and Project Car App sync.
