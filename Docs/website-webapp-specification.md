@@ -3,7 +3,7 @@
 **Last Updated:** 2026-07-24  
 **Status:** Living document  
 **Part of:** Project Car documentation hierarchy  
-**Maintained with:** Domain acquisition, Cloudflare Tunnel, and public site decisions from 2026-07-24
+**Maintained with:** Domain acquisition, Cloudflare Tunnel, public site, email, and storage decisions from 2026-07-24
 
 ---
 
@@ -15,7 +15,7 @@ This document covers the public website and any future web application surfaces 
 - DNS / Cloudflare configuration
 - Current hosting architecture (temporary → permanent)
 - Public site status and roadmap
-- Related email and supporting services
+- Email and supporting cloud storage decisions
 
 It sits alongside `high-level-apps-and-business-specification.md`, `integration-plan.md`, and `mission-control-architecture.md`.
 
@@ -102,19 +102,51 @@ Self-hosting cost is effectively electricity only once hardware is in place (nea
 
 ---
 
-## 6. Email (related)
+## 6. Email (settled)
 
-Decision lean: **Proton Mail Plus** for `@projectcar.ca` (custom domain support, 15 GB is ample when files live on McKing/Nextcloud).
+**Decision: Proton**
 
-- Nextcloud Mail will act as the client once mailboxes exist.
-- Full self-hosted mail (Mailcow etc.) is a later option; migration from managed is medium difficulty and planned as a future step.
-- Proton requires Bridge for IMAP/SMTP access from Nextcloud.
+| Item | Detail |
+|------|--------|
+| **Provider** | Proton |
+| **Starting plan** | Free (for now) |
+| **Custom domain** | `@projectcar.ca` to be added when moving to a paid plan (Mail Plus or higher) |
+| **Long-term intent** | Temporary / transitional. Eventual move toward self-hosted mail on the lab is still the direction |
+| **Nextcloud Mail** | Will require Proton Bridge when integration is needed |
 
-*(Final email provider choice still open for confirmation.)*
+### Rationale
+- Clean break from Gmail as the daily primary inbox
+- Strong privacy (end-to-end encryption)
+- Good mobile/desktop experience while travelling
+- Avoids the Gmail “Send mail as” hybrid that still keeps Google as the real client
+- Acceptable temporary paid/third-party service while McKing and the broader stack are built
+
+### Notes
+- Free tier does not support custom domains — upgrade to Mail Plus (or Unlimited) when ready to use `@projectcar.ca` addresses properly.
+- Proton Bridge will be required for native-feeling access from Nextcloud Mail later.
+- Full self-hosted mail (e.g. Mailcow) remains a future option once the lab is stable and always-on.
 
 ---
 
-## 7. Agent / API Access
+## 7. Cloud Storage (related)
+
+**Primary long-term:** Nextcloud on McKing (Mission Control).
+
+**Transitional / complementary options:**
+
+| Service | Role | Notes |
+|---------|------|-------|
+| **Proton Drive** | Privacy-focused secondary storage | To be set up when ready to more thoroughly leave Google. End-to-end encrypted. Free tier ~5 GB; paid plans scale from 200 GB. |
+| **Cloudflare R2** | Reliable object storage / offsite | Excellent Nextcloud external storage integration (S3-compatible). Zero egress fees. Strong long-term fit with the existing Cloudflare stack. Free tier 10 GB. |
+
+### Direction
+- Nextcloud remains the primary daily cloud.
+- Proton Drive will be used as encrypted personal/cloud storage during the transition away from Google.
+- Cloudflare R2 stays available as a complementary, infrastructure-friendly store (backups, media, Nextcloud external storage) that aligns with the domain/DNS/Tunnel choices already made.
+
+---
+
+## 8. Agent / API Access
 
 - Hermes (or designated agent) may receive a **scoped Cloudflare API token** focused on DNS + Tunnel management.
 - High-risk registrar actions (unlock, ownership changes, deletion) stay manual.
@@ -122,22 +154,24 @@ Decision lean: **Proton Mail Plus** for `@projectcar.ca` (custom domain support,
 
 ---
 
-## 8. Roadmap (near term)
+## 9. Roadmap (near term)
 
 | Priority | Item | Status |
 |----------|------|--------|
 | 1 | Domain registered + locked + 10-year term | Done |
 | 2 | Cloudflare Tunnel + basic landing page live | Done (on Doc) |
 | 3 | This specification document | Done |
-| 4 | Improve landing page content / identity (optional) | Next |
-| 5 | Email (`@projectcar.ca`) decision + setup | Pending |
-| 6 | Basic uptime monitoring | Pending |
-| 7 | Migrate full Docker stack Doc → McKing | ~1 month |
-| 8 | Longer-term web app / customer portal direction | Later |
+| 4 | Email provider decision | **Done — Proton (start free)** |
+| 5 | Improve landing page content / identity (optional) | Next |
+| 6 | Proton custom domain + paid plan when ready | Pending |
+| 7 | Proton Drive setup as part of leaving Google | Pending |
+| 8 | Basic uptime monitoring | Pending |
+| 9 | Migrate full Docker stack Doc → McKing | ~1 month |
+| 10 | Longer-term web app / customer portal direction | Later |
 
 ---
 
-## 9. Multiple Tunnels (future note)
+## 10. Multiple Tunnels (future note)
 
 One tunnel is sufficient for the current public site. Additional tunnels are likely later for:
 
@@ -147,7 +181,7 @@ One tunnel is sufficient for the current public site. Additional tunnels are lik
 
 ---
 
-## 10. Related Documents
+## 11. Related Documents
 
 - `high-level-apps-and-business-specification.md`
 - `integration-plan.md`
@@ -158,4 +192,4 @@ One tunnel is sufficient for the current public site. Additional tunnels are lik
 ---
 
 **Synchronized with Project Car documentation practice.**  
-**Initial capture of 2026-07-24 domain + tunnel + live site decisions.**
+**Updated 2026-07-24 with settled Proton email decision and transitional storage approach.**
