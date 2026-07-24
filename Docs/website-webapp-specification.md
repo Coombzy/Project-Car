@@ -104,27 +104,55 @@ Self-hosting cost is effectively electricity only once hardware is in place (nea
 
 ## 6. Email (settled)
 
-**Decision: Proton**
+**Decision: Proton (transitional) → Self-hosted on McKing (long-term)**
 
 | Item | Detail |
 |------|--------|
-| **Provider** | Proton |
+| **Provider (current)** | Proton |
 | **Starting plan** | Free (for now) |
 | **Custom domain** | `@projectcar.ca` to be added when moving to a paid plan (Mail Plus or higher) |
-| **Long-term intent** | Temporary / transitional. Eventual move toward self-hosted mail on the lab is still the direction |
-| **Nextcloud Mail** | Will require Proton Bridge when integration is needed |
+| **Long-term intent** | Temporary / transitional. Eventual move to self-hosted mail on McKing |
+| **Nextcloud Mail** | Will require Proton Bridge while on Proton |
 
-### Rationale
+### Agent Email Addresses
+
+On Proton paid single-user plans (Mail Plus / Unlimited):
+- Multiple encrypted email addresses (aliases) are available under one account / one login.
+- Agents can each have their own address (e.g. `hermes@projectcar.ca`, `doc@projectcar.ca`, `mcking@projectcar.ca`, `info@projectcar.ca`).
+- Agents can **send and receive** under their own address.
+- All mail lands in the shared inbox (can be organized with filters, folders, and labels).
+- This is the intended starting model — simple, centralized, and sufficient for agent identity.
+
+### Transition Plan: Proton → Self-Hosted
+
+When self-hosted mail is stood up on McKing:
+
+- The same `@projectcar.ca` addresses will continue to be used (MX records simply point to the new server).
+- Two options become available at no extra cost:
+  1. **Aliases** (same model as Proton) — keep central management.
+  2. **Real separate mailboxes** — each agent can have its own full mailbox and independent login credentials if isolation or automation requires it.
+- Native IMAP/SMTP — no Bridge required.
+- Cleaner integration with Nextcloud Mail and direct agent access.
+- Full control over filtering, routing, quotas, and retention.
+
+**Recommended path:**
+1. Start on Proton with aliases for agents.
+2. When self-hosted mail is ready, keep the same addresses.
+3. Decide at migration time whether any agents need true independent mailboxes.
+
+Most projects keep the simple alias model initially and only create separate mailboxes for agents that specifically need isolation or independent credentials.
+
+### Rationale for Proton start
 - Clean break from Gmail as the daily primary inbox
 - Strong privacy (end-to-end encryption)
 - Good mobile/desktop experience while travelling
 - Avoids the Gmail “Send mail as” hybrid that still keeps Google as the real client
-- Acceptable temporary paid/third-party service while McKing and the broader stack are built
+- Acceptable temporary third-party service while McKing and the broader stack are built
 
 ### Notes
 - Free tier does not support custom domains — upgrade to Mail Plus (or Unlimited) when ready to use `@projectcar.ca` addresses properly.
-- Proton Bridge will be required for native-feeling access from Nextcloud Mail later.
-- Full self-hosted mail (e.g. Mailcow) remains a future option once the lab is stable and always-on.
+- Proton Bridge will be required for native-feeling access from Nextcloud Mail later (while still on Proton).
+- Full self-hosted mail remains the long-term direction once the lab is stable and always-on.
 
 ---
 
@@ -192,4 +220,4 @@ One tunnel is sufficient for the current public site. Additional tunnels are lik
 ---
 
 **Synchronized with Project Car documentation practice.**  
-**Updated 2026-07-24 with settled Proton email decision and transitional storage approach.**
+**Updated 2026-07-24 with settled Proton email decision, agent address strategy, and Proton → self-hosted transition plan.**
