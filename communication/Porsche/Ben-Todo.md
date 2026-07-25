@@ -19,7 +19,7 @@ Things that need **Ben’s action, decision, approval, or physical presence**.
 - [ ] **On Porsche: install Tailscale** — not present 2026-07-25; needed to reach Doc hub as client
 - [ ] **On Porsche: install Bitwarden app** — point at self-host URL after vault CF cutover (or TS URL interim)
 - [ ] **On Porsche: install Nextcloud Desktop** — client only; connect to Doc hub
-- [ ] **On Doc: fix Hermes cron provider** — **done 2026-07-25** (empty custom api_key); keep watch that pair-checkin stays green
+- [x] **On Doc: fix Hermes cron provider** — SEALED green 2026-07-25 (`DOC_CRON_PROVIDER_FIXED`); watch next natural 10:00 tick
 
 ## P1 — This week / high value
 

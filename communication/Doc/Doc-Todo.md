@@ -9,7 +9,7 @@
 
 ## P0 — Ops / reliability
 
-- [x] **FIX cron LLM provider pin** — Root cause: `custom:Doc Hak` had **empty api_key** → cron `No LLM provider configured`. Set `api_key: ollama` (Ollama ignores). Jobs pin `provider=custom:Doc Hak` · `model=qwen3.6:35b`. Smoke `CRON_SMOKE_OK`; live pair-checkin proven on local client. **After green proof:** restore deliver `#tire-shop` 10:00/16:00.
+- [x] **FIX cron LLM provider pin** — Root cause: `custom:Doc Hak` had **empty api_key** → cron `No LLM provider configured`. Set `api_key: ollama` (Ollama ignores). Jobs pin `provider=custom:Doc Hak` · `model=qwen3.6:35b`. SEALED green 2026-07-25 00:38 MDT exec `b020814b` · job ok · deliver `#tire-shop` restored · schedule active 10:00/16:00 · 16 local API calls · audit `pair-checkin-2026-07-25-0031.md`.
 - [x] **VW SIGNUPS locked** — `SIGNUPS_ALLOWED=false` live (Ben account exists). Invitations already false. Token: `DOC_VW_SIGNUPS_LOCKED`.
 - [ ] **VW CF cutover** — CF `vault.projectcar.ca` → origin `:8222` → DOMAIN match → drop temp Caddy `:8443` → Ben phone Bitwarden self-host
 - [ ] **CF `cloud.projectcar.ca` → NC `:8080`** (Cloudflare Access later)
