@@ -2,20 +2,26 @@
 
 **Owner:** Doc Hakosuka (Hermes on M1 Max)  
 **Maintained under:** `Coombzy/Automation/communication/Doc/`  
-**Last updated:** 2026-07-12 (agent-dream skill + daily light / Sunday deep)  
+**Last updated:** 2026-07-25 (Porsche feedback after progress brief)  
 **Fleet rule:** No n8n. Orchestration = Hermes + custom adapters + Discord.
 
 ---
 
 ## P0 — Ops / reliability
 
-- [x] **Pair check-in cron 2×/day (Ben 2026-07-12)** — `doc-porsche-pair-checkin` (`89e256129ba3`) · `0 10,16 * * *` · model **ollama qwen3.6:35b** · skill `fleet-pair-checkin` · deliver `#tire-shop` · audit reports `~/Desktop/Fleet-Nextcloud/Heartbeats/Fleet/pair-checkin-*.md`
-- [x] **Nextcloud host + Desktop structure (2026-07-12)** — `/Users/dochak/Desktop/Fleet-Nextcloud` seeded. Docker NC later.
-- [x] **agent-dream skill (fleet)** — local-LLM checklist skill for Doc + Porsche; shared `skills/shared/agent-dream/`; light daily + **Sunday deep**; promote/prune caps; metrics.
-- [x] **Daily backup + dream (Ben)** — cron **`doc-daily-backup-and-dream`** (`0111562255ba`) · `0 22 * * *` · script emits `DREAM_MODE=light|deep` · skills include `agent-dream` · digests `~/Desktop/Fleet-Nextcloud/Memory/Dreams/Doc/` · `#doc-garage`. Prefer local **qwen3.6:35b**.
-- [x] **Backup tiers** — daily zip (keep 30); **Sunday → weekly/** (keep 12); **1st → monthly/** (keep 24). Spec: `DREAM-CRON.md` + `daily-doc-backup.sh`.
+- [ ] **FIX cron LLM provider pin (URGENT)** — `doc-porsche-pair-checkin` (`89e256129ba3`) failing repeatedly in `#tire-shop`: `No LLM provider configured`. Pin Hermes custom Ollama provider (not bare `ollama`) + `qwen3.6:35b`. **Pause job until fixed** to stop channel spam. Same pin for daily backup/dream if failing.
+- [ ] **VW security cutover** — CF `vault.projectcar.ca` → origin `:8222` → DOMAIN match → drop temp Caddy `:8443` → **`SIGNUPS_ALLOWED=false`** → Ben phone Bitwarden self-host
+- [ ] **CF `cloud.projectcar.ca` → NC `:8080`** (Cloudflare Access later)
+- [ ] **Refresh `communication/Nextcloud-progress.md`** — still 2026-07-14; live stacks Jul 24–25 (NC + VW + site)
+- [x] **Pair check-in cron created (Ben 2026-07-12)** — `89e256129ba3` · `0 10,16 * * *` · skill `fleet-pair-checkin` · deliver `#tire-shop` — **broken until provider pin**
+- [x] **Nextcloud Docker hub live on Doc** — NC 30.0.17 `:8080` admin `ben`; Desktop seed `/Users/dochak/Desktop/Fleet-Nextcloud`
+- [x] **Vaultwarden + Caddy sibling** — clients `https://localhost:8443`; signups still OPEN (must lock)
+- [x] **projectcar.ca public** — site pages 200 + Apex grok-4.5 health ok
+- [x] **agent-dream skill (fleet)** — shared `skills/shared/agent-dream/`
+- [x] **Daily backup + dream cron exists** — `doc-daily-backup-and-dream` / `0 22 * * *` — verify provider pin
+- [x] **Backup tiers** — daily / Sunday weekly / 1st monthly
 - [x] **Skill role-tailoring / mutual-audit apply** — prior handoffs closed.
-- [x] **daily-doc-backup.sh** — `~/.hermes/scripts/`; Porsche wrapper `daily-porsche-backup.sh` for peer install.
+- [x] **daily-doc-backup.sh** — `~/.hermes/scripts/`
 - [x] **Hermes cron SSOT for 22:00** — do not also load launchd backup (double-zip).
 
 ## P1 — Software baseline (when awake)

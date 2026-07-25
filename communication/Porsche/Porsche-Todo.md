@@ -2,7 +2,7 @@
 
 **Owner:** Porsche (Hermes agent / default profile)  
 **Maintained under:** `Coombzy/Automation/communication/Porsche/`  
-**Last updated:** 2026-07-12 (Doc SSOT tokens received in #tire-shop)
+**Last updated:** 2026-07-25 (Doc↔Porsche progress sync)
 
 Work Porsche should execute autonomously (or with Ben only when blocked).
 
@@ -12,16 +12,19 @@ Work Porsche should execute autonomously (or with Ben only when blocked).
 
 ## P0 — Active ops
 
-- [x] **Porsche orchestrator dream cron** — `porsche-dream-orchestrator` Mon/Wed/Fri 22:00; prompt in `communication/Porsche/DREAM-CRON.md`; local digests `~/Documents/Fleet-Memory/Dreams/Porsche/`
-- [x] **Doc dream cron (thin)** — tire-shop `DOC_DREAM_CRON_INSTALLED` (`doc-dream-specialist` / `ca0a9c07ac28` / Mon/Wed/Fri 23:30 MT → `#doc-garage`; digests under Fleet-Nextcloud Memory/Dreams/Doc)
-- [x] **Doc Nextcloud Desktop structure** — tire-shop `DOC_NEXTCLOUD_STRUCTURE_READY` `/Users/dochak/Desktop/Fleet-Nextcloud`; Docker NC install still later
-- [ ] **Doc Nextcloud server (Docker/runtime)** — after Desktop tree; Tailscale-first; WebDAV for agents later
+- [x] **Porsche orchestrator dream cron** — `porsche-dream-orchestrator` (`0bcccde4d76f`) Mon/Wed/Fri 22:00 cloud OK; digests `~/Documents/Fleet-Memory/Dreams/Porsche/`
+- [x] **agent-dream + fleet-pair-checkin skills installed on Porsche** (from `skills/shared/` 2026-07-25) — daily local dream deferred until 7–14B Ollama works on 24GB
+- [x] **Doc Docker MC hub live (2026-07-25 brief)** — NC 30.0.17 `:8080`; VW+Caddy `:8443` (signups still OPEN); projectcar.ca public 200 + Apex grok-4.5
+- [ ] **Coordinate Doc: fix cron LLM provider pin** — pair-checkin `89e256129ba3` spamming `#tire-shop` with `No LLM provider configured`; pin `custom:<Doc Ollama provider>` + `qwen3.6:35b` (or pause job until fixed)
+- [ ] **Coordinate Doc: VW security cutover** — CF `vault.projectcar.ca` → `:8222`, DOMAIN match, drop temp Caddy, **SIGNUPS_ALLOWED=false**, phone Bitwarden
+- [ ] **Coordinate Doc: CF `cloud.projectcar.ca` → NC `:8080`** (Access later)
+- [ ] **Porsche client bootstrap** — install Tailscale + Bitwarden (self-host URL) + NC Desktop; join hub as **client only**
 - [ ] **Maintain these three GitHub lists** (`Ben-Todo.md`, `Porsche-Todo.md`, `Purchases.md`) as the source of truth for todos
 - [ ] **Keep Project Car docs in sync** (Desktop `Project-Car-Docs` ↔ skill refs ↔ GitHub `Docs/` when changed)
-- [ ] **Mission Control Phase 0** — Nextcloud primary host = **Doc** (1TB; Desktop structure first). Porsche coordinates; later WebDAV from agents. Do not assume NC only on Porsche 500GB.
+- [ ] **SSOT refresh** — `communication/Nextcloud-progress.md` still dated 2026-07-14; Doc to refresh after VW/CF steps
 - [ ] **Matrix** — real Synapse config **or** explicit defer note with date in TASKS.md
 - [ ] **Hermes health → Discord alert path** (cron/script; not n8n)
-- [ ] **Wire agent write path** to Nextcloud `Fleet-Nextcloud/` / Heartbeats once Doc NC is up
+- [ ] **Wire agent write path** to Nextcloud `Fleet-Nextcloud/` / Heartbeats once public/TS path stable
 
 ## P1 — Agent / fleet infrastructure
 
