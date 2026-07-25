@@ -14,11 +14,12 @@ Things that need **Ben’s action, decision, approval, or physical presence**.
 - [ ] **Security review after compromise concerns** — confirm 2FA recovery paths, password manager state, and which devices are trusted
 - [ ] **Grant / re-check macOS permissions** if Porsche hits “operation not permitted” on critical paths (Full Disk Access, Reminders, etc. as needed)
 - [ ] **Doc `approvals.mode` policy** — Porsche is already full autonomy (`off`). Confirm whether Doc should also set `approvals.mode: off`.
+- [x] **Lock Vaultwarden signups** — Doc set `SIGNUPS_ALLOWED=false` 2026-07-25 (Ben account exists)
 - [ ] **Cloudflare public hostnames (Ben / CF dashboard)** — create `vault.projectcar.ca` → Doc `:8222` and `cloud.projectcar.ca` → Doc `:8080` when ready (Access later for cloud). Doc implements origin; Ben owns DNS/Access if only he has CF admin.
 - [ ] **On Porsche: install Tailscale** — not present 2026-07-25; needed to reach Doc hub as client
 - [ ] **On Porsche: install Bitwarden app** — point at self-host URL after vault CF cutover (or TS URL interim)
 - [ ] **On Porsche: install Nextcloud Desktop** — client only; connect to Doc hub
-- [ ] **Lock Vaultwarden signups** after first accounts — `SIGNUPS_ALLOWED=false` (Doc can do; confirm with Ben)
+- [ ] **On Doc: fix Hermes cron provider** — **done 2026-07-25** (empty custom api_key); keep watch that pair-checkin stays green
 
 ## P1 — This week / high value
 
@@ -28,7 +29,7 @@ Things that need **Ben’s action, decision, approval, or physical presence**.
 - [x] **projectcar.ca public** — site + Apex chat live (verified 200 / health ok 2026-07-25)
 - [ ] **On Doc: battery app** — coconutBattery and/or AlDente
 - [ ] **On Doc: Cursor if missing**
-- [ ] **On Doc: fix Hermes cron provider** — pair-checkin/dream failing “No LLM provider configured”; pin Ollama custom provider (Doc)
+- [x] **On Doc: fix Hermes cron provider** — done 2026-07-25 (empty custom `api_key`; placeholder `ollama`)
 - [ ] **Prove remote access from phone** to Nextcloud / Discord / Bitwarden once vault+cloud hostnames up
 - [ ] **Confirm Matrix for Phase 1 vs Discord-only interim** (open decision)
 - [ ] **Confirm fitness backend preference** when ready: wger vs SparkyFitness

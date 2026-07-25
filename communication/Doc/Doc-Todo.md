@@ -2,27 +2,31 @@
 
 **Owner:** Doc Hakosuka (Hermes on M1 Max)  
 **Maintained under:** `Coombzy/Automation/communication/Doc/`  
-**Last updated:** 2026-07-25 (Porsche feedback after progress brief)  
+**Last updated:** 2026-07-25 (Doc: cron provider + VW signups locked)  
 **Fleet rule:** No n8n. Orchestration = Hermes + custom adapters + Discord.
 
 ---
 
 ## P0 — Ops / reliability
 
-- [ ] **FIX cron LLM provider pin (URGENT)** — `doc-porsche-pair-checkin` (`89e256129ba3`) failing repeatedly in `#tire-shop`: `No LLM provider configured`. Pin Hermes custom Ollama provider (not bare `ollama`) + `qwen3.6:35b`. **Pause job until fixed** to stop channel spam. Same pin for daily backup/dream if failing.
-- [ ] **VW security cutover** — CF `vault.projectcar.ca` → origin `:8222` → DOMAIN match → drop temp Caddy `:8443` → **`SIGNUPS_ALLOWED=false`** → Ben phone Bitwarden self-host
+- [x] **FIX cron LLM provider pin** — Root cause: `custom:Doc Hak` had **empty api_key** → cron `No LLM provider configured`. Set `api_key: ollama` (Ollama ignores). Jobs pin `provider=custom:Doc Hak` · `model=qwen3.6:35b`. Smoke `CRON_SMOKE_OK`; live pair-checkin proven on local client. **After green proof:** restore deliver `#tire-shop` 10:00/16:00.
+- [x] **VW SIGNUPS locked** — `SIGNUPS_ALLOWED=false` live (Ben account exists). Invitations already false. Token: `DOC_VW_SIGNUPS_LOCKED`.
+- [ ] **VW CF cutover** — CF `vault.projectcar.ca` → origin `:8222` → DOMAIN match → drop temp Caddy `:8443` → Ben phone Bitwarden self-host
 - [ ] **CF `cloud.projectcar.ca` → NC `:8080`** (Cloudflare Access later)
-- [ ] **Refresh `communication/Nextcloud-progress.md`** — still 2026-07-14; live stacks Jul 24–25 (NC + VW + site)
-- [x] **Pair check-in cron created (Ben 2026-07-12)** — `89e256129ba3` · `0 10,16 * * *` · skill `fleet-pair-checkin` · deliver `#tire-shop` — **broken until provider pin**
+- [ ] **Refresh `communication/Nextcloud-progress.md`** — still 2026-07-14; include VW lock + cron provider pitfall + Jul 24–25 stacks
+- [x] **Pair check-in cron** — `89e256129ba3` · `0 10,16 * * *` · skill `fleet-pair-checkin` · provider fixed 2026-07-25
 - [x] **Nextcloud Docker hub live on Doc** — NC 30.0.17 `:8080` admin `ben`; Desktop seed `/Users/dochak/Desktop/Fleet-Nextcloud`
-- [x] **Vaultwarden + Caddy sibling** — clients `https://localhost:8443`; signups still OPEN (must lock)
-- [x] **projectcar.ca public** — site pages 200 + Apex grok-4.5 health ok
+- [x] **Vaultwarden + Caddy sibling** — origin `:8222`; clients temp `https://localhost:8443` until CF vault hostname
+- [x] **projectcar.ca public** — site pages 200 + Apex (watch degraded blips)
 - [x] **agent-dream skill (fleet)** — shared `skills/shared/agent-dream/`
-- [x] **Daily backup + dream cron exists** — `doc-daily-backup-and-dream` / `0 22 * * *` — verify provider pin
+- [x] **Daily backup + dream cron exists** — `doc-daily-backup-and-dream` / `0 22 * * *` · same provider pin
 - [x] **Backup tiers** — daily / Sunday weekly / 1st monthly
 - [x] **Skill role-tailoring / mutual-audit apply** — prior handoffs closed.
 - [x] **daily-doc-backup.sh** — `~/.hermes/scripts/`
 - [x] **Hermes cron SSOT for 22:00** — do not also load launchd backup (double-zip).
+
+### Pitfall (fleet)
+Cron + custom Ollama provider needs a **non-empty** `api_key` in `config.yaml` custom_providers (placeholder `ollama` is fine). Empty key → misleading `No LLM provider configured` even when pin looks correct.
 
 ## P1 — Software baseline (when awake)
 

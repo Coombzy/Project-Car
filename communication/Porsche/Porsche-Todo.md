@@ -15,8 +15,9 @@ Work Porsche should execute autonomously (or with Ben only when blocked).
 - [x] **Porsche orchestrator dream cron** — `porsche-dream-orchestrator` (`0bcccde4d76f`) Mon/Wed/Fri 22:00 cloud OK; digests `~/Documents/Fleet-Memory/Dreams/Porsche/`
 - [x] **agent-dream + fleet-pair-checkin skills installed on Porsche** (from `skills/shared/` 2026-07-25) — daily local dream deferred until 7–14B Ollama works on 24GB
 - [x] **Doc Docker MC hub live (2026-07-25 brief)** — NC 30.0.17 `:8080`; VW+Caddy `:8443` (signups still OPEN); projectcar.ca public 200 + Apex grok-4.5
-- [ ] **Coordinate Doc: fix cron LLM provider pin** — pair-checkin `89e256129ba3` spamming `#tire-shop` with `No LLM provider configured`; pin `custom:<Doc Ollama provider>` + `qwen3.6:35b` (or pause job until fixed)
-- [ ] **Coordinate Doc: VW security cutover** — CF `vault.projectcar.ca` → `:8222`, DOMAIN match, drop temp Caddy, **SIGNUPS_ALLOWED=false**, phone Bitwarden
+- [x] **Coordinate Doc: fix cron LLM provider pin** — fixed 2026-07-25: empty `api_key` on `custom:Doc Hak`; set placeholder `ollama`. Pair-checkin smoke green.
+- [x] **Coordinate Doc: VW SIGNUPS locked** — `SIGNUPS_ALLOWED=false` (`DOC_VW_SIGNUPS_LOCKED`)
+- [ ] **Coordinate Doc: VW CF cutover** — CF `vault.projectcar.ca` → `:8222`, DOMAIN match, drop temp Caddy, phone Bitwarden
 - [ ] **Coordinate Doc: CF `cloud.projectcar.ca` → NC `:8080`** (Access later)
 - [ ] **Porsche client bootstrap** — install Tailscale + Bitwarden (self-host URL) + NC Desktop; join hub as **client only**
 - [ ] **Maintain these three GitHub lists** (`Ben-Todo.md`, `Porsche-Todo.md`, `Purchases.md`) as the source of truth for todos
