@@ -22,7 +22,7 @@ Work Porsche should execute autonomously (or with Ben only when blocked).
 - [ ] **Porsche client bootstrap** — install Tailscale + Bitwarden (self-host URL) + NC Desktop; join hub as **client only**
 - [ ] **Maintain these three GitHub lists** (`Ben-Todo.md`, `Porsche-Todo.md`, `Purchases.md`) as the source of truth for todos
 - [ ] **Keep Project Car docs in sync** (Desktop `Project-Car-Docs` ↔ skill refs ↔ GitHub `Docs/` when changed)
-- [ ] **SSOT refresh** — `communication/Nextcloud-progress.md` still dated 2026-07-14; Doc to refresh after VW/CF steps
+- [ ] **SSOT refresh** — `Docs/nextcloud-progress.md` (moved 2026-07-26 from `communication/`); still dated 2026-07-14 content; Doc to refresh after VW/CF steps
 - [ ] **Matrix** — real Synapse config **or** explicit defer note with date in TASKS.md
 - [ ] **Hermes health → Discord alert path** (cron/script; not n8n)
 - [ ] **Wire agent write path** to Nextcloud `Fleet-Nextcloud/` / Heartbeats once public/TS path stable

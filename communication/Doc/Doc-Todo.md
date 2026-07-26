@@ -13,7 +13,7 @@
 - [x] **VW SIGNUPS locked** — `SIGNUPS_ALLOWED=false` live (Ben account exists). Invitations already false. Token: `DOC_VW_SIGNUPS_LOCKED`.
 - [ ] **VW CF cutover** — CF `vault.projectcar.ca` → origin `:8222` → DOMAIN match → drop temp Caddy `:8443` → Ben phone Bitwarden self-host
 - [ ] **CF `cloud.projectcar.ca` → NC `:8080`** (Cloudflare Access later)
-- [ ] **Refresh `communication/Nextcloud-progress.md`** — still 2026-07-14; include VW lock + cron provider pitfall + Jul 24–25 stacks
+- [ ] **Refresh `Docs/nextcloud-progress.md`** — moved from `communication/` 2026-07-26; still 2026-07-14 content; include VW lock + cron provider pitfall + Jul 24–25 stacks + CF vault/cloud plan. Stub at old path.
 - [x] **Pair check-in cron** — `89e256129ba3` · `0 10,16 * * *` · skill `fleet-pair-checkin` · provider fixed 2026-07-25
 - [x] **Nextcloud Docker hub live on Doc** — NC 30.0.17 `:8080` admin `ben`; Desktop seed `/Users/dochak/Desktop/Fleet-Nextcloud`
 - [x] **Vaultwarden + Caddy sibling** — origin `:8222`; clients temp `https://localhost:8443` until CF vault hostname

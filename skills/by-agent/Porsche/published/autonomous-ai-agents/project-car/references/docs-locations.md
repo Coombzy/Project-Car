@@ -36,6 +36,7 @@ Quick map so agents do not search randomly or overclaim what exists.
 ## GitHub Automation (coordination, not full monorepo)
 
 - `Docs/` — fleet-visible Project Car specs (Ben request 2026-07-09)
+  - **`Docs/nextcloud-progress.md`** — living Nextcloud/Vaultwarden hub progress (moved from `communication/` 2026-07-26). Doc owns updates. Old path is a stub redirect only.
 - `communication/Porsche|Doc|McKing/` — Grok chat channels (capital names)
 - **`communication/Porsche/` ops todos (source of truth, 2026-07-10):**
   - `Ben-Todo.md` — Ben actions/decisions
