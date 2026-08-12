@@ -1,9 +1,10 @@
 # Website & Web App Specification
 
-**Last Updated:** 2026-07-24  
+**Last Updated:** 2026-08-12  
 **Status:** Living document  
 **Part of:** Project Car documentation hierarchy  
-**Maintained with:** Domain acquisition, Cloudflare Tunnel, public site, email, and storage decisions from 2026-07-24
+**Canonical location:** `Coombzy/Project-Car` → `Docs/website-webapp-specification.md`  
+**Product spec:** `project-car-application-specification.md` (waitlist + shop app)
 
 ---
 
@@ -17,7 +18,9 @@ This document covers the public website and any future web application surfaces 
 - Public site status and roadmap
 - Email and supporting cloud storage decisions
 
-It sits alongside `high-level-apps-and-business-specification.md`, `integration-plan.md`, and `mission-control-architecture.md`.
+It sits alongside `high-level-apps-and-business-specification.md`, `project-car-application-specification.md`, `integration-plan.md`, and `mission-control-architecture.md`.
+
+**Split:** `projectcar.ca` is the public brand. Mission Control (Nextcloud, Vaultwarden, future cockpit) is private and is not this site.
 
 ---
 
@@ -41,17 +44,17 @@ It sits alongside `high-level-apps-and-business-specification.md`, `integration-
 
 ---
 
-## 3. Current Hosting Architecture (as of 2026-07-24)
+## 3. Current Hosting Architecture (as of 2026-08-12)
 
 ### Temporary setup (Doc)
 - **Host:** Doc (M1 Max)
-- **Stack location:** `/Users/dochak/hermes-tools/mission-control/website`
-- **Runtime:** Docker Compose
-- **Web container:** `mission-control-website` (nginx:1.27-alpine)
+- **Stack location:** `/Users/dochak/hermes-tools/project-car-website` (not under the Nextcloud compose tree)
+- **Runtime:** Docker Compose (nginx + Apex chat sidecar)
+- **Web container:** nginx:1.27-alpine
 - **Port:** `8088` (chosen to avoid conflict with Nextcloud on 8080)
 - **Local URL:** `http://localhost:8088`
 - **Health check:** `http://localhost:8088/healthz` → ok
-- **Tunnel target:** `http://host.docker.internal:8088`
+- **Tunnel target:** host cloudflared → `localhost:8088` (see site README for Cloudflare UI rules)
 
 ### Cloudflare Tunnel
 - Tunnel runs on Doc (temporary)
@@ -70,23 +73,29 @@ It sits alongside `high-level-apps-and-business-specification.md`, `integration-
 
 ## 4. Public Site Status
 
-**Live as of 2026-07-24**
+**Live.** Not a coming-soon stub.
 
 - URL: https://projectcar.ca (and www)
-- Content: Clean dark “Project Car / Coming soon” landing page
-- Tagline: “Built for the work. Tuned for the road.”
-- Message: “We’re putting the shop in order. Check back shortly.”
-- Stack: Static HTML/CSS served by nginx in Docker
+- Positioning: 24/7 community automotive maker-space
+- Tagline on home: “Community driven, Automotive Maker Space”
+- Pages: Home, About, The Shop, Membership, Roadmap, Chat, Contact
+- Apex public chat on Chat/Contact (`/api/apex/chat`)
+- Stack: Static HTML/CSS + nginx Docker; Python Apex sidecar
+- Membership page describes intended bay/hoist/token model and says it is **not a live offer yet**
 
-Files of interest:
+**Next site work:** wire a real waitlist (`POST /waitlist` on the shop API). Do not publish live prices or “book now” until Ben says the shop is open.
+
+Files of interest (runtime today):
 ```
-mission-control/website/
+~/hermes-tools/project-car-website/
   docker-compose.yml
   nginx.conf
-  html/index.html
-  html/styles.css
+  html/          # index, about, the-shop, membership, roadmap, chat, contact
+  apex/          # public chat sidecar
   README.md
 ```
+
+Planned git home: `apps/website/` in this repo.
 
 ---
 
@@ -187,15 +196,16 @@ Most projects keep the simple alias model initially and only create separate mai
 | Priority | Item | Status |
 |----------|------|--------|
 | 1 | Domain registered + locked + 10-year term | Done |
-| 2 | Cloudflare Tunnel + basic landing page live | Done (on Doc) |
+| 2 | Cloudflare Tunnel + multi-page brochure live | Done (on Doc) |
 | 3 | This specification document | Done |
 | 4 | Email provider decision | **Done — Proton (start free)** |
-| 5 | Improve landing page content / identity (optional) | Next |
+| 5 | Waitlist form → shop API | **Next** (see app spec) |
 | 6 | Proton custom domain + paid plan when ready | Pending |
 | 7 | Proton Drive setup as part of leaving Google | Pending |
 | 8 | Basic uptime monitoring | Pending |
-| 9 | Migrate full Docker stack Doc → McKing | ~1 month |
-| 10 | Longer-term web app / customer portal direction | Later |
+| 9 | Move site source into `apps/website/` | With Phase 1 code |
+| 10 | Migrate origin Doc → McKing | When McKing is home and stable |
+| 11 | `app.projectcar.ca` shop UI | After Owner booking works |
 
 ---
 
@@ -211,6 +221,8 @@ One tunnel is sufficient for the current public site. Additional tunnels are lik
 
 ## 11. Related Documents
 
+- `project-car-application-specification.md`
+- `platform-architecture.md`
 - `high-level-apps-and-business-specification.md`
 - `integration-plan.md`
 - `mission-control-architecture.md`

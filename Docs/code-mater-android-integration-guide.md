@@ -112,7 +112,7 @@ Build in layers. Do not skip security basics to chase remote shell toys.
     |
     +--> Discord Turbocharger Springs (fleet)
     |
-    +--> (L1+) Webhook / n8n / Porsche for task create
+    +--> (L1+) Webhook / Hermes / Porsche for task create
     |
     +--> (L3+) Termux sshd on mesh IP only
               ^

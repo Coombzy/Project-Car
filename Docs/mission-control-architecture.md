@@ -1,131 +1,137 @@
 # Mission Control Architecture
 
-**Last Updated:** 2026-07-09  
-**Status:** Living draft (v1)  
-**Owner:** Porsche (Scheduler/Planner)  
-**Audience:** Ben (Coombsy), Porsche, Lightning McKing, Doc Hudson / Doc Hakosuka, Grok  
-**Part of:** Project Car documentation hierarchy  
+**Last Updated:** 2026-08-12  
+**Status:** Living spec (v2) — rewritten to match the live hub and Ben-only cockpit decision  
+**Owner:** Ben (decisions) / Doc + Porsche (maintenance)  
+**Canonical location:** `Coombzy/Project-Car` → `Docs/mission-control-architecture.md`
 
-**Synchronized locations:**
-- Skill: `~/.hermes/skills/autonomous-ai-agents/project-car/references/mission-control-architecture.md`
-- Desktop: `~/Desktop/Project-Car-Docs/mission-control-architecture.md`
-- GitHub: `Coombzy/Automation/Docs/mission-control-architecture.md`
+Related: `platform-architecture.md`, `project-car-application-specification.md`, `integration-plan.md`, `home-lab-specification.md`, `security-playbook.md`.
 
-**Codebase (engineering):** `~/Documents/mission-control/`  
-**Backlog:** `~/Documents/mission-control/TASKS.md`  
-**Heartbeat state:** `~/Documents/mission-control/HEARTBEAT_NOTE.md`  
-
-Related: `master-overview-specification.md`, `high-level-apps-and-business-specification.md`, `integration-plan.md`, `home-lab-specification.md`, `security-playbook.md`.
+**This document replaces the July 2026 draft** that still planned n8n, Matrix-on-Porsche, a shared Postgres with Nextcloud, and a codebase at `~/Documents/mission-control/` (that tree does not exist).
 
 ---
 
-## 1. Purpose & Vision
+## 1. Purpose
 
-Mission Control is Ben’s **daily cockpit** and the **data/workflow hub** for Project Car:
+Mission Control is Ben’s **private daily cockpit**.
 
-- Replace Google services (files, calendar, mail, contacts, notes) with **self-hosted** stack  
-- Give agents a durable place to read/write tasks, files, audits, and reports  
-- Unify orchestration (n8n + Hermes agents) and a single dashboard  
-- Stay **local-first**, **travel-friendly** (hosted on Porsche first), and **security-first**  
+- Replace Google for files, calendar, contacts, notes, and tasks.
+- Give agents a durable, scoped place to write heartbeats, audits, and incidents.
+- Show one screen for health, calendar, tasks, and agent activity.
+- Stay local-first and reachable while traveling.
 
-**Success metric:** Ben can run schedule, files, and agent-assisted work from the road without depending on Google.
+**Users:** Ben only. This may never be a multi-user product. It is not a customer surface and must never be confused with the Project Car shop app.
 
----
-
-## 2. Scope
-
-### In scope
-- Nextcloud (Files, Calendar, Contacts, Mail client, Notes, Deck, Photos)  
-- Orchestration (n8n workflows + agent heartbeats)  
-- Matrix chat/notifications (Phase 0/1)  
-- Unified web dashboard (Next.js app in monorepo)  
-- Postgres as shared DB where appropriate  
-- Fitness backend integration (Phase 3)  
-- Agent access patterns and audit trail  
-- Remote access and health monitoring  
-
-### Out of scope (separate docs / later phases)
-- Full Project Car shop product modules (hoist booking, tool tracking, payments) — consume MC later  
-- Deep Code Mater Android remote-exec guide — dedicated doc  
-- Full business plan / monetization  
+**Success metric:** Ben can run schedule, files, and agent-assisted work from the road without Google, from one cockpit that talks to the live Nextcloud hub.
 
 ---
 
-## 3. Design Principles
+## 2. What exists today (2026-08-12)
 
-1. **Hub-and-spoke** — MC is the hub; apps/agents are spokes  
-2. **Local-first** — data on hardware Ben controls; cloud optional  
-3. **Travel default** — primary services on **Porsche** initially  
-4. **Compose-first infrastructure** — reproducible `docker compose` stack  
-5. **Strict phase order** — Matrix + Nextcloud before dashboard polish or tool tracking  
-6. **Least privilege** for agent service accounts  
-7. **Observable** — health endpoints, structured logs, Discord alerts  
-8. **Degrade gracefully** — offline notes/phone still work if lab slices fail  
+Live on **Doc** (M1 Max), path `~/hermes-tools/mission-control` (symlink `~/hermes-tools/nextcloud-hub`):
+
+| Service | Detail |
+|---------|--------|
+| Nextcloud 30 | `:8080` — Files, Calendar, Talk (`spreed`), Deck, Forms, Photos, Passwords |
+| MariaDB 11.4 | Nextcloud DB only |
+| Redis 7 | Nextcloud cache |
+| Vaultwarden | `:8222` |
+| Cloudflare Tunnel | Public marketing + selected private hostnames; NC should stay off the naked marketing apex or behind Access |
+| Tailscale | `docs-macbook-pro` / `100.97.10.72` |
+| Backups | `~/Desktop/Mission-Control/backups/nextcloud/` (daily/weekly/monthly) |
+| LaunchAgent | `ai.mission-control.hub` |
+
+**Does not exist and is not Phase 0 work:**
+
+- Custom Next.js cockpit (this spec defines it)
+- Matrix Synapse
+- n8n
+- Shared `missioncontrol` Postgres
+- `~/Documents/mission-control/` engineering tree
+
+**Hard ban:** n8n was removed 2026-07-10. Do not reintroduce it. Orchestration is Hermes agents + custom adapters + Discord.
 
 ---
 
-## 4. High-Level Architecture
+## 3. Design principles
+
+1. **Ben-only.** No shop roles, no members, no public signup.
+2. **Do not reimplement Nextcloud.** Calendar, files, Deck, Talk stay in NC. The cockpit reads them and links out.
+3. **Server-side integrations.** The browser talks to the MC app. The MC app talks to Nextcloud. No admin tokens in the client.
+4. **Hub-and-spoke.** Nextcloud is the system of record for personal ops. Project Car shop data lives in its own Postgres.
+5. **Doc now, McKing later.** Porsche is a travel **client**, not the Nextcloud server.
+6. **Degrade gracefully.** If the cockpit is down, Nextcloud web UI still works. If Doc is asleep, phone + local notes still work.
+7. **Least privilege** for agent service accounts.
+
+---
+
+## 4. Architecture
 
 ```
-[Ben: Browser / Android]
-        |  HTTPS / mesh VPN
-        v
-+--------------------------------------------------+
-| PORSCHE — Mission Control runtime (Phase A)      |
-|                                                  |
-|  [Next.js Mission Control App :3000]             |
-|           |                                      |
-|           +--> Postgres :5432                    |
-|           +--> Nextcloud :8080  (Files/Cal/…)    |
-|           +--> Matrix Synapse :8008              |
-|           +--> n8n :5678  (workflows)            |
-|                                                  |
-|  [Hermes Porsche] <--> Discord / GitHub          |
-+----------------------+---------------------------+
-                       |
-          mesh / private network
-                       |
-        +--------------+--------------+
-        v                             v
- [Doc: local LLMs]            [McKing: GPU + 30–50TB
-  private RAG/analysis]        backups, later heavy SVCs]
+[ Ben: browser / Android on Tailscale ]
+                 |
+                 v
+     +-----------+------------+
+     | Mission Control app    |   Next.js  :3000 (private)
+     |  health · cal · tasks  |
+     |  heartbeats · links    |
+     +-----------+------------+
+                 | server-side
+     +-----------v------------+
+     | Nextcloud 30  :8080    |   WebDAV / CalDAV / OCS / Deck
+     | Vaultwarden   :8222    |   health check + link
+     +-----------+------------+
+                 |
+      Tailscale / LAN
+                 |
+     +-----------+------------+
+     | Hermes agents          |   Discord + scoped NC folders
+     | (Porsche, Doc, McKing) |
+     +------------------------+
 ```
 
-### Logical layers
-
-| Layer | Components |
-|-------|------------|
-| **Experience** | Next.js dashboard, Nextcloud web UI, Element (Matrix), Discord |
-| **Orchestration** | n8n, Hermes heartbeats, webhooks |
-| **Collaboration data** | Nextcloud apps (files, calendar, deck, notes) |
-| **Realtime comms** | Matrix Synapse (+ bridges later) |
-| **App data** | Postgres (`missioncontrol` DB) |
-| **Intelligence** | Hermes agents + local LLMs (Doc/McKing) |
-| **Storage/DR** | Docker volumes → McKing backups |
+Hosting now: everything above on **Doc**.  
+Hosting later: Nextcloud + Vaultwarden + MC app migrate to **McKing**. Porsche keeps using them over the mesh.
 
 ---
 
-## 5. Component Catalog
+## 5. The cockpit app (to be built)
 
-### 5.1 Nextcloud (system of record for personal ops)
+**Repo path (planned):** `apps/mission-control/` in `Coombzy/Project-Car`.  
+**Audience:** Ben.  
+**Auth:** single-user session or a private mesh that is not exposed to the internet. No OIDC required.
 
-| Item | Detail |
-|------|--------|
-| Image (compose) | `nextcloud:29-apache` |
-| Port | `8080:80` |
-| DB | Postgres service `missioncontrol` |
-| Volumes | `nextcloud_data`, `nextcloud_config` |
-| Admin (dev default) | `admin` / env `NEXTCLOUD_ADMIN_PASSWORD` (**must rotate**) |
-| Priority apps | Files, Calendar, Contacts, Notes, Deck, Notifications, Photos; Mail when replacing Gmail |
+### Screens
 
-**Integration APIs**
-- OCS (users, shares)  
-- WebDAV (files)  
-- Calendar (CalDAV)  
-- Contacts (CardDAV)  
-- Notifications  
+| Screen | Data source | Notes |
+|--------|-------------|-------|
+| **Health** | HTTP probes + last backup mtime | Nextcloud, Vaultwarden, tunnel, backup age |
+| **Calendar** | Nextcloud CalDAV | Read/display; create/edit may deep-link to NC Calendar |
+| **Tasks** | Nextcloud Deck | Boards / cards; do not invent a second task DB |
+| **Agents** | `MissionControl/Heartbeats/`, `Audits/`, `Incidents/` | Render markdown from WebDAV |
+| **Links** | Config | Nextcloud, Vaultwarden, Project Car app, projectcar.ca |
 
-**Folder conventions** (from Integration Plan — enforce as policy):
+### Explicitly not in this app
+
+- File manager (use Nextcloud)
+- Mail client (Nextcloud Mail / Proton later)
+- Shop hoist booking (Project Car app)
+- Fitness UI (later widget at most)
+- Chat (Talk or Discord)
+
+### Env (app service)
+
+- `NEXTCLOUD_URL`
+- `NEXTCLOUD_APP_PASSWORD` (Ben or a dedicated `mc-cockpit` user)
+- `VAULTWARDEN_URL` (health only)
+- `BACKUP_DIR` or a backup-status file the backup script updates
+- `PROJECT_CAR_APP_URL` (optional deep link)
+
+---
+
+## 6. Nextcloud as system of record
+
+Keep the folder convention:
 
 ```
 Personal/
@@ -144,379 +150,135 @@ AgentShared/
   Doc/
 ```
 
-### 5.2 Postgres
+**APIs the cockpit may use:** WebDAV, CalDAV, CardDAV, OCS, Deck API, Notifications.
 
-| Item | Detail |
+**Apps already enabled:** Talk, Calendar, Deck, Forms, Photos, Passwords.
+
+Talk is the self-hosted chat we already have. **Matrix is deferred** until Talk is proven insufficient. Do not stand up Synapse as a Phase 0/1 gate.
+
+---
+
+## 7. Identity and agents
+
+| Principal | Access |
+|-----------|--------|
+| Ben | Nextcloud admin / daily user. Only human MC login. |
+| `mc-cockpit` | App password: read calendar, Deck, scoped folders. |
+| `agent-porsche` | Read calendar/tasks; write Heartbeats / Audits / Incidents. |
+| `agent-mcking` | Write implementation artifacts; read runbooks. |
+| `agent-doc` | Read selected corpora; write analysis reports. |
+| `agent-mater` | Write Incidents / alerts only. |
+
+Agents never get host root by default. Shop customers never appear here.
+
+---
+
+## 8. Orchestration
+
+Allowed:
+
+1. Hermes heartbeats / cron on each machine.
+2. Custom code in the MC app (health probes, WebDAV readers).
+3. Discord (Turbocharger Springs) for Ben-facing reports.
+4. Direct Nextcloud APIs.
+
+**Not allowed:** n8n or other no-code workflow UIs, unless Ben reverses this in writing.
+
+---
+
+## 9. Data and databases
+
+| Data | Store |
 |------|--------|
-| Image | `postgres:16-alpine` |
-| DB/user | `missioncontrol` / `missioncontrol` |
-| Port | `5432` (prefer docker network only in prod) |
-| Volume | `postgres_data` |
-| Used by | Nextcloud (initial), MC app, optionally n8n later |
+| Files, calendar, Deck, Talk | Nextcloud + **MariaDB** (live) |
+| Vaultwarden | Its own SQLite |
+| Cockpit sessions / cache (if any) | Local to the MC app — SQLite is enough |
+| Shop members, hoists, bookings | **Project Car Postgres** — not here |
 
-**Note:** Production should split DBs/schemas if contention appears (Nextcloud vs app). Phase 0 may share for simplicity; document before multi-tenant/productization.
-
-### 5.3 Matrix (Synapse)
-
-| Item | Detail |
-|------|--------|
-| Image | `matrixdotorg/synapse:latest` (compose placeholder) |
-| Port | `8008` |
-| Volume | `synapse_data` |
-| Server name | `localhost` in scaffold — **must become real domain/mesh name** |
-| Status | Placeholder; needs `generate-config` / proper secrets |
-
-**Role:** self-hosted chat + notification target; bridge file/calendar events from Nextcloud via n8n; long-term optional migration to McKing (TASKS Phase 4).
-
-### 5.4 n8n (workflow glue)
-
-| Item | Detail |
-|------|--------|
-| Image | `n8nio/n8n:latest` |
-| Port | `5678` |
-| Auth | basic auth via env (`N8N_BASIC_AUTH_*`) |
-| Workflows mount | `./n8n/workflows` |
-| Planned flows | `nextcloud-matrix-sync`, health alerts → Discord, user provisioning |
-
-### 5.5 Mission Control Next.js app
-
-| Item | Detail |
-|------|--------|
-| Repo path | `~/Documents/mission-control` |
-| Dev | `npm run dev` → `:3000` |
-| Docker service | `mission-control-app` (build `docker/Dockerfile`) |
-| Env (compose) | `DATABASE_URL`, `NEXTCLOUD_URL`, `MATRIX_URL`, `N8N_URL` |
-| UI scaffold | `frontend/components/MissionDashboard.tsx`, `app/` |
-
-**Important:** Project includes Next.js with possible breaking changes — follow in-repo `AGENTS.md` / `node_modules/next/dist/docs` when coding.
-
-### 5.6 Hermes agents (intelligence layer)
-
-| Agent | MC responsibilities |
-|-------|---------------------|
-| Porsche | Heartbeats, orchestration owner, audit runner, Discord delivery, Grok bridge, doc sync |
-| McKing | Infra/coding implementation, backup receivers, GPU jobs triggered by MC workflows |
-| Doc | Deep analysis over logs/docs; private LLM Q&A |
-| Code Mater | Field alerts into Discord + later MC incident notes |
-
-Agent access is via APIs/tokens and scoped folders — not full host root by default.
-
-### 5.7 Fitness backend (Phase 3)
-
-- **Candidates:** wger or SparkyFitness  
-- **Integrations:** calendar constraints, recovery flags into dashboard  
-- Decision still open (Integration Plan §15)
+Do not migrate Nextcloud onto Postgres “for cleanliness.” Do not share NC’s MariaDB with the shop app.
 
 ---
 
-## 6. Repository & Runtime Layout
+## 10. Hosting and travel
 
-```
-~/Documents/mission-control/
-  app/                    # Next.js app router
-  frontend/               # additional UI components/pages
-  docker/
-    docker-compose.yml    # postgres, nextcloud, matrix, n8n, app
-    Dockerfile
-  integrations/
-    nextcloud/README.md
-    matrix/README.md
-  n8n/workflows/
-  TASKS.md                # roadmap / heartbeat source of truth
-  HEARTBEAT_NOTE.md       # last run state
-  AGENTS.md / CLAUDE.md   # agent coding rules
-```
+| Phase | Where |
+|-------|--------|
+| **Now** | Doc hosts NC + Vaultwarden + (future) cockpit |
+| **Next** | Nightly backups already land on Doc Desktop; add McKing as off-box target |
+| **Later** | Move the hub to McKing (always-on Linux). Porsche is laptop client |
+| **Travel** | Ben reaches Doc/McKing over Tailscale. If the hub is down, use phone notes and catch up later |
 
-### Compose services (current scaffold)
-
-From `docker/docker-compose.yml`:
-
-1. `postgres`  
-2. `nextcloud`  
-3. `matrix-synapse` (placeholder)  
-4. `n8n`  
-5. `mission-control-app`  
-
-**Bring-up (dev):**
-
-```bash
-cd ~/Documents/mission-control/docker
-# set secrets in .env first
-docker compose up -d postgres nextcloud
-# later:
-docker compose up -d
-```
-
-Endpoints (local defaults):
-- Nextcloud: http://localhost:8080  
-- Matrix: http://localhost:8008  
-- n8n: http://localhost:5678  
-- MC app: http://localhost:3000  
+Porsche must not become the 24/7 Nextcloud host. Battery and sleep policies on a travel Mac make that the wrong default.
 
 ---
 
-## 7. Identity, Auth & Roles
+## 11. Security
 
-### Phase 0/1 (pragmatic)
-- Nextcloud local admin + app passwords / OCS tokens in env  
-- n8n basic auth  
-- Matrix registration/admin API (after real config)  
-- Discord allowlist for agents  
-- MC app may start with simple session auth; evolve to shared identity  
+See `security-playbook.md`. MC-specific:
 
-### Target roles (product-aligned)
-Owner/Admin · Staff · Technician/Mentor · Subscriber · Supplier · **Agent service accounts**
-
-### Agent service accounts (target)
-| Account | Allow |
-|---------|--------|
-| `agent-porsche` | Read calendar/tasks; write Heartbeats/Audits/Incidents; trigger n8n |
-| `agent-mcking` | Write implementation artifacts; read infra runbooks; backup APIs |
-| `agent-doc` | Read audit logs + selected corpora; write analysis reports |
-| `agent-mater` | Write Incidents/alerts; limited task create |
+1. Cockpit binds to Tailscale / localhost, not the public internet, unless behind Cloudflare Access.
+2. Secrets in `.env` / keychain — never git.
+3. Rotate Nextcloud app passwords after suspected compromise.
+4. Backup encryption for any copy that leaves Doc.
+5. No shop-member data in this stack.
 
 ---
 
-## 8. Orchestration Patterns
+## 12. Phased delivery
 
-### 8.1 Human-driven
-Ben uses MC dashboard / Nextcloud / Discord to set intent.
+### Phase A — Hub (mostly done)
 
-### 8.2 Workflow-driven (n8n)
-Examples:
-- Nextcloud file upload → Matrix notice + optional Discord  
-- Calendar change → notify + Deck card  
-- Healthcheck fail → Discord alert  
-- Nightly backup trigger → McKing receive  
+- [x] Nextcloud 30 + apps on Doc
+- [x] Vaultwarden
+- [x] Tailscale access
+- [x] Local backup script + Desktop archive
+- [ ] Backup restore drill documented
+- [ ] McKing off-box backup
 
-### 8.3 Agent heartbeat-driven (Porsche)
-Standard (see heartbeat-standards):
+### Phase B — Cockpit (next software)
 
-1. Read `HEARTBEAT_NOTE.md` + `TASKS.md`  
-2. Implement **only** active priority (Matrix + Nextcloud first)  
-3. Commit  
-4. Update heartbeat note  
-5. Report summary (Discord)  
+- [ ] `apps/mission-control` Next.js app
+- [ ] Health view
+- [ ] Calendar (CalDAV)
+- [ ] Tasks (Deck)
+- [ ] Heartbeat / incident feed
+- [ ] Single-user auth
+- [ ] Server-side NC credentials only
 
-Cloud-dependent crons paused until local LLM infrastructure is ready.
+### Phase C — Harden
 
----
+- [ ] Agent service accounts as above
+- [ ] Structured audit of privileged writes
+- [ ] Migrate hub Doc → McKing
+- [ ] Optional fitness widget
 
-## 9. Data Flow Examples
+### Deferred
 
-### Daily schedule
-Nextcloud Calendar ↔ MC dashboard ↔ (later) Project Car App offline sync  
-
-### Agent report
-Porsche writes `MissionControl/Heartbeats/YYYY-MM-DD.md` + Discord summary  
-
-### Security incident
-Code Mater/Discord alert → Porsche creates `Incidents/` note → McKing forensics → Doc analysis → playbook  
-
-### Backup
-Postgres dump + Nextcloud volume sync → McKing `backups/porsche/`  
+- Matrix
+- Tool tracking / cameras (Project Car)
+- Multi-user MC
+- Replacing Talk or Discord
 
 ---
 
-## 10. API Surfaces (logical)
-
-Detailed OpenAPI later; consumers should assume:
-
-| API | Provider | Consumers |
-|-----|----------|-----------|
-| WebDAV / OCS | Nextcloud | App, agents, n8n |
-| CalDAV / CardDAV | Nextcloud | App, Fitness, shop booking later |
-| Matrix Client-Server | Synapse | Element, bridges, n8n |
-| n8n webhooks | n8n | Agents, external hooks |
-| MC REST (planned) | Next.js routes | Dashboard, mobile app |
-| Audit append (planned) | MC service | All agents |
-
-Environment variables (compose app service):
-- `DATABASE_URL`
-- `NEXTCLOUD_URL`
-- `MATRIX_URL`
-- `N8N_URL`
-
----
-
-## 11. UI / UX Architecture
-
-### Phase 0–1
-- Functional over pretty  
-- Single dashboard shell (`MissionDashboard`) showing service health + links out to Nextcloud/n8n  
-- Auth minimal but not default-open on mesh  
-
-### Phase 2
-- Calendar views (CalDAV-backed)  
-- Task views (Deck/Notes-backed)  
-- Notification center (Matrix + Discord status)  
-- Mobile-friendly layouts  
-
-### Phase 3+
-- Fitness widgets  
-- Multi-agent status board  
-- Business modules entry points (deep link to Project Car App domains)
-
-**UX principle:** MC is the cockpit; do not re-implement all of Nextcloud—embed/link where native NC UI is better.
-
----
-
-## 12. Local LLM Integration
-
-| Need | Where it runs | How MC uses it |
-|------|---------------|----------------|
-| Private Q&A over files | Doc (primary), McKing GPU | RAG over selected Nextcloud paths (explicit allowlist) |
-| Log anomaly analysis | Doc | Nightly audit package |
-| Fast routing/summaries | Porsche light models optional | Heartbeat summaries |
-| Image/video jobs | McKing | Triggered by n8n/agent jobs |
-
-**Rule:** No silent full-drive embedding of personal data. Corpora must be declared.
-
----
-
-## 13. Security Architecture
-
-See `security-playbook.md` for procedures. MC-specific controls:
-
-1. Rotate all compose default passwords before remote access  
-2. Bind admin ports to mesh/localhost  
-3. TLS at reverse proxy for Ben-facing entrypoints  
-4. Secrets only in `.env` / keychain — never commit  
-5. Agent tokens scoped + revocable  
-6. Audit every privileged automation  
-7. Backup encryption for off-host copies  
-8. Separate prod vs dev stacks when productizing  
-
----
-
-## 14. Hosting Topology & Migration
-
-| Phase | Hosting |
-|-------|---------|
-| **A (now)** | All MC services on Porsche |
-| **B** | Nightly backups + large artifacts on McKing |
-| **C** | Consider Matrix/heavy DB move to McKing (TASKS Phase 4) |
-| **Travel** | Keep Ben-facing path on Porsche; degrade nonessential peers |
-
----
-
-## 15. Phased Delivery (aligned to TASKS.md)
-
-### Phase 0 — Setup & infrastructure (ACTIVE)
-- [x] Monorepo scaffold, TASKS/HEARTBEAT system, compose file, integration READMEs  
-- [ ] Real `docker compose up` with rotated secrets  
-- [ ] Nextcloud installer completed; Calendar/Files enabled  
-- [ ] Matrix real config (or explicit defer with date)  
-- [ ] n8n reachable + one health/alert workflow  
-- [ ] Discord alert path verified  
-- [ ] Basic dashboard health view  
-
-### Phase 1 — Core integration
-- [ ] Nextcloud ↔ Matrix notification bridge  
-- [ ] User/token model documented + agent accounts  
-- [ ] MC auth  
-- [ ] Orchestration scheduling basics  
-- [ ] Remote access + health monitoring  
-- [ ] Structured logging / audit trail  
-
-### Phase 2 — Dashboard & experience
-- [ ] Calendar + tasks in MC UI  
-- [ ] Notifications UX  
-- [ ] Mobile-friendly access  
-
-### Phase 3 — Extended
-- [ ] Fitness backend  
-- [ ] Business logic modules hooks  
-- [ ] Agent coordination dashboard  
-- [ ] Analytics  
-
-### Phase 4 — Hardening
-- [ ] Security audits, performance, DR drills  
-- [ ] Docs/user guides  
-- [ ] Matrix→McKing migration path executed if needed  
-
-### Explicitly deferred
-- Tool tracking / cameras until foundation stable  
-
----
-
-## 16. Testing Strategy
+## 13. Testing
 
 | Level | What |
 |-------|------|
-| Smoke | compose ps, HTTP 200 on NC/n8n/app |
-| Integration | n8n workflow creates NC folder / Matrix notice |
-| Auth | invalid token rejected |
-| Backup | restore dump into clean volume |
-| Agent | Porsche heartbeat dry-run against staging paths |
-| Remote | phone on mesh reaches NC |
-
-Prefer a `docker-compose.override` or `compose.dev.yml` for local experimentation without killing “stable” volumes.
+| Smoke | NC and Vaultwarden return HTTP 200 on Tailscale |
+| Backup | Restore a dump into a throwaway compose project |
+| Cockpit | Invalid session rejected; CalDAV failure shows a clear error, not a blank page |
+| Agents | Heartbeat can write `MissionControl/Heartbeats/YYYY-MM-DD.md` |
 
 ---
 
-## 17. Operational Runbooks (short)
+## 14. Open decisions (small)
 
-### Start stack
-```bash
-cd ~/Documents/mission-control/docker
-docker compose up -d
-docker compose ps
-```
-
-### Tail logs
-```bash
-docker compose logs -f nextcloud n8n mission-control-app
-```
-
-### Backup MVP
-```bash
-# example only — flesh out in home-lab backup scripts
-docker exec ... pg_dump ...
-# rsync/restic nextcloud_data → McKing
-```
-
-### Incident
-Follow security playbook; freeze writes if NC compromise suspected; rotate tokens.
+1. Cockpit hostname: Tailscale-only vs `mc.` behind Access.
+2. Whether calendar edits happen in-cockpit or always deep-link to NC.
+3. Fitness backend (wger vs SparkyFitness) — not v1.
 
 ---
 
-## 18. Open Decisions
-
-1. Fitness: wger vs SparkyFitness  
-2. Matrix mandatory in Phase 1 vs Discord-only interim  
-3. Shared vs split Postgres for NC vs app  
-4. Reverse proxy choice (Caddy/Traefik/nginx)  
-5. Identity: Nextcloud as IdP vs OIDC provider  
-6. Production domain names  
-7. Whether MC app talks to NC only via server-side routes (recommended)  
-
----
-
-## 19. Immediate Next Actions
-
-| # | Action | Owner |
-|---|--------|-------|
-| 1 | Create `docker/.env` with strong secrets; remove defaults | Porsche |
-| 2 | `docker compose up -d postgres nextcloud` and complete NC setup | Porsche |
-| 3 | Enable Calendar, Contacts, Notes, Deck | Porsche |
-| 4 | Prove mesh/remote access from phone | Ben + Porsche |
-| 5 | One n8n workflow: health → Discord | Porsche |
-| 6 | Wire agent write path to `MissionControl/Heartbeats/` | Porsche |
-| 7 | First successful backup to McKing (even manual) | Porsche + McKing |
-
----
-
-## 20. Document Maintenance
-
-- **Maintained by:** Porsche  
-- **Update when:** compose services change, phase gates pass, auth model changes  
-- **Sync:** skill + Desktop + GitHub `Docs/`  
-- **Code changes** must update TASKS/HEARTBEAT; architecture doc updated when boundaries shift  
-
----
-
-**Approved by:** _(pending Ben)_  
-**Maintained by:** Porsche  
-
-*Living document — promote sections to dedicated API/runbook docs as Phase 0–1 becomes production reality.*
+**Approved by:** Ben (2026-08-12 — MC stays personal; custom cockpit over Nextcloud APIs)  
+**Maintained with:** `Docs/` in `Coombzy/Project-Car`

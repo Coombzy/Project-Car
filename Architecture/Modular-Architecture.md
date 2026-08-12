@@ -1,19 +1,12 @@
-# Project Car Modular Architecture
+# Modular Architecture
 
-## Overview
-Modular design for easy replacement of components (Rocket.Chat, Frigate, etc.).
+This stub is retired.
 
-## Modules
-- Chat Module
-- Camera Module
-- Business Module
-- Agent Bridge
+**Canonical document:** [`Docs/platform-architecture.md`](../Docs/platform-architecture.md)
 
-## Feature Flags
-- chat.legacy (Rocket.Chat)
-- chat.custom
-- cameras.frigate
-- etc.
+Product specs:
 
-## API Contracts
-... (full document would go here)
+- [`Docs/mission-control-architecture.md`](../Docs/mission-control-architecture.md) — Ben-only cockpit
+- [`Docs/project-car-application-specification.md`](../Docs/project-car-application-specification.md) — public site + shop OS
+
+Rocket.Chat / `chat.legacy` feature flags are not part of the platform. Later modules (cameras, payments, marketplace) are feature flags in the platform doc.

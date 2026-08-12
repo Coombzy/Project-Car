@@ -1,13 +1,45 @@
-# Automation Hub
+# Project Car
 
-Central repository for automation, agent coordination, logs, and backups.
+Self-hosted shop + personal cockpit for a community automotive maker-space.
 
-## Folders
-- `communication/` - Shared bridge between Grok and Hermes
-- `logs/` - Task logs and reports
-- `backups/` - Agent and Project Car backups (to be added by Hermes)
+| Surface | What | Who |
+|---------|------|-----|
+| [projectcar.ca](https://projectcar.ca) | Public brochure + waitlist | Everyone |
+| `app.projectcar.ca` (planned) | Shop OS — members, hoists, bookings, tokens | Owner now; staff + members later |
+| Mission Control (private) | Cockpit over Nextcloud | Ben only |
+| Nextcloud / Vaultwarden | Files, calendar, tasks, passwords | Ben + agents |
 
-## Communication
-Grok and Hermes communicate via `communication/grok-hermes-log.md`.
+## Canonical docs
 
-See the communication file for current status.
+All specs live in [`Docs/`](Docs/). Start here:
+
+1. [`Docs/master-overview-specification.md`](Docs/master-overview-specification.md) — vision and map
+2. [`Docs/platform-architecture.md`](Docs/platform-architecture.md) — monorepo, stack, bans
+3. [`Docs/project-car-application-specification.md`](Docs/project-car-application-specification.md) — shop product v1
+4. [`Docs/mission-control-architecture.md`](Docs/mission-control-architecture.md) — Ben-only cockpit
+5. [`Docs/integration-plan.md`](Docs/integration-plan.md) — how the pieces connect
+
+## Repo vs runtime
+
+| Path | Role |
+|------|------|
+| This repo (`Coombzy/Project-Car`) | Specs, and soon `apps/` source |
+| `~/src/Project-Car` | Git working tree on Doc |
+| `~/hermes-tools/mission-control` | Live Nextcloud + Vaultwarden (secrets, data — not git) |
+| `~/hermes-tools/project-car-website` | Live public site until it moves to `apps/website/` |
+| `~/Desktop/Project Car/` | Local notes / workspace, **not** this git repo |
+
+## Hard rules
+
+- **No n8n.** Hermes + custom adapters + Discord only.
+- Shop data in **Postgres**. Nextcloud keeps **MariaDB**. Do not share them.
+- Shop members do **not** get Nextcloud accounts.
+- Nextcloud host is **Doc now → McKing later**. Porsche is a travel client.
+
+## Engineering clone
+
+```bash
+gh repo clone Coombzy/Project-Car ~/src/Project-Car
+```
+
+Application code is not in this tree yet. Do not start it until the specs above are the source of truth (they are, as of 2026-08-12).

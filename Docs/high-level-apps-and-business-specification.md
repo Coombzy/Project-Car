@@ -1,87 +1,79 @@
-# High-Level Overview — 3 Core Apps + Business
+# High-Level Overview — Apps + Business
 
-**Last Updated:** July 2026  
+**Last Updated:** 2026-08-12  
 **Part of:** Project Car documentation hierarchy  
-**Synchronized locations:**  
-- Skill: `~/.hermes/skills/autonomous-ai-agents/project-car/references/high-level-apps-and-business.md`  
-- Desktop: `~/Desktop/Project-Car-Docs/high-level-apps-and-business.md`
+**Canonical location:** `Coombzy/Project-Car` → `Docs/high-level-apps-and-business-specification.md`
 
-This document provides a focused high-level overview of the three primary user-facing applications and the overarching business, as requested. It sits alongside the broader `master-overview.md`.
-
-## The 3 Core Apps
-
-### 1. Mission Control (Primary Operating System)
-**Purpose:** The central "cockpit" that replaces Google services and serves as Ben's daily command center.
-
-**Key Components:**
-- Nextcloud stack (Files, Calendar, Mail, Contacts, Notes, Deck, Photos)
-- Fitness backend integration (wger or SparkyFitness)
-- Custom orchestration layer (AI agent workflows, automation rules, dashboards, personal data querying)
-- Local-first design with strong offline support and selective sync
-
-**Target Users:** Ben (daily driver while traveling or welding), with agent support running in background.
-
-**Key Integration:** Acts as the data and workflow hub for the other two apps and the agent team.
-
-### 2. Project Car App (Mobile Fabrication & Business Tool)
-**Purpose:** The Android-first mobile application for custom fabrication work, business operations, and on-the-go management.
-
-**Key Features (high-level):**
-- Fabrication tools (turbo/exhaust design, welding parameter calculators, material databases)
-- Business tools (quoting, inventory, client management, scheduling)
-- Deep integration with Mission Control (calendar, files, fitness data for performance tracking)
-- AI assistance (design suggestions, research, voice-to-task via Code Mater)
-- Offline-first with strong sync
-
-**Target Users:** Ben in the field (Northern Alberta welding sites), fabrication shops, and future customers.
-
-**Key Integration:** Mobile extension of Mission Control. Feeds real-world data back to the system. Heavily supported by the agent team (especially Porsche for planning and Lightning McKing for coding).
-
-### 3. Fitness & Wellness App (Performance Layer)
-**Purpose:** Dedicated interface and automation layer for physical performance, recovery, and longevity (critical for a journeyman welder with a demanding physical job).
-
-**Key Components:**
-- wger or SparkyFitness backend
-- Integration with Mission Control calendar and data
-- AI-driven training/recovery plans (adjusted for welding schedule, travel, and injury history)
-- Mobile tracking with Code Mater (voice logging, reminders, biometric integration where possible)
-
-**Target Users:** Ben (daily use for maintaining physical capability), with agents monitoring for schedule conflicts.
-
-**Key Integration:** Feeds performance data into Mission Control and Project Car App (e.g. adjusting work schedules based on recovery status).
-
-## The Business
-**Purpose:** Turn the above technical stack into a sustainable and scalable business.
-
-**High-Level Model:**
-- **Core Offering:** Self-hosted Mission Control + Project Car App for fabrication shops and individual tradespeople (especially welders, fabricators, automotive performance shops).
-- **Monetization:**
-  - SaaS tiers for hosted version (with local-first option always available)
-  - Premium modules (advanced fabrication AI, business analytics)
-  - Hardware/software bundles (pre-configured homelab boxes)
-  - Consulting, training, and custom fabrication services (leveraging Ben's real-world expertise)
-- **Differentiation:** Deep domain knowledge, fully local/self-hosted option (no Google dependency), AI agent team that actually works in the field with the user, strong focus on trades/physical work use cases.
-- **Go-to-Market:** Start with MVP for Ben's own use → validate with local Calgary/Northern Alberta fabrication community → expand.
-
-**Key Integration with Apps:** The apps are both products *and* tools to run the business. Data from real usage (with consent) improves the AI agents and features.
-
-## Overall Integration Summary
-- **Mission Control** = the brain and data core
-- **Project Car App** = the field tool for fabrication and business operations
-- **Fitness App** = the performance layer that keeps the operator effective
-- **Agent Team (Porsche, Doc, McKing, Code Mater)** = the automation and intelligence layer that ties everything together
-- **Business** = the commercial engine that makes it sustainable
-
-All three apps are designed to work as a unified system while remaining useful individually. Code Mater (Android Hermes agent on the Nothing 3a Pro, soon to be upgraded) serves as the mobile glue.
-
-This document is intentionally high-level. Detailed specifications live in the dedicated child documents:
-- Mission Control Architecture
-- Project Car Application Technical Specification
-- Project Car Business Plan
-- AI Agents Team Constitution
-- Home Lab Specification
+Sits next to `master-overview-specification.md`. Detail lives in the child specs linked below.
 
 ---
-**Synchronized in both locations per documentation policy.**  
-**Maintained by:** Porsche  
-**Related:** `master-overview.md`, `agent-profiles.md`
+
+## Two products (plus a later widget)
+
+### 1. Mission Control — Ben’s cockpit
+
+**Purpose:** Private replacement for Google and the daily command screen.
+
+**Users:** Ben only. This may never be a multi-user product. Not a customer surface.
+
+**Now:** Nextcloud 30 (Files, Calendar, Talk, Deck, Forms, Photos, Passwords) + Vaultwarden on Doc.
+
+**Next:** Custom Next.js cockpit over those APIs — health, calendar, tasks, agent feed — plus deep links. Do not rebuild Nextcloud.
+
+**Spec:** `mission-control-architecture.md`
+
+### 2. Project Car — public product + shop OS
+
+**Purpose:** Community automotive maker-space (bays, 2-post hoists, tools, mentorship) and the software that runs it.
+
+**Users:** Public visitors now. Ben as Owner in v1. Staff and paying members later.
+
+**Now:** [projectcar.ca](https://projectcar.ca) brochure (Home, About, The Shop, Membership, Roadmap, Chat, Contact) + Apex.
+
+**v1:** Waitlist + Owner shop OS (tiers, members, hoist booking, token ledger, week schedule).
+
+**Later:** Member/staff login, payments, NFC, cameras, marketplace, fabrication calculators.
+
+**Spec:** `project-car-application-specification.md`  
+**Site:** `website-webapp-specification.md`
+
+### 3. Fitness — not a third app
+
+Training/recovery stays a **later widget** inside Mission Control (wger or SparkyFitness undecided). Do not build a standalone fitness product in v1.
+
+---
+
+## How they relate
+
+- **Mission Control** = personal brain (Nextcloud).
+- **Project Car** = shop product (its own Postgres). Optional: mirror bookings onto Ben’s calendar.
+- **Agents** (Porsche, Doc, McKing, Code Mater) = automation layer. Hermes + Discord. **No n8n.**
+- Shop members **never** get Nextcloud accounts.
+
+Shared platform (monorepo, UI language): `platform-architecture.md`.
+
+---
+
+## The business
+
+Turn the shop + software into a sustainable maker-space business.
+
+- **Near term:** Ben’s shop, waitlist demand, software that can take members.
+- **Later:** memberships, deposits, hosted software for other shops, consulting.
+- **Differentiation:** real shop domain knowledge, local-first option, agents that work in the field.
+
+v1 software does not collect payment.
+
+---
+
+## Integration summary
+
+| App | Stands alone? | Better with |
+|-----|---------------|-------------|
+| Nextcloud / MC | Yes — already daily-usable | Cockpit UI |
+| projectcar.ca | Yes | Waitlist API |
+| Shop OS | Yes (Owner tool) | Calendar mirror, later member login |
+
+---
+
+**Updated 2026-08-12** to match locked decisions: MC stays personal; Project Car is the customer/employee product; Fitness is deferred; site + waitlist + hoist booking are v1.

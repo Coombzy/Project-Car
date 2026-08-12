@@ -1,7 +1,10 @@
 # Mission Control
 
-Main daily interface and orchestration hub.
+Ben’s private cockpit and Nextcloud hub. Not a customer product.
 
-Modular structure with swappable components.
+**Spec:** [`Docs/mission-control-architecture.md`](../Docs/mission-control-architecture.md)  
+**Platform:** [`Docs/platform-architecture.md`](../Docs/platform-architecture.md)
 
-See Modular-Architecture.md for details.
+**Live runtime (not this folder):** `~/hermes-tools/mission-control` on Doc — Nextcloud `:8080`, Vaultwarden `:8222`.
+
+The Next.js cockpit will live at `apps/mission-control/` when Phase 1 (code) starts.
