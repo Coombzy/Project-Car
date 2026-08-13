@@ -4,7 +4,8 @@
 **Status:** Living document  
 **Part of:** Project Car documentation hierarchy  
 **Canonical location:** `Coombzy/Project-Car` → `Docs/website-webapp-specification.md`  
-**Product spec:** `project-car-application-specification.md` (waitlist + shop app)
+**Product spec:** `project-car-application-specification.md` (waitlist + shop app)  
+**Improvements backlog (living):** `website-improvements.md` — P0–P4 audit, status tracking, verify commands
 
 ---
 
@@ -18,9 +19,11 @@ This document covers the public website and any future web application surfaces 
 - Public site status and roadmap
 - Email and supporting cloud storage decisions
 
-It sits alongside `high-level-apps-and-business-specification.md`, `project-car-application-specification.md`, `integration-plan.md`, and `mission-control-architecture.md`.
+It sits alongside `high-level-apps-and-business-specification.md`, `project-car-application-specification.md`, `integration-plan.md`, `mission-control-architecture.md`, and the living public-site backlog `website-improvements.md`.
 
 **Split:** `projectcar.ca` is the public brand. Mission Control (Nextcloud, Vaultwarden, future cockpit) is private and is not this site.
+
+**Backlog split:** Architecture, tunnel, domain, and email stay in **this** file. Prioritized fix/improve work (Apex, robots/404, copy, CTAs) lives in **`website-improvements.md`** so agents can tick status without rewriting the architecture spec.
 
 ---
 
@@ -83,7 +86,12 @@ It sits alongside `high-level-apps-and-business-specification.md`, `project-car-
 - Stack: Static HTML/CSS + nginx Docker; Python Apex sidecar
 - Membership page describes intended bay/hoist/token model and says it is **not a live offer yet**
 
-**Next site work:** wire a real waitlist (`POST /waitlist` on the shop API). Do not publish live prices or “book now” until Ben says the shop is open.
+**Next site work:** see living backlog **`website-improvements.md`** (P0 Apex auth / soft-404 / robots / home progress bar first). Longer product path: wire a real waitlist (`POST /waitlist` on the shop API). Do not publish live prices or “book now” until Ben says the shop is open.
+
+**Known issues (audited 2026-08-12 — detail in improvements doc):**
+- Apex public API degraded (auth mount unreadable) → Contact chat not reliable
+- Missing `robots.txt` / `sitemap.xml` / favicon soft-404 as Home HTML (nginx SPA fallback)
+- Home still shows “Website progress 10%”
 
 Files of interest (runtime today):
 ```
@@ -95,7 +103,7 @@ Files of interest (runtime today):
   README.md
 ```
 
-Planned git home: `apps/website/` in this repo.
+Planned git home: `apps/website/` in this repo (also tracked as P2-7 in `website-improvements.md`).
 
 ---
 
