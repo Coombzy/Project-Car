@@ -1,15 +1,13 @@
 # Code Mater / Android Integration Guide
 
-**Last Updated:** 2026-07-09  
+**Last Updated:** 2026-08-16  
 **Status:** Living draft (v1)  
-**Owner:** Porsche (Scheduler/Planner)  
-**Audience:** Ben (Coombsy), Porsche, Code Mater, Lightning McKing, Doc Hudson, Grok  
+**Owner:** Porsche (coord) / Doc (implement notes)  
+**Audience:** Ben (Coombsy), Porsche, Code Mater, Lightning McKing, Doc Hudson  
 **Part of:** Project Car documentation hierarchy  
-
-**Synchronized locations:**
-- Skill: `~/.hermes/skills/autonomous-ai-agents/project-car/references/code-mater-android-integration-guide.md`
-- Desktop: `~/Desktop/Project-Car-Docs/code-mater-android-integration-guide.md`
-- GitHub: `Coombzy/Automation/Docs/code-mater-android-integration-guide.md`
+**Canonical:** `Coombzy/Project-Car` → `Docs/code-mater-android-integration-guide.md`  
+**Optional Desktop mirror:** `~/Desktop/Project Car/docs/` (not an authoring path)  
+**Skill:** pointer only — do not dual-author here
 
 Related: `agent-profiles-specification.md`, `ai-agents-constitution.md`, `integration-plan.md`, `security-playbook.md`, `home-lab-specification.md`, `mission-control-architecture.md`, `heartbeat-standards.md`.
 

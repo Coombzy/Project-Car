@@ -1,7 +1,13 @@
 # eBay Automation Module Specification
 
-**Last Updated:** July 2026
-**Part of:** Project Car documentation hierarchy
+**Status:** LATER / NOT V1 — do not implement from this file.  
+**Last Updated:** 2026-08-16 (banner only; body is a July sketch)  
+**Part of:** Project Car documentation hierarchy  
+**Canonical:** `Coombzy/Project-Car` → `Docs/eBay-Automation-Module-Spec.md`
+
+This is a **later-module sketch**. Locked v1 (`project-car-application-specification.md`) explicitly excludes eBay, marketplace, and estate-sale. Feature flag `pc.marketplace` stays **off**. Shop data does **not** flow through Nextcloud; Mission Control is not a shared data layer for this module.
+
+Keep the notes below as a future idea dump only.
 
 ## Overview
 The eBay Automation Module handles automated listing, inventory management, pricing, and sales for the Project Car marketplace and the standalone Estate Sale business.

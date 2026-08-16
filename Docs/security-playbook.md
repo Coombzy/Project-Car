@@ -1,12 +1,12 @@
 # Security & Incident Response Playbook
 
-**Last Updated:** July 2026  
+**Last Updated:** 2026-08-16  
 **Part of:** Project Car documentation hierarchy  
-**Synchronized locations:**  
-- Skill: `~/.hermes/skills/autonomous-ai-agents/project-car/references/security-playbook.md`  
-- Desktop: `~/Desktop/Project-Car-Docs/security-playbook.md`
+**Canonical:** `Coombzy/Project-Car` → `Docs/security-playbook.md`  
+**Optional Desktop mirror:** `~/Desktop/Project Car/docs/` (not an authoring path)  
+**Skill:** pointer only — do not dual-author here
 
-This is the highest-priority child document. It addresses the active compromise concerns (observed file movement, Android reset, lost 2FA) with daily audits, detection, response, and recovery procedures.
+Highest-priority child for *how* we respond. The original July 2026 concern (observed file movement, Android reset, lost 2FA) is the reason this file exists; it is **not** a claim of an open incident today. For live hub exposure rules see `mission-control-architecture.md` §11 and `website-webapp-specification.md`.
 
 ## Core Principles
 - **Zero Trust**: Assume breach. No implicit trust between machines or agents.
@@ -79,6 +79,6 @@ This is the highest-priority child document. It addresses the active compromise 
 This playbook will be refined after every incident or audit finding.
 
 ---
-**Maintained by:** Porsche  
-**Synchronized in both locations per documentation policy.**  
-**Related:** `master-overview.md`, `agent-profiles.md`
+**Maintained by:** Porsche + Doc  
+**Canonical:** `Docs/security-playbook.md` on `Coombzy/Project-Car`  
+**Related:** `master-overview-specification.md`, `agent-profiles-specification.md`, `mission-control-architecture.md`

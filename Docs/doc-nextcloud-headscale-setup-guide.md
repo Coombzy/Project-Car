@@ -1,17 +1,14 @@
-# Doc (M1 Max) — Nextcloud + Headscale Setup Guide (Phase 0 Initial Host)
+# Doc Nextcloud + Headscale Setup Guide — retired
 
-**Target:** Bring up Nextcloud + Headscale on Doc as primary initial host.
+**Status:** Retired 2026-08-16. The old placeholder told people to `docker compose up` Nextcloud **+ Postgres** and install **Headscale**. That plan is wrong.
 
-**Prerequisites:** Amphetamine running, Docker/OrbStack/Colima ready, Full Disk Access for Hermes/Docker.
+Locked facts (override this file’s old title):
 
-**Steps:**
-1. Ensure Docker runtime is ready.
-2. Clone or navigate to mission-control/docker/.
-3. docker compose up for Nextcloud + Postgres.
-4. Install/run Headscale (Docker or binary).
-5. Configure and enroll clients (Porsche as travel client).
-6. Test remote access.
+- Nextcloud DB is **MariaDB 11.4**, not Postgres. Postgres is for the future shop app only.
+- Mesh is **Tailscale**, not Headscale.
+- Hub host is **Doc now → McKing later**. Porsche is a travel client.
+- Runtime: `~/hermes-tools/mission-control` (not `mission-control/docker/`).
 
-Detailed commands and .env examples here. [Full content would be expanded].
+Use instead: `home-lab-specification.md`, `mission-control-architecture.md`, `nextcloud-progress.md`.
 
-**Post-setup:** Migration note for Porsche reset.
+**Canonical:** `Coombzy/Project-Car` → `Docs/doc-nextcloud-headscale-setup-guide.md`

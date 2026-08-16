@@ -62,9 +62,9 @@ It sits alongside `high-level-apps-and-business-specification.md`, `project-car-
 ### Cloudflare Tunnel
 - Tunnel runs on Doc (temporary)
 - Public hostnames:
-  - `projectcar.ca` → `http://host.docker.internal:8088`
-  - `www.projectcar.ca` → `http://host.docker.internal:8088`
-- Existing other routes (leave intact):
+  - `projectcar.ca` → site origin `:8088` — **live (HTTPS 200, 2026-08-16)**
+  - `www.projectcar.ca` — **planned**; DNS did not resolve 2026-08-16
+- Planned private / extra hostnames (not live; no DNS 2026-08-16):
   - `cloud.` → `:8080` (Nextcloud)
   - `vault.` → `:8222` (Vaultwarden)
 

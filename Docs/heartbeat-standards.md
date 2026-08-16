@@ -1,12 +1,12 @@
 # Autonomous Heartbeat & Development Standards
 
-**Last Updated:** July 2026  
+**Last Updated:** 2026-08-16  
 **Part of:** Project Car documentation hierarchy  
-**Synchronized locations:**  
-- Skill: `~/.hermes/skills/autonomous-ai-agents/project-car/references/heartbeat-standards.md`  
-- Desktop: `~/Desktop/Project-Car-Docs/heartbeat-standards.md`
+**Canonical:** `Coombzy/Project-Car` → `Docs/heartbeat-standards.md`  
+**Optional Desktop mirror:** `~/Desktop/Project Car/docs/` (not an authoring path)  
+**Skill:** pointer only — do not dual-author here
 
-This document defines the standard for proactive, stateful autonomous development via heartbeats. It incorporates 2026 best practices for agent loops (state management, guardrails, observability, feedback loops, progressive autonomy) while being tailored to our scope: local-first/self-hosted preference, heterogeneous hardware (CachyOS Linux, two MacBooks, Android phone with Hermes Agent), task-dependent autonomy, Discord reporting (failures + success/progress summaries), multi-location storage, hardware constraints, and escalation rules (other agents → Ben → cloud models for high-risk tasks).
+This document defines the standard for proactive, stateful autonomous development via heartbeats. Tailored to local-first / self-hosted preference, heterogeneous hardware (CachyOS Linux, two MacBooks, Android phone with Hermes Agent), task-dependent autonomy, Discord reporting, and escalation (other agents → Ben → cloud models for high-risk tasks).
 
 ## Core Heartbeat Loop (Read → Act → Verify → Write → Report)
 Every heartbeat follows this canonical 5-step loop (inspired by production agent loop patterns):
@@ -44,13 +44,18 @@ Porsche manages the scheduler and adjusts cadence dynamically based on confidenc
 
 Heartbeat must check current hardware load before choosing execution target. Avoid overloading any single machine.
 
-## Storage Locations (All Required)
-Every heartbeat note must be written to **all three** locations for redundancy and accessibility:
-1. **Nextcloud** (primary Mission Control folder, e.g. `Project-Car/Heartbeats/`)
-2. **Obsidian vault** (local markdown for quick editing)
-3. **Dedicated Discord thread** (Turbocharger Springs channel for visibility and alerts)
+## Storage locations
 
-Commit changes to git where code/docs are modified. Link commit hash in the note.
+**Primary (required for fleet-visible heartbeats):** Nextcloud `MissionControl/Heartbeats/` (see `mission-control-architecture.md` §6). Use dated files such as `YYYY-MM-DD.md`.
+
+Also useful, not a hard three-way write every tick:
+
+1. **Obsidian / local markdown** — for editing on the travel laptop
+2. **Discord** — Turbocharger Springs / the relevant garage or `#tire-shop` for Ben-facing reports
+
+Do **not** write heartbeats to `Project-Car/Heartbeats/`. That path is retired.
+
+Commit changes to git where code/docs are modified. Link the commit hash in the note.
 
 ## Discord Reporting Standards
 - **Always include**:
@@ -71,7 +76,7 @@ Every heartbeat must include explicit, checkable success criteria. Examples:
 - Security scan clean
 - No hardware constraints violated
 - Output matches expected format/quality
-- Note updated in all three locations
+- Note updated in Nextcloud `MissionControl/Heartbeats/` (and Discord if it is a fleet report)
 
 If verification fails, route to another agent or escalate per autonomy level.
 
@@ -90,6 +95,6 @@ If verification fails, route to another agent or escalate per autonomy level.
 This standard ensures proactive, reliable, autonomous development while respecting our hardware, security, and local-first constraints. It will be refined based on real heartbeat performance.
 
 ---
-**Maintained by:** Porsche  
-**Synchronized in both locations per documentation policy.**  
-**Related documents:** `master-overview.md`, `ai-agents-constitution.md`, `security-playbook.md`, `agent-profiles.md`
+**Maintained by:** Porsche + Doc  
+**Canonical:** `Docs/heartbeat-standards.md` on `Coombzy/Project-Car`  
+**Related:** `master-overview-specification.md`, `ai-agents-constitution.md`, `security-playbook.md`, `agent-profiles-specification.md`, `mission-control-architecture.md`

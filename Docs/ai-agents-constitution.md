@@ -1,12 +1,12 @@
 # AI Agents Team Constitution
 
-**Last Updated:** July 2026  
+**Last Updated:** 2026-08-16  
 **Part of:** Project Car documentation hierarchy  
-**Synchronized locations:**  
-- Skill: `~/.hermes/skills/autonomous-ai-agents/project-car/references/ai-agents-constitution.md`  
-- Desktop: `~/Desktop/Project-Car-Docs/ai-agents-constitution.md`
+**Canonical:** `Coombzy/Project-Car` → `Docs/ai-agents-constitution.md`  
+**Optional Desktop mirror:** `~/Desktop/Project Car/docs/` (not an authoring path)  
+**Skill:** pointer only — do not dual-author here
 
-This is the canonical constitution for the AI agent team (Porsche, Doc Hudson, Lightning McKing, Code Mater). It incorporates best practices for agent routing researched as of July 2026 (LangGraph-style graph-based conditional routing, CrewAI role-based delegation, hierarchical supervisor patterns, embedding/LLM/rule-based hybrids, observability, and avoidance of infinite loops).
+This is the team constitution for the AI agent team (Porsche, Doc Hudson, Lightning McKing, Code Mater). Routing in practice is Discord + Hermes + the role lock below — not a LangGraph/CrewAI runtime.
 
 ## Team Overview
 - **Porsche** (M4 Pro): Central scheduler, planner, coordinator, and primary router. Acts as supervisor agent.
@@ -67,11 +67,11 @@ Routing is a core capability. We follow a hybrid approach based on current best 
 ## Review & Continuous Improvement
 - Porsche reviews routing decisions weekly.
 - Lessons learned are added to this constitution.
-- Agent profiles (`agent-profiles.md`) are updated when hardware or capabilities change.
+- Agent profiles (`agent-profiles-specification.md`) are updated when hardware or capabilities change.
 
 This constitution is the single source of truth for how the team operates. It will evolve as we gain experience.
 
 ---
-**Maintained by:** Porsche  
-**Synchronized in both locations per documentation policy.**  
-**Related documents:** `master-overview.md`, `agent-profiles.md`, `security-playbook.md`, `high-level-apps-and-business.md`
+**Maintained by:** Porsche + Doc  
+**Canonical:** `Docs/ai-agents-constitution.md` on `Coombzy/Project-Car`  
+**Related:** `master-overview-specification.md`, `agent-profiles-specification.md`, `security-playbook.md`, `heartbeat-standards.md`, `high-level-apps-and-business-specification.md`

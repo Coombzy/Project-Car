@@ -1,55 +1,66 @@
 # Doc Hakosuka (M1 Max) — software baseline
 
-**Updated:** 2026-07-12  
-**Role:** Heavy local models / deep analysis. Not the travel edge host (that is Porsche).
+**Updated:** 2026-08-16  
+**Role:** Heavy local models / deep analysis. **Also the temporary Mission Control + projectcar.ca host** until McKing is home. Not the travel edge host (that is Porsche).  
+**Canonical:** `Coombzy/Project-Car` → `Docs/doc-software-baseline.md`
 
-## Must install / verify (when Doc is awake)
+This file used to say “don’t dump the MC stack onto Doc.” That is **obsolete**. Locked host plan: Doc now → McKing later.
 
-| Item | Why | Status |
-|------|-----|--------|
-| **Amphetamine** | Prevent sleep killing Hermes gateway / long model jobs | **Installed + running** (Ben confirmed 2026-07-12) — keep active for long jobs |
-| **Hermes gateway as service** | `hermes gateway install && hermes gateway start` — survive reboot | Done (fleet Discord working) |
-| **`DISCORD_ALLOW_BOTS=mentions`** | Fleet bot-to-bot in `#tire-shop` when @mentioned (default `none` ignores other bots) | Done |
-| **Ollama and/or MLX** | Local heavy models (Doc’s primary job) | Done (`qwen3.6:35b`, `gemma4:26b`) |
-| **Homebrew + git + `gh` + `jq`** | Agent/ops basics | Done (`gh` as Coombzy) |
-| **Tailscale** (or current mesh) | Remote reach from Porsche / Ben | Verify still open |
+## Must install / verify
+
+| Item | Why | Status (checked 2026-08-16) |
+|------|-----|------------------------------|
+| **Amphetamine** | Prevent sleep killing Hermes gateway / long model jobs / Docker hub | **Running** (process present) |
+| **Hermes gateway as service** | Survive reboot | Done (fleet Discord working) |
+| **`DISCORD_ALLOW_BOTS=mentions`** + inline-mention gate | Fleet bot-to-bot in `#tire-shop` | Done |
+| **Ollama** | Local heavy models | Done — `qwen3.6:35b`, `gemma4:26b` |
+| **Homebrew + git + `gh` + `jq`** | Agent / ops basics | Done (`gh` as Coombzy) |
+| **Docker Desktop** | Required while Doc hosts NC + site | Running — `mission-control` (3) + `project-car-website` (2) |
+| **Tailscale** | Remote reach from Porsche / Ben | Up — `docs-macbook-pro` `100.97.10.72` |
 
 ## Strongly recommended
 
 | Item | Why |
 |------|-----|
 | **coconutBattery** | Battery health / cycles |
-| **AlDente** | Only if **MacBook** form factor (charge limit when always plugged) |
-| **Cursor** if missing | Coding IDE; Doc may already have Grok build — Grok + Cursor is enough |
+| **AlDente** | Charge limit if this Mac stays plugged |
+| **Cursor** or Grok Build | Coding IDE — either is enough |
 | **Stats** (free) or **iStat Menus** | RAM / thermal under large models |
 
-## Optional / usually elsewhere
+## Optional / elsewhere
 
 | Item | Notes |
 |------|--------|
-| OrbStack / Docker | Prefer Porsche (edge) or McKing (homelab) unless Doc will host containers |
-| Full Nextcloud / Matrix stack | Travel default = Porsche; don’t dump MC stack onto Doc by default |
+| OrbStack / Colima | Not required — Docker Desktop is what the hub uses on Doc today |
+| Matrix / Synapse | Deferred. Talk is enough |
+| Headscale | **Not used.** Mesh is Tailscale |
+| vLLM as daily driver | McKing / CUDA path — not default on this Mac |
 
 ## macOS settings (as important as apps)
 
 - Prevent automatic sleep when plugged in
-- Amphetamine session active for gateway / long Ollama runs
-- Hermes LaunchAgent/service so gateway survives lid/sleep policies
+- Amphetamine session **actually started** for gateway / long Ollama / Docker
+- Hermes LaunchAgent so gateway survives lid/sleep policies
 - Full Disk Access for Hermes if TCC blocks tools
 - Separate Discord bot token (never Porsche’s)
 
-## Bring-up order
+## Bring-up order (Doc already past this)
 
-1. Portal + invite + intents — see `discord-fleet-channels.md`  
+1. Portal + invite + intents — see Discord fleet notes in the `project-car` skill  
 2. Hermes + home `#doc-garage`  
-3. Amphetamine + power settings  ✅ Amphetamine running  
-4. Local model stack (Ollama/MLX)  
-5. Mesh + monitoring  
-6. Smoke in `#doc-garage` then `#tire-shop`
+3. Amphetamine + power settings  
+4. Local model stack (Ollama)  
+5. Docker + `~/hermes-tools/mission-control` + `project-car-website`  
+6. Tailscale + monitoring  
+7. Smoke in `#doc-garage` then `#tire-shop`
 
 ## Pitfalls
 
-- Machine “asleep” while Hermes is installed ≠ fleet chat working  
-- Grok build alone is not the full baseline  
-- Reusing Porsche Discord token on Doc causes token lock / double replies  
-- Amphetamine installed but session not started still allows sleep — confirm “Indefinitely” / app open during long jobs  
+- Machine “asleep” while Hermes is installed ≠ fleet chat working
+- Grok Build alone is not the full baseline
+- Reusing Porsche’s Discord token on Doc causes token lock / double replies
+- Amphetamine installed but session not started still allows sleep
+- **Do not** move Nextcloud onto Porsche “because Doc is a laptop”
+- **Do not** follow retired `doc-nextcloud-headscale-setup-guide.md` (Headscale + Postgres)
+
+Related: `home-lab-specification.md`, `nextcloud-progress.md`, `agent-profiles-specification.md`, `mission-control-architecture.md`

@@ -11,13 +11,19 @@ Self-hosted shop + personal cockpit for a community automotive maker-space.
 
 ## Canonical docs
 
-All specs live in [`Docs/`](Docs/). Start here:
+All specs live in [`Docs/`](Docs/). **Start at [`Docs/README.md`](Docs/README.md)** (full index + retired/later files).
+
+Product lock (read these first):
 
 1. [`Docs/master-overview-specification.md`](Docs/master-overview-specification.md) — vision and map
 2. [`Docs/platform-architecture.md`](Docs/platform-architecture.md) — monorepo, stack, bans
 3. [`Docs/project-car-application-specification.md`](Docs/project-car-application-specification.md) — shop product v1
 4. [`Docs/mission-control-architecture.md`](Docs/mission-control-architecture.md) — Ben-only cockpit
 5. [`Docs/integration-plan.md`](Docs/integration-plan.md) — how the pieces connect
+6. [`Docs/website-webapp-specification.md`](Docs/website-webapp-specification.md) — domain / tunnel / public site
+7. [`Docs/website-improvements.md`](Docs/website-improvements.md) — living P0–P4 site backlog
+
+`Coombzy/Automation` is historical coordination, **not** the product SSOT. Do not author new specs there.
 
 ## Repo vs runtime
 
@@ -35,6 +41,7 @@ All specs live in [`Docs/`](Docs/). Start here:
 - Shop data in **Postgres**. Nextcloud keeps **MariaDB**. Do not share them.
 - Shop members do **not** get Nextcloud accounts.
 - Nextcloud host is **Doc now → McKing later**. Porsche is a travel client.
+- Mesh is **Tailscale**, not Headscale.
 
 ## Engineering clone
 
