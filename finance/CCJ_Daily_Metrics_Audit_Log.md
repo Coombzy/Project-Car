@@ -1,3 +1,42 @@
+### 2026-08-18 | 09:45 CST
+
+#### Metrics
+| Metric                        | Value                          | Source / Notes                  |
+|-------------------------------|--------------------------------|---------------------------------|
+| **1. Audit Timestamp**        | 2026-08-18 09:45 CST           | Mid-morning (market open ~2–3 hrs; volume incomplete) |
+| **2. CCJ Price Snapshot**     | Last: $94.55<br>–$4.03 / –4.09% | Day Range $93.97–$98.78; Polygon primary (cross-checked Yahoo ~$94.10–$95.46) |
+| **3. Volume Metrics**         | Vol: 0.97M<br>Avg (20d): 3.26M<br>Rel Vol: 0.30x | Polygon (early/mid-session; expect higher EOD) |
+| **4. U3O8 Spot Price**        | $87.75 /lb                     | +$0.30 / +0.34%; UraniumTracker / Trading Economics |
+| **5. Market Cap & Valuation** | Mkt Cap: ~$41.2B (current) / ~$42.6B<br>P/E: ~167 TTM / ~68–70 Fwd | Polygon (435.53M shares); elevated TTM from temporary Westinghouse drag |
+| **6. Technical Position**     | RSI(14): 48.6<br>vs 50-DMA: –2.3%<br>vs 200-DMA: –10.4% | Neutral-soft; below short-term MA; Polygon SMAs + Wilder RSI |
+| **7. Sector Relative Perf.**  | CCJ: –4.09%<br>URA: –4.0%<br>Rel: ~0.0% | Polygon; roughly in-line with sector ETF |
+| **8. Key Catalysts / Sentiment** | • Sharp reversal after failed $100 hold<br>• Truist PT raised to $130 (Buy)<br>• Westinghouse confidential S-1 / IPO path ongoing<br>• Q2 guidance intact (19.5–21.5M lbs share); long-term contracting strong<br>• Institutional interest + hyperscaler term sheets<br>Sentiment: Cautious near-term / Constructive medium-term | Jul 31 results, Truist Aug 17, MarketBeat 13Fs, sector flow |
+
+**Historical Deltas**: vs Aug 17 close $98.58: –$4.03 (–4.09%). vs Aug 17 early high ~$100.30–$100.65: ~–5.7% to –6.1%. Still +9.5% from post-Q2 low $86.38. U3O8 +$0.30 from prior $87.45. RSI 61.0 → 48.6; vs 50-DMA flipped +4% → –2.3%.  
+**Anomaly Flags**: Low Rel Vol 0.30x (expected mid-session); sharp reversal after prior day $100 breakout attempt; first break below 50-DMA in recent recovery.  
+**Data Sources**: Polygon.io (primary CCJ/URA OHLCV, volume, MAs, RSI, mkt cap), UraniumTracker (U3O8), StockAnalysis/Yahoo/MarketWatch (cross-check price/valuation), company releases / Truist / MarketBeat (news).  
+**Analysis Confidence**: 78/100  
+**Quality Evaluator Score**: 8.5/10
+
+#### Analysis Narrative
+CCJ is reversing sharply mid-morning, last ~$94.55 (–4.09% from Aug 17 close $98.58) after the prior day’s attempt to reclaim and hold above $100. The move has broken the 50-DMA (~$96.24–$96.43) with RSI(14) declining to a neutral 48.6. Early/mid volume remains light (0.30× 20-day average), so the sustainability of the pullback is still unconfirmed. Key near-term support sits at $93.50–$94.00 (today’s low) with the next zone around $90–$91; resistance is the 50-DMA / prior close area ($96.50–$98.50) then $100.
+
+Uranium spot firmed to $87.75/lb (+0.34%), providing a constructive commodity backdrop. Fundamentals are unchanged from the Jul 31 Q2 report: production guidance of 19.5–21.5M lbs (Cameco share) remains intact despite temporary operational disruptions and weaker volumes/EBITDA (largely Westinghouse-related). Long-term contracting stays strong, hyperscaler interest in direct offtake continues, and the Westinghouse confidential S-1 path is an ongoing medium-term catalyst. Sector performance is roughly in-line with URA. Trailing P/E remains elevated due to the temporary Westinghouse equity drag, while forward multiples are more reasonable. Analyst consensus remains Buy / Moderate Buy with average PT roughly $130–$145 (Truist raised to $130 on Aug 17).
+
+Key takeaway: Sharp pullback from the $100 attempt has broken the 50-DMA on still-light volume; U3O8 firmness and intact guidance/Westinghouse/AI catalysts keep the medium-term bias constructive provided $93–94 holds.
+
+#### Forward Scenarios
+- 1-day / next session: $92.50–$97.50 (bias $93.50–$96; 55% conf) – test of today’s low or mild bounce toward 50-DMA
+- 1-week: $90–$100 (bias $93–$97; 55% conf) – digestion of failed breakout; volume will determine direction
+- 1-month: $88–$110 (bias $96–$105; 50% conf) – recovery toward/above 50-DMA possible on contracting or policy news
+- 3-month: $100–$130 (bias $110–$120; 55% conf) – uranium cycle + Westinghouse unlock + AI demand remain dominant; 200-DMA (~$105) is intermediate target
+- Key invalidation: Sustained break below $90–$91 on rising volume; U3O8 < $85
+
+#### Audit / Reviewer Notes
+(Placeholder for independent audit – to be completed by team/auditor)
+
+---
+
 ### 2026-08-17 | 09:40 CST
 
 #### Metrics
