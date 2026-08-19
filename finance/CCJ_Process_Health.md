@@ -5,6 +5,7 @@ One short line per day. Does **not** replace the main living analysis log.
 
 | Date       | Analysis Confidence | Audit Score | Top Issue / Note                          | Data Sources OK? |
 |------------|---------------------|-------------|-------------------------------------------|------------------|
+| 2026-08-18 | 78                  | 8.5         | Mid-session; 1d bias held on recovery to $96.03 then Aug19 partial hit (slight high exceed); prompt v1.5 still pending; data fidelity high | Yes |
 | 2026-08-17 | 82                  | 9           | Early intraday; Aug15 1d range exceeded on $100 breakout (momentum underest.); Forward Scenarios solid; data fidelity high | Yes |
 | 2026-08-15 | 85                  | 9           | Forward Scenarios included voluntarily (addressing recurring gap); data fidelity 100%; prompt still v1.4 needs formal mandate; 1d target pending Mon | Yes |
 | 2026-08-14 | 78                  | 8           | Missing Forward Scenarios (prompt v1.4); high data fidelity & sector awareness; intraday volume incomplete | Yes |
