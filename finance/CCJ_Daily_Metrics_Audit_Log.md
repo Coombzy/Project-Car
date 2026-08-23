@@ -1,3 +1,42 @@
+### 2026-08-23 | 10:05 CST
+
+#### Metrics
+| Metric                        | Value                          | Source / Notes                  |
+|-------------------------------|--------------------------------|---------------------------------|
+| **1. Audit Timestamp**        | 2026-08-23 10:05 CST           | Weekend post-close (Fri Aug 21 data) |
+| **2. CCJ Price Snapshot**     | Close/Last: $102.51<br>+$6.92 / +7.24% | Day Range $97.47–$102.82; Polygon primary (cross-checked Yahoo/MarketWatch/StockAnalysis) |
+| **3. Volume Metrics**         | Vol: 3.94M<br>Avg (20d): 2.98M<br>Rel Vol: 1.32x | Polygon |
+| **4. U3O8 Spot Price**        | $88.85 /lb                     | +$0.35 / +0.40%; Trading Economics / UraniumTracker as of Aug 21 |
+| **5. Market Cap & Valuation** | Mkt Cap: $44.65B<br>P/E: ~177 TTM / ~95–101 Fwd | Polygon (435.53M shares); Yahoo/StockAnalysis |
+| **6. Technical Position**     | RSI(14): 62.0<br>vs 50-DMA: +6.6%<br>vs 200-DMA: –2.2% | Bullish short-term, approaching 200-DMA; Polygon SMAs + Wilder RSI |
+| **7. Sector Relative Perf.**  | CCJ: +7.24%<br>URA: +5.09%<br>Rel: +2.15% | Polygon; clear outperformance |
+| **8. Key Catalysts / Sentiment** | • Strong Friday rebound reclaiming $100+ / 50-DMA on elevated volume after Aug 18 pullback<br>• U3O8 at ~6-month highs<br>• Q2 guidance intact (19.5–21.5M lbs share); Westinghouse confidential S-1 / IPO path ongoing<br>• Institutional buying + hyperscaler term sheets + AI/nuclear demand<br>Sentiment: Constructive short-term / Bullish medium-term | Jul 31 results, recent 13Fs, sector flow, Truist PT |
+
+**Historical Deltas**: vs Aug 20 close $95.59: +$6.92 (+7.24%). vs Aug 18 close $96.03: +$6.48 (+6.75%). vs post-Q2 low $86.38: +18.7%. U3O8 from Aug 18 $87.75: +$1.10 (+1.25%). RSI 48.6 → 62.0; flipped firmly above 50-DMA.  
+**Anomaly Flags**: Strong volume confirmation (Rel 1.32x) on +7% rebound after series of low-Rel days; rapid recovery from Aug 18 failed-breakout support test; first close above $100 since early Aug recovery.  
+**Data Sources**: Polygon.io (primary CCJ/URA OHLCV, volume, MAs, RSI, mkt cap), Trading Economics / UraniumTracker (U3O8), Yahoo/StockAnalysis/MarketWatch (valuation, consensus), company releases / MarketBeat (news).  
+**Analysis Confidence**: 88/100  
+**Quality Evaluator Score**: 9/10
+
+#### Analysis Narrative
+CCJ delivered a powerful +7.24% rebound on Friday Aug 21, closing at $102.51 after opening near $97.78 and trading a $97.47–$102.82 range on elevated relative volume (1.32× 20-day avg). This reclaims the psychological $100 level and the 50-DMA ($96.14, now +6.6% below price) with RSI(14) rising to a neutral-bullish 62.0. The stock is now only 2.2% below the 200-DMA ($104.83), setting up a potential test of that longer-term resistance. Volume confirmation is a key positive after the light-volume Aug 18 pullback that briefly broke the 50-DMA.
+
+Uranium spot continued firming to $88.85/lb (+0.40%), reaching near 6-month highs and supporting the equity move. Fundamentals remain constructive: 2026 production guidance of 19.5–21.5M lbs (Cameco share) is unchanged, the long-term contracting book is robust, hyperscalers continue exploring direct offtake, and the Westinghouse confidential S-1 path for a potential IPO remains an active medium-term catalyst. Sector relative performance was strong (CCJ +2.15% vs URA). Trailing P/E stays elevated (~177) due to temporary Westinghouse equity drag, while forward multiples (~95–101) are more reasonable. Analyst consensus is Moderate Buy / Buy with average PT roughly $131–$146 (Truist $130, others higher).
+
+Key takeaway: High-volume rebound above $100 and 50-DMA with firming U3O8 and intact catalysts restores short-term constructive bias; next focus is the 200-DMA near $105 and whether volume sustains the recovery.
+
+#### Forward Scenarios
+- 1-day / next session (Mon Aug 24): $99.50–$106.00 (bias $101–$104; 60% conf) – digest Friday gains or mild extension toward 200-DMA
+- 1-week: $98–$110 (bias $103–$107; 55% conf) – test/hold above $100; volume and U3O8 direction key
+- 1-month: $95–$120 (bias $105–$115; 55% conf) – potential 200-DMA reclaim + continuation on uranium/nuclear news
+- 3-month: $105–$140 (bias $115–$130; 55% conf) – uranium cycle + Westinghouse unlock + AI demand dominant; prior Aug 18 3m target tracking
+- Key invalidation: Sustained break below $96 / 50-DMA on rising volume; U3O8 < $85
+
+#### Audit / Reviewer Notes
+*(To be filled by subsequent audit process)*
+
+---
+
 ### 2026-08-18 | 09:45 CST
 
 #### Metrics
@@ -244,14 +283,14 @@ New entry prepended. Process Health to be updated separately if needed.
 | **2. CCJ Price Snapshot**     | Close/Last: $97.74<br>-$0.01 / -0.01% | Day Range $97.40–$99.74; Polygon primary |
 | **3. Volume Metrics**         | Vol: 2.17M<br>Avg (20d): 3.38M<br>Rel Vol: 0.64x | Polygon |
 | **4. U3O8 Spot Price**        | $87.45 /lb                     | +$0.20 (+0.23%); UraniumTracker / metalcharts as of Aug 15 |
-| **5. Market Cap & Valuation** | Mkt Cap: $42.57B<br>P/E: ~167 TTM | Polygon (435.53M shares); YCharts/GuruFocus/Yahoo ~166–170 (WEC drag) |
+| **5. Market Cap & Valuation** | Mkt Cap: $42.57B<br>P/E: ~167 TTM | Polygon (435.53M shares); Ycharts/GuruFocus/Yahoo ~166–170 (WEC drag) |
 | **6. Technical Position**     | RSI(14): 56.9<br>vs 50-DMA: +1.04%<br>vs 200-DMA: -6.90% | Neutral; Polygon SMAs + Wilder RSI |
 | **7. Sector Relative Perf.**  | CCJ: -0.01%<br>URA: -0.71%<br>Rel: +0.70% | Polygon; CCJ outperformed URA |
 | **8. Key Catalysts / Sentiment** | • Q2 guidance intact (19.5–21.5M lbs share)<br>• Westinghouse confidential S-1 / IPO path<br>• Strong contracting + AI/nuclear demand<br>• Institutional buying noted<br>Sentiment: Cautiously constructive | Jul 31 release + Aug 14–15 news |
 
 **Historical Deltas**: vs prior (Aug 14 intraday $98.77): full close -$1.03 (-1.0%). vs Aug 13 close $97.75: flat. Still +13.1% from post-Q2 low $86.38. U3O8 +$0.20 from $87.25.  
 **Anomaly Flags**: Below-avg Rel Vol 0.64x; elevated TTM P/E from temporary Westinghouse equity earnings drag.  
-**Data Sources**: Polygon.io (primary CCJ/URA OHLCV, volume, MAs, RSI, mkt cap), UraniumTracker/metalcharts (U3O8), YCharts/GuruFocus/Yahoo/MarketBeat (valuation & consensus), company releases.  
+**Data Sources**: Polygon.io (primary CCJ/URA OHLCV, volume, MAs, RSI, mkt cap), UraniumTracker/metalcharts (U3O8), Ycharts/GuruFocus/Yahoo/MarketBeat (valuation & consensus), company releases.  
 **Analysis Confidence**: 85/100  
 **Quality Evaluator Score**: 9/10
 
