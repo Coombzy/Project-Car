@@ -8,7 +8,7 @@ See `finance/CCJ_README.md`. Official cadence: Analysis 15:45 ET weekdays · Aud
 
 | Date       | Analysis Confidence | Audit Score | Top Issue / Note                          | Data Sources OK? |
 |------------|---------------------|-------------|-------------------------------------------|------------------|
-| 2026-08-24 | 75                  | 8.5         | PROCESS UPGRADE: Analysis v1.5 + Audit v1.3 + tracker + write rules committed; early snapshot remains unofficial (EOD still due today); Aug 23 1d PRELIMINARY hit (~$101.87 inside $99.50-106) | Yes (public fallback) |
+| 2026-08-24 | 75                  | 8.5         | Official EOD Analysis MISSED (only early ~09:45 CST snapshot audited); Aug 23 1d CLOSED hit (L100.29 H103.73 C~102.38); prompt v1.5 live; recommend Analysis catch-up | Yes (public fallback) |
 | 2026-08-23 | 88                  | 9           | Excellent EOD rebound entry; prompt v1.5 was still pending at audit time (closed 08-24); 1d into 08-24 tracking as digestion | Yes |
 | 2026-08-22 | N/A (no new Analysis) | 9         | Missing daily Analysis runs Aug 19-21 (critical); Aug 18 predictions strong (~80% accuracy, support perfect, 1w upper mildly exceeded on rebound to $102.51); prompt v1.5 still pending (closed 08-24) | Yes |
 | 2026-08-18 | 78                  | 8.5         | Mid-session; 1d bias held on recovery to $96.03 then Aug19 partial hit (slight high exceed); prompt v1.5 still pending; data fidelity high | Yes |
