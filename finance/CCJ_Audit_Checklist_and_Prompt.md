@@ -1,71 +1,100 @@
 # CCJ Audit Process — Hermes Agent Process
 
-**Version:** 1.2 (2026-07-21)  
-**Location:** `Project-Car/finance/`  
-**Target log:** `CCJ_Daily_Metrics_Audit_Log.md`  
-**Target health:** `CCJ_Process_Health.md`
+**Version:** 1.3 (2026-08-24)  
+**Supersedes:** v1.2 (2026-07-21)  
+**Location:** `Project-Car/finance/`
+
+Read `finance/CCJ_WRITE_RULES.md` and `finance/CCJ_README.md` first. **One writer commits.**
 
 ## Goal
-Perform a rigorous, scored review of the most recent CCJ analysis entry and **automatically write the audit results** back into the living log. Designed for a Hermes agent with GitHub write access.
 
-## Fixed Audit Checklist (must complete every run)
+Score the newest Analysis entry, grade predictions into the tracker, patch Audit Notes, update Health, and **apply any prompt-file edits in the same run**.
 
+## Fixed checklist (mark every item)
+
+**Quality**
 - [ ] All 8 core metrics present and sourced
 - [ ] Historical deltas calculated (or explicitly marked N/A)
-- [ ] Quality Evaluator section completed by the Analysis Automater
-- [ ] Analysis Confidence score present (0–100)
+- [ ] Quality Evaluator completed by Analysis
+- [ ] Analysis Confidence present (0-100)
 - [ ] Narrative references history and/or prior audit feedback
-- [ ] No obvious data contradictions between metrics and narrative
-- [ ] Anomaly flags (if any) are acknowledged and discussed
+- [ ] No obvious data contradictions
+- [ ] Anomaly flags acknowledged and discussed
+- [ ] Forward Scenarios present for 1d / 1w / 1m / 3m + invalidation + prior-scenario line
 
-## Scoring Guide – Audit Score (1–10)
+**Operational (v1.3)**
+- [ ] Analysis prompt version on GitHub matches last audit rec (or bumped this run)
+- [ ] Newest log entry patched only; older entries unchanged
+- [ ] Process Health row for **today** present after commit (content confirmed)
+- [ ] Prediction grades marked `preliminary` (RTH) vs `closed` (after regular close)
+- [ ] Data source class recorded (Polygon vs public fallback)
 
-| Score | Meaning |
-|-------|---------|
-| 9–10  | Excellent – complete, well-sourced, historically aware, actionable |
-| 7–8   | Good – minor gaps only |
-| 5–6   | Acceptable – noticeable missing elements or weak historical context |
-| 3–4   | Needs improvement – significant gaps or contradictions |
-| 1–2   | Poor – major data or process failures |
+## Scoring (start at 10; half-points only where listed)
 
-## Required Steps (execute in order)
+| Deduction | Amount |
+|-----------|--------|
+| Missing any of the 8 metrics | -2 |
+| Missing Forward Scenarios | -2 |
+| No prior-scenario hit/miss line | -1 |
+| Data contradiction | -2 |
+| Early session without Confidence <=80 AND volume flag | -1 |
+| Public fallback with matching independent numbers | -0.5 |
+| Public fallback with mismatch | -2 |
+| Recommended prompt edit not applied to the prompt file this run | -1 |
+| Health row not confirmed present | -1 |
 
-1. **Read the living log**  
-   Use `github___get_file_contents` on `finance/CCJ_Daily_Metrics_Audit_Log.md` (owner: Coombzy, repo: Project-Car). Examine the newest entry and the previous 2–3 entries for recurring issues.
+Floor 1. Do not use 9.2 / 9.3. Allowed: integers or .5.
 
-2. **Complete the Fixed Checklist**  
-   Mark every item. Note any failures.
+9-10 Excellent · 7-8 Good · 5-6 Acceptable · 3-4 Needs work · 1-2 Poor
 
-3. **Assign Audit Score (1–10)** using the scoring guide.
+## Prediction grading
 
-4. **Evaluate prediction accuracy (if targets exist)**  
-   Compare any 1-week / 1-month / 3-month targets in the analysis against subsequent actual performance (use Polygon for prices). Note hit rate, directional accuracy, and root causes of misses.
+- Horizons: 1-day, 1-week, 1-month, 3-month.
+- **1-day is Preliminary until that session's regular close** (or next morning). Do not publish 95-100% mid-session as final.
+- Hit = regular-session high/low/close stayed inside the **range** (not only the bias).
+- Directional = close vs prior close vs bias midpoint.
+- % error = |close - bias midpoint| / bias midpoint, when a bias exists.
+- Update `finance/CCJ_Prediction_Tracker.md` in place. Do **not** paste a 40-line table into old log entries.
 
-5. **Write the full Audit section**  
-   Produce clear, constructive notes including:
-   - Checklist results
-   - Audit Score
-   - Recurring issues and whether prior recommendations were addressed
-   - Specific improvement suggestions for the Analysis process
-   - Overall assessment
+## Required steps (in order)
 
-6. **Commit the updated log (mandatory)**  
-   - Get the current SHA of `CCJ_Daily_Metrics_Audit_Log.md`.  
-   - Insert / replace the Audit / Reviewer Notes section for the newest entry.  
-   - Use `github___create_or_update_file` (or `github___push_files`) with a clear commit message:  
-     `CCJ Audit – YYYY-MM-DD – Score X/10`
+1. Read WRITE_RULES, this file, newest log entry + previous 2, tracker, Health, Analysis prompt version header.
+2. Mark both checklists. Note failures.
+3. Assign Audit Score with the deduction table (show the arithmetic).
+4. Grade horizons against Polygon or matching public prices. Write tracker updates.
+5. Draft compact Audit Notes (<= 80 lines) using the structure below.
+6. If you recommend a prompt change: **edit the prompt file now** (bump version + date). Recs-only is a miss.
+7. Patch newest `#### Audit / Reviewer Notes` only. Get SHA immediately before write. Retry once on conflict.
+8. Prepend/update Health. Re-read and confirm the dated row exists.
+9. Report commit SHAs and Health confirmation.
 
-7. **Update Process Health**  
-   Add or update a line in `finance/CCJ_Process_Health.md`:  
-   `Date | Analysis Confidence | Audit Score | Top Issue`
+## Audit Notes structure (keep compact)
 
-8. **Confirm success**  
-   Report the commit confirmation.
+```markdown
+#### Audit / Reviewer Notes
+**Independent Process Quality Audit** (date/time TZ)
 
-## Success Criteria
-- [ ] Checklist fully marked
-- [ ] Numeric Audit Score (1–10) assigned
-- [ ] Recurring issues noted
-- [ ] Actionable improvement suggestions written
-- [ ] Audit section successfully written and committed to the living log
-- [ ] Process Health updated
+### Process Quality Audit
+- Checklist: [x]/[ ] each item (quality + operational)
+- Deduction arithmetic: 10 - ... = **Score X/10**
+- Recurring issues vs this run (addressed / still open)
+- Overall: 3-5 sentences
+
+### Prediction Accuracy
+- Closed vs preliminary called out
+- Pointer: see `CCJ_Prediction_Tracker.md` (include only 3-6 material rows here)
+- Directional / error / root cause of misses (uranium/volume-specific when relevant)
+
+### Improvement Recommendations
+- Max 5 bullets. If a prompt edit is needed, apply it and say "committed to [file] vX.Y".
+
+**Final Action** commits + Health confirmation (yes/no + SHA).
+```
+
+## Success criteria
+
+- [ ] Both checklists marked; score with arithmetic
+- [ ] Tracker updated; 1-day status honest (preliminary vs closed)
+- [ ] Newest Audit Notes patched only
+- [ ] Health row confirmed present
+- [ ] Prompt-file recs applied same run (or explicitly N/A)
