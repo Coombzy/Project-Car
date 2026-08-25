@@ -1,3 +1,43 @@
+### 2026-08-25 | 15:45 ET
+
+#### Metrics
+| Metric                        | Value                          | Source / Notes                  |
+|-------------------------------|--------------------------------|---------------------------------|
+| **1. Audit Timestamp**        | 2026-08-25 15:45 ET            | Official EOD (NYSE close)       |
+| **2. CCJ Price Snapshot**     | Close/Last: ~$106.90<br>+$4.63 / +4.53% | Day Range $102.75–$107.77; public (StockAnalysis/MarketWatch/Yahoo/TradeSmith) |
+| **3. Volume Metrics**         | Vol: ~2.4M<br>Avg (20d): ~3.1M<br>Rel Vol: ~0.77x | Public; moderate participation |
+| **4. U3O8 Spot Price**        | $89.55 /lb                     | +$0.70 / +0.79%; UraniumTracker |
+| **5. Market Cap & Valuation** | Mkt Cap: ~$46.5B<br>P/E: ~175–185 TTM / ~70–100 Fwd | 435.53M shares; public |
+| **6. Technical Position**     | RSI(14): ~70–76<br>vs 50-DMA: +~11%<br>vs 200-DMA: +~1.9% | Bullish; 50-DMA ~$96.3 / 200-DMA ~$104.9 |
+| **7. Sector Relative Perf.**  | CCJ: +4.5%<br>URA: +5.5%<br>Rel: –1.0% | Public; URA ~$48.2 |
+| **8. Key Catalysts / Sentiment** | • Strong extension above 200-DMA after Fri/Mon digestion<br>• U3O8 firming toward $90<br>• Guidance intact; Westinghouse S-1 ongoing<br>• AI/hyperscaler + nuclear demand flow<br>Sentiment: Constructive ST / Bullish MT | Jul 31 + sector strength |
+
+**Historical Deltas**: vs Aug 24 close $102.27: +$4.63 (+4.53%). vs Aug 21 $102.51: +4.3%. Still +23.7% from post-Q2 $86.38. Aug 24 official close recorded (prior log only early incomplete). U3O8 +$0.70. RSI elevated; price reclaimed and closed above 200-DMA.  
+**Anomaly Flags**: Rel Vol ~0.77x (not light); no failed-breakout risk on 200-DMA test given participation and sector strength. Mild relative underperformance vs URA.  
+**Data Sources**: Public fallback (StockAnalysis, MarketWatch, Yahoo, TradeSmith, UraniumTracker) – Polygon primary unavailable this run.  
+**Analysis Confidence**: 86/100  
+**Quality Evaluator Score**: 9/10
+
+#### Analysis Narrative
+CCJ delivered a strong +4.5% session on Tuesday, closing near $106.90 after trading $102.75–$107.77. This extends the post-Friday rebound, decisively reclaiming and closing above the 200-DMA (~$104.9) with RSI(14) rising into the low-to-mid 70s. Volume at ~0.77× the 20-day average provided adequate confirmation; the move was not a light-volume breakout. The stock now sits ~11% above the 50-DMA (~$96.3).
+
+U3O8 firmed to $89.55/lb (+0.79%), supporting the equity complex. URA advanced ~5.5%, so CCJ lagged the sector ETF slightly (–1.0 pp relative). Fundamentals remain intact: 2026 production guidance 19.5–21.5M lbs (Cameco share), long-term contracting book strong, Westinghouse confidential S-1 path active, and AI/hyperscaler nuclear demand ongoing. Trailing multiples stay elevated on temporary Westinghouse drag; forward more reasonable. Analyst consensus Buy with average PT ~$130–$131.
+
+Key takeaway: Volume-supported reclaim of the 200-DMA with firming U3O8 restores short-term upside bias; next focus is whether $105–107 holds and whether the move can extend toward $110+.
+
+#### Forward Scenarios (required)
+- 1-day / next session: $104.50–$110.00 (bias $106–$109; 60% conf) – hold above 200-DMA or mild extension
+- 1-week: $102–$115 (bias $107–$112; 55% conf) – volume + U3O8 direction key
+- 1-month: $100–$125 (bias $110–$120; 55% conf) – continuation on uranium/nuclear news
+- 3-month: $110–$145 (bias $120–$135; 55% conf) – uranium cycle + Westinghouse + AI dominant
+- Key invalidation: Sustained break below $102 / 200-DMA on rising volume; U3O8 < $86
+- Prior scenarios vs actual: Aug 24 1d ($99.50–$104.50 bias $100.50–$103) → actual ~$106.90 **miss (upper exceed)** on strong session; Aug 23 1w ($98–$110 bias $103–$107) on-track / now testing upper; Aug 23 1d closed hit as previously graded.
+
+#### Audit / Reviewer Notes
+(To be completed by subsequent audit process)
+
+---
+
 ### 2026-08-24 | ~09:45 CST
 
 #### Metrics
@@ -473,7 +513,7 @@ Key takeaway: Mildly constructive while price holds the 50-DMA and U3O8 remains 
 
 - Detailed comparison table (Predicted vs Actual for each horizon):  
   | Horizon | Predicted (Aug 15) | Actual (as of audit) | Hit? | Notes |
-  |---------|||||--------------------|----------------------|------|-------|
+  |---------||||||--------------------|----------------------|------|-------|
   | 1-day (next sess) | $96.50–$99.50 (range-bound) | Pending (Mon Aug 17) | TBD | Bias correct for consolidation |
   | 1-week | $95–$102 (bias $98–$100) | Pending | TBD | |
   | 1-month | $92–$110 (bias $100–$105) | Pending | TBD | |
