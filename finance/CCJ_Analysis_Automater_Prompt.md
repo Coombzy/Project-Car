@@ -1,7 +1,7 @@
 # CCJ Stock Analysis Automater — Hermes Agent Process
 
-**Version:** 1.6 (2026-08-26)  
-**Supersedes:** v1.5 (2026-08-24)  
+**Version:** 1.7 (2026-08-26)  
+**Supersedes:** v1.6 (2026-08-26)  
 **Location:** `Project-Car/finance/`
 
 Read `finance/CCJ_WRITE_RULES.md` and `finance/CCJ_README.md` first.
@@ -15,7 +15,7 @@ The job is not a recap. It is a **decision map for the next session**: regime, l
 ## Schedule
 
 - Official entry: weekdays after NYSE close. Job may fire at 15:45 ET; **Close and Volume must be the 16:00 regular-session print**. If the close is not in yet, wait/poll once. If still unavailable, label `Last` (not Close) and `Rel Vol incomplete`.
-- Confidence: EOD 80-92 typical. Early/intraday snapshots <= 80, flag `volume incomplete`, replace at EOD — they are not official.
+- Confidence: EOD 80-92 typical. Early/intraday snapshots <= 80, flag `volume incomplete`, replace at EOD — they are not official. Do not raise 1d conf above 60% until calibration full-hit rate over last 10 closed 1d is ≥ 55%.
 - Missed trading day: before writing today, record that session's official close in Historical Deltas (and close the open 1-day tracker row if price is known).
 
 ## Data sources
@@ -27,7 +27,7 @@ The job is not a recap. It is a **decision map for the next session**: regime, l
 
 Record a source on every metric. If Polygon is down, fall back and say so — do not fail the run.
 
-Also compute **ATR-proxy** = median true range of the last 5 regular sessions (High−Low, or |H−prior C| / |L−prior C| if larger). State the dollar value in Forward Scenarios.
+Also compute **ATR-proxy** = median true range of the last 5 regular sessions (High−Low, or |H−prior C| / |L−prior C| if larger). State the dollar value in the Decision map.
 
 ## Uranium / volume rules (required)
 
@@ -36,9 +36,9 @@ Also compute **ATR-proxy** = median true range of the last 5 regular sessions (H
 - Testing $100, 50-DMA, or 200-DMA on Rel Vol < 0.5x: include a short **failed-breakout / digestion-risk** note. Light-volume breaks are unconfirmed.
 - After a >10-15% bounce off a post-earnings low: note short-term mean-reversion / digestion risk — **unless** the latest session was Rel Vol >= 1.0x with close in the top third (then the bounce is confirmed; do not fade it in the 1d range).
 
-## Range construction (required — this is how 1d/1w misses happen)
+## Range construction (required)
 
-Closed-horizon miss pattern through 2026-08-25: ranges die on the **UPPER** side after Rel Vol >= 1x up-days because the next session is framed as digestion and the range is centered **below** the close (Aug 24 1d $99.50–$104.50 vs H 107.77 / C 106.96; Aug 18 1w $90–$100 vs H 102.82). Uranium beta continues more often than it mean-reverts when U3O8 and URA agree.
+Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Auditor keeps that table current). Then:
 
 1. **Regime** (pick one): `trend-up` | `trend-down` | `digestion` | `failed-break`
    - `trend-up`: Rel Vol >= 0.8x AND close in the top third of the session range AND U3O8 not down >1% AND URA not down on a CCJ up-day.
@@ -49,19 +49,19 @@ Closed-horizon miss pattern through 2026-08-25: ranges die on the **UPPER** side
    - Width **must** be >= 2.0 × ATR-proxy.
    - If regime is `trend-up`, center at close or ~0.25×ATR above close — **never below close**.
    - If 2+ of the last 3 **closed** 1d tracker rows are upper-exceed: add +1.0×ATR-proxy to the high before commit.
-   - Round numbers ($100, $105, $110) and the 200-DMA are **magnets, not walls**. Do not use them as the range high/low unless ATR math lands there.
+   - Round numbers ($100, $105, $110) and the 200-DMA are **magnets, not walls**.
 3. **1-week range**: width >= 3.5 × ATR-proxy. If `trend-up`, distance from close to high >= 1.5× distance from close to low.
-4. **Self-check** (one line in prior-scenario): "Today's 1d width $X vs ATR-proxy $Y; last closed 1d was hit|upper-exceed|lower-exceed — adjustment: …"
+4. **Self-check** (one line): "Today's 1d width $X vs ATR-proxy $Y; last closed 1d was hit|upper-exceed|lower-exceed — adjustment: …"
 
 ## Required steps (in order)
 
-1. Read WRITE_RULES + this file + newest 2 log entries + open **and last 3 closed 1d** tracker rows.
-2. Collect CCJ / URA / U3O8 / news. RSI(14), 50-DMA, 200-DMA, ATR-proxy.
-3. Classify regime. Build ranges with the construction rules above. Then write the entry.
-4. Fill **Forward Scenarios** + **Decision map** + prior-scenario vs actual for each open short horizon.
+1. Read WRITE_RULES + this file + `CCJ_Calibration.md` + newest 2 log entries + open **and last 3 closed 1d** tracker rows.
+2. Collect CCJ / URA / U3O8 / news. RSI(14), 50-DMA, 200-DMA, ATR-proxy, prior_day_pct.
+3. Classify regime. Build ranges using Calibration active rules + Range construction above.
+4. Fill **Forward Scenarios** + **Decision map** + prior-scenario lines.
 5. Quality Evaluator. If < 7, fix before commit. If 1d width < 2×ATR-proxy, fix before commit.
 6. Commit log (prepend one entry). Get SHA immediately before write.
-7. Append four tracker rows (1d/1w/1m/3m, status=`open`).
+7. Append four tracker rows with **structured features filled**: `pred_regime`, `pred_rel_vol`, `prior_day_pct` (status=`open`).
 8. Prepend one Process Health row with Audit Score `(pending)`. Re-read to confirm.
 9. Report commit SHA(s).
 
@@ -95,7 +95,7 @@ Closed-horizon miss pattern through 2026-08-25: ranges die on the **UPPER** side
 - Regime: trend-up | trend-down | digestion | failed-break. ATR-proxy: $X.XX (last 5 TR median).
 - Confirm vs fail: the Rel Vol / URA / U3O8 print that confirms continuation vs invalidates it next session.
 - Levels: 2–3 prices that change the path, with why (not round-number wallpaper).
-- Calibration: last closed 1d was hit|upper-exceed|lower-exceed — today's 1d width $X vs ATR $Y; adjustment …
+- Calibration: cite CCJ_Calibration.md active rule applied + last closed 1d outcome + today's 1d width $X vs ATR $Y.
 
 #### Forward Scenarios (required)
 - 1-day / next session: $XX–$YY (bias $AA–$BB; Z% conf)
@@ -103,7 +103,7 @@ Closed-horizon miss pattern through 2026-08-25: ranges die on the **UPPER** side
 - 1-month: $XX–$YY (bias $AA–$BB; Z% conf)
 - 3-month: $XX–$YY (bias $AA–$BB; Z% conf)
 - Key invalidation: price level + U3O8 level + volume condition
-- Prior scenarios vs actual: [date] 1d/1w → hit|miss|preliminary|on-track — one line each, plus the self-check line from Range construction §4
+- Prior scenarios vs actual: [date] 1d/1w → hit|miss|preliminary|on-track — one line each, plus self-check
 
 #### Audit / Reviewer Notes
 (To be completed by subsequent audit process)
@@ -112,10 +112,10 @@ Closed-horizon miss pattern through 2026-08-25: ranges die on the **UPPER** side
 ## Success criteria
 
 - [ ] WRITE_RULES followed (SHA, prepend-only, Health confirmed)
-- [ ] All 8 metrics sourced; deltas + anomalies present; Close is the 16:00 print (or Last labeled)
+- [ ] Calibration.md read; active rules applied
+- [ ] All 8 metrics sourced; Close is the 16:00 print (or Last labeled)
 - [ ] Regime + ATR-proxy + Decision map present
 - [ ] 1d width >= 2.0×ATR-proxy; trend-up 1d not centered below close
-- [ ] Forward Scenarios for all 4 horizons + prior-scenario line + calibration self-check
-- [ ] Volume / failed-breakout / anti-digestion rules applied when triggered
-- [ ] Quality Evaluator >= 7; Confidence consistent with session timing
-- [ ] Tracker rows appended; Health row confirmed present
+- [ ] Tracker rows include pred_regime, pred_rel_vol, prior_day_pct
+- [ ] Quality Evaluator >= 7; Confidence consistent with session timing + calibration
+- [ ] Health row confirmed present
