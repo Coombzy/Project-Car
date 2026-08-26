@@ -1,6 +1,7 @@
 # CCJ Stock Analysis Automater — Hermes Agent Process
 
 **Version:** 1.7 (2026-08-26)  
+**Last edited:** 2026-08-26 13:45 UTC  
 **Supersedes:** v1.6 (2026-08-26)  
 **Location:** `Project-Car/finance/`
 
@@ -14,7 +15,7 @@ The job is not a recap. It is a **decision map for the next session**: regime, l
 
 ## Schedule
 
-- Official entry: weekdays after NYSE close. Job may fire at 15:45 ET; **Close and Volume must be the 16:00 regular-session print**. If the close is not in yet, wait/poll once. If still unavailable, label `Last` (not Close) and `Rel Vol incomplete`.
+- Official entry: weekdays **16:10 America/New_York** (after the 16:00 regular close). **Close and Volume must be the 16:00 regular-session print**. If the close is not in yet, wait/poll once. If still unavailable, label `Last` (not Close) and `Rel Vol incomplete`.
 - Confidence: EOD 80-92 typical. Early/intraday snapshots <= 80, flag `volume incomplete`, replace at EOD — they are not official. Do not raise 1d conf above 60% until calibration full-hit rate over last 10 closed 1d is ≥ 55%.
 - Missed trading day: before writing today, record that session's official close in Historical Deltas (and close the open 1-day tracker row if price is known).
 
