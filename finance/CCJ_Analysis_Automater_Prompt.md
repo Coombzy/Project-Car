@@ -1,8 +1,8 @@
 # CCJ Stock Analysis Automater — Hermes Agent Process
 
-**Version:** 1.9 (2026-08-26)  
-**Last edited:** 2026-08-26 22:40 UTC  
-**Supersedes:** v1.8 (2026-08-26)  
+**Version:** 1.10 (2026-08-26)  
+**Last edited:** 2026-08-26 23:20 UTC  
+**Supersedes:** v1.9 (2026-08-26)  
 **Location:** `Project-Car/finance/`
 
 Read `finance/CCJ_WRITE_RULES.md` and `finance/CCJ_README.md` first.
@@ -53,8 +53,9 @@ Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Audi
    - If regime is `trend-up`, center at close or ~0.25×ATR above close — **never below close**.
    - If 2+ of the last 3 **closed** 1d tracker rows are upper-exceed: add +1.0×ATR-proxy to the high before commit. **Partial** (high outside, close inside) **counts as upper-exceed** for this count. The 1d high must also **clear last session high**.
    - Round numbers ($100, $105, $110, $115) and the 200-DMA are **magnets, not walls**. Do **not** set the 1d high equal to a round magnet — clear it by ≥ $1.00 or 0.25×ATR-proxy (whichever is larger).
+   - **Spike-fade / long wick:** if the session just closed with (high − close) ≥ 0.8×ATR-proxy, do **not** treat that wick high as support. Next-session bias stays at/above close, but continuation *through the wick high* requires Rel Vol ≥ 1.0× **and** URA not down. State the wick size in the self-check.
 3. **1-week range**: width >= 3.5 × ATR-proxy. If `trend-up`, distance from close to high >= 1.5× distance from close to low. Same magnet rule as 1d: do **not** set the 1w high equal to $100/$105/$110/$115 — clear it by ≥ $1.00 or 0.25×ATR.
-4. **Self-check** (one line): "Today's 1d width $X vs ATR-proxy $Y; last closed 1d was hit|upper-exceed|lower-exceed; 1d high $A vs last session high $B; Rel Vol Z.Zx from 16:00 print — adjustment: …"
+4. **Self-check** (one line): "Today's 1d width $X vs ATR-proxy $Y; last closed 1d was hit|upper-exceed|lower-exceed; 1d high $A vs last session high $B; Rel Vol Z.Zx from 16:00 print; wick (H−C) $W — adjustment: …"
 
 ## Required steps (in order)
 
