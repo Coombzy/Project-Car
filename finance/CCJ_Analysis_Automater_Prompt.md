@@ -1,8 +1,8 @@
 # CCJ Stock Analysis Automater — Hermes Agent Process
 
-**Version:** 1.7 (2026-08-26)  
-**Last edited:** 2026-08-26 13:45 UTC  
-**Supersedes:** v1.6 (2026-08-26)  
+**Version:** 1.8 (2026-08-26)  
+**Last edited:** 2026-08-26 20:40 UTC  
+**Supersedes:** v1.7 (2026-08-26)  
 **Location:** `Project-Car/finance/`
 
 Read `finance/CCJ_WRITE_RULES.md` and `finance/CCJ_README.md` first.
@@ -49,8 +49,8 @@ Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Audi
 2. **1-day range**
    - Width **must** be >= 2.0 × ATR-proxy.
    - If regime is `trend-up`, center at close or ~0.25×ATR above close — **never below close**.
-   - If 2+ of the last 3 **closed** 1d tracker rows are upper-exceed: add +1.0×ATR-proxy to the high before commit.
-   - Round numbers ($100, $105, $110) and the 200-DMA are **magnets, not walls**.
+   - If 2+ of the last 3 **closed** 1d tracker rows are upper-exceed: add +1.0×ATR-proxy to the high before commit. **Partial** (high outside, close inside) **counts as upper-exceed** for this count.
+   - Round numbers ($100, $105, $110, $115) and the 200-DMA are **magnets, not walls**. Do **not** set the 1d high equal to a round magnet — clear it by ≥ $1.00 or 0.25×ATR-proxy (whichever is larger).
 3. **1-week range**: width >= 3.5 × ATR-proxy. If `trend-up`, distance from close to high >= 1.5× distance from close to low.
 4. **Self-check** (one line): "Today's 1d width $X vs ATR-proxy $Y; last closed 1d was hit|upper-exceed|lower-exceed — adjustment: …"
 

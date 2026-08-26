@@ -3,12 +3,12 @@
 Lightweight tracker for long-term quality of the Analysis Automater and Audit Process.  
 One short line per day. Does **not** replace the main living analysis log.
 
-**Current prompt versions (as of 2026-08-26):** Analysis **v1.7** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
+**Current prompt versions (as of 2026-08-26 EOD):** Analysis **v1.8** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
 See `finance/CCJ_README.md`. Official cadence: Analysis 15:45 ET weekdays · Audit 16:30 ET weekdays.
 
 | Date       | Analysis Confidence | Audit Score | Top Issue / Note                          | Data Sources OK? |
 |------------|---------------------|-------------|-------------------------------------------|------------------|
-| 2026-08-26 | N/A (no new Analysis; pre-session) | 9.5 | Process upgrade shipped: Calibration.md + tracker features (pred_regime/rel_vol/prior_day_pct) + Analysis v1.7 + Audit v1.4; Aug 25 1d still open (Wed RTH) | Yes (Fallback) |
+| 2026-08-26 | N/A (EOD Analysis MISSED) | 9.5 | Official EOD Analysis missed; 16:30 audit of Aug 25 entry; Aug 25 1d CLOSED no (upper exceed, C107.32 inside bias); Calibration refreshed n=6; prompt v1.8 (partial counts + magnet buffer) | Yes (Fallback) |
 | 2026-08-25 | 86                  | 9.5         | Official EOD; strong +4.5% 200-DMA reclaim; public fallback matching; Aug 24 1d upper exceed closed; prompt v1.5 followed | Yes (Fallback) |
 | 2026-08-24 | 75                  | 8.5         | Official EOD Analysis MISSED (only early ~09:45 CST snapshot audited); Aug 23 1d CLOSED hit (L100.29 H103.73 C~102.38); prompt v1.5 live; recommend Analysis catch-up | Yes (public fallback) |
 | 2026-08-23 | 88                  | 9           | Excellent EOD rebound entry; prompt v1.5 was still pending at audit time (closed 08-24); 1d into 08-24 tracking as digestion | Yes |
