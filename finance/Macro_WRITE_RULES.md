@@ -1,4 +1,4 @@
-# Macro Theme GitHub Write Rules — v1.1 (2026-08-26)
+# Macro Theme GitHub Write Rules — v1.2 (2026-08-26)
 
 **Violating these is a process failure.** Same lesson as CCJ: full-file races overwrite living logs.
 
@@ -19,13 +19,14 @@
 - **Analysis:** prepend **one** new `### YYYY-MM-DD | HH:MM TZ` entry. Keep every older entry byte-for-byte.
 - Never replace the file with a placeholder, summary, or truncated log.
 - If today already has an official analysis entry, do not prepend a second full run. Overlap/addendum notes may be added **inside** today's newest entry only (do not rewrite older days).
-- Compact: ranking scores, mechanism, overlap scan, 3 stock picks, proxies, falsifiers, sources. Comparison tables belong in the tracker.
+- Compact: ranking scores, mechanism, overlap scan, **industry analysis (before any ticker)**, then 3 stock picks, proxies, falsifiers, sources. Comparison tables belong in the tracker.
+- Do not list stock picks in an entry that lacks the industry block for that theme.
 
 ## Tracker (`finance/Macro_Theme_Tracker.md`)
 
 - One row per `(analysis_date, theme_id, proxy)`. `proxy` is the ticker — **stock pick or ETF**. Do not duplicate; update in place.
 - Analysis: append rows with `status=open` and fill **spot_at_call**, **due_date**, **source_note**. `notes` starts with `pick` (single stock) or `basket` (ETF).
-- v1.2: each kept theme should contribute up to **3 pick rows** plus any distinct basket overlay. If a pick *is* the proxy, one row only.
+- Each kept theme should contribute up to **3 pick rows** plus any distinct basket overlay. If a pick *is* the proxy, one row only.
 - Do not change `pct_low` / `pct_high` / `horizon_days` on already-open rows (grading honesty). New overlays / new picks get **new rows**.
 - Grade at `due_date` ±1 trading day. Range hit is primary; direction is secondary.
 
