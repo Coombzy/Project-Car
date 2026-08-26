@@ -1,7 +1,7 @@
 # CCJ Stock Analysis Automater — Hermes Agent Process
 
-**Version:** 1.5 (2026-08-24)  
-**Supersedes:** v1.4 (2026-07-21)  
+**Version:** 1.6 (2026-08-26)  
+**Supersedes:** v1.5 (2026-08-24)  
 **Location:** `Project-Car/finance/`
 
 Read `finance/CCJ_WRITE_RULES.md` and `finance/CCJ_README.md` first.
@@ -10,9 +10,11 @@ Read `finance/CCJ_WRITE_RULES.md` and `finance/CCJ_README.md` first.
 
 Produce **one official post-close** CCJ analysis entry per NYSE session and commit it (prepend-only) to the living log. Not financial advice.
 
+The job is not a recap. It is a **decision map for the next session**: regime, levels that change the path, the volume/U3O8/URA tell, and ranges wide enough that high-beta uranium days do not routinely exceed the high.
+
 ## Schedule
 
-- Official entry: weekdays after NYSE close (>= 15:45 America/New_York).
+- Official entry: weekdays after NYSE close. Job may fire at 15:45 ET; **Close and Volume must be the 16:00 regular-session print**. If the close is not in yet, wait/poll once. If still unavailable, label `Last` (not Close) and `Rel Vol incomplete`.
 - Confidence: EOD 80-92 typical. Early/intraday snapshots <= 80, flag `volume incomplete`, replace at EOD — they are not official.
 - Missed trading day: before writing today, record that session's official close in Historical Deltas (and close the open 1-day tracker row if price is known).
 
@@ -25,20 +27,39 @@ Produce **one official post-close** CCJ analysis entry per NYSE session and comm
 
 Record a source on every metric. If Polygon is down, fall back and say so — do not fail the run.
 
+Also compute **ATR-proxy** = median true range of the last 5 regular sessions (High−Low, or |H−prior C| / |L−prior C| if larger). State the dollar value in Forward Scenarios.
+
 ## Uranium / volume rules (required)
 
 - Pair CCJ with **U3O8 and URA**. Flag divergence >1.5 percentage points as an anomaly.
 - Rel Vol < 0.5x: cut upside-bias confidence 10-15 points and widen downside ranges.
 - Testing $100, 50-DMA, or 200-DMA on Rel Vol < 0.5x: include a short **failed-breakout / digestion-risk** note. Light-volume breaks are unconfirmed.
-- After a >10-15% bounce off a post-earnings low: note short-term mean-reversion / digestion risk.
+- After a >10-15% bounce off a post-earnings low: note short-term mean-reversion / digestion risk — **unless** the latest session was Rel Vol >= 1.0x with close in the top third (then the bounce is confirmed; do not fade it in the 1d range).
+
+## Range construction (required — this is how 1d/1w misses happen)
+
+Closed-horizon miss pattern through 2026-08-25: ranges die on the **UPPER** side after Rel Vol >= 1x up-days because the next session is framed as digestion and the range is centered **below** the close (Aug 24 1d $99.50–$104.50 vs H 107.77 / C 106.96; Aug 18 1w $90–$100 vs H 102.82). Uranium beta continues more often than it mean-reverts when U3O8 and URA agree.
+
+1. **Regime** (pick one): `trend-up` | `trend-down` | `digestion` | `failed-break`
+   - `trend-up`: Rel Vol >= 0.8x AND close in the top third of the session range AND U3O8 not down >1% AND URA not down on a CCJ up-day.
+   - `failed-break`: test of $100 / 50-DMA / 200-DMA on Rel Vol < 0.5x.
+   - `digestion`: Rel Vol declining vs the prior session AND close mid-range AND no URA/U3O8 confirmation.
+   - **Do not** label `digestion` the session after a Rel Vol >= 1.0x `trend-up` day.
+2. **1-day range**
+   - Width **must** be >= 2.0 × ATR-proxy.
+   - If regime is `trend-up`, center at close or ~0.25×ATR above close — **never below close**.
+   - If 2+ of the last 3 **closed** 1d tracker rows are upper-exceed: add +1.0×ATR-proxy to the high before commit.
+   - Round numbers ($100, $105, $110) and the 200-DMA are **magnets, not walls**. Do not use them as the range high/low unless ATR math lands there.
+3. **1-week range**: width >= 3.5 × ATR-proxy. If `trend-up`, distance from close to high >= 1.5× distance from close to low.
+4. **Self-check** (one line in prior-scenario): "Today's 1d width $X vs ATR-proxy $Y; last closed 1d was hit|upper-exceed|lower-exceed — adjustment: …"
 
 ## Required steps (in order)
 
-1. Read WRITE_RULES + this file + newest 2 log entries + open tracker rows.
-2. Collect CCJ / URA / U3O8 / news. RSI(14), 50-DMA, 200-DMA.
-3. Build the entry with the template below.
-4. Fill **Forward Scenarios** (mandatory) and a one-line prior-scenario vs actual for each open short horizon.
-5. Quality Evaluator. If < 7, fix before commit.
+1. Read WRITE_RULES + this file + newest 2 log entries + open **and last 3 closed 1d** tracker rows.
+2. Collect CCJ / URA / U3O8 / news. RSI(14), 50-DMA, 200-DMA, ATR-proxy.
+3. Classify regime. Build ranges with the construction rules above. Then write the entry.
+4. Fill **Forward Scenarios** + **Decision map** + prior-scenario vs actual for each open short horizon.
+5. Quality Evaluator. If < 7, fix before commit. If 1d width < 2×ATR-proxy, fix before commit.
 6. Commit log (prepend one entry). Get SHA immediately before write.
 7. Append four tracker rows (1d/1w/1m/3m, status=`open`).
 8. Prepend one Process Health row with Audit Score `(pending)`. Re-read to confirm.
@@ -59,7 +80,7 @@ Record a source on every metric. If Polygon is down, fall back and say so — do
 | **5. Market Cap & Valuation** | Mkt Cap: $XX.XB<br>P/E TTM / Fwd | Shares + source               |
 | **6. Technical Position**     | RSI(14): XX.X<br>vs 50-DMA: ±X%<br>vs 200-DMA: ±X% | DMA values in notes |
 | **7. Sector Relative Perf.**  | CCJ: ±X.X%<br>URA: ±Y.Y%<br>Rel: ±Z.Z% | Source                    |
-| **8. Key Catalysts / Sentiment** | • …<br>Sentiment: ST / MT   |                                 |
+| **8. Key Catalysts / Sentiment** | • …<br>Sentiment: ST / MT   | Dated next catalyst if known |
 
 **Historical Deltas**: vs prior close / post-Q2 / U3O8 / RSI-MA flips. Note any missed session.
 **Anomaly Flags**: none / …
@@ -68,7 +89,13 @@ Record a source on every metric. If Polygon is down, fall back and say so — do
 **Quality Evaluator Score**: X/10
 
 #### Analysis Narrative
-[Metrics, U3O8 + URA linkage, volume confirmation, prior audit feedback. End with one key takeaway.]
+[Lead with what changed vs yesterday and what that implies for tomorrow. U3O8 + URA + volume confirmation. End with one key takeaway.]
+
+#### Decision map (required — 4 bullets)
+- Regime: trend-up | trend-down | digestion | failed-break. ATR-proxy: $X.XX (last 5 TR median).
+- Confirm vs fail: the Rel Vol / URA / U3O8 print that confirms continuation vs invalidates it next session.
+- Levels: 2–3 prices that change the path, with why (not round-number wallpaper).
+- Calibration: last closed 1d was hit|upper-exceed|lower-exceed — today's 1d width $X vs ATR $Y; adjustment …
 
 #### Forward Scenarios (required)
 - 1-day / next session: $XX–$YY (bias $AA–$BB; Z% conf)
@@ -76,7 +103,7 @@ Record a source on every metric. If Polygon is down, fall back and say so — do
 - 1-month: $XX–$YY (bias $AA–$BB; Z% conf)
 - 3-month: $XX–$YY (bias $AA–$BB; Z% conf)
 - Key invalidation: price level + U3O8 level + volume condition
-- Prior scenarios vs actual: [date] 1d/1w → hit|miss|preliminary|on-track — one line each
+- Prior scenarios vs actual: [date] 1d/1w → hit|miss|preliminary|on-track — one line each, plus the self-check line from Range construction §4
 
 #### Audit / Reviewer Notes
 (To be completed by subsequent audit process)
@@ -85,8 +112,10 @@ Record a source on every metric. If Polygon is down, fall back and say so — do
 ## Success criteria
 
 - [ ] WRITE_RULES followed (SHA, prepend-only, Health confirmed)
-- [ ] All 8 metrics sourced; deltas + anomalies present
-- [ ] Forward Scenarios for all 4 horizons + prior-scenario line
-- [ ] Volume / failed-breakout rules applied when triggered
+- [ ] All 8 metrics sourced; deltas + anomalies present; Close is the 16:00 print (or Last labeled)
+- [ ] Regime + ATR-proxy + Decision map present
+- [ ] 1d width >= 2.0×ATR-proxy; trend-up 1d not centered below close
+- [ ] Forward Scenarios for all 4 horizons + prior-scenario line + calibration self-check
+- [ ] Volume / failed-breakout / anti-digestion rules applied when triggered
 - [ ] Quality Evaluator >= 7; Confidence consistent with session timing
 - [ ] Tracker rows appended; Health row confirmed present
