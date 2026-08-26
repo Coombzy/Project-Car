@@ -1,7 +1,7 @@
 # Macro Industry Theme Map Process
 
 Owner: `Coombzy/Project-Car`  
-Current versions: **Analysis v1.3** · **Write rules v1.1** (2026-08-26)  
+Current versions: **Analysis v1.3** · **Write rules v1.2** (2026-08-26)  
 Grok automation: **Macro Alpha** (weekly Mon/Thu 07:30 America/Regina)  
 Not financial advice. Selection support only — no position sizes.
 
