@@ -1,8 +1,8 @@
 # CCJ Stock Analysis Automater — Hermes Agent Process
 
-**Version:** 1.8 (2026-08-26)  
-**Last edited:** 2026-08-26 20:40 UTC  
-**Supersedes:** v1.7 (2026-08-26)  
+**Version:** 1.9 (2026-08-26)  
+**Last edited:** 2026-08-26 22:40 UTC  
+**Supersedes:** v1.8 (2026-08-26)  
 **Location:** `Project-Car/finance/`
 
 Read `finance/CCJ_WRITE_RULES.md` and `finance/CCJ_README.md` first.
@@ -16,6 +16,7 @@ The job is not a recap. It is a **decision map for the next session**: regime, l
 ## Schedule
 
 - Official entry: weekdays **16:10 America/New_York** (after the 16:00 regular close). **Close and Volume must be the 16:00 regular-session print**. If the close is not in yet, wait/poll once. If still unavailable, label `Last` (not Close) and `Rel Vol incomplete`.
+- **Regime Rel Vol** is the official 16:00 print only — never a 15:45 last. If only an early print exists, do not classify regime as `trend-up`.
 - Confidence: EOD 80-92 typical. Early/intraday snapshots <= 80, flag `volume incomplete`, replace at EOD — they are not official. Do not raise 1d conf above 60% until calibration full-hit rate over last 10 closed 1d is ≥ 55%.
 - Missed trading day: before writing today, record that session's official close in Historical Deltas (and close the open 1-day tracker row if price is known).
 
@@ -42,6 +43,7 @@ Also compute **ATR-proxy** = median true range of the last 5 regular sessions (H
 Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Auditor keeps that table current). Then:
 
 1. **Regime** (pick one): `trend-up` | `trend-down` | `digestion` | `failed-break`
+   - Rel Vol used here **must** be the 16:00 official print.
    - `trend-up`: Rel Vol >= 0.8x AND close in the top third of the session range AND U3O8 not down >1% AND URA not down on a CCJ up-day.
    - `failed-break`: test of $100 / 50-DMA / 200-DMA on Rel Vol < 0.5x.
    - `digestion`: Rel Vol declining vs the prior session AND close mid-range AND no URA/U3O8 confirmation.
@@ -49,18 +51,18 @@ Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Audi
 2. **1-day range**
    - Width **must** be >= 2.0 × ATR-proxy.
    - If regime is `trend-up`, center at close or ~0.25×ATR above close — **never below close**.
-   - If 2+ of the last 3 **closed** 1d tracker rows are upper-exceed: add +1.0×ATR-proxy to the high before commit. **Partial** (high outside, close inside) **counts as upper-exceed** for this count.
+   - If 2+ of the last 3 **closed** 1d tracker rows are upper-exceed: add +1.0×ATR-proxy to the high before commit. **Partial** (high outside, close inside) **counts as upper-exceed** for this count. The 1d high must also **clear last session high**.
    - Round numbers ($100, $105, $110, $115) and the 200-DMA are **magnets, not walls**. Do **not** set the 1d high equal to a round magnet — clear it by ≥ $1.00 or 0.25×ATR-proxy (whichever is larger).
-3. **1-week range**: width >= 3.5 × ATR-proxy. If `trend-up`, distance from close to high >= 1.5× distance from close to low.
-4. **Self-check** (one line): "Today's 1d width $X vs ATR-proxy $Y; last closed 1d was hit|upper-exceed|lower-exceed — adjustment: …"
+3. **1-week range**: width >= 3.5 × ATR-proxy. If `trend-up`, distance from close to high >= 1.5× distance from close to low. Same magnet rule as 1d: do **not** set the 1w high equal to $100/$105/$110/$115 — clear it by ≥ $1.00 or 0.25×ATR.
+4. **Self-check** (one line): "Today's 1d width $X vs ATR-proxy $Y; last closed 1d was hit|upper-exceed|lower-exceed; 1d high $A vs last session high $B; Rel Vol Z.Zx from 16:00 print — adjustment: …"
 
 ## Required steps (in order)
 
 1. Read WRITE_RULES + this file + `CCJ_Calibration.md` + newest 2 log entries + open **and last 3 closed 1d** tracker rows.
-2. Collect CCJ / URA / U3O8 / news. RSI(14), 50-DMA, 200-DMA, ATR-proxy, prior_day_pct.
+2. Collect CCJ / URA / U3O8 / news. RSI(14), 50-DMA, 200-DMA, ATR-proxy, prior_day_pct. Rel Vol = 16:00 print.
 3. Classify regime. Build ranges using Calibration active rules + Range construction above.
 4. Fill **Forward Scenarios** + **Decision map** + prior-scenario lines.
-5. Quality Evaluator. If < 7, fix before commit. If 1d width < 2×ATR-proxy, fix before commit.
+5. Quality Evaluator. If < 7, fix before commit. If 1d width < 2×ATR-proxy, or 1d high ≤ last session high after a 2-of-3 upper-exceed, fix before commit.
 6. Commit log (prepend one entry). Get SHA immediately before write.
 7. Append four tracker rows with **structured features filled**: `pred_regime`, `pred_rel_vol`, `prior_day_pct` (status=`open`).
 8. Prepend one Process Health row with Audit Score `(pending)`. Re-read to confirm.
@@ -96,7 +98,7 @@ Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Audi
 - Regime: trend-up | trend-down | digestion | failed-break. ATR-proxy: $X.XX (last 5 TR median).
 - Confirm vs fail: the Rel Vol / URA / U3O8 print that confirms continuation vs invalidates it next session.
 - Levels: 2–3 prices that change the path, with why (not round-number wallpaper).
-- Calibration: cite CCJ_Calibration.md active rule applied + last closed 1d outcome + today's 1d width $X vs ATR $Y.
+- Calibration: cite CCJ_Calibration.md active rule applied + last closed 1d outcome + today's 1d width $X vs ATR $Y + 1d high vs last session high.
 
 #### Forward Scenarios (required)
 - 1-day / next session: $XX–$YY (bias $AA–$BB; Z% conf)
@@ -114,9 +116,10 @@ Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Audi
 
 - [ ] WRITE_RULES followed (SHA, prepend-only, Health confirmed)
 - [ ] Calibration.md read; active rules applied
-- [ ] All 8 metrics sourced; Close is the 16:00 print (or Last labeled)
+- [ ] All 8 metrics sourced; Close and Rel Vol are the 16:00 print (or Last labeled)
 - [ ] Regime + ATR-proxy + Decision map present
 - [ ] 1d width >= 2.0×ATR-proxy; trend-up 1d not centered below close
+- [ ] After 2-of-3 upper-exceed: 1d high clears last session high and is not parked on a magnet
 - [ ] Tracker rows include pred_regime, pred_rel_vol, prior_day_pct
 - [ ] Quality Evaluator >= 7; Confidence consistent with session timing + calibration
 - [ ] Health row confirmed present

@@ -2,7 +2,7 @@
 
 Owner: `Coombzy/Project-Car`  
 Live automations: **CCJ Daily Stock Analysis** then **CCJ Analysis Auditor**  
-Current versions: **Analysis v1.8** · **Audit v1.4** · **Write rules v1.1** · **Calibration live** (2026-08-26)
+Current versions: **Analysis v1.9** · **Audit v1.4** · **Write rules v1.1** · **Calibration live** (2026-08-26)
 
 ## Load order (every run)
 
@@ -19,7 +19,7 @@ Current versions: **Analysis v1.8** · **Audit v1.4** · **Write rules v1.1** ·
 
 | Job | When | Why |
 |-----|------|-----|
-| Analysis | Weekdays **15:45 America/New_York**; Close/volume = **16:00 print** | Full-session OHLCV; 15:45 last is not Close |
+| Analysis | Weekdays **16:10 America/New_York**; Close/volume/**Rel Vol** = **16:00 print** | Full-session OHLCV; 15:45 last is not Close and must not set regime |
 | Audit | Weekdays **16:30 America/New_York** | Grades closed session; refreshes Calibration when 1d/1w close |
 
 Early/intraday snapshots are optional and must be labeled incomplete. They do **not** replace the EOD entry.
