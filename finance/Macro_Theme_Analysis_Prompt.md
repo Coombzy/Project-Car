@@ -1,9 +1,9 @@
 # Macro Industry Theme Map — Analysis Prompt
 
-**Version:** 1.2 (2026-08-26)  
-**Last edited:** 2026-08-26 18:15 UTC  
-**Supersedes:** v1.1 (ETF-first book; 30/60/90 only)  
-**Source of v1.2 user edits:** Grok automation **Macro Alpha** (`b78c3446-…`) — rank by upside × chance; prefer single stocks; 3 names per theme.  
+**Version:** 1.3 (2026-08-26)  
+**Last edited:** 2026-08-26 18:20 UTC  
+**Supersedes:** v1.2 (rank by upside × conf; prefer single stocks; 3 picks/theme)  
+**v1.3 user edit:** thorough industry / theme analysis **before** naming stocks.  
 **Location:** `Project-Car/finance/`
 
 Read `finance/Macro_WRITE_RULES.md` and `finance/Macro_README.md` first. Not financial advice. Selection support only — no position sizes.
@@ -28,6 +28,22 @@ If nothing durable, output **0–1** themes and say so — do not invent.
 8. `action`: `watch` | `deep-dive` | `ignore`. **At most one `deep-dive` per run.** Default `watch`. Use `ignore` when the move is already priced.
 9. **Do not change** ranges/horizons on already-open tracker rows. New idea = new row.
 10. Per theme: **suggest 3 best stocks** (usually benefit-side convexity; 1 of 3 may be the cleanest hurt-side name). If a pick is also a proxy, **one tracker row** — do not duplicate.
+11. **No tickers until the industry is done.** For each kept theme, complete the **Industry analysis** block (below) *before* listing any stock. Picks must be the output of that analysis, not the starting point. Naming SU/UAL/JPM from memory without the screen is a process miss.
+
+## Industry analysis (required, before any stock picks)
+
+For **each** kept theme, research the affected industry (use current news, filings, peer list, prices — do not skip this for speed). Write the block in the log **above** the 3 stocks.
+
+Cover, compactly:
+
+1. **Value chain** — who actually collects the cash (producer / midstream / refiner / OEM / carrier / lender, etc.).
+2. **Transmission** — how the 72h news hits *this* industry: price, volume, spread/differential, cost, FX, policy, multiple. Name the **tell** (e.g. WCS–WTI, crack spread, 30y yield).
+3. **Peer universe** — 5–8 liquid listed names in that chain (plus the obvious ETF basket). One line each: leverage to the driver.
+4. **Screen** — from that universe, why **these 3** win vs the others: operating leverage to the tell, liquidity, not already priced, balance-sheet/survival if the theme is a shock. Drop names that fail the screen; do not force 3 junk picks.
+5. **Hurt side** — who loses in the same chain and why (even if the 3 picks are mostly benefit).
+6. **Already priced?** — if the industry move is in, action = `ignore` and do not invent leftover names.
+
+Only **after** 1–6, output the 3 stocks with ranges.
 
 ## Proxy / pick quality
 
@@ -60,18 +76,19 @@ Worked example (2026-08-26, keep as prior):
 - Hormuz thaw hits Alberta via (a) lower WTI/Brent **and** (b) returning Gulf heavies widening **WCS–WTI** **and** (c) fading TMX Asia scarcity bid.
 - Canada fight stacks via **oil-as-weapon politics** (Ottawa/Ford withhold risk) and **steel capex costs**, plus CAD FX cushion — not via the 50% crude line.
 - Required tell when oil + Canada are both live: **WCS–WTI differential**, not Brent alone.
-- v1.2 names for that overlay (examples, not a standing book): SU, CNQ, CVE on the hurt side vs COP / PSX on the US side — only if liquid and not already open with frozen ranges.
+- Industry analysis for that overlay would screen oil-sands (SU, CNQ, CVE, IMO) vs US cokers/refiners (PSX, MPC, VLO) vs airlines (UAL, DAL, AAL) **before** locking 3 picks — only if liquid and not already open with frozen ranges.
 
 ## Required steps (in order)
 
 1. Read WRITE_RULES + this file + newest log entry + **all open** tracker rows + last 5 closed (if any).
 2. Collect ~72h macro/policy/geo news. Cite sources. Record driver spots (Brent, WTI, WCS differential if oil is in play, 10y/30y if fiscal/Fed is in play).
-3. Draft candidate themes. **Score** `(conf/100) × pct_high` on the best benefit name. Keep the top ≤3. Run **overlap scan**. Attach overlays.
-4. For each kept theme: 3 stock picks + any basket overlay. Enforce uniqueness + {14,30,60,90} + snapshots + proxy-specific falsifiers. At most one `deep-dive`.
-5. Quality self-check: duplicate-beta? illiquid name? already-priced `ignore`? energy exemption checked? ranking scores shown? log will be commitable?
-6. Commit **log first** (prepend one entry). Get SHA immediately before write.
-7. Append tracker rows (`status=open`) for every unique ticker (picks + baskets). Get SHA immediately before write. Retry once on conflict.
-8. Report commit SHA(s) in the chat output.
+3. Draft candidate themes. Run **overlap scan**. Attach overlays. **Do not name stocks yet.**
+4. For each kept theme: complete **Industry analysis** (value chain, transmission, 5–8 peer universe, screen, hurt side, already-priced). Research current prices/news for that industry.
+5. **Then** pick ≤3 stocks from the screen + any basket overlay. Score `(conf/100) × pct_high` on the best benefit name; keep the top ≤3 themes. Enforce uniqueness + {14,30,60,90} + snapshots + proxy-specific falsifiers. At most one `deep-dive`.
+6. Quality self-check: industry block present *above* picks? duplicate-beta? illiquid name? already-priced `ignore`? energy exemption checked? ranking scores shown? log will be commitable?
+7. Commit **log first** (prepend one entry). Get SHA immediately before write.
+8. Append tracker rows (`status=open`) for every unique ticker (picks + baskets). Get SHA immediately before write. Retry once on conflict.
+9. Report commit SHA(s) in the chat output.
 
 ## Output structure (chat + log)
 
@@ -83,9 +100,10 @@ Worked example (2026-08-26, keep as prior):
 
 For each theme:
 - theme_id, title, mechanism (2–4 sentences)
-- **3 best stocks** (ticker · side · why one line)
 - horizon_days + why
 - Beneficiaries / Hurt (industries)
+- **Industry analysis** (value chain · transmission/tell · peer universe · screen · hurt · priced?) — **before stocks**
+- **Then** 3 best stocks (ticker · side · why they survived the screen)
 - Proxies / picks table: ticker | side | pct_low | pct_high | conf | action | spot_at_call | pick_or_basket
 - Falsifier (per ticker if they differ)
 - Action (theme-level; deep-dive only if a ticker is deep-dive)
@@ -101,9 +119,10 @@ Fill the first 15 at analysis time; leave actual_* / hit_* / graded_date blank; 
 ## Success criteria
 
 - [ ] WRITE_RULES followed (SHA, prepend log, append tracker, no range edits on open rows)
-- [ ] Prompt file present and version cited (v1.2+)
+- [ ] Prompt file present and version cited (v1.3+)
 - [ ] ≤3 themes; ranking scores in the log; overlap scan in the log
-- [ ] 3 stock picks per kept theme (or explicit reason if fewer)
+- [ ] **Industry analysis written before any ticker** for each kept theme
+- [ ] 3 stock picks per kept theme (or explicit reason if fewer) that survive the screen
 - [ ] No duplicate-beta pair; no OTC/thin names
 - [ ] Horizons in {14,30,60,90}; snapshots + due_date filled
 - [ ] ≤1 deep-dive; energy exemption checked if Canada + oil both appear
