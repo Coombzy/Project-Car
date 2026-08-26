@@ -1,18 +1,23 @@
 # Macro Industry Theme Map Process
 
 Owner: `Coombzy/Project-Car`  
-Current versions: **Analysis v1.2** · **Write rules v1.1** (2026-08-26)  
+Current versions: **Analysis v1.3** · **Write rules v1.1** (2026-08-26)  
 Grok automation: **Macro Alpha** (weekly Mon/Thu 07:30 America/Regina)  
 Not financial advice. Selection support only — no position sizes.
 
 ## Load order (every run)
 
 1. `finance/Macro_WRITE_RULES.md`
-2. `finance/Macro_Theme_Analysis_Prompt.md` (must be **v1.2+**; check Version + Last edited)
+2. `finance/Macro_Theme_Analysis_Prompt.md` (must be **v1.3+**; check Version + Last edited)
 3. `finance/Macro_Theme_Log.md` — newest 1–2 entries
 4. `finance/Macro_Theme_Tracker.md` — **all open rows** + last 5 closed (when any exist)
 
-If GitHub prompt and the Macro Alpha wrapper disagree, **GitHub v1.2+ wins** except the wrapper's must-keep user constraints (already merged into v1.2): rank by upside × chance, prefer liquid single stocks, 3 names per theme.
+If GitHub prompt and the Macro Alpha wrapper disagree, **GitHub v1.3+ wins** except the wrapper's must-keep user constraints (already merged): rank by upside × chance, prefer liquid single stocks, 3 names per theme, **industry analysis before picks**.
+
+## What v1.3 changed
+
+- For each kept theme, write **Industry analysis** (value chain, transmission/tell, 5–8 peer universe, screen, hurt side, already-priced) **before any ticker**.
+- The 3 stock picks are the *output* of that screen, not the starting point.
 
 ## What v1.2 changed (from Macro Alpha)
 
