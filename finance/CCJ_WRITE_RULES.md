@@ -1,4 +1,4 @@
-# CCJ GitHub Write Rules — v1.0 (2026-08-24)
+# CCJ GitHub Write Rules — v1.1 (2026-08-26)
 
 **Violating these is a process failure** (Audit Score -1). The Jul 23 overwrite and the Aug 24 Process Health miss both came from full-file races.
 
@@ -20,7 +20,7 @@
 - **Audit:** replace **only** the newest entry's `#### Audit / Reviewer Notes` block (the placeholder). Do not rewrite older audits. Do not nest "Post-Performance Audit Update" inside historical entries — put closed-horizon results in `CCJ_Prediction_Tracker.md`.
 - **Never** replace the file with a placeholder, summary, or truncated log.
 - If today already has an **EOD** analysis entry, do not prepend a second one. If today has only an incomplete early snapshot, you may **replace that snapshot in place** with the EOD version (same heading date).
-- New Audit Notes should stay compact (<= 80 lines). Comparison tables belong in the tracker.
+- New Audit Notes should stay compact (<= 80 lines). Comparison tables belong in the tracker / Calibration file.
 
 ## Process Health (`finance/CCJ_Process_Health.md`)
 
@@ -31,9 +31,14 @@
 
 ## Prediction tracker (`finance/CCJ_Prediction_Tracker.md`)
 
-- Analysis: append rows for the four new horizons (`status=open`).
-- Audit: update `actual_*`, `hit`, `directional`, `pct_error`, `status` (`preliminary` during RTH, `closed` after regular-session close).
+- Analysis: append four rows (1d/1w/1m/3m, `status=open`) and fill **pred_regime**, **pred_rel_vol**, **prior_day_pct**.
+- Audit: update `actual_*`, `hit`, `directional`, `pct_error`, `status` (`preliminary` during RTH, `closed` after regular-session close). Preserve feature columns.
 - Do not duplicate a (`analysis_date`, `horizon`) pair; update in place.
+
+## Calibration (`finance/CCJ_Calibration.md`)
+
+- Auditor: after any newly **closed** 1d or 1w, recount hit/miss tables and bump **As of** date. Keep short — no full tracker dump.
+- Analysis: **read only** (use Active rules as priors). Do not rewrite Calibration during Analysis runs.
 
 ## Prompt files
 
