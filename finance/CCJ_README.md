@@ -2,7 +2,7 @@
 
 Owner: `Coombzy/Project-Car`  
 Live automations: **CCJ Daily Stock Analysis** then **CCJ Analysis Auditor**  
-Current versions: **Analysis prompt v1.6** · **Audit prompt v1.3** · **Write rules v1.0** (2026-08-26)
+Current versions: **Analysis v1.7** · **Audit v1.4** · **Write rules v1.1** · **Calibration live** (2026-08-26)
 
 ## Load order (every run)
 
@@ -10,16 +10,17 @@ Current versions: **Analysis prompt v1.6** · **Audit prompt v1.3** · **Write r
 2. The role prompt for this run:
    - Analysis → `finance/CCJ_Analysis_Automater_Prompt.md`
    - Audit → `finance/CCJ_Audit_Checklist_and_Prompt.md`
-3. Newest 2–3 entries in `finance/CCJ_Daily_Metrics_Audit_Log.md`
-4. `finance/CCJ_Prediction_Tracker.md` (required for audits; Analysis reads prior-scenario rows **and last 3 closed 1d**)
-5. `finance/CCJ_Process_Health.md` (one new row per completed run)
+3. `finance/CCJ_Calibration.md` (Analysis: priors; Audit: refresh after closes)
+4. Newest 2–3 entries in `finance/CCJ_Daily_Metrics_Audit_Log.md`
+5. `finance/CCJ_Prediction_Tracker.md` (prior-scenario rows + last 3 closed 1d; feature columns required on new rows)
+6. `finance/CCJ_Process_Health.md` (one new row per completed run)
 
 ## Cadence (intended)
 
 | Job | When | Why |
 |-----|------|-----|
 | Analysis | Weekdays **15:45 America/New_York**; Close/volume = **16:00 print** | Full-session OHLCV; 15:45 last is not Close |
-| Audit | Weekdays **16:30 America/New_York** | Grades a closed session; 1-day marked Closed not Preliminary |
+| Audit | Weekdays **16:30 America/New_York** | Grades closed session; refreshes Calibration when 1d/1w close |
 
 Early/intraday snapshots are optional and must be labeled incomplete. They do **not** replace the EOD entry.
 
