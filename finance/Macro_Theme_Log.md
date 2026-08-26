@@ -6,6 +6,99 @@ Not financial advice. Selection support only — no position sizes.
 
 ---
 
+### 2026-08-26 | 18:25 UTC (v1.3 official analysis — user-requested re-run after industry-before-picks rule)
+
+**Prompt:** [v1.3](https://github.com/Coombzy/Project-Car/blob/main/finance/Macro_Theme_Analysis_Prompt.md). Prior 16:20 UTC = v1.1; 14:42 UTC = v1.0 backfill. Both left intact. Frozen ETF ranges **not** edited. New rows = stock picks only.
+
+**Key Takeaway:** Hormuz’s 7-mile corridor is still not open, so jet-fuel relief is the cleanest 30d upside; US–Canada 50% lists (energy still exempt) hit lumber/auto-parts and help US steel into 8 Sep; Warsh Friday + Bessent buybacks from 9 Sep keep duration live, not a one-day JH trade.
+
+**Overlap scan:** Hormuz × Canada still stacks on **Alberta WCS** (price + differential + TMX Asia bid + political oil-as-weapon), **not** a 50% crude duty. Sign flips if corridor fails. Hormuz × duration = weak disinflation tail. Canada × duration = weak. Electricity threats still political, not booked.
+
+**Ranking** (score = conf/100 × pct_high of best *benefit* name):
+- Hormuz / UAL 18×0.55 = **9.9** — kept
+- Canada / NUE 14×0.50 = **7.0** — kept
+- Duration / DHI 14×0.45 = **6.3** — kept
+Dropped: XLU electricity (political); China drone-tariff chatter (not a durable 72h industry book).
+
+Drivers: Brent ~86.3, WTI ~80.3, 10y ~4.65%, 30y ~5.18%. Corridor not operational ([Al Jazeera](https://www.aljazeera.com/news/2026/8/26/iran-oman-agree-on-temporary-hormuz-route-what-we-know)). Energy still exempt ([White House](https://www.whitehouse.gov/fact-sheets/2026/07/fact-sheet-president-donald-j-trump-imposes-additional-tariffs-on-canada/)). Buybacks ≥$4bn from 9 Sep; Warsh speaks 28 Aug.
+
+#### Theme 1 — `20260826-hormuz-thaw` · 30d (due 2026-09-25)
+**Mechanism:** Temporary 7-mile lane agreed in principle; Iran permission + mines; US has not endorsed; tanker hit near Oman this week. Brent −~2.6% to ~$86.3 on hope, *ahead of barrels*. 30d = first cargoes vs snap-back.
+**Beneficiaries / hurt:** jet-fuel consumers vs oil-sands heavies vs (mixed) USGC cokers.
+
+**Industry analysis (before picks):**
+1. *Value chain:* Gulf producer → Hormuz tanker → refiner/coker → jet/crack products → airline. Alberta heavy is a *substitute* barrel, not a Hormuz barrel.
+2. *Transmission / tell:* jet crack + Brent (airlines); **WCS–WTI** + TMX Asia bid (oil sands); heavy-sour discount (USGC cokers). Distillates still tight — premium fade can reverse.
+3. *Peer universe:* UAL / DAL / AAL / LUV (unhedged jet; UAL guided ~$6bn extra 2026 fuel vs Jan); SU / CNQ / CVE / IMO (WCS levered; SU integrated but still oil-sands heavy); PSX / MPC / VLO (cokers; Reuters 24 Aug: US refiners already on a “super-refining” stress run — cracks may compress if crude falls).
+4. *Screen:* One airline only (no UAL+DAL duplicate beta). One oil-sands name (SU > CNQ for liquidity + integration still WCS-tied). One refiner (PSX) with **haircut** because war-run utilization cuts the cheap-heavy gift. Drop AAL (weaker BS), LUV (different network), CVE/IMO (duplicate SU), MPC/VLO (same as PSX).
+5. *Hurt:* oil sands if WCS widens; shale less than WCS. Airlines lose if kinetic restart.
+6. *Priced?* Oil’s third down day prices *some* airline relief. Corridor still closed → not `ignore`.
+
+**Then — 3 stocks that survived the screen:** UAL (unhedged fuel, highest % torque) · SU (WCS stack; **deep-dive**) · PSX (coker, mixed, lower conf).
+
+| ticker | side | pct_low | pct_high | conf | action | spot_at_call | pick_or_basket |
+|--------|------|---------|----------|------|--------|--------------|----------------|
+| UAL | benefit | 5 | 18 | 55 | watch | ~116 | pick |
+| SU | hurt | -18 | -4 | 50 | deep-dive | WTI 80.3; WCS-WTI tell | pick |
+| PSX | benefit | 2 | 12 | 45 | watch | Brent 86.3 | pick |
+
+JETS/USO/XEG/CRAK remain open (frozen). XLE not in this book. **Falsifiers:** UAL — Brent >$95 / kinetic restart. SU — WCS–WTI narrows while TMX bid, *or* Hormuz fail (then SU is relative *benefit*). PSX — heavy discount collapses *and* cracks crush.
+**Action:** deep-dive (SU only).
+
+#### Theme 2 — `20260826-us-canada-tariffs` · 60d (due 2026-10-25)
+**Mechanism:** Section 338 50% live 22 Aug, USMCA origin irrelevant; Canada matches 8 Sep; steel/aluminum 25→50%. Energy/potash still exempt. Ford/Québec electricity = political tail, not booked.
+**Beneficiaries / hurt:** US steel mills vs Canadian lumber + NA auto-parts. Mexico is a relative nearshoring candidate, not a high-conf single name.
+
+**Industry analysis (before picks):**
+1. *Value chain:* Canadian mill / parts plant → border → US OEM / builder. US mini-mill sits *inside* the tariff wall.
+2. *Transmission / tell:* 8 Sep Canadian counter-list; Section 232 steel already 50%; Section 338 stacks on autos/dairy/alcohol/lumber-adjacent goods. Energy exemption means this is **not** a crude-duty theme.
+3. *Peer universe:* NUE / STLD / CLF (US steel; Barron’s/Invezz 24 Aug: jumped on talks failing); WFG / RYN (lumber; WFG already living with CV/AD duties, 50% is an extra hit on Canada-origin); MGA / APTV / GM (auto parts/OEM; MGA is the Canada-heavy parts name); EWC basket.
+4. *Screen:* NUE over STLD/CLF (scale + least-levered BS). WFG over RYN (direct Canada lumber exporter, NYSE, mkt cap ~$5.4B, ADV ok). MGA over GM (parts torque to Canada-US auto, not a full OEM). Drop EWW as a *pick* (country ETF, already a frozen basket). Drop SLX (too thin).
+5. *Hurt:* Canadian lumber, auto-parts, dairy processors. US steel consumers (autos, builders) pay more — that is why MGA is hurt even as NUE benefits.
+6. *Priced?* Steel pop 24 Aug prices *some* NUE. 8 Sep Canadian list not in yet → watch, not ignore.
+
+**Then — 3 stocks:** NUE (benefit) · WFG (hurt lumber) · MGA (hurt parts).
+
+| ticker | side | pct_low | pct_high | conf | action | spot_at_call | pick_or_basket |
+|--------|------|---------|----------|------|--------|--------------|----------------|
+| NUE | benefit | 3 | 14 | 50 | watch | talks-fail pop 24 Aug | pick |
+| WFG | hurt | -16 | -3 | 50 | watch | ~69 | pick |
+| MGA | hurt | -14 | -2 | 48 | watch | driver=338 autos | pick |
+
+EWC/EWW/CARZ frozen. **Falsifiers:** rapid USMCA-compatible deal. Stack falsifier: energy exemption reversed (then SU/XEG become *policy* hurt, not just Hormuz).
+**Action:** watch.
+
+#### Theme 3 — `20260826-treasury-fed-tension` · 60d for new picks (open TLT/XLF stay 45d / due 2026-10-10)
+**Mechanism:** Bessent ≥$4bn 10s–30s buybacks from **9 Sep**; Warsh at Jackson Hole **Fri 28 Aug**. 30y ~5.18%, 10y ~4.65%. PCE 3.7%. Buyback relief already round-tripped; Druckenmiller called the plan a mistake. Not a 2-day JH ticket.
+**Beneficiaries / hurt:** long-duration cash-flow names vs (not booked) mixed financials.
+
+**Industry analysis (before picks):**
+1. *Value chain:* Treasury long-end supply → term premium → discount rates on utilities / housing / tower REITs. Banks are *not* a clean opposite (NIM vs duration).
+2. *Transmission / tell:* 30y yield; whether Warsh defends 2% without blessing quasi-QE. BofA: 30y 5.5%+ if he does not contain the long end.
+3. *Peer universe:* NEE / DUK / SO (regulated duration); DHI / LEN / PHM (rate-sensitive housing); AMT / CCI (tower REIT duration); TLT basket. XLF/JPM/KRE dropped as hurt — mixed sector, one-sided v1.0 range was already a miss.
+4. *Screen:* NEE (cleanest large-cap duration utility). DHI (highest housing torque vs LEN). AMT (tower duration, not a homebuilder duplicate). Drop DUK/SO (lower beta), PHM (smaller), CCI (duplicate AMT).
+5. *Hurt:* not booked as a name (financials too mixed). TLT remains the frozen basket.
+6. *Priced?* Partial. 9 Sep operations have not started → watch.
+
+**Then — 3 stocks:** NEE · DHI · AMT (same rate driver, different ops — not XLE/USO-style duplicate).
+
+| ticker | side | pct_low | pct_high | conf | action | spot_at_call | pick_or_basket |
+|--------|------|---------|----------|------|--------|--------------|----------------|
+| NEE | benefit | 2 | 10 | 48 | watch | 30y 5.18% | pick |
+| DHI | benefit | 3 | 14 | 45 | watch | 30y 5.18% / 10y 4.65% | pick |
+| AMT | benefit | 2 | 10 | 45 | watch | ~176 | pick |
+
+**Falsifier:** buybacks halted or 30y >5.5% on hawkish Warsh / fiscal scare.
+**Action:** watch.
+
+#### Tracker this run
+Append 9 *pick* rows (UAL, SU, PSX, NUE, WFG, MGA, NEE, DHI, AMT). 10 prior basket rows frozen.
+
+**Calibration:** no closed rows.
+**Sources:** Al Jazeera 26 Aug corridor; WSJ/CNN oil; United 15 Jul $6bn fuel hit; Reuters 24 Aug super-refining; White House 338 energy exempt; Barron’s/Invezz 24 Aug NUE/STLD/CLF; WFG quote ~69; CNBC/Reuters Jackson Hole; Trading Economics 10y 4.65% / 30y 5.18%. Disclaimer: not financial advice.
+
+---
+
 ### 2026-08-26 | 16:20 UTC (v1.1 official analysis — user-requested re-run after prompt landed)
 
 **Prompt:** [v1.1](https://github.com/Coombzy/Project-Car/blob/main/finance/Macro_Theme_Analysis_Prompt.md) (2026-08-26 15:05 UTC). Prior 14:42 UTC entry is the v1.0 backfill + overlap addendum; left intact. Open tracker rows **not re-booked** (no duplicate `(analysis_date, theme_id, proxy)`).
