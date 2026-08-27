@@ -34,7 +34,7 @@ Key takeaway: Volume-supported reclaim of the 200-DMA with firming U3O8 restores
 - Prior scenarios vs actual: Aug 24 1d ($99.50–$104.50 bias $100.50–$103) → actual ~$106.90 **miss (upper exceed)** on strong session; Aug 23 1w ($98–$110 bias $103–$107) on-track / now testing upper; Aug 23 1d closed hit as previously graded.
 
 #### Audit / Reviewer Notes
-**Independent Process Quality Audit** (Grok CCJ Auditor, 2026-08-26 ~16:35 ET; post-close)
+**Independent Process Quality Audit** (Grok CCJ Auditor, 2026-08-27 ~16:35 ET; post-close)
 
 ### Process Quality Audit
 - Checklist (Quality):
@@ -49,35 +49,35 @@ Key takeaway: Volume-supported reclaim of the 200-DMA with firming U3O8 restores
   - [x] Decision map N/A (entry pre-v1.6; prompt was v1.5 at write)
   - [x] 1d width vs ATR: ATR not stated; width $5.50 — flag only (v1.6+ rule)
 - Checklist (Operational v1.4):
-  - [x] Analysis prompt bumped this run v1.7 → **v1.8**
+  - [x] Analysis prompt bumped this run **v1.10 → v1.11** (log-heading confirm + catch-up must write the living log)
   - [x] Newest log entry patched only
   - [x] Process Health row for today confirmed post-commit
-  - [x] Prediction grades: Aug 25 1d **closed**; 1w/1m/3m open; no new 1w close
-  - [x] Data source class: public fallback (matching independent numbers)
+  - [x] Prediction grades: Aug 26 1d **closed hit**; Aug 23 1w open through ~Aug 28; 1d status honest (closed)
+  - [x] Data source class: public fallback (Yahoo + Investing.com match on Aug 27 OHLC)
   - [x] Tracker feature columns preserved
   - [x] Calibration.md refreshed (new 1d close)
 - Deduction arithmetic: 10 − 0.5 (public fallback matching) = **9.5/10**
-- Recurring issues: Official **Aug 26 EOD Analysis MISSED** (newest entry remains Aug 25 15:45). Two consecutive 1d high-exceeds (Aug 24 full, Aug 25 partial). Prompt v1.8 applied this run.
-- Overall: Aug 25 EOD remains structurally excellent. Independent Aug 26 RTH (Yahoo/StockAnalysis match): O107.06 **H111.54 L106.91 C107.32** Vol ~3.23–3.45M. URA C48.05 (−0.19%). Spike-and-fade through $110 magnet; close held bias $106–$109. 15:45 Rel Vol 0.77x vs official ~1.1x is timing, not contradiction. Score unchanged; operational miss is the missing Aug 26 entry.
+- Recurring issues: Official **Aug 27 EOD Analysis MISSED**. Official **Aug 26 living-log entry also missing** (catch-up wrote tracker/health/calibration/prompt v1.10 but never prepended `### 2026-08-26`). Newest log heading remains Aug 25.
+- Overall: Aug 25 EOD remains structurally excellent (score unchanged). Independent Aug 27 RTH (Yahoo history + Investing.com match): O108.13 **H108.83 L105.19 C106.33** Vol ~1.69–1.87M (Rel ~0.50–0.55×). Fade −0.96% after Wed spike-fade; close held inside the wide Aug 26 1d ($102.50–$116.50). U3O8 $90.60/lb (+$1.05 / +1.17%, UraniumTracker). Operational miss is the missing Aug 26 log + Aug 27 EOD.
 
 ### Prediction Accuracy
-- Closed vs preliminary: Aug 25 1-day **closed** after Wed 26 regular close. No 1w newly closed.
+- Closed vs preliminary: Aug 26 1-day **closed** after Thu 27 regular close. No 1w newly closed (Aug 23 1w through ~Aug 28).
 - Pointer: full table in `CCJ_Prediction_Tracker.md`.
 - Material rows:
-  - Aug 25 1d ($104.50–$110.00 bias $106–$109): L106.91 H111.54 C**107.32** → **no (upper exceed)**; close inside; pct_error ~0.2% vs bias mid $107.50 → closed
-  - Aug 25 1w ($102–$115): H111.54 C107.32 on-track
-  - Aug 24 1w ($98–$108): path high **exceeded** (H111.54); C107.32 inside; open
+  - Aug 26 1d ($102.50–$116.50 bias $107–$112.50): L105.19 H108.83 C**106.33** → **yes (hit)**; C below bias low; pct_error ~3.1% vs bias mid $109.75 → closed
+  - Aug 26 1w ($99–$122): on-track (day 1)
+  - Aug 25 1w ($102–$115): path L105.19 H111.54 C106.33 on-track
   - Aug 23 1w ($98–$110): path high exceeded; open through ~Aug 28
-  - Aug 18 1m ($88–$110): path high exceeded; open
-- Calibration: refreshed yes. Closed 1d n=6: full hit 2/6 (33%); partial 2/6 (33%); full upper 1/6; lower miss 1/6. Last 3 closed 1d = 2 upper-exceed → next 1d must add +1.0×ATR to high.
-- Root cause: $110 set as 1d cap (= magnet). Session TR ~$4.63; width $5.50 did not cover the spike. Close tracked bias almost perfectly. Uranium high-beta + round-number magnet, not a fundamental miss.
+  - Aug 25 3m ($110–$145): path L105.19 through $110 — flag, still open
+- Calibration: refreshed yes. Closed 1d n=7: full hit 3/7 (43%); partial 2/7 (29%); full upper 1/7; lower miss 1/7. Last 3 closed 1d = 2 upper-exceed + 1 hit → rule 2 **still fires**.
+- Root cause (Aug 26 1d): hit because v1.10 width $14 (3.0×ATR) + rule 2/magnet-clear absorbed the fade. Bias $107–$112.50 was still optimistic vs Rel ~0.5× digestion; close slipped 67¢ under bias low. Range construction worked; bias did not.
 
 ### Improvement Recommendations
-- Prompt edit committed to `CCJ_Analysis_Automater_Prompt.md` **v1.8**: (1) partial high-exceed counts as upper-exceed for the 2-of-3 rule; (2) do not place 1d high AT a round magnet — clear it by ≥$1 or 0.25×ATR.
-- **Analysis job catch-up required** for official 2026-08-26 EOD (C107.32 H111.54 L106.91 Vol ~3.2–3.5M; URA 48.05). Apply v1.8 + Calibration rule 2 on next 1d.
-- Keep 16:10 ET Close/volume print. Do not treat $110/$115 as walls.
+- Prompt edit committed to `CCJ_Analysis_Automater_Prompt.md` **v1.11**: re-read confirm living-log `### YYYY-MM-DD` heading; catch-up without a log entry is incomplete (fixes Aug 26 tracker/health-without-log miss).
+- **Analysis job catch-up required** for (1) official 2026-08-26 living-log EOD (never prepended) and (2) official 2026-08-27 EOD (C106.33 H108.83 L105.19 Vol ~1.7–1.9M Rel ~0.5×; U3O8 $90.60). Apply v1.11 + Calibration rule 2 (still live) + Rel ≤ 0.5× downside widen.
+- Keep 16:10 ET Close/volume print. Do not treat tracker rows as a substitute for the log.
 
-**Final Action** Tracker + Calibration + Health + prompt v1.8 in same run.
+**Final Action** Tracker + Calibration + Health + prompt v1.11 in same run. Official Aug 26 log + Aug 27 EOD missed; audit of existing newest entry complete.
 
 ---
 
