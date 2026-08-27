@@ -1,8 +1,8 @@
 # CCJ Stock Analysis Automater — Hermes Agent Process
 
-**Version:** 1.10 (2026-08-26)  
-**Last edited:** 2026-08-26 23:20 UTC  
-**Supersedes:** v1.9 (2026-08-26)  
+**Version:** 1.11 (2026-08-27)  
+**Last edited:** 2026-08-27 20:40 UTC  
+**Supersedes:** v1.10 (2026-08-26)  
 **Location:** `Project-Car/finance/`
 
 Read `finance/CCJ_WRITE_RULES.md` and `finance/CCJ_README.md` first.
@@ -19,6 +19,7 @@ The job is not a recap. It is a **decision map for the next session**: regime, l
 - **Regime Rel Vol** is the official 16:00 print only — never a 15:45 last. If only an early print exists, do not classify regime as `trend-up`.
 - Confidence: EOD 80-92 typical. Early/intraday snapshots <= 80, flag `volume incomplete`, replace at EOD — they are not official. Do not raise 1d conf above 60% until calibration full-hit rate over last 10 closed 1d is ≥ 55%.
 - Missed trading day: before writing today, record that session's official close in Historical Deltas (and close the open 1-day tracker row if price is known).
+- Catch-up for a missed session **must prepend the living-log entry first**. Tracker, Health, and Calibration updates without a `### YYYY-MM-DD` log heading are an incomplete run — not a substitute.
 
 ## Data sources
 
@@ -64,7 +65,7 @@ Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Audi
 3. Classify regime. Build ranges using Calibration active rules + Range construction above.
 4. Fill **Forward Scenarios** + **Decision map** + prior-scenario lines.
 5. Quality Evaluator. If < 7, fix before commit. If 1d width < 2×ATR-proxy, or 1d high ≤ last session high after a 2-of-3 upper-exceed, fix before commit.
-6. Commit log (prepend one entry). Get SHA immediately before write.
+6. Commit log (prepend one entry). Get SHA immediately before write. **Re-read the living log and confirm the `### YYYY-MM-DD` heading for this session exists.** If missing, retry the log write once. Do not proceed to tracker/Health until the heading is confirmed.
 7. Append four tracker rows with **structured features filled**: `pred_regime`, `pred_rel_vol`, `prior_day_pct` (status=`open`).
 8. Prepend one Process Health row with Audit Score `(pending)`. Re-read to confirm.
 9. Report commit SHA(s).
@@ -124,3 +125,4 @@ Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Audi
 - [ ] Tracker rows include pred_regime, pred_rel_vol, prior_day_pct
 - [ ] Quality Evaluator >= 7; Confidence consistent with session timing + calibration
 - [ ] Health row confirmed present
+- [ ] Living-log `### YYYY-MM-DD` heading for this session confirmed present after commit (not only Health)
