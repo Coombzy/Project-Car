@@ -6,6 +6,85 @@ Not financial advice. Selection support only — no position sizes.
 
 ---
 
+### 2026-08-27 | 13:50 UTC (v1.3 official analysis — Thursday cadence)
+
+**Prompt:** [v1.3](https://github.com/Coombzy/Project-Car/blob/main/finance/Macro_Theme_Analysis_Prompt.md). Prior 26 Aug 18:25 UTC = v1.3 user re-run; 16:20 UTC = v1.1; 14:42 UTC = v1.0. All left intact. Frozen open rows **not** edited. New rows = new industries only (no UAL/SU/PSX/NUE/WFG/MGA/NEE/DHI/AMT re-book).
+
+**Key Takeaway:** Hormuz’s corridor is still not operational and Brent bounced ~86.3→~88.8, but the 72h industry book is **products not crude**: Russia extending the diesel export ban through September keeps ULSD cracks near ~$95; Canada’s 8 Sep 15/25/50% list is now official and hits US appliances/paper/dairy, not Alberta crude (energy still exempt).
+
+**Overlap scan:**
+1. Distillate × open Hormuz thaw → **related, not the same cash-flow line.** Thaw is Brent/WCS; this book is the **ULSD/jet crack**. Hormuz reopen would falsify distillate (Gulf product returns). Distillate tightness is a **haircut** to the open UAL benefit even if crude fades. Sign flips if corridor opens. Do not reverse UAL/SU (falsifier Brent >$95 not printed; oil bounce is a risk, not a close).
+2. Distillate × Canada 8 Sep → weak (diesel as a truck/steel-capex cost only). No overlay.
+3. Canada 8 Sep × open `20260826-us-canada-tariffs` → **same trade war, new industries.** Yesterday booked US mill wall (NUE) + Canada lumber/parts (WFG/MGA). Today’s tell is the [874-item counter-list](https://www.canada.ca/en/department-finance/news/2026/08/list-of-products-from-the-united-states-subject-to-counter-tariffs-effective-september-8-2026.html) into **US exporters** (appliances, pulp/paper, dairy). Energy/potash still exempt — not a crude-duty stack. Electricity threats still political, not booked.
+4. Duration / Jackson Hole (Warsh Fri 28 Aug 10:00 ET; buybacks 9 Sep) → still live on open TLT/NEE/DHI/AMT. **Not re-booked** (not a 2-day JH ticket; no new industry expression). 10y ~4.67%, 30y ~5.18%.
+
+**Ranking** (score = conf/100 × pct_high of best *benefit* name):
+- Distillate / STNG 20×0.50 = **10.0** — kept (new)
+- Open Hormuz / UAL 18×0.55 = **9.9** — live on tracker, **no new rows** (corridor still closed; oil bounce ≠ falsify)
+- Open duration / DHI 14×0.45 = **6.3** — live on tracker, **no new rows**
+- Canada 8 Sep / SAP.TO 12×0.48 = **5.8** — kept (new industry vs NUE/WFG/MGA)
+Dropped: PBF/DINO (duplicate refiner vs VLO); ASTL (thin, ~$0.5B); DE (mega-cap, US+Canada reported together — too little 8 Sep torque); GENIUS/stablecoin/JPM (not a 72h shock until Warsh speaks); XLU electricity (political).
+
+Drivers: Brent ~88.8, WTI ~82.4, HO ~$4.22/gal → ULSD crack ~$95; 10y ~4.67%, 30y ~5.18%. Corridor not operational ([Reuters](https://www.reuters.com/world/china/iran-oman-discuss-temporary-hormuz-corridor-impasse-with-us-drags-2026-08-25/) 26 Aug: no final accord; [CBS](https://www.cbsnews.com/live-updates/iran-war-us-strait-of-hormuz-sanctions/) 27 Aug: Iran military outlet says US must lift blockade). Energy still exempt ([White House](https://www.whitehouse.gov/fact-sheets/2026/07/fact-sheet-president-donald-j-trump-imposes-additional-tariffs-on-canada/)).
+
+#### Theme 1 — `20260827-distillate-squeeze` · 30d (due 2026-09-26)
+**Mechanism:** Reuters 25 Aug: Russia set to extend the diesel export ban through September (idle refineries after Ukrainian drone hits; year-end extension also discussed). IEA Aug: jet exports from Russia/ME/Asia −670 kb/d y/y; diesel seaborne −1.3 mb/d. Hormuz still closed, so Gulf product cannot backfill. Crude faded three days then bounced; **cracks did not**. 30d = the September ban window vs a surprise reopen of either Russia diesel or Hormuz product.
+**Beneficiaries / hurt:** USGC diesel-export refiners + product tankers vs diesel-cost truckload. (Airlines already open on Hormuz — not duplicated.)
+
+**Industry analysis (before picks):**
+1. *Value chain:* Russian refinery (offline) → missing seaborne ULSD/jet → Atlantic-basin crack → USGC refiner export cargo → product tanker TCE → European/LatAm importer. US truckload sits at the other end of the same barrel (retail diesel).
+2. *Transmission / tell:* **ULSD crack** (HO $/gal × 42 − WTI), not Brent. Today HO ~$4.22 / WTI ~82.4 ⇒ crack ~$95 vs teens in peacetime (record $93.84–$102 in mid-Aug per Reuters/247). Russia-ban extension is a *volume* tell; Hormuz-closed is the *backfill* constraint.
+3. *Peer universe:* VLO / MPC (USGC diesel/jet yield + export to Europe; both doubled YTD, mkt cap ~$100B); DINO (inland/Rockies, +107% YTD, less export); PBF (levered, +162% YTD, $8B — torque but crash-risk); STNG (product tanker, ~90-ship MR/LR fleet, NYSE); INSW (mixed crude+product); KNX (truckload spot, fuel pass-through incomplete); ODFL (LTL — fuel surcharge stickier, weaker hurt); UNP (rail diesel, mega-cap, low %). CRAK/PSX already open (PSX was *coker/heavy*, not diesel-export).
+4. *Screen:* One refiner only — **VLO** over MPC (similar beta; VLO is the cleaner diesel/jet yield name) and over PBF/DINO (duplicate + already-priced crash risk). One tanker — **STNG** over INSW (product-only fleet matches the ULSD tell; higher % torque than VLO which has already doubled). One hurt — **KNX** over ODFL (truckload spot vs LTL surcharge) and over UNP (torque). Drop FRO (Oslo). Drop UAL/DAL (open / duplicate airline).
+5. *Hurt:* truckload (KNX); airlines (already booked); farmers/heating. VLO *consumers* (truck, ag) pay the crack.
+6. *Priced?* Refiner equities have run 80–110% YTD; CNBC 17 Aug flagged 6-month forward mean-reversion after similar spikes; Barron’s 21 Aug still sees room. **Not ignore:** 25 Aug ban-extension is new, cracks still ~$95. Haircut VLO’s remaining %; give STNG the convexity. If cracks compress $30+ from here without a volume restore, the theme is late.
+
+**Then — 3 stocks that survived the screen:** STNG (product-tanker TCE; **deep-dive**) · VLO (USGC diesel export, haircut) · KNX (truckload hurt).
+
+| ticker | side | pct_low | pct_high | conf | action | spot_at_call | pick_or_basket |
+|--------|------|---------|----------|------|--------|--------------|----------------|
+| STNG | benefit | 6 | 20 | 50 | deep-dive | STNG ~76; ULSD crack ~95 | pick |
+| VLO | benefit | 3 | 12 | 48 | watch | VLO ~350 | pick |
+| KNX | hurt | -12 | -2 | 45 | watch | KNX ~69.6 | pick |
+
+**Falsifiers:** STNG — Russia diesel exports resume **and** Hormuz product flows normalize (TCE collapse). VLO — ULSD crack <$30 or Gulf product exports recover. KNX — crack collapses **or** freight upcycle offsets fuel. Stack: Hormuz corridor actually opens (then distillate dies; open UAL benefit revives).
+**Action:** deep-dive (STNG only).
+
+#### Theme 2 — `20260827-canada-8sep` · 14d (due 2026-09-10)
+**Mechanism:** 25 Aug Canada published the matching 15/25/50% counter-list on $27.6bn of US goods, effective **8 Sep 12:01 a.m.** Sectors: steel/aluminum (50%), furniture/clothing (50%), appliances/dairy (25%), ag equipment, pulp/paper, electronics. 8 Sep is 12 days out — 14d is the implementation + first guidance window. Trump’s 50% Canadian auto/steel from **1 Jan 2027** is a 2027 threat, not this book. Energy/potash still exempt on the US 338 side.
+**Beneficiaries / hurt:** Canadian dairy processors (import-sub) vs US appliance OEMs and US pulp/paper exporters.
+
+**Industry analysis (before picks):**
+1. *Value chain:* US plant → border → Canadian retailer/OEM. 8 Sep plants a 15/25/50% duty on that crossing. Canadian domestic processor collects the import-sub rent. US mill wall (NUE) is a *different* crossing (Canada→US), already booked.
+2. *Transmission / tell:* 8 Sep list going live; whether dairy/appliance/paper lines survive last-minute talks. Not WCS, not Brent, not Section 232 steel already at 50%.
+3. *Peer universe:* WHR (US appliances into Canada, 25% line, mkt cap ~$2.6B, −43% YTD); DE / AGCO (ag equipment; DE reports US+Canada as one unit — low Canada-only torque); IP / PKG / SW (pulp/paper/packaging; IP is the US exporter); SAP.TO (Canadian dairy; has a large US plant network — mixed); ASTL (Canadian steel import-sub, mkt cap ~$0.5B — **thin, skip**); MGA/WFG already open.
+4. *Screen:* **SAP.TO** is the only liquid TSX dairy name that wins from 25% on US cheese/milk powder into Canada — keep with a **haircut** because Saputo’s USA division also ships north. **WHR** over any furniture name (25% appliances, small cap, high % torque; Canada is a real Whirlpool market). **IP** over DE (paper is on the list with cleaner Canada-crossing exposure; DE mega-cap / combined NA reporting fails the % screen). Drop ASTL (thin). Drop AGCO (DE duplicate, worse liquidity). Drop SW (Ireland-domicile mix).
+5. *Hurt:* US appliance, paper, ag-equipment exporters. Canadian consumers pay more. NUE’s *Canadian export slice* is a mild haircut to the open mill-wall book, not a reverse.
+6. *Priced?* NUE/WFG popped on talks-fail 24 Aug. WHR’s −43% YTD is company-specific (volume/housing), not 8 Sep. List is 2 days old, duty not live → watch, not ignore.
+
+**Then — 3 stocks:** SAP.TO (benefit, haircut) · WHR (hurt appliances) · IP (hurt paper).
+
+| ticker | side | pct_low | pct_high | conf | action | spot_at_call | pick_or_basket |
+|--------|------|---------|----------|------|--------|--------------|----------------|
+| SAP.TO | benefit | 3 | 12 | 48 | watch | SAP.TO ~41 CAD | pick |
+| WHR | hurt | -18 | -4 | 50 | watch | WHR ~40 | pick |
+| IP | hurt | -10 | -2 | 45 | watch | IP ~41.4 | pick |
+
+**Falsifiers:** SAP.TO — dairy lines dropped from the 8 Sep list or USMCA dairy carve-out. WHR/IP — appliance/paper lines dropped or a USMCA-compatible deal before 8 Sep. Stack: energy exemption reversed (then SU/XEG become *policy* hurt — not this book).
+**Action:** watch.
+
+#### Not booked this run (open rows stand)
+- `20260826-hormuz-thaw` — corridor not finalized; Brent 86.3→88.8 is a risk to UAL, not a falsify (>$95). Distillate is the product overlay, new theme_id because the tell is the crack not Brent.
+- `20260826-treasury-fed-tension` — Warsh Friday is the 60d mechanism already on NEE/DHI/AMT/TLT. Not a 14d speech lottery.
+
+#### Tracker this run
+Append 6 *pick* rows (STNG, VLO, KNX, SAP.TO, WHR, IP). All 19 prior rows frozen.
+
+**Calibration:** no closed rows.
+**Sources:** Reuters 25 Aug Russia diesel ban; Reuters 26 Aug Hormuz not finalized; CBS 27 Aug blockade condition; Trading Economics Brent ~88.8 / WTI ~82.4 / HO ~4.22 / 10y 4.67 / 30y 5.18 (27 Aug); IEA Oil Market Report Aug 2026; CNBC 17 Aug refiner-run warning; Barron’s/Yahoo 21–25 Aug VLO/MPC; Canada.ca 25 Aug counter-list + 8 Sep 12:01 a.m.; White House 338 energy exempt; WHR ~40 / IP ~41.4 / SAP.TO ~41 / STNG ~76 / VLO ~350 / KNX ~69.6. Disclaimer: not financial advice.
+
+---
+
 ### 2026-08-26 | 18:25 UTC (v1.3 official analysis — user-requested re-run after industry-before-picks rule)
 
 **Prompt:** [v1.3](https://github.com/Coombzy/Project-Car/blob/main/finance/Macro_Theme_Analysis_Prompt.md). Prior 16:20 UTC = v1.1; 14:42 UTC = v1.0 backfill. Both left intact. Frozen ETF ranges **not** edited. New rows = stock picks only.
