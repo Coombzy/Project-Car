@@ -2,7 +2,7 @@
 
 Owner: `Coombzy/Project-Car`  
 Live automations: **CCJ Daily Stock Analysis** then **CCJ Analysis Auditor**  
-Current versions: **Analysis v1.10** · **Audit v1.4** · **Write rules v1.1** · **Calibration live** (2026-08-26)
+Current versions: **Analysis v1.11** · **Audit v1.4** · **Write rules v1.1** · **Calibration live** (2026-08-27)
 
 ## Load order (every run)
 
