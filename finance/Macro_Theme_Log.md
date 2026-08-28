@@ -6,6 +6,64 @@ Not financial advice. Selection support only — no position sizes.
 
 ---
 
+### 2026-08-28 | 18:55 UTC (v1.3 official analysis — Warsh JH print; off-cadence Friday)
+
+**Prompt:** [v1.3](https://github.com/Coombzy/Project-Car/blob/main/finance/Macro_Theme_Analysis_Prompt.md). Prior 27 Aug 13:50 UTC = Thursday cadence. Left intact. Frozen open rows **not** edited. New rows = new industries only (no TLT/NEE/DHI/AMT/UAL/SU/STNG/VLO/KNX/SAP.TO/WHR/IP re-book).
+
+**Key Takeaway:** Warsh’s first Jackson Hole keynote made inflation the “predominant focus,” refused forward guidance, and lifted September hike odds to ~56%; the new 30d industry book is **front-end real rates into gold miners**, not a re-book of the 30y/buyback duration names (30y 5.21% still below the 5.5% falsifier).
+
+**Overlap scan:**
+1. Warsh front-end × open duration (`20260826-treasury-fed-tension`) → **related curve, different cash-flow line.** Open TLT/NEE/DHI/AMT are the **30y/buyback** expression (Bessent ≥$4bn from 9 Sep still scheduled). Today’s tell is the **2y** (CNBC: +8 bp to ~4.31%) and **spot gold**. Bear flattener (2y up, 30y ~5.21% not exploding) means duration names are *not* falsified (30y >5.5% not printed; buybacks not halted). Sign: if buybacks fail *and* Warsh hikes, duration benefit dies and gold hurt extends. If buybacks work, 30y can stay contained while 2y stays high — gold still hurt, duration still live. Do not reverse NEE/DHI/AMT.
+2. Warsh × Hormuz/distillate → weak (disinflation tail only if oil also breaks). Brent ~88.3, not >95. ULSD crack still ~$96. No overlay. No new energy rows.
+3. Warsh × Canada 8 Sep → none. Seafood/fish **dropped** from the 8 Sep list 27 Aug ([Reuters](https://www.reuters.com/business/canada-excludes-us-seafood-retaliatory-tariffs-2026-08-27/)) — a carve-out, not a deal. WHR/IP/SAP.TO stand. Energy still exempt.
+4. GENIUS/stablecoin/JPM — Warsh did **not** speak to payment stablecoins (speech “tokens” = LLM usage, not crypto). Still not booked.
+
+**Ranking** (score = conf/100 × pct_high of best *benefit* name):
+- Warsh front-end / KEY 10×0.45 = **4.5** — kept (new industry: gold miners + regional NIM). Convexity is on the *hurt* miner (KGC −16×0.52 would be 8.3 if scored as benefit; it is not).
+- Open distillate / STNG 20×0.50 = **10.0** — live, **no new rows**
+- Open Hormuz / UAL 18×0.55 = **9.9** — live, **no new rows** (corridor still not operational; Brent 88.3 ≠ >95)
+- Open duration / DHI 14×0.45 = **6.3** — live, **no new rows** (Warsh is a *risk* to the 30y book, not a close)
+- Open Canada 8 Sep / SAP.TO 12×0.48 = **5.8** — live, **no new rows** (seafood carve-out is not a dairy/appliance falsify)
+Dropped: Venezuela OPEC-exit / CVX (talks, no decision; oil-beta duplicate vs open USO/SU); China 7.5% overcapacity tariff (Bloomberg 24 Aug “set to impose” before Xi visit — not live); AEM/NEM/GDX as extra miners (duplicate gold-beta vs KGC); GENIUS/JPM (Warsh silent); XLU electricity (political).
+
+Drivers: 2y ~4.31% (CNBC post-speech +8 bp), 10y ~4.69%, 30y ~5.21%; Sep FOMC 16 Sep hike odds ~55.7% (CME, +~20 pp); DXY ~99.66; spot gold ~$4,560 (post-speech −0.8% to −2%); GDX ~100.3 (−3.3%); Brent ~88.3, WTI ~83.3, HO ~$4.27 → ULSD crack ~$96. Corridor not operational. Energy still exempt.
+
+#### Theme 1 — `20260828-warsh-hike-gold` · 30d (due 2026-09-27)
+**Mechanism:** [Fed text](https://www.federalreserve.gov/newsevents/speech/warsh20260828a.htm): PCE 3.7% / 6-month 4.1%; “the Fed’s predominant focus right now should be on prices”; “I would be hard-pressed to describe broad financial conditions as restrictive”; no forward guidance. AP/PBS: rate hikes may be needed in coming months. 30d = Sep 16 FOMC + digestion — 14d would miss the meeting. Not a 2-hour speech lottery.
+**Beneficiaries / hurt:** asset-sensitive regional-bank NIM vs gold-mining free cash flow (real-rate + dollar). mREIT funding cost is a *second* 2y hurt with a flatten haircut.
+
+**Industry analysis (before picks):**
+1. *Value chain:* Mine (KGC/NEM/AEM) → royalty (WPM) → bullion/ETF (GLD) → jewelry/CB. Separate chain: regional bank (KEY/CFG) holds floating C&I/CRE, funds deposits; a hike reprices assets faster than deposits. Third chain: agency mREIT (NLY/AGNC) holds MBS, funds repo — 2y is the funding leg, 30y/MBS the asset leg.
+2. *Transmission / tell:* **2y yield + spot gold**, not 30y (Bessent still caps the long end). Today 2y ~4.31%, gold ~$4,560, GDX −3.3%, NEM −3.7% to ~127, AEM −4.6% to ~205. NLY only −0.6% because the bear flattener cushions MBS prices — haircut that name. DXY ~99.66 is the secondary tell.
+3. *Peer universe:* NEM (largest, NYSE, ~$140B, −3.7% to ~127, 52w high 135 — lower remaining %); AEM (low-AISC quality, −4.6% to ~205); KGC (NYSE, mkt cap ~$38B, ADV ~8.5M, higher beta, 52w high 39 / 27 Aug close 32.51); Barrick (ticker mix, skip); WPM (royalty, less opex leverage); PAAS (silver, industrial mix — Warsh “strong economy” offsets); GDX basket; KEY (regional, $23B, ~21.92, 52w high 24.07); CFG (~70, $29B); KRE basket ~74.3 (flat); NLY (~22.95, $17B, 52w 20–24.52 — tight); AGNC (~10.86); XLF already open as *hurt* (noisy) — different hypothesis.
+4. *Screen:* **One miner only** — **KGC** over NEM (NEM already near 52w high, lower remaining %) and over AEM (duplicate gold-beta; AEM quality = less torque). Drop GDX as a *pick* (basket duplicate vs KGC). **One bank** — **KEY** over CFG (smaller cap, more % room to 52w high ~10%) and over KRE (prefer a name). Haircut KEY because bear-flatten is not a classic steepener NIM gift and 52w high caps the easy 10%. **One 2y-funding hurt that is not gold** — **NLY** over AGNC (liquidity) with a **flatten haircut** (today’s −0.6% vs miners −4% is the tell that this is the weaker expression). Drop WAL/ZION (crisis-beta, not this book). Drop DHI/NEE/AMT (already open duration). Drop COIN (Warsh silent on crypto).
+5. *Hurt:* gold miners (real rate); mREITs (repo); duration names already booked. Jewelers/gold-consumers are a theoretical benefit too thin to book.
+6. *Priced?* Miners printed −3 to −5% today = *some* of the hawkish. Remaining is 56% Sep-hike odds → 80%+ into 16 Sep. **Not ignore.** If 2y reverses under 4.15% and gold reclaims $4,700, the theme is a one-day speech fade.
+
+**Then — 3 stocks that survived the screen:** KGC (miner torque; **deep-dive**) · KEY (regional NIM benefit, haircut) · NLY (mREIT 2y-funding hurt, flatten haircut).
+
+| ticker | side | pct_low | pct_high | conf | action | spot_at_call | pick_or_basket |
+|--------|------|---------|----------|------|--------|--------------|----------------|
+| KGC | hurt | -16 | -4 | 52 | deep-dive | KGC ~31.4; Au ~4560; 2y 4.31% | pick |
+| KEY | benefit | 2 | 10 | 45 | watch | KEY ~21.92; 2y 4.31% | pick |
+| NLY | hurt | -8 | -1 | 42 | watch | NLY ~22.95 | pick |
+
+**Falsifiers:** KGC — Sep FOMC holds **and** 2y <4.15% with gold >$4,700. KEY — Sep hold, or a credit/CRE event, or flatten so severe asset yields do not reprice. NLY — 9 Sep buybacks rally 30y/MBS enough to offset 2y (already the haircut; falsify if NLY *rises* through a hike). Stack: 30y >5.5% (then open duration benefit also dies — do not wait to reverse those rows until the printed falsifier).
+**Action:** deep-dive (KGC only).
+
+#### Not booked this run (open rows stand)
+- `20260826-hormuz-thaw` / `20260827-distillate-squeeze` — corridor not operational; Brent 88.3; crack ~$96. No new energy names.
+- `20260826-treasury-fed-tension` — 30y 5.21% <5.5%; buybacks still 9 Sep. Warsh is a risk, not a close.
+- `20260827-canada-8sep` — seafood carve-out only; 8 Sep 12:01 a.m. still live for dairy/appliances/paper.
+
+#### Tracker this run
+Append 3 *pick* rows (KGC, KEY, NLY). All 25 prior rows frozen.
+
+**Calibration:** no closed rows.
+**Sources:** [Fed Warsh 28 Aug speech](https://www.federalreserve.gov/newsevents/speech/warsh20260828a.htm); [CNBC](https://www.cnbc.com/2026/08/28/kevin-warsh-jackson-hole-federal-reserve-inflation.html)/Yahoo/AP/PBS market reaction; CME FedWatch ~55.7% Sep hike; Trading Economics 10y 4.69 / 30y 5.21 / Brent 88.3 / WTI 83.3 / HO 4.27; Bloomberg gold slide; Yahoo NEM ~127.42 −3.7% / AEM ~205.48 −4.6% / GDX ~100.30 −3.3% / KEY ~21.92 / NLY ~22.95; [Reuters 27 Aug Canada seafood drop](https://www.reuters.com/business/canada-excludes-us-seafood-retaliatory-tariffs-2026-08-27/); Bloomberg 27 Aug Venezuela OPEC talks (dropped); White House 338 energy exempt. Disclaimer: not financial advice.
+
+---
+
 ### 2026-08-27 | 13:50 UTC (v1.3 official analysis — Thursday cadence)
 
 **Prompt:** [v1.3](https://github.com/Coombzy/Project-Car/blob/main/finance/Macro_Theme_Analysis_Prompt.md). Prior 26 Aug 18:25 UTC = v1.3 user re-run; 16:20 UTC = v1.1; 14:42 UTC = v1.0. All left intact. Frozen open rows **not** edited. New rows = new industries only (no UAL/SU/PSX/NUE/WFG/MGA/NEE/DHI/AMT re-book).
