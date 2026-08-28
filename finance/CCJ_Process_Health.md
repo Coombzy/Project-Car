@@ -8,6 +8,7 @@ See `finance/CCJ_README.md`. Official cadence: Analysis **16:10 ET** weekdays ·
 
 | Date       | Analysis Confidence | Audit Score | Top Issue / Note                          | Data Sources OK? |
 |------------|---------------------|-------------|-------------------------------------------|------------------|
+| 2026-08-28 | 86                  | (pending)   | Official EOD C$100.01 Rel 1.36x volume 200-DMA break; Aug 26 C107.36 / Aug 27 C106.33 recorded in Historical Deltas (those log headings still missing) | Fallback |
 | 2026-08-27 | N/A (no new Analysis) | 9.5         | Official EOD Analysis MISSED (Aug 26 log never prepended; Aug 27 16:10 missed); Aug 26 1d CLOSED hit L105.19 H108.83 C106.33; prompt v1.11 log-confirm | Yes (Fallback) |
 | 2026-08-26 | 85                  | 9.5         | Catch-up official EOD written (v1.10); spike-fade H111.54→C107.36 Rel 1.23x; 1d $102.50–$116.50 (rule 2 + magnet-clear); Health cadence/version synced 16:10 / v1.10 | Yes (Fallback) |
 | 2026-08-25 | 86                  | 9.5         | Official EOD; strong +4.5% 200-DMA reclaim; public fallback matching; Aug 24 1d upper exceed closed; prompt v1.5 followed | Yes (Fallback) |
