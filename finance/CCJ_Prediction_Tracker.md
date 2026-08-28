@@ -8,10 +8,14 @@ Hit: actual regular-session H/L/Close inside **range** (not only bias).
 
 **Feature columns** (fill at prediction time): `pred_regime` = trend-up|trend-down|digestion|failed-break · `pred_rel_vol` = Rel Vol of the session being analyzed · `prior_day_pct` = prior regular-session % change.
 
-Last price context: 2026-08-27 official RTH close CCJ **$106.33** (Investing.com 15:59:59 + Yahoo history; Yahoo quote $106.34) L **105.19** H **108.83** Vol ~1.69–1.87M (Rel ~0.50–0.55× vs 20d ~3.37M); prior close $107.36 (−0.96%). U3O8 $90.60/lb (+$1.05 / +1.17%, UraniumTracker). Aug 26 1-day **closed yes (hit)**. See also `CCJ_Calibration.md`.
+Last price context: 2026-08-28 official RTH close CCJ **$100.01** (Yahoo 16:00:02 ET; StockAnalysis $99.97 / Investing $100.06) L **$99.53** H **$106.46** Vol **3.95M** (Rel **1.36×** vs 20d **2.90M**); prior close $106.33 (−5.94%). U3O8 $90.40/lb (−$0.20 / −0.22%, UraniumTracker / TE). URA C $45.57 (−5.79%). Regime **trend-down** (volume 200-DMA break). Aug 26 1d already closed hit. See also `CCJ_Calibration.md`.
 
 | analysis_date | horizon | range_low | range_high | bias_low | bias_high | conf | pred_regime | pred_rel_vol | prior_day_pct | actual_low | actual_high | actual_close | hit | directional | pct_error | status | notes |
 |---------------|---------|-----------|------------|----------|-----------|------|-------------|--------------|---------------|------------|-------------|--------------|-----|-------------|-----------|--------|-------|
+| 2026-08-28 | 1d | 92.50 | 109.00 | 96.50 | 101.50 | 50 | trend-down | 1.36 | -5.94 |  |  |  |  |  |  | open | v1.11 EOD; 200-DMA volume break; rule 2+7; width $16.50 = 3.56×ATR |
+| 2026-08-28 | 1w | 88.00 | 113.00 | 94.00 | 104.00 | 50 | trend-down | 1.36 | -5.94 |  |  |  |  |  |  | open | Day 1 of 5; magnet-clear $110 → $113 |
+| 2026-08-28 | 1m | 82.00 | 124.00 | 93.00 | 110.00 | 50 | trend-down | 1.36 | -5.94 |  |  |  |  |  |  | open |  |
+| 2026-08-28 | 3m | 88.00 | 148.00 | 100.00 | 125.00 | 55 | trend-down | 1.36 | -5.94 |  |  |  |  |  |  | open | 3m low below price (avoid Aug 25 $110-above-spot error) |
 | 2026-08-26 | 1d | 102.50 | 116.50 | 107.00 | 112.50 | 55 | digestion | 1.23 | 0.37 | 105.19 | 108.83 | 106.33 | yes | mild fade / below bias | ~3.1% | closed | v1.10 width $14 covered Rel ~0.5× fade; C 67¢ under bias low |
 | 2026-08-26 | 1w | 99.00 | 122.00 | 107.00 | 116.00 | 55 | digestion | 1.23 | 0.37 | 105.19 | 108.83 | 106.33 | on-track | | | open | Day 1 of 5 |
 | 2026-08-26 | 1m | 96.00 | 128.00 | 108.00 | 122.00 | 55 | digestion | 1.23 | 0.37 | 105.19 | 108.83 | 106.33 | on-track | | | open | |
