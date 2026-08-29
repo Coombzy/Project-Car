@@ -1,7 +1,7 @@
 # BTC / ETH Daily Analysis Prompt
 
-**Version:** 1.1  
-**Last edited:** 2026-08-28T15:25:00Z  
+**Version:** 1.2  
+**Last edited:** 2026-08-29T15:10:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** BTC ETH Daily Crypto Analysis automation
 
@@ -25,23 +25,26 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
    - 1-week width ≥ **3.0 × ATR-proxy** (use **≥ 4.0 ×** if last 5 sessions include a ≥5% up-day); if trend-up, upside leg from close ≥ 1.5× downside leg.
    - 1-month and 3-month: wider numeric bands; bias optional but preferred.
    - **Printed-high clearance:** `range_high` ≥ `max(as-of, UTC-session high already printed)` + **0.5 × ATR-proxy**. Never park the high on a wick/magnet.
-   - **Spike-fade:** if (session high − as-of) ≥ 0.8 × ATR, do not treat the wick high as a hard cap; still apply the 0.5× ATR clearance above that high. (Aug 28 1d BTC parked $81500 on printed $81479.50 = +0.008× ATR — forbidden.)
-4. Fill **pred_regime** and **prior_day_pct** (prior 24h % change) on every tracker row.
-5. Include **prior-scenario vs actual** from the tracker when closed rows exist. If none exist, write `prior-scenario: no closed tracker rows yet`.
+   - **Printed-low clearance:** `range_low` ≤ `min(as-of, UTC-session low already printed)` − **0.5 × ATR-proxy**. Never park the low on a wick. (Aug 28 ETH 1d actual low $2406 vs floor $2375 = 0.29×ATR — hit but tight.)
+   - **Spike-fade:** if (session high − as-of) ≥ 0.8 × ATR, do not treat the wick high as a hard cap; still apply the 0.5× ATR clearance above that high. Symmetric if (as-of − session low) ≥ 0.8 × ATR. (Aug 28 1d BTC parked $81500 on printed $81479.50 = +0.008× ATR — forbidden.)
+4. Fill **pred_regime** and **prior_day_pct** (prior 24h % change) on every tracker row. Put the **as-of UTC timestamp** in 1d notes so the 24h window is unambiguous.
+5. Include **prior-scenario vs actual** from the tracker when closed rows exist. If none exist, write `prior-scenario: no closed tracker rows yet`. When closed 1d rows exist, cite hit/miss + path H/L vs range (not only bias).
 6. **Decision map** (3 bullets): confirm vs fail; path-changing levels; calibration from last closed miss/hit.
-7. **Parseable table** in Forward Scenarios matching tracker columns: asset, horizon, range_low, range_high, bias_low, bias_high, conf, pred_regime, prior_day_pct.
+7. **Parseable table first:** immediately after Key Takeaway (before snapshot/narrative), output the 8-row table matching tracker columns: asset, horizon, range_low, range_high, bias_low, bias_high, conf, pred_regime, prior_day_pct. Notification emails truncate; Auditor recovery depends on this table being in the first screenful. Repeat the table in Forward Scenarios if useful.
+8. **Weekend/holiday ETF:** Sat/Sun and US market holidays have no US spot ETF print. State the last completed session date and figure. Do not treat Friday's flow as same-day Saturday flow.
 
 ## Report structure
 
 **Key Takeaway** (one sentence)
 
+**Parseable table** (rule 7 — 8 rows, immediately here)
+
 1. **Current Market Snapshot** — prices, 24h %, volume, mkt caps; 1d / 7d / 30d performance for BTC and ETH.
 2. **Technical Analysis** — support/resistance, MAs, RSI, ATR-proxy, **regime**, short-term outlook (1–3d and 1w) with probability ranges.
-3. **Fundamental & News** — ETF flows, institutional, regulatory, macro, on-chain; catalysts with probability + timing.
+3. **Fundamental & News** — ETF flows (with session date), institutional, regulatory, macro, on-chain; catalysts with probability + timing.
 4. **Forward Scenarios** (numeric bands required)
    - BTC: **1d** / 1w / 1m / 3m — `$low–$high` (bias low–high; conf %)
    - ETH: same
-   - Parseable table (rule 7)
    - Correlation note; overall crypto outlook; confidence low/medium/high
    - Key invalidation levels
    - Prior scenarios vs actual (from tracker)
@@ -57,6 +60,7 @@ Get SHA of `finance/BTC_ETH_Prediction_Tracker.md` immediately before write; ret
 - Do not duplicate existing (analysis_date, asset, horizon) pairs.
 - Do not change ranges on already-open rows from prior days.
 - Do not invent backfill for missing prior dates; Auditor recovers those from task output.
-- **Response must include the new tracker blob SHA.** If the write fails after one retry, paste the 8 rows and the SHA you needed — do not mark the run successful without rows.
+- **Post-write verify:** re-get the tracker and confirm today's 8 `(analysis_date, asset, horizon)` rows exist. If absent after one retry, paste the 8 rows in the response and write `WRITE FAILED` — do not mark the run successful.
+- **Response must include the new tracker blob SHA.**
 
 Cite sources. Be objective and data-driven.
