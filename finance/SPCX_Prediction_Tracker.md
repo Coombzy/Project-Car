@@ -21,3 +21,7 @@ Hit: actual H/L/Close (or path high/low over the horizon) stayed inside **range*
 | 2026-08-28 | 1w | 124 | 162 | 140 | 162 | 40 | digestion | below-avg | 0.89 | 139.01 | 143.29 |  |  |  |  | open | width 38 >=3x ATR; coil above 50-DMA/IPO; slight upside; 8/28 RTH path 139.01–143.29 |
 | 2026-08-28 | 1m | 105 | 188 | 125 | 188 | 35 | digestion | below-avg | 0.89 | 139.01 | 143.29 |  |  |  |  | open | Sep 9/10/24 lock-ups + Starship F14 NET Sep |
 | 2026-08-28 | 3m | 85 | 225 | 115 | 225 | 30 | digestion | below-avg | 0.89 | 139.01 | 143.29 |  |  |  |  | open | Q3 earnings unlock ~Nov; F14 orbital; Louisiana spaceport |
+| 2026-08-29 | 1d | 132 | 152 | 141 | 152 | 45 | digestion | below-avg | 0.45 |  |  |  |  |  |  | open | next-session 2026-08-31 RTH; ATR-proxy 8.50 (14d); last-5 median TR ~5.08; printed-high clearance |
+| 2026-08-29 | 1w | 124 | 160 | 140 | 160 | 40 | digestion | below-avg | 0.45 |  |  |  |  |  |  | open | width 36 >=3x ATR; coil near 50-DMA/IPO; slight upside bias |
+| 2026-08-29 | 1m | 105 | 190 | 125 | 190 | 35 | digestion | below-avg | 0.45 |  |  |  |  |  |  | open | Sep 9/10/24 lock-ups + Starship F14 NET Sep |
+| 2026-08-29 | 3m | 85 | 230 | 115 | 230 | 30 | digestion | below-avg | 0.45 |  |  |  |  |  |  | open | Q3 earnings/lock-up waves; F14 orbital; Louisiana spaceport |
