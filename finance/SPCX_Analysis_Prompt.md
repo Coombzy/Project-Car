@@ -1,7 +1,7 @@
 # SPCX Daily Analysis Prompt
 
-**Version:** 1.0  
-**Last edited:** 2026-08-28T16:20:00Z  
+**Version:** 1.1  
+**Last edited:** 2026-08-29T16:10:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** SPCX Daily Stock Analysis automation
 
@@ -35,7 +35,8 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
 6. Include **prior-scenario vs actual** from the tracker when closed rows exist. If none exist, write `prior-scenario: no closed tracker rows yet`.
 7. **Decision map** (3 bullets): confirm vs fail; path-changing levels; calibration from last closed miss/hit (or `no closed 1w yet`).
 8. **Parseable table** in Forward Scenarios matching tracker columns: horizon, range_low, range_high, bias_low, bias_high, conf, pred_regime, pred_rel_vol, prior_day_pct.
-9. **Self-check** (one line): `1d width $X vs ATR-proxy $Y; 1d maps to next session YYYY-MM-DD; last completed Rel Vol Z.Zx; 1d high $A vs last session high $B.`
+9. **Self-check** (one line): `1d width $X vs ATR-proxy $Y; 1d maps to next session YYYY-MM-DD; last completed Rel Vol Z.Zx; 1d high $A vs last session high $B; pred_rel_vol same on all 4 rows (yes/no).`
+10. **Non-session days (weekend / US market holiday):** If `analysis_date` has **no Nasdaq regular session**, do **not** append new `(analysis_date, horizon)` rows. Friday's (or last session's) 1d already maps to the next RTH — a Saturday/Sunday 1d is a duplicate window. First line: `session: closed (weekend/holiday YYYY-MM-DD); no new rows`. Still **update path actuals** (H/L/C) on existing open 1w/1m/3m rows using the last completed **official RTH** OHLC (SpaceX IR or Yahoo) if those actuals are stale or mid-session only. Do not change ranges on already-open rows.
 
 ## Report structure
 
@@ -56,15 +57,18 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
 5. **Decision map** (3 bullets)
 6. **Risks & Disclaimer** — not financial advice
 
+On a non-session day (rule 10), skip sections 4's new bands; still state official last RTH OHLC and any path-actual updates.
+
 ## GitHub write (mandatory — hard gate)
 
 Get SHA of `finance/SPCX_Prediction_Tracker.md` immediately before write; retry once on conflict.
 
-- Append **one row per (analysis_date, horizon)** for {1d, 1w, 1m, 3m}. Status = `open`.
-- Fill `pred_regime`, `pred_rel_vol`, `prior_day_pct` on every row. 1d notes must name the next session date.
+- **Session day:** Append **one row per (analysis_date, horizon)** for {1d, 1w, 1m, 3m}. Status = `open`.
+- Fill `pred_regime`, `pred_rel_vol`, `prior_day_pct` on every row. `pred_rel_vol` must be identical on all four rows. 1d notes must name the next session date.
+- **Non-session day:** Do not append rows. Update stale path actuals on open 1w/1m/3m only.
 - Do not duplicate existing (analysis_date, horizon) pairs.
 - Do not change ranges on already-open rows from prior days.
 - Do not invent backfill for missing prior dates; Auditor recovers those from task output.
-- **Response must include the new tracker blob SHA.** If the write fails after one retry, paste the 4 rows and the SHA you needed — do not mark the run successful without rows.
+- **Response must include the new tracker blob SHA.** If the write fails after one retry, paste the 4 rows (or the path-actual edits) and the SHA you needed — do not mark the run successful without the write.
 
 Cite sources. Be objective and data-driven.
