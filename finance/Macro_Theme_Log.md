@@ -6,6 +6,66 @@ Not financial advice. Selection support only — no position sizes.
 
 ---
 
+### 2026-08-29 | 21:50 UTC (v1.3 official analysis — Venezuela deal print; weekend)
+
+**Prompt:** [v1.3](https://github.com/Coombzy/Project-Car/blob/main/finance/Macro_Theme_Analysis_Prompt.md). Prior 28 Aug 18:55 UTC = Warsh. Left intact. Frozen open rows **not** edited. New rows = new industries only (no SU/XEG/USO/PSX/CVX-as-oil-beta re-book).
+
+**Key Takeaway:** Trump + Rodríguez confirmed a 55% US-control JV over 17 Venezuelan fields (~65bn bbl, $100bn private capex, 100-year concession) after Friday’s close — **sentiment is real for Alberta heavies**, but the 60d *new* cash-flow is operator/OFS rents (CVX, HAL), not a 30d flood of barrels that “replaces much of” Canada’s 3.5 mbpd (Ven is ~0.66 mbpd into the US; USGC can absorb ~0.3–0.4 mbpd extra). SU/XEG already book the WCS hurt — overlay, do not duplicate.
+
+**Overlap scan:**
+1. Venezuela heavy × open Hormuz/WCS (`20260826-hormuz-thaw` SU/XEG) → **same differential cash-flow (heavy-sour into USGC cokers).** Gulf heavies (Hormuz) *and* Orinoco Merey (this deal) both widen **WCS–WTI**. Sign: deal legal-block → overlay fades, Hormuz thesis still lives on corridor. Do **not** reverse SU; do **not** new-row SU/CNQ/XEG. Energy still exempt from Section 338 — this is substitution, not a 50% crude duty. The tweet’s “replace much of US Canadian oil needs” is **not** in AP/BBC/ABC; Canada remains #1 at 3.53 mbpd vs Ven 0.66.
+2. Venezuela × open oil-price (USO/XLE) → long-dated extra barrels. Production guide is 1.25→2.0 mbpd **by 2032**, not 60d. Duplicate oil-beta if booked. No new USO row.
+3. Venezuela × distillate (STNG/VLO) → weak (more heavy feed ≠ ULSD volume). No overlay.
+4. Venezuela × Canada 8 Sep tariffs → none (energy exempt).
+5. Venezuela × Warsh/gold → none.
+
+**Ranking** (score = conf/100 × pct_high of best *benefit* name):
+- Venezuela operator-OFS / HAL 16×0.48 = **7.7** — kept (new)
+- Open distillate / STNG 20×0.50 = **10.0** — live, no new rows
+- Open Hormuz / UAL 18×0.55 = **9.9** — live; WCS overlay noted, **no SU/XEG re-book**
+- Open duration / DHI 14×0.45 = **6.3** — live, no new rows
+- Open Canada 8 Sep / SAP.TO 12×0.48 = **5.8** — live, no new rows
+- Open Warsh / KEY 10×0.45 = **4.5** — live, no new rows
+Dropped: CNQ (duplicate WCS vs open SU); ENB (Mainline is PADD 2; Ven competes at PADD 3); SLB/BKR (duplicate OFS vs HAL); XOM (not the incumbent); OPEC-exit as a standalone (still “considering,” not a signed quit).
+
+Drivers: CVX Fri close 201.86; HAL 36.18 (deal printed *after* the close — Monday is first session); Brent ~88 / WTI ~83 (weekend); Canada 3.53 mbpd vs Ven 0.66 mbpd into US ([Rio Times](https://www.riotimesonline.com/venezuela-second-us-crude-supplier-18-weeks-2026/) week of 21 Aug). Energy still exempt.
+
+#### Theme 1 — `20260829-venezuela-heavy` · 60d (due 2026-10-28)
+**Mechanism:** [AP/BBC/ABC](https://www.bbc.co.uk/news/articles/cx2zlwe7qj1o) 28–29 Aug: Trump announced, Rodríguez confirmed, Rubio called it a win. Terms as stated: 55% US JV, 17 fields, 65bn bbl, >$100bn private investment, >$209bn Venezuelan tax, 100-year concession, “no cost to the taxpayer.” [WSJ/Reuters](https://www.reuters.com/business/energy/chevron-complete-deal-venezuela-migrate-expand-oil-projects-sources-say-2026-08-28/): Chevron migrating existing JVs + two extra heavy fields (Petropiar/Ayacucho 8); Halliburton in talks on equipment. Official text **not published**; constitutional/hydrocarbons-law challenges flagged; David Goldwyn: hard to see material-scale acceleration. 60d = first signed company terms + whether the 100-year lease survives the first legal test. 14d would be a weekend headline lottery. 90d would wait on barrels that the 2032 ramp does not promise.
+**Beneficiaries / hurt:** US operators + OFS collecting Venezuelan working-interest/capex vs Alberta heavy *sentiment* at USGC (already on SU/XEG).
+
+**Industry analysis (before picks):**
+1. *Value chain:* Orinoco extra-heavy → upgrader/diluent → USGC coker. Chevron is the only large US incumbent (three PDVSA JVs). HAL/SLB sell the workover, drilling, and facilities package. Alberta WCS is the *substitute* barrel at the same cokers (Merey ~16° API, similar sour). Enbridge Mainline serves PADD 2, not the Gulf.
+2. *Transmission / tell:* **(a)** CVX/HAL contract news and 60d 8-K/guidance — operator rent. **(b)** **WCS–WTI** for the Canadian overlay (same tell as Hormuz). **Not** Brent in 60d: +300–400 kbd of incremental Ven (RBN/USGC absorbable) is not a crude-crash. Gas-price claim is political. OPEC-exit is still Bloomberg “considering.”
+3. *Peer universe:* CVX (incumbent, NYSE, Fri 201.86, mega-cap — Venezuela is a slice of NAV); XOM/COP (not the named near-deal); HAL (named, NYSE, 36.18, 52w 21.40–43.59, ADV ~9–13M); SLB (international OFS, more liquid, not the named talk); BKR (third OFS); SU/CNQ/CVE/IMO (WCS; SU already open); ENB/TRP (Canadian midstream — wrong basin); PSX/CRAK already open as coker benefit.
+4. *Screen:* **One operator** — **CVX** over XOM (CVX is the only big US name in-country; XOM has no near-term working-interest print). Haircut CVX’s % (mega-cap + unpublished text + Goldwyn). **One OFS** — **HAL** over SLB/BKR (WSJ named Halliburton in talks; higher remaining % than SLB). **Hurt** — CNQ is the cleaner pure-upstream WCS name vs integrated SU, **but that is the same cash-flow already open on SU/XEG** → drop (duplicate beta). ENB dropped (PADD 2). No third unused liquid hurt. Do not force CVE (US refining mix).
+5. *Hurt:* Alberta oil-sands *sentiment* and USGC WCS barrels (open SU/XEG). PDVSA isn’t listed. Midwest Canadian pipe is not the first-loss.
+6. *Priced?* Friday session **closed before** the Truth Social/AP print. Monday is the first tape. **Not ignore.** Haircut remaining % because: text unpublished, legal risk, 2032 ramp, CVX size. If Monday is a one-day pop that fades on “no 8-K,” the theme is late.
+
+**Then — 2 stocks that survived the screen** (third hurt already open on SU/XEG; not duplicated): HAL (OFS torque; **deep-dive**) · CVX (operator, haircut).
+
+| ticker | side | pct_low | pct_high | conf | action | spot_at_call | pick_or_basket |
+|--------|------|---------|----------|------|--------|--------------|----------------|
+| HAL | benefit | 4 | 16 | 48 | deep-dive | HAL 36.18 (Fri close; deal AH) | pick |
+| CVX | benefit | 2 | 8 | 45 | watch | CVX 201.86 (Fri close; deal AH) | pick |
+
+**Overlay (no new row):** open SU/XEG remain the Canadian-heavy hurt. Venezuela is a *second* WCS-widener next to Hormuz Gulf heavies. State-dependent: deal blocked → overlay dies; corridor fail → SU can still be relative *benefit* vs EWC even if Ven talks live.
+**Falsifiers:** HAL — talks collapse **or** hydrocarbons law blocks foreign OFS. CVX — no signed JV/8-K in 60d **or** guidance says Venezuela NAV immaterial. Overlay: WCS–WTI narrows (existing SU falsifier still governs those rows). Stack: official text never published (then this theme is a headline).
+**Action:** deep-dive (HAL only).
+
+#### Not booked this run (open rows stand)
+- SU/XEG/USO/PSX — WCS and oil-price already live; Ven is an overlay note, not a new range.
+- Warsh/KGC — 2y/gold unchanged by this deal.
+- Canada 8 Sep — seafood carve-out only; energy still exempt.
+
+#### Tracker this run
+Append 2 *pick* rows (HAL, CVX). All 28 prior rows frozen.
+
+**Calibration:** no closed rows.
+**Sources:** [AP via Boston.com](https://www.boston.com/news/world-news/2026/08/28/trump-says-us-has-entered-deal-with-venezuela-to-take-control-of-65-billion-barrels-of-oil-reserves/); [BBC](https://www.bbc.co.uk/news/articles/cx2zlwe7qj1o); [ABC](https://abcnews.com/International/trump-announces-historic-us-venezuela-oil-deal-lower/story?id=136046002); [USA Today](https://www.usatoday.com/story/news/world/2026/08/28/trump-venezuela-oil-deal-us-control/91515889007/); [Reuters Chevron migrate](https://www.reuters.com/business/energy/chevron-complete-deal-venezuela-migrate-expand-oil-projects-sources-say-2026-08-28/); WSJ Chevron/HAL talks; [Rio Times](https://www.riotimesonline.com/venezuela-second-us-crude-supplier-18-weeks-2026/) US import split; RBN USGC 0.3–0.4 mbpd absorbable; Chevron IR CVX 201.86 / Halliburton IR HAL 36.18 (28 Aug close). Disclaimer: not financial advice.
+
+---
+
 ### 2026-08-28 | 18:55 UTC (v1.3 official analysis — Warsh JH print; off-cadence Friday)
 
 **Prompt:** [v1.3](https://github.com/Coombzy/Project-Car/blob/main/finance/Macro_Theme_Analysis_Prompt.md). Prior 27 Aug 13:50 UTC = Thursday cadence. Left intact. Frozen open rows **not** edited. New rows = new industries only (no TLT/NEE/DHI/AMT/UAL/SU/STNG/VLO/KNX/SAP.TO/WHR/IP re-book).
