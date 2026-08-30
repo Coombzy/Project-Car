@@ -6,11 +6,11 @@ One row per `(analysis_date, asset, horizon)`. Update in place. Do not duplicate
 **Status:** `open` · `preliminary` · `closed` · `expired`  
 **Hit:** path high/low and as-of close stayed inside **range** (not only bias). Crypto is 24/7 — grade on horizon window from analysis_date as-of, not NYSE close.
 
-**Last audit:** 2026-08-29T15:10Z (Coinbase). Closed 1d **n=2** (BTC hit, ETH hit). Aug 29 Daily Analysis ran (title “BTC/ETH digestion continues”) but wrote **no tracker rows**; notification email truncated before Forward Scenarios — bands not recovered, not invented. Aug 11–27 still unrestored.
+**Last audit:** 2026-08-30T14:15Z (Coinbase). Closed 1d **n=2** (BTC hit, ETH hit). Aug 29 Daily Analysis wrote **no tracker rows** (not invented). Aug 11–27 still unrestored. Aug 30 Daily Analysis appended 8 open rows.
 
-**Hit-rate snapshot:** closed 1d **2/2**; 1w/1m/3m n=0 closed. Open 1w/1m/3m path-so-far: BTC on-track · ETH on-track (6/6).
+**Hit-rate snapshot:** closed 1d **2/2**; 1w/1m/3m n=0 closed. Open 1w/1m/3m path-so-far (from 2026-08-28): BTC on-track · ETH on-track (6/6).
 
-**Spot context:** Coinbase 15:09 UTC BTC **$77,940** ETH **$2,444**. 1d window (28th 14:11Z → 29th 14:11Z) BTC H **$79,866** / L **$76,846** / close **$77,689**. ETH H **$2,527** / L **$2,406** / close **$2,436**. Farside 28 Aug US spot BTC ETFs **−$201.9M** (reversal from +$242.3M on 27 Aug); ETH ETFs **+$102.1M**. Weekend — no 29 Aug ETF print.
+**Spot context:** Coinbase 14:15 UTC 30 Aug BTC **$78,894** ETH **$2,475**. UTC session printed 30 Aug: BTC H **$78,964** / L **$77,945**; ETH H **$2,478** / L **$2,452**. Prior 24h BTC **+1.2%** ETH **+1.1%**. Farside last completed session **28 Aug** US spot BTC ETFs **−$201.9M**; ETH ETFs **+$102.1M**. Weekend — no 29 Aug or 30 Aug ETF print.
 
 | analysis_date | asset | horizon | range_low | range_high | bias_low | bias_high | conf | pred_regime | prior_day_pct | actual_low | actual_high | actual_close | hit | directional | pct_error | status | notes |
 |---------------|-------|---------|-----------|------------|----------|-----------|------|-------------|---------------|------------|-------------|--------------|-----|-------------|-----------|--------|-------|
@@ -22,3 +22,11 @@ One row per `(analysis_date, asset, horizon)`. Update in place. Do not duplicate
 | 2026-08-28 | ETH | 1w | 2260 | 2720 | 2400 | 2600 | 55 | digestion | -0.17 | 2406 | 2527 | 2444 | on-track | fade vs 2512 |  | open | ~25h of 7d; Coinbase 15:09Z last $2444; ETHBTC ~0.0314; window through ~09-04 14:11Z |
 | 2026-08-28 | ETH | 1m | 2050 | 3100 | 2300 | 2800 | 50 | digestion | -0.17 | 2406 | 2527 | 2444 | on-track |  |  | open | path-so-far inside; ETH ETF inflows continued 28 Aug +$102M |
 | 2026-08-28 | ETH | 3m | 1750 | 3600 | 2200 | 3200 | 40 | digestion | -0.17 | 2406 | 2527 | 2444 | on-track |  |  | open | L2/ETF continuation vs macro; ATH $4946 distant |
+| 2026-08-30 | BTC | 1d | 75400 | 82200 | 77600 | 80200 | 50 | failed-break | 1.2 |  |  |  |  |  |  | open | as-of 2026-08-30T14:15Z Coinbase $78894; UTC-session printed H $78964 L $77945; ATR-proxy $2284; width 6800=2.98×ATR; high clears printed H +0.5×ATR ($80104) and $81480 magnet; low clears printed L −0.5×ATR ($76805) and Fri $76846; 1d window 30th 14:15Z→31st 14:15Z; weekend no ETF print |
+| 2026-08-30 | BTC | 1w | 72800 | 84800 | 76000 | 82000 | 50 | failed-break | 1.2 |  |  |  |  |  |  | open | width 12000=5.3×ATR (≥3.0×; last 5 sessions had no ≥5% up-day); window through ~09-06 14:15Z; $80k/$81500 remain magnets |
+| 2026-08-30 | BTC | 1m | 66000 | 96000 | 74000 | 88000 | 45 | failed-break | 1.2 |  |  |  |  |  |  | open | 30d +23.5%; SMA50 ~$67k / SMA200 ~$69k structural support; Warsh/JH hike-odds event risk |
+| 2026-08-30 | BTC | 3m | 56000 | 112000 | 70000 | 98000 | 40 | failed-break | 1.2 |  |  |  |  |  |  | open | ATH $126198 distant; ETF flow regime after 28 Aug −$202M vs prior 9-day +$3.0B streak |
+| 2026-08-30 | ETH | 1d | 2340 | 2620 | 2420 | 2540 | 50 | failed-break | 1.1 |  |  |  |  |  |  | open | as-of 2026-08-30T14:15Z Coinbase $2475; UTC-session printed H $2478 L $2452; median-TR 5d $86 / published 14d ATR ~$120 — bands sized off $110; width 280=2.55×$110; high clears $2478+55 and $2567 reject; low clears $2452−55 and Fri $2406; window 30th 14:15Z→31st 14:15Z |
+| 2026-08-30 | ETH | 1w | 2220 | 2760 | 2380 | 2620 | 50 | failed-break | 1.1 |  |  |  |  |  |  | open | width 540≈4.9×$110; ETHBTC ~0.0314; window through ~09-06 14:15Z; ETH ETF streak intact as of 28 Aug +$102.1M |
+| 2026-08-30 | ETH | 1m | 1980 | 3200 | 2280 | 2900 | 45 | failed-break | 1.1 |  |  |  |  |  |  | open | 30d +31.1%; SMA50 ~$2005 / SMA200 ~$2020; $2500/$2567 cap near-term |
+| 2026-08-30 | ETH | 3m | 1650 | 3800 | 2100 | 3300 | 40 | failed-break | 1.1 |  |  |  |  |  |  | open | L2/ETF continuation vs hawkish Fed; ATH $4946 distant |
