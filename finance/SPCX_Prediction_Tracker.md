@@ -7,7 +7,7 @@ One row per `(analysis_date, horizon)`. Update in place. Do not duplicate.
 Status: `open` · `preliminary` · `closed` · `expired`  
 Hit: actual H/L/Close (or path high/low over the horizon) stayed inside **range** (not only bias).
 
-Last price context: 2026-08-28 official RTH (SpaceX IR / Yahoo) O **$139.82** H **$143.29** L **$137.90** C **$141.50** (+0.63 / +0.45%) Vol **55.11M** (~0.48× vs Yahoo 20d ~114.7M). Prior close $140.87. 8/27 1d newly **closed hit**. No closed 1w yet. 8/28 and 8/29 1d both map to 8/31 (weekend overlap).
+Last price context: 2026-08-28 official RTH (SpaceX IR / Yahoo) O **$139.82** H **$143.29** L **$137.90** C **$141.50** (+0.63 / +0.45%) Vol **55.11M** (~0.47× vs Barchart/stockanalysis 20d ~117.2M; ~0.48× vs Yahoo 20d ~114.7M). Prior close $140.87. After-hours 8/28 ~$140.95 (−0.39%). 8/27 1d **closed hit**. No closed 1w yet. 8/28 and 8/29 1d both map to 8/31 (weekend overlap). **2026-08-30 Sunday: session closed; no new rows. Path actuals on 8/29 1w/1m/3m filled from last official RTH.**
 
 | analysis_date | horizon | range_low | range_high | bias_low | bias_high | conf | pred_regime | pred_rel_vol | prior_day_pct | actual_low | actual_high | actual_close | hit | directional | pct_error | status | notes |
 |---------------|---------|-----------|------------|----------|-----------|------|-------------|--------------|---------------|------------|-------------|--------------|-----|-------------|-----------|--------|-------|
@@ -24,6 +24,6 @@ Last price context: 2026-08-28 official RTH (SpaceX IR / Yahoo) O **$139.82** H 
 | 2026-08-28 | 1m | 105 | 188 | 125 | 188 | 35 | digestion | below-avg | 0.89 | 137.90 | 143.29 | 141.50 |  |  |  | open | Sep 9/10/24 lock-ups + Starship F14 NET Sep; 8/28 RTH path inside |
 | 2026-08-28 | 3m | 85 | 225 | 115 | 225 | 30 | digestion | below-avg | 0.89 | 137.90 | 143.29 | 141.50 |  |  |  | open | Q3 earnings unlock ~Nov; F14 orbital; Louisiana spaceport; 8/28 RTH path inside |
 | 2026-08-29 | 1d | 132 | 152 | 141 | 152 | 45 | digestion | below-avg | 0.45 |  |  |  |  |  |  | open | weekend analysis; next-session 2026-08-31 RTH (overlaps 8/28 1d window); ATR-proxy 8.50 (14d); last-5 median TR ~5.08 |
-| 2026-08-29 | 1w | 124 | 160 | 140 | 160 | 40 | digestion | below-avg | 0.45 |  |  |  |  |  |  | open | weekend; width 36 >=3x ATR; coil near 50-DMA/IPO; slight upside bias |
-| 2026-08-29 | 1m | 105 | 190 | 125 | 190 | 35 | digestion | below-avg | 0.45 |  |  |  |  |  |  | open | weekend; Sep 9/10/24 lock-ups + Starship F14 NET Sep |
-| 2026-08-29 | 3m | 85 | 230 | 115 | 230 | 30 | digestion | below-avg | 0.45 |  |  |  |  |  |  | open | weekend; Q3 earnings/lock-up waves; F14 orbital; Louisiana spaceport |
+| 2026-08-29 | 1w | 124 | 160 | 140 | 160 | 40 | digestion | below-avg | 0.45 | 137.90 | 143.29 | 141.50 |  |  |  | open | weekend; width 36 >=3x ATR; coil near 50-DMA/IPO; slight upside bias; 8/30 path actuals from last official 8/28 RTH L137.90 H143.29 C141.50 |
+| 2026-08-29 | 1m | 105 | 190 | 125 | 190 | 35 | digestion | below-avg | 0.45 | 137.90 | 143.29 | 141.50 |  |  |  | open | weekend; Sep 9/10/24 lock-ups + Starship F14 NET Sep; 8/30 path actuals from 8/28 RTH L137.90 H143.29 C141.50 |
+| 2026-08-29 | 3m | 85 | 230 | 115 | 230 | 30 | digestion | below-avg | 0.45 | 137.90 | 143.29 | 141.50 |  |  |  | open | weekend; Q3 earnings/lock-up waves; F14 orbital; Louisiana spaceport; 8/30 path actuals from 8/28 RTH L137.90 H143.29 C141.50 |
