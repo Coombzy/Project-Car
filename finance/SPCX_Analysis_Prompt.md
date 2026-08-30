@@ -1,7 +1,7 @@
 # SPCX Daily Analysis Prompt
 
-**Version:** 1.1  
-**Last edited:** 2026-08-29T16:10:00Z  
+**Version:** 1.2  
+**Last edited:** 2026-08-30T16:15:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** SPCX Daily Stock Analysis automation
 
@@ -29,7 +29,7 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
    - **Spike-fade:** if (session high − last/close) >= 0.8 × ATR, do not treat that wick high as a hard cap; still apply the 0.5× ATR clearance.
 4. **Volume / confidence**
    - `pred_rel_vol` = last **completed** session volume vs 20d avg, bucketed `below-avg` | `normal` | `elevated`. Use the **same** value on all four rows for that `analysis_date`.
-   - `prior_day_pct` = last **completed** regular session % change (not the in-progress session).
+   - `prior_day_pct` = last **completed** regular session % change (not the in-progress session). Compute from official RTH close vs prior official RTH close.
    - If last completed Rel Vol < 0.5x: cut 1d upside-bias confidence **10 points** and do not treat a coil as a confirmed breakout.
 5. Mid-session labels: price is **Last** (not Close). Rel Vol for the in-progress session is **incomplete**. Confidence <= 80 until a completed close is used as the as-of.
 6. Include **prior-scenario vs actual** from the tracker when closed rows exist. If none exist, write `prior-scenario: no closed tracker rows yet`.
@@ -37,6 +37,15 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
 8. **Parseable table** in Forward Scenarios matching tracker columns: horizon, range_low, range_high, bias_low, bias_high, conf, pred_regime, pred_rel_vol, prior_day_pct.
 9. **Self-check** (one line): `1d width $X vs ATR-proxy $Y; 1d maps to next session YYYY-MM-DD; last completed Rel Vol Z.Zx; 1d high $A vs last session high $B; pred_rel_vol same on all 4 rows (yes/no).`
 10. **Non-session days (weekend / US market holiday):** If `analysis_date` has **no Nasdaq regular session**, do **not** append new `(analysis_date, horizon)` rows. Friday's (or last session's) 1d already maps to the next RTH — a Saturday/Sunday 1d is a duplicate window. First line: `session: closed (weekend/holiday YYYY-MM-DD); no new rows`. Still **update path actuals** (H/L/C) on existing open 1w/1m/3m rows using the last completed **official RTH** OHLC (SpaceX IR or Yahoo) if those actuals are stale or mid-session only. Do not change ranges on already-open rows.
+11. **Horizon close windows (Auditor grades; Analysis may annotate notes):**
+    - **1d** closes after the mapped next regular session's official RTH close.
+    - **1w** closes after the **5th regular session that begins after `analysis_date`** (next 5 RTH days). Do not close a mid-week 1w on that week's Friday just because the calendar week ended.
+    - **1m** closes after the **21st** such session; **3m** after the **63rd**.
+    - Weekend/holiday `analysis_date`: subsequent sessions start at the next RTH (same 1w clock as Friday's 1w if both exist).
+    - Pre-existing weekend 1d rows written before rule 10: **keep and grade** vs the same next RTH as Friday's 1d. Do not delete or expire as duplicates.
+    - When updating path actuals, Analysis may tag 1w notes `Day N/5; closes after YYYY-MM-DD`.
+12. **pct_error format:** `X.X%` (include the percent sign). Compute `|close − bias midpoint| / bias midpoint` when a bias band exists.
+13. **Official RTH source order:** SpaceX IR, else Yahoo, else StockAnalysis / MarketWatch / Barchart. State which source. 14d ATR from Barchart is acceptable as the published ATR-proxy.
 
 ## Report structure
 
@@ -64,11 +73,12 @@ On a non-session day (rule 10), skip sections 4's new bands; still state officia
 Get SHA of `finance/SPCX_Prediction_Tracker.md` immediately before write; retry once on conflict.
 
 - **Session day:** Append **one row per (analysis_date, horizon)** for {1d, 1w, 1m, 3m}. Status = `open`.
-- Fill `pred_regime`, `pred_rel_vol`, `prior_day_pct` on every row. `pred_rel_vol` must be identical on all four rows. 1d notes must name the next session date.
-- **Non-session day:** Do not append rows. Update stale path actuals on open 1w/1m/3m only.
+- Fill `pred_regime`, `pred_rel_vol`, `prior_day_pct` on every row. `pred_rel_vol` must be identical on all four rows. 1d notes must name the next session date. 1w notes should include `Day 0/5; closes after YYYY-MM-DD`.
+- **Non-session day:** Do not append rows. Update stale path actuals on open 1w/1m/3m only. Refresh `Day N/5` on open 1w notes when a session has elapsed.
 - Do not duplicate existing (analysis_date, horizon) pairs.
 - Do not change ranges on already-open rows from prior days.
 - Do not invent backfill for missing prior dates; Auditor recovers those from task output.
+- Do not overwrite `pred_regime`, `pred_rel_vol`, or `prior_day_pct` on existing rows.
 - **Response must include the new tracker blob SHA.** If the write fails after one retry, paste the 4 rows (or the path-actual edits) and the SHA you needed — do not mark the run successful without the write.
 
 Cite sources. Be objective and data-driven.
