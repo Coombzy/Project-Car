@@ -3,12 +3,12 @@
 Lightweight tracker for long-term quality of the Analysis Automater and Audit Process.  
 One short line per day. Does **not** replace the main living analysis log.
 
-**Current prompt versions (as of 2026-08-28 audit):** Analysis **v1.11** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
+**Current prompt versions (as of 2026-08-31 audit):** Analysis **v1.12** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
 See `finance/CCJ_README.md`. Official cadence: Analysis **16:10 ET** weekdays · Audit 16:30 ET weekdays.
 
 | Date       | Analysis Confidence | Audit Score | Top Issue / Note                          | Data Sources OK? |
 |------------|---------------------|-------------|-------------------------------------------|------------------|
-| 2026-08-31 | 86                  | (pending)   | Official EOD C$98.76 Rel 1.10x digestion after Fri dump; Aug 28 1d HIT L97.53 H99.90 C98.76; rule 2 still fires | Fallback |
+| 2026-08-31 | 86                  | 9.5         | Official EOD C$98.76 Rel 1.14x digestion; Aug 28 1d CLOSED hit L97.53 H99.70 C98.76; Aug 24 1w CLOSED both-ends; rule 2 OFF; log truncated pending restore | Fallback |
 | 2026-08-28 | 86                  | 9.5         | Official EOD C$100.01 Rel 1.36x volume 200-DMA break; Aug 23 1w CLOSED partial-high L99.53 H111.54 C100.01; rule 2 still fires; Aug 26/27 log headings still missing | Fallback |
 | 2026-08-27 | N/A (no new Analysis) | 9.5         | Official EOD Analysis MISSED (Aug 26 log never prepended; Aug 27 16:10 missed); Aug 26 1d CLOSED hit L105.19 H108.83 C106.33; prompt v1.11 log-confirm | Yes (Fallback) |
 | 2026-08-26 | 85                  | 9.5         | Catch-up official EOD written (v1.10); spike-fade H111.54→C107.36 Rel 1.23x; 1d $102.50–$116.50 (rule 2 + magnet-clear); Health cadence/version synced 16:10 / v1.10 | Yes (Fallback) |
