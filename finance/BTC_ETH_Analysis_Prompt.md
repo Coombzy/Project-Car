@@ -1,7 +1,7 @@
 # BTC / ETH Daily Analysis Prompt
 
-**Version:** 1.3  
-**Last edited:** 2026-08-30T15:14:00Z  
+**Version:** 1.4  
+**Last edited:** 2026-08-31T15:10:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** BTC ETH Daily Crypto Analysis automation
 
@@ -30,10 +30,11 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
 4. Fill **pred_regime** and **prior_day_pct** (prior 24h % change) on every tracker row. Put the **as-of UTC timestamp** in 1d notes so the 24h window is unambiguous.
 5. Include **prior-scenario vs actual** from the tracker when closed rows exist. If none exist, write `prior-scenario: no closed tracker rows yet`. When closed 1d rows exist, cite hit/miss + path H/L vs range (not only bias).
 6. **Decision map** (3 bullets): confirm vs fail; path-changing levels; calibration from last closed miss/hit.
-7. **Parseable table first:** immediately after Key Takeaway (before snapshot/narrative), output the 8-row table matching tracker columns: asset, horizon, range_low, range_high, bias_low, bias_high, conf, pred_regime, prior_day_pct. Notification emails truncate; Auditor recovery depends on this table being in the first screenful. Repeat the table in Forward Scenarios if useful.
+7. **Parseable table first:** immediately after Key Takeaway (before snapshot/narrative), output the 8-row table matching tracker columns: asset, horizon, range_low, range_high, bias_low, bias_high, conf, pred_regime, prior_day_pct. Notification emails truncate; Auditor recovery depends on this table being in the first screenful. Compact enough that ETH 1m/3m survive email cut (Aug 31 notification died after ETH 1w). Repeat the table in Forward Scenarios if useful.
 8. **Weekend/holiday ETF:** Sat/Sun and US market holidays have no US spot ETF print. State the last completed session date and figure. Do not treat Friday's flow as same-day Saturday flow.
 9. **Weekend writes are mandatory.** Crypto is 24/7. Saturday and Sunday **must** append 8 tracker rows for that `analysis_date`. Only the ETF print is skipped (rule 8). A weekend run that produces a report but writes zero rows is a failed run (Aug 29 2026 Daily Analysis executed 75s and wrote nothing).
 10. **Write-first:** If time/token budget is tight, commit the 8 tracker rows immediately after the parseable table — before long narrative. Short runs that skip GitHub are failed runs. Auditor cannot invent missing ranges.
+11. **Write-SHA gate (hard).** After emitting the parseable table, the **next** actions are: get tracker SHA → commit 8 rows → re-get and confirm. Do **not** write Current Market Snapshot or later sections until the response contains the new tracker **blob SHA**. A 60–90s run that emails a table but no SHA is a failed run even if the takeaway looks complete (**Aug 29 75s and Aug 31 74s** — Monday included). If time is short, omit sections 1–6 entirely.
 
 ## Report structure
 
@@ -63,6 +64,7 @@ Get SHA of `finance/BTC_ETH_Prediction_Tracker.md` immediately before write; ret
 - Do not change ranges on already-open rows from prior days.
 - Do not invent backfill for missing prior dates; Auditor recovers those from task output.
 - **Applies on Sat/Sun.** Do not treat weekend as a skip. (Rule 9.)
+- **Applies on weekdays.** Short runtime is not a skip. (Rule 11.)
 - **Post-write verify:** re-get the tracker and confirm today's 8 `(analysis_date, asset, horizon)` rows exist. If absent after one retry, paste the 8 rows in the response and write `WRITE FAILED` — do not mark the run successful.
 - **Response must include the new tracker blob SHA.**
 
