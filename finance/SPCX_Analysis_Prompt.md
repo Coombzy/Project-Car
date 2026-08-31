@@ -1,7 +1,7 @@
 # SPCX Daily Analysis Prompt
 
-**Version:** 1.2  
-**Last edited:** 2026-08-30T16:15:00Z  
+**Version:** 1.3  
+**Last edited:** 2026-08-31T15:45:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** SPCX Daily Stock Analysis automation
 
@@ -46,6 +46,11 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
     - When updating path actuals, Analysis may tag 1w notes `Day N/5; closes after YYYY-MM-DD`.
 12. **pct_error format:** `X.X%` (include the percent sign). Compute `|close − bias midpoint| / bias midpoint` when a bias band exists.
 13. **Official RTH source order:** SpaceX IR, else Yahoo, else StockAnalysis / MarketWatch / Barchart. State which source. 14d ATR from Barchart is acceptable as the published ATR-proxy.
+14. **Session-day path maintenance (v1.3):** On a session day, after appending today's four rows, also refresh already-open multi-day rows:
+    - Path `actual_low` = min low from analysis as-of through the latest print; `actual_high` = max high; `actual_close` = official RTH close if complete, else **Last**.
+    - Refresh every open 1w note to `Day N/5; closes after YYYY-MM-DD` (N = regular sessions that have **begun** after that row's `analysis_date`, including an in-progress session).
+    - If a prior 1d row maps to the **current** session and RTH has not closed, set status=`preliminary` and fill intra-day H/L/Last. Leave hit / directional / pct_error blank until official RTH close.
+    - Do **not** change ranges, bias, conf, `pred_regime`, `pred_rel_vol`, or `prior_day_pct` on existing rows.
 
 ## Report structure
 
@@ -74,6 +79,7 @@ Get SHA of `finance/SPCX_Prediction_Tracker.md` immediately before write; retry 
 
 - **Session day:** Append **one row per (analysis_date, horizon)** for {1d, 1w, 1m, 3m}. Status = `open`.
 - Fill `pred_regime`, `pred_rel_vol`, `prior_day_pct` on every row. `pred_rel_vol` must be identical on all four rows. 1d notes must name the next session date. 1w notes should include `Day 0/5; closes after YYYY-MM-DD`.
+- **Then apply rule 14:** update path actuals + `Day N/5` on already-open 1w/1m/3m; mark mapped-today prior 1d rows `preliminary` with intra-day H/L/Last.
 - **Non-session day:** Do not append rows. Update stale path actuals on open 1w/1m/3m only. Refresh `Day N/5` on open 1w notes when a session has elapsed.
 - Do not duplicate existing (analysis_date, horizon) pairs.
 - Do not change ranges on already-open rows from prior days.
