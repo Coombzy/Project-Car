@@ -1,7 +1,7 @@
 # BTC / ETH Daily Analysis Prompt
 
-**Version:** 1.4  
-**Last edited:** 2026-08-31T15:10:00Z  
+**Version:** 1.5  
+**Last edited:** 2026-09-01T15:20:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** BTC ETH Daily Crypto Analysis automation
 
@@ -35,12 +35,15 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
 9. **Weekend writes are mandatory.** Crypto is 24/7. Saturday and Sunday **must** append 8 tracker rows for that `analysis_date`. Only the ETF print is skipped (rule 8). A weekend run that produces a report but writes zero rows is a failed run (Aug 29 2026 Daily Analysis executed 75s and wrote nothing).
 10. **Write-first:** If time/token budget is tight, commit the 8 tracker rows immediately after the parseable table — before long narrative. Short runs that skip GitHub are failed runs. Auditor cannot invent missing ranges.
 11. **Write-SHA gate (hard).** After emitting the parseable table, the **next** actions are: get tracker SHA → commit 8 rows → re-get and confirm. Do **not** write Current Market Snapshot or later sections until the response contains the new tracker **blob SHA**. A 60–90s run that emails a table but no SHA is a failed run even if the takeaway looks complete (**Aug 29 75s and Aug 31 74s** — Monday included). If time is short, omit sections 1–6 entirely.
+12. **Write is the first tool sequence (v1.5).** After the table is composed, the **first tool calls** must be GitHub `get_file_contents` on `finance/BTC_ETH_Prediction_Tracker.md` then `create_or_update_file` / `push_files` for the 8 rows. Do **not** call web_search, browse, or snapshot tools until the new blob SHA is in hand. First user-visible line after the table: `TRACKER_SHA: <blob sha>`. Runtime length is irrelevant — **Sep 1 227s also wrote 0 rows**. Auditor recovery does **not** convert a failed Analysis run into a pass. If the write tool errors or the SHA is unchanged after one retry: paste the 8 markdown rows and write `WRITE FAILED` as the next heading, then stop.
 
 ## Report structure
 
 **Key Takeaway** (one sentence)
 
 **Parseable table** (rule 7 — 8 rows, immediately here)
+
+`TRACKER_SHA: <blob sha>` (rule 12 — required before section 1)
 
 1. **Current Market Snapshot** — prices, 24h %, volume, mkt caps; 1d / 7d / 30d performance for BTC and ETH.
 2. **Technical Analysis** — support/resistance, MAs, RSI, ATR-proxy, **regime**, short-term outlook (1–3d and 1w) with probability ranges.
@@ -64,8 +67,8 @@ Get SHA of `finance/BTC_ETH_Prediction_Tracker.md` immediately before write; ret
 - Do not change ranges on already-open rows from prior days.
 - Do not invent backfill for missing prior dates; Auditor recovers those from task output.
 - **Applies on Sat/Sun.** Do not treat weekend as a skip. (Rule 9.)
-- **Applies on weekdays.** Short runtime is not a skip. (Rule 11.)
+- **Applies on weekdays.** Short runtime is not a skip. (Rule 11–12.) **227s is not a skip.**
 - **Post-write verify:** re-get the tracker and confirm today's 8 `(analysis_date, asset, horizon)` rows exist. If absent after one retry, paste the 8 rows in the response and write `WRITE FAILED` — do not mark the run successful.
-- **Response must include the new tracker blob SHA.**
+- **Response must include the new tracker blob SHA** on its own line as `TRACKER_SHA: <sha>`.
 
 Cite sources. Be objective and data-driven.
