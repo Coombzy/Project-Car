@@ -1,3 +1,51 @@
+### 2026-09-01 | 16:20 ET
+
+#### Metrics
+| Metric                        | Value                          | Source / Notes                  |
+|-------------------------------|--------------------------------|---------------------------------|
+| **1. Audit Timestamp**        | 2026-09-01 16:20 ET            | Official EOD (Yahoo 15:59:58 ET print) |
+| **2. CCJ Price Snapshot**     | Close: $96.30<br>−$2.46 / −2.49% | Day Range $94.69–$97.42; Yahoo 15:59:58 ET (cluster C $96.25–$96.55; ChartExchange $96.27 / StockAnalysis header $96.29) |
+| **3. Volume Metrics**         | Vol: 1.94M<br>Avg (20d): 2.62M<br>Rel Vol: 0.74x | Yahoo 16:00 vol 1,939,748; 20d excl. today 2.62M; ChartExchange vol cluster ~2.14M (Rel ~0.82x) |
+| **4. U3O8 Spot Price**        | $89.35 /lb                     | −$0.50 / −0.56% vs Aug 31 $89.85; UraniumTracker 2026-09-01 |
+| **5. Market Cap & Valuation** | Mkt Cap: $41.94B<br>P/E: ~169 TTM / ~71 Fwd | 435.53M × $96.30; StockAnalysis TTM/Fwd series |
+| **6. Technical Position**     | RSI(14): 46.9<br>vs 50-DMA: +0.3%<br>vs 200-DMA: −8.4% | 50-DMA $96.04 / 200-DMA $105.13 (Yahoo/StockAnalysis); RSI StockAnalysis session ~46.94 |
+| **7. Sector Relative Perf.**  | CCJ: −2.49%<br>URA: −3.25%<br>Rel: +0.76% | StockScan URA C $44.03 (H $44.63 L $43.55 V 1.95M); cluster C $43.97–$44.18 |
+| **8. Key Catalysts / Sentiment** | • Undercut 50-DMA $96.04 (L $94.69) then closed back above<br>• URA weaker than CCJ; U3O8 only −0.56%<br>• WSJ: Westinghouse IPO path; guidance 19.5–21.5M lbs + S-1 intact<br>Sentiment: Cautious ST / Constructive MT | Post-200-DMA-break grind |
+
+**Historical Deltas**: vs Aug 31 C $98.76: −$2.46 (−2.49%). No missed NYSE session (Mon→Tue). Aug 26 official C **$107.36** and Aug 27 official C **$106.33** still lack living-log headings (recorded 8/28; restore from `9353ad26` still pending). vs post-Q2 $86.38: +11.5%. U3O8 $90.40 (Aug 28) → $89.85 (Aug 31) → $89.35. RSI 50.5 → 46.9. Price tagged 50-DMA and recovered; remains −8.4% vs 200-DMA.
+**Anomaly Flags**: CCJ vs U3O8 **−1.93pp** (>1.5pp) — equity dumped harder than spot. CCJ vs URA +0.76pp (under 1.5). Rel 0.74x declining vs Mon 1.14x; mid-range close (59%); 50-DMA undercut then reclaim on sub-1.0x vol (unconfirmed); wick $1.12 = 0.28×ATR.
+**Data Sources**: public fallback (Yahoo 15:59:58 ET close/vol; StockAnalysis; StockScan URA; UraniumTracker). Polygon unavailable.
+**Analysis Confidence**: 85/100
+**Quality Evaluator Score**: 8.5/10
+
+#### Analysis Narrative
+Tuesday extended the post-Friday 200-DMA-break grind. CCJ closed $96.30 (−2.49%) on $94.69–$97.42, Rel 0.74x (1.94M vs 20d 2.62M). The session undercut the 50-DMA ($96.04) to $94.69 and closed back above it in the middle of the range. $100 was never in play. Aug 31 1d $93.50–$108.00 printed inside (L94.69 H97.42 C96.30).
+
+The pair is mixed. URA dropped ~3.25% to $44.03 (cluster $43.97–$44.18) — sector weaker than CCJ. U3O8 only slipped $0.50 to $89.35 (−0.56%). That 1.93pp CCJ-vs-spot gap is the anomaly: miners sold off harder than yellowcake. No new Cameco release; Westinghouse IPO coverage (WSJ) and 19.5–21.5M lb guidance remain intact. Light-moderate Rel makes the 50-DMA reclaim unconfirmed.
+
+Wednesday path-change: hold/reclaim needs Rel ≥1.0x with URA not down and a close above today's $97.42 high. Lose $94.69 on Rel ≥0.8x and the digestion becomes another down-leg toward the mid-$90s.
+
+Key takeaway: Fading-volume 50-DMA test-and-reclaim after the 200-DMA break; spot did not confirm the equity dump, URA did — next session is hold $96 / $94.69 or fail.
+
+#### Decision map (required — 4 bullets)
+- Regime: **digestion**. ATR-proxy: **$4.07** (last 5 TR median: 4.07 / 2.48 / 6.93 / 3.83 / 4.63). Rel 0.74x 16:00 print; mid-range close; Rel declining vs Mon 1.14x; not trend-up (Rel <0.8x and close not top-third).
+- Confirm vs fail: Bounce confirms if Wed Rel ≥1.0x AND URA not down AND close >$97.42. Trend-down resumes if close <$94.69 on Rel ≥0.8x. 50-DMA reclaim on Rel 0.74x is unconfirmed.
+- Levels: **$96.30 / $96.04** (close + 50-DMA); **$94.69** session low (path-change); **$97.42** session high then $100 magnet. 200-DMA $105.13 remains distant resistance.
+- Calibration: rules **4+5** (rule 2 OFF 1/3 Aug 25 partial / Aug 26 hit / Aug 28 hit; rule 3 off Rel 0.74>0.5; rule 7 off wick 0.28×ATR). 1d width **$10.50** vs ATR **$4.07** (2.58×); 1d high **$102.00** vs last session high **$97.42** (clears; $100 magnet cleared to $102).
+
+#### Forward Scenarios (required)
+- 1-day / next session (Wed Sep 2): $91.50–$102.00 (bias $93.50–$98.00; 50% conf)
+- 1-week: $88.00–$106.00 (bias $92.00–$102.00; 50% conf)
+- 1-month: $80.00–$118.00 (bias $90.00–$106.00; 50% conf)
+- 3-month: $84.00–$145.00 (bias $94.00–$120.00; 55% conf)
+- Key invalidation: Close below $91.50 on Rel ≥0.8x AND U3O8 <$86
+- Prior scenarios vs actual: Aug 31 1d $93.50–$108.00 → L94.69 H97.42 C96.30 **hit** (C inside bias $96–$101; auditor to close). Aug 31 1w $88–$112 day 2 of 5 on-track (path L94.69 H99.70 C96.30). Aug 28 1d already **hit**. Self-check: Today's 1d width $10.50 vs ATR-proxy $4.07; last closed 1d was hit; 1d high $102.00 vs last session high $97.42; Rel Vol 0.74x from 16:00 print; wick (H−C) $1.12 = 0.28×ATR — adjustment: rule 2 OFF; rule 7 OFF; magnet-clear $100→$102; downside widened for Rel fade + URA −3.3%.
+
+#### Audit / Reviewer Notes
+(To be completed by subsequent audit process)
+
+---
+
 ### 2026-08-31 | 16:20 ET
 
 #### Metrics
