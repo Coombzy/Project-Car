@@ -1,7 +1,7 @@
 # SPCX Daily Analysis Prompt
 
-**Version:** 1.4  
-**Last edited:** 2026-09-01T16:30:00Z  
+**Version:** 1.5  
+**Last edited:** 2026-09-02T16:58:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** SPCX Daily Stock Analysis automation
 
@@ -51,7 +51,12 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
     - Refresh every open 1w note to `Day N/5; closes after YYYY-MM-DD` (N = regular sessions that have **begun** after that row's `analysis_date`, including an in-progress session).
     - If a prior 1d row maps to the **current** session and RTH has not closed, set status=`preliminary` and fill intra-day H/L/Last. Leave hit / directional / pct_error blank until official RTH close.
     - Do **not** change ranges, bias, conf, `pred_regime`, `pred_rel_vol`, or `prior_day_pct` on existing rows.
-15. **Write-first / TRACKER_SHA gate (v1.4 — hard).** After the parseable table is composed, the FIRST tool calls must be GitHub get_file_contents on `finance/SPCX_Prediction_Tracker.md` then create_or_update_file for today's 4 rows + rule-14 path refresh. Do not write snapshot/narrative until the response contains the new tracker blob SHA. First user-visible line after the table: `TRACKER_SHA: <blob sha>`. A run that emails a report but writes 0 rows is a failed run (**2026-09-01**). If the write tool errors or the SHA is unchanged after one retry: paste the 4 markdown rows and write `WRITE FAILED` as the next heading, then stop. Auditor recovery does not convert a failed Analysis write into a pass.
+15. **Write-first / TRACKER_SHA gate (v1.5 — hard).** After the parseable table is composed, the FIRST tool calls must be GitHub get_file_contents on `finance/SPCX_Prediction_Tracker.md` then create_or_update_file for today's 4 rows + rule-14 path refresh. Do not write snapshot/narrative until the response contains the new tracker blob SHA. First user-visible line after the table: `TRACKER_SHA: <blob sha>`.
+    - **Never** output `TRACKER_SHA: write pending`, `see GitHub update below`, or any placeholder SHA. Those strings are a failed run (**2026-09-02** emailed a table + `write pending` and wrote 0 rows).
+    - A run that emails a report but writes 0 rows is a failed run (**2026-09-01** 59s truncated before table; **2026-09-02** 138s table-in-email but 0 rows). Runtime length is irrelevant.
+    - If the write tool errors or the SHA is unchanged after one retry: paste the 4 markdown rows and write `WRITE FAILED` as the next heading, then stop.
+    - Auditor recovery does not convert a failed Analysis write into a pass.
+16. **Price-quote cap before write (v1.5).** After the two mandatory GitHub reads (prompt + tracker), allow at most one price-quote batch (Yahoo / SpaceX IR / MarketWatch OHLC + Barchart 14d ATR). The NEXT tool call MUST be the tracker write. No further web_search / browse / snapshot until `TRACKER_SHA` is in the response. Lock ranges from tracker context + that one quote batch; research narrative only after the SHA.
 
 ## Report structure
 
@@ -59,7 +64,7 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
 
 **Parseable table** (rule 8 — 4 rows, immediately here)
 
-`TRACKER_SHA: <blob sha>` (rule 15 — required before section 1)
+`TRACKER_SHA: <blob sha>` (rule 15 — required before section 1; real blob SHA only)
 
 1. **Current Market Snapshot** — Last/Close, change %, day's range, volume vs 20d avg, mkt cap, 1d/5d/1m performance. Label Last vs Close.
 2. **Technical Analysis** — support/resistance, MAs, RSI, ATR-proxy (both last-5 and 14d), **regime**, short-term outlook.
@@ -90,6 +95,6 @@ Get SHA of `finance/SPCX_Prediction_Tracker.md` immediately before write; retry 
 - Do not invent backfill for missing prior dates; Auditor recovers those from task output.
 - Do not overwrite `pred_regime`, `pred_rel_vol`, or `prior_day_pct` on existing rows.
 - **Post-write verify:** re-get the tracker and confirm today's four `(analysis_date, horizon)` rows exist (session day) or that path actuals changed (non-session day). If absent after one retry, paste the rows and write `WRITE FAILED`.
-- **Response must include the new tracker blob SHA** on its own line as `TRACKER_SHA: <sha>`. If the write fails after one retry, paste the 4 rows (or the path-actual edits) and the SHA you needed — do not mark the run successful without the write.
+- **Response must include the new tracker blob SHA** on its own line as `TRACKER_SHA: <sha>`. Never print `write pending`. If the write fails after one retry, paste the 4 rows (or the path-actual edits) and the SHA you needed — do not mark the run successful without the write.
 
 Cite sources. Be objective and data-driven.
