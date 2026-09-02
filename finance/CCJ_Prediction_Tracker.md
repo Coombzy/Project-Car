@@ -8,10 +8,14 @@ Hit: actual regular-session H/L/Close inside **range** (not only bias).
 
 **Feature columns** (fill at prediction time): `pred_regime` = trend-up|trend-down|digestion|failed-break · `pred_rel_vol` = Rel Vol of the session being analyzed · `prior_day_pct` = prior regular-session % change.
 
-Last price context: 2026-09-01 official RTH close CCJ **$96.30** (Yahoo 15:59:58 ET; StockAnalysis $96.29 cluster) L **$94.69** H **$97.42** Vol **1.94M** (Rel **0.74×** vs 20d **2.62M**); prior close $98.76 (−2.49%). U3O8 $89.35/lb (−$0.50 / −0.56%, UraniumTracker). URA C $44.03 cluster (−3.25%). Regime **digestion** after 50-DMA test-reclaim. Aug 31 1d **closed hit** L94.69 H97.42 C96.30. See also `CCJ_Calibration.md`.
+Last price context: 2026-09-02 official RTH close CCJ **$96.38** (Polygon; StockAnalysis/Yahoo 4:00 PM ET $96.38 cluster) L **$95.13** H **$98.37** Vol **2.39M** (Rel **0.87×** vs 20d **2.75M**); prior close $96.26 (+0.12%). U3O8 $89.55/lb (+$0.20 / +0.22%, UraniumTracker). URA C $44.32 (+0.86%). Regime **digestion** after 50-DMA test-reclaim. Sep 1 1d printed **hit** L95.13 H98.37 C96.38. See also `CCJ_Calibration.md`.
 
 | analysis_date | horizon | range_low | range_high | bias_low | bias_high | conf | pred_regime | pred_rel_vol | prior_day_pct | actual_low | actual_high | actual_close | hit | directional | pct_error | status | notes |
 |---------------|---------|-----------|------------|----------|-----------|------|-------------|--------------|---------------|------------|-------------|--------------|-----|-------------|-----------|--------|-------|
+| 2026-09-02 | 1d | 92.00 | 102.00 | 94.00 | 99.00 | 50 | digestion | 0.87 | 0.12 |  |  |  |  |  |  | open | v1.11 EOD; 50-DMA test-reclaim; rule 2 OFF; width $10.00 = 2.61×ATR; magnet-clear $100→$102; grades Thu Sep 3 |
+| 2026-09-02 | 1w | 87.00 | 107.00 | 92.00 | 102.00 | 50 | digestion | 0.87 | 0.12 |  |  |  |  |  |  | open | Day 1 of 5; magnet-clear $105 → $107 |
+| 2026-09-02 | 1m | 80.00 | 118.00 | 90.00 | 106.00 | 50 | digestion | 0.87 | 0.12 |  |  |  |  |  |  | open |  |
+| 2026-09-02 | 3m | 84.00 | 145.00 | 94.00 | 120.00 | 55 | digestion | 0.87 | 0.12 |  |  |  |  |  |  | open | 3m low below price |
 | 2026-09-01 | 1d | 91.50 | 102.00 | 93.50 | 98.00 | 50 | digestion | 0.74 | -2.49 |  |  |  |  |  |  | open | v1.11 EOD; 50-DMA test-reclaim; rule 2 OFF; width $10.50 = 2.58×ATR; magnet-clear $100→$102; grades Wed Sep 2 |
 | 2026-09-01 | 1w | 88.00 | 106.00 | 92.00 | 102.00 | 50 | digestion | 0.74 | -2.49 |  |  |  |  |  |  | open | Day 1 of 5; magnet-clear $105 → $106 |
 | 2026-09-01 | 1m | 80.00 | 118.00 | 90.00 | 106.00 | 50 | digestion | 0.74 | -2.49 |  |  |  |  |  |  | open |  |
