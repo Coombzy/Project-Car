@@ -3,12 +3,12 @@
 Lightweight tracker for long-term quality of the Analysis Automater and Audit Process.  
 One short line per day. Does **not** replace the main living analysis log.
 
-**Current prompt versions (as of 2026-08-31 audit):** Analysis **v1.12** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
+**Current prompt versions (as of 2026-09-02 audit):** Analysis **v1.12** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
 See `finance/CCJ_README.md`. Official cadence: Analysis **16:10 ET** weekdays · Audit 16:30 ET weekdays.
 
 | Date       | Analysis Confidence | Audit Score | Top Issue / Note                          | Data Sources OK? |
 |------------|---------------------|-------------|-------------------------------------------|------------------|
-| 2026-09-02 | 86                  | (pending)   | Official EOD C$96.38 Rel 0.87x digestion; 50-DMA test-reclaim L95.13; Sep 1 1d printed hit; Aug 26 1w printed lower-exceed; Polygon primary; log restore from 9353ad26 still pending | Yes |
+| 2026-09-02 | 86                  | 10          | Official EOD C$96.38 Rel 0.87x digestion; Sep 1 1d CLOSED hit L95.13 H98.37 C96.38; Aug 26 1w CLOSED lower-exceed; prompt v1.12 applied; log restore from 9353ad26 still pending | Yes |
 | 2026-09-01 | 85                  | (pending)   | Official EOD C$96.30 Rel 0.74x digestion; 50-DMA test-reclaim L94.69; CCJ vs U3O8 −1.93pp flag; Aug 31 1d printed hit (auditor to close); log restore from 9353ad26 still pending | Fallback |
 | 2026-08-31 | 86                  | 9.5         | Official EOD C$98.76 Rel 1.14x digestion; Aug 28 1d CLOSED hit L97.53 H99.70 C98.76; Aug 24 1w CLOSED both-ends; rule 2 OFF; log truncated pending restore | Fallback |
 | 2026-08-28 | 86                  | 9.5         | Official EOD C$100.01 Rel 1.36x volume 200-DMA break; Aug 23 1w CLOSED partial-high L99.53 H111.54 C100.01; rule 2 still fires; Aug 26/27 log headings still missing | Fallback |
