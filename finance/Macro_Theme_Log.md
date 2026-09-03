@@ -1,3 +1,62 @@
+### 2026-09-03 | 09:50 America/Regina
+
+**Process:** Macro v1.3 · Write rules v1.2 · sources Axios/Reuters/Windward/OilPrice/ACER/EIA/Canada.ca 1–3 Sep 2026
+
+**Key Takeaway:** US “tanker-for-tanker” hits on Iranian government tankers plus Qatar/UAE LNG still bottled at Hormuz leave TTF at a 3-year high into a thin EU storage refill — leftover convexity is US liquefaction/FLNG, not the already-booked crude E&P names.
+
+**Overlap scan:** Same geo root as open `20260831-hormuz-reesc` (kinetic restart) but a **different cash-flow line** (TTF / JKM / US LNG utilization / TTF–HH spread, not Brent/WTI/WCS). Do not rebook DVN/CNQ/DAL or XLE/USO. Distillate (`20260827`) is the ULSD-crack product of the same constraint — overlay only (diesel AAA $5.69–5.78, 4yr high; do not re-add STNG/VLO/KNX). Ven deals signed 2 Sep (CVX $7bn to ~600 kbd; GEV grid; Eni Junín-5) confirm open `20260829` — leftover GEV is multi-year GW, low 60d torque; do not new-id. Warsh/hike (`20260828`) and Bessent buybacks (`20260826`) stack via energy CPI into ~60–62% Sep-hike odds and 30y back at ~5.27 — note only; do not flip KGC/KEY/NLY/NEE/DHI/AMT/TLT. Canada 8 Sep counters unchanged; talks still suspended (Carney 1 Sep); Section 338 still **excludes energy, potash, fish, critical minerals**. WCS–WTI spot tighter (~12.6 vs 14–15 on 31 Aug) is the re-esc path working on open oil-sands rows, not a new theme.
+
+**Ranking**
+- EU gas / Qatar-Hormuz LNG winter tightness — VG (52/100)×18 = **9.4** — **KEPT**
+- Hormuz tanker-for-tanker crude intensification — leftover E&P after DVN/CNQ and a 6–7% crude jump — dropped (overlay on `20260831`)
+- Ven signed increment (GEV/SLB) — GEV mega-cap, 5yr capex, +2.6% on the print — dropped (overlay on `20260829`)
+- Bessent-fail / term premium — 30y gains wiped but unique names collide with open duration rows — dropped
+- Canada 8 Sep / 338 — no 72h list change — dropped (rows frozen)
+- Defense / gold-flip / feedgas E&P — priced or wrong tell — dropped
+
+---
+
+#### 20260903-eu-lng-winter — Hormuz-blocked Qatar LNG + thin EU storage into winter refill miss
+
+**Mechanism.** Qatar/UAE LNG (~20% of global supply) remains bottled: Hormuz LNG transit is still a standstill even as some crude is escorted through; QatarEnergy force majeure is extended through October; pre-conflict in-transit cargoes have now all delivered, so the last buffer is gone. Reuters 2 Sep documented rare ship-to-ship LNG transfers outside the strait. The 1–2 Sep US “tanker-for-tanker” strikes on Iranian government tankers plus ~100 IRGC targets make a near-term LNG restart less, not more, likely. TTF printed a 3-year high (~€75.3 session high 2 Sep; ~€72.8 morning 3 Sep). EU storage ~65% vs ~81% seasonal normal (Germany ~50–53% vs an 80% Nov mandate). USGC–Asia winter arb is closed; cargoes prefer Europe. Cash therefore shifts to US liquefaction selling TTF/JKM-linked volumes off cheap Henry Hub, and to FLNG/Atlantic shipping on utilization — not to HH producers and not to already-open crude E&P.
+
+**horizon_days:** 60. Covers the rest of the injection window, October Qatar FM, and the 1 Nov storage print. 14d is only the next kinetic headline; 90d dilutes the 2 Sep STS + tanker-for-tanker catalyst into winter weather noise.
+
+**Beneficiaries:** US liquefaction with Europe offtake; FLNG / Atlantic LNG shipping. **Hurt:** EU gas-intensive chemicals and fertilizer; EU utilities on unhedged TTF.
+
+**Industry analysis** (before any ticker)
+
+1. *Value chain.* Cash is collected by (a) US liquefaction that sells TTF/JKM-linked cargoes while buying cheap HH feedgas, (b) FLNG / Atlantic LNG shipping on utilization and spot charters, (c) Gulf feedgas pipelines only on *volume*, not TTF price. US gas *producers* collect HH — and HH is ~$2.95, not TTF €73. European crackers and gas-intensive chemicals *pay* TTF. US nitrogen is a relative winner vs EU fertilizer because feedstock stays cheap — a different line from liquefaction fees.
+2. *Transmission / tell.* Kinetic + vessel-count still << pre-war → Qatari/UAE LNG stays bottled. Tells: **TTF** (€69.8 ACER NWE 2 Sep vs €66.0 on 31 Aug; ICE ~€72.8 / session high €75.3), **JKM ~$23.8**, **TTF–HH spread** (~$21 vs HH ~$2.95), **EU storage ~65% vs ~81% seasonal**, Germany ~50–53% vs 80% Nov mandate, Hormuz LNG vessel count (still ~0 new loadings through the strait), US LNG destination mix (Europe bid > Asia).
+3. *Peer universe.* Liquefaction: LNG Cheniere (scale; $295.86 vs 52w $300.89; +14% in 30d), VG Venture Global (operating US liquefaction + DE/FR/NL/UK offtake; $14.73 vs 52w $17.62; ~14M vol; $37B), CQP (Cheniere MLP; lower-beta clone). FLNG/shipping: GLNG Golar ($53.13 vs 52w $56.80–57.79; ~1.1M vol), FLNG Flex ($31.78, near 52w, thinner). Construction: NEXT Rio Grande — no TTF cash yet. Pipes: KMI / WMB — volume not TTF. HH producers: EQT $55.75 / AR / RRC — HH decoupled. Nitrogen: CF $139.27 vs 52w $141.96, +18% in 30d. Chemicals: LYB $66.57 (EU O&P / Wesseling exposure; partial asset sales haircut).
+4. *Screen.* Drop LNG (at/through 52w after a 14% rip — same lesson as FRO on 31 Aug). Drop CQP (duplicate beta). Drop NEXT (no cash this horizon). Drop KMI/WMB and EQT/AR/RRC (wrong tell: volume/HH, not TTF). Drop FLNG (near high, weaker than GLNG). Drop CF (priced at 52w; would make three benefit names). Survivors: VG (operating liquefaction leftover vs Cheniere), GLNG (FLNG utilization/charter torque, not a liquefaction-fee clone), LYB (cleanest liquid NYSE hurt with EU gas-cost operating leverage).
+5. *Hurt.* EU chemicals/fertilizer/power-intensive industry and unhedged EU utilities. Not US truckload (open distillate) and not airlines (open jet). USGC cokers and crude E&P are the oil line, already booked.
+6. *Already priced?* TTF +30% in a month and Cheniere is at the 52-week high. Leftover is a **winter refill miss if Hormuz LNG stays shut into October**, not the 2 Sep print. Action = watch, not ignore. Not a deep-dive: the driver is already on the tape; the 60d question is whether storage misses the Nov mandate.
+
+**Then 3 stocks**
+- **VG** benefit — operating US liquefaction + Europe offtake; leftover vs Cheniere at 52w; liquid NYSE.
+- **GLNG** benefit — FLNG utilization/charter torque; not duplicate of VG’s liquefaction fee.
+- **LYB** hurt — EU chemical feedstock to TTF; 1-of-3 hurt so the theme has both sides.
+
+| ticker | side | pct_low | pct_high | conf | action | spot_at_call | pick_or_basket |
+|--------|------|---------|----------|------|--------|--------------|----------------|
+| VG | benefit | 4 | 18 | 52 | watch | 14.73; TTF ~€73 / JKM ~$23.8 / HH ~$2.95 | pick |
+| GLNG | benefit | 3 | 14 | 48 | watch | 53.13; TTF ~€73 | pick |
+| LYB | hurt | -14 | -3 | 48 | watch | 66.57; TTF ~€73 | pick |
+
+**Falsifiers**
+- VG: TTF back below €55 *or* Qatar FM lifted with Hormuz LNG vessel count visibly recovering.
+- GLNG: same, plus FLNG utilization/charter rates roll over.
+- LYB: TTF <€55 or EU storage on-pace >75% by mid-Oct (hurt thesis dies if gas cheapens).
+
+**Action:** watch.
+
+**Drivers (3 Sep morning):** Brent ~95–96 · WTI ~91 · WCS–WTI spot ~12.6 (tighter vs 14–15 on 31 Aug) · TTF ~€72.8 (session high €75.3 on 2 Sep) · JKM ~$23.8 · HH ~$2.95 · Au ~4400–4514 · 10y ~4.77% · 30y ~5.27 · CME Sep hike ~60–62% · EU storage ~65%.
+
+**Calibration:** No closed tracker rows yet. First 14d grades due 2026-09-10 (Canada 8 Sep); first 30d grades 2026-09-25 (Hormuz thaw).
+
+**Disclaimer:** Not financial advice. Selection support only — no position sizes.
+
 ### 2026-08-31 | 07:45 America/Regina
 
 **Process:** Macro v1.3 · Write rules v1.2 · sources Reuters/BBC/Politico/CENTCOM/XTB/Saxo/Treasury 28–31 Aug 2026
