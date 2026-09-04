@@ -8,6 +8,7 @@ See `finance/CCJ_README.md`. Official cadence: Analysis **16:10 ET** weekdays ·
 
 | Date       | Analysis Confidence | Audit Score | Top Issue / Note                          | Data Sources OK? |
 |------------|---------------------|-------------|-------------------------------------------|------------------|
+| 2026-09-04 | 85                  | (pending)   | Official EOD C$100.74 Rel 0.56x digestion; $100 hold on light vol; Sep 3 1d printed hit; next session Tue Sep 8 Labor Day; Sep 3 Health row missing; log restore from 9353ad26 still pending | Yes |
 | 2026-09-02 | 86                  | 10          | Official EOD C$96.38 Rel 0.87x digestion; Sep 1 1d CLOSED hit L95.13 H98.37 C96.38; Aug 26 1w CLOSED lower-exceed; prompt v1.12 applied; log restore from 9353ad26 still pending | Yes |
 | 2026-09-01 | 85                  | (pending)   | Official EOD C$96.30 Rel 0.74x digestion; 50-DMA test-reclaim L94.69; CCJ vs U3O8 −1.93pp flag; Aug 31 1d printed hit (auditor to close); log restore from 9353ad26 still pending | Fallback |
 | 2026-08-31 | 86                  | 9.5         | Official EOD C$98.76 Rel 1.14x digestion; Aug 28 1d CLOSED hit L97.53 H99.70 C98.76; Aug 24 1w CLOSED both-ends; rule 2 OFF; log truncated pending restore | Fallback |
