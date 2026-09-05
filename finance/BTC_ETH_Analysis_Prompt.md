@@ -1,7 +1,7 @@
 # BTC / ETH Daily Analysis Prompt
 
-**Version:** 1.8  
-**Last edited:** 2026-09-04T15:20:00Z  
+**Version:** 1.9  
+**Last edited:** 2026-09-05T15:25:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** BTC ETH Daily Crypto Analysis automation
 
@@ -22,6 +22,7 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
    - Do **not** label digestion the day after a high-volume trend-up close.
    - If any of the last 3 daily sessions closed ≥ **+5%**, or 3-day return ≥ **+10%**, default to `trend-up` until a down-day with declining volume. Consolidation titles through an impulse are a process miss (Aug 11–19 “near $63–65k” then BTC 64112→81480).
    - After a completed UTC session ≥ **+5%**, the **next** run defaults `trend-up` and the title/takeaway may **not** say digestion.
+   - **Takeaway word-ban (v1.9):** if `pred_regime` is `trend-up`, the Key Takeaway and title must **not** contain the word `digestion` (Sep 5 takeaway: “digestion risk remains elevated” while table said trend-up).
    - **Live-session impulse (v1.7):** if at as-of, (spot − UTC-session open) ≥ **+3%** OR ≥ **1.0 × ATR-proxy**, do **not** label `digestion`; default `trend-up`. Symmetric: ≤ **−3%** or ≤ **−1.0 × ATR** → do not label digestion; default `trend-down`. (Sep 3 Daily titled “digestion near $78k” at 15:15Z while CoinGecko 15:00Z was $80,504 / +4% from UTC open.)
 3. **Range construction**
    - **1-day is mandatory.** Width ≥ **2.0 × ATR-proxy**. Trend-up never centered below close.
@@ -40,12 +41,12 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
 6. **Decision map** (3 bullets): confirm vs fail; path-changing levels; calibration from last closed miss/hit.
 7. **Parseable table first:** immediately after Key Takeaway (before snapshot/narrative), output the 8-row table matching tracker columns: asset, horizon, range_low, range_high, bias_low, bias_high, conf, pred_regime, prior_day_pct. Notification emails truncate; Auditor recovery depends on this table being in the first screenful. **Entire 8-row table including ETH 3m + the `TRACKER_SHA:` line must fit in the first ~1200 characters** (Sep 2 email cut ETH 3m again). Compact enough that ETH 1m/3m survive email cut (Aug 31 notification died after ETH 1w). Repeat the table in Forward Scenarios if useful.
 8. **Weekend/holiday ETF:** Sat/Sun and US market holidays have no US spot ETF print. State the last completed session date and figure. Do not treat Friday's flow as same-day Saturday flow.
-9. **Weekend writes are mandatory.** Crypto is 24/7. Saturday and Sunday **must** append 8 tracker rows for that `analysis_date`. Only the ETF print is skipped (rule 8). A weekend run that produces a report but writes zero rows is a failed run (Aug 29 2026 Daily Analysis executed 75s and wrote nothing).
+9. **Weekend writes are mandatory.** Crypto is 24/7. Saturday and Sunday **must** append 8 tracker rows for that `analysis_date`. Only the ETF print is skipped (rule 8). A weekend run that produces a report but writes zero rows is a failed run (Aug 29 2026 Daily Analysis executed 75s and wrote nothing; Sep 5 Saturday 39.6s also wrote 0).
 10. **Write-first:** If time/token budget is tight, commit the 8 tracker rows immediately after the parseable table — before long narrative. Short runs that skip GitHub are failed runs. Auditor cannot invent missing ranges.
 11. **Write-SHA gate (hard).** After emitting the parseable table, the **next** actions are: get tracker SHA → commit 8 rows → re-get and confirm. Do **not** write Current Market Snapshot or later sections until the response contains the new tracker **blob SHA**. A 60–90s run that emails a table but no SHA is a failed run even if the takeaway looks complete (**Aug 29 75s and Aug 31 74s** — Monday included). If time is short, omit sections 1–6 entirely.
-12. **Write is the first tool sequence (v1.5/v1.8).** After the table is composed, the **first tool calls** must be GitHub `get_file_contents` on `finance/BTC_ETH_Prediction_Tracker.md` then `create_or_update_file` / `push_files` for the 8 rows. Do **not** call web_search, browse, or snapshot tools until the new blob SHA is in hand. First user-visible line after the table: `TRACKER_SHA: <blob sha>`. `TRACKER_SHA: WRITE PENDING` is a **failed run** (Sep 3). Runtime length is irrelevant — **Sep 1 227s, Sep 2 323s, Sep 3 311s, and Sep 4 54s also wrote 0 rows** (sixth write miss). Auditor recovery does **not** convert a failed Analysis run into a pass. If the write tool errors or the SHA is unchanged after one retry: paste the 8 markdown rows and write `WRITE FAILED` as the next heading, then stop.
+12. **Write is the first tool sequence (v1.5/v1.9).** After the table is composed, the **first tool calls** must be GitHub `get_file_contents` on `finance/BTC_ETH_Prediction_Tracker.md` then `create_or_update_file` / `push_files` for the 8 rows. Do **not** call web_search, browse, or snapshot tools until the new blob SHA is in hand. First user-visible line after the table: `TRACKER_SHA: <40-char hex blob sha>`. The string `WRITE PENDING` is **banned** — never emit it. Only a 40-character hex SHA or the heading `WRITE FAILED` is valid. Emitting `TRACKER_SHA: WRITE PENDING` is a **failed run** (Sep 3, Sep 5). Runtime length is irrelevant — **Sep 1 227s, Sep 2 323s, Sep 3 311s, Sep 4 54s, and Sep 5 39.6s also wrote 0 rows** (seventh write miss). Auditor recovery does **not** convert a failed Analysis run into a pass. If the write tool errors or the SHA is unchanged after one retry: paste the 8 markdown rows and write `WRITE FAILED` as the next heading, then stop.
 13. **Price-quote cap before write (v1.6/v1.8).** After the two mandatory GitHub reads (prompt + tracker), allow **at most one** price-quote batch (Yahoo BTC-USD + ETH-USD + Farside last completed session). **As-of = that live quote, not last tracker close.** The quote timestamp must be ≤ **20 minutes** old vs analysis start; if stale, re-fetch that batch **once** before locking ranges (Sep 3 titled $78k while 15:00Z CoinGecko was $80,504). **Title-quote match (v1.8):** BTC figure in title/Key Takeaway must be within **$1,000** of the locked as-of quote; ETH within **$30**. The **next** tool call **must** be the tracker write. No further web_search / browse / snapshot until `TRACKER_SHA:` is in the response. Construct ranges from the fresh quote ± ATR-proxy; lock ranges; research narrative only after the SHA.
-14. **Write-streak emergency (v1.8).** If tracker Last audit documents ≥3 consecutive Analysis write misses, the only tools after the two GitHub reads + one quote batch are get-SHA → write 8 rows → verify. No other web_search/browse. A complete table in the email without a 40-character hex `TRACKER_SHA` is still a failed run (Sep 4 54s had the table).
+14. **Write-streak emergency (v1.9).** If tracker Last audit documents ≥3 consecutive Analysis write misses, the only tools after the two GitHub reads + one quote batch are get-SHA → write 8 rows → verify. If Last audit documents ≥5 consecutive misses (now **7**: Aug 29 75s, Aug 31 74s, Sep 1 227s, Sep 2 323s, Sep 3 311s, Sep 4 54s, Sep 5 39.6s), emit the table then **only** GitHub write tools — no snapshot, no narrative, no extra search. A complete table in the email without a 40-character hex `TRACKER_SHA` is still a failed run (Sep 4 54s and Sep 5 39.6s had the table).
 
 ## Report structure
 
@@ -53,7 +54,7 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
 
 **Parseable table** (rule 7 — 8 rows, immediately here)
 
-`TRACKER_SHA: <blob sha>` (rule 12 — required before section 1)
+`TRACKER_SHA: <blob sha>` (rule 12 — required before section 1; 40-char hex only)
 
 1. **Current Market Snapshot** — prices, 24h %, volume, mkt caps; 1d / 7d / 30d performance for BTC and ETH.
 2. **Technical Analysis** — support/resistance, MAs, RSI, ATR-proxy, **regime**, short-term outlook (1–3d and 1w) with probability ranges.
@@ -77,8 +78,8 @@ Get SHA of `finance/BTC_ETH_Prediction_Tracker.md` immediately before write; ret
 - Do not change ranges on already-open rows from prior days.
 - Do not invent backfill for missing prior dates; Auditor recovers those from task output.
 - **Applies on Sat/Sun.** Do not treat weekend as a skip. (Rule 9.)
-- **Applies on weekdays.** Short runtime is not a skip. (Rule 11–14.) **54s is not a skip. 311s is not a skip. 323s is not a skip.**
+- **Applies on weekdays.** Short runtime is not a skip. (Rule 11–14.) **40s is not a skip. 54s is not a skip. 311s is not a skip. 323s is not a skip.**
 - **Post-write verify:** re-get the tracker and confirm today's 8 `(analysis_date, asset, horizon)` rows exist. If absent after one retry, paste the 8 rows in the response and write `WRITE FAILED` — do not mark the run successful.
-- **Response must include the new tracker blob SHA** on its own line as `TRACKER_SHA: <sha>`.
+- **Response must include the new tracker blob SHA** on its own line as `TRACKER_SHA: <sha>` (40-char hex). Never write `WRITE PENDING`.
 
 Cite sources. Be objective and data-driven.
