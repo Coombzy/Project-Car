@@ -67,7 +67,7 @@ Do not treat McKing as the brochure host plan. McKing remains the later hub for 
 - **Path:** Cloudflare Tunnel → Doc `localhost:8000`
 - **Code:** `apps/project-car/api`
 - **Stay-up:** LaunchAgent `com.projectcar.shop-api` (KeepAlive) on Doc. Details in `api-stay-up.md` — do not expand the runbook here.
-- **CORS:** `cors-origins.md` — brochure `POST /waitlist` from `projectcar.ca` / `www` / localhost.
+- **CORS:** `cors-origins.md` — brochure `POST /waitlist` from `projectcar.ca` / `www` / localhost, plus **`https://app.projectcar.ca`**.
 
 ### Cloudflare Tunnel (Doc)
 
@@ -76,10 +76,10 @@ Do not treat McKing as the brochure host plan. McKing remains the later hub for 
   - `projectcar.ca` → current brochure origin `:8088` — **live**
   - `api.projectcar.ca` → shop API `:8000` — **live** (public waitlist + Owner API)
   - `www.projectcar.ca` — CORS allowlist includes it; do not claim DNS until it resolves
+  - `app.projectcar.ca` → Doc shop UI `:3000` — **live** (Ben GO 2026-09-06 ~11:41). Owner + Member demo via public host. Tunnel origin preferred `http://127.0.0.1:3000`. Still demo cookies — not OIDC. The shop is not open.
 - Planned private / extra hostnames (not live):
   - `cloud.` → `:8080` (Nextcloud)
   - `vault.` → `:8222` (Vaultwarden)
-  - `app.projectcar.ca` — Owner + Member shop UI **after** booking is live on Doc (Member routes live under `apps/project-car/web` `/member`, not the brochure)
 
 ---
 
@@ -225,7 +225,7 @@ Most projects keep the simple alias model initially and only create separate mai
 | 8 | Proton custom domain + paid plan when ready | Pending |
 | 9 | Proton Drive setup as part of leaving Google | Pending |
 | 10 | Basic uptime monitoring | Pending |
-| 11 | `app.projectcar.ca` shop UI | After Owner booking is live on Doc |
+| 11 | `app.projectcar.ca` shop UI | **Done** (2026-09-06 ~11:41) — public host live pointing at Doc demo. Still demo cookies. The shop is not open. |
 | 12 | McKing as later hub (NC / mail / backups) | When McKing is home and stable — **not** the brochure host |
 
 ---

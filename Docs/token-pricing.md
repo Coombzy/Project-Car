@@ -90,7 +90,7 @@ Token balance + hoist booking is a **primary Member** page — not Owner-only ad
 | **Owner** | Tiers, band / overlay settings, overrides, at-risk, everyone else's ledger. Still required. |
 | **Member** | See their own balance, book / cancel within tier rules, see **band + overlay + total** on their schedule. |
 
-Member self-serve UI is **live on Doc demo** (`/member`, seed `ada.reyes@example.com`). Demo session cookie — not claimed live on `app.projectcar.ca`.
+Member self-serve UI is **live on Doc demo and `https://app.projectcar.ca`** (`/member`, seed `ada.reyes@example.com`). Demo session cookie — **not OIDC**. The shop is not open.
 
 ---
 
@@ -194,7 +194,7 @@ Same 2-hour slot reserved **30 hours** ahead: overlay **1.25×** → `200 × 1.2
 - Owner-editable settings table for bands / overlays (v1 ships the default table in code).
 - No Cloudflare. No Apex. No Mission Control cockpit.
 - No Stripe. No “shop is open.” Do not put these multipliers on projectcar.ca.
-- Member OIDC (session cookie stub is what shipped). No live `app.projectcar.ca` claim.
+- Member OIDC (session cookie stub is what shipped). Public `app.projectcar.ca` is live pointing at the Doc demo — still not a shop opening.
 
 ---
 
