@@ -27,7 +27,7 @@ def test_tiers_patch(client: TestClient) -> None:
     listed = client.get("/tiers", headers=AUTH)
     assert listed.status_code == 200
     names = {row["name"] for row in listed.json()}
-    assert names == {"basic", "pro", "weekly"}
+    assert names == {"basic", "premium"}
 
     patched = client.patch(
         "/tiers/basic",
@@ -44,9 +44,9 @@ def test_member_detail_and_admin_tokens(client: TestClient) -> None:
     detail = client.get(f"/members/{member['id']}", headers=AUTH)
     assert detail.status_code == 200
     body = detail.json()
-    assert body["tier_name"] == "pro"
+    assert body["tier_name"] == "premium"
     assert body["phone"] == "403-555-0100"
-    assert float(body["token_balance"]) == 800
+    assert float(body["token_balance"]) == 1500
     assert body["bookings"] == []
 
     adjusted = client.post(
@@ -57,7 +57,7 @@ def test_member_detail_and_admin_tokens(client: TestClient) -> None:
     assert adjusted.status_code == 201
     assert adjusted.json()["kind"] == "admin_adjustment"
     refreshed = client.get(f"/members/{member['id']}", headers=AUTH)
-    assert float(refreshed.json()["token_balance"]) == 798.5
+    assert float(refreshed.json()["token_balance"]) == 1498.5
 
 
 def test_hoist_status_patch(client: TestClient) -> None:
@@ -97,19 +97,26 @@ def test_seed_demo_data_on_sqlite(client: TestClient) -> None:
         session_gen.close()
 
     assert summary["members"] == 6
-    assert summary["hoists"] == 3
+    assert summary["hoists"] == 6
     assert summary["bookings"] >= 6
 
     dash = client.get("/dashboard", headers=AUTH)
     assert dash.status_code == 200
     body = dash.json()
     assert body["waitlist_count"] == 4
-    assert len(body["hoists"]) == 3
+    assert len(body["hoists"]) == 6
+    assert sum(1 for hoist in body["hoists"] if hoist["is_shop"]) == 1
     assert len(body["token_at_risk"]) >= 1
     members = client.get("/members", headers=AUTH)
     assert len(members.json()) == 6
+    assert {row["tier_name"] for row in members.json()} <= {"basic", "premium"}
+    tiers = {row["name"]: row["included_tokens"] for row in client.get("/tiers", headers=AUTH).json()}
+    assert tiers["basic"] == 1000
+    assert tiers["premium"] == 1500
     bookings = client.get("/bookings", headers=AUTH)
-    assert len(bookings.json()) >= 6
+    body_bookings = bookings.json()
+    assert len(body_bookings) >= 6
+    assert any(row["kind"] == "shop" for row in body_bookings)
 
 
 def app_session(client: TestClient):

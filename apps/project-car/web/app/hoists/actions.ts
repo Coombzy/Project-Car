@@ -17,6 +17,7 @@ export async function createHoistAction(formData: FormData): Promise<void> {
       name: String(formData.get("name") ?? "").trim(),
       location_label: String(formData.get("location_label") ?? "").trim(),
       status: String(formData.get("status") ?? "available"),
+      is_shop: formData.get("is_shop") === "on",
     });
   } catch (error) {
     bounce(error);
@@ -32,6 +33,7 @@ export async function patchHoistAction(formData: FormData): Promise<void> {
     await patchHoist(String(formData.get("id") ?? ""), {
       location_label: String(formData.get("location_label") ?? "").trim(),
       status: String(formData.get("status") ?? "available"),
+      is_shop: formData.get("is_shop") === "on",
     });
   } catch (error) {
     bounce(error);

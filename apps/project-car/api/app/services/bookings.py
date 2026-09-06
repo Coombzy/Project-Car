@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.models import (
     Booking,
+    BookingKind,
     BookingStatus,
     Hoist,
     HoistStatus,
@@ -54,6 +55,27 @@ def hoist_has_overlap(
     stmt = select(Booking.id).where(
         Booking.hoist_id == hoist_id,
         Booking.status.in_(OVERLAP_STATUSES),
+        Booking.start_at < end_at,
+        Booking.end_at > start_at,
+    )
+    if exclude_id is not None:
+        stmt = stmt.where(Booking.id != exclude_id)
+    return session.scalars(stmt).first() is not None
+
+
+def shop_work_blocks_customer(
+    session: Session,
+    hoist_id: UUID,
+    start_at: datetime,
+    end_at: datetime,
+    *,
+    exclude_id: UUID | None = None,
+) -> bool:
+    """Open shop work (pending/confirmed/active) blocks customer bookings on that hoist."""
+    stmt = select(Booking.id).where(
+        Booking.hoist_id == hoist_id,
+        Booking.kind == BookingKind.SHOP,
+        Booking.status.in_(OPEN_STATUSES),
         Booking.start_at < end_at,
         Booking.end_at > start_at,
     )
@@ -110,14 +132,35 @@ def preview_reserve(
 def create_booking(
     session: Session,
     *,
-    member_id: UUID,
+    member_id: UUID | None,
     hoist_id: UUID,
     start_at: datetime,
     end_at: datetime,
     notes: str | None,
+    kind: BookingKind = BookingKind.CUSTOMER,
 ) -> Booking:
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
+
+    hoist = session.get(Hoist, hoist_id)
+    if hoist is None:
+        raise _error(404, "not_found", "Hoist not found.")
+    if hoist.status in UNAVAILABLE_HOIST:
+        raise _error(400, "hoist_unavailable", "That hoist is in maintenance or locked.")
+
+    if kind == BookingKind.SHOP:
+        return _create_shop_booking(
+            session,
+            hoist=hoist,
+            start_at=start_at,
+            end_at=end_at,
+            notes=notes,
+            member_id=member_id,
+        )
+
+    if member_id is None:
+        raise _error(400, "member_required", "Customer bookings need a member.")
+
     try:
         quote = quote_reserve(start_at, end_at)
     except PricingError as exc:
@@ -131,14 +174,16 @@ def create_booking(
     ).first()
     if member is None:
         raise _error(404, "not_found", "Member not found.")
-    hoist = session.get(Hoist, hoist_id)
-    if hoist is None:
-        raise _error(404, "not_found", "Hoist not found.")
 
     if member.status != MemberStatus.ACTIVE:
         raise _error(400, "member_not_bookable", "Only active members can book a hoist.")
-    if hoist.status in UNAVAILABLE_HOIST:
-        raise _error(400, "hoist_unavailable", "That hoist is in maintenance or locked.")
+
+    if shop_work_blocks_customer(session, hoist.id, start_at, end_at):
+        raise _error(
+            409,
+            "shop_priority",
+            "Shop work already claims this window on that hoist. Customer bookings cannot displace it.",
+        )
 
     window = timedelta(days=member.tier.booking_window_days)
     if start_at > as_utc(shop_now()) + window:
@@ -163,6 +208,7 @@ def create_booking(
         hoist_id=hoist.id,
         start_at=start_at,
         end_at=end_at,
+        kind=BookingKind.CUSTOMER,
         status=BookingStatus.PENDING,
         reserved_tokens=tokens,
         pricing_rule=rule,
@@ -183,6 +229,49 @@ def create_booking(
     return get_booking(session, booking.id)
 
 
+def _create_shop_booking(
+    session: Session,
+    *,
+    hoist: Hoist,
+    start_at: datetime,
+    end_at: datetime,
+    notes: str | None,
+    member_id: UUID | None,
+) -> Booking:
+    if not hoist.is_shop:
+        raise _error(400, "not_shop_hoist", "Shop work can only be booked on the shop hoist.")
+    if end_at <= start_at:
+        raise _error(400, "invalid_window", "End must be after start.")
+
+    member = None
+    if member_id is not None:
+        member = session.get(Member, member_id)
+        if member is None:
+            raise _error(404, "not_found", "Member not found.")
+
+    if hoist_has_overlap(session, hoist.id, start_at, end_at):
+        raise _error(
+            409,
+            "hoist_overlap",
+            "That hoist already has a confirmed or active booking in this window. Cancel it before placing shop work.",
+        )
+
+    booking = Booking(
+        member_id=member.id if member is not None else None,
+        hoist_id=hoist.id,
+        start_at=start_at,
+        end_at=end_at,
+        kind=BookingKind.SHOP,
+        status=BookingStatus.PENDING,
+        reserved_tokens=Decimal("0"),
+        pricing_rule=None,
+        notes=notes,
+    )
+    session.add(booking)
+    session.flush()
+    return get_booking(session, booking.id)
+
+
 def confirm_booking(session: Session, booking_id: UUID) -> Booking:
     booking = get_booking(session, booking_id)
     if booking.status != BookingStatus.PENDING:
@@ -197,6 +286,18 @@ def confirm_booking(session: Session, booking_id: UUID) -> Booking:
         exclude_id=booking.id,
     ):
         raise _error(409, "hoist_overlap", "That hoist already has a confirmed or active booking in this window.")
+    if booking.kind == BookingKind.CUSTOMER and shop_work_blocks_customer(
+        session,
+        booking.hoist_id,
+        booking.start_at,
+        booking.end_at,
+        exclude_id=booking.id,
+    ):
+        raise _error(
+            409,
+            "shop_priority",
+            "Shop work already claims this window on that hoist. Customer bookings cannot displace it.",
+        )
     booking.status = BookingStatus.CONFIRMED
     session.add(booking)
     session.flush()

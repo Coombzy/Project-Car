@@ -38,6 +38,7 @@ Bands and overlay never replace the append-only ledger. Owner create (`POST /boo
 - Tier `included_tokens`, `booking_window_days`, and `max_simultaneous_bookings` stay enforced.
 - Overdue does **not** auto-charge money.
 - Two membership tiers in seed (not three). Allotments below.
+- **Six hoists** in seed. Exactly one is the **shop hoist** (`is_shop`). Shop/business work has priority on that bay — see below.
 
 ---
 
@@ -47,10 +48,28 @@ Two tiers. One includes more tokens per period than the other. **Names and dolla
 
 | Placeholder name | `included_tokens` / period |
 |------------------|----------------------------|
-| Basic | **400** |
-| Pro | **800** |
+| Basic | **1000** |
+| Premium | **1500** |
 
-No third **Weekly** tier in this lock. Drop it from seed notes and seed tier rows. Owner can still add or rename tiers later in data — this is not a schema ban.
+Two tiers only. **Pro** and **Weekly** are retired names — rename Pro → Premium in seed and demo `tier_name` references. Owner can still add or rename tiers later in data — this is not a schema ban.
+
+---
+
+## Shop hoist priority (v1)
+
+Seed inventory: **6 hoists**. Exactly one is marked `is_shop` (the shop hoist — business / internal work). The other five are customer bays.
+
+**Rule:** shop/business work has priority over customer bookings on that hoist. Customer bookings yield. They cannot displace shop work.
+
+How it is encoded:
+
+1. `hoists.is_shop` — boolean. Seed and API allow **exactly one** shop hoist.
+2. `bookings.kind` — `customer` (default) or `shop`. `kind=shop` is the Owner-only shop-work path. It may omit `member_id` and does **not** reserve member tokens.
+3. Shop work (`kind=shop`) can only be created on the shop hoist.
+4. A **customer** booking that overlaps any **open** shop booking (`pending` / `confirmed` / `active`) on that hoist is rejected at create and at confirm (`409 shop_priority`).
+5. Shop create still refuses a window that already has a **confirmed or active** booking (`409 hoist_overlap`). Pending customer bookings do not block shop create. If both are pending, confirming the customer booking fails while shop work occupies the window. Owner cancels the customer booking first if they need the confirmed slot — **no silent displacement**, no public booking, no Stripe.
+
+Owner schedule shows the shop hoist and `kind=shop` chips so the week grid matches this rule. Re-seed notes: 6 bays + one shop-priority hoist.
 
 ---
 
@@ -177,5 +196,5 @@ Member-to-member hoist time trades/offers: bookings should not be glued to one m
 
 ---
 
-**Approved by:** Ben (2026-09-06 GO: bands primary, overlay on top, UI shows the math; Member balance + booking is a primary customer surface. 2026-09-06 recall: `base_tokens = hours × 100`; two tiers, Basic 400 / Pro 800 placeholders.)  
+**Approved by:** Ben (2026-09-06 GO: bands primary, overlay on top, UI shows the math; Member balance + booking is a primary customer surface. 2026-09-06 recall: `base_tokens = hours × 100`. 2026-09-06 product lock: two tiers Basic **1000** / Premium **1500**; 6 hoists with one shop-priority hoist.)  
 **Maintained with:** `Docs/` in `Coombzy/Project-Car`

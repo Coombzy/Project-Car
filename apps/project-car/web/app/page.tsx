@@ -17,8 +17,9 @@ export default async function DashboardPage() {
         <p className="eyebrow">Owner · demo</p>
         <h1>Shop dashboard</h1>
         <p className="lede">
-          Today&apos;s bays, bookings, waitlist, and members running low on
-          tokens. Seeded sample data — not a live shop.
+          Today&apos;s bays (6 hoists, one shop-priority), bookings, waitlist,
+          and members running low on tokens. Seeded sample data — not a live
+          shop.
         </p>
         <div className="metrics">
           <div className="metric">
@@ -50,7 +51,10 @@ export default async function DashboardPage() {
               <article key={hoist.id} className="card hoist-card">
                 <div className="hoist-card-head">
                   <h3>{hoist.name}</h3>
-                  <StatusPill value={hoist.status} />
+                  <div className="hoist-pills">
+                    {hoist.is_shop ? <StatusPill value="shop" /> : null}
+                    <StatusPill value={hoist.status} />
+                  </div>
                 </div>
                 <p className="muted">{hoist.location_label || "No location label"}</p>
                 {hoist.current_booking ? (
@@ -96,7 +100,17 @@ export default async function DashboardPage() {
                       <div className="muted">{formatShopDateTime(booking.start_at)}</div>
                     </td>
                     <td>
-                      <Link href={`/members/${booking.member_id}`}>{booking.member_name}</Link>
+                      {booking.member_id ? (
+                        <Link href={`/members/${booking.member_id}`}>{booking.member_name}</Link>
+                      ) : (
+                        booking.member_name
+                      )}
+                      {booking.kind === "shop" ? (
+                        <>
+                          {" "}
+                          <StatusPill value="shop" />
+                        </>
+                      ) : null}
                     </td>
                     <td>{booking.hoist_name}</td>
                     <td>

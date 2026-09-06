@@ -26,12 +26,15 @@ function fail(formData: FormData, error: unknown): never {
 
 export async function createBookingAction(formData: FormData): Promise<void> {
   try {
+    const kind = String(formData.get("kind") ?? "customer");
+    const memberId = String(formData.get("member_id") ?? "").trim();
     await createBooking({
-      member_id: String(formData.get("member_id") ?? ""),
+      member_id: kind === "shop" ? memberId || null : memberId,
       hoist_id: String(formData.get("hoist_id") ?? ""),
       start_at: String(formData.get("start_at") ?? ""),
       end_at: String(formData.get("end_at") ?? ""),
       notes: String(formData.get("notes") ?? "") || null,
+      kind,
     });
   } catch (error) {
     fail(formData, error);

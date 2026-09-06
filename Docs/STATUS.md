@@ -10,7 +10,7 @@ Living one-pager: what’s live, what’s next, locks. Product detail stays in t
 - **Pages:** Home, About, The Shop, Membership, Roadmap, Contact. Chat nav/page stripped (PR #5). Apex deferred.
 - **Waitlist:** Membership / Contact `POST` JSON to `https://api.projectcar.ca/waitlist`. CORS allowlist includes `https://projectcar.ca`, `https://www.projectcar.ca`, and localhost. **e2e PASS.** See `cors-origins.md`.
 - **Shop API:** `api.projectcar.ca` = Cloudflare tunnel → Doc `localhost:8000`. Primary stay-up: LaunchAgent `com.projectcar.shop-api` (KeepAlive) → `~/hermes-tools/mission-control/shop-api/run-shop-api.sh` → uvicorn `:8000`. Lid-close / sleep still kills the Mac. See `api-stay-up.md`.
-- **Shop OS on `main` (PR #2 + #3):** public waitlist path; Owner API + Next.js UI under `apps/project-car/` — tiers, members, hoists, bookings, append-only token ledger, dashboard / week schedule. **Not** claimed live on `app.projectcar.ca`.
+- **Shop OS on `main` (PR #2 + #3 + later):** public waitlist path; Owner API + Next.js UI under `apps/project-car/` — tiers, members, hoists, bookings, append-only token ledger, dashboard / week schedule. Seed: **6 hoists** (one shop-priority) and **Basic 1000 / Premium 1500**. **Not** claimed live on `app.projectcar.ca`. The shop is not open.
 
 ---
 
@@ -35,7 +35,8 @@ Living one-pager: what’s live, what’s next, locks. Product detail stays in t
 ## Locks (unchanged)
 
 - No Stripe. No “shop is open” claims. No live pricing until Ben says so.
-- Token pricing v1 is locked: bands + overlay in `America/Regina` — `token-pricing.md`. Defaults are Owner-editable placeholders, not public prices.
+- Token pricing v1 is locked: bands + overlay in `America/Regina` — `token-pricing.md`. Defaults are Owner-editable placeholders, not public prices. Allotments: **Basic 1000 / Premium 1500** per period. Two tiers only (no Pro, no Weekly).
+- **6 hoists** in calendar/seed. Exactly one is the shop hoist (`is_shop`). Shop/business work (`kind=shop`, Owner-only) has priority on that bay — customer bookings that overlap open shop work are rejected. No silent displacement. See `token-pricing.md`.
 - Hold the Mission Control cockpit until Owner booking is merged **and** live on Doc.
 - Shop members never get Nextcloud accounts.
 - No n8n.

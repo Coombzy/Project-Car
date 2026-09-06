@@ -97,6 +97,7 @@ def create_booking(body: BookingCreate, session: DbSession, _owner: Owner) -> Bo
         start_at=body.start_at,
         end_at=body.end_at,
         notes=body.notes,
+        kind=body.kind,
     )
     return BookingOut.from_booking(booking)
 

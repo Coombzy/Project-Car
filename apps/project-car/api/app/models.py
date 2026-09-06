@@ -19,6 +19,7 @@ from decimal import Decimal
 from typing import Optional
 
 from sqlalchemy import (
+    Boolean,
     DateTime,
     Enum as SAEnum,
     ForeignKey,
@@ -73,6 +74,11 @@ class BookingStatus(str, enum.Enum):
     COMPLETED = "completed"
     OVERDUE = "overdue"
     CANCELLED = "cancelled"
+
+
+class BookingKind(str, enum.Enum):
+    CUSTOMER = "customer"
+    SHOP = "shop"
 
 
 class TokenTransactionKind(str, enum.Enum):
@@ -202,7 +208,7 @@ class Member(Base):
 
 
 class Hoist(Base):
-    """Work bay / 2-post hoist."""
+    """Work bay / 2-post hoist. Exactly one row should be the shop hoist."""
 
     __tablename__ = "hoists"
     __table_args__ = (Index("ix_hoists_status", "status"),)
@@ -215,6 +221,7 @@ class Hoist(Base):
         nullable=False,
         default=HoistStatus.AVAILABLE,
     )
+    is_shop: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -255,7 +262,7 @@ class Tool(Base):
 
 
 class Booking(Base):
-    """Member hoist reservation. Token reserve/debit happens via the ledger."""
+    """Hoist reservation. Customer rows reserve tokens; shop rows are Owner-only."""
 
     __tablename__ = "bookings"
     __table_args__ = (
@@ -265,14 +272,19 @@ class Booking(Base):
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
-    member_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("members.id", ondelete="RESTRICT"), nullable=False
+    member_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("members.id", ondelete="RESTRICT"), nullable=True
     )
     hoist_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("hoists.id", ondelete="RESTRICT"), nullable=False
     )
     start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     end_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    kind: Mapped[BookingKind] = mapped_column(
+        _enum_column(BookingKind),
+        nullable=False,
+        default=BookingKind.CUSTOMER,
+    )
     status: Mapped[BookingStatus] = mapped_column(
         _enum_column(BookingStatus),
         nullable=False,
@@ -290,7 +302,7 @@ class Booking(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
 
-    member: Mapped[Member] = relationship(back_populates="bookings", foreign_keys=[member_id])
+    member: Mapped[Optional[Member]] = relationship(back_populates="bookings", foreign_keys=[member_id])
     hoist: Mapped[Hoist] = relationship(back_populates="bookings")
     token_transactions: Mapped[list[TokenTransaction]] = relationship(back_populates="booking")
     incidents: Mapped[list[Incident]] = relationship(back_populates="booking")

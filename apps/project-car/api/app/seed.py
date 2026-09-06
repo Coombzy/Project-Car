@@ -7,8 +7,8 @@ Usage (from apps/project-car/api, venv active, after `alembic upgrade head`):
 
 `--reset` deletes members, hoists, bookings, token ledger rows, waitlist
 entries, and related operational rows, then inserts the demo set. Tiers are
-refreshed to the two Owner-editable placeholders (Basic / Pro). A leftover
-Weekly seed row is dropped.
+refreshed to the two Owner-editable placeholders (Basic / Premium). Leftover
+Weekly or Pro seed rows are dropped (Pro members move to Premium).
 
 Default (no flag) upserts the demo IDs and rebuilds this week's sample
 bookings so a fresh or existing demo DB is never an empty shell.
@@ -37,6 +37,7 @@ from app.models import (
     AccessEvent,
     BillingTransaction,
     Booking,
+    BookingKind,
     BookingStatus,
     Hoist,
     HoistStatus,
@@ -70,29 +71,30 @@ PLACEHOLDER_TIERS = [
         "name": "basic",
         "display_name": "Basic",
         "price": Decimal("150.00"),
-        "included_tokens": 400,
+        "included_tokens": 1000,
         "booking_window_days": 14,
         "max_simultaneous_bookings": 1,
         "notes": (
             "Placeholder. Owner can edit. Not live pricing. "
-            "Allotment 400 tokens/period. Base hoist rate is "
+            "Allotment 1000 tokens/period. Base hoist rate is "
             f"{BASE_TOKENS_PER_HOUR} tokens/hour."
         ),
     },
     {
-        "name": "pro",
-        "display_name": "Pro",
+        "name": "premium",
+        "display_name": "Premium",
         "price": Decimal("250.00"),
-        "included_tokens": 800,
+        "included_tokens": 1500,
         "booking_window_days": 21,
         "max_simultaneous_bookings": 2,
         "notes": (
             "Placeholder. Owner can edit. Not live pricing. "
-            "Allotment 800 tokens/period. Base hoist rate is "
+            "Allotment 1500 tokens/period. Base hoist rate is "
             f"{BASE_TOKENS_PER_HOUR} tokens/hour."
         ),
     },
 ]
+TIER_RENAMES = {"pro": "premium"}
 
 
 def _upsert_tier(session: Session, payload: dict) -> MembershipTier:
@@ -108,15 +110,15 @@ def _upsert_tier(session: Session, payload: dict) -> MembershipTier:
 
 
 def _retire_extra_tiers(session: Session) -> None:
-    """Drop seed leftovers (Weekly) so demo DBs match the two-tier lock."""
+    """Drop seed leftovers (Weekly / Pro) so demo DBs match the two-tier lock."""
     keep = {payload["name"] for payload in PLACEHOLDER_TIERS}
     extras = session.scalars(select(MembershipTier).where(~MembershipTier.name.in_(keep))).all()
     if not extras:
         return
     extra_names = [row.name for row in extras]
-    fallback = "basic"
     for member in session.scalars(select(Member).where(Member.tier_name.in_(extra_names))).all():
-        member.tier_name = fallback
+        dest = TIER_RENAMES.get(member.tier_name, "basic")
+        member.tier_name = dest if dest in keep else "basic"
         session.add(member)
     session.flush()
     for row in extras:
@@ -124,16 +126,31 @@ def _retire_extra_tiers(session: Session) -> None:
     session.flush()
 
 
-def _upsert_hoist(session: Session, key: str, name: str, location: str, status: HoistStatus) -> Hoist:
+def _upsert_hoist(
+    session: Session,
+    key: str,
+    name: str,
+    location: str,
+    status: HoistStatus,
+    *,
+    is_shop: bool = False,
+) -> Hoist:
     hoist_id = seed_id("hoist", key)
     row = session.get(Hoist, hoist_id)
     if row is None:
-        row = Hoist(id=hoist_id, name=name, location_label=location, status=status)
+        row = Hoist(
+            id=hoist_id,
+            name=name,
+            location_label=location,
+            status=status,
+            is_shop=is_shop,
+        )
         session.add(row)
     else:
         row.name = name
         row.location_label = location
         row.status = status
+        row.is_shop = is_shop
         session.add(row)
     return row
 
@@ -185,24 +202,33 @@ def _make_booking(
     session: Session,
     *,
     key: str,
-    member: Member,
+    member: Member | None,
     hoist: Hoist,
     start: datetime,
     end: datetime,
     status: BookingStatus,
     notes: str,
     unused: Decimal = Decimal("0"),
+    kind: BookingKind = BookingKind.CUSTOMER,
 ) -> Booking:
-    quote = quote_reserve(start, end)
-    tokens = quote.final_reserve_cost
-    rule = quote.as_rule()
-    meta = quote.ledger_meta()
+    if kind == BookingKind.SHOP:
+        tokens = Decimal("0")
+        rule = None
+        meta = None
+    else:
+        if member is None:
+            raise ValueError("Customer demo bookings need a member.")
+        quote = quote_reserve(start, end)
+        tokens = quote.final_reserve_cost
+        rule = quote.as_rule()
+        meta = quote.ledger_meta()
     booking = Booking(
         id=seed_id("booking", key),
-        member_id=member.id,
+        member_id=member.id if member is not None else None,
         hoist_id=hoist.id,
         start_at=start,
         end_at=end,
+        kind=kind,
         status=BookingStatus.PENDING,
         reserved_tokens=tokens,
         pricing_rule=rule,
@@ -210,15 +236,16 @@ def _make_booking(
     )
     session.add(booking)
     session.flush()
-    apply_ledger(
-        session,
-        member,
-        kind=TokenTransactionKind.BOOKING_RESERVE,
-        amount=-tokens,
-        booking_id=booking.id,
-        note="Demo reserve",
-        meta=meta,
-    )
+    if kind == BookingKind.CUSTOMER and member is not None and tokens > 0:
+        apply_ledger(
+            session,
+            member,
+            kind=TokenTransactionKind.BOOKING_RESERVE,
+            amount=-tokens,
+            booking_id=booking.id,
+            note="Demo reserve",
+            meta=meta,
+        )
 
     if status == BookingStatus.ACTIVE:
         booking.status = BookingStatus.ACTIVE
@@ -226,37 +253,39 @@ def _make_booking(
         session.add(hoist)
     elif status == BookingStatus.COMPLETED:
         used = tokens - unused
-        apply_ledger(
-            session,
-            member,
-            kind=TokenTransactionKind.BOOKING_REFUND,
-            amount=tokens,
-            booking_id=booking.id,
-            note="Demo release reserve",
-            meta=meta,
-        )
-        if used > 0:
+        if kind == BookingKind.CUSTOMER and member is not None and tokens > 0:
             apply_ledger(
                 session,
                 member,
-                kind=TokenTransactionKind.BOOKING_DEBIT,
-                amount=-used,
+                kind=TokenTransactionKind.BOOKING_REFUND,
+                amount=tokens,
                 booking_id=booking.id,
-                note="Demo debit",
+                note="Demo release reserve",
                 meta=meta,
             )
+            if used > 0:
+                apply_ledger(
+                    session,
+                    member,
+                    kind=TokenTransactionKind.BOOKING_DEBIT,
+                    amount=-used,
+                    booking_id=booking.id,
+                    note="Demo debit",
+                    meta=meta,
+                )
         booking.reserved_tokens = Decimal("0")
         booking.status = BookingStatus.COMPLETED
     elif status == BookingStatus.CANCELLED:
-        apply_ledger(
-            session,
-            member,
-            kind=TokenTransactionKind.BOOKING_REFUND,
-            amount=tokens,
-            booking_id=booking.id,
-            note="Demo cancel refund",
-            meta=meta,
-        )
+        if kind == BookingKind.CUSTOMER and member is not None and tokens > 0:
+            apply_ledger(
+                session,
+                member,
+                kind=TokenTransactionKind.BOOKING_REFUND,
+                amount=tokens,
+                booking_id=booking.id,
+                note="Demo cancel refund",
+                meta=meta,
+            )
         booking.reserved_tokens = Decimal("0")
         booking.status = BookingStatus.CANCELLED
     else:
@@ -277,6 +306,16 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     bay1 = _upsert_hoist(session, "bay-1", "Bay 1", "North wall", HoistStatus.AVAILABLE)
     bay2 = _upsert_hoist(session, "bay-2", "Bay 2", "South wall", HoistStatus.AVAILABLE)
     bay3 = _upsert_hoist(session, "bay-3", "Bay 3", "East wall", HoistStatus.AVAILABLE)
+    bay4 = _upsert_hoist(session, "bay-4", "Bay 4", "West wall", HoistStatus.AVAILABLE)
+    bay5 = _upsert_hoist(session, "bay-5", "Bay 5", "Center aisle", HoistStatus.AVAILABLE)
+    shop = _upsert_hoist(
+        session,
+        "shop",
+        "Shop",
+        "Internal / business work",
+        HoistStatus.AVAILABLE,
+        is_shop=True,
+    )
     session.flush()
 
     waiver_at = datetime(2026, 8, 1, 15, 0, tzinfo=SHOP_TZ)
@@ -286,7 +325,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         name="Ada Reyes",
         email="ada.reyes@example.com",
         phone="403-555-0101",
-        tier_name="pro",
+        tier_name="premium",
         status=MemberStatus.ACTIVE,
         waiver_signed_at=waiver_at,
         waiver_version="2026-08-waiver",
@@ -325,7 +364,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         name="Jordan Vale",
         email="jordan.vale@example.com",
         phone="403-555-0104",
-        tier_name="pro",
+        tier_name="premium",
         status=MemberStatus.SUSPENDED,
         waiver_signed_at=None,
         waiver_version=None,
@@ -368,8 +407,8 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         session.add(member)
     session.flush()
 
-    apply_ledger(session, ada, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("2000"), note="Demo Pro allocation + duration buffer")
-    apply_ledger(session, sam, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("1200"), note="Demo Basic allocation + duration buffer")
+    apply_ledger(session, ada, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("1500"), note="Demo Premium allocation")
+    apply_ledger(session, sam, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("1000"), note="Demo Basic allocation")
     apply_ledger(
         session,
         sam,
@@ -377,14 +416,14 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         amount=Decimal("-300"),
         note="Demo: prior month usage",
     )
-    apply_ledger(session, riley, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("800"), note="Demo Basic allocation + duration buffer")
-    apply_ledger(session, casey, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("800"), note="Demo Basic allocation + duration buffer")
-    apply_ledger(session, morgan, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("400"), note="Demo Basic allocation")
+    apply_ledger(session, riley, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("1000"), note="Demo Basic allocation")
+    apply_ledger(session, casey, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("1000"), note="Demo Basic allocation")
+    apply_ledger(session, morgan, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("1000"), note="Demo Basic allocation")
     apply_ledger(
         session,
         morgan,
         kind=TokenTransactionKind.ADMIN_ADJUSTMENT,
-        amount=Decimal("-400"),
+        amount=Decimal("-1000"),
         note="Demo: used prior month (at-risk)",
     )
 
@@ -462,6 +501,40 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
             "past": BookingStatus.CANCELLED,
             "notes": "Cancelled — parts delayed",
         },
+        {
+            "key": "thu-bay4",
+            "offset": 3,
+            "member": casey,
+            "hoist": bay4,
+            "start": 9,
+            "end": 11,
+            "future": BookingStatus.CONFIRMED,
+            "past": BookingStatus.COMPLETED,
+            "notes": "Brake job — overflow bay",
+        },
+        {
+            "key": "fri-bay5",
+            "offset": 4,
+            "member": sam,
+            "hoist": bay5,
+            "start": 10,
+            "end": 13,
+            "future": BookingStatus.CONFIRMED,
+            "past": BookingStatus.COMPLETED,
+            "notes": "Suspension refresh",
+        },
+        {
+            "key": "wed-shop",
+            "offset": 2,
+            "member": None,
+            "hoist": shop,
+            "start": 13,
+            "end": 16,
+            "future": BookingStatus.CONFIRMED,
+            "past": BookingStatus.COMPLETED,
+            "notes": "Shop work — rack inspection",
+            "kind": BookingKind.SHOP,
+        },
     ]
 
     for slot in week_slots:
@@ -478,6 +551,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
             end=_at(day, slot["end"]),
             status=status,
             notes=slot["notes"],
+            kind=slot.get("kind", BookingKind.CUSTOMER),
         )
 
     _make_booking(
@@ -500,6 +574,17 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         status=BookingStatus.CONFIRMED,
         notes="Confirmed afternoon — turbo mock-up",
     )
+    _make_booking(
+        session,
+        key="today-shop",
+        member=None,
+        hoist=shop,
+        start=_at(today, 11),
+        end=_at(today, 13),
+        status=BookingStatus.CONFIRMED,
+        notes="Shop work — in-house fab",
+        kind=BookingKind.SHOP,
+    )
     session.flush()
 
     for member in demo_members:
@@ -511,7 +596,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
             "name": "Priya Shah",
             "email": "priya.shah@example.com",
             "phone": "403-555-0188",
-            "notes": "Interested in Pro once doors open",
+            "notes": "Interested in Premium — waitlist only, shop not open",
             "contacted": False,
         },
         {
@@ -566,7 +651,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     return {
         "tiers": len(PLACEHOLDER_TIERS),
         "members": len(demo_members),
-        "hoists": 3,
+        "hoists": 6,
         "bookings": int(booking_count),
         "waitlist": len(waitlist),
     }
@@ -593,8 +678,9 @@ def main(argv: list[str] | None = None) -> int:
     mode = "reset + seed" if args.reset else "upsert seed"
     print(f"Shop OS demo data ready ({mode}).")
     print(
-        "  {members} members, {hoists} hoists, {bookings} bookings this week, "
-        "{waitlist} waitlist entries, {tiers} tiers.".format(**summary)
+        "  {members} members, {hoists} hoists (5 customer bays + 1 shop hoist), "
+        "{bookings} bookings this week, {waitlist} waitlist entries, {tiers} tiers "
+        "(Basic 1000 / Premium 1500).".format(**summary)
     )
     print("  Owner login (localhost demo): owner@projectcar.ca / changeme")
     print("  The shop is not open. This is sample data for walkthroughs.")

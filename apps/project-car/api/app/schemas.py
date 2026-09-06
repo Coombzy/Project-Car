@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-from app.models import BookingStatus, HoistStatus, MemberStatus, TokenTransactionKind
+from app.models import BookingKind, BookingStatus, HoistStatus, MemberStatus, TokenTransactionKind
 
 
 def _blank_to_none(value: str | None) -> str | None:
@@ -200,6 +200,7 @@ class HoistOut(BaseModel):
     name: str
     location_label: str
     status: HoistStatus
+    is_shop: bool
     created_at: datetime
     updated_at: datetime
 
@@ -208,6 +209,7 @@ class HoistCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     location_label: str = Field(default="", max_length=120)
     status: HoistStatus = HoistStatus.AVAILABLE
+    is_shop: bool = False
 
     @field_validator("name", "location_label")
     @classmethod
@@ -219,6 +221,7 @@ class HoistPatch(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=120)
     location_label: str | None = Field(default=None, max_length=120)
     status: HoistStatus | None = None
+    is_shop: bool | None = None
 
 
 class PricingRuleOut(BaseModel):
@@ -238,10 +241,11 @@ class BookingOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
-    member_id: UUID
+    member_id: UUID | None
     member_name: str
     hoist_id: UUID
     hoist_name: str
+    kind: BookingKind
     start_at: datetime
     end_at: datetime
     status: BookingStatus
@@ -257,9 +261,10 @@ class BookingOut(BaseModel):
         return cls(
             id=booking.id,
             member_id=booking.member_id,
-            member_name=booking.member.name,
+            member_name=booking.member.name if booking.member is not None else "Shop",
             hoist_id=booking.hoist_id,
             hoist_name=booking.hoist.name,
+            kind=booking.kind,
             start_at=booking.start_at,
             end_at=booking.end_at,
             status=booking.status,
@@ -272,10 +277,11 @@ class BookingOut(BaseModel):
 
 
 class BookingCreate(BaseModel):
-    member_id: UUID
+    member_id: UUID | None = None
     hoist_id: UUID
     start_at: datetime
     end_at: datetime
+    kind: BookingKind = BookingKind.CUSTOMER
     tokens: Decimal | None = Field(default=None, description="Ignored. Server computes reserve from duration.")
     notes: str | None = Field(default=None, max_length=2000)
 

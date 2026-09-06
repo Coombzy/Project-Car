@@ -23,27 +23,18 @@ def seed_placeholder_tiers(session) -> None:
             name="basic",
             display_name="Basic",
             price=Decimal("150.00"),
-            included_tokens=400,
+            included_tokens=1000,
             booking_window_days=14,
             max_simultaneous_bookings=1,
             notes="Placeholder",
         ),
         MembershipTier(
-            name="pro",
-            display_name="Pro",
+            name="premium",
+            display_name="Premium",
             price=Decimal("250.00"),
-            included_tokens=800,
+            included_tokens=1500,
             booking_window_days=21,
             max_simultaneous_bookings=2,
-            notes="Placeholder",
-        ),
-        MembershipTier(
-            name="weekly",
-            display_name="Weekly",
-            price=Decimal("80.00"),
-            included_tokens=2,
-            booking_window_days=7,
-            max_simultaneous_bookings=1,
             notes="Placeholder",
         ),
     ):
@@ -86,7 +77,7 @@ def create_member(client: TestClient, **overrides) -> dict:
     payload = {
         "name": "Ada Reyes",
         "email": "ada@example.com",
-        "tier_name": "pro",
+        "tier_name": "premium",
         **overrides,
     }
     response = client.post("/members", json=payload, headers=AUTH)

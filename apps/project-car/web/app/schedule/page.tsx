@@ -61,7 +61,8 @@ export default async function SchedulePage({
         <p className="eyebrow">Week view · America/Edmonton</p>
         <h1>Schedule</h1>
         <p className="lede">
-          One hoist, one overlapping confirmed or active booking. Reserve cost is
+          Six bays — the shop hoist is reserved for internal work first.
+          Customer bookings cannot displace open shop work. Reserve cost is
           duration × 100 × band × overlay. Complete debits; cancel refunds the
           locked reserve.
         </p>
@@ -105,7 +106,10 @@ export default async function SchedulePage({
                   <tr key={hoist.id}>
                     <th>
                       <div>{hoist.name}</div>
-                      <StatusPill value={hoist.status} />
+                      <div className="hoist-pills">
+                        {hoist.is_shop ? <StatusPill value="shop" /> : null}
+                        <StatusPill value={hoist.status} />
+                      </div>
                     </th>
                     {days.map((day) => {
                       const cell = bookings.filter(
@@ -115,8 +119,9 @@ export default async function SchedulePage({
                       return (
                         <td key={`${hoist.id}-${day}`} className={day === today ? "is-today" : undefined}>
                           {cell.map((booking) => (
-                            <article key={booking.id} className={`booking-chip status-${booking.status}`}>
+                            <article key={booking.id} className={`booking-chip status-${booking.status}${booking.kind === "shop" ? " booking-chip-shop" : ""}`}>
                               <strong>{booking.member_name}</strong>
+                              {booking.kind === "shop" ? <StatusPill value="shop" /> : null}
                               <div>
                                 {formatShopTime(booking.start_at)}–{formatShopTime(booking.end_at)}
                               </div>
@@ -175,8 +180,9 @@ export default async function SchedulePage({
         <section className="card" style={{ marginTop: "1.4rem" }}>
           <h2>Create booking</h2>
           <p className="lede">
-            Starts as pending. Server computes reserve from the window — Owner does
-            not type a token amount.
+            Customer bookings start pending; the server computes reserve from the
+            window. Shop work is Owner-only on the shop hoist and does not take
+            member tokens.
           </p>
           {activeMembers.length === 0 || hoists.length === 0 ? (
             <p className="muted">Need at least one active member and one hoist.</p>
