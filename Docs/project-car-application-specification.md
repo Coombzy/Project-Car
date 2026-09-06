@@ -66,7 +66,7 @@ Identity rules:
    - Public chat (Apex) is **deferred** (Ben). If revived later, it must not become an admin console.
 
 2. **Shop OS (Owner only)**
-   - Membership tiers (seed: Basic, Pro, Weekly — names and prices are data, not hardcoded copy).
+   - Membership tiers (seed: **two** tiers — Basic and Pro — names and prices are data, not hardcoded copy). Allotment placeholders: Basic **400** / Pro **800** per period (`token-pricing.md`).
    - Members: name, email, phone, tier, status (`active` / `suspended` / `banned` / `churned`), waiver fields, emergency contact, token balance, deposit balance.
    - Hoists (work bays): name, location label, status (`available` / `occupied` / `maintenance` / `locked`).
    - Bookings: member + hoist + start/end + status (`pending` → `confirmed` → `active` → `completed` / `overdue` / `cancelled`).
@@ -102,19 +102,20 @@ These rules are the product, not an implementation detail.
 6. Cancelled bookings refund any remaining reserve.
 7. Tier fields (`included_tokens`, `booking_window_days`, `max_simultaneous_bookings`) are enforced in the API, not only in the UI.
 
-Exact token **counts** and dollar prices are **not locked**. Seed reasonable placeholders; Owner can edit tiers.
+Dollar prices and tier **names** stay Owner-editable. Slot cost is **not** an arbitrary Owner-entered reserve amount — see §5.1. Seed allotment placeholders: Basic **400** / Pro **800** per period (`token-pricing.md`). Two tiers, not three.
 
-### 5.1 Token rate (bands + overlay)
+### 5.1 Token rate (duration × bands + overlay)
 
-How many tokens a slot **costs** is locked separately (Ben GO 2026-09-06): time-of-day / day-of-week **bands** in `America/Regina`, plus an advance / last-minute **overlay** at reserve time.
+How many tokens a slot **costs** is locked separately (Ben GO / recall 2026-09-06): **100 tokens per hour** of hoist time, then time-of-day / day-of-week **bands** in `America/Regina`, plus an advance / last-minute **overlay** at reserve time.
 
 ```
-final_reserve_cost = base_tokens × band_multiplier × advance_multiplier
+base_tokens = hours × 100
+final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier
 ```
 
 Show band + overlay + total before confirm. Store `pricing_rule` on ledger meta. Cancel refunds the reserved amount — do not reprice.
 
-Defaults, UX must-haves, and the Fri-eve default: **`token-pricing.md`**. Multipliers are Owner-editable placeholders. Not public brochure prices. No Stripe. Not implemented in the API yet.
+Defaults, two-tier allotment placeholders (Basic 400 / Pro 800), UX must-haves, and the Fri-eve default: **`token-pricing.md`**. Multipliers and allotments are Owner-editable placeholders. Not public brochure prices. No Stripe. Not implemented in the API yet.
 
 ---
 
@@ -322,7 +323,7 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 - Public chat (Apex) later — deferred (Ben), not P0.
 - Staff login later (unless pulled forward with Member auth). Do not dump Member into a vague v2.
 - Payments later (v3). No Stripe now.
-- Token pricing bands + overlay: **spec-locked** (`token-pricing.md`). API / UI implement later. Pricing math applies to Member bookings too.
+- Token pricing: **spec-locked** (`token-pricing.md`) — `base_tokens = hours × 100`, then bands + overlay. API / UI implement later. Pricing math applies to Member bookings too.
 - Mission Control cockpit **held** until Owner booking is merged **and** live on Doc. Do not start the cockpit early.
 
 ### Implementation notes
@@ -336,7 +337,7 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 
 ## 14. Open product details (not blockers)
 
-1. Exact tier names, prices, included tokens. Band / overlay **defaults** are locked as Owner-editable placeholders in `token-pricing.md`.
+1. Exact dollar prices and final public names. Allotment placeholders (Basic 400 / Pro 800) and the **100 tokens/hour** base are in `token-pricing.md`. Band / overlay defaults are locked there as Owner-editable placeholders.
 2. How many hoists at open (model supports many; seed 1–3 for development).
 3. Whether a member is bound to a “home bay” or may book any hoist.
 4. Weekly vs monthly token reset.
