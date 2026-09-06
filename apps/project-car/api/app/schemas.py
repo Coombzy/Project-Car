@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime
+from decimal import Decimal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+
+from app.models import BookingStatus, HoistStatus, MemberStatus, TokenTransactionKind
 
 
 def _blank_to_none(value: str | None) -> str | None:
@@ -45,6 +48,7 @@ class WaitlistEntryOut(BaseModel):
     email: EmailStr
     phone: str | None
     notes: str | None
+    contacted_at: datetime | None
     created_at: datetime
 
 
@@ -61,3 +65,226 @@ class LoginRequest(BaseModel):
 class PrincipalOut(BaseModel):
     role: str
     email: str
+
+
+class TierOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    name: str
+    display_name: str
+    price: Decimal
+    included_tokens: int
+    booking_window_days: int
+    max_simultaneous_bookings: int
+    notes: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class TierCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=64)
+    display_name: str = Field(min_length=1, max_length=120)
+    price: Decimal = Field(ge=0)
+    included_tokens: int = Field(ge=0)
+    booking_window_days: int = Field(ge=1)
+    max_simultaneous_bookings: int = Field(ge=1)
+    notes: str | None = None
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        return value.strip().lower()
+
+    @field_validator("display_name")
+    @classmethod
+    def strip_display(cls, value: str) -> str:
+        return value.strip()
+
+
+class TierPatch(BaseModel):
+    display_name: str | None = Field(default=None, min_length=1, max_length=120)
+    price: Decimal | None = Field(default=None, ge=0)
+    included_tokens: int | None = Field(default=None, ge=0)
+    booking_window_days: int | None = Field(default=None, ge=1)
+    max_simultaneous_bookings: int | None = Field(default=None, ge=1)
+    notes: str | None = None
+
+
+class MemberOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    name: str
+    email: EmailStr
+    phone: str | None
+    tier_name: str
+    status: MemberStatus
+    waiver_signed_at: datetime | None
+    waiver_version: str | None
+    emergency_contact_name: str | None
+    emergency_contact_phone: str | None
+    token_balance: Decimal
+    deposit_balance: Decimal
+    created_at: datetime
+    updated_at: datetime
+
+
+class MemberCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    email: EmailStr
+    phone: str | None = Field(default=None, max_length=40)
+    tier_name: str = Field(min_length=1, max_length=64)
+    status: MemberStatus = MemberStatus.ACTIVE
+    waiver_signed_at: datetime | None = None
+    waiver_version: str | None = Field(default=None, max_length=64)
+    emergency_contact_name: str | None = Field(default=None, max_length=200)
+    emergency_contact_phone: str | None = Field(default=None, max_length=40)
+    allocate_tokens: bool = True
+
+    @field_validator("name")
+    @classmethod
+    def strip_name(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        return str(value).strip().lower()
+
+    @field_validator("tier_name")
+    @classmethod
+    def normalize_tier(cls, value: str) -> str:
+        return value.strip().lower()
+
+    @field_validator("phone", "waiver_version", "emergency_contact_name", "emergency_contact_phone", mode="before")
+    @classmethod
+    def empty_optional(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _blank_to_none(str(value))
+
+
+class MemberPatch(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    phone: str | None = Field(default=None, max_length=40)
+    tier_name: str | None = Field(default=None, min_length=1, max_length=64)
+    status: MemberStatus | None = None
+    waiver_signed_at: datetime | None = None
+    waiver_version: str | None = Field(default=None, max_length=64)
+    emergency_contact_name: str | None = Field(default=None, max_length=200)
+    emergency_contact_phone: str | None = Field(default=None, max_length=40)
+
+
+class TokenAdjustment(BaseModel):
+    amount: Decimal
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class TokenTransactionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    member_id: UUID
+    booking_id: UUID | None
+    kind: TokenTransactionKind
+    amount: Decimal
+    note: str | None
+    created_at: datetime
+
+
+class HoistOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    name: str
+    location_label: str
+    status: HoistStatus
+    created_at: datetime
+    updated_at: datetime
+
+
+class HoistCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    location_label: str = Field(default="", max_length=120)
+    status: HoistStatus = HoistStatus.AVAILABLE
+
+    @field_validator("name", "location_label")
+    @classmethod
+    def strip_text(cls, value: str) -> str:
+        return value.strip()
+
+
+class HoistPatch(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    location_label: str | None = Field(default=None, max_length=120)
+    status: HoistStatus | None = None
+
+
+class BookingOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    member_id: UUID
+    member_name: str
+    hoist_id: UUID
+    hoist_name: str
+    start_at: datetime
+    end_at: datetime
+    status: BookingStatus
+    reserved_tokens: Decimal
+    notes: str | None
+    created_at: datetime
+    updated_at: datetime
+
+    @classmethod
+    def from_booking(cls, booking) -> BookingOut:
+        return cls(
+            id=booking.id,
+            member_id=booking.member_id,
+            member_name=booking.member.name,
+            hoist_id=booking.hoist_id,
+            hoist_name=booking.hoist.name,
+            start_at=booking.start_at,
+            end_at=booking.end_at,
+            status=booking.status,
+            reserved_tokens=booking.reserved_tokens,
+            notes=booking.notes,
+            created_at=booking.created_at,
+            updated_at=booking.updated_at,
+        )
+
+
+class BookingCreate(BaseModel):
+    member_id: UUID
+    hoist_id: UUID
+    start_at: datetime
+    end_at: datetime
+    tokens: Decimal = Field(default=Decimal("1"), gt=0)
+    notes: str | None = Field(default=None, max_length=2000)
+
+
+class BookingComplete(BaseModel):
+    unused_tokens: Decimal = Field(default=Decimal("0"), ge=0)
+
+
+class MemberDetailOut(MemberOut):
+    bookings: list[BookingOut]
+
+
+class MemberAtRiskOut(BaseModel):
+    id: UUID
+    name: str
+    email: EmailStr
+    tier_name: str
+    token_balance: Decimal
+
+
+class HoistSnapshotOut(HoistOut):
+    current_booking: BookingOut | None = None
+
+
+class DashboardOut(BaseModel):
+    hoists: list[HoistSnapshotOut]
+    today_bookings: list[BookingOut]
+    waitlist_count: int
+    token_at_risk: list[MemberAtRiskOut]

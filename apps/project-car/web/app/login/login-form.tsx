@@ -26,11 +26,12 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
         type="password"
         autoComplete="current-password"
         required
+        defaultValue="changeme"
       />
       {state?.message ? <p className="banner error">{state.message}</p> : null}
       <div className="actions">
         <button type="submit" disabled={pending}>
-          {pending ? "Signing in…" : "Sign in"}
+          {pending ? "Signing in…" : "Enter demo as Owner"}
         </button>
       </div>
     </form>

@@ -14,7 +14,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (session && isLogin) {
-    return NextResponse.redirect(new URL("/waitlist", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();

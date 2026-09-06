@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import __version__
 from app.config import settings
 from app.errors import register_error_handlers
-from app.routers import auth, waitlist
+from app.routers import auth, bookings, dashboard, hoists, members, tiers, waitlist
 
 
 def create_app() -> FastAPI:
@@ -14,8 +14,10 @@ def create_app() -> FastAPI:
         title="Project Car Shop API",
         version=__version__,
         description=(
-            "Shop OS API. Slice 1: corrected domain model and public waitlist. "
-            "Owner auth is a v1 session stub (email/password or bearer secret), not OIDC."
+            "Shop OS API. Owner dashboard, schedule, members, hoists, tiers, "
+            "waitlist, and token ledger. Auth is a v1 session stub "
+            "(email/password or bearer secret), not OIDC. Demo data only — "
+            "the shop is not open and there is no live payment processor."
         ),
     )
     register_error_handlers(application)
@@ -32,6 +34,11 @@ def create_app() -> FastAPI:
 
     application.include_router(auth.router)
     application.include_router(waitlist.router)
+    application.include_router(dashboard.router)
+    application.include_router(tiers.router)
+    application.include_router(members.router)
+    application.include_router(hoists.router)
+    application.include_router(bookings.router)
     return application
 
 

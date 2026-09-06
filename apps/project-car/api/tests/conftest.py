@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -8,7 +10,45 @@ from sqlalchemy.pool import StaticPool
 
 from app.db import get_db
 from app.main import app
-from app.models import Base
+from app.models import Base, MembershipTier
+
+AUTH = {"Authorization": "Bearer dev-owner-secret"}
+
+
+def seed_placeholder_tiers(session) -> None:
+    if session.get(MembershipTier, "basic") is not None:
+        return
+    for row in (
+        MembershipTier(
+            name="basic",
+            display_name="Basic",
+            price=Decimal("150.00"),
+            included_tokens=4,
+            booking_window_days=14,
+            max_simultaneous_bookings=1,
+            notes="Placeholder",
+        ),
+        MembershipTier(
+            name="pro",
+            display_name="Pro",
+            price=Decimal("250.00"),
+            included_tokens=8,
+            booking_window_days=21,
+            max_simultaneous_bookings=2,
+            notes="Placeholder",
+        ),
+        MembershipTier(
+            name="weekly",
+            display_name="Weekly",
+            price=Decimal("80.00"),
+            included_tokens=2,
+            booking_window_days=7,
+            max_simultaneous_bookings=1,
+            notes="Placeholder",
+        ),
+    ):
+        session.add(row)
+    session.commit()
 
 
 @pytest.fixture
@@ -20,6 +60,10 @@ def client() -> TestClient:
     )
     Base.metadata.create_all(engine)
     TestingSession = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+
+    setup = TestingSession()
+    seed_placeholder_tiers(setup)
+    setup.close()
 
     def override_db():
         session = TestingSession()
@@ -36,3 +80,22 @@ def client() -> TestClient:
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+
+
+def create_member(client: TestClient, **overrides) -> dict:
+    payload = {
+        "name": "Ada Reyes",
+        "email": "ada@example.com",
+        "tier_name": "pro",
+        **overrides,
+    }
+    response = client.post("/members", json=payload, headers=AUTH)
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def create_hoist(client: TestClient, **overrides) -> dict:
+    payload = {"name": "Bay 1", "location_label": "North wall", **overrides}
+    response = client.post("/hoists", json=payload, headers=AUTH)
+    assert response.status_code == 201, response.text
+    return response.json()

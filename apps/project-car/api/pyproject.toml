@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "project-car-api"
 version = "0.1.0"
-description = "Project Car shop OS API (slice 1: domain + waitlist)"
+description = "Project Car shop OS API (Owner dashboard, bookings, tokens, demo seed)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

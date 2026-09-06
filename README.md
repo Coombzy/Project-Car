@@ -43,10 +43,24 @@ Product lock (read these first):
 - Nextcloud host is **Doc now → McKing later**. Porsche is a travel client.
 - Mesh is **Tailscale**, not Headscale.
 
+## Shop OS (localhost demo)
+
+Owner app for members, hoists, bookings, and waitlist. **Not** production, **not** projectcar.ca, shop is **not** open.
+
+```bash
+docker compose -f infra/compose/compose.yaml up -d
+cd apps/project-car/api && python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]" && cp .env.example .env && alembic upgrade head && python -m app.seed
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Second terminal: `cd apps/project-car/web && cp .env.example .env.local && npm install && npm run dev`
+
+Open http://localhost:3000 and sign in with demo Owner `owner@projectcar.ca` / `changeme`. Re-seed with `python -m app.seed --reset`. Full steps: [`apps/project-car/web/README.md`](apps/project-car/web/README.md) and [`apps/project-car/api/README.md`](apps/project-car/api/README.md).
+
 ## Engineering clone
 
 ```bash
 gh repo clone Coombzy/Project-Car ~/src/Project-Car
 ```
 
-Application code is not in this tree yet. Do not start it until the specs above are the source of truth (they are, as of 2026-08-12).
