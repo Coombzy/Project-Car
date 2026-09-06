@@ -6,7 +6,7 @@
 **Audience:** Anyone implementing the Project Car product  
 **Canonical location:** `Coombzy/Project-Car` → `Docs/project-car-application-specification.md`
 
-Related: `platform-architecture.md`, `mission-control-architecture.md`, `integration-plan.md`, `website-webapp-specification.md`, `high-level-apps-and-business-specification.md`.
+Related: `platform-architecture.md`, `mission-control-architecture.md`, `integration-plan.md`, `website-webapp-specification.md`, `high-level-apps-and-business-specification.md`, `token-pricing.md`.
 
 This is the product spec that was missing from the documentation hierarchy. Implement from this file, not from empty scaffolds or from Mission Control docs.
 
@@ -102,7 +102,19 @@ These rules are the product, not an implementation detail.
 6. Cancelled bookings refund any remaining reserve.
 7. Tier fields (`included_tokens`, `booking_window_days`, `max_simultaneous_bookings`) are enforced in the API, not only in the UI.
 
-Exact token counts and dollar prices are **not locked**. Seed reasonable placeholders; Owner can edit tiers.
+Exact token **counts** and dollar prices are **not locked**. Seed reasonable placeholders; Owner can edit tiers.
+
+### 5.1 Token rate (bands + overlay)
+
+How many tokens a slot **costs** is locked separately (Ben GO 2026-09-06): time-of-day / day-of-week **bands** in `America/Regina`, plus an advance / last-minute **overlay** at reserve time.
+
+```
+final_reserve_cost = base_tokens × band_multiplier × advance_multiplier
+```
+
+Show band + overlay + total before confirm. Store `pricing_rule` on ledger meta. Cancel refunds the reserved amount — do not reprice.
+
+Defaults, UX must-haves, and the Fri-eve default: **`token-pricing.md`**. Multipliers are Owner-editable placeholders. Not public brochure prices. No Stripe. Not implemented in the API yet.
 
 ---
 
@@ -304,6 +316,7 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 - Public chat (Apex) later — deferred (Ben), not P0.
 - Staff / Member login later (v2).
 - Payments later (v3). No Stripe now.
+- Token pricing bands + overlay: **spec-locked** (`token-pricing.md`). API / UI implement later.
 - Mission Control cockpit **held** until Owner booking is merged **and** live on Doc.
 
 ### Implementation notes
@@ -317,7 +330,7 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 
 ## 14. Open product details (not blockers)
 
-1. Exact tier names, prices, included tokens.
+1. Exact tier names, prices, included tokens. Band / overlay **defaults** are locked as Owner-editable placeholders in `token-pricing.md`.
 2. How many hoists at open (model supports many; seed 1–3 for development).
 3. Whether a member is bound to a “home bay” or may book any hoist.
 4. Weekly vs monthly token reset.
