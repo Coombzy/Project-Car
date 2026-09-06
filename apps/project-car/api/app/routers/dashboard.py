@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from datetime import timedelta
 from decimal import Decimal
 from uuid import UUID
 
@@ -32,9 +33,9 @@ from app.schemas import (
     TodoOut,
 )
 from app.services.calendar_oauth import calendar_payload
-from app.services.hours import expand_booked_hours
+from app.services.hours import booking_overlaps_window, expand_booked_hours
 from app.services.todos import list_todos
-from app.shop_time import PRICING_TZ, day_bounds, next_24h_bounds, shop_now
+from app.shop_time import PRICING_TZ, as_utc, day_bounds, next_24h_bounds, shop_now
 
 router = APIRouter(tags=["dashboard"])
 
@@ -85,18 +86,24 @@ def _hoist_snapshots(
 
 
 def _window_bookings(session, window_start, window_end) -> list[Booking]:
-    return list(
+    # SQLite may persist naive shop-local clocks; Postgres persists aware UTC.
+    # Widen the SQL window, then keep rows that overlap after as_utc().
+    start = as_utc(window_start)
+    end = as_utc(window_end)
+    pad = timedelta(hours=24)
+    rows = list(
         session.scalars(
             select(Booking)
             .options(selectinload(Booking.member), selectinload(Booking.hoist))
             .where(
-                Booking.start_at < window_end,
-                Booking.end_at > window_start,
+                Booking.start_at < end + pad,
+                Booking.end_at > start - pad,
                 Booking.status.in_(OPEN_HOUR_STATUSES),
             )
             .order_by(Booking.start_at)
         ).all()
     )
+    return [row for row in rows if booking_overlaps_window(row, start, end)]
 
 
 def _current_parts_orders(session) -> list[PartsOrder]:

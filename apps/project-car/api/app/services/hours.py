@@ -35,6 +35,20 @@ def booking_member_name(booking: Booking) -> str:
     return "Shop"
 
 
+def booking_overlaps_window(booking: Booking, window_start: datetime, window_end: datetime) -> bool:
+    """True when a booking overlaps [window_start, window_end) after tz normalize.
+
+    SQLite demo rows are often naive shop-local wall clocks; Postgres stores
+    aware UTC. Always compare through ``as_utc`` so afternoon Regina slots are
+    not dropped against a UTC SQL bound.
+    """
+    if booking.status not in OPEN_HOUR_STATUSES:
+        return False
+    return as_utc(booking.start_at) < as_utc(window_end) and as_utc(booking.end_at) > as_utc(
+        window_start
+    )
+
+
 def expand_booked_hours(
     bookings: list[Booking],
     window_start: datetime,
@@ -46,7 +60,7 @@ def expand_booked_hours(
     """One row per booked Regina hour in the window."""
     hours: list[dict] = []
     for booking in bookings:
-        if booking.status not in OPEN_HOUR_STATUSES:
+        if not booking_overlaps_window(booking, window_start, window_end):
             continue
         if hoist_id is not None and booking.hoist_id != hoist_id:
             continue

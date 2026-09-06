@@ -63,7 +63,8 @@ from app.models import (
 from app.services.fill import resolve_fill_for_slot
 from app.services.pricing import BASE_TOKENS_PER_HOUR, quote_reserve
 from app.services.tokens import apply_ledger, rebuild_token_balance
-from app.shop_time import PRICING_TZ, SHOP_TZ, shop_now
+from app.services.hours import booking_overlaps_window
+from app.shop_time import PRICING_TZ, SHOP_TZ, as_utc, next_24h_bounds, shop_now
 
 SEED_NS = UUID("a11ce000-5e1d-4000-8000-000000000001")
 
@@ -417,6 +418,58 @@ def _seed_chat_threads(session: Session, *, ada: Member, riley: Member) -> None:
     session.flush()
 
 
+def _hoist_busy(session: Session, hoist_id: UUID, start: datetime, end: datetime) -> bool:
+    start_utc = as_utc(start)
+    end_utc = as_utc(end)
+    rows = session.scalars(select(Booking).where(Booking.hoist_id == hoist_id)).all()
+    for row in rows:
+        if booking_overlaps_window(row, start_utc, end_utc):
+            return True
+    return False
+
+
+def _place_next24(
+    session: Session,
+    *,
+    key: str,
+    member: Member | None,
+    hoist: Hoist,
+    notes: str,
+    kind: BookingKind = BookingKind.CUSTOMER,
+    after_hours: int = 1,
+    status: BookingStatus = BookingStatus.CONFIRMED,
+) -> Booking:
+    leftover = session.get(Booking, seed_id("booking", key))
+    if leftover is not None:
+        session.delete(leftover)
+        session.flush()
+    window_start, window_end = next_24h_bounds()
+    cursor = as_utc(window_start).astimezone(PRICING_TZ).replace(
+        minute=0, second=0, microsecond=0
+    ) + timedelta(hours=after_hours)
+    duration = timedelta(hours=2)
+    latest = as_utc(window_end).astimezone(PRICING_TZ)
+    start = cursor
+    end = cursor + duration
+    while cursor + duration <= latest:
+        if not _hoist_busy(session, hoist.id, cursor, cursor + duration):
+            start = cursor
+            end = cursor + duration
+            break
+        cursor += timedelta(hours=1)
+    return _make_booking(
+        session,
+        key=key,
+        member=member,
+        hoist=hoist,
+        start=start,
+        end=end,
+        status=status,
+        notes=notes,
+        kind=kind,
+    )
+
+
 def _upsert_todo(session: Session, key: str, **fields) -> Todo:
     todo_id = seed_id("todo", key)
     row = session.get(Todo, todo_id)
@@ -685,7 +738,17 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     demo_members = [ada, sam, riley, jordan, casey, morgan]
     _retire_extra_tiers(session)
     _clear_member_activity(session, [row.id for row in demo_members])
-    for shop_key in ("wed-shop", "today-shop", "sun-bay6", "next24-shop"):
+    for shop_key in (
+        "wed-shop",
+        "today-shop",
+        "sun-bay6",
+        "next24-shop",
+        "next24-ada",
+        "next24-sam",
+        "next24-riley",
+        "next24-jordan",
+        "next24-casey",
+    ):
         leftover = session.get(Booking, seed_id("booking", shop_key))
         if leftover is not None:
             session.delete(leftover)
@@ -886,49 +949,56 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         kind=BookingKind.SHOP,
     )
 
-    # Rolling next-24h strips so the Owner dashboard is never empty at any clock hour.
-    now = shop_now()
-    next_hour = (now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)).astimezone(PRICING_TZ)
-    _make_booking(
+    # Rolling next-24h strips so Bays 1–6 stay populated at any clock hour.
+    _place_next24(
         session,
         key="next24-ada",
         member=ada,
         hoist=bay1,
-        start=next_hour + timedelta(hours=1),
-        end=next_hour + timedelta(hours=3),
-        status=BookingStatus.CONFIRMED,
         notes="1992 Miata — turbo mock-up",
+        after_hours=1,
     )
-    _make_booking(
+    _place_next24(
+        session,
+        key="next24-riley",
+        member=riley,
+        hoist=bay2,
+        notes="WRX — clutch job",
+        after_hours=2,
+    )
+    _place_next24(
         session,
         key="next24-sam",
         member=sam,
         hoist=bay3,
-        start=next_hour + timedelta(hours=4),
-        end=next_hour + timedelta(hours=6),
-        status=BookingStatus.CONFIRMED,
         notes="Golf R — oil + inspection",
+        after_hours=4,
     )
-    _make_booking(
+    _place_next24(
+        session,
+        key="next24-jordan",
+        member=jordan,
+        hoist=bay4,
+        notes="BRZ — brake job",
+        after_hours=6,
+    )
+    _place_next24(
         session,
         key="next24-casey",
         member=casey,
         hoist=bay5,
-        start=next_hour + timedelta(hours=8),
-        end=next_hour + timedelta(hours=10),
-        status=BookingStatus.PENDING,
         notes="No vehicle on file — brake job",
+        after_hours=8,
+        status=BookingStatus.PENDING,
     )
-    _make_booking(
+    _place_next24(
         session,
         key="next24-shop",
         member=None,
         hoist=shop,
-        start=next_hour + timedelta(hours=2),
-        end=next_hour + timedelta(hours=4),
-        status=BookingStatus.CONFIRMED,
         notes="Bay 6 — rack inspection",
         kind=BookingKind.SHOP,
+        after_hours=3,
     )
     session.flush()
 

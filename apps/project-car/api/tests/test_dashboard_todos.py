@@ -216,7 +216,12 @@ def test_seed_includes_bay6_todos_and_parts_orders(client: TestClient) -> None:
     assert names == ["Bay 1", "Bay 2", "Bay 3", "Bay 4", "Bay 5", "Bay 6"]
     shop = next(row for row in body["hoists"] if row["is_shop"])
     assert shop["name"] == "Bay 6"
-    assert any(row["next_hours"] for row in body["hoists"])
+    for name in names:
+        bay = next(row for row in body["hoists"] if row["name"] == name)
+        assert bay["next_hours"], f"{name} should show booked hours in the next 24h"
+    assert any(hour["member_name"] == "Ada Reyes" for hour in body["hoists"][0]["next_hours"])
+    assert any(hour["member_name"] == "Shop" for hour in shop["next_hours"])
+    assert any("Miata" in hour["vehicle_label"] for hour in body["hoists"][0]["next_hours"])
     assert any(row["title"] for row in body["todos"])
     skus = {row["sku"] for row in body["parts_orders"]}
     assert any(sku and sku.startswith("PT-") for sku in skus)
