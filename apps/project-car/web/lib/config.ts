@@ -219,6 +219,40 @@ export type Dashboard = {
   token_at_risk: MemberAtRisk[];
 };
 
+export type ChatParticipant = {
+  member_id: string;
+  name: string;
+  email: string;
+};
+
+export type ChatMessage = {
+  id: string;
+  room_id: string;
+  sender_role: "owner" | "member";
+  sender_member_id: string | null;
+  sender_email: string;
+  sender_name: string;
+  body: string;
+  created_at: string;
+};
+
+export type ChatRoom = {
+  id: string;
+  title: string;
+  muted: boolean;
+  created_by_email: string;
+  created_at: string;
+  updated_at: string;
+  participants: ChatParticipant[];
+  last_message: ChatMessage | null;
+  last_message_at: string | null;
+};
+
+export type ChatMessagePage = {
+  messages: ChatMessage[];
+  cursor: string | null;
+};
+
 export class ShopApiError extends Error {
   readonly status: number;
   readonly code: string;

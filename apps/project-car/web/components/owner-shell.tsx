@@ -11,6 +11,7 @@ const NAV = [
   { href: "/waitlist", current: "waitlist", label: "Waitlist" },
   { href: "/tiers", current: "tiers", label: "Tiers" },
   { href: "/fill", current: "fill", label: "Fill gaps" },
+  { href: "/chat", current: "chat", label: "Chat" },
   { href: "/parts", current: "parts", label: "Parts" },
   { href: "/tools", current: "tools", label: "Tools" },
   { href: "/jobs", current: "jobs", label: "Job board" },

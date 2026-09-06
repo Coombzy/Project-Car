@@ -5,6 +5,9 @@ import {
   shopApiUrl,
   type Booking,
   type BookingQuote,
+  type ChatMessage,
+  type ChatMessagePage,
+  type ChatRoom,
   type Dashboard,
   type FillNotifyResult,
   type FillPreview,
@@ -266,6 +269,45 @@ export async function notifyFill(payload: {
   });
 }
 
+export async function listChatRooms(): Promise<ChatRoom[]> {
+  return shopJson<ChatRoom[]>("/chat/rooms", "Could not load chat rooms.");
+}
+
+export async function getChatRoom(id: string): Promise<ChatRoom> {
+  return shopJson<ChatRoom>(`/chat/rooms/${id}`, "Could not load that chat room.");
+}
+
+export async function createChatRoom(payload: { title: string; member_ids: string[] }): Promise<ChatRoom> {
+  return shopJson<ChatRoom>("/chat/rooms", "Could not create the chat room.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function muteChatRoom(id: string, muted: boolean): Promise<ChatRoom> {
+  return shopJson<ChatRoom>(`/chat/rooms/${id}/mute`, "Could not update mute.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ muted }),
+  });
+}
+
+export async function listChatMessages(id: string, afterId?: string): Promise<ChatMessagePage> {
+  const query = new URLSearchParams();
+  if (afterId) query.set("after_id", afterId);
+  const suffix = query.size ? `?${query.toString()}` : "";
+  return shopJson<ChatMessagePage>(`/chat/rooms/${id}/messages${suffix}`, "Could not load chat messages.");
+}
+
+export async function postChatMessage(id: string, body: string): Promise<ChatMessage> {
+  return shopJson<ChatMessage>(`/chat/rooms/${id}/messages`, "Could not send the message.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ body }),
+  });
+}
+
 async function memberFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const token = await readMemberSessionToken();
   const headers = new Headers(init.headers);
@@ -386,5 +428,31 @@ export async function confirmMemberBooking(id: string): Promise<Booking> {
 export async function cancelMemberBooking(id: string): Promise<Booking> {
   return memberJson<Booking>(`/member/bookings/${id}/cancel`, "Could not cancel the booking.", {
     method: "POST",
+  });
+}
+
+export async function listMemberChatRooms(): Promise<ChatRoom[]> {
+  return memberJson<ChatRoom[]>("/member/chat/rooms", "Could not load your chat rooms.");
+}
+
+export async function getMemberChatRoom(id: string): Promise<ChatRoom> {
+  return memberJson<ChatRoom>(`/member/chat/rooms/${id}`, "Could not load that chat room.");
+}
+
+export async function listMemberChatMessages(id: string, afterId?: string): Promise<ChatMessagePage> {
+  const query = new URLSearchParams();
+  if (afterId) query.set("after_id", afterId);
+  const suffix = query.size ? `?${query.toString()}` : "";
+  return memberJson<ChatMessagePage>(
+    `/member/chat/rooms/${id}/messages${suffix}`,
+    "Could not load chat messages.",
+  );
+}
+
+export async function postMemberChatMessage(id: string, body: string): Promise<ChatMessage> {
+  return memberJson<ChatMessage>(`/member/chat/rooms/${id}/messages`, "Could not send the message.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ body }),
   });
 }

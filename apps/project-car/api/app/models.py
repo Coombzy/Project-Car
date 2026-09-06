@@ -25,6 +25,7 @@ from sqlalchemy import (
     Enum as SAEnum,
     ForeignKey,
     Index,
+    Integer,
     Numeric,
     String,
     Text,
@@ -221,6 +222,7 @@ class Member(Base):
         back_populates="reviewer",
     )
     notifications: Mapped[list[NotificationOutbox]] = relationship(back_populates="member")
+    chat_participations: Mapped[list[ChatParticipant]] = relationship(back_populates="member")
 
     def __repr__(self) -> str:
         return f"<Member(id={self.id!r}, email={self.email!r})>"
@@ -613,6 +615,104 @@ class NotificationOutbox(Base):
         return f"<NotificationOutbox(id={self.id!r}, channel={self.channel!r}, status={self.status!r})>"
 
 
+class ChatSenderRole(str, enum.Enum):
+    OWNER = "owner"
+    MEMBER = "member"
+
+
+class ChatRoom(Base):
+    """Human shop thread. Owners start rooms; members reply if they are in them."""
+
+    __tablename__ = "chat_rooms"
+    __table_args__ = (Index("ix_chat_rooms_updated_at", "updated_at"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    created_by_email: Mapped[str] = mapped_column(String(320), nullable=False)
+    muted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    participants: Mapped[list[ChatParticipant]] = relationship(
+        back_populates="room", cascade="all, delete-orphan"
+    )
+    messages: Mapped[list[ChatMessage]] = relationship(
+        back_populates="room", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self) -> str:
+        return f"<ChatRoom(id={self.id!r}, title={self.title!r})>"
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class ChatParticipant(Base):
+    """Member in a room. Owner/ops are implicit (see-all), not rows here."""
+
+    __tablename__ = "chat_participants"
+    __table_args__ = (
+        UniqueConstraint("room_id", "member_id", name="uq_chat_participants_room_member"),
+        Index("ix_chat_participants_member_id", "member_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("chat_rooms.id", ondelete="CASCADE"), nullable=False
+    )
+    member_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("members.id", ondelete="CASCADE"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    room: Mapped[ChatRoom] = relationship(back_populates="participants")
+    member: Mapped[Member] = relationship(back_populates="chat_participations")
+
+    def __repr__(self) -> str:
+        return f"<ChatParticipant(room_id={self.room_id!r}, member_id={self.member_id!r})>"
+
+
+class ChatMessage(Base):
+    """One human message. No AI/Grok/Matrix sender in Chat v1."""
+
+    __tablename__ = "chat_messages"
+    __table_args__ = (
+        Index("ix_chat_messages_room_created", "room_id", "created_at"),
+        Index("ix_chat_messages_room_seq", "room_id", "seq", unique=True),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    room_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("chat_rooms.id", ondelete="CASCADE"), nullable=False
+    )
+    sender_role: Mapped[ChatSenderRole] = mapped_column(
+        _enum_column(ChatSenderRole),
+        nullable=False,
+    )
+    sender_member_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("members.id", ondelete="SET NULL")
+    )
+    sender_email: Mapped[str] = mapped_column(String(320), nullable=False)
+    sender_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    seq: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    room: Mapped[ChatRoom] = relationship(back_populates="messages")
+    sender_member: Mapped[Optional[Member]] = relationship()
+
+    def __repr__(self) -> str:
+        return f"<ChatMessage(id={self.id!r}, room_id={self.room_id!r})>"
+
+
 ALL_MODELS = [
     MembershipTier,
     Member,
@@ -626,6 +726,9 @@ ALL_MODELS = [
     AccessEvent,
     FillOffer,
     NotificationOutbox,
+    ChatRoom,
+    ChatParticipant,
+    ChatMessage,
 ]
 
 

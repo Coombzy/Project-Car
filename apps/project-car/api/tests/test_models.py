@@ -25,6 +25,9 @@ def test_all_models_import() -> None:
         "access_events",
         "fill_offers",
         "notification_outbox",
+        "chat_rooms",
+        "chat_participants",
+        "chat_messages",
     ]
 
 
