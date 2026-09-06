@@ -47,8 +47,19 @@ export function densityLevel(bookedHours: number, openHours: number = OPEN_SHOP_
   return "light";
 }
 
+export function parseShopInstant(iso: string, timeZone: string = CALENDAR_TZ): Date {
+  if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(iso)) {
+    return new Date(iso);
+  }
+  const match = iso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (match) {
+    return zonedDateTime(match[1], Number(match[2]), Number(match[3] ?? "0"), timeZone);
+  }
+  return new Date(iso);
+}
+
 export function calendarDate(iso: string, timeZone: string = CALENDAR_TZ): string {
-  const date = new Date(iso);
+  const date = parseShopInstant(iso, timeZone);
   if (Number.isNaN(date.getTime())) {
     return iso.slice(0, 10);
   }
@@ -70,7 +81,7 @@ export function calendarTodayIso(now: Date = new Date()): string {
 }
 
 export function formatCalendarTime(iso: string): string {
-  const date = new Date(iso);
+  const date = parseShopInstant(iso);
   if (Number.isNaN(date.getTime())) {
     return iso;
   }
@@ -206,8 +217,8 @@ export function zonedDateTime(isoDate: string, hour = 0, minute = 0, timeZone: s
 }
 
 export function overlapHours(startIso: string, endIso: string, windowStart: Date, windowEnd: Date): number {
-  const start = new Date(startIso).getTime();
-  const end = new Date(endIso).getTime();
+  const start = parseShopInstant(startIso).getTime();
+  const end = parseShopInstant(endIso).getTime();
   if (Number.isNaN(start) || Number.isNaN(end) || end <= start) {
     return 0;
   }
@@ -267,8 +278,8 @@ export function bookingHourPlacement(
   if (hours <= 0) {
     return null;
   }
-  const start = Math.max(new Date(startIso).getTime(), dayStart.getTime());
-  const end = Math.min(new Date(endIso).getTime(), dayEnd.getTime());
+  const start = Math.max(parseShopInstant(startIso).getTime(), dayStart.getTime());
+  const end = Math.min(parseShopInstant(endIso).getTime(), dayEnd.getTime());
   const startHour = (start - dayStart.getTime()) / 3_600_000;
   const endHour = (end - dayStart.getTime()) / 3_600_000;
   const heightHours = Math.max(endHour - startHour, 0.25);

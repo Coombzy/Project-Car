@@ -15,6 +15,7 @@ import {
   monthOf,
   monthWindow,
   overlapHours,
+  parseShopInstant,
   parseHoistParam,
   parseMonthParam,
   parseSlotParam,
@@ -68,6 +69,15 @@ describe("America/Regina bounds", () => {
   it("labels a UTC instant on the Regina calendar date", () => {
     assert.equal(calendarDate("2026-09-08T06:00:00.000Z"), "2026-09-08");
     assert.equal(calendarDate("2026-09-08T05:59:00.000Z"), "2026-09-07");
+  });
+
+  it("treats naive API timestamps as Regina wall clock, not UTC", () => {
+    assert.equal(parseShopInstant("2026-09-08T09:00:00").toISOString(), "2026-09-08T15:00:00.000Z");
+    assert.equal(calendarDate("2026-09-08T09:00:00"), "2026-09-08");
+    const placement = bookingHourPlacement("2026-09-08T09:00:00", "2026-09-08T12:00:00", "2026-09-08");
+    assert.ok(placement);
+    assert.equal(placement.startHour, 9);
+    assert.equal(placement.endHour, 12);
   });
 });
 
