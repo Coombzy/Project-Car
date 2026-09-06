@@ -28,7 +28,9 @@ There is no API systemd/launchd unit or API compose service in this repo.
 
 Doc is a MacBook (M1 Max). Lid close or host sleep stops or stalls origin processes and can drop the tunnel.
 
-**Public symptom:** Cloudflare **502** on https://api.projectcar.ca. Brochure waitlist `POST /waitlist` fails in the browser.
+**Public symptom:** Cloudflare **502** on https://api.projectcar.ca (origin or tunnel gone). Brochure waitlist `POST /waitlist` fails in the browser.
+
+A Cloudflare **403** HTML challenge (`cf-mitigated: challenge`) is edge/WAF, not lid-close. Zone owns that. Do not treat it as “restart uvicorn.”
 
 Mitigation already on Doc: Amphetamine + plugged-in no-sleep (`doc-software-baseline.md`). That is a host habit, not a guarantee. If the lid is closed, the public API is down until Doc is awake and uvicorn is running again.
 
@@ -63,7 +65,7 @@ Alerts can come from anyone who sees a 502 or a failed waitlist submit. **Recove
 
 ## Recovery checklist
 
-1. **Public health.** `GET https://api.projectcar.ca/health` → 200? If yes, stop.
+1. **Public health.** `GET https://api.projectcar.ca/health` → 200? If yes, stop. 403 challenge page → Zone (not Lead).
 2. **Doc awake?** Lid closed / sleep → 502. Wake Doc (Amphetamine session if it should stay up).
 3. **Lead — origin.** On Doc, confirm uvicorn in `apps/project-car/api` and `GET http://127.0.0.1:8000/health`. If local health fails, Lead brings uvicorn back. Do not hand that restart to Garage or Zone.
 4. **Postgres (only if origin errors on DB).** `docker compose -f infra/compose/compose.yaml` is the shop DB, not the API process. Lead checks it if uvicorn is up but requests 5xx.
