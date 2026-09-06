@@ -88,10 +88,10 @@ Token balance + hoist booking is a **primary Member** page — not ops-only admi
 
 | Who | What | Host |
 |-----|------|------|
-| **Owner / Staff** | Tiers, band / overlay / fill controls, overrides, at-risk, everyone else's ledger. Fill preview / dry-run / send lives here. | Intended **`ops.projectcar.ca`**. Live today via temporary alias `app.projectcar.ca`. Do not call this an Owner-only host. **No DNS cut in this PR.** |
-| **Member** | See their own balance, book / cancel within tier rules, see **band + overlay + fill + total** on their schedule when next-day openings apply. Fill **notify** targets members. | **Next:** **projectcar.ca**. **Today:** still `app.` `/member` (temporary alias). Not shipped on the customer host. |
+| **Owner / Staff** | Tiers, band / overlay / fill controls, overrides, at-risk, everyone else's ledger. Fill preview / dry-run / send lives here. | **LIVE** on **`ops.projectcar.ca`**. Temporary alias `app.projectcar.ca` still up (same Doc `:3000`). Do not call this an Owner-only host. Some clients still have flaky local DNS for `ops.` — use `app.`. |
+| **Member** | See their own balance, book / cancel within tier rules, see **band + overlay + fill + total** on their schedule when next-day openings apply. Fill **notify** targets members. | **Next:** **projectcar.ca**. **Today:** still shop-UI `/member` on `ops.` + temporary `app.` alias. Not shipped on the customer host. |
 
-Member self-serve UI is **live on Doc demo and the temporary alias `https://app.projectcar.ca`** (`/member`, seed `ada.reyes@example.com`). Demo session cookie — **not OIDC**. The shop is not open. Do not claim Member UI is on projectcar.ca yet. Fill controls stay on management (`ops.` intended; `app.` alias today). **No DNS cut in this slice.**
+Member self-serve UI is **live on Doc demo, `https://ops.projectcar.ca/member`, and the temporary alias `https://app.projectcar.ca/member`** (seed `ada.reyes@example.com`). Demo session cookie — **not OIDC**. The shop is not open. Do not claim Member UI is on projectcar.ca yet. Fill controls stay on management (`ops.` LIVE; `app.` alias still up).
 
 ---
 
@@ -235,13 +235,13 @@ Same last-minute slot on **tomorrow** when customer bays are fully open (25% fil
 - Owner-editable settings table for bands / overlays (v1 ships the default table in code).
 - No Cloudflare / DNS cut from this file. No Apex. No Mission Control cockpit.
 - No Stripe. No “shop is open.” Do not put these multipliers on projectcar.ca.
-- Member OIDC (session cookie stub is what shipped). Public `app.projectcar.ca` is a **temporary alias** pointing at the Doc demo — intended management hostname is **`ops.projectcar.ca`** (naming lock only; no DNS cut yet). Still not a shop opening.
+- Member OIDC (session cookie stub is what shipped). Management hostname **`ops.projectcar.ca` is LIVE** → Doc `:3000`. Public `app.projectcar.ca` is a **temporary alias** on the same origin until Ben cuts that DNS. Still not a shop opening.
 
 ---
 
 ## Next (not a v1 table change)
 
-**Next-day open-slot fill** ships as the explicit `fill_multiplier` above (Ben GO 2026-09-06). Leftover hours get a **10–25%** discount; urgency drives the cut. Members are notified (email stub / later push / SMS). This is **not** a rewrite of the locked advance overlay table. Management `/fill` on Doc demo; **no DNS cut**.
+**Next-day open-slot fill** is on `main` (PR #20) as the explicit `fill_multiplier` above. Leftover hours get a **10–25%** discount; urgency drives the cut. Members are notified (email stub / later push / SMS). This is **not** a rewrite of the locked advance overlay table. Management `/fill` on Doc demo (`ops.` LIVE + temporary `app.` alias).
 
 ---
 

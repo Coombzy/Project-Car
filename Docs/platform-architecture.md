@@ -57,7 +57,7 @@ Coombzy/Project-Car
     Modular-Architecture.md     pointer to this file
   apps/
     website/                    projectcar.ca (git SSOT; Apex stripped; Pages target)
-    mission-control/            Next.js cockpit — **held** until Owner booking is live on Doc
+    mission-control/            Next.js cockpit — **parked** until Ben GO (Owner + Member booking already live)
     project-car/
       web/                      Next.js shop UI (on `main`)
       api/                      FastAPI + Alembic (on `main`)
@@ -78,18 +78,18 @@ Do **not** vendor Nextcloud’s `data/` or MariaDB files into this tree.
 | Concern | Choice | Notes |
 |---------|--------|--------|
 | Public site | Static HTML/CSS in `apps/website/` | Waitlist form POSTs to `https://api.projectcar.ca/waitlist`. Brochure target is **Cloudflare Pages** (not done). |
-| MC cockpit | Next.js | Private; CalDAV/Deck/WebDAV server-side. **Held** until Owner booking is live on Doc. |
-| Shop UI | Next.js | PWA, mobile-friendly |
+| MC cockpit | Next.js | Private; CalDAV/Deck/WebDAV server-side. **Parked** until Ben GO. Owner + Member booking are already live. |
+| Shop UI | Next.js | PWA, mobile-friendly. **LIVE** on `ops.projectcar.ca` → Doc `:3000`. Temporary alias `app.projectcar.ca`. |
 | Shop API | FastAPI + SQLAlchemy 2 + Alembic | OpenAPI generated |
 | Shop DB | Postgres 16 | Dedicated volume |
 | NC DB | MariaDB 11.4 | Untouched by apps |
 | Orchestration | Hermes + custom adapters + Discord | **No n8n** |
 | Chat (personal) | Nextcloud Talk + Discord | Matrix deferred |
-| Chat (public) | Apex on projectcar.ca — **deferred** (Ben) | Not an admin tool; not P0 |
+| Chat (public / shop) | **Planned** dual surface — Member/customer (+ later Grok on projectcar.ca) and Ops admin. Human vs AI vs both still **open**. Apex sidecar **deferred**. Not shipped. |
 | Identity (MC) | Single-user session / mesh | |
-| Identity (PC v1) | Owner session | |
-| Identity (PC later) | OIDC (Pocket ID / Authelia) | |
-| Tunnel / DNS | Cloudflare | `projectcar.ca` + `api.projectcar.ca` live (lab tunnels). Brochure target is Pages. |
+| Identity (PC v1) | Owner + Member demo session cookies (not OIDC) | |
+| Identity (PC later) | OIDC (Pocket ID / Authelia) for Staff on `ops.` | |
+| Tunnel / DNS | Cloudflare | `projectcar.ca` / www + `api.projectcar.ca` + **`ops.projectcar.ca` LIVE** + temporary `app.` alias. Brochure target is Pages. |
 | Mesh | Tailscale | Remote access to private services |
 
 ### Banned
@@ -154,14 +154,15 @@ Do **not** treat “add `apps/…`” as future work where the trees already exi
 |------|--------|
 | `~/src/Project-Car` as the git worktree | Ongoing |
 | `apps/project-car/api` + Alembic + `waitlist_entries` | **Done** on `main` (PR #2 + #3) |
-| `apps/project-car/web` Owner dashboard + week schedule | **Done** on `main` |
-| `POST /waitlist` + public Membership/Contact form | **Done** |
+| `apps/project-car/web` Owner + Member booking, calendar (#18), fill (#20), placeholders (#21), schedule harden (#24) | **Live** on Doc `:3000` / `ops.` + temporary `app.` alias (`main` `91c547e`) |
+| `POST /waitlist` + public Membership/Contact form | **Done** (e2e PASS brochure → api) |
 | `infra/compose` shop Postgres only | **Done** |
-| Owner booking **hardened + live** on Doc / `app.projectcar.ca` | **Next** |
+| Member customer surface on `projectcar.ca` | **Next** — still shop-UI `/member` today |
+| Ben cuts the `app.` alias | **Next** — `ops.` already LIVE; alias stays |
 | Cloudflare Pages cutover for the brochure | **Next** (GO’d; blocked on CF ↔ GitHub auth) |
-| `apps/mission-control` health + CalDAV + Deck + heartbeat feed | **Held** until Owner booking is merged **and** live on Doc |
+| `apps/mission-control` health + CalDAV + Deck + heartbeat feed | **Parked** — needs **Ben GO**. Booking live hold is already satisfied. |
 
-Do not block on NFC, live cameras / Frigate, Stripe, or moving Nextcloud. Demo placeholders for Parts / Job board / Cameras do not turn `pc.cameras` or `pc.marketplace` on. Do not start the MC cockpit before Owner booking is live on Doc.
+Do not block on NFC, live cameras / Frigate, Stripe, or moving Nextcloud. Demo placeholders for Parts / Job board / Cameras do not turn `pc.cameras` or `pc.marketplace` on. Do not start the MC cockpit without Ben GO. Freeze major IA reshuffles — Ben is happy with the current app direction.
 
 ---
 
