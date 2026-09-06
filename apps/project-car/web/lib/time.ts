@@ -1,4 +1,4 @@
-const SHOP_TZ = "America/Edmonton";
+const SHOP_TZ = "America/Regina";
 
 export function formatShopDateTime(iso: string): string {
   const date = new Date(iso);

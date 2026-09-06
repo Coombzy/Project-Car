@@ -3,9 +3,9 @@
  *
  * Monthly heat-map density is booked hours vs open shop hours (08:00–21:00).
  * Weekly hour slots are shop-local America/Regina. Cancelled bookings do not
- * occupy a hoist. Naive Owner `datetime-local` values still go through the
- * existing API helper (America/Edmonton); during Mountain Daylight both
- * zones are UTC−6.
+ * occupy a hoist. Display labels and calendar math are America/Regina.
+ * Naive Owner `datetime-local` values still go through the API shop-local
+ * helper; during Mountain Daylight Edmonton and Regina are both UTC−6.
  */
 
 export const CALENDAR_TZ = "America/Regina";
