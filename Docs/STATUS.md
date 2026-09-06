@@ -54,7 +54,9 @@ Do not invent extra product from this table. Calendar heat-map / weekly per-hois
 
 ## Next (in flight — Ben GO ~12:22)
 
-Calendar redesign is on `main` (#18). Fill landed on `main` as #20. This PR is placeholders only — do not rewrite calendar or drop fill. **No DNS cut** here.
+**v1 build = breadth-first.** Placeholders / rough IA are OK. Get planned surfaces into the app (Parts, Tools, job board, cams, calendar / fill, member surfaces) so layout can be ironed out. Do **not** leave a planned feature out of the **build** for polish. Depth later. The **ship-MVP cut** (drop unfinished / unnecessary) is a later gate — not this list.
+
+Calendar redesign is on `main` (#18). Fill landed on `main` as #20. This PR is placeholders only — do not rewrite calendar or drop fill. **`ops.projectcar.ca` is LIVE.** `app.` remains the temporary alias — do not cut it here.
 
 1. **Calendar redesign (on `main`, PR #18).** Monthly = heat-map by hoist booking density vs 08:00–21:00. Weekly = **separate per-hoist hour grids** (not the old combined week table). Owner includes the shop hoist (Owner-only); Member is Bays 1–5. Create / quote / cancel unchanged. Fill chips and quote math from #20 stay. Do not rewrite this UI from a placeholders PR.
 2. **Next-day open-slot fill (on `main`, PR #20).** Notify members (email stub / later push / SMS) of leftover hours with a **10–25%** fill factor on available hours. Urgency drives the discount (emptier / closer to start → bigger cut inside that range). Explicit extra multiplier — not a change to the locked v1 band / overlay tables. See `token-pricing.md`. Management `/fill` on Doc demo (`ops.` + temporary `app.` alias); notify targets members. Not a public price. No Stripe.
