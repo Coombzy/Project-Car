@@ -37,9 +37,8 @@ function MemberJobsBody() {
         amounts are visible so the model is clear.
       </p>
       <PlaceholderNote>
-        Customer-facing placeholder on temporary <code>app.</code>{" "}
-        <code>/member</code>. Sample bounties only. Buttons do not claim work or
-        move tokens.
+        Customer-facing placeholder on <code>/member/jobs</code>. Sample
+        bounties only. Buttons do not claim, complete, or move tokens.
       </PlaceholderNote>
       <JobBoard audience="member" />
     </>

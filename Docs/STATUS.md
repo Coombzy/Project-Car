@@ -84,7 +84,7 @@ Placeholder pages (Parts, Tools, Job board, Cameras, Payments) are **demo UI** (
 - **Host split** is locked (table above). Customer = `projectcar.ca` / www. Management = **`ops.projectcar.ca`** (LIVE; staff-on-shift, not Owner-only). `app.` is a **temporary alias** until Ben cuts that DNS — **not removed**.
 - **Build-breadth (now)** vs **ship-MVP cut (later)** — see table above. Placeholders now; cut unfinished / unnecessary at public MVP.
 - **Ops sections (locked IA, placeholders now):** **Parts** and **Tools**. Tools = tool inventory, tool orders, customer/member tool requests, planned tool purchases. Not a claim that inventory or purchasing is shipped.
-- **Job board (locked IA, placeholder now):** shop chores; pays **tokens** on completion (**ledger**, not Stripe). Ops posts; members claim.
+- **Job board (locked IA, placeholder now):** shop chores (cleaning, tool maintenance, random upkeep). Ops posts a **token bounty**; member claim/complete credits the **append-only token ledger** (same tokens as hoist booking, **not Stripe**). Placeholder must show sample amounts. Full workflow Later.
 - **Cameras (locked IA, placeholder now):** members = **one primary shop cam**. Ops = **all cams** + door entry logs + Frigate / AI collection. Not a claim that Frigate is wired on `main`.
 - **Member parts purchasing** = placeholder now; **full Later**.
 - No Stripe. No “shop is open” claims. No live public pricing until Ben says so.

@@ -38,9 +38,10 @@ function OpsJobsBody() {
         column is the model lock.
       </p>
       <PlaceholderNote>
-        Sample jobs with token amounts. Buttons do not post or assign. Not a
-        live work-order system. Intended host <code>ops.projectcar.ca</code>{" "}
-        (today the temporary <code>app.</code> alias).
+        Sample jobs with token amounts. Buttons do not post, claim, or move
+        ledger tokens. Not a live work-order system. Host{" "}
+        <code>ops.projectcar.ca</code> (temporary <code>app.</code> alias still
+        up).
       </PlaceholderNote>
       <JobBoard audience="ops" />
     </>
