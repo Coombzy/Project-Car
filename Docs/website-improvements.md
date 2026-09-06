@@ -42,9 +42,9 @@
 | Pages | Home, About, The Shop, Membership, Roadmap, Contact. Chat nav stripped (PR #5). |
 | Discord invite | `https://discord.gg/projectcar` |
 | Soft-404 | Live Worker 404s missing static files. Git has `404.html` + nginx `error_page 404`. Do not add SPA `/* /index.html 200`. |
-| Mission Control | Separate; Owner + Member booking are live on Doc demo **and** `https://app.projectcar.ca`. Cockpit still needs **Ben GO** — do not start it from brochure work. |
+| Mission Control | Separate; ops + Member booking are live on Doc demo **and** the temporary alias `https://app.projectcar.ca`. Intended management host is **`ops.projectcar.ca`** (no DNS cut yet). Cockpit still needs **Ben GO** — do not start it from brochure work. |
 
-**Overall:** Waitlist is live. Chat/Apex stay gone. Brochure hygiene P0-3…P0-7 is **already live** on the Worker. Owner + Member booking are live on Doc demo **and** `https://app.projectcar.ca` (Ben GO ~11:41) — not Mission Control, not Apex, not a redesign. The shop is not open.
+**Overall:** Waitlist is live. Chat/Apex stay gone. Brochure hygiene P0-3…P0-7 is **already live** on the Worker. Ops + Member booking are live on Doc demo **and** the temporary alias `https://app.projectcar.ca` (Ben GO ~11:41). Intended management hostname is **`ops.projectcar.ca`** (naming lock; no DNS cut yet). Not Mission Control, not Apex. The shop is not open.
 
 ---
 
@@ -142,7 +142,7 @@ Follow skill **project-car-web-copy**. Tighten; don’t rewrite the story. No fa
 3. P3 copy pass  
 4. P4 as interest grows  
 
-Brochure hygiene is **already live** on Worker `projectcar-brochure` (re-uploaded 2026-09-06). Do not invent another Zone upload for that ship. Owner + Member booking are live on Doc demo **and** `https://app.projectcar.ca`. Mission Control cockpit still needs **Ben GO**. The shop is not open.
+Brochure hygiene is **already live** on Worker `projectcar-brochure` (re-uploaded 2026-09-06). Do not invent another Zone upload for that ship. Ops + Member booking are live on Doc demo **and** the temporary `app.` alias. Intended management host is **`ops.`**. Mission Control cockpit still needs **Ben GO**. The shop is not open.
 
 Waitlist (P1-5), Chat strip (P1-2), git home (P2-7), and P0-3…P0-7 are **done** (git + live Worker). Apex (P0-1 / P0-2) is **deferred** — do not start the queue there.  
 
@@ -181,11 +181,12 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 
 ## Explicit non-goals (for now)
 
-- Full member app / bay booking on the marketing site  
+- Shipping Member booking onto projectcar.ca **in a brochure / this-docs PR** — that host migration is **Next**, not live  
 - Live pricing tables or fake open dates  
 - Reintroducing n8n or bolting Mission Control onto projectcar.ca  
 - Pixar/Disney McQueen IP in branding assets  
-- Treating Chat as shipped product until a real join path exists  
+- Treating Chat as shipped product / reviving Apex  
+- Cutting DNS from `app.` to `ops.` from a docs PR — naming lock only  
 
 ---
 
@@ -193,6 +194,7 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 
 | Date | Change |
 |------|--------|
+| 2026-09-06 | Reality sync ~12:28 America/Edmonton: host split locked — customer = projectcar.ca; management = **`ops.projectcar.ca`**; `app.` = temporary alias (live). Member UI on projectcar.ca is Next. No DNS cut. MC cockpit still needs Ben GO. No Stripe. The shop is not open. |
 | 2026-09-06 | Reality sync ~11:52 America/Edmonton: `https://app.projectcar.ca` **LIVE** (Ben GO ~11:41) pointing at Doc demo. Owner + Member booking reachable on the public app host. MC cockpit still needs Ben GO. No Stripe. The shop is not open. |
 | 2026-09-06 | Reality sync ~11:20 America/Edmonton: P0-3…P0-7 **already live** on Worker (re-uploaded). No pending hygiene upload. Owner + Member booking live on Doc demo; `app.projectcar.ca` not claimed; MC cockpit still needs Ben GO. |
 | 2026-09-06 | P0-3…P0-7 **done** in `apps/website/` (robots, sitemap, 404.html, favicon set, Home progress bar removed). Live origin noted as Worker Direct Upload, not Doc `:8088`. P1-2 Chat strip **done** (PR #5). Next product path: Owner booking; MC held. |
@@ -205,6 +207,7 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 
 | Date | Decision | By |
 |------|----------|-----|
+| 2026-09-06 | Host split: customer = `projectcar.ca` / www; management = **`ops.projectcar.ca`** (staff on shift + Owner); `app.` = temporary alias until DNS cut. Naming lock only. | Ben (via Master Chief) |
 | 2026-09-06 | Brochure live host is Worker Direct Upload (`projectcar-brochure`), not Doc `:8088`. Classic Pages git skipped. Hygiene P0s are in git **and already live** (Worker re-uploaded 2026-09-06). | Ben (task) · Garage (site) · Zone (CF) |
 | 2026-09-06 | Waitlist on brochure is **done**. Apex is **deferred**, not active P0. `Docs/` is SSOT; `apps/website/WEBSITE-*` files are pointers only. | Status sync (living ops) |
 | 2026-08-12 | Keep improvements as a **living git doc** in Project-Car `Docs/`, separate from architecture spec. | Ben (request) · Doc (author) |

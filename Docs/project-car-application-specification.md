@@ -24,27 +24,30 @@ It is **not** Mission Control. Mission Control is Ben’s private cockpit over N
 
 ## 2. Surfaces
 
+**Host split (LOCKED — Ben GO 2026-09-06 ~12:22; management hostname corrected via Master Chief).** Naming lock only — **no live DNS cut** to `ops.` in this PR.
+
 | Host | Audience | Role |
 |------|----------|------|
-| `projectcar.ca` / `www` | Public | Brochure, membership story, contact, waitlist. Apex chat **deferred** |
-| `app.projectcar.ca` | Owner + Member demo via public host; Staff later | Shop OS: members, hoists, bookings, tokens — **live** on Doc `:3000` **and** `https://app.projectcar.ca` (Ben GO ~11:41). Demo session cookies — not OIDC. The shop is not open. |
-| `api.projectcar.ca` | Public waitlist + authenticated Owner API | FastAPI. Tunnel → Doc `:8000` |
+| `projectcar.ca` / `www` | **Customer app** — public today; Members next | Brochure, membership story, contact, waitlist (**live**). Member self-serve booking / balance **migrates here** as a follow-up slice. Apex chat **deferred**. Do **not** claim that Member UI is on this host yet. |
+| `ops.projectcar.ca` | **Intended management hostname** — staff on shift + Owner | Ops management UI. Staff will use this host (OIDC later). Owner uses it too. Do **not** call this an Owner-only host. **Not live DNS yet.** |
+| `app.projectcar.ca` | **Temporary alias** until the DNS cut to `ops.` | What is **live today** (Ben GO ~11:41): Doc `:3000` via Cloudflare tunnel. Member demo **still lives here** at `/member` until the customer-host migration. Demo session cookies — not OIDC. The shop is not open. |
+| `api.projectcar.ca` | Public waitlist + authenticated Owner / Member API | FastAPI. Tunnel → Doc `:8000` |
 
 Private Mission Control stays off the marketing domain (Tailscale / Access / a private hostname). Vaultwarden and Nextcloud stay off `projectcar.ca` apex.
 
-**Today (2026-09-06 ~11:52 America/Edmonton):** the public site is a multi-page brochure plus a real waitlist form. Owner booking (duration × band × overlay) and Member self-serve (session cookie + `/member/me` + Bays 1–5 schedule) are on `main` (`58827f0`, PR #16) **and live on Doc** (`:3000` / `:8000`) **and reachable via `https://app.projectcar.ca`**. Demo session cookies — not OIDC. The shop is not open. Apex public chat is deferred (Ben). See §13 for shipped vs remaining.
+**Today (2026-09-06 ~12:28 America/Edmonton):** the public site is a multi-page brochure plus a real waitlist form. Ops booking (duration × band × overlay) and Member self-serve (session cookie + `/member/me` + Bays 1–5 schedule) are on `main` (`58827f0`, PR #16) **and live on Doc** (`:3000` / `:8000`) **and reachable via the temporary alias `https://app.projectcar.ca`**. Intended management hostname is **`ops.projectcar.ca`** — not cut over. Member demo is still on `app.` `/member` — the move to projectcar.ca is **Next**, not shipped. Demo session cookies — not OIDC. The shop is not open. Apex public chat is deferred (Ben). See §13 for shipped vs remaining and §15 for today’s Next locks (calendar redesign, next-day fill, host migration).
 
 ---
 
 ## 3. Users and roles
 
-Design the data model for all three roles now. Only **Owner** is used in v1.
+Design the data model for all three roles now. Only **Owner** login is used in v1 (demo cookies). Staff belong on the same management host later.
 
 | Role | Who | v1 | Later |
 |------|-----|----|-------|
-| **Owner** | Ben | Full admin. The only login. | Same |
-| **Staff** | Employees / mentors | Schema only | Check-in help, incidents, override bookings |
-| **Member** | Paying customers | Schema + waitlist + **self-serve demo** (session cookie, own balance, book / cancel on Bays 1–5) | Staff OIDC later. Public host is live (demo cookies). |
+| **Owner** | Ben | Full admin on the **ops management UI** (live today via temporary `app.` alias). | Same host: **`ops.projectcar.ca`**. |
+| **Staff** | Employees / mentors on shift | Schema only | Check-in help, incidents, override bookings. Login via OIDC on **`ops.`** — same host as Owner. |
+| **Member** | Paying customers | Schema + waitlist + **self-serve demo** on temporary `app.` `/member` (session cookie, own balance, book / cancel on Bays 1–5) | Customer surface moves to **projectcar.ca** (Next — not shipped). |
 | **Waitlist** | Public visitors | Email + name + notes | Convert to Member on onboarding |
 
 Identity rules:
@@ -65,7 +68,7 @@ Identity rules:
    - **Waitlist (shipped):** name, email, optional phone, optional notes, timestamp. Persist in the app database. Do not pretend the contact form is a CRM.
    - Public chat (Apex) is **deferred** (Ben). If revived later, it must not become an admin console.
 
-2. **Shop OS (Owner only)**
+2. **Shop OS (ops management UI)**
    - Membership tiers (seed: **two** tiers — Basic and Premium — names and prices are data, not hardcoded copy). Allotment placeholders: Basic **1000** / Premium **1500** per period (`token-pricing.md`).
    - Members: name, email, phone, tier, status (`active` / `suspended` / `banned` / `churned`), waiver fields, emergency contact, token balance, deposit balance.
    - Hoists (work bays): name, location label, status (`available` / `occupied` / `maintenance` / `locked`), `is_shop`. Seed **6** hoists; exactly one is the shop hoist.
@@ -177,8 +180,8 @@ Do not share this database with Nextcloud.
 | Auth now (Member demo) | Parallel Member session cookie (`pc_member_session`). Email must match a `members` row. Not OIDC. |
 | Auth later | OIDC for Staff (and Member if we replace the cookie stub) |
 | Mobile | Responsive PWA. No Capacitor/RN until a real offline field loop exists |
-| Hosting now | Brochure: live Doc tunnel, **target Cloudflare Pages**. Shop API: `api.projectcar.ca` tunnel → Doc `:8000`. Owner UI not live on `app.` yet |
-| Hosting later | McKing |
+| Hosting now | Brochure: Worker `projectcar-brochure` on `projectcar.ca` / `www` (Pages cutover GO’d, not done). Shop API: `api.projectcar.ca` tunnel → Doc `:8000`. Ops management UI: live today via temporary alias `app.projectcar.ca` → Doc `:3000` (KeepAlive `com.projectcar.shop-web`). Intended hostname **`ops.projectcar.ca`** — naming lock only; no DNS cut yet. Member demo still on `app.` `/member`. |
+| Hosting next | Member customer surface on **projectcar.ca**. Management on **`ops.`** (DNS cut from the `app.` alias). McKing later as hub. |
 
 UI calls **our API only**. The browser never holds Nextcloud admin credentials.
 
@@ -235,17 +238,17 @@ OpenAPI is generated from FastAPI, not hand-written empty YAML.
 - Membership / Contact: waitlist form posts to `POST /waitlist`.
 - Do not invent live prices or “book now” until the shop is open.
 
-### App (`apps/project-car/web`)
+### Ops management UI (`apps/project-car/web`)
 
-Owner-only shell:
+Staff-on-shift / ops shell. Intended host **`ops.projectcar.ca`**. Live today via the temporary alias **`app.projectcar.ca`**. Owner uses this host; Staff will too (OIDC later). Do not describe it as Owner-only.
 
 1. **Dashboard** — hoist cards, today’s bookings, waitlist count, token-at-risk members.
-2. **Schedule** — week view by hoist (this is what the membership page mockup is promising).
+2. **Schedule (live today)** — combined week table: hoists as rows, days as columns. See §15 for the locked redesign (monthly heat-map; weekly = separate per-hoist hour grids).
 3. **Members** — table + detail (tier, tokens, waiver, bookings).
 4. **Waitlist** — convert-to-member is a later button; v1 can be “mark contacted”.
 5. **Tiers / settings** — edit allowances.
 
-Owner screens exist under `apps/project-car/web` (dashboard, schedule, members, hoists, waitlist, tiers). Member self-serve is `/member` (balance + ledger) and `/member/schedule` (Bays 1–5, quote, book/cancel). Demo seed only — the shop is not open.
+Ops screens exist under `apps/project-car/web` (dashboard, schedule, members, hoists, waitlist, tiers). Member self-serve is **still** `/member` on the same Next.js app (balance + ledger) and `/member/schedule` (Bays 1–5, quote, book/cancel) — reachable today at `https://app.projectcar.ca/member` (temporary alias). Demo seed only — the shop is not open. Moving that customer surface to **projectcar.ca** is **Next** (§15). Do not claim it is shipped.
 
 ---
 
@@ -268,17 +271,23 @@ Mission Control does **not** own members, tokens, or hoist state.
 ### v1 (this spec — on `main`)
 
 - Waitlist on the public site (**Done**).
-- Owner shop OS: tiers, members, hoists, bookings, token ledger, dashboard + week schedule (**on `main`, live on Doc** `:3000`, **and** on `https://app.projectcar.ca`).
-- Member self-serve is **live on Doc demo and the public app host** (PR #14 / `9baf3c4`; public host honors `main` `58827f0` / PR #16) — session cookie, own balance, book / cancel on Bays 1–5. Still demo cookies — **not OIDC**. The shop is not open.
+- Ops shop OS: tiers, members, hoists, bookings, token ledger, dashboard + week schedule (**on `main`, live on Doc** `:3000`, **and** on the temporary alias `https://app.projectcar.ca`). Intended host **`ops.projectcar.ca`** — not cut over.
+- Member self-serve is **live on Doc demo and the temporary `app.` alias** (PR #14 / `9baf3c4`; public host honors `main` `58827f0` / PR #16) — session cookie, own balance, book / cancel on Bays 1–5. Still on `app.` `/member`. Still demo cookies — **not OIDC**. The shop is not open.
 
-### Next (not a v2 dump)
+### Next (not a v2 dump — Ben GO 2026-09-06 ~12:22)
 
+Detail in §15. Summary:
+
+- **Calendar redesign** — monthly heat-map by hoist booking density; weekly = separate per-hoist hour grids.
+- **Next-day open-slot fill** — notify members (email / push / SMS) with a **10–25%** discount on leftover hours; urgency drives the discount.
+- **Host migration** — Member customer surface → **projectcar.ca**. Management stays **`ops.`** (today the `app.` alias). Do not claim this is shipped.
+- **DNS cut `app.` → `ops.`** — naming locked; **no live DNS cut in this PR**.
 - **Mission Control cockpit** still needs **Ben GO** before start. Do not start the cockpit from a docs PR.
-- Staff **OIDC** can follow the Member session stub. Do not dump the rest of v2 here.
+- Staff **OIDC** later (on **`ops.`**). Stripe later. Apex deferred. Do not dump the rest of v2 here.
 
 ### v2 (rest)
 
-- Staff login (OIDC) if not already pulled forward with Member auth.
+- Staff login (OIDC) on **`ops.`** if not already pulled forward.
 - Manual billing records + deposit tracking in the UI.
 - Waiver capture.
 
@@ -311,17 +320,17 @@ Mission Control does **not** own members, tokens, or hoist state.
 
 ## 13. Shop OS: shipped vs remaining
 
-Reality as of 2026-09-06 ~11:52 America/Edmonton. Do not invent Stripe or “shop is open” from this section. Public `app.projectcar.ca` is live pointing at the Doc demo — still demo cookies, not a shop opening.
+Reality as of 2026-09-06 ~12:28 America/Edmonton. Do not invent Stripe or “shop is open” from this section. Public `app.projectcar.ca` is live as a **temporary alias** pointing at the Doc demo — still demo cookies, not a shop opening. Intended management hostname is **`ops.projectcar.ca`** (naming lock only; no DNS cut yet).
 
 ### Shipped on `main` (PR #2 + #3)
 
 - **Public waitlist:** `POST /waitlist` on the shop API; Membership / Contact form posts to `https://api.projectcar.ca/waitlist` (`apps/website/html/waitlist.js`). CORS allowlist includes `projectcar.ca` / `www` / localhost / **`https://app.projectcar.ca`**. See `cors-origins.md`.
-- **Owner API** (`apps/project-car/api`): auth session, tiers, members, hoists, bookings (create / confirm / check-in / complete / cancel), append-only token ledger, dashboard snapshot, waitlist list + mark contacted.
-- **Owner web** (`apps/project-car/web`): dashboard, week schedule, members, hoists, waitlist, tiers. Demo seed only.
-- **Member self-serve** (`/member/me`, `/member/hoists`, `/member/schedule`): session cookie, own balance + ledger, quote + book/confirm/cancel on customer bays. **Live on Doc demo and `https://app.projectcar.ca`.** Demo seed: `ada.reyes@example.com`. Shop hoist stays Owner-only.
+- **Ops API** (`apps/project-car/api`): auth session, tiers, members, hoists, bookings (create / confirm / check-in / complete / cancel), append-only token ledger, dashboard snapshot, waitlist list + mark contacted.
+- **Ops web** (`apps/project-car/web`): dashboard, week schedule, members, hoists, waitlist, tiers. Demo seed only. Intended host `ops.`; live today via `app.` alias.
+- **Member self-serve** (`/member/me`, `/member/hoists`, `/member/schedule`): session cookie, own balance + ledger, quote + book/confirm/cancel on customer bays. **Live on Doc demo and the temporary alias `https://app.projectcar.ca`.** Demo seed: `ada.reyes@example.com`. Shop hoist bay stays Owner-only.
 - **Shop Postgres** in `infra/compose` (API is not a compose service).
 - **Live API edge:** `api.projectcar.ca` → Doc `:8000`. Stay-up is LaunchAgent `com.projectcar.shop-api` (KeepAlive) — `api-stay-up.md`. Public `GET /health` **200**.
-- **Live shop UI edge:** `app.projectcar.ca` → Doc `:3000` (Ben GO ~11:41). KeepAlive `com.projectcar.shop-web`. Tunnel origin preferred `http://127.0.0.1:3000` (not bare localhost). Checkout `58827f0` (PR #16).
+- **Live shop UI edge:** temporary alias `app.projectcar.ca` → Doc `:3000` (Ben GO ~11:41). KeepAlive `com.projectcar.shop-web`. Tunnel origin preferred `http://127.0.0.1:3000` (not bare localhost). Checkout `58827f0` (PR #16). Intended hostname **`ops.projectcar.ca`** — not cut over.
 
 ### Public waitlist vs authenticated Owner API
 
@@ -337,10 +346,12 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 
 - Classic Pages git cutover for the brochure (GO’d; blocked on CF ↔ GitHub auth). Live origin is already Worker `projectcar-brochure`. Shop API stays the lab tunnel.
 - Public chat (Apex) later — deferred (Ben), not P0.
-- Staff login (OIDC) later. Do not dump the rest of v2 here.
+- Staff login (OIDC) later on **`ops.`**. Do not dump the rest of v2 here.
+- DNS cut `app.` → `ops.` — naming locked; **not this PR**.
+- Member customer surface on **projectcar.ca** — Next; not shipped.
 - Payments later (v3). No Stripe now.
 - Token pricing: **spec-locked** (`token-pricing.md`) — `base_tokens = hours × 100`, then bands + overlay. Owner and Member booking use the same engine.
-- Mission Control cockpit still needs **Ben GO** before start. Owner + Member booking are already live on Doc demo **and** the public app host. Do not start the cockpit from a docs PR.
+- Mission Control cockpit still needs **Ben GO** before start. Ops + Member booking are already live on Doc demo **and** the temporary `app.` alias. Do not start the cockpit from a docs PR.
 
 ### Implementation notes
 
@@ -357,11 +368,43 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 2. Hoist inventory is locked: **6 hoists**, exactly one shop hoist. **v1 = (A) Owner-only** on that bay. Members book the five customer bays. **(B) bumpable** is a later tweak.
 3. Whether a member is bound to a “home bay” (unlocked; any customer bay for now).
 4. Period reset cadence (monthly vs other) — allotments are per period; cadence still open.
-5. Public app hostname is live: `app.projectcar.ca` → Doc `:3000` (Ben GO 2026-09-06 ~11:41). Still demo cookies, not a shop opening.
+5. **Hostnames are locked** (§2): customer = `projectcar.ca` / www; management = **`ops.projectcar.ca`**; `app.` is a temporary alias live today (Ben GO 2026-09-06 ~11:41) → Doc `:3000`. DNS cut is Next, not this PR. Still demo cookies, not a shop opening.
 
 Record decisions here when Ben makes them. Do not block v1 schema on them.
 
 ---
 
-**Approved by:** Ben (2026-08-12 direction: site + waitlist, and shop membership / hoist booking; customers + employees later)  
+## 15. Next product locks (2026-09-06 ~12:22 / ~12:28)
+
+Ben GO ~12:22 (calendar, fill, Member host). Management hostname corrected via Master Chief to **`ops.`**. These are **Next**, not shipped. Calendar / fill are separate in-flight slices — do not start them from this docs PR. **No live DNS cut** from this PR.
+
+### Host split (repeat of §2)
+
+- **Customer:** `projectcar.ca` / www. Brochure + waitlist live. Member self-serve **migrates here**.
+- **Management:** **`ops.projectcar.ca`** — staff on shift / ops UI. Owner uses it too. Staff OIDC later. Not an Owner-only host.
+- **`app.projectcar.ca`:** temporary alias until DNS cut. Live today. Do not treat it as the intended name.
+
+### Calendar redesign
+
+Live today: one combined week table (`/schedule`, `/member/schedule`) — hoists as rows, days as columns.
+
+Locked Next:
+
+- **Monthly** — heat-map by hoist booking density (how full each hoist / day is).
+- **Weekly** — **separate per-hoist hour grids**, not the current combined table.
+
+### Next-day open-slot fill
+
+Notify members of leftover hours (email / push / SMS) with a **10–25%** discount on available hours. Urgency drives the discount inside that range. Not a rewrite of the locked v1 advance overlay table — see `token-pricing.md`.
+
+### Still held / deferred
+
+- Mission Control cockpit: **Ben GO** required. Do not start.
+- Staff OIDC: later, on **`ops.`**.
+- Stripe / shop open / live public pricing: later. Do not invent.
+- Apex public chat: deferred. Do not revive.
+
+---
+
+**Approved by:** Ben (2026-08-12 direction: site + waitlist, and shop membership / hoist booking; customers + employees later). 2026-09-06 host split: customer = projectcar.ca; management = **ops.projectcar.ca**; `app.` = temporary alias.  
 **Maintained with:** `Docs/` in `Coombzy/Project-Car`

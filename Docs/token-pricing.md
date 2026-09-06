@@ -83,14 +83,14 @@ Owner schedule shows the shop hoist and `kind=shop` chips so the week grid match
 
 ## Surfaces
 
-Token balance + hoist booking is a **primary Member** page — not Owner-only admin. Pricing math applies to **Member bookings** the same as Owner-created ones.
+Token balance + hoist booking is a **primary Member** page — not ops-only admin. Pricing math applies to **Member bookings** the same as Owner-created ones.
 
-| Who | What |
-|-----|------|
-| **Owner** | Tiers, band / overlay settings, overrides, at-risk, everyone else's ledger. Still required. |
-| **Member** | See their own balance, book / cancel within tier rules, see **band + overlay + total** on their schedule. |
+| Who | What | Host |
+|-----|------|------|
+| **Owner / Staff** | Tiers, band / overlay settings, overrides, at-risk, everyone else's ledger. Still required. | Intended **`ops.projectcar.ca`**. Live today via temporary alias `app.projectcar.ca`. Do not call this an Owner-only host. |
+| **Member** | See their own balance, book / cancel within tier rules, see **band + overlay + total** on their schedule. | **Next:** **projectcar.ca**. **Today:** still `app.` `/member` (temporary alias). Not shipped on the customer host. |
 
-Member self-serve UI is **live on Doc demo and `https://app.projectcar.ca`** (`/member`, seed `ada.reyes@example.com`). Demo session cookie — **not OIDC**. The shop is not open.
+Member self-serve UI is **live on Doc demo and the temporary alias `https://app.projectcar.ca`** (`/member`, seed `ada.reyes@example.com`). Demo session cookie — **not OIDC**. The shop is not open. Do not claim Member UI is on projectcar.ca yet.
 
 ---
 
@@ -192,9 +192,15 @@ Same 2-hour slot reserved **30 hours** ahead: overlay **1.25×** → `200 × 1.2
 ## Out of scope
 
 - Owner-editable settings table for bands / overlays (v1 ships the default table in code).
-- No Cloudflare. No Apex. No Mission Control cockpit.
+- No Cloudflare / DNS cut from this file. No Apex. No Mission Control cockpit.
 - No Stripe. No “shop is open.” Do not put these multipliers on projectcar.ca.
-- Member OIDC (session cookie stub is what shipped). Public `app.projectcar.ca` is live pointing at the Doc demo — still not a shop opening.
+- Member OIDC (session cookie stub is what shipped). Public `app.projectcar.ca` is a **temporary alias** pointing at the Doc demo — intended management hostname is **`ops.projectcar.ca`** (naming lock only; no DNS cut yet). Still not a shop opening.
+
+---
+
+## Next (not a v1 table change)
+
+**Next-day open-slot fill** (Ben GO 2026-09-06 ~12:22): leftover hours get a **10–25%** discount; urgency drives the cut inside that range. Members are notified (email / push / SMS). This is **not** a rewrite of the locked advance overlay table above. Do not invent a third v1 multiplier or ship fill from a docs PR.
 
 ---
 
@@ -205,5 +211,5 @@ Same 2-hour slot reserved **30 hours** ahead: overlay **1.25×** → `200 × 1.2
 
 ---
 
-**Approved by:** Ben (2026-09-06 GO: bands primary, overlay on top, UI shows the math; Member balance + booking is a primary customer surface. 2026-09-06 recall: `base_tokens = hours × 100`. 2026-09-06 product lock: two tiers Basic **1000** / Premium **1500**; 6 hoists; shop hoist v1 = **(A) Owner-only**.)  
+**Approved by:** Ben (2026-09-06 GO: bands primary, overlay on top, UI shows the math; Member balance + booking is a primary customer surface. 2026-09-06 recall: `base_tokens = hours × 100`. 2026-09-06 product lock: two tiers Basic **1000** / Premium **1500**; 6 hoists; shop hoist v1 = **(A) Owner-only**. 2026-09-06 host split: Member surface Next on projectcar.ca; ops management on **`ops.projectcar.ca`**; `app.` = temporary alias.)  
 **Maintained with:** `Docs/` in `Coombzy/Project-Car`
