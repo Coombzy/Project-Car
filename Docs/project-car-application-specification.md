@@ -226,10 +226,14 @@ Authenticated routes are role-aware: Owner session/bearer for admin; Member sess
 | `GET` | `/member/hoists` | Customer bays only (no shop hoist) |
 | `GET` | `/member/bookings` | Own bookings |
 | `GET` | `/member/schedule` | Customer-bay occupancy + own bookings |
-| `POST` | `/member/bookings/quote` | Duration × band × overlay for self |
+| `POST` | `/member/bookings/quote` | Duration × band × overlay × fill for self |
 | `POST` | `/member/bookings` | Create own customer booking (same reserve rules) |
 | `POST` | `/member/bookings/{id}/confirm` | Confirm own pending booking |
 | `POST` | `/member/bookings/{id}/cancel` | Cancel own booking, refund reserve |
+| `GET` | `/member/fill` | Next-day customer-bay openings + fill discount |
+| `GET` | `/fill/preview` | Owner: next-day openings, urgency, discount |
+| `POST` | `/fill/notify` | Owner: dry-run or send fill notices (outbox) |
+| `GET` | `/fill/outbox` | Owner: notification outbox |
 
 Errors: JSON `{ "error": { "code", "message" } }`. Validation via Pydantic. Overlap conflicts return `409`.
 

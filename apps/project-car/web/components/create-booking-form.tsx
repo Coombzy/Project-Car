@@ -147,11 +147,15 @@ export function CreateBookingForm({ members, hoists, weekStart, defaultStart, de
         <div className="quote-preview">
           <p className="eyebrow">Reserve quote · America/Regina bands</p>
           <p className="quote-math">
-            {rule.hours}h × 100 × {rule.band_multiplier} × {rule.advance_multiplier} ={" "}
+            {rule.hours}h × 100 × {rule.band_multiplier} × {rule.advance_multiplier}
+            {rule.fill_multiplier && rule.fill_multiplier !== "1" ? ` × ${rule.fill_multiplier}` : ""} ={" "}
             <strong>{tokensLabel(rule.final_reserve_cost)}</strong>
           </p>
           <p className="muted">
             {tokensLabel(rule.base_tokens)} base · {rule.band_label} · {rule.overlay_label}
+            {rule.fill_multiplier && rule.fill_multiplier !== "1"
+              ? ` · ${rule.fill_label ?? "Fill"} ${rule.fill_discount_pct}%`
+              : ""}
           </p>
           {quote?.token_balance !== null && quote?.token_balance_after !== null ? (
             <p className="muted">
@@ -163,7 +167,7 @@ export function CreateBookingForm({ members, hoists, weekStart, defaultStart, de
       ) : quoteError ? (
         <p className="muted">{quoteError}</p>
       ) : (
-        <p className="muted">Pick a start and end to see duration × band × overlay.</p>
+        <p className="muted">Pick a start and end to see duration × band × overlay × fill.</p>
       )}
       <div className="actions">
         <button type="submit">Reserve booking</button>

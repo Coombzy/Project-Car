@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import __version__
 from app.config import get_settings
 from app.errors import register_error_handlers
-from app.routers import auth, bookings, dashboard, hoists, member, members, tiers, waitlist
+from app.routers import auth, bookings, dashboard, fill, hoists, member, members, tiers, waitlist
 
 
 def create_app() -> FastAPI:
@@ -40,6 +40,7 @@ def create_app() -> FastAPI:
     application.include_router(members.router)
     application.include_router(hoists.router)
     application.include_router(bookings.router)
+    application.include_router(fill.router)
     return application
 
 

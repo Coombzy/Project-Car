@@ -16,8 +16,13 @@ def _window(hours_from_now: int, length_hours: float = 2) -> tuple[str, str]:
     return start.isoformat(), end.isoformat()
 
 
-def _expected_reserve(start: str, end: str) -> Decimal:
-    return quote_reserve(datetime.fromisoformat(start), datetime.fromisoformat(end)).final_reserve_cost
+def _expected_reserve(client: TestClient, start: str, end: str, member_id: str | None = None) -> Decimal:
+    payload = {"start_at": start, "end_at": end}
+    if member_id:
+        payload["member_id"] = member_id
+    quoted = client.post("/bookings/quote", headers=AUTH, json=payload)
+    assert quoted.status_code == 200, quoted.text
+    return Decimal(str(quoted.json()["reserved_tokens"]))
 
 
 def _dec(value) -> Decimal:
@@ -28,7 +33,7 @@ def test_create_booking_reserves_tokens_and_writes_ledger(client: TestClient) ->
     member = create_member(client)
     hoist = create_hoist(client)
     start, end = _window(4)
-    expected = _expected_reserve(start, end)
+    expected = _expected_reserve(client, start, end, member["id"])
     created = client.post(
         "/bookings",
         headers=AUTH,
@@ -142,7 +147,7 @@ def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None
     member = create_member(client)
     hoist = create_hoist(client)
     start, end = _window(3)
-    expected = _expected_reserve(start, end)
+    expected = _expected_reserve(client, start, end, member["id"])
     booking = client.post(
         "/bookings",
         headers=AUTH,
@@ -177,7 +182,7 @@ def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None
     assert refund["meta"]["pricing_rule"]["final_reserve_cost"] == str(expected)
 
     other_start, other_end = _window(8)
-    other_expected = _expected_reserve(other_start, other_end)
+    other_expected = _expected_reserve(client, other_start, other_end, member["id"])
     other = client.post(
         "/bookings",
         headers=AUTH,

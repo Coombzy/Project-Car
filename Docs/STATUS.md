@@ -53,10 +53,10 @@ Do not invent extra product from this table. Calendar heat-map / weekly per-hois
 
 ## Next (in flight — Ben GO ~12:22)
 
-Not shipped. Do not implement from a docs PR unless a later slice is GO’d. Calendar / fill are separate in-flight product locks — not this docs PR.
+Calendar is a separate in-flight PR (#18). Do not implement other Next items from this PR. **No DNS cut** here.
 
-1. **Calendar redesign.** Monthly = heat-map by hoist booking density. Weekly = **separate per-hoist hour grids** (not the current combined week table with hoists as rows and days as columns). Live schedule today is still that combined week grid (`/schedule`, `/member/schedule`). **Next / in flight — do not claim shipped.**
-2. **Next-day open-slot fill.** Notify members (email / push / SMS) of leftover hours with a **10–25%** discount on available hours. Urgency drives the discount (emptier / closer to start → bigger cut inside that range). Not a change to the locked v1 advance overlay table — see `token-pricing.md`. **Next / in flight — do not claim shipped.**
+1. **Calendar redesign.** Monthly = heat-map by hoist booking density. Weekly = **separate per-hoist hour grids** (not the current combined week table with hoists as rows and days as columns). Live schedule today is still that combined week grid (`/schedule`, `/member/schedule`). Still in flight on #18 — do not fight that UI from this PR. **Do not claim shipped.**
+2. **Next-day open-slot fill (this PR).** Notify members (email stub / later push / SMS) of leftover hours with a **10–25%** fill factor on available hours. Urgency drives the discount (emptier / closer to start → bigger cut inside that range). Explicit extra multiplier — not a change to the locked v1 band / overlay tables. See `token-pricing.md`. Management `/fill` on Doc demo (`ops.` + temporary `app.` alias); notify targets members. Not a public price. No Stripe.
 3. **Host migration — Member UI on projectcar.ca.** Customer surface (self-serve booking + balance) moves to **projectcar.ca**. Management stays on **`ops.`** (temporary `app.` alias still live). Today Member demo still lives on shop-UI `/member`. Do **not** claim this is shipped.
 4. **Ben cuts the `app.` alias.** `ops.` is already LIVE. `app.` stays until Ben cuts that DNS. Do not remove the alias from docs or edge config in this PR.
 5. **Mission Control cockpit** still needs **Ben GO** before start. Owner + Member booking are already live on Doc **and** the public ops / app hosts — that earlier hold is satisfied. Do not start the cockpit in this PR.
@@ -81,7 +81,7 @@ Not shipped. Do not implement from a docs PR unless a later slice is GO’d. Cal
 - **Cameras (locked IA, placeholder now):** members = **one primary shop cam**. Ops = **all cams** + door entry logs + Frigate / AI collection. Not a claim that Frigate is wired on `main`.
 - **Member parts purchasing** = placeholder now; **full Later**.
 - No Stripe. No “shop is open” claims. No live public pricing until Ben says so.
-- Token pricing v1 is locked: bands + overlay in `America/Regina` — `token-pricing.md`. `hours × 100 × band × overlay`. Defaults are Owner-editable placeholders, not public prices. Allotments: **Basic 1000 / Premium 1500** per period. Two tiers only (no Pro, no Weekly). Next-day fill **10–25%** is Next, not a v1 table change.
+- Token pricing v1 is locked: bands + overlay in `America/Regina` — `token-pricing.md`. `hours × 100 × band × overlay × fill`. Defaults are Owner-editable placeholders, not public prices. Allotments: **Basic 1000 / Premium 1500** per period. Two tiers only (no Pro, no Weekly). Fill is an explicit extra factor (10–25%), not a rewrite of the overlay table.
 - **6 hoists** in calendar/seed. Exactly one is the shop hoist (`is_shop`). **v1 = (A) Owner-only** — customers cannot book that **bay** (`400 shop_hoist_owner_only`). **(B) bumpable** is a later tweak only. See `token-pricing.md`.
 - HTTPS ops/app Doc demo requires **Secure** session cookies (`COOKIE_SECURE` / `SHOP_COOKIE_SECURE`). Demo cookies — **not OIDC**.
 - Mission Control cockpit needs **Ben GO** before start. Do not start the cockpit from a docs PR.

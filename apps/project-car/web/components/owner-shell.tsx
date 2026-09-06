@@ -10,6 +10,7 @@ const NAV = [
   { href: "/hoists", current: "hoists", label: "Hoists" },
   { href: "/waitlist", current: "waitlist", label: "Waitlist" },
   { href: "/tiers", current: "tiers", label: "Tiers" },
+  { href: "/fill", current: "fill", label: "Fill gaps" },
 ] as const;
 
 export type OwnerSection = (typeof NAV)[number]["current"];

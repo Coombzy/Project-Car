@@ -17,6 +17,8 @@ def test_all_models_import() -> None:
         "incidents",
         "billing_transactions",
         "access_events",
+        "fill_offers",
+        "notification_outbox",
     ]
 
 

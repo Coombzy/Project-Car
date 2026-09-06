@@ -14,7 +14,7 @@ Default (no flag) upserts the demo IDs and rebuilds this week's sample
 bookings so a fresh or existing demo DB is never an empty shell.
 
 Reserve cost is computed from duration (`Docs/token-pricing.md`):
-`final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier`.
+`final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier × fill_multiplier`.
 Demo bookings use that engine. Not live prices.
 
 This is sample data for localhost prospect walkthroughs. The shop is not
@@ -39,16 +39,19 @@ from app.models import (
     Booking,
     BookingKind,
     BookingStatus,
+    FillOffer,
     Hoist,
     HoistStatus,
     Incident,
     Member,
     MembershipTier,
     MemberStatus,
+    NotificationOutbox,
     TokenTransaction,
     TokenTransactionKind,
     WaitlistEntry,
 )
+from app.services.fill import resolve_fill_for_slot
 from app.services.pricing import BASE_TOKENS_PER_HOUR, quote_reserve
 from app.services.tokens import apply_ledger, rebuild_token_balance
 from app.shop_time import SHOP_TZ, shop_now
@@ -187,6 +190,8 @@ def _clear_member_activity(session: Session, member_ids: list[UUID]) -> None:
 
 
 def _reset_shop(session: Session) -> None:
+    session.execute(delete(NotificationOutbox))
+    session.execute(delete(FillOffer))
     session.execute(delete(TokenTransaction))
     session.execute(delete(AccessEvent))
     session.execute(delete(BillingTransaction))
@@ -218,7 +223,7 @@ def _make_booking(
     else:
         if member is None:
             raise ValueError("Customer demo bookings need a member.")
-        quote = quote_reserve(start, end)
+        quote = quote_reserve(start, end, fill=resolve_fill_for_slot(session, start, end))
         tokens = quote.final_reserve_cost
         rule = quote.as_rule()
         meta = quote.ledger_meta()
@@ -433,7 +438,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
 
     # Fill this calendar week so the Owner schedule is never an empty grid.
     # Past days are completed/cancelled (reserve released). Today and future hold reserve.
-    # reserved_tokens come from quote_reserve (hours × 100 × band × overlay).
+    # reserved_tokens come from quote_reserve (hours × 100 × band × overlay × fill).
     week_slots = [
         {
             "key": "mon-casey",

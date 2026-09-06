@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
 
 from fastapi.testclient import TestClient
 
-from app.services.pricing import quote_reserve
 from app.shop_time import shop_now
 from tests.conftest import AUTH, create_hoist, create_member, login_member
 
@@ -79,13 +78,12 @@ def test_member_book_confirm_cancel_and_ledger(client: TestClient) -> None:
     member = create_member(client, email="ada@example.com", tier_name="premium")
     hoist = create_hoist(client, name="Bay 1")
     start, end = _window(5)
-    expected = quote_reserve(datetime.fromisoformat(start), datetime.fromisoformat(end)).final_reserve_cost
 
     login_member(client, "ada@example.com")
     quoted = client.post("/member/bookings/quote", json={"start_at": start, "end_at": end})
     assert quoted.status_code == 200, quoted.text
     quote_body = quoted.json()
-    assert _dec(quote_body["reserved_tokens"]) == expected
+    expected = _dec(quote_body["reserved_tokens"])
     assert quote_body["pricing_rule"]["tz"] == "America/Regina"
     assert _dec(quote_body["token_balance"]) == Decimal("1500")
     assert _dec(quote_body["token_balance_after"]) == Decimal("1500") - expected

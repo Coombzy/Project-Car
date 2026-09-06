@@ -96,6 +96,13 @@ export function overlayIsNonStandard(multiplier: string | number | undefined): b
   return Number(multiplier) !== 1;
 }
 
+export function fillApplies(multiplier: string | number | undefined): boolean {
+  if (multiplier === undefined) {
+    return false;
+  }
+  return Number(multiplier) !== 1;
+}
+
 export function shopDateTimeLocal(date: Date = new Date()): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: SHOP_TZ,

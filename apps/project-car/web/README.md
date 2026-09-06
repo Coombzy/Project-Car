@@ -47,6 +47,7 @@ npm run dev
 | Hoists | http://localhost:3000/hoists |
 | Waitlist | http://localhost:3000/waitlist |
 | Tiers | http://localhost:3000/tiers |
+| Fill gaps | http://localhost:3000/fill |
 | Shop API | http://127.0.0.1:8000 |
 | API OpenAPI | http://127.0.0.1:8000/docs |
 | `SHOP_API_URL` | `http://127.0.0.1:8000` (web `.env.local`) |
@@ -60,7 +61,7 @@ The login screen is pre-filled and labeled as a **demo**. After `python -m app.s
 | Email | `owner@projectcar.ca` |
 | Password | `changeme` |
 
-These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (6 hoist cards including the Owner-only shop hoist, today's bookings, token-at-risk), Schedule (week by hoist), Members (Basic / Premium), Hoists, Waitlist (mark contacted), and Tiers (edit allowances). Re-seed notes: 6 bays + one Owner-only shop hoist (v1 choice A).
+These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (6 hoist cards including the Owner-only shop hoist, today's bookings, token-at-risk), Schedule (week by hoist), Members (Basic / Premium), Hoists, Waitlist (mark contacted), Tiers (edit allowances), and Fill gaps (next-day openings + notify). Re-seed notes: 6 bays + one Owner-only shop hoist (v1 choice A).
 
 ### Demo Member — Ada on localhost
 

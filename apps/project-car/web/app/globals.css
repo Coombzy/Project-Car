@@ -477,6 +477,73 @@ main.wide {
   background: #2a1614;
 }
 
+.fill-chip {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.08rem 0.45rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  border: 1px solid #3f5340;
+  color: #c5d6b8;
+  background: #1a2218;
+}
+
+.fill-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+
+.fill-stats dt {
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fill-stats dd {
+  margin: 0.2rem 0 0;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.channel-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 0.45rem;
+}
+
+.inline-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+}
+
+.inline-check input {
+  width: auto;
+}
+
+.urgency-high {
+  border-color: #8a6230;
+  color: #f0d3a4;
+}
+
+.urgency-medium {
+  border-color: #6a5734;
+  color: #e6d3b0;
+}
+
+.urgency-low,
+.urgency-none {
+  border-color: var(--line);
+  color: var(--muted);
+}
+
 .quote-preview {
   margin-top: 1rem;
   padding: 0.85rem 1rem;

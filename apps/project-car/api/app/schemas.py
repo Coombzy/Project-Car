@@ -6,7 +6,15 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-from app.models import BookingKind, BookingStatus, HoistStatus, MemberStatus, TokenTransactionKind
+from app.models import (
+    BookingKind,
+    BookingStatus,
+    HoistStatus,
+    MemberStatus,
+    NotificationChannel,
+    NotificationStatus,
+    TokenTransactionKind,
+)
 
 
 def _blank_to_none(value: str | None) -> str | None:
@@ -232,6 +240,10 @@ class PricingRuleOut(BaseModel):
     overlay_id: str
     overlay_label: str
     advance_multiplier: str
+    fill_id: str = "none"
+    fill_label: str = "No fill"
+    fill_multiplier: str = "1"
+    fill_discount_pct: str = "0"
     hours: str
     base_tokens: str
     final_reserve_cost: str
@@ -364,3 +376,93 @@ class DashboardOut(BaseModel):
     today_bookings: list[BookingOut]
     waitlist_count: int
     token_at_risk: list[MemberAtRiskOut]
+
+
+class FillGapOut(BaseModel):
+    hoist_id: UUID
+    hoist_name: str
+    start_at: datetime
+    end_at: datetime
+    hours: Decimal
+
+
+class FillPreviewOut(BaseModel):
+    target_date: str
+    tz: str
+    window_start: datetime
+    window_end: datetime
+    bay_count: int
+    capacity_hours: Decimal
+    booked_hours: Decimal
+    open_hours: Decimal
+    open_ratio: Decimal
+    discount_pct: Decimal
+    fill_multiplier: Decimal
+    urgency: str
+    applies: bool
+    gaps: list[FillGapOut]
+    offer_id: UUID | None = None
+    source: str = "none"
+
+    @classmethod
+    def from_snapshot(cls, snapshot) -> FillPreviewOut:
+        return cls(
+            target_date=snapshot.target_date.isoformat(),
+            tz=snapshot.tz,
+            window_start=snapshot.window_start,
+            window_end=snapshot.window_end,
+            bay_count=snapshot.bay_count,
+            capacity_hours=snapshot.capacity_hours,
+            booked_hours=snapshot.booked_hours,
+            open_hours=snapshot.open_hours,
+            open_ratio=snapshot.open_ratio,
+            discount_pct=snapshot.discount_pct,
+            fill_multiplier=snapshot.fill_multiplier,
+            urgency=snapshot.urgency,
+            applies=snapshot.applies,
+            gaps=[
+                FillGapOut(
+                    hoist_id=gap.hoist_id,
+                    hoist_name=gap.hoist_name,
+                    start_at=gap.start_at,
+                    end_at=gap.end_at,
+                    hours=gap.hours,
+                )
+                for gap in snapshot.gaps
+            ],
+            offer_id=snapshot.offer_id,
+            source=snapshot.source,
+        )
+
+
+class FillNotifyRequest(BaseModel):
+    dry_run: bool = True
+    discount_pct: Decimal | None = Field(default=None, ge=0, le=100)
+    channels: list[str] = Field(default_factory=lambda: ["email"])
+
+
+class NotificationOutboxOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    channel: NotificationChannel
+    member_id: UUID | None
+    fill_offer_id: UUID | None
+    to_address: str | None
+    subject: str | None
+    body: str | None
+    payload: dict | None = None
+    status: NotificationStatus
+    attempts: int
+    last_error: str | None
+    dry_run: bool
+    sent_at: datetime | None
+    created_at: datetime
+
+
+class FillNotifyOut(BaseModel):
+    preview: FillPreviewOut
+    dry_run: bool
+    published: bool
+    queued: int
+    notifications: list[NotificationOutboxOut]

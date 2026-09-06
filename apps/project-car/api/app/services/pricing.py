@@ -1,11 +1,12 @@
-"""Duration × band × overlay reserve quotes (Docs/token-pricing.md).
+"""Duration × band × overlay × fill reserve quotes (Docs/token-pricing.md).
 
 `base_tokens = hours × 100`
-`final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier`
+`final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier × fill_multiplier`
 
 Bands are looked up in America/Regina from the booking **start**. Overlay is
-measured at reserve time (now → start). Cancel / complete must reuse the
-locked quote — never re-run this table.
+measured at reserve time (now → start). Fill is an explicit next-day factor
+(default 1.0) — it does not change locked band / overlay math. Cancel /
+complete must reuse the locked quote — never re-run this table.
 """
 
 from __future__ import annotations
@@ -53,12 +54,29 @@ class Overlay:
 
 
 @dataclass(frozen=True)
+class FillFactor:
+    id: str
+    label: str
+    multiplier: Decimal
+    discount_pct: Decimal
+
+
+NO_FILL = FillFactor(
+    id="none",
+    label="No fill",
+    multiplier=Decimal("1.00"),
+    discount_pct=Decimal("0"),
+)
+
+
+@dataclass(frozen=True)
 class ReserveQuote:
     hours: Decimal
     band: Band
     overlay: Overlay
     base_tokens: Decimal
     final_reserve_cost: Decimal
+    fill: FillFactor = NO_FILL
     tz: str = PRICING_TZ_NAME
 
     def as_rule(self) -> dict[str, str]:
@@ -69,6 +87,10 @@ class ReserveQuote:
             "overlay_id": self.overlay.id,
             "overlay_label": self.overlay.label,
             "advance_multiplier": _factor_str(self.overlay.multiplier),
+            "fill_id": self.fill.id,
+            "fill_label": self.fill.label,
+            "fill_multiplier": _factor_str(self.fill.multiplier),
+            "fill_discount_pct": _factor_str(self.fill.discount_pct),
             "hours": _factor_str(self.hours),
             "base_tokens": _factor_str(self.base_tokens),
             "final_reserve_cost": _money_str(self.final_reserve_cost),
@@ -147,18 +169,23 @@ def quote_reserve(
     end_at: datetime,
     *,
     reserved_at: datetime | None = None,
+    fill: FillFactor | None = None,
 ) -> ReserveQuote:
     hours = duration_hours(start_at, end_at)
     band = resolve_band(start_at)
     overlay = resolve_overlay(start_at=start_at, reserved_at=reserved_at or shop_now())
+    fill_factor = fill or NO_FILL
     base = (hours * BASE_TOKENS_PER_HOUR).quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
-    final = (base * band.multiplier * overlay.multiplier).quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
+    final = (base * band.multiplier * overlay.multiplier * fill_factor.multiplier).quantize(
+        MONEY_QUANT, rounding=ROUND_HALF_UP
+    )
     if final <= 0:
         raise PricingError("invalid_tokens", "Reserved tokens must be greater than zero.")
     return ReserveQuote(
         hours=hours,
         band=band,
         overlay=overlay,
+        fill=fill_factor,
         base_tokens=base,
         final_reserve_cost=final,
     )
