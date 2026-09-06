@@ -135,6 +135,35 @@ body {
   background: rgba(192, 132, 252, 0.12);
 }
 
+.nav-list a.nav-link-secondary {
+  color: var(--text);
+  font-weight: 650;
+}
+
+.nav-list a.nav-link-secondary.is-active {
+  color: #e9d5ff;
+  background: rgba(192, 132, 252, 0.12);
+}
+
+.nav-list a.nav-cta {
+  color: #1a1020;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--accent), #a78bfa);
+  box-shadow: 0 4px 14px rgba(192, 132, 252, 0.22);
+}
+
+.nav-list a.nav-cta:hover,
+.nav-list a.nav-cta:focus-visible {
+  color: #1a1020;
+  background: linear-gradient(90deg, var(--accent), #a78bfa);
+  filter: brightness(1.06);
+}
+
+.nav-list a.nav-cta.is-active {
+  color: #1a1020;
+  background: linear-gradient(90deg, var(--accent), #a78bfa);
+}
+
 /* Full-width top banner — purple bar + logo image */
 .site-banner {
   position: relative;
@@ -623,6 +652,11 @@ footer {
     font-size: 0.8rem;
   }
 
+  .nav-list a.nav-cta {
+    text-align: center;
+    margin-top: 0.2rem;
+  }
+
   .page {
     width: min(100%, 420px);
     padding: 1rem 0 1.5rem;
@@ -849,4 +883,28 @@ footer {
 .waitlist-status a:focus-visible {
   opacity: 0.9;
   outline: none;
+}
+
+.waitlist-next {
+  margin: 1rem 0 0;
+  padding: 0.85rem 0.95rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.waitlist-next-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #e9d5ff;
+}
+
+.waitlist-next-body {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
 }
