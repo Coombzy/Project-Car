@@ -241,6 +241,34 @@ body {
   margin-bottom: 0.25rem;
 }
 
+.hero-cta {
+  margin: 1.15rem 0 0.15rem;
+}
+
+.cta-primary {
+  display: inline-block;
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 1.15rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #1a1020;
+  background: linear-gradient(90deg, var(--accent), #a78bfa);
+  box-shadow: 0 8px 24px rgba(192, 132, 252, 0.25);
+  transition: filter 0.15s ease;
+}
+
+.cta-primary:hover,
+.cta-primary:focus-visible {
+  color: #1a1020;
+  filter: brightness(1.06);
+  outline: none;
+}
+
 .divider {
   width: 40px;
   height: 2px;
@@ -574,263 +602,6 @@ footer {
   margin: 1.5rem 0 1.35rem;
 }
 
-.apex-slot {
-  margin: 0;
-}
-
-.apex-identity {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.apex-portrait {
-  width: 88px;
-  height: 88px;
-  object-fit: cover;
-  object-position: center 30%;
-  border-radius: 16px;
-  border: 1px solid rgba(192, 132, 252, 0.35);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  background: #1a2030;
-  flex-shrink: 0;
-}
-
-.apex-identity-text {
-  min-width: 0;
-}
-
-.apex-heading {
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent);
-  font-weight: 650;
-  margin-bottom: 0.4rem;
-}
-
-.apex-copy {
-  color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin-bottom: 0;
-}
-
-.apex-panel {
-  min-height: 320px;
-  border-radius: 12px;
-  border: 1px solid rgba(192, 132, 252, 0.28);
-  background: rgba(0, 0, 0, 0.28);
-  padding: 0;
-  overflow: hidden;
-}
-
-.apex-panel.apex-live {
-  display: block;
-  min-height: 0;
-}
-
-.apex-placeholder {
-  color: var(--muted);
-  font-size: 0.85rem;
-  letter-spacing: 0.04em;
-  opacity: 0.75;
-  text-align: center;
-  padding: 1.25rem;
-}
-
-.apex-human {
-  margin-top: 0.85rem;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.apex-human a {
-  color: var(--accent);
-  text-decoration: none;
-  border-bottom: 1px solid rgba(192, 132, 252, 0.35);
-}
-
-.apex-chat {
-  display: flex;
-  flex-direction: column;
-  min-height: 340px;
-}
-
-.apex-chat-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0.45rem 0.65rem 0;
-  border-bottom: 1px solid transparent;
-}
-
-.apex-new-chat {
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--muted);
-  font: inherit;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0.35rem 0.65rem;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.apex-new-chat:hover,
-.apex-new-chat:focus-visible {
-  color: var(--text);
-  border-color: rgba(192, 132, 252, 0.4);
-  outline: none;
-}
-
-.apex-new-chat:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.apex-chat-log {
-  flex: 1 1 auto;
-  max-height: 320px;
-  overflow-y: auto;
-  padding: 0.9rem 0.9rem 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-
-.apex-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.5rem;
-  max-width: 100%;
-}
-
-.apex-row-user {
-  align-self: flex-end;
-  flex-direction: row-reverse;
-}
-
-.apex-row-assistant {
-  align-self: flex-start;
-}
-
-.apex-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  object-fit: cover;
-  object-position: center 30%;
-  border: 1px solid rgba(192, 132, 252, 0.3);
-  flex-shrink: 0;
-  background: #1a2030;
-}
-
-.apex-bubble {
-  max-width: min(92%, 28rem);
-  border-radius: 12px;
-  padding: 0.55rem 0.75rem;
-  font-size: 0.9rem;
-  line-height: 1.45;
-}
-
-.apex-bubble-user {
-  background: rgba(192, 132, 252, 0.18);
-  border: 1px solid rgba(192, 132, 252, 0.25);
-  color: var(--text);
-}
-
-.apex-bubble-assistant {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--line);
-  color: var(--text);
-}
-
-.apex-who {
-  font-size: 0.65rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 0.25rem;
-  font-weight: 650;
-}
-
-.apex-bubble-user .apex-who {
-  color: #c4b5fd;
-  text-align: right;
-}
-
-.apex-bubble-text {
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.apex-thinking {
-  opacity: 0.7;
-  font-style: italic;
-  color: var(--muted);
-}
-
-.apex-chat-form {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.5rem;
-  padding: 0.65rem 0.75rem 0.55rem;
-  border-top: 1px solid var(--line);
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.apex-chat-form textarea {
-  resize: vertical;
-  min-height: 2.6rem;
-  max-height: 8rem;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text);
-  padding: 0.55rem 0.7rem;
-  font: inherit;
-  font-size: 0.9rem;
-}
-
-.apex-chat-form textarea:focus {
-  outline: none;
-  border-color: rgba(192, 132, 252, 0.55);
-}
-
-.apex-chat-form button {
-  align-self: end;
-  border: none;
-  border-radius: 10px;
-  padding: 0.55rem 0.95rem;
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 650;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
-  color: #1a1020;
-  background: linear-gradient(90deg, var(--accent), #a78bfa);
-}
-
-.apex-chat-form button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.apex-chat-foot {
-  padding: 0.35rem 0.85rem 0.7rem;
-  font-size: 0.75rem;
-  color: var(--muted);
-  line-height: 1.4;
-}
-
-.apex-chat-foot a {
-  color: var(--accent);
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -906,15 +677,6 @@ footer {
 
   .contact-email {
     font-size: 1.05rem;
-  }
-
-  .apex-panel {
-    min-height: 180px;
-  }
-
-  .apex-portrait {
-    width: 72px;
-    height: 72px;
   }
 
   .layout {
@@ -1111,4 +873,16 @@ footer {
 
 .waitlist-status[data-kind="pending"] {
   color: var(--muted);
+}
+
+.waitlist-status a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+}
+
+.waitlist-status a:hover,
+.waitlist-status a:focus-visible {
+  opacity: 0.9;
+  outline: none;
 }
