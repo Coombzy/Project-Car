@@ -151,5 +151,11 @@ Same slot reserved **30 hours** ahead: overlay **1.25×** → `2 × 1.25 × 1.25
 
 ---
 
+## Later (not v1)
+
+Member-to-member hoist time trades/offers: bookings should not be glued to one member forever (transferable booking or trade-offer entity). Design note only — do not design the trade system here, and do not put trades in v1 pricing rules.
+
+---
+
 **Approved by:** Ben (2026-09-06 GO: bands primary, overlay on top, UI shows the math; Member balance + booking is a primary customer surface)  
 **Maintained with:** `Docs/` in `Coombzy/Project-Car`

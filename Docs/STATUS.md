@@ -26,6 +26,12 @@ Living one-pager: what’s live, what’s next, locks. Product detail stays in t
 
 ---
 
+## Later (not v1)
+
+- Member-to-member hoist time trades/offers — bookings should not be glued to one member forever (transferable booking or trade-offer entity). Design note only; do not design the trade system now.
+
+---
+
 ## Locks (unchanged)
 
 - No Stripe. No “shop is open” claims. No live pricing until Ben says so.
