@@ -5,7 +5,7 @@
 **Part of:** Project Car documentation hierarchy  
 **Canonical:** `Coombzy/Project-Car` → `Docs/eBay-Automation-Module-Spec.md`
 
-This is a **later-module sketch**. Locked v1 (`project-car-application-specification.md`) explicitly excludes eBay, marketplace, and estate-sale. Feature flag `pc.marketplace` stays **off**. Shop data does **not** flow through Nextcloud; Mission Control is not a shared data layer for this module.
+This is a **later-module sketch**. Locked v1 (`project-car-application-specification.md`) excludes live eBay, marketplace checkout, and estate-sale. Feature flag `pc.marketplace` stays **off**. A customer-facing parts **placeholder** is allowed without implementing this module. Shop data does **not** flow through Nextcloud; Mission Control is not a shared data layer for this module.
 
 Keep the notes below as a future idea dump only.
 

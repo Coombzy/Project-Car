@@ -11,6 +11,11 @@ const NAV = [
   { href: "/waitlist", current: "waitlist", label: "Waitlist" },
   { href: "/tiers", current: "tiers", label: "Tiers" },
   { href: "/fill", current: "fill", label: "Fill gaps" },
+  { href: "/parts", current: "parts", label: "Parts" },
+  { href: "/tools", current: "tools", label: "Tools" },
+  { href: "/jobs", current: "jobs", label: "Job board" },
+  { href: "/cameras", current: "cameras", label: "Cameras" },
+  { href: "/payments", current: "payments", label: "Payments" },
 ] as const;
 
 export type OwnerSection = (typeof NAV)[number]["current"];
@@ -53,9 +58,11 @@ export function OwnerShell({
       </header>
       <div className="demo-banner">
         Management demo on the current app.projectcar.ca alias (Doc). Intended
-        host is ops.projectcar.ca — naming only, no DNS yet. Keep building
-        calendar here. The shop is not open. This is not live pricing or
-        payment.
+        host is ops.projectcar.ca — naming only, no DNS yet. Calendar is the
+        month heat-map + weekly per-hoist grids. Parts, Tools, job board,
+        cameras, and Payments are labeled placeholders — not live purchasing,
+        inventory, or camera feeds. The shop is not open. This is not live
+        pricing or Stripe.
       </div>
       <main className={wide ? "wide" : undefined}>{children}</main>
     </div>

@@ -16,9 +16,10 @@ The old stub `Architecture/Modular-Architecture.md` points here.
 ## 1. Two products, one repo
 
 ```
-projectcar.ca          Customer app (brochure + waitlist now)
-ops.projectcar.ca      Management (not Owner-only). Planned; no DNS cut in fill-gaps
-app.projectcar.ca      Temporary alias for ops. Live today; not the intended name
+projectcar.ca          Customer app (brochure + waitlist now; Member migrates later)
+ops.projectcar.ca      Management LIVE (staff on shift + Owner; not Owner-only)
+app.projectcar.ca      Temporary alias for ops; still live; not the intended name
+api.projectcar.ca      Shop API
 mc. / Tailscale        Mission Control cockpit — Ben only
 cloud. / :8080         Nextcloud — Ben's files/calendar/tasks
 vault. / :8222         Vaultwarden
@@ -109,10 +110,10 @@ Flags are for **product modules we might add**, not for swapping chat platforms.
 | `pc.waitlist` | on | Public waitlist API |
 | `pc.booking` | on | Hoist booking |
 | `pc.member_login` | off | Staff/Member OIDC |
-| `pc.payments` | off | Stripe |
-| `pc.access_readers` | off | NFC/FOB |
-| `pc.cameras` | off | Frigate occupancy hints |
-| `pc.marketplace` | off | eBay / parts listings |
+| `pc.payments` | off | Live Stripe / processor. Ops Payments **placeholder** (membership + parts; AI default, human on exceptions) is OK with the flag off. |
+| `pc.access_readers` | off | NFC/FOB. Door **entry logs** are an ops-only surface; live readers stay Later. |
+| `pc.cameras` | off | Live **Frigate (or equivalent NVR)** feeds + AI events. Occupancy is a **hint, not source of truth**. Members: **one primary shop camera**. Ops (`ops.` / temp `app.`): **every** camera + door entry logs + AI collection. Placeholder pages exist without this flag. Do not invent live NVR wiring while the flag is off. |
+| `pc.marketplace` | off | Full eBay / parts **purchase**. Customer-facing parts **placeholder** is OK with the flag off. Do not ship checkout or eBay adapters until this flag is on. |
 | `mc.fitness` | off | Fitness widget |
 
 There is no `chat.legacy` / Rocket.Chat flag. That idea is retired.
@@ -140,7 +141,7 @@ There is no `chat.legacy` / Rocket.Chat flag. That idea is retired.
 1. Browser → our Next.js apps only.
 2. Next.js (server) → FastAPI or Nextcloud.
 3. FastAPI → Postgres; optionally Nextcloud WebDAV/CalDAV.
-4. External systems (Stripe, eBay, Frigate) only behind adapters, and only after their flag is on.
+4. External systems (Stripe, eBay, Frigate / NVR) only behind adapters, and only after their flag is on. Placeholder Parts / Job board / Cameras pages must not claim those adapters are live.
 5. Hermes may call FastAPI with a service token or write to scoped Nextcloud folders. Hermes does not write SQL.
 
 ---
@@ -160,7 +161,7 @@ Do **not** treat “add `apps/…`” as future work where the trees already exi
 | Cloudflare Pages cutover for the brochure | **Next** (GO’d; blocked on CF ↔ GitHub auth) |
 | `apps/mission-control` health + CalDAV + Deck + heartbeat feed | **Held** until Owner booking is merged **and** live on Doc |
 
-Do not block on NFC, cameras, Stripe, or moving Nextcloud. Do not start the MC cockpit before Owner booking is live on Doc.
+Do not block on NFC, live cameras / Frigate, Stripe, or moving Nextcloud. Demo placeholders for Parts / Job board / Cameras do not turn `pc.cameras` or `pc.marketplace` on. Do not start the MC cockpit before Owner booking is live on Doc.
 
 ---
 
