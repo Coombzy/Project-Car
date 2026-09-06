@@ -1,9 +1,9 @@
 # Website improvements backlog
 
-Living document (git canonical):
+Canonical (git) — do not duplicate the backlog here:
 
-- Repo: https://github.com/Coombzy/Project-Car/blob/main/Docs/website-improvements.md
-- Clone: ~/src/Project-Car/Docs/website-improvements.md
-- Desktop mirror: ~/Desktop/Project Car/docs/website-improvements.md
+- [`Docs/website-improvements.md`](../../Docs/website-improvements.md)
+- Clone: `~/src/Project-Car/Docs/website-improvements.md`
+- Desktop mirror: `~/Desktop/Project Car/docs/website-improvements.md` (read copy)
 
-Do not duplicate the full backlog here — edit the git doc and push.
+Tick waitlist / Apex / P0 status in `Docs/` only.

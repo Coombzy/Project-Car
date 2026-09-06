@@ -86,7 +86,7 @@ It sits alongside `high-level-apps-and-business-specification.md`, `project-car-
 - Stack: Static HTML/CSS + nginx Docker; Python Apex sidecar
 - Membership page describes intended bay/hoist/token model and says it is **not a live offer yet**
 
-**Next site work:** see living backlog **`website-improvements.md`** (P0 Apex auth / soft-404 / robots / home progress bar first). Longer product path: wire a real waitlist (`POST /waitlist` on the shop API). Do not publish live prices or “book now” until Ben says the shop is open.
+**Next site work:** see living backlog **`website-improvements.md`**. Waitlist (`POST /waitlist`) is **done**. Apex is **deferred** (not active P0). Remaining P0 is robots / sitemap / 404 / favicon / home progress bar. Do not publish live prices or “book now” until Ben says the shop is open.
 
 **Known issues (audited 2026-08-12 — detail in improvements doc):**
 - Apex public API degraded (auth mount unreadable) → Contact chat not reliable
@@ -103,7 +103,7 @@ Files of interest (runtime today):
   README.md
 ```
 
-Planned git home: `apps/website/` in this repo (also tracked as P2-7 in `website-improvements.md`).
+Git home: `apps/website/` in this repo (P2-7 **done** in `website-improvements.md`). Doc may still serve a runtime copy from `~/hermes-tools/project-car-website`.
 
 ---
 
