@@ -77,9 +77,9 @@ A 24/7 community automotive maker-space and the software around it.
 
 **Live:** [projectcar.ca](https://projectcar.ca) — brochure (Home, About, The Shop, Membership, Roadmap, Contact) + waitlist form → `https://api.projectcar.ca/waitlist`. Chat nav stripped. Apex sidecar **deferred** (Ben). Brochure git SSOT is `apps/website/`; Pages cutover is GO’d but not done.
 
-**Live Shop OS (`main` `91c547e`):** Owner + Member booking + tokens, calendar heat-map / weekly per-hoist grids (#18), next-day fill (#20), breadth placeholders (#21), schedule harden (#24). Management host **`ops.projectcar.ca` LIVE** → Doc `:3000` (staff-on-shift, not Owner-only). `app.projectcar.ca` is a **temporary alias**. Member demo still `/member` on that UI — customer-host migration is Next. Demo cookies, not OIDC. The shop is not open.
+**Live Shop OS (`main` `afb37f9`):** Owner + Member booking + tokens, calendar heat-map / weekly per-hoist grids (#18), next-day fill (#20), breadth placeholders (#21), schedule harden (#24), inventory prefixes (#26), Chat v1 human/polling (#27), Dashboard 24h strips + todos + parts POs (#28). Management host **`ops.projectcar.ca` LIVE** → Doc `:3000` (staff-on-shift, not Owner-only). `app.projectcar.ca` is a **temporary alias**. Member demo still `/member` on that UI — customer-host migration is Next. Demo cookies, not OIDC. The shop is not open.
 
-**Later:** staff OIDC on `ops.`, full Stripe, NFC, live Frigate, marketplace, fabrication tools. Chat dual surface is **planned**, not shipped. MC cockpit parked until Ben GO.
+**Later:** staff OIDC on `ops.`, full Stripe, NFC, live Frigate, marketplace, fabrication tools. Chat v1 (human / polling / Owner-starts-rooms) is **LIVE** on the ops/app demo (`/chat`, `/member/chat`). Later Grok on projectcar.ca and Apex stay **deferred**. MC cockpit parked until Ben GO.
 
 Spec: `project-car-application-specification.md`.  
 Site: `website-webapp-specification.md`.  

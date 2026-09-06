@@ -167,7 +167,7 @@ No third party writes shop SQL directly.
 - [x] Public brochure on projectcar.ca
 - [x] Docs reconciled in this repo
 - [x] Waitlist API + form
-- [x] Shop booking (Owner + Member) live on Doc / **`ops.projectcar.ca`** + temporary `app.` alias (`main` `91c547e`: calendar #18, fill #20, placeholders #21, schedule harden #24)
+- [x] Shop booking (Owner + Member) live on Doc / **`ops.projectcar.ca`** + temporary `app.` alias (`main` `afb37f9`: calendar #18, fill #20, placeholders #21, inventory #26, Chat v1 #27, Dashboard #28)
 - [ ] MC cockpit over CalDAV/Deck/WebDAV (**parked** — needs **Ben GO**; booking-live hold is already satisfied)
 - [ ] Off-box backup to McKing
 
@@ -212,7 +212,7 @@ No third party writes shop SQL directly.
 
 **Settled:** no n8n; Doc→McKing host plan; Talk not Matrix; MC Ben-only; PC = site + waitlist + booking; separate Postgres; members ≠ Nextcloud users. Host split: customer = `projectcar.ca`; management = **`ops.projectcar.ca` LIVE** (staff-on-shift, not Owner-only); `app.` = temporary alias.
 
-**Still open:** fitness backend; exact public dollar prices; chat v1 mode (human vs AI vs both — planned, not shipped); cockpit hostname (MC still needs Ben GO).
+**Still open:** fitness backend; exact public dollar prices; Chat follow-ons (Grok / websockets — Chat v1 human/polling is **LIVE**); cockpit hostname (MC still needs Ben GO).
 
 ---
 

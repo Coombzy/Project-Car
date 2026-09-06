@@ -35,7 +35,7 @@ It is **not** Mission Control. Mission Control is Ben’s private cockpit over N
 
 Private Mission Control stays off the marketing domain (Tailscale / Access / a private hostname). Vaultwarden and Nextcloud stay off `projectcar.ca` apex.
 
-**Today (2026-09-06 ~14:10 America/Edmonton, `main` `91c547e`):** the public site is a multi-page brochure plus a real waitlist form (**e2e PASS** brochure → api). **`https://ops.projectcar.ca` is LIVE at the edge** (same Doc shop UI as `app.`; some clients still have local DNS cache). Ops booking (duration × band × overlay × fill), calendar heat-map / weekly per-hoist grids (#18), next-day fill (#20), breadth placeholders (#21), and schedule fail-soft (#24) are on `main` **and live on Doc** (`:3000` / `:8000`) **and reachable via `https://ops.projectcar.ca` and the temporary alias `https://app.projectcar.ca`**. Member demo is still shop-UI `/member` — the move to projectcar.ca is **Next**, not shipped. Demo session cookies — not OIDC. HTTPS ops/app demo requires **Secure** cookies (`COOKIE_SECURE` / `SHOP_COOKIE_SECURE`). Shop-web KeepAlive uses **`next start`** (not `next dev`). The shop is not open. Apex sidecar is deferred. **Chat v1** (human / polling / Owner-starts-rooms) is the evening demo (§17). See §4 for **build-breadth (now)** vs **ship-MVP cut (later)**, §13 for shipped vs remaining, and §15 for remaining Next locks (Member host migration; Ben cuts `app.`; MC cockpit still needs Ben GO).
+**Today (2026-09-06 ~16:16 America/Edmonton, `main` `afb37f9`):** the public site is a multi-page brochure plus a real waitlist form (**e2e PASS** brochure → api). **`https://ops.projectcar.ca` is LIVE at the edge** (same Doc shop UI as `app.`; some clients still have local DNS cache). Ops booking (duration × band × overlay × fill), calendar heat-map / weekly per-hoist grids (#18), next-day fill (#20), breadth placeholders (#21), schedule fail-soft (#24), inventory prefixes (#26), **Chat v1** (#27), and **Dashboard** 24h strips + todos + parts POs (#28) are on `main` **and live on Doc** (`:3000` / `:8000`, shop-web `next start` `BUILD_ID` `5swmVz-T2CqKEQzTk1ifU`) **and reachable via `https://ops.projectcar.ca` and the temporary alias `https://app.projectcar.ca`**. Member demo is still shop-UI `/member` — the move to projectcar.ca is **Next**, not shipped. Demo session cookies — not OIDC. HTTPS ops/app demo requires **Secure** cookies (`COOKIE_SECURE` / `SHOP_COOKIE_SECURE`). The shop is not open. Apex sidecar is deferred. **Chat v1** (human / polling / Owner-starts-rooms) is **LIVE on Doc** (§17). See §4 for **build-breadth (now)** vs **ship-MVP cut (later)**, §13 for shipped vs remaining, and §15 for remaining Next locks (Member host migration; Ben cuts `app.`; MC cockpit still needs Ben GO).
 
 ---
 
@@ -298,9 +298,9 @@ Mission Control does **not** own members, tokens, or hoist state.
 ### v1 (this spec — on `main`)
 
 - Waitlist on the public site (**Done**).
-- Ops shop OS: tiers, members, hoists, bookings, token ledger, dashboard + schedule (**on `main`, live on Doc** `:3000`, **and** on **`https://ops.projectcar.ca`** plus the temporary alias `https://app.projectcar.ca`). Schedule UX is month heat-map + weekly per-hoist hours (#18); fail-soft + Regina ISO windows (#24).
+- Ops shop OS: tiers, members, hoists, bookings, token ledger, dashboard + schedule (**on `main`, live on Doc** `:3000`, **and** on **`https://ops.projectcar.ca`** plus the temporary alias `https://app.projectcar.ca`). Schedule UX is month heat-map + weekly per-hoist hours (#18); fail-soft + Regina ISO windows (#24). Dashboard is 24h bay strips + todos + parts POs (#28).
 - Member self-serve is **live on Doc demo, `ops.`, and the temporary `app.` alias** (PR #14 / `9baf3c4`; public host honors `main` `58827f0` / PR #16) — session cookie, own balance, book / cancel on Bays 1–5. Still on shop-UI `/member`. Still demo cookies — **not OIDC**. Secure cookies required on HTTPS ops/app. The shop is not open.
-- **Chat v1 (human / polling)** — Owner starts rooms; members reply in rooms they are in; Ops/Owner see-all + mute. Dual surfaces `/chat` and `/member/chat`. Not Matrix / Apex / Grok. Demo only until merge/deploy.
+- **Chat v1 (human / polling)** — Owner starts rooms; members reply in rooms they are in; Ops/Owner see-all + mute. Dual surfaces `/chat` and `/member/chat` (auth-gate 307 when logged out). **LIVE on Doc** (`ops.` + temporary `app.` alias). Not Matrix / Apex / Grok.
 - **Build-breadth placeholders** (locked IA, demo UI on `main` as #21 — not live product): Parts (PT), Tools (B1–B6 + TC), job board, cams, Payments, member surfaces. Calendar / fill are **shipped** (#18 / #20), not shells. **Ship-MVP cut** later drops unfinished / unnecessary features. **CM** later.
 
 ### Next (not a v2 dump — Ben GO 2026-09-06 ~12:22)
@@ -311,7 +311,7 @@ Detail in §15. Summary:
 - **Next-day open-slot fill** — on `main` (PR #20). Notify members (email stub / later push / SMS) with a **10–25%** fill factor on leftover hours; urgency drives the discount. Shipped, not Next.
 - **Host migration** — Member customer surface → **projectcar.ca**. Management stays **`ops.`** (temporary `app.` alias still live). Do not claim this is shipped.
 - **Ben cuts the `app.` alias** — `ops.` is already LIVE at the edge; `app.` stays until Ben cuts that DNS. Not a docs PR.
-- **Chat follow-ons** — Chat v1 human/polling/Owner-starts-rooms is the evening demo (§17). Later: Grok on projectcar.ca, assign / staff notes / escalate. Apex sidecar stays deferred.
+- **Chat follow-ons** — Chat v1 human/polling/Owner-starts-rooms is **LIVE on Doc** (§17). Later: Grok on projectcar.ca, assign / staff notes / escalate. Apex sidecar stays deferred.
 - **Mission Control cockpit** still needs **Ben GO** before start. Do not start the cockpit from a docs PR.
 - Staff **OIDC** later (on **`ops.`**). Full Stripe later. Apex deferred. Do not dump the rest of v2 here.
 - Parts / Tools / job board / cameras **placeholders** are on `main` as #21 (§16). Tools / Parts lists use locked SKU prefixes (demo). Do not start live Frigate or QR checkout from leftover placeholder work.
@@ -352,17 +352,17 @@ Detail in §15. Summary:
 
 ## 13. Shop OS: shipped vs remaining
 
-Reality as of 2026-09-06 ~14:10 America/Edmonton (`main` `91c547e`). Do not invent Stripe, “shop is open,” or a live chat product from this section. **`ops.projectcar.ca` is LIVE** at the edge (same Doc demo as `app.`; some clients still have local DNS cache). Public `app.projectcar.ca` remains a **temporary alias** — still demo cookies, not a shop opening. Distinguish **build-breadth (now)** vs **ship-MVP cut (later)**.
+Reality as of 2026-09-06 ~16:16 America/Edmonton (`main` `afb37f9`). Do not invent Stripe, “shop is open,” or Matrix / Apex / Grok chat from this section. **Chat v1** (human / polling) and **Dashboard** (#28) are **LIVE on Doc**. **`ops.projectcar.ca` is LIVE** at the edge (same Doc demo as `app.`; some clients still have local DNS cache). Public `app.projectcar.ca` remains a **temporary alias** — still demo cookies, not a shop opening. Distinguish **build-breadth (now)** vs **ship-MVP cut (later)**.
 
 ### Shipped on `main` (PR #2 + #3)
 
 - **Public waitlist:** `POST /waitlist` on the shop API; Membership / Contact form posts to `https://api.projectcar.ca/waitlist` (`apps/website/html/waitlist.js`). CORS allowlist includes brochure origins (`projectcar.ca` / `www`), localhost, **`https://ops.projectcar.ca`**, and the temporary alias **`https://app.projectcar.ca`**. See `cors-origins.md`.
 - **Ops API** (`apps/project-car/api`): auth session, tiers, members, hoists, bookings (create / confirm / check-in / complete / cancel), append-only token ledger, dashboard snapshot, waitlist list + mark contacted.
-- **Ops web** (`apps/project-car/web`): dashboard, schedule (month heat-map + weekly per-hoist hours — #18; fail-soft + Regina ISO — #24), members, hoists, waitlist, tiers, fill (#20), plus Parts / Tools / Job board / Cameras / Payments **placeholders** (#21; Tools / Parts deepened with locked SKU prefixes). Demo seed only. **LIVE** on `ops.`; temporary `app.` alias still up. Placeholders are not live purchasing, QR checkout, Frigate, or Stripe.
-- **Member self-serve** (`/member/me`, `/member/hoists`, `/member/schedule`): session cookie, own balance + ledger, quote + book/confirm/cancel on customer bays. **Live on Doc demo, `https://ops.projectcar.ca`, and the temporary alias `https://app.projectcar.ca`.** Demo seed: `ada.reyes@example.com`. Shop hoist bay stays Owner-only. Customer-facing placeholders: `/member/parts` (request desk — PT / TC, not commerce), `/member/jobs`, `/member/cameras` (primary camera only). No member Tools nav.
+- **Ops web** (`apps/project-car/web`): dashboard (24h bay strips + todos + parts POs — #28), schedule (month heat-map + weekly per-hoist hours — #18; fail-soft + Regina ISO — #24), members, hoists, waitlist, tiers, fill (#20), Chat v1 (#27), plus Parts / Tools / Job board / Cameras / Payments **placeholders** (#21; Tools / Parts deepened in #26 with locked SKU prefixes). Demo seed only. **LIVE** on `ops.`; temporary `app.` alias still up. Placeholders are not live purchasing, QR checkout, Frigate, or Stripe.
+- **Member self-serve** (`/member/me`, `/member/hoists`, `/member/schedule`, `/member/chat`): session cookie, own balance + ledger, quote + book/confirm/cancel on customer bays, Chat v1 (own rooms; Owner starts them), personal todos + booked-bay 24h strips. **Live on Doc demo, `https://ops.projectcar.ca`, and the temporary alias `https://app.projectcar.ca`.** Demo seed: `ada.reyes@example.com`. Shop hoist bay stays Owner-only. Customer-facing placeholders: `/member/parts` (request desk — PT / TC, not commerce), `/member/jobs`, `/member/cameras` (primary camera only). No member Tools nav.
 - **Shop Postgres** in `infra/compose` (API is not a compose service).
 - **Live API edge:** `api.projectcar.ca` → Doc `:8000`. Stay-up is LaunchAgent `com.projectcar.shop-api` (KeepAlive) — `api-stay-up.md`. **Lead owns Doc `:8000`.** Public `GET /health` **200**.
-- **Live shop UI edge:** **`ops.projectcar.ca` LIVE** at the edge (2026-09-06 ~12:55) — Zone Cloudflare tunnel v8 hostname `ops` → `http://127.0.0.1:3000`. Public `/` → `Location: https://ops.projectcar.ca/login` (no localhost hop); `/login` **200**. KeepAlive `com.projectcar.shop-web` runs **`next start`** (not `next dev`). Checkout through `91c547e` (PR #24). Temporary alias `app.projectcar.ca` still live on the same origin — **not removed**. Some clients still have local DNS cache for `ops.`.
+- **Live shop UI edge:** **`ops.projectcar.ca` LIVE** at the edge (2026-09-06 ~12:55) — Zone Cloudflare tunnel v8 hostname `ops` → `http://127.0.0.1:3000`. Public `/` → `Location: https://ops.projectcar.ca/login` (no localhost hop); `/login` **200**. KeepAlive `com.projectcar.shop-web` runs **`next start`** (not `next dev`) after Dashboard **#28** (`main` `afb37f9`, `BUILD_ID` `5swmVz-T2CqKEQzTk1ifU`). Temporary alias `app.projectcar.ca` still live on the same origin — **not removed**. Some clients still have local DNS cache for `ops.`.
 
 ### Public waitlist vs authenticated Owner API
 
@@ -378,7 +378,7 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 
 - Classic Pages git cutover for the brochure (GO’d; blocked on CF ↔ GitHub auth). Live origin is already Worker `projectcar-brochure`. Shop API stays the lab tunnel.
 - Public Apex sidecar later — deferred (Ben), not P0. Do not revive.
-- **Chat follow-ons** — Grok / assign / staff notes / escalate / websockets. Chat v1 human/polling is the evening demo (§17).
+- **Chat follow-ons** — Grok / assign / staff notes / escalate / websockets. Chat v1 human/polling is **LIVE on Doc** (§17).
 - Staff login (OIDC) later on **`ops.`**. Do not dump the rest of v2 here.
 - Ben cuts the **`app.`** alias — `ops.` is already LIVE at the edge; alias stays until Ben cuts that DNS. **Not this docs PR.**
 - Member customer surface on **projectcar.ca** — Next; not shipped.
@@ -408,9 +408,9 @@ Record decisions here when Ben makes them. Do not block v1 schema on them.
 
 ---
 
-## 15. Next product locks (2026-09-06 ~14:10)
+## 15. Next product locks (2026-09-06 ~16:16)
 
-Ben GO ~12:22 (calendar, fill, Member host). Management hostname corrected via Master Chief to **`ops.`**. **`ops.` went LIVE at the edge ~12:55.** Calendar redesign is **on `main` (PR #18)**. Fill is **on `main` (PR #20)**. Breadth placeholders are **on `main` (PR #21)**. Schedule harden is **on `main` (PR #24 / `91c547e`)**. Member-host migration stays **Next**. Chat v1 human/polling is the evening demo (§17). Do **not** cut the `app.` alias from a docs PR.
+Ben GO ~12:22 (calendar, fill, Member host). Management hostname corrected via Master Chief to **`ops.`**. **`ops.` went LIVE at the edge ~12:55.** Calendar redesign is **on `main` (PR #18)**. Fill is **on `main` (PR #20)**. Breadth placeholders are **on `main` (PR #21)**. Schedule harden is **on `main` (PR #24)**. Inventory prefixes are **on `main` (PR #26)**. Chat v1 is **LIVE on Doc (PR #27)**. Dashboard 24h + todos is **LIVE on Doc (PR #28 / `afb37f9`)**. Member-host migration stays **Next**. Do **not** cut the `app.` alias from a docs PR.
 
 ### Host split (repeat of §2)
 
@@ -435,12 +435,12 @@ Notify members of leftover hours (email / push / SMS) with a **10–25%** discou
 
 ### Build-breadth IA (now) vs ship-MVP cut (later)
 
-Placeholders now (even rough): Parts (PT), Tools (B1–B6 + TC), job board, cams, calendar / fill, member surfaces, Payments. At public MVP release, cut unfinished / unnecessary features. Full member parts purchasing is **Later**. **CM** later. Chat v1 human/polling is the evening demo (§17) — not Matrix / Grok.
+Placeholders now (even rough): Parts (PT), Tools (B1–B6 + TC), job board, cams, calendar / fill, member surfaces, Payments. At public MVP release, cut unfinished / unnecessary features. Full member parts purchasing is **Later**. **CM** later. Chat v1 human/polling is **LIVE on Doc** (§17) — not Matrix / Grok.
 
 ### Still held / deferred
 
 - **Google Calendar two-way sync:** ICS + Connect stub shipped with the dashboard slice. Token exchange / two-way sync is Next. Apple stays ICS import.
-- **Chat follow-ons:** Grok on projectcar.ca, assign / staff notes / escalate. Chat v1 human/polling is the evening demo (§17).
+- **Chat follow-ons:** Grok on projectcar.ca, assign / staff notes / escalate. Chat v1 human/polling is **LIVE on Doc** (§17).
 - Mission Control cockpit: **Ben GO** required. Do not start.
 - Staff OIDC: later, on **`ops.`**.
 - Stripe / shop open / live public pricing: later. Do not invent.
@@ -499,18 +499,18 @@ Members perform shop upkeep (cleaning, tool maintenance, random tasks). **Ops po
 
 ---
 
-## 17. Chat v1 (human / polling — LIVE as demo)
+## 17. Chat v1 (human / polling — LIVE on Doc)
 
-Ben lock 2026-09-06: human messaging only tonight. Polling is fine. Dual surfaces. **Owners only may start rooms.** Members reply in rooms they are in. Ops/Owner see-all threads + mute. Hosts unchanged (ops/app management; Member on `/member/*`). No Stripe, shop not open, no Apex, no MC cockpit.
+Ben lock 2026-09-06: human messaging + polling. Dual surfaces. **Owners only may start rooms.** Members reply in rooms they are in. Ops/Owner see-all threads + mute. Hosts unchanged (ops/app management; Member on `/member/*`). Logged-out `/chat` and `/member/chat` **auth-gate 307**. No Stripe, shop not open, no Apex, no MC cockpit.
 
-| Surface | Audience | Chat v1 (this slice) |
+| Surface | Audience | Chat v1 (LIVE on Doc) |
 |---------|----------|----------------------|
 | **Member chat** | Members on shop-UI `/member/chat` | List own rooms, open a thread, send, poll. Cannot create rooms. |
 | **Ops / Owner admin** | Owner on `/chat` (`ops.` / temp `app.` alias) | See **all** threads, create room (Owner only), mute, send, poll. |
 
-**LIVE as demo** (this slice — do not claim Doc/`ops.` until merge/deploy): Postgres `chat_rooms` / `chat_participants` / `chat_messages`, Owner + Member APIs, seeded demo threads, polling every few seconds while a thread is open. **Not** live Matrix. **Not** Apex. **Not** Grok.
+**LIVE on Doc** (PR #27; shop-web `next start` on `main` `afb37f9`): Postgres `chat_rooms` / `chat_participants` / `chat_messages`, Owner + Member APIs, seeded demo threads, polling every few seconds while a thread is open. Reachable on **`ops.`** and the temporary **`app.`** alias. **Not** live Matrix. **Not** Apex. **Not** Grok.
 
-Later (not this slice): Grok on **projectcar.ca**, assign / staff notes / escalate, websockets. Member booking assistant stays Later.
+Later (not Chat v1): Grok on **projectcar.ca**, assign / staff notes / escalate, websockets. Member booking assistant stays Later.
 
 Locks:
 
@@ -522,5 +522,5 @@ Locks:
 
 ---
 
-**Approved by:** Ben (2026-08-12 direction: site + waitlist, and shop membership / hoist booking; customers + employees later). 2026-09-06 host split: customer = projectcar.ca; management = **ops.projectcar.ca** (LIVE at edge ~12:55); `app.` = temporary alias (not removed). 2026-09-06 breadth-first placeholders: parts (member + ops), tools, job board (token bounty), cameras, payments (AI-exception). Full purchase, claim/complete, live NVR, and Stripe stay Later. Ship-MVP cut is a later gate. 2026-09-06 inventory lock: B1–B6 / TC / PT prefixes; B6 = shop hoist (not SH); CM later; member Parts = requests only. 2026-09-06: Chat v1 human/polling/Owner-starts-rooms LIVE as demo (§17).
+**Approved by:** Ben (2026-08-12 direction: site + waitlist, and shop membership / hoist booking; customers + employees later). 2026-09-06 host split: customer = projectcar.ca; management = **ops.projectcar.ca** (LIVE at edge ~12:55); `app.` = temporary alias (not removed). 2026-09-06 breadth-first placeholders: parts (member + ops), tools, job board (token bounty), cameras, payments (AI-exception). Full purchase, claim/complete, live NVR, and Stripe stay Later. Ship-MVP cut is a later gate. 2026-09-06 inventory lock: B1–B6 / TC / PT prefixes; B6 = shop hoist (not SH); CM later; member Parts = requests only. 2026-09-06 ~16:16: Chat v1 human/polling/Owner-starts-rooms **LIVE on Doc** (§17 / #27); Dashboard 24h + todos **LIVE on Doc** (#28 / `afb37f9`).
 **Maintained with:** `Docs/` in `Coombzy/Project-Car`

@@ -44,7 +44,7 @@
 | Soft-404 | Live Worker 404s missing static files. Git has `404.html` + nginx `error_page 404`. Do not add SPA `/* /index.html 200`. |
 | Mission Control | Separate; ops + Member booking are live on Doc demo, **`https://ops.projectcar.ca`**, and the temporary alias `https://app.projectcar.ca`. Cockpit still needs **Ben GO** — do not start it from brochure work. |
 
-**Overall:** Waitlist is live. Chat/Apex stay gone (Apex sidecar deferred; shop chat is planned, not live). Brochure hygiene P0-3…P0-7 is **already live** on the Worker. Ops + Member booking are live on Doc demo, **`https://ops.projectcar.ca`**, and the temporary alias `https://app.projectcar.ca`. Some clients still have flaky local DNS for `ops.` — use `app.`. Not Mission Control, not Apex. The shop is not open.
+**Overall:** Waitlist is live. Brochure Chat/Apex stay gone (Apex sidecar deferred; public Chat page stays stripped). Shop OS **Chat v1** (human / polling) is **LIVE** on the ops/app demo — not the brochure. Brochure hygiene P0-3…P0-7 is **already live** on the Worker. Ops + Member booking, Chat #27, and Dashboard #28 are live on Doc demo, **`https://ops.projectcar.ca`**, and the temporary alias `https://app.projectcar.ca`. Some clients still have flaky local DNS for `ops.` — use `app.`. Not Mission Control, not Apex. The shop is not open.
 
 ---
 
@@ -185,7 +185,7 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 - Live pricing tables or fake open dates  
 - Reintroducing n8n or bolting Mission Control onto projectcar.ca  
 - Pixar/Disney McQueen IP in branding assets  
-- Treating Chat as shipped product / reviving Apex  
+- Treating **brochure** Chat as shipped product / reviving Apex (Shop OS Chat v1 is LIVE on ops/app; that is not this site)  
 - Cutting the `app.` alias from a docs PR — `ops.` is already LIVE; alias stays until Ben cuts that DNS  
 
 ---
@@ -194,7 +194,8 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 
 | Date | Change |
 |------|--------|
-| 2026-09-06 | Reality sync ~14:10 America/Edmonton (`main` `91c547e`): **`ops.projectcar.ca` LIVE** → Doc `:3000`; `app.` = temporary alias. Calendar #18 / fill #20 / placeholders #21 / schedule harden #24 are Live. Chat planned, not live. MC cockpit still needs Ben GO. No Stripe. The shop is not open. |
+| 2026-09-06 | Reality sync ~16:16 America/Edmonton (`main` `afb37f9`): **`ops.projectcar.ca` LIVE** → Doc `:3000`; `app.` = temporary alias. Calendar #18 / fill #20 / placeholders #21 / inventory #26 / Chat #27 / Dashboard #28 are Live on Doc. Brochure Chat/Apex stay stripped. MC cockpit still needs Ben GO. No Stripe. The shop is not open. |
+| 2026-09-06 | Reality sync ~14:10 America/Edmonton (`main` `91c547e`): **`ops.projectcar.ca` LIVE** → Doc `:3000`; `app.` = temporary alias. Calendar #18 / fill #20 / placeholders #21 / schedule harden #24 are Live. Chat planned, not live (superseded ~16:16). MC cockpit still needs Ben GO. No Stripe. The shop is not open. |
 | 2026-09-06 | Reality sync ~12:28 America/Edmonton: host split locked — customer = projectcar.ca; management = **`ops.projectcar.ca`**; `app.` = temporary alias (live). Member UI on projectcar.ca is Next. No DNS cut. MC cockpit still needs Ben GO. No Stripe. The shop is not open. |
 | 2026-09-06 | Reality sync ~11:52 America/Edmonton: `https://app.projectcar.ca` **LIVE** (Ben GO ~11:41) pointing at Doc demo. Owner + Member booking reachable on the public app host. MC cockpit still needs Ben GO. No Stripe. The shop is not open. |
 | 2026-09-06 | Reality sync ~11:20 America/Edmonton: P0-3…P0-7 **already live** on Worker (re-uploaded). No pending hygiene upload. Owner + Member booking live on Doc demo; `app.projectcar.ca` not claimed; MC cockpit still needs Ben GO. |
