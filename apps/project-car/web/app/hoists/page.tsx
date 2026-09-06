@@ -19,8 +19,9 @@ export default async function HoistsPage({
         <p className="eyebrow">GET /hoists</p>
         <h1>Hoists</h1>
         <p className="lede">
-          Demo bays for the walkthrough. Occupied flips on check-in; complete
-          frees the bay when nothing else is active.
+          Demo inventory is 6 bays — exactly one shop hoist, Owner-only for
+          internal work (v1 choice A; customers cannot book it). Occupied flips
+          on check-in; complete frees the bay when nothing else is active.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
 
@@ -34,7 +35,10 @@ export default async function HoistsPage({
               <article key={hoist.id} className="card hoist-card">
                 <div className="hoist-card-head">
                   <h3>{hoist.name}</h3>
-                  <StatusPill value={hoist.status} />
+                  <div className="hoist-pills">
+                    {hoist.is_shop ? <StatusPill value="shop" /> : null}
+                    <StatusPill value={hoist.status} />
+                  </div>
                 </div>
                 <form action={patchHoistAction}>
                   <input type="hidden" name="id" value={hoist.id} />
@@ -50,6 +54,10 @@ export default async function HoistsPage({
                       <option value="maintenance">maintenance</option>
                       <option value="locked">locked</option>
                     </select>
+                  </label>
+                  <label className="checkbox-row">
+                    <input type="checkbox" name="is_shop" defaultChecked={hoist.is_shop} />
+                    Shop hoist (internal / business work)
                   </label>
                   <div className="actions">
                     <button type="submit">Save bay</button>
@@ -79,6 +87,10 @@ export default async function HoistsPage({
                 <option value="maintenance">maintenance</option>
                 <option value="locked">locked</option>
               </select>
+            </label>
+            <label className="checkbox-row">
+              <input type="checkbox" name="is_shop" />
+              Shop hoist
             </label>
             <div className="actions" style={{ alignSelf: "end" }}>
               <button type="submit">Create hoist</button>

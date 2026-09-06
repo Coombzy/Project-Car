@@ -52,7 +52,7 @@ def test_create_booking_reserves_tokens_and_writes_ledger(client: TestClient) ->
 
     detail = client.get(f"/members/{member['id']}", headers=AUTH)
     assert detail.status_code == 200
-    assert _dec(detail.json()["token_balance"]) == Decimal("800") - expected
+    assert _dec(detail.json()["token_balance"]) == Decimal("1500") - expected
 
     ledger = client.get(f"/members/{member['id']}/tokens", headers=AUTH)
     kinds = [row["kind"] for row in ledger.json()]
@@ -84,8 +84,8 @@ def test_create_booking_ignores_client_token_amount(client: TestClient) -> None:
     assert expected != Decimal("1")
     assert quote_body["pricing_rule"]["band_id"] == "weekday_day"
     assert quote_body["pricing_rule"]["base_tokens"] == "100"
-    assert _dec(quote_body["token_balance"]) == Decimal("800")
-    assert _dec(quote_body["token_balance_after"]) == Decimal("800") - expected
+    assert _dec(quote_body["token_balance"]) == Decimal("1500")
+    assert _dec(quote_body["token_balance_after"]) == Decimal("1500") - expected
 
     created = client.post(
         "/bookings",
@@ -116,7 +116,7 @@ def datetime_in_regina_band():
 
 
 def test_confirm_overlap_returns_409(client: TestClient) -> None:
-    ada = create_member(client, email="ada@example.com", tier_name="pro")
+    ada = create_member(client, email="ada@example.com", tier_name="premium")
     casey = create_member(client, name="Casey", email="casey@example.com", tier_name="basic")
     hoist = create_hoist(client)
     start, end = _window(5)
@@ -153,7 +153,7 @@ def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None
             "end_at": end,
         },
     ).json()
-    assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == Decimal("800") - expected
+    assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == Decimal("1500") - expected
 
     assert client.post(f"/bookings/{booking['id']}/confirm", headers=AUTH).status_code == 200
     checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)
@@ -170,7 +170,7 @@ def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None
     assert completed.status_code == 200, completed.text
     assert completed.json()["status"] == "completed"
     used = expected - unused
-    assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == Decimal("800") - used
+    assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == Decimal("1500") - used
     assert client.get("/hoists", headers=AUTH).json()[0]["status"] == "available"
     complete_ledger = client.get(f"/members/{member['id']}/tokens", headers=AUTH).json()
     refund = next(row for row in complete_ledger if row["kind"] == "booking_refund")
@@ -188,12 +188,12 @@ def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None
             "end_at": other_end,
         },
     ).json()
-    after_other = Decimal("800") - used - other_expected
+    after_other = Decimal("1500") - used - other_expected
     assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == after_other
     cancelled = client.post(f"/bookings/{other['id']}/cancel", headers=AUTH)
     assert cancelled.status_code == 200
     assert cancelled.json()["status"] == "cancelled"
-    assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == Decimal("800") - used
+    assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == Decimal("1500") - used
 
 
 def test_tier_rules_enforced(client: TestClient) -> None:
@@ -219,13 +219,26 @@ def test_tier_rules_enforced(client: TestClient) -> None:
     assert second.status_code == 400
     assert second.json()["error"]["code"] == "max_simultaneous_bookings"
 
-    weekly = create_member(client, name="Riley", email="riley@example.com", tier_name="weekly")
+    limited = client.post(
+        "/tiers",
+        headers=AUTH,
+        json={
+            "name": "limited",
+            "display_name": "Limited",
+            "price": "0",
+            "included_tokens": 2000,
+            "booking_window_days": 7,
+            "max_simultaneous_bookings": 1,
+        },
+    )
+    assert limited.status_code == 201, limited.text
+    short_window = create_member(client, name="Riley", email="riley@example.com", tier_name="limited")
     far_start = shop_now() + timedelta(days=10)
     window = client.post(
         "/bookings",
         headers=AUTH,
         json={
-            "member_id": weekly["id"],
+            "member_id": short_window["id"],
             "hoist_id": hoist["id"],
             "start_at": far_start.isoformat(),
             "end_at": (far_start + timedelta(hours=2)).isoformat(),
@@ -241,7 +254,7 @@ def test_inactive_member_and_insufficient_tokens(client: TestClient) -> None:
         client,
         name="Jordan",
         email="jordan@example.com",
-        tier_name="pro",
+        tier_name="premium",
         status="suspended",
     )
     start, end = _window(3)
@@ -253,11 +266,11 @@ def test_inactive_member_and_insufficient_tokens(client: TestClient) -> None:
     assert denied.status_code == 400
     assert denied.json()["error"]["code"] == "member_not_bookable"
 
-    broke = create_member(client, name="Morgan", email="morgan@example.com", tier_name="weekly")
+    broke = create_member(client, name="Morgan", email="morgan@example.com", tier_name="basic")
     client.post(
         f"/members/{broke['id']}/tokens",
         headers=AUTH,
-        json={"amount": "-2", "note": "wipe"},
+        json={"amount": "-1000", "note": "wipe"},
     )
     poor = client.post(
         "/bookings",
@@ -298,3 +311,91 @@ def test_ninety_minute_booking_via_api(client: TestClient) -> None:
     assert body["pricing_rule"]["hours"] == "1.5"
     assert body["pricing_rule"]["base_tokens"] == "150"
     assert _dec(body["reserved_tokens"]) == quote_reserve(start, end).final_reserve_cost
+
+
+def test_shop_hoist_is_owner_only(client: TestClient) -> None:
+    member = create_member(client)
+    customer_bay = create_hoist(client, name="Bay 1")
+    shop = create_hoist(client, name="Shop", location_label="Internal", is_shop=True)
+    start, end = _window(6)
+
+    denied_kind = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "kind": "shop",
+            "hoist_id": customer_bay["id"],
+            "start_at": start,
+            "end_at": end,
+            "notes": "Wrong bay",
+        },
+    )
+    assert denied_kind.status_code == 400
+    assert denied_kind.json()["error"]["code"] == "not_shop_hoist"
+
+    shop_booking = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "kind": "shop",
+            "hoist_id": shop["id"],
+            "start_at": start,
+            "end_at": end,
+            "notes": "Rack inspection",
+        },
+    )
+    assert shop_booking.status_code == 201, shop_booking.text
+    body = shop_booking.json()
+    assert body["kind"] == "shop"
+    assert body["member_id"] is None
+    assert body["member_name"] == "Shop"
+    assert _dec(body["reserved_tokens"]) == Decimal("0")
+    assert body["pricing_rule"] is None
+
+    blocked = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": shop["id"],
+            "start_at": start,
+            "end_at": end,
+        },
+    )
+    assert blocked.status_code == 400
+    assert blocked.json()["error"]["code"] == "shop_hoist_owner_only"
+
+    later_start, later_end = _window(12)
+    still_blocked = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": shop["id"],
+            "start_at": later_start,
+            "end_at": later_end,
+        },
+    )
+    assert still_blocked.status_code == 400
+    assert still_blocked.json()["error"]["code"] == "shop_hoist_owner_only"
+
+    on_customer_bay = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": customer_bay["id"],
+            "start_at": later_start,
+            "end_at": later_end,
+        },
+    )
+    assert on_customer_bay.status_code == 201, on_customer_bay.text
+    assert on_customer_bay.json()["kind"] == "customer"
+
+    second_shop = client.post(
+        "/hoists",
+        headers=AUTH,
+        json={"name": "Shop 2", "is_shop": True},
+    )
+    assert second_shop.status_code == 409
+    assert second_shop.json()["error"]["code"] == "duplicate_shop_hoist"

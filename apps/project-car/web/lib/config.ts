@@ -71,10 +71,11 @@ export type PricingRule = {
 
 export type Booking = {
   id: string;
-  member_id: string;
+  member_id: string | null;
   member_name: string;
   hoist_id: string;
   hoist_name: string;
+  kind: "customer" | "shop";
   start_at: string;
   end_at: string;
   status: "pending" | "confirmed" | "active" | "completed" | "overdue" | "cancelled";
@@ -112,6 +113,7 @@ export type Hoist = {
   name: string;
   location_label: string;
   status: "available" | "occupied" | "maintenance" | "locked";
+  is_shop: boolean;
   created_at: string;
   updated_at: string;
 };

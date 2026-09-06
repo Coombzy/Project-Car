@@ -54,6 +54,7 @@ def get_dashboard(session: DbSession, _owner: Owner) -> DashboardOut:
                 name=hoist.name,
                 location_label=hoist.location_label,
                 status=hoist.status,
+                is_shop=hoist.is_shop,
                 created_at=hoist.created_at,
                 updated_at=hoist.updated_at,
                 current_booking=by_hoist.get(hoist.id),

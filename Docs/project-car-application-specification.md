@@ -66,10 +66,10 @@ Identity rules:
    - Public chat (Apex) is **deferred** (Ben). If revived later, it must not become an admin console.
 
 2. **Shop OS (Owner only)**
-   - Membership tiers (seed: **two** tiers — Basic and Pro — names and prices are data, not hardcoded copy). Allotment placeholders: Basic **400** / Pro **800** per period (`token-pricing.md`).
+   - Membership tiers (seed: **two** tiers — Basic and Premium — names and prices are data, not hardcoded copy). Allotment placeholders: Basic **1000** / Premium **1500** per period (`token-pricing.md`).
    - Members: name, email, phone, tier, status (`active` / `suspended` / `banned` / `churned`), waiver fields, emergency contact, token balance, deposit balance.
-   - Hoists (work bays): name, location label, status (`available` / `occupied` / `maintenance` / `locked`).
-   - Bookings: member + hoist + start/end + status (`pending` → `confirmed` → `active` → `completed` / `overdue` / `cancelled`).
+   - Hoists (work bays): name, location label, status (`available` / `occupied` / `maintenance` / `locked`), `is_shop`. Seed **6** hoists; exactly one is the shop hoist.
+   - Bookings: member (optional on shop work) + hoist + start/end + `kind` (`customer` / `shop`) + status (`pending` → `confirmed` → `active` → `completed` / `overdue` / `cancelled`).
    - Token ledger: append-only credits and debits. Booking reserve, debit, refund, monthly allocation, admin adjustment.
    - Owner dashboard: hoist status, today’s / this week’s bookings, token balances, waitlist count.
 
@@ -95,14 +95,15 @@ Identity rules:
 These rules are the product, not an implementation detail.
 
 1. A hoist has at most **one overlapping confirmed/active booking**.
-2. Creating a booking **reserves** tokens (`booking_reserve`, negative amount) and does not spend them yet.
+2. Creating a **customer** booking **reserves** tokens (`booking_reserve`, negative amount) and does not spend them yet. Shop work (`kind=shop`) does not reserve member tokens.
 3. Completing a booking **debits** reserved tokens (`booking_debit`) or **refunds** unused reserve (`booking_refund`). Never silently change `member.token_balance` without a ledger row.
 4. `member.token_balance` is a cached sum of the ledger. If they disagree, the ledger wins; a rebuild job can recompute.
 5. Overdue bookings do not auto-charge money in v1. They flip to `overdue` and can open an `Incident` (`late_return`) for the Owner to review.
 6. Cancelled bookings refund any remaining reserve.
 7. Tier fields (`included_tokens`, `booking_window_days`, `max_simultaneous_bookings`) are enforced in the API, not only in the UI.
+8. **Shop hoist — v1 choice (A).** Exactly one hoist is `is_shop`. **Owner-only:** customers cannot book it (`400 shop_hoist_owner_only`). Only Owner `kind=shop` landings. **(B) bumpable** (customer overflow, shop work displaces) is a later tweak — do not implement displace/refund-on-bump in v1. No public booking. No Stripe. See `token-pricing.md`.
 
-Dollar prices and tier **names** stay Owner-editable. Slot cost is **not** an arbitrary Owner-entered reserve amount — see §5.1. Seed allotment placeholders: Basic **400** / Pro **800** per period (`token-pricing.md`). Two tiers, not three.
+Dollar prices and tier **names** stay Owner-editable. Slot cost is **not** an arbitrary Owner-entered reserve amount — see §5.1. Seed allotment placeholders: Basic **1000** / Premium **1500** per period (`token-pricing.md`). Two tiers, not three. No Pro. No Weekly.
 
 ### 5.1 Token rate (duration × bands + overlay)
 
@@ -115,7 +116,7 @@ final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier
 
 Show band + overlay + total before confirm. Store `pricing_rule` on ledger meta. Cancel refunds the reserved amount — do not reprice. Owner `POST /bookings` computes this in the API.
 
-Defaults, two-tier allotment placeholders (Basic 400 / Pro 800), UX must-haves, and the Fri-eve default: **`token-pricing.md`**. Multipliers and allotments are Owner-editable placeholders. Not public brochure prices. No Stripe. Owner API computes reserve from duration.
+Defaults, two-tier allotment placeholders (Basic 1000 / Premium 1500), 6-hoist seed with one shop-priority hoist, UX must-haves, and the Fri-eve default: **`token-pricing.md`**. Multipliers and allotments are Owner-editable placeholders. Not public brochure prices. No Stripe. Owner API computes reserve from duration.
 
 ---
 
@@ -200,7 +201,7 @@ All authenticated routes require Owner (later: role-aware).
 | `GET` | `/members/{id}/tokens` | Ledger |
 | `POST` | `/members/{id}/tokens` | Admin adjustment |
 | `GET/POST` | `/hoists` | List / create |
-| `PATCH` | `/hoists/{id}` | Status, labels |
+| `PATCH` | `/hoists/{id}` | Status, labels, `is_shop` |
 | `GET/POST` | `/bookings` | List (filter by hoist/day) / create |
 | `POST` | `/bookings/{id}/confirm` | Pending → confirmed |
 | `POST` | `/bookings/{id}/check-in` | → active (manual in v1) |
@@ -337,10 +338,10 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 
 ## 14. Open product details (not blockers)
 
-1. Exact dollar prices and final public names. Allotment placeholders (Basic 400 / Pro 800) and the **100 tokens/hour** base are in `token-pricing.md`. Band / overlay defaults are locked there as Owner-editable placeholders.
-2. How many hoists at open (model supports many; seed 1–3 for development).
-3. Whether a member is bound to a “home bay” or may book any hoist.
-4. Weekly vs monthly token reset.
+1. Exact dollar prices and final public names. Allotment placeholders (Basic **1000** / Premium **1500**) and the **100 tokens/hour** base are in `token-pricing.md`. Band / overlay defaults are locked there as Owner-editable placeholders.
+2. Hoist inventory is locked: **6 hoists**, exactly one shop hoist. **v1 = (A) Owner-only** on that bay. Members book the five customer bays. **(B) bumpable** is a later tweak.
+3. Whether a member is bound to a “home bay” (unlocked; any customer bay for now).
+4. Period reset cadence (monthly vs other) — allotments are per period; cadence still open.
 5. Public app hostname timing (`app.projectcar.ca` vs Tailscale-only until v2).
 
 Record decisions here when Ben makes them. Do not block v1 schema on them.

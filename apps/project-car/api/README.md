@@ -56,7 +56,7 @@ python -m app.seed          # upsert demo IDs; rebuild this week's sample bookin
 python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then seed
 ```
 
-`--reset` refreshes Basic / Pro placeholders (Weekly seed leftover is retired). Bookings are placed relative to **today** in `America/Edmonton` so a fresh DB always shows a live-looking week. Reserve amounts are computed from duration × band × overlay (`America/Regina`).
+`--reset` refreshes Basic **1000** / Premium **1500** placeholders (Weekly / Pro seed leftovers are retired; Pro members move to Premium). Seed creates **6 hoists** (5 customer bays + 1 Owner-only shop hoist). Bookings are placed relative to **today** in `America/Edmonton` so a fresh DB always shows a live-looking week. Reserve amounts are computed from duration × band × overlay (`America/Regina`). Shop work (`kind=shop`) does not reserve member tokens. Customers cannot book the shop hoist (v1 choice A).
 
 ## Endpoints
 
@@ -117,16 +117,17 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 ### Booking / token rules (spec §5)
 
 1. A hoist has at most one overlapping **confirmed** or **active** booking (`409 hoist_overlap`).
-2. Creating a booking **reserves** tokens (`booking_reserve`, negative) and starts `pending`. The API computes `reserved_tokens` from duration (`hours × 100 × band × overlay`) and ignores a client `tokens` field. The quote is stored on `booking.pricing_rule` and ledger `meta`.
+2. Creating a **customer** booking **reserves** tokens (`booking_reserve`, negative) and starts `pending`. The API computes `reserved_tokens` from duration (`hours × 100 × band × overlay`) and ignores a client `tokens` field. The quote is stored on `booking.pricing_rule` and ledger `meta`. Shop work (`kind=shop`) skips the ledger.
 3. Completing an active booking releases the reserve, then **debits** used tokens (`booking_debit`) and **refunds** any unused reserve (`booking_refund`).
 4. Cancel refunds remaining reserve. `member.token_balance` is a cached ledger sum — never changed without a row.
 5. Tier `included_tokens`, `booking_window_days`, and `max_simultaneous_bookings` are enforced in the API.
+6. Exactly one hoist may be `is_shop`. **v1 = (A) Owner-only** — customer bookings on that hoist return `400 shop_hoist_owner_only`. (B) bumpable is a later tweak.
 
 ## Domain
 
-Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`.
+Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work.
 
-Membership tier seed rows (Basic 400 / Pro 800) are placeholders only. Test fixtures still include Weekly.
+Membership tier seed rows (Basic 1000 / Premium 1500) are placeholders only. Two tiers in fixtures.
 
 ## Tests
 

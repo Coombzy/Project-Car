@@ -295,6 +295,29 @@ main.wide {
   margin-bottom: 0.45rem;
 }
 
+.hoist-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.pill-shop,
+.booking-chip-shop {
+  border-color: #4a5d7a;
+  color: #c9d6ea;
+}
+
+.pill-shop {
+  background: #161c28;
+}
+
 .pill {
   display: inline-block;
   border-radius: 999px;

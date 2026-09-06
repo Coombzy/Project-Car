@@ -38,6 +38,7 @@ Bands and overlay never replace the append-only ledger. Owner create (`POST /boo
 - Tier `included_tokens`, `booking_window_days`, and `max_simultaneous_bookings` stay enforced.
 - Overdue does **not** auto-charge money.
 - Two membership tiers in seed (not three). Allotments below.
+- **Six hoists** in seed. Exactly one is the **shop hoist** (`is_shop`). v1 choice **(A)** — Owner-only; customers cannot book it. See below.
 
 ---
 
@@ -47,10 +48,36 @@ Two tiers. One includes more tokens per period than the other. **Names and dolla
 
 | Placeholder name | `included_tokens` / period |
 |------------------|----------------------------|
-| Basic | **400** |
-| Pro | **800** |
+| Basic | **1000** |
+| Premium | **1500** |
 
-No third **Weekly** tier in this lock. Drop it from seed notes and seed tier rows. Owner can still add or rename tiers later in data — this is not a schema ban.
+Two tiers only. **Pro** and **Weekly** are retired names — rename Pro → Premium in seed and demo `tier_name` references. Owner can still add or rename tiers later in data — this is not a schema ban.
+
+---
+
+## Shop hoist priority (v1)
+
+Seed inventory: **6 hoists**. Exactly one is marked `is_shop` (the shop hoist — business / internal work). The other five are customer bays.
+
+Two clean rules were on the table:
+
+| | Rule | v1? |
+|---|---|---|
+| **(A)** | **Owner-only.** Customers cannot book the shop hoist at all. Only `kind=shop` (Owner) lands there. | **Yes — default** |
+| **(B)** | **Bumpable.** Customers may book the shop hoist when it is free; shop/business work can later override / displace those bookings (cancel + refund). | Later tweak only |
+
+**Recommended default is (A).** Why: five customer bays already exist; the sixth bay is for internal / business work. v1 should not invent bump, silent cancel, or refund-on-displace. Owner books shop work without competing with members. No public booking. No Stripe.
+
+**(B)** stays a possible later tweak if Ben wants overflow on the shop hoist. Do not implement bump/displace in v1.
+
+How (A) is encoded:
+
+1. `hoists.is_shop` — boolean. Seed and API allow **exactly one** shop hoist.
+2. `bookings.kind` — `customer` (default) or `shop`. `kind=shop` is the Owner-only shop-work path. It may omit `member_id` and does **not** reserve member tokens.
+3. Shop work (`kind=shop`) can only be created on the shop hoist.
+4. A **customer** booking on the shop hoist is rejected at create and at confirm (`400 shop_hoist_owner_only`). Customers use the five customer bays.
+
+Owner schedule shows the shop hoist and `kind=shop` chips so the week grid matches this rule. Re-seed notes: 6 bays + one Owner-only shop hoist.
 
 ---
 
@@ -173,9 +200,10 @@ Same 2-hour slot reserved **30 hours** ahead: overlay **1.25×** → `200 × 1.2
 
 ## Later (not v1)
 
-Member-to-member hoist time trades/offers: bookings should not be glued to one member forever (transferable booking or trade-offer entity). Design note only — do not design the trade system here, and do not put trades in v1 pricing rules.
+- **(B) bumpable shop hoist** — customer overflow on the shop hoist, with shop/business work able to override / displace (cancel + refund). Not v1.
+- Member-to-member hoist time trades/offers: bookings should not be glued to one member forever (transferable booking or trade-offer entity). Design note only — do not design the trade system here, and do not put trades in v1 pricing rules.
 
 ---
 
-**Approved by:** Ben (2026-09-06 GO: bands primary, overlay on top, UI shows the math; Member balance + booking is a primary customer surface. 2026-09-06 recall: `base_tokens = hours × 100`; two tiers, Basic 400 / Pro 800 placeholders.)  
+**Approved by:** Ben (2026-09-06 GO: bands primary, overlay on top, UI shows the math; Member balance + booking is a primary customer surface. 2026-09-06 recall: `base_tokens = hours × 100`. 2026-09-06 product lock: two tiers Basic **1000** / Premium **1500**; 6 hoists; shop hoist v1 = **(A) Owner-only**.)  
 **Maintained with:** `Docs/` in `Coombzy/Project-Car`

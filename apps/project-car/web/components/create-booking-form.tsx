@@ -15,15 +15,19 @@ type Props = {
 };
 
 export function CreateBookingForm({ members, hoists, weekStart, defaultStart, defaultEnd }: Props) {
+  const [kind, setKind] = useState<"customer" | "shop">("customer");
   const [memberId, setMemberId] = useState(members[0]?.id ?? "");
   const [startAt, setStartAt] = useState(defaultStart);
   const [endAt, setEndAt] = useState(defaultEnd);
   const [quote, setQuote] = useState<BookingQuote | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
+  const shopHoist = hoists.find((hoist) => hoist.is_shop);
+  const hoistChoices = kind === "shop" ? hoists.filter((hoist) => hoist.is_shop) : hoists.filter((hoist) => !hoist.is_shop);
 
   useEffect(() => {
-    if (!startAt || !endAt) {
+    if (kind === "shop" || !startAt || !endAt) {
       setQuote(null);
+      setQuoteError(null);
       return;
     }
     const controller = new AbortController();
@@ -61,7 +65,7 @@ export function CreateBookingForm({ members, hoists, weekStart, defaultStart, de
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [startAt, endAt, memberId]);
+  }, [startAt, endAt, memberId, kind]);
 
   const selected = members.find((member) => member.id === memberId);
   const rule = quote?.pricing_rule;
@@ -71,8 +75,21 @@ export function CreateBookingForm({ members, hoists, weekStart, defaultStart, de
       <input type="hidden" name="week" value={weekStart} />
       <div className="form-grid">
         <label>
+          Kind
+          <select name="kind" value={kind} onChange={(event) => setKind(event.target.value as "customer" | "shop")}>
+            <option value="customer">Customer</option>
+            <option value="shop">Shop work</option>
+          </select>
+        </label>
+        <label>
           Member
-          <select name="member_id" required value={memberId} onChange={(event) => setMemberId(event.target.value)}>
+          <select
+            name="member_id"
+            required={kind === "customer"}
+            value={kind === "shop" ? "" : memberId}
+            onChange={(event) => setMemberId(event.target.value)}
+          >
+            {kind === "shop" ? <option value="">Shop (no member)</option> : null}
             {members.map((member) => (
               <option key={member.id} value={member.id}>
                 {member.name} · {member.tier_name} · {member.token_balance} tok
@@ -82,10 +99,16 @@ export function CreateBookingForm({ members, hoists, weekStart, defaultStart, de
         </label>
         <label>
           Hoist
-          <select name="hoist_id" required defaultValue={hoists[0]?.id}>
-            {hoists.map((hoist) => (
+          <select
+            name="hoist_id"
+            required
+            defaultValue={kind === "shop" ? shopHoist?.id : hoistChoices[0]?.id}
+            key={kind}
+          >
+            {hoistChoices.map((hoist) => (
               <option key={hoist.id} value={hoist.id}>
-                {hoist.name} · {hoist.status}
+                {hoist.name}
+                {hoist.is_shop ? " · shop hoist · Owner-only" : ""} · {hoist.status}
               </option>
             ))}
           </select>
@@ -115,7 +138,12 @@ export function CreateBookingForm({ members, hoists, weekStart, defaultStart, de
           <input type="text" name="notes" placeholder="Optional" />
         </label>
       </div>
-      {rule ? (
+      {kind === "shop" ? (
+        <p className="muted">
+          Shop work is Owner-only on the shop hoist (v1 choice A). Customers
+          cannot book this bay. No member tokens reserved.
+        </p>
+      ) : rule ? (
         <div className="quote-preview">
           <p className="eyebrow">Reserve quote · America/Regina bands</p>
           <p className="quote-math">
