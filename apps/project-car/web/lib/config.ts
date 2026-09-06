@@ -12,18 +12,105 @@ export type ApiErrorBody = {
   };
 };
 
+export type Principal = {
+  role: string;
+  email: string;
+};
+
 export type WaitlistEntry = {
   id: string;
   name: string;
   email: string;
   phone: string | null;
   notes: string | null;
+  contacted_at: string | null;
   created_at: string;
 };
 
-export type Principal = {
-  role: string;
+export type MembershipTier = {
+  name: string;
+  display_name: string;
+  price: string;
+  included_tokens: number;
+  booking_window_days: number;
+  max_simultaneous_bookings: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Member = {
+  id: string;
+  name: string;
   email: string;
+  phone: string | null;
+  tier_name: string;
+  status: "active" | "suspended" | "banned" | "churned";
+  waiver_signed_at: string | null;
+  waiver_version: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  token_balance: string;
+  deposit_balance: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Booking = {
+  id: string;
+  member_id: string;
+  member_name: string;
+  hoist_id: string;
+  hoist_name: string;
+  start_at: string;
+  end_at: string;
+  status: "pending" | "confirmed" | "active" | "completed" | "overdue" | "cancelled";
+  reserved_tokens: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MemberDetail = Member & {
+  bookings: Booking[];
+};
+
+export type TokenTransaction = {
+  id: string;
+  member_id: string;
+  booking_id: string | null;
+  kind: string;
+  amount: string;
+  note: string | null;
+  created_at: string;
+};
+
+export type Hoist = {
+  id: string;
+  name: string;
+  location_label: string;
+  status: "available" | "occupied" | "maintenance" | "locked";
+  created_at: string;
+  updated_at: string;
+};
+
+export type HoistSnapshot = Hoist & {
+  current_booking: Booking | null;
+};
+
+export type MemberAtRisk = {
+  id: string;
+  name: string;
+  email: string;
+  tier_name: string;
+  token_balance: string;
+};
+
+export type Dashboard = {
+  hoists: HoistSnapshot[];
+  today_bookings: Booking[];
+  waitlist_count: number;
+  token_at_risk: MemberAtRisk[];
 };
 
 export class ShopApiError extends Error {

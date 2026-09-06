@@ -3,13 +3,26 @@ import Link from "next/link";
 
 import { logoutAction } from "../app/logout-action";
 
+const NAV = [
+  { href: "/", current: "home", label: "Dashboard" },
+  { href: "/schedule", current: "schedule", label: "Schedule" },
+  { href: "/members", current: "members", label: "Members" },
+  { href: "/hoists", current: "hoists", label: "Hoists" },
+  { href: "/waitlist", current: "waitlist", label: "Waitlist" },
+  { href: "/tiers", current: "tiers", label: "Tiers" },
+] as const;
+
+export type OwnerSection = (typeof NAV)[number]["current"];
+
 export function OwnerShell({
   email,
   current,
+  wide,
   children,
 }: {
   email?: string;
-  current: "home" | "waitlist";
+  current: OwnerSection;
+  wide?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -17,18 +30,18 @@ export function OwnerShell({
       <header className="topbar">
         <div className="brand">
           <strong>Project Car</strong>
-          <span>Shop OS · Owner</span>
+          <span>Shop OS · Owner demo</span>
         </div>
         <nav className="nav">
-          <Link href="/" aria-current={current === "home" ? "page" : undefined}>
-            Dashboard
-          </Link>
-          <Link
-            href="/waitlist"
-            aria-current={current === "waitlist" ? "page" : undefined}
-          >
-            Waitlist
-          </Link>
+          {NAV.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={current === item.current ? "page" : undefined}
+            >
+              {item.label}
+            </Link>
+          ))}
           {email ? <span className="identity">{email}</span> : null}
           <form action={logoutAction}>
             <button className="ghost" type="submit">
@@ -37,7 +50,11 @@ export function OwnerShell({
           </form>
         </nav>
       </header>
-      <main>{children}</main>
+      <div className="demo-banner">
+        Demo shop OS — sample members, hoists, and bookings so you can walk the
+        product. The shop is not open. This is not live pricing or payment.
+      </div>
+      <main className={wide ? "wide" : undefined}>{children}</main>
     </div>
   );
 }

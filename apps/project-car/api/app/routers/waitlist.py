@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+from uuid import UUID
+
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -17,7 +20,7 @@ def create_waitlist_entry(
     session: DbSession,
     settings: AppSettings,
 ) -> WaitlistEntryOut:
-    """Public. Persist a waitlist row. Does not require login."""
+    """Public. Persist a waitlist row. No Owner cookie or bearer token."""
     if not settings.pc_waitlist:
         raise HTTPException(
             status_code=404,
@@ -63,3 +66,16 @@ def list_waitlist_entries(
         select(WaitlistEntry).order_by(WaitlistEntry.created_at.desc())
     ).all()
     return [WaitlistEntryOut.model_validate(row) for row in rows]
+
+
+@router.post("/waitlist/{entry_id}/contacted", response_model=WaitlistEntryOut)
+def mark_waitlist_contacted(entry_id: UUID, session: DbSession, _owner: Owner) -> WaitlistEntryOut:
+    entry = session.get(WaitlistEntry, entry_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Waitlist entry not found."})
+    if entry.contacted_at is None:
+        entry.contacted_at = datetime.now(timezone.utc)
+        session.add(entry)
+        session.flush()
+        session.refresh(entry)
+    return WaitlistEntryOut.model_validate(entry)

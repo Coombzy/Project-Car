@@ -79,6 +79,7 @@ a:hover {
 .nav {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 
@@ -229,31 +230,217 @@ th {
   max-width: 28ch;
 }
 
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--bg-input);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 0.7rem 0.75rem;
+  font: inherit;
+}
+
+select:focus,
+textarea:focus {
+  outline: 1px solid var(--accent);
+}
+
+h2 {
+  margin: 1.6rem 0 0.7rem;
+  font-size: 1.15rem;
+}
+
+h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+main.wide {
+  width: min(1240px, calc(100% - 2rem));
+}
+
+.demo-banner,
+.banner.demo {
+  border: 1px solid #5a4a2e;
+  background: #241c12;
+  color: #e6d3b0;
+  padding: 0.7rem 1.2rem;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.banner.demo {
+  border-radius: 8px;
+  margin: 0 0 1rem;
+}
+
+.hoist-grid,
+.tier-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.9rem;
+}
+
+.hoist-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.45rem;
+}
+
+.pill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.pill-available,
+.pill-active,
+.pill-completed {
+  border-color: #3f5340;
+  color: #c5d6b8;
+  background: #1a2218;
+}
+
+.pill-confirmed,
+.pill-occupied {
+  border-color: #6a5734;
+  color: #e6d3b0;
+  background: #241c12;
+}
+
+.pill-pending,
+.pill-locked {
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+.pill-maintenance,
+.pill-cancelled,
+.pill-overdue,
+.pill-banned,
+.pill-suspended {
+  border-color: #6d322b;
+  color: #f0c8c2;
+  background: #2a1614;
+}
+
+.pill-churned {
+  border-color: var(--line);
+}
+
+.week-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0 0 1rem;
+}
+
+.week-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-elev);
+}
+
+.week-grid {
+  min-width: 980px;
+  margin: 0;
+}
+
+.week-grid th,
+.week-grid td {
+  min-width: 120px;
+  vertical-align: top;
+}
+
+.week-grid th:first-child,
+.week-grid td:first-child,
+.week-grid tbody th {
+  min-width: 110px;
+  position: sticky;
+  left: 0;
+  background: #121418;
+}
+
+.week-grid .is-today {
+  background: rgba(196, 165, 116, 0.08);
+}
+
+.booking-chip {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.45rem 0.5rem;
+  margin-bottom: 0.45rem;
+  background: #101217;
+  font-size: 0.82rem;
+}
+
+.booking-chip strong {
+  display: block;
+}
+
+.chip-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+}
+
+.chip-actions button {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.7rem 1rem;
+}
+
+.form-grid label,
+.stack-form label {
+  margin-top: 0;
+}
+
 @media (max-width: 720px) {
   .topbar {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  table,
-  thead,
-  tbody,
-  th,
-  td,
-  tr {
+  table:not(.week-grid),
+  table:not(.week-grid) thead,
+  table:not(.week-grid) tbody,
+  table:not(.week-grid) th,
+  table:not(.week-grid) td,
+  table:not(.week-grid) tr {
     display: block;
   }
 
-  thead {
+  table:not(.week-grid) thead {
     display: none;
   }
 
-  td {
+  table:not(.week-grid) td {
     border-bottom: none;
     padding: 0.25rem 0;
   }
 
-  tr {
+  table:not(.week-grid) tr {
     padding: 0.85rem 0;
     border-bottom: 1px solid var(--line);
   }

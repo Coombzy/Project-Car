@@ -347,6 +347,7 @@ class WaitlistEntry(Base):
     email: Mapped[str] = mapped_column(String(320), nullable=False)
     phone: Mapped[Optional[str]] = mapped_column(String(40))
     notes: Mapped[Optional[str]] = mapped_column(Text)
+    contacted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

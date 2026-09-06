@@ -1,39 +1,31 @@
-import { redirect } from "next/navigation";
-
 import { OwnerShell } from "../../components/owner-shell";
-import { ShopApiError } from "../../lib/config";
+import { handlePageError } from "../../lib/page";
 import { getMe, listWaitlist } from "../../lib/shop-api";
-import { clearSessionCookie } from "../../lib/session";
+import { formatShopDateTime } from "../../lib/time";
+import { markContactedAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-function formatWhen(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) {
-    return iso;
-  }
-  return new Intl.DateTimeFormat("en-CA", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "UTC",
-  }).format(date) + " UTC";
-}
-
-export default async function WaitlistPage() {
+export default async function WaitlistPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
   try {
+    const params = await searchParams;
     const [me, entries] = await Promise.all([getMe(), listWaitlist()]);
     return (
       <OwnerShell email={me.email} current="waitlist">
         <p className="eyebrow">GET /waitlist</p>
         <h1>Waitlist</h1>
         <p className="lede">
-          Public signups land here. Convert-to-member is later; this slice is
-          the Owner list.
+          Public signups land here. Convert-to-member is later; this slice can
+          mark someone contacted.
         </p>
+        {params.error ? <div className="banner error">{params.error}</div> : null}
         {entries.length === 0 ? (
           <div className="banner empty">
-            No one is on the waitlist yet. A public <code>POST /waitlist</code>{" "}
-            will show up here.
+            No one is on the waitlist yet. Seed demo rows or POST /waitlist.
           </div>
         ) : (
           <div className="card">
@@ -45,6 +37,7 @@ export default async function WaitlistPage() {
                   <th>Phone</th>
                   <th>Notes</th>
                   <th>Joined</th>
+                  <th>Contacted</th>
                 </tr>
               </thead>
               <tbody>
@@ -54,7 +47,17 @@ export default async function WaitlistPage() {
                     <td>{entry.email}</td>
                     <td>{entry.phone ?? "—"}</td>
                     <td className="notes">{entry.notes ?? "—"}</td>
-                    <td>{formatWhen(entry.created_at)}</td>
+                    <td>{formatShopDateTime(entry.created_at)}</td>
+                    <td>
+                      {entry.contacted_at ? (
+                        formatShopDateTime(entry.contacted_at)
+                      ) : (
+                        <form action={markContactedAction}>
+                          <input type="hidden" name="id" value={entry.id} />
+                          <button type="submit">Mark contacted</button>
+                        </form>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -64,21 +67,12 @@ export default async function WaitlistPage() {
       </OwnerShell>
     );
   } catch (error) {
-    if (error instanceof ShopApiError && error.status === 401) {
-      await clearSessionCookie();
-      redirect("/login?reason=session");
-    }
-    const message =
-      error instanceof ShopApiError ? error.message : "Could not load the waitlist.";
+    const message = await handlePageError(error);
     return (
       <OwnerShell current="waitlist">
         <p className="eyebrow">GET /waitlist</p>
         <h1>Waitlist</h1>
         <div className="banner error">{message}</div>
-        <p className="lede">
-          The Owner UI calls the shop API from the Next.js server. Check that
-          Postgres and uvicorn are running.
-        </p>
       </OwnerShell>
     );
   }
