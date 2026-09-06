@@ -21,7 +21,10 @@ export default async function FillPage({
         <p className="lede">
           Next-day open hours on customer bays only (shop hoist excluded). Discount
           is 10–25% from how empty tomorrow is — more open hours, higher discount.
-          Tokens only. Not a public price. The shop is not open.
+          Notices go to active members. This page is management UI (`ops.` when
+          claimed; `app.` is a temporary alias), not the projectcar.ca customer
+          app. No DNS cut here. Tokens only. Not a public price. The shop is not
+          open.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
         {params.notice ? <div className="banner empty">{params.notice}</div> : null}

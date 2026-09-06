@@ -91,7 +91,7 @@ Token balance + hoist booking is a **primary Member** page — not ops-only admi
 | **Owner / Staff** | Tiers, band / overlay / fill controls, overrides, at-risk, everyone else's ledger. Fill preview / dry-run / send lives here. | Intended **`ops.projectcar.ca`**. Live today via temporary alias `app.projectcar.ca`. Do not call this an Owner-only host. **No DNS cut in this PR.** |
 | **Member** | See their own balance, book / cancel within tier rules, see **band + overlay + fill + total** on their schedule when next-day openings apply. Fill **notify** targets members. | **Next:** **projectcar.ca**. **Today:** still `app.` `/member` (temporary alias). Not shipped on the customer host. |
 
-Member self-serve UI is **live on Doc demo and the temporary alias `https://app.projectcar.ca`** (`/member`, seed `ada.reyes@example.com`). Demo session cookie — **not OIDC**. The shop is not open. Do not claim Member UI is on projectcar.ca yet.
+Member self-serve UI is **live on Doc demo and the temporary alias `https://app.projectcar.ca`** (`/member`, seed `ada.reyes@example.com`). Demo session cookie — **not OIDC**. The shop is not open. Do not claim Member UI is on projectcar.ca yet. Fill controls stay on management (`ops.` intended; `app.` alias today). **No DNS cut in this slice.**
 
 ---
 
@@ -169,7 +169,7 @@ Owner can override the discount in that 10–25% band when previewing / sending.
 
 **When fill applies:** the booking window overlaps tomorrow's fill window **and** there are openings (or a published offer). Same-day and later-week slots stay `fill_multiplier = 1`. Shop work never takes fill (no tokens).
 
-Notify active members over a durable **notification outbox**. v1 email path: SMTP when `SMTP_HOST` is set, otherwise an in-process stub that records `sent`. SMS and push are stub adapters (`sms_not_configured` / `push_not_configured`) so Twilio / Inbox can plug in later. Owner UI can dry-run or send.
+Notify **active members** over a durable **notification outbox** (not the public brochure). v1 email path: SMTP when `SMTP_HOST` is set, otherwise an in-process stub that records `sent`. SMS and push are stub adapters (`sms_not_configured` / `push_not_configured`) so Twilio / Inbox can plug in later. Dry-run / send stays on **management** (`ops.` intended; `app.` temporary alias; Doc Shop OS `/fill` today). No DNS cut here. Do not ship fill UI or live prices on `projectcar.ca` Pages.
 
 ---
 

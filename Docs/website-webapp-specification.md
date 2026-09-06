@@ -97,6 +97,7 @@ Do not treat McKing as the brochure host plan. McKing remains the later hub for 
 - Planned private / extra hostnames (not live):
   - `cloud.` → `:8080` (Nextcloud)
   - `vault.` → `:8222` (Vaultwarden)
+  - Member routes on Doc Shop OS `/member` (temporary `app.` alias) are the existing demo, not a `projectcar.ca` customer app. Do not build the brochure / Pages customer app in the fill-gaps slice.
 
 ---
 
