@@ -4,7 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationError, field_validator
 
 from app.models import (
     BookingKind,
@@ -270,19 +270,27 @@ class BookingOut(BaseModel):
 
     @classmethod
     def from_booking(cls, booking) -> BookingOut:
-        rule = booking.pricing_rule
+        hoist = getattr(booking, "hoist", None)
+        member = getattr(booking, "member", None)
+        raw = booking.pricing_rule
+        rule = None
+        if raw:
+            try:
+                rule = PricingRuleOut.model_validate(raw)
+            except ValidationError:
+                rule = None
         return cls(
             id=booking.id,
             member_id=booking.member_id,
-            member_name=booking.member.name if booking.member is not None else "Shop",
+            member_name=member.name if member is not None else "Shop",
             hoist_id=booking.hoist_id,
-            hoist_name=booking.hoist.name,
+            hoist_name=hoist.name if hoist is not None else "Unknown hoist",
             kind=booking.kind,
             start_at=booking.start_at,
             end_at=booking.end_at,
             status=booking.status,
             reserved_tokens=booking.reserved_tokens,
-            pricing_rule=PricingRuleOut.model_validate(rule) if rule else None,
+            pricing_rule=rule,
             notes=booking.notes,
             created_at=booking.created_at,
             updated_at=booking.updated_at,

@@ -4,17 +4,17 @@ import { MemberShell } from "../../../components/member-shell";
 import { MonthHeatmap } from "../../../components/month-heatmap";
 import { ScheduleToolbar } from "../../../components/schedule-toolbar";
 import { WeekHoistCalendars } from "../../../components/week-hoist-calendars";
-import { handleMemberPageError } from "../../../lib/page";
+import { handleMemberPageError, shopErrorMessage } from "../../../lib/page";
 import { getMemberFill, getMemberMe, getMemberSchedule } from "../../../lib/shop-api";
 import {
   addDays,
   calendarTodayIso,
   monthWindow,
-  naiveWindow,
   parseHoistParam,
   parseMonthParam,
   parseSlotParam,
   parseViewParam,
+  shopWindowQuery,
   slotEnd,
   sortHoists,
 } from "../../../lib/calendar";
@@ -41,11 +41,28 @@ export default async function MemberSchedulePage({
         : { start: weekStart, end: addDays(weekStart, 7) };
     const days = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
 
-    const [me, schedule, fill] = await Promise.all([
-      getMemberMe(),
+    let me;
+    try {
+      me = await getMemberMe();
+    } catch (error) {
+      const message = await handleMemberPageError(error);
+      return (
+        <MemberShell current="schedule" wide>
+          <p className="eyebrow">Your schedule</p>
+          <h1>Schedule</h1>
+          <div className="banner error">{message}</div>
+        </MemberShell>
+      );
+    }
+
+    let loadError: string | null = null;
+    const [schedule, fill] = await Promise.all([
       getMemberSchedule({
-        windowStart: naiveWindow(window.start),
-        windowEnd: naiveWindow(window.end),
+        windowStart: shopWindowQuery(window.start),
+        windowEnd: shopWindowQuery(window.end),
+      }).catch((error) => {
+        loadError = shopErrorMessage(error, "Could not load your schedule.");
+        return { hoists: [], bookings: [], occupancy: [] };
       }),
       getMemberFill().catch(() => null),
     ]);
@@ -69,6 +86,7 @@ export default async function MemberSchedulePage({
           this calendar.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
+        {loadError ? <div className="banner error">{loadError}</div> : null}
         {fill?.applies ? (
           <div className="banner empty">
             Tomorrow ({fill.target_date}, America/Regina) has {fill.open_hours} open
