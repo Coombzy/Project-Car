@@ -400,6 +400,7 @@ def _seed_chat_threads(session: Session, *, ada: Member, riley: Member) -> None:
                     sender_email=email,
                     sender_name=name,
                     body=body,
+                    seq=index + 1,
                     created_at=created_at,
                 )
             )

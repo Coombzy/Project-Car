@@ -25,6 +25,7 @@ from sqlalchemy import (
     Enum as SAEnum,
     ForeignKey,
     Index,
+    Integer,
     Numeric,
     String,
     Text,
@@ -681,7 +682,10 @@ class ChatMessage(Base):
     """One human message. No AI/Grok/Matrix sender in Chat v1."""
 
     __tablename__ = "chat_messages"
-    __table_args__ = (Index("ix_chat_messages_room_created", "room_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_chat_messages_room_created", "room_id", "created_at"),
+        Index("ix_chat_messages_room_seq", "room_id", "seq", unique=True),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
     room_id: Mapped[uuid.UUID] = mapped_column(
@@ -697,6 +701,7 @@ class ChatMessage(Base):
     sender_email: Mapped[str] = mapped_column(String(320), nullable=False)
     sender_name: Mapped[str] = mapped_column(String(200), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
+    seq: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

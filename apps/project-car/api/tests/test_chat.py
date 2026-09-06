@@ -152,4 +152,5 @@ def test_empty_message_rejected(client: TestClient) -> None:
         headers=AUTH,
         json={"body": "   "},
     )
-    assert blank.status_code == 422
+    assert blank.status_code == 400
+    assert blank.json()["error"]["code"] == "empty_message"

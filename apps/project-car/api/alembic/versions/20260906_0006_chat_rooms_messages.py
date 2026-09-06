@@ -52,15 +52,18 @@ def upgrade() -> None:
         sa.Column("sender_email", sa.String(length=320), nullable=False),
         sa.Column("sender_name", sa.String(length=200), nullable=False),
         sa.Column("body", sa.Text(), nullable=False),
+        sa.Column("seq", sa.Integer(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.ForeignKeyConstraint(["room_id"], ["chat_rooms.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["sender_member_id"], ["members.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_chat_messages_room_created", "chat_messages", ["room_id", "created_at"])
+    op.create_index("ix_chat_messages_room_seq", "chat_messages", ["room_id", "seq"], unique=True)
 
 
 def downgrade() -> None:
+    op.drop_index("ix_chat_messages_room_seq", table_name="chat_messages")
     op.drop_index("ix_chat_messages_room_created", table_name="chat_messages")
     op.drop_table("chat_messages")
     op.drop_index("ix_chat_participants_member_id", table_name="chat_participants")

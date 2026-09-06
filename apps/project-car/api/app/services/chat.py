@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.auth import Principal
@@ -57,7 +57,7 @@ def last_message_for(session: Session, room_id: UUID) -> ChatMessage | None:
     return session.scalars(
         select(ChatMessage)
         .where(ChatMessage.room_id == room_id)
-        .order_by(ChatMessage.created_at.desc())
+        .order_by(ChatMessage.seq.desc(), ChatMessage.created_at.desc())
         .limit(1)
     ).first()
 
@@ -121,34 +121,27 @@ def list_messages(
     after_id: UUID | None = None,
     limit: int = 100,
 ) -> tuple[list[ChatMessage], UUID | None]:
-    if after_id is not None:
-        after = session.get(ChatMessage, after_id)
-        if after is None or after.room_id != room_id:
-            raise ChatError(404, "not_found", "Cursor message not found.")
-        rows = list(
-            session.scalars(
-                select(ChatMessage)
-                .where(
-                    ChatMessage.room_id == room_id,
-                    ChatMessage.created_at > after.created_at,
-                )
-                .order_by(ChatMessage.created_at.asc())
-                .limit(limit)
-            ).all()
-        )
-        cursor = rows[-1].id if rows else after_id
-        return rows, cursor
-
-    newest = list(
+    rows = list(
         session.scalars(
             select(ChatMessage)
             .where(ChatMessage.room_id == room_id)
-            .order_by(ChatMessage.created_at.desc())
-            .limit(limit)
+            .order_by(ChatMessage.seq.asc(), ChatMessage.created_at.asc())
         ).all()
     )
-    rows = list(reversed(newest))
-    cursor = rows[-1].id if rows else None
+    if after_id is not None:
+        ids = [row.id for row in rows]
+        try:
+            start = ids.index(after_id) + 1
+        except ValueError:
+            raise ChatError(404, "not_found", "Cursor message not found.") from None
+        rows = rows[start:]
+    elif len(rows) > limit:
+        rows = rows[-limit:]
+    rows = rows[:limit]
+    if rows:
+        cursor = rows[-1].id
+    else:
+        cursor = after_id
     return rows, cursor
 
 
@@ -183,6 +176,7 @@ def post_message(
     else:
         raise ChatError(403, "forbidden", "Only Owner or a room member can send.")
 
+    next_seq = (session.scalar(select(func.max(ChatMessage.seq)).where(ChatMessage.room_id == room.id)) or 0) + 1
     row = ChatMessage(
         room_id=room.id,
         sender_role=sender_role,
@@ -190,6 +184,7 @@ def post_message(
         sender_email=sender_email,
         sender_name=sender_name,
         body=cleaned,
+        seq=next_seq,
     )
     session.add(row)
     room.updated_at = _now()
