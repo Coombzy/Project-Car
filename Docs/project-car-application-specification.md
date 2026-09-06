@@ -78,7 +78,7 @@ Identity rules:
    - Bookings: member (optional on shop work) + hoist + start/end + `kind` (`customer` / `shop`) + status (`pending` → `confirmed` → `active` → `completed` / `overdue` / `cancelled`).
    - Token ledger: append-only credits and debits. Booking reserve, debit, refund, monthly allocation, admin adjustment.
    - Owner dashboard: hoist status, today’s / this week’s bookings, token balances, waitlist count.
-   - **Parts** and **Tools** sections (locked IA; **placeholders now**): Tools = tool inventory, tool orders, customer/member tool requests, planned tool purchases. Member parts **purchasing** = placeholder now; **full Later**.
+   - **Parts** and **Tools** sections (locked IA; **placeholders now**): prefixes **B1–B6** (bay-resident kits; B6 = shop hoist, not SH), **TC** (crib checkout stub), **PT** (stock / PO / member requests). Member parts = **request desk** now; **full purchasing Later**. **CM** consumables later.
    - **Job board** (locked IA; **placeholder now**): shop chores; pays **tokens** on completion (**ledger**, not Stripe). Ops posts; members claim.
    - **Cameras** (locked IA; **placeholder now**): members = **one primary shop cam**. Ops = **all cams** + door entry logs + Frigate / AI collection. Not a claim that Frigate is wired on `main`.
 
@@ -97,7 +97,7 @@ Identity rules:
 - Job-board claim / complete / assign. **Placeholder** board with sample token-paid chores is in.
 - Fitness, Matrix, n8n.
 - Offline-first mobile client. v1 is a mobile-friendly PWA in the browser.
-- Full member parts purchasing (placeholder now; **Later**).
+- Full member parts purchasing (request desk now; **full Later**). Do not invent member commerce.
 
 ---
 
@@ -149,7 +149,7 @@ Promote the existing `ProjectCar-App/models.py` design. It is the best product a
 - `membership_tiers`
 - `members`
 - `hoists`
-- `tools` (schema now; Tools **section** is a build-breadth placeholder — inventory / orders / requests / planned purchases)
+- `tools` (schema now — `name` / `part_number`; Tools **section** is a build-breadth placeholder. Locked SKU prefixes B1–B6 / TC / PT live in demo UI; thin API/seed may follow without changing prefixes)
 - `bookings`
 - `token_transactions` (append-only)
 - `waitlist_entries` (shipped)
@@ -261,13 +261,13 @@ Staff-on-shift / ops shell. **LIVE** host **`ops.projectcar.ca`**. Temporary ali
 3. **Members** — table + detail (tier, tokens, waiver, bookings).
 4. **Waitlist** — convert-to-member is a later button; v1 can be “mark contacted”.
 5. **Tiers / settings** — edit allowances.
-6. **Parts (ops placeholder)** — shop/parts **purchasing tracker** (POs, incoming, vendor). Distinct from the member Parts desk. Not live purchasing.
-7. **Tools (ops placeholder)** — inventory, orders, member requests, planned purchases. IA only. Not on Member nav.
+6. **Parts (ops placeholder)** — **PT** stock list (qty / reorder) plus POs / incoming / vendor. Distinct from the member request desk. Not live purchasing.
+7. **Tools (ops placeholder)** — **B1–B6** bay-resident kit lists + **TC** crib checkout stub, plus orders / member requests / planned purchases. IA only. Not on Member nav. **B6** = shop hoist bay (not `SH`).
 8. **Job board (placeholder)** — sample shop upkeep with **token bounties**. Claim / assign / complete Later.
 9. **Cameras (placeholder)** — every camera tile, door entry logs, AI collection stubs. Not live Frigate.
 10. **Payments (ops placeholder)** — membership + parts billing stubs. AI tracks by default; humans on exceptions. Not Stripe.
 
-**Build-breadth placeholders (locked IA, not shipped):** **Parts**, **Tools** (inventory, orders, customer/member requests, planned purchases), **job board** (shop chores; tokens on completion via ledger; Ops posts; members claim), **cameras** (members = one primary shop cam; ops = all cams + door entry logs + Frigate / AI collection), **Payments** (membership + parts; AI default, human on exceptions). Member parts purchasing = placeholder now; full Later.
+**Build-breadth placeholders (locked IA, not shipped):** **Parts** (PT qty / reorder + POs), **Tools** (B1–B6 bay kits + TC crib + orders / requests / planned), **job board** (shop chores; tokens on completion via ledger; Ops posts; members claim), **cameras** (members = one primary shop cam; ops = all cams + door entry logs + Frigate / AI collection), **Payments** (membership + parts; AI default, human on exceptions). Member parts = request desk now; full purchasing Later. **CM** later.
 
 Ops screens exist under `apps/project-car/web` (dashboard, schedule, members, hoists, waitlist, tiers, plus Parts / Tools / Job board / Cameras / Payments placeholders). Member self-serve is **still** `/member` on the same Next.js app (balance + ledger) and `/member/schedule` (Bays 1–5, quote, book/cancel), plus customer-facing placeholders at `/member/parts`, `/member/jobs`, `/member/cameras` — reachable today at `https://ops.projectcar.ca/member` and `https://app.projectcar.ca/member` (temporary alias). Demo seed only — the shop is not open. Moving that customer surface to **projectcar.ca** is **Next** (§15). Do not claim it is shipped. See §16.
 
@@ -294,7 +294,7 @@ Mission Control does **not** own members, tokens, or hoist state.
 - Waitlist on the public site (**Done**).
 - Ops shop OS: tiers, members, hoists, bookings, token ledger, dashboard + schedule (**on `main`, live on Doc** `:3000`, **and** on **`https://ops.projectcar.ca`** plus the temporary alias `https://app.projectcar.ca`). Schedule UX is month heat-map + weekly per-hoist hours (#18); fail-soft + Regina ISO windows (#24).
 - Member self-serve is **live on Doc demo, `ops.`, and the temporary `app.` alias** (PR #14 / `9baf3c4`; public host honors `main` `58827f0` / PR #16) — session cookie, own balance, book / cancel on Bays 1–5. Still on shop-UI `/member`. Still demo cookies — **not OIDC**. Secure cookies required on HTTPS ops/app. The shop is not open.
-- **Build-breadth placeholders** (locked IA, demo UI on `main` as #21 — not live product): Parts, Tools, job board, cams, Payments, member surfaces. Calendar / fill are **shipped** (#18 / #20), not shells. **Ship-MVP cut** later drops unfinished / unnecessary features.
+- **Build-breadth placeholders** (locked IA, demo UI on `main` as #21 — not live product): Parts (PT), Tools (B1–B6 + TC), job board, cams, Payments, member surfaces. Calendar / fill are **shipped** (#18 / #20), not shells. **Ship-MVP cut** later drops unfinished / unnecessary features. **CM** later.
 - **Chat** is **planned**, not on `main` (§17).
 
 ### Next (not a v2 dump — Ben GO 2026-09-06 ~12:22)
@@ -308,7 +308,7 @@ Detail in §15. Summary:
 - **Chat (planned)** — dual surface: Member/customer (+ later Grok on projectcar.ca) and Ops admin. Human vs AI vs both still open. Do not invent an implementation. Apex sidecar stays deferred.
 - **Mission Control cockpit** still needs **Ben GO** before start. Do not start the cockpit from a docs PR.
 - Staff **OIDC** later (on **`ops.`**). Full Stripe later. Apex deferred. Do not dump the rest of v2 here.
-- Parts / job board / cameras **placeholders** are on `main` as #21 (§16). Do not start live Frigate from leftover placeholder work.
+- Parts / Tools / job board / cameras **placeholders** are on `main` as #21 (§16). Tools / Parts lists use locked SKU prefixes (demo). Do not start live Frigate or QR checkout from leftover placeholder work.
 
 ### v2 (rest)
 
@@ -325,7 +325,7 @@ Detail in §15. Summary:
 
 ### Later still
 
-- Marketplace / eBay module (`pc.marketplace` off). Customer-facing parts **placeholder** is already on the Member UI; do not treat that as checkout.
+- Marketplace / eBay module (`pc.marketplace` off). Customer-facing parts **request desk** is already on the Member UI; do not treat that as checkout.
 - Job-board claim / complete / assign. Placeholder board with sample tasks is already on ops + Member UI.
 - Estate-sale product (separate app, shared patterns).
 - Fabrication calculators.
@@ -352,8 +352,8 @@ Reality as of 2026-09-06 ~14:10 America/Edmonton (`main` `91c547e`). Do not inve
 
 - **Public waitlist:** `POST /waitlist` on the shop API; Membership / Contact form posts to `https://api.projectcar.ca/waitlist` (`apps/website/html/waitlist.js`). CORS allowlist includes brochure origins (`projectcar.ca` / `www`), localhost, **`https://ops.projectcar.ca`**, and the temporary alias **`https://app.projectcar.ca`**. See `cors-origins.md`.
 - **Ops API** (`apps/project-car/api`): auth session, tiers, members, hoists, bookings (create / confirm / check-in / complete / cancel), append-only token ledger, dashboard snapshot, waitlist list + mark contacted.
-- **Ops web** (`apps/project-car/web`): dashboard, schedule (month heat-map + weekly per-hoist hours — #18; fail-soft + Regina ISO — #24), members, hoists, waitlist, tiers, fill (#20), plus Parts / Tools / Job board / Cameras / Payments **placeholders** (#21). Demo seed only. **LIVE** on `ops.`; temporary `app.` alias still up. Placeholders are not live purchasing, inventory, Frigate, or Stripe.
-- **Member self-serve** (`/member/me`, `/member/hoists`, `/member/schedule`): session cookie, own balance + ledger, quote + book/confirm/cancel on customer bays. **Live on Doc demo, `https://ops.projectcar.ca`, and the temporary alias `https://app.projectcar.ca`.** Demo seed: `ada.reyes@example.com`. Shop hoist bay stays Owner-only. Customer-facing placeholders: `/member/parts`, `/member/jobs`, `/member/cameras` (primary camera only).
+- **Ops web** (`apps/project-car/web`): dashboard, schedule (month heat-map + weekly per-hoist hours — #18; fail-soft + Regina ISO — #24), members, hoists, waitlist, tiers, fill (#20), plus Parts / Tools / Job board / Cameras / Payments **placeholders** (#21; Tools / Parts deepened with locked SKU prefixes). Demo seed only. **LIVE** on `ops.`; temporary `app.` alias still up. Placeholders are not live purchasing, QR checkout, Frigate, or Stripe.
+- **Member self-serve** (`/member/me`, `/member/hoists`, `/member/schedule`): session cookie, own balance + ledger, quote + book/confirm/cancel on customer bays. **Live on Doc demo, `https://ops.projectcar.ca`, and the temporary alias `https://app.projectcar.ca`.** Demo seed: `ada.reyes@example.com`. Shop hoist bay stays Owner-only. Customer-facing placeholders: `/member/parts` (request desk — PT / TC, not commerce), `/member/jobs`, `/member/cameras` (primary camera only). No member Tools nav.
 - **Shop Postgres** in `infra/compose` (API is not a compose service).
 - **Live API edge:** `api.projectcar.ca` → Doc `:8000`. Stay-up is LaunchAgent `com.projectcar.shop-api` (KeepAlive) — `api-stay-up.md`. **Lead owns Doc `:8000`.** Public `GET /health` **200**.
 - **Live shop UI edge:** **`ops.projectcar.ca` LIVE** at the edge (2026-09-06 ~12:55) — Zone Cloudflare tunnel v8 hostname `ops` → `http://127.0.0.1:3000`. Public `/` → `Location: https://ops.projectcar.ca/login` (no localhost hop); `/login` **200**. KeepAlive `com.projectcar.shop-web` runs **`next start`** (not `next dev`). Checkout through `91c547e` (PR #24). Temporary alias `app.projectcar.ca` still live on the same origin — **not removed**. Some clients still have local DNS cache for `ops.`.
@@ -429,7 +429,7 @@ Notify members of leftover hours (email / push / SMS) with a **10–25%** discou
 
 ### Build-breadth IA (now) vs ship-MVP cut (later)
 
-Placeholders now (even rough): Parts, Tools, job board, cams, calendar / fill, member surfaces, Payments. At public MVP release, cut unfinished / unnecessary features. Full member parts purchasing is **Later**. Chat is planned (§17) — do not treat it as a shipped placeholder.
+Placeholders now (even rough): Parts (PT), Tools (B1–B6 + TC), job board, cams, calendar / fill, member surfaces, Payments. At public MVP release, cut unfinished / unnecessary features. Full member parts purchasing is **Later**. **CM** later. Chat is planned (§17) — do not treat it as a shipped placeholder. Do not invent Chat mode from an inventory slice.
 
 ### Still held / deferred
 
@@ -451,15 +451,28 @@ Additive locks. Do **not** rewrite §15 calendar / fill / host-migration work. N
 
 **Ship-MVP cut (later gate):** before a public MVP, cut unfinished and unnecessary features. Do not ship every placeholder as the public product.
 
+### Inventory prefixes (LOCKED — Ben + Chief)
+
+SKU shape: `PREFIX-CATEGORY-NNN`. Category may include extra hyphen segments (`PT-OIL-5W30-012`).
+
+| Prefix | What | Behavior now |
+|--------|------|----------------|
+| **B1–B6** | Resident bay hand-tool kits | One kit per hoist/bay. Tools stay on the cart. **B6 = shop hoist bay** — same B-scheme as other bays. **Never `SH`.** |
+| **TC** | Tool-crib specialty tools | Checkout / return / overdue stub. Not bay-resident. |
+| **PT** | Parts inventory | Stock qty, reorder point, POs, member requests. |
+| **CM** | Consumables | **Later.** Prefix reserved. Trivial stub note only — do not build a full CM desk. |
+
+Bay-resident vs crib vs parts: B-prefix tools do **not** check out through the crib. TC tools do. PT is shop stock, not a tool checkout and not member commerce. Demo SKUs in the web UI (`apps/project-car/web/lib/inventory.ts`) are labeled placeholder. Existing API `tools` table (`name` / `part_number`) stays schema-only until a thin seed/API is worth it — do not change prefixes when it lands.
+
 ### Parts — two surfaces
 
-- **Member / customer** (`/member/parts` on `ops.` / temporary `app.`): temporary desk so people can see what parts purchasing is about. Not checkout.
-- **Ops** (`/parts`): shop/parts **purchasing tracker** (POs, incoming, vendor, shop stock vs member request). Distinct from the member catalog.
+- **Member / customer** (`/member/parts` on `ops.` / temporary `app.`): **request desk** for a PT stock line or a TC crib tool. Not a catalog, not checkout, not eBay. Bay kits (B1–B6) stay on the hoist — members do not shop those.
+- **Ops** (`/parts`): **PT** list (qty / reorder) plus POs / incoming / vendor, shop stock vs member request. Distinct from the member desk.
 - Full purchase + eBay stay **Later**. Flag `pc.marketplace` stays **off**. See marketplace / eBay specs (do not implement from those files).
 
 ### Tools (ops only)
 
-`/tools` — four stubs: **inventory**, **orders**, **customer/member requests**, **planned purchases**. Breadth-first IA. Not live QR / hardware. Not on the Member nav.
+`/tools` — **Bay kits (B1–B6 lists)** + **Tool crib (TC checkout state stub)**, plus the existing **orders / customer-member requests / planned purchases** stubs. Breadth-first IA. Not live QR / hardware. Not on the Member nav. Members may request a crib tool from `/member/parts` only.
 
 ### Job board (token pay)
 
@@ -500,5 +513,5 @@ Locks:
 
 ---
 
-**Approved by:** Ben (2026-08-12 direction: site + waitlist, and shop membership / hoist booking; customers + employees later). 2026-09-06 host split: customer = projectcar.ca; management = **ops.projectcar.ca** (LIVE at edge ~12:55); `app.` = temporary alias (not removed). 2026-09-06 breadth-first placeholders: parts (member + ops), tools, job board (token bounty), cameras, payments (AI-exception). Full purchase, claim/complete, live NVR, and Stripe stay Later. Ship-MVP cut is a later gate. 2026-09-06 ~14:10: Docs reality sync to `main` `91c547e` — calendar #18, fill #20, placeholders #21, schedule harden #24 shipped; chat planned not live.
+**Approved by:** Ben (2026-08-12 direction: site + waitlist, and shop membership / hoist booking; customers + employees later). 2026-09-06 host split: customer = projectcar.ca; management = **ops.projectcar.ca** (LIVE at edge ~12:55); `app.` = temporary alias (not removed). 2026-09-06 breadth-first placeholders: parts (member + ops), tools, job board (token bounty), cameras, payments (AI-exception). Full purchase, claim/complete, live NVR, and Stripe stay Later. Ship-MVP cut is a later gate. 2026-09-06 ~14:10: Docs reality sync to `main` `91c547e` — calendar #18, fill #20, placeholders #21, schedule harden #24 shipped; chat planned not live. 2026-09-06 inventory lock: B1–B6 / TC / PT prefixes; B6 = shop hoist (not SH); CM later; member Parts = requests only.
 **Maintained with:** `Docs/` in `Coombzy/Project-Car`

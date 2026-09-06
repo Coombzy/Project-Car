@@ -1,5 +1,5 @@
+import { MemberRequestDesk } from "../../../components/member-request-desk";
 import { MemberShell } from "../../../components/member-shell";
-import { PartsCatalog } from "../../../components/parts-catalog";
 import { PlaceholderNote } from "../../../components/placeholder-note";
 import { handleMemberPageError } from "../../../lib/page";
 import { getMemberMe } from "../../../lib/shop-api";
@@ -29,18 +29,20 @@ function MemberPartsBody() {
   return (
     <>
       <p className="eyebrow">Customer-facing · placeholder</p>
-      <h1>Parts purchasing</h1>
+      <h1>Parts &amp; tool requests</h1>
       <p className="lede">
-        Buy parts through the shop when this desk is live. This page is a
-        temporary stand-in so you can see what it is about. Full checkout and
-        eBay stay Later. No Stripe. The shop is not open.
+        Ask ops for a shop-stock part (<code>PT-…</code>) or a specialty crib
+        tool (<code>TC-…</code>). This is a request desk — not a catalog, not
+        checkout, not eBay. Bay kits (B1–B6) stay on the hoist; members do not
+        shop those. No Stripe. The shop is not open.
       </p>
       <PlaceholderNote>
         Customer-facing placeholder on temporary <code>app.</code>{" "}
-        <code>/member</code> — migrates to projectcar.ca later. Sample cards
-        only. Not live purchasing.
+        <code>/member</code> — migrates to projectcar.ca later. Sample SKUs
+        only. Requests, not purchasing. Flag <code>pc.marketplace</code> stays
+        off.
       </PlaceholderNote>
-      <PartsCatalog audience="member" />
+      <MemberRequestDesk />
     </>
   );
 }

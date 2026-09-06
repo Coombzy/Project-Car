@@ -1,27 +1,6 @@
-/** Demo-only copy for Parts / Job board / Cameras. Not live APIs. */
+/** Demo-only copy for Job board / Cameras / Payments. Inventory SKUs live in inventory.ts. */
 
 export const PRIMARY_CAMERA_ID = "cam-shop-main";
-
-export const SAMPLE_PARTS = [
-  {
-    id: "part-caliper-bracket",
-    name: "Wilwood caliper bracket (sample)",
-    note: "Member/customer parts desk — not a catalog and not for sale.",
-    status: "Coming later",
-  },
-  {
-    id: "part-an-fittings",
-    name: "AN fittings assortment (sample)",
-    note: "Full purchase + eBay stay Later (pc.marketplace off).",
-    status: "Coming later",
-  },
-  {
-    id: "part-shop-towels",
-    name: "Shop towels — case (sample)",
-    note: "Placeholder so people can see what this surface is about.",
-    status: "Coming later",
-  },
-] as const;
 
 export const SAMPLE_JOBS = [
   {
@@ -78,51 +57,6 @@ export const SAMPLE_JOBS = [
     tokenBounty: 15,
     note: "Flatten and stack by the rear door.",
   },
-] as const;
-
-export const SAMPLE_OPS_PART_ORDERS = [
-  {
-    id: "po-1042",
-    what: "Shop-stock AN fittings restock",
-    vendor: "Summit (sample)",
-    for: "Shop inventory",
-    status: "Ordered (stub)",
-  },
-  {
-    id: "po-1043",
-    what: "Wilwood bracket — Ada Reyes",
-    vendor: "Local parts (sample)",
-    for: "Member request",
-    status: "Incoming (stub)",
-  },
-  {
-    id: "po-1044",
-    what: "Shop towels — 4 cases",
-    vendor: "Uline (sample)",
-    for: "Shop inventory",
-    status: "Received (stub)",
-  },
-] as const;
-
-export const SAMPLE_TOOL_INVENTORY = [
-  { id: "tool-1", name: "Snap-on 3/8 torque wrench", location: "Tool wall A", status: "In bay" },
-  { id: "tool-2", name: "Eastwood MIG 250", location: "Fab corner", status: "Available" },
-  { id: "tool-3", name: "OTC ball-joint press", location: "Bay 2 cart", status: "Checked out (stub)" },
-] as const;
-
-export const SAMPLE_TOOL_ORDERS = [
-  { id: "to-1", what: "Replacement 1/2 impact sockets", vendor: "Harbor (sample)", status: "Open (stub)" },
-  { id: "to-2", what: "Die grinder bits", vendor: "McMaster (sample)", status: "Shipped (stub)" },
-] as const;
-
-export const SAMPLE_TOOL_REQUESTS = [
-  { id: "tr-1", who: "Ada Reyes (sample)", what: "Need a flare-nut wrench set Friday", status: "New (stub)" },
-  { id: "tr-2", who: "Sam Okonkwo (sample)", what: "Borrow engine hoist Saturday", status: "Review (stub)" },
-] as const;
-
-export const SAMPLE_TOOL_PLANNED = [
-  { id: "tp-1", what: "Second 2-post arm pad set", note: "Budget later — not a PO", when: "Next quarter (stub)" },
-  { id: "tp-2", what: "Blast cabinet", note: "Member request cluster", when: "Unscheduled (stub)" },
 ] as const;
 
 export const SAMPLE_MEMBERSHIP_PAYMENTS = [

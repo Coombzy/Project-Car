@@ -908,6 +908,38 @@ main.wide {
   }
 }
 
+.inventory-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin: 0 0 1rem;
+}
+
+.kit-bay-toggle {
+  flex-wrap: wrap;
+}
+
+.sku {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.reorder-row td {
+  background: rgba(196, 92, 74, 0.08);
+}
+
+.cm-later {
+  margin-top: 1.4rem;
+}
+
+.request-form textarea {
+  min-height: 5.5rem;
+}
+
 /* Placeholder cameras / parts / jobs — not live NVR or purchasing */
 .camera-frame {
   display: flex;
