@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from uuid import UUID, uuid5
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.db import SessionLocal
@@ -337,7 +337,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         session,
         sam,
         kind=TokenTransactionKind.ADMIN_ADJUSTMENT,
-        amount=Decimal("-2"),
+        amount=Decimal("-3"),
         note="Demo: prior month usage (at-risk)",
     )
     apply_ledger(session, riley, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("2"), note="Demo Weekly allocation")
@@ -353,33 +353,102 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
 
     now = shop_now()
     today = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    yesterday = today - timedelta(days=1)
-    tomorrow = today + timedelta(days=1)
-    plus_two = today + timedelta(days=2)
-    plus_three = today + timedelta(days=3)
+    monday = today - timedelta(days=today.weekday())
 
-    _make_booking(
-        session,
-        key="yesterday-complete",
-        member=casey,
-        hoist=bay1,
-        start=_at(yesterday, 9),
-        end=_at(yesterday, 12),
-        status=BookingStatus.COMPLETED,
-        tokens=Decimal("1"),
-        notes="Completed alignment check",
-    )
-    _make_booking(
-        session,
-        key="yesterday-cancel",
-        member=sam,
-        hoist=bay3,
-        start=_at(yesterday, 14),
-        end=_at(yesterday, 16),
-        status=BookingStatus.CANCELLED,
-        tokens=Decimal("1"),
-        notes="Cancelled — parts delayed",
-    )
+    # Fill this calendar week so the Owner schedule is never an empty grid.
+    # Past days are completed/cancelled (reserve released). Today and future hold reserve.
+    week_slots = [
+        {
+            "key": "mon-casey",
+            "offset": 0,
+            "member": casey,
+            "hoist": bay1,
+            "start": 9,
+            "end": 12,
+            "tokens": Decimal("1"),
+            "future": BookingStatus.CONFIRMED,
+            "past": BookingStatus.COMPLETED,
+            "notes": "Alignment check",
+        },
+        {
+            "key": "tue-sam",
+            "offset": 1,
+            "member": sam,
+            "hoist": bay2,
+            "start": 10,
+            "end": 13,
+            "tokens": Decimal("1"),
+            "future": BookingStatus.CONFIRMED,
+            "past": BookingStatus.COMPLETED,
+            "notes": "Oil + inspection",
+        },
+        {
+            "key": "wed-ada",
+            "offset": 2,
+            "member": ada,
+            "hoist": bay3,
+            "start": 9,
+            "end": 12,
+            "tokens": Decimal("2"),
+            "future": BookingStatus.CONFIRMED,
+            "past": BookingStatus.COMPLETED,
+            "notes": "Turbo mock-up",
+        },
+        {
+            "key": "thu-ada",
+            "offset": 3,
+            "member": ada,
+            "hoist": bay2,
+            "start": 14,
+            "end": 18,
+            "tokens": Decimal("2"),
+            "future": BookingStatus.CONFIRMED,
+            "past": BookingStatus.COMPLETED,
+            "notes": "Long bay — exhaust",
+        },
+        {
+            "key": "fri-casey",
+            "offset": 4,
+            "member": casey,
+            "hoist": bay3,
+            "start": 9,
+            "end": 11,
+            "tokens": Decimal("1"),
+            "future": BookingStatus.PENDING,
+            "past": BookingStatus.COMPLETED,
+            "notes": "Pending Owner confirm",
+        },
+        {
+            "key": "sat-cancel",
+            "offset": 5,
+            "member": sam,
+            "hoist": bay3,
+            "start": 14,
+            "end": 16,
+            "tokens": Decimal("1"),
+            "future": BookingStatus.CANCELLED,
+            "past": BookingStatus.CANCELLED,
+            "notes": "Cancelled — parts delayed",
+        },
+    ]
+
+    for slot in week_slots:
+        day = monday + timedelta(days=slot["offset"])
+        if day == today:
+            continue
+        status = slot["past"] if day < today else slot["future"]
+        _make_booking(
+            session,
+            key=slot["key"],
+            member=slot["member"],
+            hoist=slot["hoist"],
+            start=_at(day, slot["start"]),
+            end=_at(day, slot["end"]),
+            status=status,
+            tokens=slot["tokens"],
+            notes=slot["notes"],
+        )
+
     _make_booking(
         session,
         key="today-active",
@@ -401,39 +470,6 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         status=BookingStatus.CONFIRMED,
         tokens=Decimal("2"),
         notes="Confirmed afternoon — turbo mock-up",
-    )
-    _make_booking(
-        session,
-        key="tomorrow-confirmed",
-        member=sam,
-        hoist=bay1,
-        start=_at(tomorrow, 10),
-        end=_at(tomorrow, 12),
-        status=BookingStatus.CONFIRMED,
-        tokens=Decimal("1"),
-        notes="Oil + inspection",
-    )
-    _make_booking(
-        session,
-        key="plus-two-pending",
-        member=casey,
-        hoist=bay3,
-        start=_at(plus_two, 9),
-        end=_at(plus_two, 11),
-        status=BookingStatus.PENDING,
-        tokens=Decimal("1"),
-        notes="Pending Owner confirm",
-    )
-    _make_booking(
-        session,
-        key="plus-three-confirmed",
-        member=ada,
-        hoist=bay2,
-        start=_at(plus_three, 14),
-        end=_at(plus_three, 18),
-        status=BookingStatus.CONFIRMED,
-        tokens=Decimal("2"),
-        notes="Long bay — exhaust",
     )
     session.flush()
 
@@ -497,11 +533,12 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
             session.add(row)
 
     session.flush()
+    booking_count = session.scalar(select(func.count()).select_from(Booking)) or 0
     return {
         "tiers": 3,
         "members": len(demo_members),
         "hoists": 3,
-        "bookings": 7,
+        "bookings": int(booking_count),
         "waitlist": len(waitlist),
     }
 
