@@ -70,6 +70,12 @@ a:hover {
   text-transform: uppercase;
 }
 
+.identity {
+  color: var(--muted);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.72rem;
+}
+
 .nav {
   display: flex;
   align-items: center;

@@ -29,7 +29,7 @@ export function OwnerShell({
           >
             Waitlist
           </Link>
-          {email ? <span className="eyebrow">{email}</span> : null}
+          {email ? <span className="identity">{email}</span> : null}
           <form action={logoutAction}>
             <button className="ghost" type="submit">
               Sign out
