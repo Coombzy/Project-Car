@@ -153,9 +153,7 @@ export function CreateBookingForm({ members, hoists, weekStart, defaultStart, de
           </p>
           <p className="muted">
             {tokensLabel(rule.base_tokens)} base · {rule.band_label} · {rule.overlay_label}
-            {rule.fill_multiplier && rule.fill_multiplier !== "1"
-              ? ` · ${rule.fill_label ?? "Fill"} ${rule.fill_discount_pct}%`
-              : ""}
+            {rule.fill_multiplier && rule.fill_multiplier !== "1" ? ` · ${rule.fill_label ?? "Fill"}` : ""}
           </p>
           {quote?.token_balance !== null && quote?.token_balance_after !== null ? (
             <p className="muted">
