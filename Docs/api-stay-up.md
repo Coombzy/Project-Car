@@ -5,7 +5,7 @@
 **Public URL:** https://api.projectcar.ca  
 **Related:** `cors-origins.md`, `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
 
-Keep the Shop API reachable. This is operational reality, not a product-lock rewrite. Lead may later sync product-lock wording to match.
+Keep the Shop API reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
 ---
 
@@ -13,14 +13,16 @@ Keep the Shop API reachable. This is operational reality, not a product-lock rew
 
 | Piece | Reality (as of this repo) |
 |-------|---------------------------|
-| Process | **uvicorn** FastAPI app from `apps/project-car/api` (`app.main:app`) |
-| Documented bind | `127.0.0.1:8000` — `uvicorn app.main:app --reload --host 127.0.0.1 --port 8000` |
+| Process | **uvicorn** FastAPI app from `apps/project-car/api` (`app.main:app`) on `:8000` |
+| **Primary stay-up** | LaunchAgent **`com.projectcar.shop-api`** on Doc (`KeepAlive`) |
+| Wrapper | `~/hermes-tools/mission-control/shop-api/run-shop-api.sh` → uvicorn `:8000` |
+| Manual / local bind | `127.0.0.1:8000` — `uvicorn app.main:app --reload --host 127.0.0.1 --port 8000` (dev only; KeepAlive is how prod-on-Doc stays up) |
 | Working tree on Doc | `~/src/Project-Car` |
 | Compose | `infra/compose/compose.yaml` is **shop Postgres only** (`shop-postgres`). It does **not** start the API. Do not invent an API container. |
 | Edge | Host **cloudflared** on Doc (same pattern as the brochure). Zone owns the `api.projectcar.ca` hostname / DNS rule. Confirm the live Cloudflare mapping; do not assume a compose service. |
 | Brochure site | Separate stack (`apps/website` / Doc `~/hermes-tools/project-car-website` on `:8088`). Not this process. |
 
-There is no API systemd/launchd unit or API compose service in this repo.
+The LaunchAgent lives on **Doc**, not in this git repo. Compose still does not start the API. KeepAlive is the primary stay-up for process crashes / logout-style exits. **Lid-close / sleep still kills the Mac** — launchd cannot outrun sleep.
 
 ---
 
@@ -32,7 +34,7 @@ Doc is a MacBook (M1 Max). Lid close or host sleep stops or stalls origin proces
 
 A Cloudflare **403** HTML challenge (`cf-mitigated: challenge`) is edge/WAF, not lid-close. Zone owns that. Do not treat it as “restart uvicorn.”
 
-Mitigation already on Doc: Amphetamine + plugged-in no-sleep (`doc-software-baseline.md`). That is a host habit, not a guarantee. If the lid is closed, the public API is down until Doc is awake and uvicorn is running again.
+Mitigation already on Doc: Amphetamine + plugged-in no-sleep (`doc-software-baseline.md`) plus LaunchAgent KeepAlive once the host is awake. Those are not a guarantee. If the lid is closed, the public API is down until Doc is awake; KeepAlive should then start the wrapper again. If local `:8000` is still dead after wake, Lead checks `com.projectcar.shop-api` + `run-shop-api.sh`.
 
 ---
 
@@ -67,7 +69,7 @@ Alerts can come from anyone who sees a 502 or a failed waitlist submit. **Recove
 
 1. **Public health.** `GET https://api.projectcar.ca/health` → 200? If yes, stop. 403 challenge page → Zone (not Lead).
 2. **Doc awake?** Lid closed / sleep → 502. Wake Doc (Amphetamine session if it should stay up).
-3. **Lead — origin.** On Doc, confirm uvicorn in `apps/project-car/api` and `GET http://127.0.0.1:8000/health`. If local health fails, Lead brings uvicorn back. Do not hand that restart to Garage or Zone.
+3. **Lead — origin.** On Doc, `GET http://127.0.0.1:8000/health`. If it fails after wake, Lead checks LaunchAgent `com.projectcar.shop-api` (KeepAlive) and `~/hermes-tools/mission-control/shop-api/run-shop-api.sh`. Do not hand that restart to Garage or Zone.
 4. **Postgres (only if origin errors on DB).** `docker compose -f infra/compose/compose.yaml` is the shop DB, not the API process. Lead checks it if uvicorn is up but requests 5xx.
 5. **Zone — edge.** Local `:8000` health OK but public 502 / DNS miss → Zone checks host cloudflared + the `api.projectcar.ca` hostname rule. Lead does not edit Cloudflare.
 6. **Garage — after.** When public health is 200, Garage may re-run brochure waitlist e2e. Form only. No process restarts.

@@ -11,7 +11,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 
 ---
 
-## Start here (product lock, 2026-08-12)
+## Start here (product lock, 2026-09-06)
 
 | Doc | What |
 |-----|------|
@@ -29,6 +29,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 
 | Doc | What |
 |-----|------|
+| [STATUS.md](STATUS.md) | What’s live, what’s next, locks — start here for 2026-09-06 reality |
 | [website-improvements.md](website-improvements.md) | P0–P4 backlog for projectcar.ca (tick status as work ships) |
 | [nextcloud-progress.md](nextcloud-progress.md) | Live hub status on Doc (no secrets) |
 | [doc-software-baseline.md](doc-software-baseline.md) | Doc M1 Max apps / settings |

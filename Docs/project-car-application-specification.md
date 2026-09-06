@@ -1,6 +1,6 @@
 # Project Car Application Specification
 
-**Last Updated:** 2026-08-12  
+**Last Updated:** 2026-09-06  
 **Status:** Living spec (v1)  
 **Owner:** Ben (decisions) / Doc + Porsche (maintenance)  
 **Audience:** Anyone implementing the Project Car product  
@@ -26,13 +26,13 @@ It is **not** Mission Control. Mission Control is Ben’s private cockpit over N
 
 | Host | Audience | Role |
 |------|----------|------|
-| `projectcar.ca` / `www` | Public | Brochure, membership story, contact, waitlist, Apex chat |
-| `app.projectcar.ca` | Owner now; Staff + Members later | Shop OS: members, hoists, bookings, tokens |
-| `api.projectcar.ca` | App + later integrations | FastAPI. Not public without auth |
+| `projectcar.ca` / `www` | Public | Brochure, membership story, contact, waitlist. Apex chat **deferred** |
+| `app.projectcar.ca` | Owner now; Staff + Members later | Shop OS: members, hoists, bookings, tokens — **not live yet** |
+| `api.projectcar.ca` | Public waitlist + authenticated Owner API | FastAPI. Tunnel → Doc `:8000` |
 
 Private Mission Control stays off the marketing domain (Tailscale / Access / a private hostname). Vaultwarden and Nextcloud stay off `projectcar.ca` apex.
 
-**Today (2026-08-12):** the public site is already a multi-page brochure (Home, About, The Shop, Membership, Roadmap, Chat, Contact) plus Apex on the contact/chat pages. There is no authenticated app yet.
+**Today (2026-09-06):** the public site is a multi-page brochure plus a real waitlist form. Owner shop OS (API + Next.js) is on `main`. Apex public chat is deferred (Ben). See §13 for shipped vs remaining.
 
 ---
 
@@ -62,8 +62,8 @@ Identity rules:
 
 1. **Public site**
    - Keep the existing brochure pages.
-   - Add a real **waitlist** (name, email, optional phone, optional notes, timestamp). Persist in the app database. Do not pretend the contact form is a CRM.
-   - Keep Apex as a public chat helper; it must not become an admin console.
+   - **Waitlist (shipped):** name, email, optional phone, optional notes, timestamp. Persist in the app database. Do not pretend the contact form is a CRM.
+   - Public chat (Apex) is **deferred** (Ben). If revived later, it must not become an admin console.
 
 2. **Shop OS (Owner only)**
    - Membership tiers (seed: Basic, Pro, Weekly — names and prices are data, not hardcoded copy).
@@ -127,7 +127,7 @@ Promote the existing `ProjectCar-App/models.py` design. It is the best product a
 - `tools` (schema now, UI later)
 - `bookings`
 - `token_transactions` (append-only)
-- `waitlist_entries` (**new** — not in the current model)
+- `waitlist_entries` (shipped)
 - `incidents` (Owner can file; no member UI)
 - `billing_transactions` (manual records only)
 - `access_events` (schema now; no readers in v1)
@@ -162,7 +162,7 @@ Do not share this database with Nextcloud.
 | Auth v1 | Owner session (httpOnly cookie) against the API |
 | Auth later | OIDC for Staff/Member |
 | Mobile | Responsive PWA. No Capacitor/RN until a real offline field loop exists |
-| Hosting now | Docker on Doc, Cloudflare Tunnel for public site; app may stay Tailscale-only until ready |
+| Hosting now | Brochure: live Doc tunnel, **target Cloudflare Pages**. Shop API: `api.projectcar.ca` tunnel → Doc `:8000`. Owner UI not live on `app.` yet |
 | Hosting later | McKing |
 
 UI calls **our API only**. The browser never holds Nextcloud admin credentials.
@@ -178,8 +178,8 @@ All authenticated routes require Owner (later: role-aware).
 | `POST` | `/auth/login` | Owner session |
 | `POST` | `/auth/logout` | Clear session |
 | `GET` | `/me` | Current principal |
-| `POST` | `/waitlist` | **Public.** Create waitlist entry |
-| `GET` | `/waitlist` | Owner list |
+| `POST` | `/waitlist` | **Public** (CORS). Create waitlist entry. No Owner cookie / bearer. |
+| `GET` | `/waitlist` | Owner list (auth required) |
 | `GET/POST` | `/tiers` | List / create tiers |
 | `PATCH` | `/tiers/{name}` | Edit price, tokens, window |
 | `GET/POST` | `/members` | List / create |
@@ -219,7 +219,7 @@ Owner-only shell:
 4. **Waitlist** — convert-to-member is a later button; v1 can be “mark contacted”.
 5. **Tiers / settings** — edit allowances.
 
-Reuse the intent of the old stubs (`HoistCard`, `BookingCalendar`, `DashboardMetrics`). Rebuild them against the real API; the current files are empty.
+Owner screens exist under `apps/project-car/web` (dashboard, schedule, members, hoists, waitlist, tiers). Demo seed only — the shop is not open.
 
 ---
 
@@ -239,10 +239,10 @@ Mission Control does **not** own members, tokens, or hoist state.
 
 ## 11. Phased delivery
 
-### v1 (this spec)
+### v1 (this spec — on `main`)
 
-- Waitlist on the public site.
-- Owner shop OS: tiers, members, hoists, bookings, token ledger, dashboard + week schedule.
+- Waitlist on the public site (**Done**).
+- Owner shop OS: tiers, members, hoists, bookings, token ledger, dashboard + week schedule (**on `main`**; harden + live on Doc still remaining).
 
 ### v2
 
@@ -276,15 +276,42 @@ Mission Control does **not** own members, tokens, or hoist state.
 
 ---
 
-## 13. Implementation notes for the first code slice
+## 13. Shop OS: shipped vs remaining
 
-When Phase 1 (code) starts:
+Reality as of 2026-09-06. Do not invent Stripe, “shop is open,” or a live `app.projectcar.ca` from this section.
 
-1. Real git working tree is `~/src/Project-Car` (this repo). Do not treat `~/Desktop/Project Car/` as the repo.
-2. Put the shop API + web under `apps/project-car/`.
-3. Keep the public site under `apps/website/` (move from `~/hermes-tools/project-car-website` when ready).
-4. Dedicated Postgres in `infra/compose`.
-5. First vertical slice: waitlist → member → hoist → booking → ledger → dashboard.
+### Shipped on `main` (PR #2 + #3)
+
+- **Public waitlist:** `POST /waitlist` on the shop API; Membership / Contact form posts to `https://api.projectcar.ca/waitlist` (`apps/website/html/waitlist.js`). CORS allowlist includes `projectcar.ca` / `www` / localhost. See `cors-origins.md`.
+- **Owner API** (`apps/project-car/api`): auth session, tiers, members, hoists, bookings (create / confirm / check-in / complete / cancel), append-only token ledger, dashboard snapshot, waitlist list + mark contacted.
+- **Owner web** (`apps/project-car/web`): dashboard, week schedule, members, hoists, waitlist, tiers. Demo seed only.
+- **Shop Postgres** in `infra/compose` (API is not a compose service).
+- **Live API edge:** `api.projectcar.ca` → Doc `:8000`. Stay-up is LaunchAgent `com.projectcar.shop-api` (KeepAlive) — `api-stay-up.md`.
+
+### Public waitlist vs authenticated Owner API
+
+| Surface | Auth | Who |
+|---------|------|-----|
+| `POST /waitlist` | **None.** Browser CORS. | Public brochure |
+| `GET /waitlist`, `/dashboard`, `/tiers`, `/members`, `/hoists`, `/bookings`, `/auth/*`, `/me` | Owner session or bearer | Ben / Owner UI |
+
+Do not put Owner cookies on the brochure. Do not require auth for the public waitlist POST.
+
+### Remaining
+
+- Owner booking **hardened + live** on Doc / `app.projectcar.ca`.
+- Cloudflare Pages cutover for the brochure (GO’d; blocked on CF ↔ GitHub auth). Shop API stays the lab tunnel.
+- Public chat (Apex) later — deferred (Ben), not P0.
+- Staff / Member login later (v2).
+- Payments later (v3). No Stripe now.
+- Mission Control cockpit **held** until Owner booking is merged **and** live on Doc.
+
+### Implementation notes
+
+1. Git worktree is `~/src/Project-Car`. Do not treat `~/Desktop/Project Car/` as the repo.
+2. `apps/project-car/` and `apps/website/` already exist. Do not “add” them as greenfield.
+3. Brochure live origin may still be `~/hermes-tools/project-car-website` until Pages.
+4. Stay-up / CORS details stay in `api-stay-up.md` and `cors-origins.md` — do not duplicate runbooks here.
 
 ---
 

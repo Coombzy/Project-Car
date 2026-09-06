@@ -1,6 +1,6 @@
 # Project Car Master Overview & Documentation Hierarchy
 
-**Last Updated:** 2026-08-16  
+**Last Updated:** 2026-09-06  
 **Owner:** Ben (decisions) / Porsche + Doc (maintenance)  
 **Audience:** Ben (Coombsy), Porsche, Lightning McKing, Doc Hudson  
 **Status:** Living document — map of the ecosystem. Product detail lives in child specs.
@@ -47,7 +47,7 @@ Orchestration: Hermes heartbeats + custom adapters + Discord. **No n8n.**
 
 | Tier | Machine | Role |
 |------|---------|------|
-| Hub (now) | **Doc** | Nextcloud 30, Vaultwarden, projectcar.ca origin |
+| Hub (now) | **Doc** | Nextcloud 30, Vaultwarden, current brochure origin, shop API tunnel (`api.projectcar.ca` → `:8000`) |
 | Hub (later) | **McKing** | Always-on Linux home for the same services + backups + GPU |
 | Travel client | **Porsche** | Ben’s laptop. Does **not** host Nextcloud |
 | Mobile edge | **Code Mater** | Phone |
@@ -65,7 +65,7 @@ Ben’s private Google replacement + cockpit.
 
 **Live:** Nextcloud (Files, Calendar, Talk, Deck, Forms, Photos, Passwords) + Vaultwarden on Doc.
 
-**To build:** a Next.js cockpit that reads Nextcloud APIs (health, calendar, tasks, agent heartbeat feed) and links out. Does not reimplement Nextcloud. Does not serve shop members.
+**To build (held):** a Next.js cockpit that reads Nextcloud APIs (health, calendar, tasks, agent heartbeat feed) and links out. Does not reimplement Nextcloud. Does not serve shop members. **Do not start the cockpit until Owner booking is merged and live on Doc.**
 
 Spec: `mission-control-architecture.md`.
 
@@ -75,9 +75,9 @@ Spec: `mission-control-architecture.md`.
 
 A 24/7 community automotive maker-space and the software around it.
 
-**Live:** [projectcar.ca](https://projectcar.ca) — brochure (Home, About, The Shop, Membership, Roadmap, Chat, Contact) + Apex chat.
+**Live:** [projectcar.ca](https://projectcar.ca) — brochure (Home, About, The Shop, Membership, Roadmap, Chat, Contact) + waitlist form → `https://api.projectcar.ca/waitlist`. Apex public chat is **deferred** (Ben). Brochure git SSOT is `apps/website/`; Pages cutover is GO’d but not done.
 
-**v1 to build:** waitlist on the public site, plus an Owner shop OS (membership tiers, members, hoist booking, token ledger, week schedule). Designed for customers and employees; only Ben logs in at first.
+**On `main` (PR #2 + #3):** Owner shop OS — membership tiers, members, hoist booking, append-only token ledger, week schedule + dashboard (`apps/project-car/api` + `web`). Only Ben logs in. Not claimed live on `app.projectcar.ca`.
 
 **Later:** member/staff login, payments, NFC, cameras, marketplace, fabrication tools.
 
@@ -115,13 +115,14 @@ Full: `integration-plan.md` and `platform-architecture.md`.
 |-----|--------|
 | `master-overview-specification.md` | This file |
 | `README.md` (this folder) | Index — start here for the full file list |
-| `platform-architecture.md` | Done (2026-08-12) |
-| `project-car-application-specification.md` | Done (2026-08-12) — was the gap |
-| `mission-control-architecture.md` | Rewritten (2026-08-12) |
-| `high-level-apps-and-business-specification.md` | Updated (2026-08-12) |
-| `integration-plan.md` | Updated (2026-08-12) |
-| `website-webapp-specification.md` | Updated (2026-08-12) |
-| `website-improvements.md` | Living backlog (2026-08-12) |
+| `STATUS.md` | One-pager — live / next / locks (2026-09-06) |
+| `platform-architecture.md` | Reality sync 2026-09-06 |
+| `project-car-application-specification.md` | Reality sync 2026-09-06 — shipped vs remaining |
+| `mission-control-architecture.md` | Rewritten (2026-08-12); cockpit held |
+| `high-level-apps-and-business-specification.md` | Reality sync 2026-09-06 |
+| `integration-plan.md` | Reality sync 2026-09-06 |
+| `website-webapp-specification.md` | Reality sync 2026-09-06 |
+| `website-improvements.md` | Living backlog (2026-09-06; Apex/waitlist ticks in PR #4) |
 | `nextcloud-progress.md` | Living hub status (refreshed 2026-08-16) |
 | `doc-software-baseline.md` | Refreshed 2026-08-16 |
 | `agent-profiles-specification.md` | Refreshed 2026-08-16 |
@@ -143,8 +144,8 @@ Full: `integration-plan.md` and `platform-architecture.md`.
 
 ## 9. Next steps
 
-1. Review these 2026-08-12 specs (docs hygiene pass 2026-08-16: index, retired stubs, live-ops refresh).
-2. Phase 1 code: shop waitlist + booking, then MC cockpit.
+1. Cloudflare Pages cutover for the brochure (blocked on CF ↔ GitHub auth). Shop API stays the lab tunnel.
+2. Owner booking hardened + live on Doc / `app.projectcar.ca`. Then — and only then — the MC cockpit.
 3. Expand `home-lab-specification.md` from the stub + live MC facts when convenient — not from the July skill draft.
 
 ---
