@@ -4,8 +4,8 @@ Self-hosted shop + personal cockpit for a community automotive maker-space.
 
 | Surface | What | Who |
 |---------|------|-----|
-| [projectcar.ca](https://projectcar.ca) | Public brochure + waitlist | Everyone |
-| `app.projectcar.ca` (planned) | Shop OS — members, hoists, bookings, tokens | Owner now; staff + members later |
+| [projectcar.ca](https://projectcar.ca) | Brochure + waitlist now; **future customer app** | Public / members later |
+| `app.projectcar.ca` (planned) | **Management** — Owner Shop OS (fill, hoists, ledgers) | Owner (staff later) |
 | Mission Control (private) | Cockpit over Nextcloud | Ben only |
 | Nextcloud / Vaultwarden | Files, calendar, tasks, passwords | Ben + agents |
 
