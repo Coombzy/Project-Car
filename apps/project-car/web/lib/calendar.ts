@@ -376,6 +376,13 @@ export function slotEnd(slot: string): string {
   return `${lookup.year}-${lookup.month}-${lookup.day}T${lookup.hour}:${lookup.minute}`;
 }
 
+/** Regina wall-clock instant as UTC ISO. FastAPI query datetimes accept this
+ * without naive/offset quirks (`+` in offsets also breaks URLSearchParams). */
+export function shopWindowQuery(isoDate: string, hour = 0): string {
+  return zonedDateTime(isoDate, hour, 0).toISOString();
+}
+
+/** @deprecated use shopWindowQuery — kept as an alias for existing call sites */
 export function naiveWindow(isoDate: string, hour = 0): string {
-  return `${isoDate}T${pad(hour)}:00:00`;
+  return shopWindowQuery(isoDate, hour);
 }

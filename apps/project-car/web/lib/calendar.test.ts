@@ -15,8 +15,10 @@ import {
   monthOf,
   monthWindow,
   overlapHours,
+  naiveWindow,
   parseShopInstant,
   parseHoistParam,
+  shopWindowQuery,
   parseMonthParam,
   parseSlotParam,
   parseViewParam,
@@ -64,6 +66,9 @@ describe("America/Regina bounds", () => {
     assert.equal(zonedDateTime("2026-09-08", 0).toISOString(), "2026-09-08T06:00:00.000Z");
     assert.equal(zonedDateTime("2026-09-08", 9).toISOString(), "2026-09-08T15:00:00.000Z");
     assert.equal(zonedDateTime("2026-01-15", 8).toISOString(), "2026-01-15T14:00:00.000Z");
+    assert.equal(shopWindowQuery("2026-09-08"), "2026-09-08T06:00:00.000Z");
+    assert.equal(naiveWindow("2026-09-08", 9), "2026-09-08T15:00:00.000Z");
+    assert.equal(shopWindowQuery("2026-09-08").includes("+"), false);
   });
 
   it("labels a UTC instant on the Regina calendar date", () => {
