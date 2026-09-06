@@ -22,12 +22,14 @@ from app.schemas import (
     HoistOut,
     MemberBookingCreate,
     MemberBookingQuoteRequest,
+    MemberDashboardOut,
     MemberScheduleOut,
     MemberSelfOut,
     OccupancyOut,
     PricingRuleOut,
     TokenTransactionOut,
 )
+from app.routers.dashboard import member_dashboard_payload
 from app.services import bookings as booking_service
 from app.services.fill import snapshot_next_day
 from app.shop_time import as_utc
@@ -104,6 +106,11 @@ def member_me(session: DbSession, principal: MemberUser) -> MemberSelfOut:
         bookings=[BookingOut.from_booking(row) for row in bookings],
         tokens=[TokenTransactionOut.model_validate(row) for row in tokens],
     )
+
+
+@router.get("/dashboard", response_model=MemberDashboardOut)
+def member_dashboard(session: DbSession, principal: MemberUser) -> MemberDashboardOut:
+    return member_dashboard_payload(session, principal)
 
 
 @router.get("/tokens", response_model=list[TokenTransactionOut])

@@ -48,6 +48,10 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_from: str = "shop@projectcar.ca"
     smtp_use_tls: bool = True
+    # Google Calendar OAuth scaffold. Empty = Connect Google stays a stub.
+    google_oauth_client_id: str = ""
+    google_oauth_client_secret: str = ""
+    google_oauth_redirect_uri: str = ""
 
     @field_validator("owner_email", mode="before")
     @classmethod

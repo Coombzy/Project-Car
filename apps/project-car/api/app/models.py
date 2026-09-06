@@ -135,6 +135,23 @@ class FillOfferStatus(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
+class TodoStatus(str, enum.Enum):
+    OPEN = "open"
+    DONE = "done"
+
+
+class PartsOrderStatus(str, enum.Enum):
+    ORDERED = "ordered"
+    SHIPPED = "shipped"
+    IN_TRANSIT = "in_transit"
+    RECEIVED = "received"
+
+
+class CalendarProvider(str, enum.Enum):
+    GOOGLE = "google"
+    APPLE = "apple"
+
+
 class MembershipTier(Base):
     """Membership plan. Prices and token allowances are data, not UI copy."""
 
@@ -223,6 +240,7 @@ class Member(Base):
     )
     notifications: Mapped[list[NotificationOutbox]] = relationship(back_populates="member")
     chat_participations: Mapped[list[ChatParticipant]] = relationship(back_populates="member")
+    todos: Mapped[list[Todo]] = relationship(back_populates="member")
 
     def __repr__(self) -> str:
         return f"<Member(id={self.id!r}, email={self.email!r})>"
@@ -713,6 +731,110 @@ class ChatMessage(Base):
         return f"<ChatMessage(id={self.id!r}, room_id={self.room_id!r})>"
 
 
+class Todo(Base):
+    """Personal to-do for the logged-in Owner or Member. Not Nextcloud Deck."""
+
+    __tablename__ = "todos"
+    __table_args__ = (
+        Index("ix_todos_owner_email_status", "owner_email", "status"),
+        Index("ix_todos_member_status", "member_id", "status"),
+        Index("ix_todos_due_at", "due_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    owner_email: Mapped[Optional[str]] = mapped_column(String(320))
+    member_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("members.id", ondelete="CASCADE")
+    )
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    notes: Mapped[Optional[str]] = mapped_column(Text)
+    due_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    status: Mapped[TodoStatus] = mapped_column(
+        _enum_column(TodoStatus),
+        nullable=False,
+        default=TodoStatus.OPEN,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    member: Mapped[Optional[Member]] = relationship(back_populates="todos")
+
+    def __repr__(self) -> str:
+        return f"<Todo(id={self.id!r}, title={self.title!r})>"
+
+
+class PartsOrder(Base):
+    """Ops parts PO stub. SKUs use the PT prefix; not a live vendor API."""
+
+    __tablename__ = "parts_orders"
+    __table_args__ = (
+        UniqueConstraint("po_number", name="uq_parts_orders_po_number"),
+        Index("ix_parts_orders_status_ordered", "status", "ordered_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    po_number: Mapped[str] = mapped_column(String(40), nullable=False)
+    sku: Mapped[Optional[str]] = mapped_column(String(80))
+    what: Mapped[str] = mapped_column(String(240), nullable=False)
+    vendor: Mapped[str] = mapped_column(String(160), nullable=False, default="")
+    for_label: Mapped[str] = mapped_column(String(160), nullable=False, default="")
+    status: Mapped[PartsOrderStatus] = mapped_column(
+        _enum_column(PartsOrderStatus),
+        nullable=False,
+        default=PartsOrderStatus.ORDERED,
+    )
+    ordered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    shipped_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    eta_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    received_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    tracking: Mapped[Optional[str]] = mapped_column(String(120))
+    notes: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    def __repr__(self) -> str:
+        return f"<PartsOrder(po_number={self.po_number!r}, status={self.status!r})>"
+
+
+class CalendarConnection(Base):
+    """Scaffold for Google / Apple calendar OAuth. Not production-complete."""
+
+    __tablename__ = "calendar_connections"
+    __table_args__ = (
+        UniqueConstraint("owner_email", "member_id", "provider", name="uq_calendar_connections_owner_provider"),
+        Index("ix_calendar_connections_member", "member_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    owner_email: Mapped[Optional[str]] = mapped_column(String(320))
+    member_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("members.id", ondelete="CASCADE")
+    )
+    provider: Mapped[CalendarProvider] = mapped_column(
+        _enum_column(CalendarProvider),
+        nullable=False,
+    )
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="disconnected")
+    external_account: Mapped[Optional[str]] = mapped_column(String(320))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    def __repr__(self) -> str:
+        return f"<CalendarConnection(provider={self.provider!r}, status={self.status!r})>"
+
+
 ALL_MODELS = [
     MembershipTier,
     Member,
@@ -729,6 +851,9 @@ ALL_MODELS = [
     ChatRoom,
     ChatParticipant,
     ChatMessage,
+    Todo,
+    PartsOrder,
+    CalendarConnection,
 ]
 
 

@@ -28,6 +28,9 @@ def test_all_models_import() -> None:
         "chat_rooms",
         "chat_participants",
         "chat_messages",
+        "todos",
+        "parts_orders",
+        "calendar_connections",
     ]
 
 

@@ -58,7 +58,7 @@ Two tiers only. **Pro** and **Weekly** are retired names — rename Pro → Prem
 
 ## Shop hoist priority (v1)
 
-Seed inventory: **6 hoists**. Exactly one is marked `is_shop` (the shop hoist — business / internal work). The other five are customer bays.
+Seed inventory: **6 hoists**. Exactly one is marked `is_shop` (**Bay 6** — business / internal work). Bays 1–5 are customer bays.
 
 Two clean rules were on the table:
 

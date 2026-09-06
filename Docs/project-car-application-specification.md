@@ -77,7 +77,7 @@ Identity rules:
    - Hoists (work bays): name, location label, status (`available` / `occupied` / `maintenance` / `locked`), `is_shop`. Seed **6** hoists; exactly one is the shop hoist.
    - Bookings: member (optional on shop work) + hoist + start/end + `kind` (`customer` / `shop`) + status (`pending` → `confirmed` → `active` → `completed` / `overdue` / `cancelled`).
    - Token ledger: append-only credits and debits. Booking reserve, debit, refund, monthly allocation, admin adjustment.
-   - Owner dashboard: hoist status, today’s / this week’s bookings, token balances, waitlist count.
+   - Owner dashboard: Bays 1–6 next-24h booked hours (member + vehicle/notes), personal to-dos, current parts POs, token-at-risk, waitlist count. No “Today’s bookings” list. Bay 6 is the shop hoist.
    - **Parts** and **Tools** sections (locked IA; **placeholders now**): prefixes **B1–B6** (bay-resident kits; B6 = shop hoist, not SH), **TC** (crib checkout stub), **PT** (stock / PO / member requests). Member parts = **request desk** now; **full purchasing Later**. **CM** consumables later.
    - **Job board** (locked IA; **placeholder now**): shop chores; pays **tokens** on completion (**ledger**, not Stripe). Ops posts; members claim.
    - **Cameras** (locked IA; **placeholder now**): members = **one primary shop cam**. Ops = **all cams** + door entry logs + Frigate / AI collection. Not a claim that Frigate is wired on `main`.
@@ -221,7 +221,12 @@ Authenticated routes are role-aware: Owner session/bearer for admin; Member sess
 | `POST` | `/bookings/{id}/check-in` | → active (manual in v1) |
 | `POST` | `/bookings/{id}/complete` | Debit tokens, free hoist |
 | `POST` | `/bookings/{id}/cancel` | Refund reserve |
-| `GET` | `/dashboard` | Hoist snapshot + today + waitlist count |
+| `GET` | `/dashboard` | Bays 1–6 next-24h hours + todos + current parts POs + waitlist |
+| `GET` | `/member/dashboard` | Member todos + next-24h hours on own bookings only |
+| `GET/POST` | `/todos` | Personal to-dos (Owner or Member session) |
+| `GET/PATCH/DELETE` | `/todos/{id}` | Own to-do only |
+| `GET` | `/todos/{id}/ics` | ICS for a to-do due date (`America/Regina`) |
+| `GET` | `/calendar/status` | Google / Apple connect stub |
 | `GET` | `/member/me` | Own profile, balance, ledger, bookings |
 | `GET` | `/member/tokens` | Own ledger |
 | `GET` | `/member/hoists` | Customer bays only (no shop hoist) |
@@ -256,7 +261,7 @@ Staff-on-shift / ops shell. **LIVE** host **`ops.projectcar.ca`**. Temporary ali
 
 **Shipped screens today** (do not invent more as shipped):
 
-1. **Dashboard** — hoist cards, today’s bookings, waitlist count, token-at-risk members.
+1. **Dashboard** — Bays 1–6 next-24h hour strips (member + vehicle/notes), personal to-dos + ICS, current parts POs, waitlist count, token-at-risk. **No “Today’s bookings” list.** Bay 6 is the Owner-only shop hoist.
 2. **Schedule (on `main`, PR #18; harden PR #24)** — month heat-map (per-hoist density vs 08:00–21:00) that drills into a weekly hour grid per hoist (`America/Regina`). Owner sees Bays 1–5 plus the Owner-only shop hoist; Member sees customer bays only. Fill chips / quote math from #20 stay. Fail-soft if bookings list 500s; windows as Regina UTC ISO. **LIVE** host `ops.`; temporary `app.` alias still up.
 3. **Members** — table + detail (tier, tokens, waiver, bookings).
 4. **Waitlist** — convert-to-member is a later button; v1 can be “mark contacted”.
@@ -434,6 +439,7 @@ Placeholders now (even rough): Parts (PT), Tools (B1–B6 + TC), job board, cams
 
 ### Still held / deferred
 
+- **Google Calendar two-way sync:** ICS + Connect stub shipped with the dashboard slice. Token exchange / two-way sync is Next. Apple stays ICS import.
 - **Chat follow-ons:** Grok on projectcar.ca, assign / staff notes / escalate. Chat v1 human/polling is the evening demo (§17).
 - Mission Control cockpit: **Ben GO** required. Do not start.
 - Staff OIDC: later, on **`ops.`**.

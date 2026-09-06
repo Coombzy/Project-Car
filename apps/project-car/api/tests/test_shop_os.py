@@ -21,6 +21,10 @@ def test_dashboard_snapshot(client: TestClient) -> None:
     assert body["hoists"][0]["name"] == "Bay 1"
     assert "today_bookings" in body
     assert "token_at_risk" in body
+    assert "next_hours" in body["hoists"][0]
+    assert "todos" in body
+    assert "parts_orders" in body
+    assert body["tz"] == "America/Regina"
 
 
 def test_tiers_patch(client: TestClient) -> None:

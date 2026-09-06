@@ -14,6 +14,8 @@ from app.models import (
     MemberStatus,
     NotificationChannel,
     NotificationStatus,
+    PartsOrderStatus,
+    TodoStatus,
     TokenTransactionKind,
 )
 
@@ -376,15 +378,119 @@ class MemberAtRiskOut(BaseModel):
     token_balance: Decimal
 
 
+class BookedHourOut(BaseModel):
+    booking_id: UUID
+    hoist_id: UUID
+    hoist_name: str
+    kind: BookingKind
+    status: BookingStatus
+    hour_start: datetime
+    hour_end: datetime
+    member_id: UUID | None
+    member_name: str
+    vehicle_label: str
+    notes: str | None
+
+
 class HoistSnapshotOut(HoistOut):
     current_booking: BookingOut | None = None
+    next_hours: list[BookedHourOut] = Field(default_factory=list)
+
+
+class TodoOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    owner_email: str | None
+    member_id: UUID | None
+    title: str
+    notes: str | None
+    due_at: datetime | None
+    status: TodoStatus
+    created_at: datetime
+    updated_at: datetime
+
+
+class TodoCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    notes: str | None = Field(default=None, max_length=2000)
+    due_at: datetime | None = None
+
+    @field_validator("title")
+    @classmethod
+    def strip_title(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("notes", mode="before")
+    @classmethod
+    def empty_notes(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _blank_to_none(str(value))
+
+
+class TodoPatch(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    notes: str | None = Field(default=None, max_length=2000)
+    due_at: datetime | None = None
+    clear_due: bool = False
+    status: TodoStatus | None = None
+
+
+class PartsOrderOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    po_number: str
+    sku: str | None
+    what: str
+    vendor: str
+    for_label: str
+    status: PartsOrderStatus
+    ordered_at: datetime
+    shipped_at: datetime | None
+    eta_at: datetime | None
+    received_at: datetime | None
+    tracking: str | None
+    notes: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class CalendarProviderStatusOut(BaseModel):
+    connected: bool
+    status: str
+    ready: bool
+    label: str
+    hint: str | None = None
+
+
+class CalendarStatusOut(BaseModel):
+    google: CalendarProviderStatusOut
+    apple: CalendarProviderStatusOut
+    next: str
 
 
 class DashboardOut(BaseModel):
+    tz: str
+    window_start: datetime
+    window_end: datetime
     hoists: list[HoistSnapshotOut]
     today_bookings: list[BookingOut]
     waitlist_count: int
     token_at_risk: list[MemberAtRiskOut]
+    todos: list[TodoOut] = Field(default_factory=list)
+    parts_orders: list[PartsOrderOut] = Field(default_factory=list)
+    calendar: CalendarStatusOut | None = None
+
+
+class MemberDashboardOut(BaseModel):
+    tz: str
+    window_start: datetime
+    window_end: datetime
+    hoists: list[HoistSnapshotOut]
+    todos: list[TodoOut]
+    calendar: CalendarStatusOut
 
 
 class FillGapOut(BaseModel):

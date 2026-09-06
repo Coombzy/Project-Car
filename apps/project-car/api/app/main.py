@@ -6,7 +6,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import __version__
 from app.config import get_settings
 from app.errors import register_error_handlers
-from app.routers import auth, bookings, chat, dashboard, fill, hoists, member, member_chat, members, tiers, waitlist
+from app.routers import (
+    auth,
+    bookings,
+    calendar,
+    chat,
+    dashboard,
+    fill,
+    hoists,
+    member,
+    member_chat,
+    members,
+    tiers,
+    todos,
+    waitlist,
+)
 
 
 def create_app() -> FastAPI:
@@ -29,7 +43,7 @@ def create_app() -> FastAPI:
             CORSMiddleware,
             allow_origins=origins,
             allow_credentials=True,
-            allow_methods=["GET", "POST", "PATCH", "OPTIONS", "HEAD"],
+            allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS", "HEAD"],
             allow_headers=["Accept", "Content-Type", "Authorization"],
         )
 
@@ -44,6 +58,8 @@ def create_app() -> FastAPI:
     application.include_router(fill.router)
     application.include_router(chat.router)
     application.include_router(member_chat.router)
+    application.include_router(todos.router)
+    application.include_router(calendar.router)
     return application
 
 

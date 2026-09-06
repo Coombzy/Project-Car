@@ -39,6 +39,7 @@ from app.models import (
     Booking,
     BookingKind,
     BookingStatus,
+    CalendarConnection,
     ChatMessage,
     ChatParticipant,
     ChatRoom,
@@ -51,6 +52,10 @@ from app.models import (
     MembershipTier,
     MemberStatus,
     NotificationOutbox,
+    PartsOrder,
+    PartsOrderStatus,
+    Todo,
+    TodoStatus,
     TokenTransaction,
     TokenTransactionKind,
     WaitlistEntry,
@@ -58,7 +63,7 @@ from app.models import (
 from app.services.fill import resolve_fill_for_slot
 from app.services.pricing import BASE_TOKENS_PER_HOUR, quote_reserve
 from app.services.tokens import apply_ledger, rebuild_token_balance
-from app.shop_time import SHOP_TZ, shop_now
+from app.shop_time import PRICING_TZ, SHOP_TZ, shop_now
 
 SEED_NS = UUID("a11ce000-5e1d-4000-8000-000000000001")
 
@@ -197,6 +202,9 @@ def _reset_shop(session: Session) -> None:
     session.execute(delete(ChatMessage))
     session.execute(delete(ChatParticipant))
     session.execute(delete(ChatRoom))
+    session.execute(delete(CalendarConnection))
+    session.execute(delete(Todo))
+    session.execute(delete(PartsOrder))
     session.execute(delete(NotificationOutbox))
     session.execute(delete(FillOffer))
     session.execute(delete(TokenTransaction))
@@ -409,6 +417,167 @@ def _seed_chat_threads(session: Session, *, ada: Member, riley: Member) -> None:
     session.flush()
 
 
+def _upsert_todo(session: Session, key: str, **fields) -> Todo:
+    todo_id = seed_id("todo", key)
+    row = session.get(Todo, todo_id)
+    if row is None:
+        row = Todo(id=todo_id, **fields)
+        session.add(row)
+    else:
+        for name, value in fields.items():
+            setattr(row, name, value)
+        session.add(row)
+    return row
+
+
+def _seed_todos(session: Session, ada: Member) -> None:
+    due_soon = shop_now().replace(minute=0, second=0, microsecond=0) + timedelta(hours=6)
+    due_tomorrow = (shop_now() + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
+    _upsert_todo(
+        session,
+        "owner-confirm-friday",
+        owner_email="owner@projectcar.ca",
+        member_id=None,
+        title="Confirm Casey’s Friday pending on Bay 3",
+        notes="Pending Owner confirm — alignment check.",
+        due_at=due_soon,
+        status=TodoStatus.OPEN,
+    )
+    _upsert_todo(
+        session,
+        "owner-call-priya",
+        owner_email="owner@projectcar.ca",
+        member_id=None,
+        title="Call Priya on the waitlist",
+        notes="Premium interest. Shop is not open — this is a demo follow-up.",
+        due_at=due_tomorrow,
+        status=TodoStatus.OPEN,
+    )
+    _upsert_todo(
+        session,
+        "owner-fill-review",
+        owner_email="owner@projectcar.ca",
+        member_id=None,
+        title="Review tomorrow’s fill notify dry-run",
+        notes="Check the outbox before a real send. No Stripe.",
+        due_at=None,
+        status=TodoStatus.OPEN,
+    )
+    _upsert_todo(
+        session,
+        "ada-turbo-parts",
+        owner_email=None,
+        member_id=ada.id,
+        title="Bring turbo parts for the Bay 1 mock-up",
+        notes="1992 Miata — downpipe and wastegate.",
+        due_at=due_soon,
+        status=TodoStatus.OPEN,
+    )
+    _upsert_todo(
+        session,
+        "ada-waiver",
+        owner_email=None,
+        member_id=ada.id,
+        title="Sign the updated shop waiver",
+        notes="Owner posted a new version for 2026.",
+        due_at=due_tomorrow,
+        status=TodoStatus.OPEN,
+    )
+    _upsert_todo(
+        session,
+        "ada-bracket",
+        owner_email=None,
+        member_id=ada.id,
+        title="Pick up Wilwood bracket when PT-PO-1043 lands",
+        notes="Member request tied to the sample parts PO.",
+        due_at=None,
+        status=TodoStatus.OPEN,
+    )
+    session.flush()
+
+
+def _upsert_parts_order(session: Session, key: str, **fields) -> PartsOrder:
+    order_id = seed_id("parts-order", key)
+    row = session.get(PartsOrder, order_id)
+    if row is None:
+        row = PartsOrder(id=order_id, **fields)
+        session.add(row)
+    else:
+        for name, value in fields.items():
+            setattr(row, name, value)
+        session.add(row)
+    return row
+
+
+def _seed_parts_orders(session: Session) -> None:
+    now = shop_now()
+    _upsert_parts_order(
+        session,
+        "po-1042",
+        po_number="PT-PO-1042",
+        sku="PT-ANF-008",
+        what="Shop-stock AN fittings restock",
+        vendor="Summit (sample)",
+        for_label="Shop inventory",
+        status=PartsOrderStatus.ORDERED,
+        ordered_at=now - timedelta(days=2),
+        shipped_at=None,
+        eta_at=now + timedelta(days=5),
+        received_at=None,
+        tracking=None,
+        notes="PT prefix. Not a live vendor ping.",
+    )
+    _upsert_parts_order(
+        session,
+        "po-1043",
+        po_number="PT-PO-1043",
+        sku="PT-PAD-003",
+        what="Wilwood bracket — Ada Reyes",
+        vendor="Local parts (sample)",
+        for_label="Member request",
+        status=PartsOrderStatus.SHIPPED,
+        ordered_at=now - timedelta(days=4),
+        shipped_at=now - timedelta(days=1),
+        eta_at=now + timedelta(days=1),
+        received_at=None,
+        tracking="SAMPLE-1043",
+        notes="Incoming for Ada’s turbo mock-up.",
+    )
+    _upsert_parts_order(
+        session,
+        "po-1045",
+        po_number="PT-PO-1045",
+        sku="PT-OIL-5W30-012",
+        what="Engine oil 5W-30 — 12 jugs",
+        vendor="Uline (sample)",
+        for_label="Shop inventory",
+        status=PartsOrderStatus.IN_TRANSIT,
+        ordered_at=now - timedelta(days=6),
+        shipped_at=now - timedelta(days=3),
+        eta_at=now + timedelta(hours=18),
+        received_at=None,
+        tracking="SAMPLE-1045",
+        notes="Below reorder on the PT stock stub.",
+    )
+    _upsert_parts_order(
+        session,
+        "po-1044",
+        po_number="PT-PO-1044",
+        sku="PT-FLT-001",
+        what="Oil filter assortment — case",
+        vendor="Uline (sample)",
+        for_label="Shop inventory",
+        status=PartsOrderStatus.RECEIVED,
+        ordered_at=now - timedelta(days=12),
+        shipped_at=now - timedelta(days=8),
+        eta_at=now - timedelta(days=3),
+        received_at=now - timedelta(days=2),
+        tracking="SAMPLE-1044",
+        notes="Received stub — kept so tracking history is visible.",
+    )
+    session.flush()
+
+
 def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     for payload in PLACEHOLDER_TIERS:
         _upsert_tier(session, payload)
@@ -425,8 +594,8 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     shop = _upsert_hoist(
         session,
         "shop",
-        "Shop",
-        "Internal / business work",
+        "Bay 6",
+        "Internal / business work · shop hoist",
         HoistStatus.AVAILABLE,
         is_shop=True,
     )
@@ -516,6 +685,11 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     demo_members = [ada, sam, riley, jordan, casey, morgan]
     _retire_extra_tiers(session)
     _clear_member_activity(session, [row.id for row in demo_members])
+    for shop_key in ("wed-shop", "today-shop", "sun-bay6", "next24-shop"):
+        leftover = session.get(Booking, seed_id("booking", shop_key))
+        if leftover is not None:
+            session.delete(leftover)
+    session.flush()
     for member in demo_members:
         member.token_balance = Decimal("0")
         session.add(member)
@@ -649,6 +823,18 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
             "notes": "Shop work — rack inspection",
             "kind": BookingKind.SHOP,
         },
+        {
+            "key": "sun-bay6",
+            "offset": 6,
+            "member": None,
+            "hoist": shop,
+            "start": 9,
+            "end": 12,
+            "future": BookingStatus.CONFIRMED,
+            "past": BookingStatus.COMPLETED,
+            "notes": "Shop hoist — fixture fab",
+            "kind": BookingKind.SHOP,
+        },
     ]
 
     for slot in week_slots:
@@ -697,6 +883,51 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         end=_at(today, 13),
         status=BookingStatus.CONFIRMED,
         notes="Shop work — in-house fab",
+        kind=BookingKind.SHOP,
+    )
+
+    # Rolling next-24h strips so the Owner dashboard is never empty at any clock hour.
+    now = shop_now()
+    next_hour = (now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)).astimezone(PRICING_TZ)
+    _make_booking(
+        session,
+        key="next24-ada",
+        member=ada,
+        hoist=bay1,
+        start=next_hour + timedelta(hours=1),
+        end=next_hour + timedelta(hours=3),
+        status=BookingStatus.CONFIRMED,
+        notes="1992 Miata — turbo mock-up",
+    )
+    _make_booking(
+        session,
+        key="next24-sam",
+        member=sam,
+        hoist=bay3,
+        start=next_hour + timedelta(hours=4),
+        end=next_hour + timedelta(hours=6),
+        status=BookingStatus.CONFIRMED,
+        notes="Golf R — oil + inspection",
+    )
+    _make_booking(
+        session,
+        key="next24-casey",
+        member=casey,
+        hoist=bay5,
+        start=next_hour + timedelta(hours=8),
+        end=next_hour + timedelta(hours=10),
+        status=BookingStatus.PENDING,
+        notes="No vehicle on file — brake job",
+    )
+    _make_booking(
+        session,
+        key="next24-shop",
+        member=None,
+        hoist=shop,
+        start=next_hour + timedelta(hours=2),
+        end=next_hour + timedelta(hours=4),
+        status=BookingStatus.CONFIRMED,
+        notes="Bay 6 — rack inspection",
         kind=BookingKind.SHOP,
     )
     session.flush()
@@ -760,10 +991,15 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
             row.contacted_at = contacted_at
             session.add(row)
 
+    _seed_todos(session, ada)
+    _seed_parts_orders(session)
+
     session.flush()
     _seed_chat_threads(session, ada=ada, riley=riley)
     booking_count = session.scalar(select(func.count()).select_from(Booking)) or 0
     chat_count = session.scalar(select(func.count()).select_from(ChatRoom)) or 0
+    todo_count = session.scalar(select(func.count()).select_from(Todo)) or 0
+    po_count = session.scalar(select(func.count()).select_from(PartsOrder)) or 0
     return {
         "tiers": len(PLACEHOLDER_TIERS),
         "members": len(demo_members),
@@ -771,6 +1007,8 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         "bookings": int(booking_count),
         "waitlist": len(waitlist),
         "chat_rooms": int(chat_count),
+        "todos": int(todo_count),
+        "parts_orders": int(po_count),
     }
 
 
@@ -795,9 +1033,10 @@ def main(argv: list[str] | None = None) -> int:
     mode = "reset + seed" if args.reset else "upsert seed"
     print(f"Shop OS demo data ready ({mode}).")
     print(
-        "  {members} members, {hoists} hoists (5 customer bays + 1 Owner-only shop hoist), "
-        "{bookings} bookings this week, {waitlist} waitlist entries, {chat_rooms} chat rooms, "
-        "{tiers} tiers (Basic 1000 / Premium 1500).".format(**summary)
+        "  {members} members, {hoists} hoists (Bay 1–5 + Bay 6 shop hoist), "
+        "{bookings} bookings, {todos} todos, {parts_orders} parts POs, "
+        "{chat_rooms} chat rooms, {waitlist} waitlist entries, {tiers} tiers "
+        "(Basic 1000 / Premium 1500).".format(**summary)
     )
     print("  Owner login (localhost demo): owner@projectcar.ca / changeme")
     print("  Member login (localhost demo): ada.reyes@example.com / changeme")
