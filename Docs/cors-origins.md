@@ -1,7 +1,7 @@
 # CORS_ORIGINS — brochure waitlist
 
 **Status:** Living ops  
-**Updated:** 2026-09-06  
+**Updated:** 2026-09-06 ~12:55 America/Edmonton  
 **Related:** `api-stay-up.md`, `apps/project-car/api/.env.example`, `apps/project-car/api/app/config.py`, `apps/website/html/waitlist.js`
 
 Browser waitlist from https://projectcar.ca must be allowed to call the Shop API. After any `.env` change, **Lead** restarts the API process on Doc.
@@ -14,10 +14,10 @@ Env var: **`CORS_ORIGINS`** (Pydantic `Settings.cors_origins` in `apps/project-c
 
 Comma-separated Origin allowlist. `*` is **dropped** in code — never set `*` for production, and do not rely on a wildcard “just this once.”
 
-Must include **`https://projectcar.ca`**. Live allowlist also includes `https://www.projectcar.ca`, localhost Owner-UI ports, and **`https://app.projectcar.ca`** (public shop UI origin, Ben GO 2026-09-06 ~11:41).
+Must include **`https://projectcar.ca`**. Live allowlist also includes `https://www.projectcar.ca`, localhost Owner-UI ports, **`https://ops.projectcar.ca`** (LIVE management origin, 2026-09-06 ~12:55), and the temporary alias **`https://app.projectcar.ca`** (still live until Ben cuts that DNS).
 
 ```
-CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,https://projectcar.ca,https://www.projectcar.ca,https://app.projectcar.ca
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,https://projectcar.ca,https://www.projectcar.ca,https://ops.projectcar.ca,https://app.projectcar.ca
 ```
 
 Empty `CORS_ORIGINS` → no CORS middleware (browser waitlist will fail).
