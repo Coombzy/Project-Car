@@ -48,6 +48,7 @@ def _enum_column(enum_cls: type[enum.Enum], *, length: int = 32) -> SAEnum:
 
 
 JsonList = JSON().with_variant(JSONB(), "postgresql")
+JsonObject = JSON().with_variant(JSONB(), "postgresql")
 UuidPk = Uuid(as_uuid=True).with_variant(UUID(as_uuid=True), "postgresql")
 
 
@@ -280,6 +281,7 @@ class Booking(Base):
     reserved_tokens: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), nullable=False, default=Decimal("0")
     )
+    pricing_rule: Mapped[Optional[dict]] = mapped_column(JsonObject)
     notes: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -319,6 +321,7 @@ class TokenTransaction(Base):
     )
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     note: Mapped[Optional[str]] = mapped_column(Text)
+    meta: Mapped[Optional[dict]] = mapped_column(JsonObject)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

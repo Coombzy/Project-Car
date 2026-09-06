@@ -88,3 +88,24 @@ export function tokensLabel(value: string | number): string {
   }
   return Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
 }
+
+export function overlayIsNonStandard(multiplier: string | number | undefined): boolean {
+  if (multiplier === undefined) {
+    return false;
+  }
+  return Number(multiplier) !== 1;
+}
+
+export function shopDateTimeLocal(date: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: SHOP_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const lookup = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${lookup.year}-${lookup.month}-${lookup.day}T${lookup.hour}:${lookup.minute}`;
+}

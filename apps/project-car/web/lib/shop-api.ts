@@ -3,6 +3,7 @@ import {
   SESSION_COOKIE,
   shopApiUrl,
   type Booking,
+  type BookingQuote,
   type Dashboard,
   type Hoist,
   type Member,
@@ -189,6 +190,18 @@ export async function listBookings(params?: {
   if (params?.windowEnd) query.set("window_end", params.windowEnd);
   const suffix = query.size ? `?${query.toString()}` : "";
   return shopJson<Booking[]>(`/bookings${suffix}`, "Could not load bookings.");
+}
+
+export async function quoteBooking(payload: {
+  start_at: string;
+  end_at: string;
+  member_id?: string;
+}): Promise<BookingQuote> {
+  return shopJson<BookingQuote>("/bookings/quote", "Could not quote the booking.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function createBooking(payload: Record<string, unknown>): Promise<Booking> {

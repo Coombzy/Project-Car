@@ -31,7 +31,6 @@ export async function createBookingAction(formData: FormData): Promise<void> {
       hoist_id: String(formData.get("hoist_id") ?? ""),
       start_at: String(formData.get("start_at") ?? ""),
       end_at: String(formData.get("end_at") ?? ""),
-      tokens: String(formData.get("tokens") ?? "1"),
       notes: String(formData.get("notes") ?? "") || null,
     });
   } catch (error) {

@@ -18,6 +18,7 @@ def apply_ledger(
     amount: Decimal,
     booking_id=None,
     note: str | None = None,
+    meta: dict | None = None,
 ) -> TokenTransaction:
     amount = Decimal(amount)
     row = TokenTransaction(
@@ -26,6 +27,7 @@ def apply_ledger(
         kind=kind,
         amount=amount,
         note=note,
+        meta=meta,
     )
     session.add(row)
     member.token_balance = Decimal(member.token_balance) + amount

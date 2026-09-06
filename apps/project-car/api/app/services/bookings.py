@@ -19,6 +19,7 @@ from app.models import (
     MemberStatus,
     TokenTransactionKind,
 )
+from app.services.pricing import PricingError, quote_reserve
 from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
 
@@ -83,6 +84,29 @@ def _set_hoist_available_if_idle(session: Session, hoist: Hoist) -> None:
         session.add(hoist)
 
 
+def preview_reserve(
+    session: Session,
+    *,
+    start_at: datetime,
+    end_at: datetime,
+    member_id: UUID | None = None,
+) -> tuple:
+    """Return (quote, token_balance, token_balance_after). Balances are None without a member."""
+    start_at = as_utc(start_at)
+    end_at = as_utc(end_at)
+    try:
+        quote = quote_reserve(start_at, end_at)
+    except PricingError as exc:
+        raise _error(400, exc.code, exc.message) from exc
+    if member_id is None:
+        return quote, None, None
+    member = session.get(Member, member_id)
+    if member is None:
+        raise _error(404, "not_found", "Member not found.")
+    balance = Decimal(member.token_balance)
+    return quote, balance, balance - quote.final_reserve_cost
+
+
 def create_booking(
     session: Session,
     *,
@@ -90,17 +114,17 @@ def create_booking(
     hoist_id: UUID,
     start_at: datetime,
     end_at: datetime,
-    tokens: Decimal,
     notes: str | None,
 ) -> Booking:
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
-    tokens = Decimal(tokens)
-
-    if end_at <= start_at:
-        raise _error(400, "invalid_window", "Booking end must be after start.")
-    if tokens <= 0:
-        raise _error(400, "invalid_tokens", "Reserved tokens must be greater than zero.")
+    try:
+        quote = quote_reserve(start_at, end_at)
+    except PricingError as exc:
+        raise _error(400, exc.code, exc.message) from exc
+    tokens = quote.final_reserve_cost
+    rule = quote.as_rule()
+    meta = quote.ledger_meta()
 
     member = session.scalars(
         select(Member).options(selectinload(Member.tier)).where(Member.id == member_id)
@@ -141,6 +165,7 @@ def create_booking(
         end_at=end_at,
         status=BookingStatus.PENDING,
         reserved_tokens=tokens,
+        pricing_rule=rule,
         notes=notes,
     )
     session.add(booking)
@@ -152,6 +177,7 @@ def create_booking(
         amount=-tokens,
         booking_id=booking.id,
         note="Reserve tokens for booking",
+        meta=meta,
     )
     session.refresh(booking)
     return get_booking(session, booking.id)
@@ -208,6 +234,7 @@ def complete_booking(
 
     used = reserved - unused
     member = booking.member
+    meta = {"pricing_rule": booking.pricing_rule} if booking.pricing_rule else None
     if reserved > 0:
         apply_ledger(
             session,
@@ -216,6 +243,7 @@ def complete_booking(
             amount=reserved,
             booking_id=booking.id,
             note="Release reserved tokens",
+            meta=meta,
         )
         if used > 0:
             apply_ledger(
@@ -225,6 +253,7 @@ def complete_booking(
                 amount=-used,
                 booking_id=booking.id,
                 note="Debit used tokens",
+                meta=meta,
             )
 
     booking.reserved_tokens = Decimal("0")
@@ -241,6 +270,7 @@ def cancel_booking(session: Session, booking_id: UUID) -> Booking:
         raise _error(400, "invalid_transition", "Completed, overdue, or cancelled bookings cannot be cancelled.")
 
     reserved = Decimal(booking.reserved_tokens)
+    meta = {"pricing_rule": booking.pricing_rule} if booking.pricing_rule else None
     if reserved > 0:
         apply_ledger(
             session,
@@ -249,6 +279,7 @@ def cancel_booking(session: Session, booking_id: UUID) -> Booking:
             amount=reserved,
             booking_id=booking.id,
             note="Refund reserve on cancel",
+            meta=meta,
         )
         booking.reserved_tokens = Decimal("0")
 

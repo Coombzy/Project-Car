@@ -113,9 +113,9 @@ base_tokens = hours × 100
 final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier
 ```
 
-Show band + overlay + total before confirm. Store `pricing_rule` on ledger meta. Cancel refunds the reserved amount — do not reprice.
+Show band + overlay + total before confirm. Store `pricing_rule` on ledger meta. Cancel refunds the reserved amount — do not reprice. Owner `POST /bookings` computes this in the API.
 
-Defaults, two-tier allotment placeholders (Basic 400 / Pro 800), UX must-haves, and the Fri-eve default: **`token-pricing.md`**. Multipliers and allotments are Owner-editable placeholders. Not public brochure prices. No Stripe. Not implemented in the API yet.
+Defaults, two-tier allotment placeholders (Basic 400 / Pro 800), UX must-haves, and the Fri-eve default: **`token-pricing.md`**. Multipliers and allotments are Owner-editable placeholders. Not public brochure prices. No Stripe. Owner API computes reserve from duration.
 
 ---
 
@@ -323,7 +323,7 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 - Public chat (Apex) later — deferred (Ben), not P0.
 - Staff login later (unless pulled forward with Member auth). Do not dump Member into a vague v2.
 - Payments later (v3). No Stripe now.
-- Token pricing: **spec-locked** (`token-pricing.md`) — `base_tokens = hours × 100`, then bands + overlay. API / UI implement later. Pricing math applies to Member bookings too.
+- Token pricing: **spec-locked** (`token-pricing.md`) — `base_tokens = hours × 100`, then bands + overlay. Owner API / schedule implement it; Member self-serve later. Pricing math applies to Member bookings too.
 - Mission Control cockpit **held** until Owner booking is merged **and** live on Doc. Do not start the cockpit early.
 
 ### Implementation notes
