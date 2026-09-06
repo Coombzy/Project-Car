@@ -32,7 +32,7 @@ Ben / Chief lock. Two horizons — do **not** collapse them into one “v1 inclu
 | **Build breadth (now)** | Breadth-first **placeholders** / rough IA so layout can be ironed out. Put planned features in the app (Parts, Tools, job board, cams, calendar / fill, member surfaces, Payments, **chat shells when we build them**). Do **not** leave a planned surface out of the **build** for polish. A placeholder is not shipped product. |
 | **Ship-MVP cut (later gate)** | At **public MVP release**, cut unfinished and unnecessary features. Do **not** ship every placeholder as the public product. What ships then is a later Ben cut — not “everything we sketched now.” |
 
-Do not invent extra product from this table. Calendar heat-map / weekly per-hoist is on `main` (PR #18). Next-day fill is on `main` (PR #20). Breadth placeholders are on `main` (PR #21). Member parts **purchasing** is a placeholder now; **full** purchasing is **Later**. Chat is **planned**, not on `main`.
+Do not invent extra product from this table. Calendar heat-map / weekly per-hoist is on `main` (PR #18). Next-day fill is on `main` (PR #20). Breadth placeholders are on `main` (PR #21). Tools / Parts inventory prefixes are locked (B1–B6 / TC / PT; CM later) — demo lists, not live checkout. Member parts is a **request desk** now; **full** purchasing is **Later**. Chat is **planned**, not on `main`. Do not invent Chat mode here.
 
 ---
 
@@ -49,7 +49,7 @@ Do not invent extra product from this table. Calendar heat-map / weekly per-hois
 - **Member self-serve (demo, still `/member` on the shop UI):** PR #14 merged → `main` `9baf3c4` and walked on Doc; reachable via `https://ops.projectcar.ca/member` and `https://app.projectcar.ca/member`. Member login (seed `ada.reyes@example.com`); `/member/me` balance + ledger; `/member/hoists` + schedule on **Bays 1–5 only**; shop hoist Owner-only (`400 shop_hoist_owner_only`). Demo session cookie (`pc_member_session`) — **not OIDC**. **Not** migrated to projectcar.ca.
 - **Calendar redesign (on `main`, PR #18):** Monthly = hoist-density heat-map vs 08:00–21:00. Weekly = **separate per-hoist hour grids**. Owner includes the shop hoist (Owner-only); Member is Bays 1–5. Create / quote / cancel unchanged.
 - **Next-day fill (on `main`, PR #20):** leftover customer-bay hours tomorrow get a **10–25%** fill factor; urgency drives the cut. Notification outbox (email stub / later push / SMS). Management `/fill` on Doc demo (`ops.` + temporary `app.` alias). Explicit extra multiplier — not a change to the locked v1 band / overlay tables. See `token-pricing.md`. Not a public price. No Stripe.
-- **Breadth-first placeholders (on `main`, PR #21 — demo UI only):** Ops on **`ops.`** and the temporary `app.` alias: `/parts` (ops-side shop/parts POs — **not** the member catalog), `/tools` (inventory / orders / member requests / planned purchases), `/jobs` (sample tasks **with token bounties**), `/cameras` (every cam + door logs + AI stubs), `/payments` (membership + parts billing stubs; **AI tracks by default**, humans on exceptions). Member (customer-facing `/member`): Parts placeholder, job board with token amounts, **primary camera only**. **Not** live purchasing, inventory, Frigate, Stripe, or claim/complete.
+- **Breadth-first placeholders (on `main`, PR #21 — demo UI only; Tools / Parts deepened this slice):** Ops on **`ops.`** and the temporary `app.` alias: `/parts` (PT stock + qty / reorder + POs — **not** the member catalog), `/tools` (B1–B6 bay kits + TC crib checkout stub + orders / requests / planned), `/jobs` (sample tasks **with token bounties**), `/cameras` (every cam + door logs + AI stubs), `/payments` (membership + parts billing stubs; **AI tracks by default**, humans on exceptions). Member (customer-facing `/member`): Parts **request desk** (PT / TC SKUs, not commerce), job board with token amounts, **primary camera only**. **Not** live purchasing, QR checkout, Frigate, Stripe, or claim/complete. Demo SKUs are labeled placeholder.
 - **Schedule harden (on `main`, PR #24 / `91c547e`):** Owner `/schedule` and Member `/member/schedule` **fail-soft** if bookings list 500s — month heat-map + weekly grids still render. Windows are sent as **America/Regina instants (UTC ISO)** so FastAPI cannot 422 on naive wall-clock strings.
 
 ---
@@ -77,10 +77,11 @@ Placeholder pages (Parts, Tools, Job board, Cameras, Payments) are **demo UI** (
 
 - Member-to-member hoist time trades/offers — bookings should not be glued to one member forever (transferable booking or trade-offer entity). Design note only; do not design the trade system now.
 - Member booking assistant (Ben later-want) — a bot that helps members book hoist dates. Same Later bucket as trades. After Member UI is solid; likely Grok / Apex-replacement public chat lane, **not** Owner admin. Do **not** build in current Shop OS slices. Related to the planned chat dual surface (Next) — still not an implementation.
-- **Member parts purchasing (full).** Placeholder on the Parts surface is **build-breadth (now)**. Ops Parts is a PO tracker, not the member catalog. Full member purchasing is **Later**. Do not claim a shop is selling parts. Flag `pc.marketplace` stays **off**.
+- **Member parts purchasing (full).** Member `/member/parts` is a **request desk** (build-breadth now) — PT stock or TC crib tool, not a cart. Ops Parts is PT qty / reorder + POs, not the member catalog. Full member purchasing is **Later**. Do not claim a shop is selling parts. Flag `pc.marketplace` stays **off**.
 - **Job board claim / complete / assign** — workflow is Later. Placeholder board with sample token-paid chores is what shipped.
 - **Live Frigate (or equivalent NVR)** — flag `pc.cameras` stays **off** until wired. Occupancy is a **hint, not source of truth**. Door logs ops-only.
-- **Live tool inventory / QR / checkout** — ops Tools placeholders are IA only.
+- **Live tool inventory / QR / checkout / hardware** — prefix model is locked (below); ops `/tools` lists are demo SKUs. Return mail, overdue workflow, and readers stay Later.
+- **Consumables (`CM`)** — prefix reserved. Full CM desk Later. Trivial stub note only.
 - **Stripe / live billing** — ops Payments placeholder (membership + parts; AI default, human on exceptions) is IA only. `pc.payments` stays **off**. Full Stripe is Later. AI tracks payments by default; humans get alerts on exceptions.
 
 ---
@@ -90,10 +91,11 @@ Placeholder pages (Parts, Tools, Job board, Cameras, Payments) are **demo UI** (
 - **Host split** is locked (table above). Customer = `projectcar.ca` / www. Management = **`ops.projectcar.ca`** (LIVE at edge; staff-on-shift, not Owner-only). `app.` is a **temporary alias** until Ben cuts that DNS — **not removed**. Local DNS cache on some clients is not a product rollback — use `app.`.
 - **IA freeze.** Ben is happy with the current app direction. Do **not** start major IA reshuffles.
 - **Build breadth (now)** and **Ship-MVP cut (later gate)** are **two locks** (tables above). Build = placeholders in the app for IA. Public MVP = later cut of unfinished / unnecessary. Do **not** read this as “v1 includes everything forever.”
-- **Ops sections (locked IA, placeholders now):** **Parts** and **Tools**. Tools = tool inventory, tool orders, customer/member tool requests, planned tool purchases. Not a claim that inventory or purchasing is shipped.
+- **Inventory prefixes (LOCKED — Ben + Chief):** **B1–B6** = resident bay hand-tool kits (one kit per hoist/bay). **B6 = shop hoist bay** — same B-scheme as other bays, **not `SH`**. **TC** = tool-crib specialty tools (checkout / return / overdue). **PT** = parts inventory (stock, PO, member requests). **CM** = consumables **later** (do not build a full CM UI now). SKU shape `PREFIX-CATEGORY-NNN` (category may include extra hyphen segments): `B2-WR-014`, `TC-TQ-003`, `PT-OIL-5W30-012`. Bay-resident tools stay on the cart (no crib checkout). Crib tools check out. Parts are qty / reorder + requests — not tool checkout and not member commerce. Demo UI / seed SKUs only until a thin API lands. Existing `tools` table (`name` / `part_number`) stays schema-only in this slice.
+- **Ops sections (locked IA, placeholders now):** **Parts** (PT list + POs) and **Tools** (B1–B6 lists + TC checkout stub, plus orders / requests / planned). Not a claim that inventory or purchasing is shipped.
 - **Job board (locked IA, placeholder now):** shop chores (cleaning, tool maintenance, random upkeep). Ops posts a **token bounty**; member claim/complete credits the **append-only token ledger** (same tokens as hoist booking, **not Stripe**). Placeholder must show sample amounts. Full workflow Later.
 - **Cameras (locked IA, placeholder now):** members = **one primary shop cam**. Ops = **all cams** + door entry logs + Frigate / AI collection. Not a claim that Frigate is wired on `main`.
-- **Member parts purchasing** = placeholder now; **full Later**.
+- **Member parts / tool requests** = request desk now; **full purchasing Later**. No member Tools nav.
 - **Chat** = **planned dual surface**, not shipped. Member/customer (+ later Grok on projectcar.ca) and Ops admin (all threads / assign / mute / staff notes / escalate). Human vs AI vs both is still open. Apex sidecar **deferred**. Do not invent an implementation.
 - No Stripe. No “shop is open” claims. No live public pricing until Ben says so.
 - Token pricing v1 is locked: bands + overlay in `America/Regina` — `token-pricing.md`. `hours × 100 × band × overlay × fill`. Defaults are Owner-editable placeholders, not public prices. Allotments: **Basic 1000 / Premium 1500** per period. Two tiers only (no Pro, no Weekly). Fill is an explicit extra factor (10–25%), not a rewrite of the overlay table.
@@ -105,7 +107,7 @@ Placeholder pages (Parts, Tools, Job board, Cameras, Payments) are **demo UI** (
 - Shop members never get Nextcloud accounts.
 - No n8n.
 - **Lead owns Doc `:8000`.** Do not hand uvicorn restarts to Chief.
-- **Ops Parts** is a shop/parts PO tracker — distinct from `/member/parts`.
+- **Ops Parts** is PT stock + PO tracker — distinct from `/member/parts` (requests only).
 - **Payments (ops):** membership + parts. AI tracks by default; humans on exceptions. Placeholder only. Stripe Later.
 
 Specs: `project-car-application-specification.md` §2 / §13 / §15 / §16 / §17, `token-pricing.md`, `website-webapp-specification.md`, `platform-architecture.md` §5.

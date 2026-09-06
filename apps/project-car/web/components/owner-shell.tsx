@@ -59,10 +59,10 @@ export function OwnerShell({
       <div className="demo-banner">
         Management demo on the current app.projectcar.ca alias (Doc). Intended
         host is ops.projectcar.ca — naming only, no DNS yet. Calendar is the
-        month heat-map + weekly per-hoist grids. Parts, Tools, job board,
-        cameras, and Payments are labeled placeholders — not live purchasing,
-        inventory, or camera feeds. The shop is not open. This is not live
-        pricing or Stripe.
+        month heat-map + weekly per-hoist grids. Parts (PT) and Tools (B1–B6
+        bay kits + TC crib) use locked SKU prefixes — labeled placeholders,
+        not live purchasing, checkout, or camera feeds. The shop is not open.
+        This is not live pricing or Stripe.
       </div>
       <main className={wide ? "wide" : undefined}>{children}</main>
     </div>
