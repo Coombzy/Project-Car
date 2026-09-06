@@ -1,6 +1,6 @@
 # High-Level Overview — Apps + Business
 
-**Last Updated:** 2026-08-12  
+**Last Updated:** 2026-09-06  
 **Part of:** Project Car documentation hierarchy  
 **Canonical location:** `Coombzy/Project-Car` → `Docs/high-level-apps-and-business-specification.md`
 
@@ -18,7 +18,7 @@ Sits next to `master-overview-specification.md`. Detail lives in the child specs
 
 **Now:** Nextcloud 30 (Files, Calendar, Talk, Deck, Forms, Photos, Passwords) + Vaultwarden on Doc.
 
-**Next:** Custom Next.js cockpit over those APIs — health, calendar, tasks, agent feed — plus deep links. Do not rebuild Nextcloud.
+**Next:** Custom Next.js cockpit over those APIs — health, calendar, tasks, agent feed — plus deep links. Do not rebuild Nextcloud. **Held** until Owner booking is merged **and** live on Doc.
 
 **Spec:** `mission-control-architecture.md`
 
@@ -28,9 +28,9 @@ Sits next to `master-overview-specification.md`. Detail lives in the child specs
 
 **Users:** Public visitors now. Ben as Owner in v1. Staff and paying members later.
 
-**Now:** [projectcar.ca](https://projectcar.ca) brochure (Home, About, The Shop, Membership, Roadmap, Chat, Contact) + Apex.
+**Now:** [projectcar.ca](https://projectcar.ca) brochure (Home, About, The Shop, Membership, Roadmap, Chat, Contact) + public waitlist (`POST https://api.projectcar.ca/waitlist`). Apex public chat is **deferred** (Ben). Owner shop OS is on `main` (API + web); not claimed live on `app.projectcar.ca`.
 
-**v1:** Waitlist + Owner shop OS (tiers, members, hoist booking, token ledger, week schedule).
+**v1 (on main):** Waitlist + Owner shop OS (tiers, members, hoist booking, token ledger, week schedule). Remaining: harden booking and take it live on Doc.
 
 **Later:** Member/staff login, payments, NFC, cameras, marketplace, fabrication calculators.
 
@@ -70,10 +70,10 @@ v1 software does not collect payment.
 
 | App | Stands alone? | Better with |
 |-----|---------------|-------------|
-| Nextcloud / MC | Yes — already daily-usable | Cockpit UI |
-| projectcar.ca | Yes | Waitlist API |
-| Shop OS | Yes (Owner tool) | Calendar mirror, later member login |
+| Nextcloud / MC | Yes — already daily-usable | Cockpit UI (held until Owner booking is live on Doc) |
+| projectcar.ca | Yes | Waitlist API (live) |
+| Shop OS | Yes (Owner tool on `main`) | Live on Doc / `app.projectcar.ca`; later member login |
 
 ---
 
-**Updated 2026-08-12** to match locked decisions: MC stays personal; Project Car is the customer/employee product; Fitness is deferred; site + waitlist + hoist booking are v1.
+**Updated 2026-09-06** to match shipped reality: waitlist + Owner shop OS are on `main`; Apex deferred; Pages is the brochure target (not done); MC cockpit held. Locks unchanged: no Stripe / no “shop is open”; members ≠ Nextcloud; no n8n.

@@ -1,10 +1,10 @@
 # Integration Plan — Apps, Agents, Home Lab & Business
 
-**Last Updated:** 2026-08-12  
+**Last Updated:** 2026-09-06  
 **Status:** Living spec (v2)  
 **Canonical location:** `Coombzy/Project-Car` → `Docs/integration-plan.md`
 
-The previous repo copy of this file was an empty stub. This version matches the live hub and the 2026-08-12 product decisions.
+The previous repo copy of this file was an empty stub. This version matches the live hub and the 2026-09-06 shipped reality (waitlist + Owner shop OS on `main`).
 
 Related: `master-overview-specification.md`, `platform-architecture.md`, `mission-control-architecture.md`, `project-car-application-specification.md`.
 
@@ -89,7 +89,7 @@ Later. Backend-agnostic “session / recovery” model when we pick wger or Spar
 
 ### Public site ↔ shop API
 
-`POST /waitlist` from membership/contact pages. That is the first real integration.
+`POST /waitlist` from membership/contact pages. That is the first real integration — **Done** (live form → `https://api.projectcar.ca/waitlist`). Owner API is authenticated and separate.
 
 ---
 
@@ -114,7 +114,7 @@ Routing: planning → Porsche; deep analysis → Doc; code/infra → McKing; pho
   Tailscale / HTTPS
         |
    [Doc — hub now]
-   Nextcloud · Vaultwarden · site · (future MC app · shop API)
+   Nextcloud · Vaultwarden · site · shop API (`api.projectcar.ca`) · (MC app held)
         |
    later migrate
         |
@@ -166,9 +166,9 @@ No third party writes shop SQL directly.
 - [x] Nextcloud + apps on Doc
 - [x] Public brochure on projectcar.ca
 - [x] Docs reconciled in this repo
-- [ ] Waitlist API + form
-- [ ] Shop booking (Owner)
-- [ ] MC cockpit over CalDAV/Deck/WebDAV
+- [x] Waitlist API + form
+- [x] Shop booking (Owner) on `main` — not yet live on Doc / `app.projectcar.ca`
+- [ ] MC cockpit over CalDAV/Deck/WebDAV (**held** until Owner booking is live on Doc)
 - [ ] Off-box backup to McKing
 
 ### Next
@@ -216,4 +216,4 @@ No third party writes shop SQL directly.
 
 ---
 
-**Updated 2026-08-12.** Maintained in `Docs/` on `Coombzy/Project-Car`.
+**Updated 2026-09-06.** Maintained in `Docs/` on `Coombzy/Project-Car`.

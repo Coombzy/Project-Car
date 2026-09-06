@@ -1,6 +1,6 @@
 # Platform Architecture
 
-**Last Updated:** 2026-08-12  
+**Last Updated:** 2026-09-06  
 **Status:** Living spec (v1)  
 **Canonical location:** `Coombzy/Project-Car` → `Docs/platform-architecture.md`
 
@@ -54,11 +54,11 @@ Coombzy/Project-Car
   Architecture/
     Modular-Architecture.md     pointer to this file
   apps/
-    website/                    projectcar.ca (move from hermes-tools)
-    mission-control/            Next.js cockpit
+    website/                    projectcar.ca (git SSOT; Apex stripped; Pages target)
+    mission-control/            Next.js cockpit — **held** until Owner booking is live on Doc
     project-car/
-      web/                      Next.js shop UI
-      api/                      FastAPI + Alembic
+      web/                      Next.js shop UI (on `main`)
+      api/                      FastAPI + Alembic (on `main`)
   packages/
     ui/                         shared look (dark industrial)
     api-client/                 typed client for the shop API
@@ -75,19 +75,19 @@ Do **not** vendor Nextcloud’s `data/` or MariaDB files into this tree.
 
 | Concern | Choice | Notes |
 |---------|--------|--------|
-| Public site | Static HTML/CSS + Nginx (already live) | Waitlist form will POST to the shop API |
-| MC cockpit | Next.js | Private; CalDAV/Deck/WebDAV server-side |
+| Public site | Static HTML/CSS in `apps/website/` | Waitlist form POSTs to `https://api.projectcar.ca/waitlist`. Brochure target is **Cloudflare Pages** (not done). |
+| MC cockpit | Next.js | Private; CalDAV/Deck/WebDAV server-side. **Held** until Owner booking is live on Doc. |
 | Shop UI | Next.js | PWA, mobile-friendly |
 | Shop API | FastAPI + SQLAlchemy 2 + Alembic | OpenAPI generated |
 | Shop DB | Postgres 16 | Dedicated volume |
 | NC DB | MariaDB 11.4 | Untouched by apps |
 | Orchestration | Hermes + custom adapters + Discord | **No n8n** |
 | Chat (personal) | Nextcloud Talk + Discord | Matrix deferred |
-| Chat (public) | Apex on projectcar.ca | Not an admin tool |
+| Chat (public) | Apex on projectcar.ca — **deferred** (Ben) | Not an admin tool; not P0 |
 | Identity (MC) | Single-user session / mesh | |
 | Identity (PC v1) | Owner session | |
 | Identity (PC later) | OIDC (Pocket ID / Authelia) | |
-| Tunnel / DNS | Cloudflare | `projectcar.ca` already live |
+| Tunnel / DNS | Cloudflare | `projectcar.ca` + `api.projectcar.ca` live (lab tunnels). Brochure target is Pages. |
 | Mesh | Tailscale | Remote access to private services |
 
 ### Banned
@@ -124,11 +124,13 @@ There is no `chat.legacy` / Rocket.Chat flag. That idea is retired.
 |-------|--------|
 | Specs, app source | `Coombzy/Project-Car` |
 | Nextcloud + Vaultwarden compose, data, `.env` | `~/hermes-tools/mission-control` |
-| Public site runtime (until moved) | `~/hermes-tools/project-car-website` |
+| Public site git SSOT | `apps/website/` |
+| Public site runtime (until Pages cutover) | `~/hermes-tools/project-car-website` |
+| Shop API stay-up on Doc | LaunchAgent `com.projectcar.shop-api` → `~/hermes-tools/mission-control/shop-api/run-shop-api.sh` (see `api-stay-up.md`) |
 | NC backups | `~/Desktop/Mission-Control/backups/nextcloud/` |
 | Agent local notes | `~/Desktop/Project Car/` |
 
-When the website moves into `apps/website/`, the Docker origin on Doc can bind-mount that folder. No need to change Cloudflare.
+`apps/website/` is already in git. Live origin stays Doc tunnel until Pages. Shop API stays the lab tunnel.
 
 ---
 
@@ -142,16 +144,22 @@ When the website moves into `apps/website/`, the Docker origin on Doc can bind-m
 
 ---
 
-## 8. First code slice (after these docs)
+## 8. Sequence (2026-09-06)
 
-1. Keep using `~/src/Project-Car` as the git worktree.
-2. Add `apps/project-car/api` with Alembic and the corrected domain model + `waitlist_entries`.
-3. Add `apps/project-car/web` Owner dashboard + week schedule.
-4. Add `POST /waitlist` and wire the public membership/contact page.
-5. Add `apps/mission-control` health + CalDAV + Deck + heartbeat feed.
-6. Add `infra/compose` Postgres for the shop only.
+Do **not** treat “add `apps/…`” as future work where the trees already exist.
 
-Do not block on NFC, cameras, Stripe, or moving Nextcloud.
+| Step | Status |
+|------|--------|
+| `~/src/Project-Car` as the git worktree | Ongoing |
+| `apps/project-car/api` + Alembic + `waitlist_entries` | **Done** on `main` (PR #2 + #3) |
+| `apps/project-car/web` Owner dashboard + week schedule | **Done** on `main` |
+| `POST /waitlist` + public Membership/Contact form | **Done** |
+| `infra/compose` shop Postgres only | **Done** |
+| Owner booking **hardened + live** on Doc / `app.projectcar.ca` | **Next** |
+| Cloudflare Pages cutover for the brochure | **Next** (GO’d; blocked on CF ↔ GitHub auth) |
+| `apps/mission-control` health + CalDAV + Deck + heartbeat feed | **Held** until Owner booking is merged **and** live on Doc |
+
+Do not block on NFC, cameras, Stripe, or moving Nextcloud. Do not start the MC cockpit before Owner booking is live on Doc.
 
 ---
 
