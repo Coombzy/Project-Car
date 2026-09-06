@@ -36,7 +36,7 @@ Living one-pager: what’s live, what’s next, locks. Product detail stays in t
 
 - No Stripe. No “shop is open” claims. No live pricing until Ben says so.
 - Token pricing v1 is locked: bands + overlay in `America/Regina` — `token-pricing.md`. Defaults are Owner-editable placeholders, not public prices. Allotments: **Basic 1000 / Premium 1500** per period. Two tiers only (no Pro, no Weekly).
-- **6 hoists** in calendar/seed. Exactly one is the shop hoist (`is_shop`). Shop/business work (`kind=shop`, Owner-only) has priority on that bay — customer bookings that overlap open shop work are rejected. No silent displacement. See `token-pricing.md`.
+- **6 hoists** in calendar/seed. Exactly one is the shop hoist (`is_shop`). **v1 = (A) Owner-only** — customers cannot book it (`400 shop_hoist_owner_only`). **(B) bumpable** (customers book it, shop work displaces them) is a later tweak only. See `token-pricing.md`. No Stripe. The shop is not open.
 - Hold the Mission Control cockpit until Owner booking is merged **and** live on Doc.
 - Shop members never get Nextcloud accounts.
 - No n8n.

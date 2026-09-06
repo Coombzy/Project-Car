@@ -101,7 +101,7 @@ These rules are the product, not an implementation detail.
 5. Overdue bookings do not auto-charge money in v1. They flip to `overdue` and can open an `Incident` (`late_return`) for the Owner to review.
 6. Cancelled bookings refund any remaining reserve.
 7. Tier fields (`included_tokens`, `booking_window_days`, `max_simultaneous_bookings`) are enforced in the API, not only in the UI.
-8. **Shop hoist priority.** Exactly one hoist is `is_shop`. Owner-only `kind=shop` bookings on that hoist block overlapping customer create/confirm (`409 shop_priority`). Customers yield — they cannot displace shop work. Shop create does not silently cancel a confirmed/active customer booking (`409 hoist_overlap`); Owner cancels first. No public booking. No Stripe.
+8. **Shop hoist — v1 choice (A).** Exactly one hoist is `is_shop`. **Owner-only:** customers cannot book it (`400 shop_hoist_owner_only`). Only Owner `kind=shop` landings. **(B) bumpable** (customer overflow, shop work displaces) is a later tweak — do not implement displace/refund-on-bump in v1. No public booking. No Stripe. See `token-pricing.md`.
 
 Dollar prices and tier **names** stay Owner-editable. Slot cost is **not** an arbitrary Owner-entered reserve amount — see §5.1. Seed allotment placeholders: Basic **1000** / Premium **1500** per period (`token-pricing.md`). Two tiers, not three. No Pro. No Weekly.
 
@@ -339,7 +339,7 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 ## 14. Open product details (not blockers)
 
 1. Exact dollar prices and final public names. Allotment placeholders (Basic **1000** / Premium **1500**) and the **100 tokens/hour** base are in `token-pricing.md`. Band / overlay defaults are locked there as Owner-editable placeholders.
-2. Hoist inventory is locked for the demo/spec: **6 hoists**, exactly one shop-priority hoist (`is_shop` + `kind=shop`). Members may book any customer bay; the shop hoist yields to shop work.
+2. Hoist inventory is locked: **6 hoists**, exactly one shop hoist. **v1 = (A) Owner-only** on that bay. Members book the five customer bays. **(B) bumpable** is a later tweak.
 3. Whether a member is bound to a “home bay” (unlocked; any customer bay for now).
 4. Period reset cadence (monthly vs other) — allotments are per period; cadence still open.
 5. Public app hostname timing (`app.projectcar.ca` vs Tailscale-only until v2).

@@ -57,7 +57,7 @@ The login screen is pre-filled and labeled as a **demo**. After `python -m app.s
 | Email | `owner@projectcar.ca` |
 | Password | `changeme` |
 
-These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (6 hoist cards including the shop hoist, today's bookings, token-at-risk), Schedule (week by hoist), Members (Basic / Premium), Hoists, Waitlist (mark contacted), and Tiers (edit allowances). Re-seed notes: 6 bays + one shop-priority hoist.
+These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (6 hoist cards including the Owner-only shop hoist, today's bookings, token-at-risk), Schedule (week by hoist), Members (Basic / Premium), Hoists, Waitlist (mark contacted), and Tiers (edit allowances). Re-seed notes: 6 bays + one Owner-only shop hoist (v1 choice A).
 
 Re-seed anytime from the API directory: `python -m app.seed --reset`. See `../api/README.md`.
 

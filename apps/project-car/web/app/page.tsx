@@ -17,9 +17,9 @@ export default async function DashboardPage() {
         <p className="eyebrow">Owner · demo</p>
         <h1>Shop dashboard</h1>
         <p className="lede">
-          Today&apos;s bays (6 hoists, one shop-priority), bookings, waitlist,
-          and members running low on tokens. Seeded sample data — not a live
-          shop.
+          Today&apos;s bays (6 hoists, one Owner-only shop hoist), bookings,
+          waitlist, and members running low on tokens. Seeded sample data — not
+          a live shop.
         </p>
         <div className="metrics">
           <div className="metric">

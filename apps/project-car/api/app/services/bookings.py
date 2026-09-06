@@ -63,27 +63,6 @@ def hoist_has_overlap(
     return session.scalars(stmt).first() is not None
 
 
-def shop_work_blocks_customer(
-    session: Session,
-    hoist_id: UUID,
-    start_at: datetime,
-    end_at: datetime,
-    *,
-    exclude_id: UUID | None = None,
-) -> bool:
-    """Open shop work (pending/confirmed/active) blocks customer bookings on that hoist."""
-    stmt = select(Booking.id).where(
-        Booking.hoist_id == hoist_id,
-        Booking.kind == BookingKind.SHOP,
-        Booking.status.in_(OPEN_STATUSES),
-        Booking.start_at < end_at,
-        Booking.end_at > start_at,
-    )
-    if exclude_id is not None:
-        stmt = stmt.where(Booking.id != exclude_id)
-    return session.scalars(stmt).first() is not None
-
-
 def _open_booking_count(session: Session, member_id: UUID) -> int:
     rows = session.scalars(
         select(Booking.id).where(
@@ -178,11 +157,11 @@ def create_booking(
     if member.status != MemberStatus.ACTIVE:
         raise _error(400, "member_not_bookable", "Only active members can book a hoist.")
 
-    if shop_work_blocks_customer(session, hoist.id, start_at, end_at):
+    if hoist.is_shop:
         raise _error(
-            409,
-            "shop_priority",
-            "Shop work already claims this window on that hoist. Customer bookings cannot displace it.",
+            400,
+            "shop_hoist_owner_only",
+            "The shop hoist is Owner-only. Customer bookings use the five customer bays.",
         )
 
     window = timedelta(days=member.tier.booking_window_days)
@@ -253,7 +232,7 @@ def _create_shop_booking(
         raise _error(
             409,
             "hoist_overlap",
-            "That hoist already has a confirmed or active booking in this window. Cancel it before placing shop work.",
+            "That hoist already has a confirmed or active booking in this window.",
         )
 
     booking = Booking(
@@ -278,17 +257,11 @@ def confirm_booking(session: Session, booking_id: UUID) -> Booking:
         raise _error(400, "invalid_transition", "Only pending bookings can be confirmed.")
     if booking.hoist.status in UNAVAILABLE_HOIST:
         raise _error(400, "hoist_unavailable", "That hoist is in maintenance or locked.")
-    if booking.kind == BookingKind.CUSTOMER and shop_work_blocks_customer(
-        session,
-        booking.hoist_id,
-        booking.start_at,
-        booking.end_at,
-        exclude_id=booking.id,
-    ):
+    if booking.kind == BookingKind.CUSTOMER and booking.hoist.is_shop:
         raise _error(
-            409,
-            "shop_priority",
-            "Shop work already claims this window on that hoist. Customer bookings cannot displace it.",
+            400,
+            "shop_hoist_owner_only",
+            "The shop hoist is Owner-only. Customer bookings use the five customer bays.",
         )
     if hoist_has_overlap(
         session,

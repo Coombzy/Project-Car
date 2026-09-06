@@ -61,10 +61,9 @@ export default async function SchedulePage({
         <p className="eyebrow">Week view · America/Edmonton</p>
         <h1>Schedule</h1>
         <p className="lede">
-          Six bays — the shop hoist is reserved for internal work first.
-          Customer bookings cannot displace open shop work. Reserve cost is
-          duration × 100 × band × overlay. Complete debits; cancel refunds the
-          locked reserve.
+          Six bays — the shop hoist is Owner-only (v1 choice A). Customers
+          book the other five. Reserve cost is duration × 100 × band × overlay.
+          Complete debits; cancel refunds the locked reserve.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
 
@@ -181,8 +180,8 @@ export default async function SchedulePage({
           <h2>Create booking</h2>
           <p className="lede">
             Customer bookings start pending; the server computes reserve from the
-            window. Shop work is Owner-only on the shop hoist and does not take
-            member tokens.
+            window. Shop work is Owner-only on the shop hoist (customers cannot
+            book it) and does not take member tokens.
           </p>
           {activeMembers.length === 0 || hoists.length === 0 ? (
             <p className="muted">Need at least one active member and one hoist.</p>

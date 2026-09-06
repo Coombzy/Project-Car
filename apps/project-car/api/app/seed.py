@@ -678,7 +678,7 @@ def main(argv: list[str] | None = None) -> int:
     mode = "reset + seed" if args.reset else "upsert seed"
     print(f"Shop OS demo data ready ({mode}).")
     print(
-        "  {members} members, {hoists} hoists (5 customer bays + 1 shop hoist), "
+        "  {members} members, {hoists} hoists (5 customer bays + 1 Owner-only shop hoist), "
         "{bookings} bookings this week, {waitlist} waitlist entries, {tiers} tiers "
         "(Basic 1000 / Premium 1500).".format(**summary)
     )

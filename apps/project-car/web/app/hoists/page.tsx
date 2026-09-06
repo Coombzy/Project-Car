@@ -19,9 +19,9 @@ export default async function HoistsPage({
         <p className="eyebrow">GET /hoists</p>
         <h1>Hoists</h1>
         <p className="lede">
-          Demo inventory is 6 bays — exactly one shop hoist for internal work.
-          Shop work has priority on that bay. Occupied flips on check-in;
-          complete frees the bay when nothing else is active.
+          Demo inventory is 6 bays — exactly one shop hoist, Owner-only for
+          internal work (v1 choice A; customers cannot book it). Occupied flips
+          on check-in; complete frees the bay when nothing else is active.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
 

@@ -313,7 +313,7 @@ def test_ninety_minute_booking_via_api(client: TestClient) -> None:
     assert _dec(body["reserved_tokens"]) == quote_reserve(start, end).final_reserve_cost
 
 
-def test_shop_hoist_priority_blocks_customer(client: TestClient) -> None:
+def test_shop_hoist_is_owner_only(client: TestClient) -> None:
     member = create_member(client)
     customer_bay = create_hoist(client, name="Bay 1")
     shop = create_hoist(client, name="Shop", location_label="Internal", is_shop=True)
@@ -362,11 +362,11 @@ def test_shop_hoist_priority_blocks_customer(client: TestClient) -> None:
             "end_at": end,
         },
     )
-    assert blocked.status_code == 409
-    assert blocked.json()["error"]["code"] == "shop_priority"
+    assert blocked.status_code == 400
+    assert blocked.json()["error"]["code"] == "shop_hoist_owner_only"
 
     later_start, later_end = _window(12)
-    overflow = client.post(
+    still_blocked = client.post(
         "/bookings",
         headers=AUTH,
         json={
@@ -376,8 +376,21 @@ def test_shop_hoist_priority_blocks_customer(client: TestClient) -> None:
             "end_at": later_end,
         },
     )
-    assert overflow.status_code == 201, overflow.text
-    assert overflow.json()["kind"] == "customer"
+    assert still_blocked.status_code == 400
+    assert still_blocked.json()["error"]["code"] == "shop_hoist_owner_only"
+
+    on_customer_bay = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": customer_bay["id"],
+            "start_at": later_start,
+            "end_at": later_end,
+        },
+    )
+    assert on_customer_bay.status_code == 201, on_customer_bay.text
+    assert on_customer_bay.json()["kind"] == "customer"
 
     second_shop = client.post(
         "/hoists",
@@ -386,25 +399,3 @@ def test_shop_hoist_priority_blocks_customer(client: TestClient) -> None:
     )
     assert second_shop.status_code == 409
     assert second_shop.json()["error"]["code"] == "duplicate_shop_hoist"
-
-
-def test_pending_customer_yields_to_later_shop_confirm(client: TestClient) -> None:
-    member = create_member(client)
-    shop = create_hoist(client, name="Shop", is_shop=True)
-    start, end = _window(7)
-    customer = client.post(
-        "/bookings",
-        headers=AUTH,
-        json={"member_id": member["id"], "hoist_id": shop["id"], "start_at": start, "end_at": end},
-    )
-    assert customer.status_code == 201, customer.text
-    shop_work = client.post(
-        "/bookings",
-        headers=AUTH,
-        json={"kind": "shop", "hoist_id": shop["id"], "start_at": start, "end_at": end},
-    )
-    assert shop_work.status_code == 201, shop_work.text
-    assert client.post(f"/bookings/{shop_work.json()['id']}/confirm", headers=AUTH).status_code == 200
-    conflict = client.post(f"/bookings/{customer.json()['id']}/confirm", headers=AUTH)
-    assert conflict.status_code == 409
-    assert conflict.json()["error"]["code"] == "shop_priority"

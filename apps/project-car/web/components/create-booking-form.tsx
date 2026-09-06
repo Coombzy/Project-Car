@@ -22,6 +22,7 @@ export function CreateBookingForm({ members, hoists, weekStart, defaultStart, de
   const [quote, setQuote] = useState<BookingQuote | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const shopHoist = hoists.find((hoist) => hoist.is_shop);
+  const hoistChoices = kind === "shop" ? hoists.filter((hoist) => hoist.is_shop) : hoists.filter((hoist) => !hoist.is_shop);
 
   useEffect(() => {
     if (kind === "shop" || !startAt || !endAt) {
@@ -101,13 +102,13 @@ export function CreateBookingForm({ members, hoists, weekStart, defaultStart, de
           <select
             name="hoist_id"
             required
-            defaultValue={kind === "shop" ? shopHoist?.id ?? hoists[0]?.id : hoists[0]?.id}
+            defaultValue={kind === "shop" ? shopHoist?.id : hoistChoices[0]?.id}
             key={kind}
           >
-            {hoists.map((hoist) => (
+            {hoistChoices.map((hoist) => (
               <option key={hoist.id} value={hoist.id}>
                 {hoist.name}
-                {hoist.is_shop ? " · shop hoist" : ""} · {hoist.status}
+                {hoist.is_shop ? " · shop hoist · Owner-only" : ""} · {hoist.status}
               </option>
             ))}
           </select>
@@ -139,8 +140,8 @@ export function CreateBookingForm({ members, hoists, weekStart, defaultStart, de
       </div>
       {kind === "shop" ? (
         <p className="muted">
-          Shop work is Owner-only on the shop hoist. No member tokens reserved.
-          Customer bookings cannot take this window once shop work is open.
+          Shop work is Owner-only on the shop hoist (v1 choice A). Customers
+          cannot book this bay. No member tokens reserved.
         </p>
       ) : rule ? (
         <div className="quote-preview">
