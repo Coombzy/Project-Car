@@ -9,7 +9,7 @@
   <meta property="og:image" content="/assets/shop.jpg" />
   <link rel="icon" href="assets/mcking.jpg" type="image/jpeg" />
   <title>Membership — Project Car</title>
-  <link rel="stylesheet" href="styles.css?v=29" />
+  <link rel="stylesheet" href="styles.css?v=30" />
 </head>
 <body>
   <div class="bg" aria-hidden="true"></div>
@@ -19,13 +19,12 @@
     <label for="nav-toggle" class="nav-toggle-btn" aria-label="Open menu">
       <span></span><span></span><span></span>
     </label>
-        <ul class="nav-list">
+    <ul class="nav-list">
       <li><a href="/">Home</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="the-shop.html">The Shop</a></li>
       <li><a href="membership.html" class="is-active" aria-current="page">Membership</a></li>
       <li><a href="roadmap.html">Roadmap</a></li>
-      <li><a href="chat.html">Chat</a></li>
       <li><a href="contact.html">Contact</a></li>
     </ul>
   </nav>
@@ -106,7 +105,7 @@
 
       <div class="divider" role="presentation"></div>
 
-      <h2 class="section-heading">Interested in membership?</h2>
+      <h2 class="section-heading" id="waitlist">Interested in membership?</h2>
       <p class="description">
         Join the waitlist if you want early access when membership packaging firms up. This is interest only — not a booking, not a sale, and not a claim that the shop is open yet.
       </p>
@@ -135,7 +134,7 @@
           <div class="waitlist-actions">
             <button type="submit">Join waitlist</button>
           </div>
-          <p class="waitlist-status" data-waitlist-status hidden></p>
+          <p class="waitlist-status" data-waitlist-status hidden aria-live="polite"></p>
         </form>
       </div>
       <p class="contact" style="margin-top:1rem">
@@ -151,6 +150,6 @@
     <span>projectcar.ca</span>
   </footer>
   <script src="shop-config.js?v=1"></script>
-  <script src="waitlist.js?v=1" defer></script>
+  <script src="waitlist.js?v=2" defer></script>
 </body>
 </html>
