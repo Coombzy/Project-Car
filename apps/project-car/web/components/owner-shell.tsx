@@ -31,7 +31,7 @@ export function OwnerShell({
       <header className="topbar">
         <div className="brand">
           <strong>Project Car</strong>
-          <span>Shop OS · Owner demo</span>
+          <span>Management · Owner demo · app alias</span>
         </div>
         <nav className="nav">
           {NAV.map((item) => (
@@ -52,8 +52,10 @@ export function OwnerShell({
         </nav>
       </header>
       <div className="demo-banner">
-        Demo shop OS — sample members, hoists, and bookings so you can walk the
-        product. The shop is not open. This is not live pricing or payment.
+        Management demo on the current app.projectcar.ca alias (Doc). Intended
+        host is ops.projectcar.ca — naming only, no DNS yet. Keep building
+        calendar here. The shop is not open. This is not live pricing or
+        payment.
       </div>
       <main className={wide ? "wide" : undefined}>{children}</main>
     </div>

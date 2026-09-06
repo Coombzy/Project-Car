@@ -1,10 +1,14 @@
-# Project Car shop web (Owner + Member)
+# Project Car shop web (management UI)
 
-Next.js Shop OS shell. The browser talks to this app only; the Next.js server calls the FastAPI shop API with the v1 session cookies (`pc_owner_session` or `pc_member_session`).
+Next.js Shop OS shell for **management**. Live today on the temporary alias `app.projectcar.ca` / Doc `:3000`. Intended host name is `ops.projectcar.ca` (Owner + staff on shift) — naming lock only, no DNS in this slice. Keep building calendar on this current UI.
+
+The browser talks to this app only; the Next.js server calls the FastAPI shop API with the v1 session cookies (`pc_owner_session` or `pc_member_session`).
+
+**Host lock (Ben 2026-09-06):** `projectcar.ca` = customer. `ops.projectcar.ca` = intended management. `app.projectcar.ca` = temporary alias (live). Member `/member` is **temporarily parked** on this demo. Do not deploy this app to brochure/Pages and do not migrate Member onto `apps/website` here.
 
 Specs: `Docs/project-car-application-specification.md` §7–9, `Docs/platform-architecture.md`.
 
-This is **not** projectcar.ca. Do not deploy it to the marketing domain. The shop is not open.
+The shop is not open.
 
 ## Local run (API + web + demo data)
 
@@ -61,7 +65,7 @@ The login screen is pre-filled and labeled as a **demo**. After `python -m app.s
 | Email | `owner@projectcar.ca` |
 | Password | `changeme` |
 
-These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (6 hoist cards including the Owner-only shop hoist, today's bookings, token-at-risk), Schedule (week by hoist), Members (Basic / Premium), Hoists, Waitlist (mark contacted), Tiers (edit allowances), and Fill gaps (next-day openings + notify). Re-seed notes: 6 bays + one Owner-only shop hoist (v1 choice A).
+These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (6 hoist cards including the Owner-only shop hoist, today's bookings, token-at-risk), Schedule (month heat-map, then week-by-hoist hour grids), Members (Basic / Premium), Hoists, Waitlist (mark contacted), Tiers (edit allowances), and Fill gaps (next-day openings + notify). Re-seed notes: 6 bays + one Owner-only shop hoist (v1 choice A).
 
 ### Demo Member — Ada on localhost
 
@@ -72,7 +76,7 @@ After the same seed:
 | Email | `ada.reyes@example.com` |
 | Password | `changeme` |
 
-Open `/member/login`, then Balance (tokens + ledger) and Schedule (Bays 1–5, band + overlay + total, book / cancel). The shop hoist is not on the Member grid. Not OIDC.
+Open `/member/login`, then Balance (tokens + ledger) and Schedule (Bays 1–5 month heat-map + weekly hour grids, band + overlay + total, book / cancel). The shop hoist is not on the Member calendar. Not OIDC. This `/member` park is temporary — customer app is `projectcar.ca`; management’s intended name is `ops.projectcar.ca`.
 
 Re-seed anytime from the API directory: `python -m app.seed --reset`. See `../api/README.md`.
 

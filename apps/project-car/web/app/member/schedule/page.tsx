@@ -1,63 +1,75 @@
-import Link from "next/link";
-
-import { BookingCost } from "../../../components/booking-cost";
+import { MemberBookingCard } from "../../../components/member-booking-card";
 import { MemberBookingForm } from "../../../components/member-booking-form";
 import { MemberShell } from "../../../components/member-shell";
-import { StatusPill } from "../../../components/status-pill";
+import { MonthHeatmap } from "../../../components/month-heatmap";
+import { ScheduleToolbar } from "../../../components/schedule-toolbar";
+import { WeekHoistCalendars } from "../../../components/week-hoist-calendars";
 import { handleMemberPageError } from "../../../lib/page";
 import { getMemberFill, getMemberMe, getMemberSchedule } from "../../../lib/shop-api";
 import {
   addDays,
-  formatShopTime,
-  parseWeekParam,
-  shopDateTimeLocal,
-  shopTodayIso,
-  weekdayLabel,
-} from "../../../lib/time";
-import { memberCancelBookingAction, memberConfirmBookingAction } from "./actions";
+  calendarTodayIso,
+  monthWindow,
+  naiveWindow,
+  parseHoistParam,
+  parseMonthParam,
+  parseSlotParam,
+  parseViewParam,
+  slotEnd,
+  sortHoists,
+} from "../../../lib/calendar";
+import { parseWeekParam, shopDateTimeLocal } from "../../../lib/time";
 
 export const dynamic = "force-dynamic";
-
-function bookingDay(iso: string): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Edmonton",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date(iso));
-}
 
 export default async function MemberSchedulePage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string; error?: string }>;
+  searchParams: Promise<{ week?: string; month?: string; view?: string; hoist?: string; slot?: string; error?: string }>;
 }) {
   try {
     const params = await searchParams;
+    const today = calendarTodayIso();
+    const view = parseViewParam(params.view, params.week);
     const weekStart = parseWeekParam(params.week);
-    const weekEnd = addDays(weekStart, 7);
+    const month = parseMonthParam(params.month, params.week ? weekStart : today);
+    const hoistId = parseHoistParam(params.hoist);
+    const slot = parseSlotParam(params.slot);
+    const window =
+      view === "month"
+        ? monthWindow(month)
+        : { start: weekStart, end: addDays(weekStart, 7) };
     const days = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
-    const today = shopTodayIso();
 
     const [me, schedule, fill] = await Promise.all([
       getMemberMe(),
       getMemberSchedule({
-        windowStart: `${weekStart}T00:00:00`,
-        windowEnd: `${weekEnd}T00:00:00`,
+        windowStart: naiveWindow(window.start),
+        windowEnd: naiveWindow(window.end),
       }),
-      getMemberFill(),
+      getMemberFill().catch(() => null),
     ]);
+
+    const ordered = sortHoists(schedule.hoists.filter((hoist) => !hoist.is_shop));
+    const returnTo = { view, week: weekStart, month, hoist: hoistId };
+    const defaultStart = slot ?? shopDateTimeLocal(new Date(Date.now() + 72 * 3600 * 1000));
+    const defaultEnd = slot ? slotEnd(slot) : shopDateTimeLocal(new Date(Date.now() + 73 * 3600 * 1000));
 
     return (
       <MemberShell email={me.email} current="schedule" wide>
-        <p className="eyebrow">Your week · America/Edmonton</p>
+        <p className="eyebrow">
+          {view === "month" ? "Month heat-map" : "Week · per bay"} · America/Regina
+        </p>
         <h1>Schedule</h1>
         <p className="lede">
-          Customer bays only. Reserve is duration × 100 × band × overlay × fill.
-          Cancel refunds the locked reserve. The shop hoist is not on this grid.
+          Customer bays only — temporary /member demo on this management alias.
+          Customer app is projectcar.ca. Month is a density heat-map; week is
+          an hour grid per bay. Reserve is duration × 100 × band × overlay ×
+          fill. Cancel refunds the locked reserve. The shop hoist is not on
+          this calendar.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
-        {fill.applies ? (
+        {fill?.applies ? (
           <div className="banner empty">
             Tomorrow ({fill.target_date}, America/Regina) has {fill.open_hours} open
             customer-bay hours. Next-day open slots take a {fill.discount_pct}% fill
@@ -65,111 +77,49 @@ export default async function MemberSchedulePage({
           </div>
         ) : null}
 
-        <div className="week-nav">
-          <Link className="button ghost" href={`/member/schedule?week=${addDays(weekStart, -7)}`}>
-            ← Previous
-          </Link>
-          <strong>
-            {weekdayLabel(weekStart)} – {weekdayLabel(addDays(weekStart, 6))}
-          </strong>
-          <Link className="button ghost" href={`/member/schedule?week=${addDays(weekStart, 7)}`}>
-            Next →
-          </Link>
-          <Link className="button ghost" href="/member/schedule">
-            This week
-          </Link>
-        </div>
+        <ScheduleToolbar
+          base="/member/schedule"
+          view={view}
+          weekStart={weekStart}
+          month={month}
+          hoist={hoistId}
+        />
 
-        {schedule.hoists.length === 0 ? (
-          <div className="banner empty">
-            No customer bays yet. Ask the Owner to seed demo hoists.
-          </div>
+        {ordered.length === 0 ? (
+          <div className="banner empty">No customer bays yet. Ask the Owner to seed demo hoists.</div>
+        ) : view === "month" ? (
+          <MonthHeatmap
+            base="/member/schedule"
+            month={month}
+            hoists={ordered}
+            intervals={schedule.occupancy}
+            today={today}
+          />
         ) : (
-          <div className="week-scroll">
-            <table className="week-grid">
-              <thead>
-                <tr>
-                  <th>Bay</th>
-                  {days.map((day) => (
-                    <th key={day} className={day === today ? "is-today" : undefined}>
-                      {weekdayLabel(day)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {schedule.hoists.map((hoist) => (
-                  <tr key={hoist.id}>
-                    <th>
-                      <div>{hoist.name}</div>
-                      <div className="hoist-pills">
-                        <StatusPill value={hoist.status} />
-                      </div>
-                    </th>
-                    {days.map((day) => {
-                      const cell = schedule.occupancy.filter(
-                        (slot) => slot.hoist_id === hoist.id && bookingDay(slot.start_at) === day,
-                      );
-                      return (
-                        <td key={`${hoist.id}-${day}`} className={day === today ? "is-today" : undefined}>
-                          {cell.map((slot) => {
-                            const own = slot.own
-                              ? schedule.bookings.find((booking) => booking.id === slot.booking_id)
-                              : undefined;
-                            return (
-                              <article
-                                key={slot.booking_id}
-                                className={`booking-chip status-${slot.status}${slot.own ? "" : " occupancy-chip"}`}
-                              >
-                                <strong>{slot.own ? "You" : "Booked"}</strong>
-                                <div>
-                                  {formatShopTime(slot.start_at)}–{formatShopTime(slot.end_at)}
-                                </div>
-                                {own ? (
-                                  <BookingCost
-                                    reservedTokens={own.reserved_tokens}
-                                    pricingRule={own.pricing_rule}
-                                  />
-                                ) : null}
-                                <StatusPill value={slot.status} />
-                                {own && own.status === "pending" ? (
-                                  <div className="chip-actions">
-                                    <form action={memberConfirmBookingAction}>
-                                      <input type="hidden" name="id" value={own.id} />
-                                      <input type="hidden" name="week" value={weekStart} />
-                                      <button type="submit">Confirm</button>
-                                    </form>
-                                    <form action={memberCancelBookingAction}>
-                                      <input type="hidden" name="id" value={own.id} />
-                                      <input type="hidden" name="week" value={weekStart} />
-                                      <button className="ghost" type="submit">
-                                        Cancel
-                                      </button>
-                                    </form>
-                                  </div>
-                                ) : null}
-                                {own && (own.status === "confirmed" || own.status === "active") ? (
-                                  <div className="chip-actions">
-                                    <form action={memberCancelBookingAction}>
-                                      <input type="hidden" name="id" value={own.id} />
-                                      <input type="hidden" name="week" value={weekStart} />
-                                      <button className="ghost" type="submit">
-                                        Cancel
-                                      </button>
-                                    </form>
-                                  </div>
-                                ) : null}
-                              </article>
-                            );
-                          })}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <WeekHoistCalendars
+            base="/member/schedule"
+            weekStart={weekStart}
+            month={month}
+            days={days}
+            today={today}
+            hoists={ordered}
+            focusHoistId={hoistId}
+            itemsForHoist={(hoist) =>
+              schedule.occupancy
+                .filter((slotRow) => slotRow.hoist_id === hoist.id)
+                .map((slotRow) => {
+                  const own = slotRow.own
+                    ? schedule.bookings.find((booking) => booking.id === slotRow.booking_id)
+                    : undefined;
+                  return {
+                    id: slotRow.booking_id,
+                    start_at: slotRow.start_at,
+                    end_at: slotRow.end_at,
+                    node: <MemberBookingCard slot={slotRow} own={own} returnTo={returnTo} compact />,
+                  };
+                })
+            }
+          />
         )}
 
         <section className="card" style={{ marginTop: "1.4rem" }}>
@@ -177,16 +127,20 @@ export default async function MemberSchedulePage({
           <p className="lede">
             Quote shows band + overlay + fill + total before reserve. Book confirms the
             slot. You cannot book the shop hoist.
+            {slot ? ` Prefilling ${slot} from the hour slot you clicked.` : ""}
           </p>
-          {schedule.hoists.length === 0 ? (
+          {ordered.length === 0 ? (
             <p className="muted">Need at least one customer bay.</p>
           ) : (
             <MemberBookingForm
+              key={`${defaultStart}-${hoistId ?? ""}`}
               member={me}
-              hoists={schedule.hoists}
+              hoists={ordered}
               weekStart={weekStart}
-              defaultStart={shopDateTimeLocal(new Date(Date.now() + 72 * 3600 * 1000))}
-              defaultEnd={shopDateTimeLocal(new Date(Date.now() + 73 * 3600 * 1000))}
+              defaultStart={defaultStart}
+              defaultEnd={defaultEnd}
+              defaultHoistId={hoistId}
+              returnTo={returnTo}
             />
           )}
         </section>
@@ -196,7 +150,7 @@ export default async function MemberSchedulePage({
     const message = await handleMemberPageError(error);
     return (
       <MemberShell current="schedule" wide>
-        <p className="eyebrow">Your week</p>
+        <p className="eyebrow">Your schedule</p>
         <h1>Schedule</h1>
         <div className="banner error">{message}</div>
       </MemberShell>

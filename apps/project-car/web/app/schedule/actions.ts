@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { ShopApiError } from "../../lib/config";
+import { scheduleHref, type ScheduleView } from "../../lib/calendar";
 import {
   cancelBooking,
   checkInBooking,
@@ -12,16 +13,28 @@ import {
   createBooking,
 } from "../../lib/shop-api";
 
-function weekTarget(formData: FormData): string {
+function scheduleTarget(formData: FormData): string {
+  const view = String(formData.get("view") ?? "");
   const week = String(formData.get("week") ?? "");
-  return week ? `/schedule?week=${encodeURIComponent(week)}` : "/schedule";
+  const month = String(formData.get("month") ?? "");
+  const hoist = String(formData.get("hoist") ?? "");
+  return scheduleHref("/schedule", {
+    view: view === "week" || view === "month" ? (view as ScheduleView) : undefined,
+    week: week || undefined,
+    month: month || undefined,
+    hoist: hoist || undefined,
+  });
 }
 
 function fail(formData: FormData, error: unknown): never {
   const message = error instanceof ShopApiError ? error.message : "Booking action failed.";
-  const base = weekTarget(formData);
-  const sep = base.includes("?") ? "&" : "?";
-  redirect(`${base}${sep}error=${encodeURIComponent(message)}`);
+  redirect(scheduleHref("/schedule", {
+    view: String(formData.get("view") ?? "") === "week" ? "week" : "month",
+    week: String(formData.get("week") ?? "") || undefined,
+    month: String(formData.get("month") ?? "") || undefined,
+    hoist: String(formData.get("hoist") ?? "") || undefined,
+    error: message,
+  }));
 }
 
 export async function createBookingAction(formData: FormData): Promise<void> {
@@ -41,7 +54,7 @@ export async function createBookingAction(formData: FormData): Promise<void> {
   }
   revalidatePath("/schedule");
   revalidatePath("/");
-  redirect(weekTarget(formData));
+  redirect(scheduleTarget(formData));
 }
 
 export async function confirmBookingAction(formData: FormData): Promise<void> {
@@ -52,7 +65,7 @@ export async function confirmBookingAction(formData: FormData): Promise<void> {
   }
   revalidatePath("/schedule");
   revalidatePath("/");
-  redirect(weekTarget(formData));
+  redirect(scheduleTarget(formData));
 }
 
 export async function checkInBookingAction(formData: FormData): Promise<void> {
@@ -63,7 +76,7 @@ export async function checkInBookingAction(formData: FormData): Promise<void> {
   }
   revalidatePath("/schedule");
   revalidatePath("/");
-  redirect(weekTarget(formData));
+  redirect(scheduleTarget(formData));
 }
 
 export async function completeBookingAction(formData: FormData): Promise<void> {
@@ -74,7 +87,7 @@ export async function completeBookingAction(formData: FormData): Promise<void> {
   }
   revalidatePath("/schedule");
   revalidatePath("/");
-  redirect(weekTarget(formData));
+  redirect(scheduleTarget(formData));
 }
 
 export async function cancelBookingAction(formData: FormData): Promise<void> {
@@ -85,5 +98,5 @@ export async function cancelBookingAction(formData: FormData): Promise<void> {
   }
   revalidatePath("/schedule");
   revalidatePath("/");
-  redirect(weekTarget(formData));
+  redirect(scheduleTarget(formData));
 }

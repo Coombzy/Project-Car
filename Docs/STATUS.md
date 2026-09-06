@@ -32,7 +32,7 @@ Ben / Chief lock. Do not collapse these into one “v1 is everything” claim.
 | **Build-breadth (now)** | Breadth-first **placeholders** for layout / IA — even rough. Locked surfaces: **Parts**, **Tools**, job board, cams, calendar / fill, member surfaces. Build the shells so the shop OS has the right rooms. Do **not** treat a placeholder as shipped product. |
 | **Ship-MVP cut (later)** | At **public MVP release**, cut unfinished / unnecessary features. What ships then is a later Ben cut — not “everything we sketched now.” |
 
-Do not invent extra product from this table. Calendar heat-map / weekly per-hoist / next-day fill stay **Next / in flight** (not shipped). Member parts **purchasing** is a placeholder now; **full** purchasing is **Later**.
+Do not invent extra product from this table. Calendar heat-map / weekly per-hoist is **this slice** (#18 — not live until merge). Next-day fill is on `main` (PR #20). Member parts **purchasing** is a placeholder now; **full** purchasing is **Later**.
 
 ---
 
@@ -53,10 +53,10 @@ Do not invent extra product from this table. Calendar heat-map / weekly per-hois
 
 ## Next (in flight — Ben GO ~12:22)
 
-Calendar is a separate in-flight PR (#18). Do not implement other Next items from this PR. **No DNS cut** here.
+Calendar redesign is this PR (#18). Fill landed on `main` as #20. Do not implement other Next items here. **No DNS cut** here.
 
-1. **Calendar redesign.** Monthly = heat-map by hoist booking density. Weekly = **separate per-hoist hour grids** (not the current combined week table with hoists as rows and days as columns). Live schedule today is still that combined week grid (`/schedule`, `/member/schedule`). Still in flight on #18 — do not fight that UI from this PR. **Do not claim shipped.**
-2. **Next-day open-slot fill (this PR).** Notify members (email stub / later push / SMS) of leftover hours with a **10–25%** fill factor on available hours. Urgency drives the discount (emptier / closer to start → bigger cut inside that range). Explicit extra multiplier — not a change to the locked v1 band / overlay tables. See `token-pricing.md`. Management `/fill` on Doc demo (`ops.` + temporary `app.` alias); notify targets members. Not a public price. No Stripe.
+1. **Calendar redesign (this slice).** Monthly = heat-map by hoist booking density vs 08:00–21:00. Weekly = **separate per-hoist hour grids** (not the old combined week table). Owner includes the shop hoist (Owner-only); Member is Bays 1–5. Create / quote / cancel unchanged. Fill chips and quote math from #20 stay. Doc + `ops.` / temporary `app.` alias pick the new grid up after merge — do not claim calendar live until then.
+2. **Next-day open-slot fill (on `main`, PR #20).** Notify members (email stub / later push / SMS) of leftover hours with a **10–25%** fill factor on available hours. Urgency drives the discount (emptier / closer to start → bigger cut inside that range). Explicit extra multiplier — not a change to the locked v1 band / overlay tables. See `token-pricing.md`. Management `/fill` on Doc demo (`ops.` + temporary `app.` alias); notify targets members. Not a public price. No Stripe.
 3. **Host migration — Member UI on projectcar.ca.** Customer surface (self-serve booking + balance) moves to **projectcar.ca**. Management stays on **`ops.`** (temporary `app.` alias still live). Today Member demo still lives on shop-UI `/member`. Do **not** claim this is shipped.
 4. **Ben cuts the `app.` alias.** `ops.` is already LIVE. `app.` stays until Ben cuts that DNS. Do not remove the alias from docs or edge config in this PR.
 5. **Mission Control cockpit** still needs **Ben GO** before start. Owner + Member booking are already live on Doc **and** the public ops / app hosts — that earlier hold is satisfied. Do not start the cockpit in this PR.

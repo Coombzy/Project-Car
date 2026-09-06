@@ -23,7 +23,8 @@ export default async function MemberHomePage() {
         <p className="lede">
           Balance is a cached ledger sum. Book customer bays 1–5 within your
           {` ${me.tier_name} `}
-          window. The shop hoist is Owner-only. Sample data — the shop is not
+          window. The shop hoist is Owner-only. Temporary demo on this
+          management alias — customer app is projectcar.ca. The shop is not
           open.
         </p>
 

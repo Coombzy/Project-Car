@@ -26,7 +26,7 @@ export function MemberShell({
       <header className="topbar">
         <div className="brand">
           <strong>Project Car</strong>
-          <span>Shop OS · Member demo</span>
+          <span>Member demo · parked</span>
         </div>
         <nav className="nav">
           {NAV.map((item) => (
@@ -47,9 +47,9 @@ export function MemberShell({
         </nav>
       </header>
       <div className="demo-banner">
-        Member self-serve demo — your token balance and customer bays (1–5). The
-        shop hoist is Owner-only. The shop is not open. This is not live pricing
-        or payment.
+        Temporary Member demo on this management alias — customer bays 1–5.
+        Customer app is projectcar.ca. Intended management host is
+        ops.projectcar.ca. The shop hoist is Owner-only. The shop is not open.
       </div>
       <main className={wide ? "wide" : undefined}>{children}</main>
     </div>

@@ -161,7 +161,7 @@ export default async function DashboardPage() {
         <p>
           <Link href="/waitlist">Open waitlist →</Link>
           {" · "}
-          <Link href="/schedule">Open week schedule →</Link>
+          <Link href="/schedule">Open schedule →</Link>
         </p>
       </OwnerShell>
     );

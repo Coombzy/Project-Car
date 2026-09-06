@@ -120,7 +120,7 @@ Week grid (same defaults):
 | Sat | 1.5 | 1.5 | 1.5 | 1.5 |
 | Sun | 1.5 | 1.5 | 1.5 | 0.75 (Sun→Mon) |
 
-Shop OS week cells and naive `datetime-local` values still use the existing `shop_time` helper `SHOP_TZ` = `America/Edmonton` (Owner labels stay `America/Edmonton`). Band and overlay math use `PRICING_TZ` = `America/Regina`. During Mountain Daylight both are UTC−6, so clock times match. In winter Edmonton is UTC−7 and Regina stays UTC−6 — the engine converts the stored UTC instant to Regina before picking a band.
+Shop OS month/week calendars label days and hour slots in `America/Regina`. Naive `datetime-local` values still use the existing `shop_time` helper `SHOP_TZ` = `America/Edmonton` so create/quote stay honest with the API. Band and overlay math use `PRICING_TZ` = `America/Regina`. During Mountain Daylight both are UTC−6, so clock times match. In winter Edmonton is UTC−7 and Regina stays UTC−6 — the engine converts the stored UTC instant to Regina before picking a band.
 
 ---
 
@@ -205,7 +205,7 @@ Every `booking_reserve` (and the matching debit / refund rows) stores the math. 
 ## UX must-haves (non-optional)
 
 1. **Create booking.** Show `(hours × 100) × band × overlay × fill = total`, balance **before** and **after**, plus **band label**, **overlay label**, and **fill label** when fill ≠ 1.0, before confirm / reserve.
-2. **Week schedule cells.** Band color + token-cost badge. Overlay chip when overlay ≠ 1.0. Fill chip when fill ≠ 1.0.
+2. **Weekly hour-slot cells.** Band color + token-cost badge on the booking in the hour grid. Overlay chip when overlay ≠ 1.0. Fill chip when fill ≠ 1.0. Month view is density-only (booked hours vs 08:00–21:00), not a second price surface.
 3. **Member detail.** Balance + recent ledger. **At-risk** when open reserved tokens **>** remaining (cached) free balance.
 4. **Cancel / complete.** Show refund or debit **inline** (the locked reserved amount).
 5. **Never hide math.** `pricing_rule` (band id + multipliers + factors + total) on ledger meta; surface it on the ledger, not only in a tooltip.
