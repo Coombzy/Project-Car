@@ -27,12 +27,12 @@ It is **not** Mission Control. Mission Control is Ben’s private cockpit over N
 | Host | Audience | Role |
 |------|----------|------|
 | `projectcar.ca` / `www` | Public | Brochure, membership story, contact, waitlist. Apex chat **deferred** |
-| `app.projectcar.ca` | Owner now; Staff + Members later | Shop OS: members, hoists, bookings, tokens — **not live yet** |
+| `app.projectcar.ca` | Owner now; **Member self-serve next** after Owner live; Staff later | Shop OS: members, hoists, bookings, tokens — Owner UI **not live yet**. Member booking + balance UI **not shipped**. |
 | `api.projectcar.ca` | Public waitlist + authenticated Owner API | FastAPI. Tunnel → Doc `:8000` |
 
 Private Mission Control stays off the marketing domain (Tailscale / Access / a private hostname). Vaultwarden and Nextcloud stay off `projectcar.ca` apex.
 
-**Today (2026-09-06):** the public site is a multi-page brochure plus a real waitlist form. Owner shop OS (API + Next.js) is on `main`. Apex public chat is deferred (Ben). See §13 for shipped vs remaining.
+**Today (2026-09-06):** the public site is a multi-page brochure plus a real waitlist form. Owner shop OS (API + Next.js) is on `main`. Apex public chat is deferred (Ben). Token balance + hoist booking is a **primary Member** page of the product — elevated next after Owner booking is live; **not shipped**. See §13 for shipped vs remaining.
 
 ---
 
@@ -44,13 +44,13 @@ Design the data model for all three roles now. Only **Owner** is used in v1.
 |------|-----|----|-------|
 | **Owner** | Ben | Full admin. The only login. | Same |
 | **Staff** | Employees / mentors | Schema only | Check-in help, incidents, override bookings |
-| **Member** | Paying customers | Schema + waitlist records | Book hoists, see their tokens, their bay |
+| **Member** | Paying customers | Schema + waitlist records | **Next first-class slice** after Owner live: self-serve book / cancel + see their token balance. Not shipped. |
 | **Waitlist** | Public visitors | Email + name + notes | Convert to Member on onboarding |
 
 Identity rules:
 
 - v1 auth is a single Owner session (email + password or a strong app secret).
-- Staff/Member logins come later via OIDC (Pocket ID / Authelia). Build tables so we do not rewrite them.
+- Member self-serve booking + balance may unlock **OIDC / Member auth earlier** than a vague v2 dump. Staff login can follow. Build tables so we do not rewrite them.
 - **Shop members must not receive Nextcloud accounts.**
 - Agents do not log into this app. If they write anything, they use a scoped service token against the API.
 
@@ -255,11 +255,16 @@ Mission Control does **not** own members, tokens, or hoist state.
 
 - Waitlist on the public site (**Done**).
 - Owner shop OS: tiers, members, hoists, bookings, token ledger, dashboard + week schedule (**on `main`**; harden + live on Doc still remaining).
+- v1 stays Owner-operated. Do **not** claim Member UI is shipped.
 
-### v2
+### Next (after Owner live — first-class, not a v2 dump)
 
-- Staff + Member logins (OIDC).
-- Member self-serve booking within tier rules.
+- **Member self-serve booking + token balance.** Members see their balance, book / cancel within tier rules, and see band + overlay + total on their schedule. Pricing math applies to Member bookings (`token-pricing.md`).
+- May pull **OIDC / Member auth** earlier than the rest of v2. **Not shipped.**
+
+### v2 (rest)
+
+- Staff login (OIDC) if not already pulled forward with Member auth.
 - Manual billing records + deposit tracking in the UI.
 - Waiver capture.
 
@@ -312,12 +317,13 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 ### Remaining
 
 - Owner booking **hardened + live** on Doc / `app.projectcar.ca`.
+- **Member self-serve booking + token balance UI** (+ Member auth / OIDC as needed) — next first-class slice after Owner live. **Not shipped.** Token balance + hoist booking is a primary customer page.
 - Cloudflare Pages cutover for the brochure (GO’d; blocked on CF ↔ GitHub auth). Shop API stays the lab tunnel.
 - Public chat (Apex) later — deferred (Ben), not P0.
-- Staff / Member login later (v2).
+- Staff login later (unless pulled forward with Member auth). Do not dump Member into a vague v2.
 - Payments later (v3). No Stripe now.
-- Token pricing bands + overlay: **spec-locked** (`token-pricing.md`). API / UI implement later.
-- Mission Control cockpit **held** until Owner booking is merged **and** live on Doc.
+- Token pricing bands + overlay: **spec-locked** (`token-pricing.md`). API / UI implement later. Pricing math applies to Member bookings too.
+- Mission Control cockpit **held** until Owner booking is merged **and** live on Doc. Do not start the cockpit early.
 
 ### Implementation notes
 

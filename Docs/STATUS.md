@@ -17,11 +17,18 @@ Living one-pager: what’s live, what’s next, locks. Product detail stays in t
 ## Next
 
 1. **Owner booking hardened + live** on Doc / `app.projectcar.ca`.
-2. Hold **Mission Control cockpit** until that booking path is live.
-3. Brochure hygiene P0-3…P0-7 is **in git** (`apps/website/html`: robots, sitemap, `404.html`, favicon set, Home progress bar removed). Live Worker picks it up on the next Direct Upload (Zone). Classic Pages git still skipped.
-4. Public Apex chat: **deferred (Ben)**. Not P0. Do not revive.
-5. Staff / Member login and payments: later.
-6. **Token pricing** (bands + overlay) is **spec-locked** — `token-pricing.md`. Implement later. Not this docs drop.
+2. **Member self-serve booking + token balance UI** (+ Member auth / OIDC as needed) — first-class next slice after Owner live. Not buried under “later.” Token balance + hoist booking is a primary customer (Member) page. **Not shipped.** May unlock OIDC / Member auth earlier than a vague v2 dump.
+3. Hold **Mission Control cockpit** until Owner booking is merged **and** live on Doc. Do not start the cockpit early.
+4. Brochure hygiene P0-3…P0-7 is **in git** (`apps/website/html`: robots, sitemap, `404.html`, favicon set, Home progress bar removed). Live Worker picks it up on the next Direct Upload (Zone). Classic Pages git still skipped.
+5. Public Apex chat: **deferred (Ben)**. Not P0. Do not revive.
+6. Payments / Stripe: later. Staff login can follow Member auth; do not dump Member into a vague v2.
+7. **Token pricing** (bands + overlay) is **spec-locked** — `token-pricing.md`. Implement later. Not this docs drop. Pricing math applies to Member bookings too.
+
+---
+
+## Later (not v1)
+
+- Member-to-member hoist time trades/offers — bookings should not be glued to one member forever (transferable booking or trade-offer entity). Design note only; do not design the trade system now.
 
 ---
 
