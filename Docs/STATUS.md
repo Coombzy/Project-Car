@@ -23,14 +23,14 @@ Private Mission Control stays off these hosts.
 
 ---
 
-## Build-breadth (now) vs ship-MVP cut (later)
+## Build breadth (now) vs Ship-MVP cut (later gate)
 
-Ben / Chief lock. Do not collapse these into one “v1 is everything” claim.
+Ben / Chief lock. Two horizons — do **not** collapse them into one “v1 includes everything forever.”
 
 | Horizon | Meaning |
 |---------|---------|
-| **Build-breadth (now)** | Breadth-first **placeholders** for layout / IA — even rough. Locked surfaces: **Parts**, **Tools**, job board, cams, calendar / fill, member surfaces, **Payments**. Build the shells so the shop OS has the right rooms. Do **not** treat a placeholder as shipped product. |
-| **Ship-MVP cut (later)** | At **public MVP release**, cut unfinished / unnecessary features. What ships then is a later Ben cut — not “everything we sketched now.” |
+| **Build breadth (now)** | Breadth-first **placeholders** / rough IA so layout can be ironed out. Put planned features in the app (Parts, Tools, job board, cams, calendar / fill, member surfaces, Payments). Do **not** leave a planned surface out of the **build** for polish. A placeholder is not shipped product. |
+| **Ship-MVP cut (later gate)** | At **public MVP release**, cut unfinished and unnecessary features. Do **not** ship every placeholder as the public product. What ships then is a later Ben cut — not “everything we sketched now.” |
 
 Do not invent extra product from this table. Calendar heat-map / weekly per-hoist is on `main` (PR #18). Next-day fill is on `main` (PR #20). Member parts **purchasing** is a placeholder now; **full** purchasing is **Later**.
 
@@ -54,7 +54,14 @@ Do not invent extra product from this table. Calendar heat-map / weekly per-hois
 
 ## Next (in flight — Ben GO ~12:22)
 
-**v1 build = breadth-first.** Placeholders / rough IA are OK. Get planned surfaces into the app (Parts, Tools, job board, cams, calendar / fill, member surfaces) so layout can be ironed out. Do **not** leave a planned feature out of the **build** for polish. Depth later. The **ship-MVP cut** (drop unfinished / unnecessary) is a later gate — not this list.
+Two gates — do **not** collapse them into “v1 includes everything forever.”
+
+| Gate | Meaning |
+|------|---------|
+| **Build breadth (now)** | Put planned features into the app as placeholders / rough IA (Parts, Tools, job board, cams, calendar / fill, member surfaces, …) so layout can be ironed out. Placeholders are OK. Do **not** leave a planned surface out of the **build** for polish. |
+| **Ship-MVP cut (later gate)** | Before the **public MVP** ship, cut unfinished and unnecessary features. Do **not** ship every placeholder as the public product. |
+
+The numbered items below include calendar / fill (already on `main`) plus remaining Next (host migration). They are not a promise that every placeholder ships in MVP.
 
 Calendar redesign is on `main` (#18). Fill landed on `main` as #20. This PR is placeholders only — do not rewrite calendar or drop fill. **`ops.projectcar.ca` is LIVE.** `app.` remains the temporary alias — do not cut it here.
 
@@ -84,7 +91,7 @@ Placeholder pages (Parts, Tools, Job board, Cameras, Payments) are **demo UI** (
 ## Locks
 
 - **Host split** is locked (table above). Customer = `projectcar.ca` / www. Management = **`ops.projectcar.ca`** (LIVE; staff-on-shift, not Owner-only). `app.` is a **temporary alias** until Ben cuts that DNS — **not removed**.
-- **Build-breadth (now)** vs **ship-MVP cut (later)** — see table above. Placeholders now; cut unfinished / unnecessary at public MVP.
+- **Build breadth (now)** and **Ship-MVP cut (later gate)** are **two locks** (tables above). Build = placeholders in the app for IA. Public MVP = later cut of unfinished / unnecessary. Do **not** read this as “v1 includes everything forever.”
 - **Ops sections (locked IA, placeholders now):** **Parts** and **Tools**. Tools = tool inventory, tool orders, customer/member tool requests, planned tool purchases. Not a claim that inventory or purchasing is shipped.
 - **Job board (locked IA, placeholder now):** shop chores (cleaning, tool maintenance, random upkeep). Ops posts a **token bounty**; member claim/complete credits the **append-only token ledger** (same tokens as hoist booking, **not Stripe**). Placeholder must show sample amounts. Full workflow Later.
 - **Cameras (locked IA, placeholder now):** members = **one primary shop cam**. Ops = **all cams** + door entry logs + Frigate / AI collection. Not a claim that Frigate is wired on `main`.
