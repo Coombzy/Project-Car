@@ -79,6 +79,10 @@ A demo banner stays in the Owner chrome. It does **not** claim the shop is open 
 
 Login uses `POST /auth/login` and stores the API’s httpOnly `pc_owner_session` cookie on the Next.js origin. Bearer `OWNER_API_SECRET` stays available for API clients (curl); the Owner UI uses the cookie stub.
 
+## Session cookies on HTTPS vs local HTTP
+
+Public hosts (`https://ops.projectcar.ca`, `https://app.projectcar.ca`) need **Secure** cookies. KeepAlive often runs `next dev` (NODE_ENV unset), so set `SHOP_COOKIE_SECURE=true` on Doc for the shop UI and `COOKIE_SECURE=true` on the API. Local `http://127.0.0.1:3000` should leave `SHOP_COOKIE_SECURE` unset or false — a Secure cookie will not stick on plain HTTP. Firefox is pickier about this than some other browsers.
+
 ## Out of scope
 
 Website / apex / Cloudflare, Mission Control, Stripe live charges, NFC, cameras, Member/Staff OIDC, n8n.
