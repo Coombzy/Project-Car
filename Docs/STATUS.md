@@ -21,14 +21,16 @@ Living one-pager: what’s live, what’s next, locks. Product detail stays in t
 3. Brochure hygiene P0-3…P0-7 is **in git** (`apps/website/html`: robots, sitemap, `404.html`, favicon set, Home progress bar removed). Live Worker picks it up on the next Direct Upload (Zone). Classic Pages git still skipped.
 4. Public Apex chat: **deferred (Ben)**. Not P0. Do not revive.
 5. Staff / Member login and payments: later.
+6. **Token pricing** (bands + overlay) is **spec-locked** — `token-pricing.md`. Implement later. Not this docs drop.
 
 ---
 
 ## Locks (unchanged)
 
 - No Stripe. No “shop is open” claims. No live pricing until Ben says so.
+- Token pricing v1 is locked: bands + overlay in `America/Regina` — `token-pricing.md`. Defaults are Owner-editable placeholders, not public prices.
 - Hold the Mission Control cockpit until Owner booking is merged **and** live on Doc.
 - Shop members never get Nextcloud accounts.
 - No n8n.
 
-Specs: `project-car-application-specification.md` §13, `website-webapp-specification.md`, `platform-architecture.md`.
+Specs: `project-car-application-specification.md` §13, `token-pricing.md`, `website-webapp-specification.md`, `platform-architecture.md`.
