@@ -24,8 +24,8 @@ export default async function MemberHomePage() {
           Balance is a cached ledger sum. Book customer bays 1–5 within your
           {` ${me.tier_name} `}
           window. The shop hoist is Owner-only. Temporary demo on this
-          management host — customer app will be projectcar.ca later. The shop
-          is not open.
+          management alias — customer app is projectcar.ca. The shop is not
+          open.
         </p>
 
         <div className="metrics">

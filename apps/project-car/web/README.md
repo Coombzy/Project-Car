@@ -1,8 +1,10 @@
 # Project Car shop web (management UI)
 
-Next.js Shop OS shell for **management** (`app.projectcar.ca`). The browser talks to this app only; the Next.js server calls the FastAPI shop API with the v1 session cookies (`pc_owner_session` or `pc_member_session`).
+Next.js Shop OS shell for **management**. Live today on the temporary alias `app.projectcar.ca` / Doc `:3000`. Intended host name is `ops.projectcar.ca` (Owner + staff on shift) — naming lock only, no DNS in this slice. Keep building calendar on this current UI.
 
-**Host lock (Ben 2026-09-06):** `app.projectcar.ca` = management (Owner calendar stays here). `projectcar.ca` = customer app later. Member `/member` is **temporarily parked** on this demo — not a permanent `app` home. Do not deploy this app to the brochure/Pages origin and do not migrate Member onto `apps/website` in the calendar slice.
+The browser talks to this app only; the Next.js server calls the FastAPI shop API with the v1 session cookies (`pc_owner_session` or `pc_member_session`).
+
+**Host lock (Ben 2026-09-06):** `projectcar.ca` = customer. `ops.projectcar.ca` = intended management. `app.projectcar.ca` = temporary alias (live). Member `/member` is **temporarily parked** on this demo. Do not deploy this app to brochure/Pages and do not migrate Member onto `apps/website` here.
 
 Specs: `Docs/project-car-application-specification.md` §7–9, `Docs/platform-architecture.md`.
 
@@ -74,7 +76,7 @@ After the same seed:
 | Email | `ada.reyes@example.com` |
 | Password | `changeme` |
 
-Open `/member/login`, then Balance (tokens + ledger) and Schedule (Bays 1–5 month heat-map + weekly hour grids, band + overlay + total, book / cancel). The shop hoist is not on the Member calendar. Not OIDC. This `/member` park is temporary — customer app destination is `projectcar.ca`, not a permanent claim on `app`.
+Open `/member/login`, then Balance (tokens + ledger) and Schedule (Bays 1–5 month heat-map + weekly hour grids, band + overlay + total, book / cancel). The shop hoist is not on the Member calendar. Not OIDC. This `/member` park is temporary — customer app is `projectcar.ca`; management’s intended name is `ops.projectcar.ca`.
 
 Re-seed anytime from the API directory: `python -m app.seed --reset`. See `../api/README.md`.
 

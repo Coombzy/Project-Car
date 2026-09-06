@@ -19,9 +19,10 @@ export default async function MemberLoginPage({
         <p className="eyebrow">Member demo session</p>
         <h1>Sign in to your bay</h1>
         <p className="lede">
-          Temporary Member demo parked on the management host. Customer app
-          will be projectcar.ca later. v1 session cookie — not OIDC. The shop
-          is not open.
+          Temporary Member demo parked on this management alias
+          (app.projectcar.ca). Customer app is projectcar.ca. Intended
+          management host is ops.projectcar.ca. v1 session cookie — not OIDC.
+          The shop is not open.
         </p>
         <div className="banner demo">
           <strong>Demo Member credentials</strong>

@@ -19,8 +19,9 @@ export default async function LoginPage({
         <p className="eyebrow">Management · Owner demo</p>
         <h1>Sign in to Shop OS</h1>
         <p className="lede">
-          Management UI (app.projectcar.ca). v1 owner stub against the shop
-          API. Not OIDC. The shop is not open.
+          Management UI on the current app.projectcar.ca alias. Intended host
+          is ops.projectcar.ca (Owner + staff on shift) — naming only. Keep
+          building here. Not OIDC. The shop is not open.
         </p>
         <div className="banner demo">
           <strong>Demo Owner credentials</strong>
@@ -39,8 +40,8 @@ export default async function LoginPage({
         <p className="muted" style={{ marginTop: "1.2rem" }}>
           Temporary Member demo is still on{" "}
           <Link href="/member/login">/member/login</Link>{" "}
-          (<code>ada.reyes@example.com</code>) — parked here for now, not the
-          permanent customer home.
+          (<code>ada.reyes@example.com</code>) — parked on this alias for now.
+          Customer app is projectcar.ca.
         </p>
       </section>
     </main>

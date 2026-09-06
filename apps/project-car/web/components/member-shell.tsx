@@ -47,9 +47,9 @@ export function MemberShell({
         </nav>
       </header>
       <div className="demo-banner">
-        Temporary Member demo on this management host — customer bays 1–5.
-        Permanent customer app is projectcar.ca later. The shop hoist is
-        Owner-only. The shop is not open. This is not live pricing or payment.
+        Temporary Member demo on this management alias — customer bays 1–5.
+        Customer app is projectcar.ca. Intended management host is
+        ops.projectcar.ca. The shop hoist is Owner-only. The shop is not open.
       </div>
       <main className={wide ? "wide" : undefined}>{children}</main>
     </div>
