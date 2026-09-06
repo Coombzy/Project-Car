@@ -1,32 +1,43 @@
 import Link from "next/link";
 
 import { BookingCost } from "../../components/booking-cost";
+import { HoistHourStrip } from "../../components/hoist-hour-strip";
 import { MemberShell } from "../../components/member-shell";
 import { StatusPill } from "../../components/status-pill";
+import { TodoPanel } from "../../components/todo-panel";
 import { handleMemberPageError } from "../../lib/page";
-import { getMemberMe } from "../../lib/shop-api";
+import { getMemberDashboard, getMemberMe } from "../../lib/shop-api";
 import { formatShopDateTime, tokensLabel } from "../../lib/time";
+import {
+  createMemberTodoAction,
+  deleteMemberTodoAction,
+  toggleMemberTodoAction,
+} from "./todos/actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function MemberHomePage() {
+export default async function MemberHomePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ error?: string }>;
+}) {
+  const query = searchParams ? await searchParams : {};
   try {
-    const me = await getMemberMe();
+    const [me, dash] = await Promise.all([getMemberMe(), getMemberDashboard()]);
     const open = me.bookings.filter(
       (booking) =>
         booking.status === "pending" || booking.status === "confirmed" || booking.status === "active",
     );
     return (
-      <MemberShell email={me.email} current="home">
+      <MemberShell email={me.email} current="home" wide>
         <p className="eyebrow">Member · demo</p>
-        <h1>Your tokens</h1>
+        <h1>Your shop</h1>
         <p className="lede">
-          Balance is a cached ledger sum. Book customer bays 1–5 within your
-          {` ${me.tier_name} `}
-          window. The shop hoist is Owner-only. Temporary demo on this
-          management alias — customer app is projectcar.ca. The shop is not
-          open.
+          Balance, your to-dos, and the next 24 hours on bays you have booked.
+          Customer bays only — Bay 6 is Owner-only. Temporary demo on this
+          management alias. The shop is not open.
         </p>
+        {query.error ? <div className="banner error">{query.error}</div> : null}
 
         <div className="metrics">
           <div className="metric">
@@ -38,18 +49,53 @@ export default async function MemberHomePage() {
             <b>{me.tier_name}</b>
           </div>
           <div className="metric">
-            <span className="eyebrow">Period allotment</span>
-            <b>{tokensLabel(me.included_tokens)}</b>
+            <span className="eyebrow">Open to-dos</span>
+            <b>{dash.todos.filter((todo) => todo.status === "open").length}</b>
           </div>
           <div className="metric">
-            <span className="eyebrow">Booking window</span>
-            <b>{me.booking_window_days}d</b>
+            <span className="eyebrow">Your booked hours (24h)</span>
+            <b>{dash.hoists.reduce((sum, hoist) => sum + hoist.next_hours.length, 0)}</b>
           </div>
         </div>
 
         <p>
           <Link href="/member/schedule">Book a customer bay →</Link>
         </p>
+
+        <h2>Your bays · next 24 hours</h2>
+        <p className="muted">
+          Window {formatShopDateTime(dash.window_start)} – {formatShopDateTime(dash.window_end)}{" "}
+          ({dash.tz}). Only bays with your bookings.
+        </p>
+        {dash.hoists.length === 0 ? (
+          <div className="banner empty">
+            You have no booked hours in the next 24 hours. Open the schedule to
+            book a customer bay.
+          </div>
+        ) : (
+          <div className="hoist-grid hoist-grid-bays">
+            {dash.hoists.map((hoist) => (
+              <HoistHourStrip
+                key={hoist.id}
+                hoist={hoist}
+                scheduleHref={`/member/schedule?view=week&hoist=${hoist.id}`}
+                linkMembers={false}
+              />
+            ))}
+          </div>
+        )}
+
+        <TodoPanel
+          todos={dash.todos}
+          calendar={dash.calendar}
+          actions={{
+            create: createMemberTodoAction,
+            toggle: toggleMemberTodoAction,
+            remove: deleteMemberTodoAction,
+          }}
+          icsPath={(id) => `/member/todos/${id}/ics`}
+          audience="member"
+        />
 
         <h2>Open bookings</h2>
         {open.length === 0 ? (
@@ -126,7 +172,7 @@ export default async function MemberHomePage() {
     return (
       <MemberShell current="home">
         <p className="eyebrow">Member · demo</p>
-        <h1>Your tokens</h1>
+        <h1>Your shop</h1>
         <div className="banner error">{message}</div>
       </MemberShell>
     );

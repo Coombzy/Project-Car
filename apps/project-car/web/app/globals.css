@@ -1046,3 +1046,91 @@ main.wide {
   resize: vertical;
   min-height: 4.5rem;
 }
+
+.hoist-grid-bays {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.hoist-card-shop {
+  box-shadow: inset 0 0 0 1px #4a5d7a;
+}
+
+.hour-strip {
+  list-style: none;
+  margin: 0.7rem 0 0.85rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.hour-strip-item {
+  display: grid;
+  grid-template-columns: minmax(7rem, 0.9fr) minmax(0, 1.4fr) auto;
+  gap: 0.45rem 0.7rem;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+  background: #101217;
+}
+
+.hour-strip-when {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.hoist-empty {
+  margin: 0.7rem 0;
+}
+
+.todo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.todo-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 0.65rem;
+  align-items: start;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.todo-row.is-done strong {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.todo-cal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.todo-cal-actions .button,
+.todo-cal-actions button {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.todo-create {
+  margin-top: 0.9rem;
+}
+
+.calendar-connect {
+  margin-top: 0.9rem;
+}
+
+@media (max-width: 720px) {
+  .hour-strip-item,
+  .todo-row {
+    grid-template-columns: 1fr;
+  }
+}

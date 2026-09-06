@@ -1,34 +1,52 @@
 import Link from "next/link";
 
 import { OwnerShell } from "../components/owner-shell";
-import { StatusPill } from "../components/status-pill";
+import { HoistHourStrip } from "../components/hoist-hour-strip";
+import { PartsOrdersCard } from "../components/parts-orders-card";
+import { TodoPanel } from "../components/todo-panel";
+import { createTodoAction, deleteTodoAction, toggleTodoAction } from "./todos/actions";
 import { getDashboard, getMe } from "../lib/shop-api";
 import { handlePageError } from "../lib/page";
-import { BookingCost } from "../components/booking-cost";
-import { formatShopDateTime, formatShopTime, tokensLabel } from "../lib/time";
+import { sortHoists } from "../lib/calendar";
+import { formatShopDateTime, tokensLabel } from "../lib/time";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ error?: string }>;
+}) {
+  const query = searchParams ? await searchParams : {};
   try {
     const [me, dash] = await Promise.all([getMe(), getDashboard()]);
+    const hoists = sortHoists(dash.hoists);
     return (
-      <OwnerShell email={me.email} current="home">
+      <OwnerShell email={me.email} current="home" wide>
         <p className="eyebrow">Owner · demo</p>
         <h1>Shop dashboard</h1>
         <p className="lede">
-          Today&apos;s bays (6 hoists, one Owner-only shop hoist), bookings,
-          waitlist, and members running low on tokens. Seeded sample data — not
-          a live shop.
+          Next 24 hours on Bays 1–6 (Bay 6 is the Owner-only shop hoist), your
+          to-dos, and the most current parts orders. Times are America/Regina.
+          Seeded sample data — the shop is not open.
         </p>
+        {query.error ? <div className="banner error">{query.error}</div> : null}
         <div className="metrics">
           <div className="metric">
-            <span className="eyebrow">Hoists</span>
+            <span className="eyebrow">Bays</span>
             <b>{dash.hoists.length}</b>
           </div>
           <div className="metric">
-            <span className="eyebrow">Today&apos;s bookings</span>
-            <b>{dash.today_bookings.length}</b>
+            <span className="eyebrow">Booked hours (24h)</span>
+            <b>{dash.hoists.reduce((sum, hoist) => sum + hoist.next_hours.length, 0)}</b>
+          </div>
+          <div className="metric">
+            <span className="eyebrow">Open to-dos</span>
+            <b>{dash.todos.filter((todo) => todo.status === "open").length}</b>
+          </div>
+          <div className="metric">
+            <span className="eyebrow">Open POs</span>
+            <b>{dash.parts_orders.filter((row) => row.status !== "received").length}</b>
           </div>
           <div className="metric">
             <span className="eyebrow">Waitlist</span>
@@ -39,95 +57,41 @@ export default async function DashboardPage() {
             <b>{dash.token_at_risk.length}</b>
           </div>
         </div>
+        <p className="muted">
+          Window {formatShopDateTime(dash.window_start)} – {formatShopDateTime(dash.window_end)}{" "}
+          ({dash.tz}).
+        </p>
 
-        <h2>Hoists</h2>
-        {dash.hoists.length === 0 ? (
+        <h2>Bays · next 24 hours</h2>
+        {hoists.length === 0 ? (
           <div className="banner empty">
             No hoists yet. Run <code>python -m app.seed</code> in the API.
           </div>
         ) : (
-          <div className="hoist-grid">
-            {dash.hoists.map((hoist) => (
-              <article key={hoist.id} className="card hoist-card">
-                <div className="hoist-card-head">
-                  <h3>{hoist.name}</h3>
-                  <div className="hoist-pills">
-                    {hoist.is_shop ? <StatusPill value="shop" /> : null}
-                    <StatusPill value={hoist.status} />
-                  </div>
-                </div>
-                <p className="muted">{hoist.location_label || "No location label"}</p>
-                {hoist.current_booking ? (
-                  <p>
-                    On bay: <strong>{hoist.current_booking.member_name}</strong>
-                    <br />
-                    <span className="muted">
-                      {formatShopTime(hoist.current_booking.start_at)}–
-                      {formatShopTime(hoist.current_booking.end_at)}
-                    </span>
-                  </p>
-                ) : (
-                  <p className="muted">No active booking right now.</p>
-                )}
-                <p>
-                  <Link href="/hoists">Manage hoists →</Link>
-                </p>
-              </article>
+          <div className="hoist-grid hoist-grid-bays">
+            {hoists.map((hoist) => (
+              <HoistHourStrip
+                key={hoist.id}
+                hoist={hoist}
+                scheduleHref={`/schedule?view=week&hoist=${hoist.id}`}
+              />
             ))}
           </div>
         )}
 
-        <h2>Today&apos;s bookings</h2>
-        {dash.today_bookings.length === 0 ? (
-          <div className="banner empty">Nothing on the board for today.</div>
-        ) : (
-          <div className="card">
-            <table>
-              <thead>
-                <tr>
-                  <th>When</th>
-                  <th>Member</th>
-                  <th>Hoist</th>
-                  <th>Status</th>
-                  <th>Tokens</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dash.today_bookings.map((booking) => (
-                  <tr key={booking.id}>
-                    <td>
-                      {formatShopTime(booking.start_at)}–{formatShopTime(booking.end_at)}
-                      <div className="muted">{formatShopDateTime(booking.start_at)}</div>
-                    </td>
-                    <td>
-                      {booking.member_id ? (
-                        <Link href={`/members/${booking.member_id}`}>{booking.member_name}</Link>
-                      ) : (
-                        booking.member_name
-                      )}
-                      {booking.kind === "shop" ? (
-                        <>
-                          {" "}
-                          <StatusPill value="shop" />
-                        </>
-                      ) : null}
-                    </td>
-                    <td>{booking.hoist_name}</td>
-                    <td>
-                      <StatusPill value={booking.status} />
-                    </td>
-                    <td>
-                      <BookingCost
-                        reservedTokens={booking.reserved_tokens}
-                        pricingRule={booking.pricing_rule}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <PartsOrdersCard orders={dash.parts_orders} />
+
+        <TodoPanel
+          todos={dash.todos}
+          calendar={dash.calendar}
+          actions={{
+            create: createTodoAction,
+            toggle: toggleTodoAction,
+            remove: deleteTodoAction,
+          }}
+          icsPath={(id) => `/todos/${id}/ics`}
+          audience="owner"
+        />
 
         <h2>Token-at-risk members</h2>
         {dash.token_at_risk.length === 0 ? (
@@ -162,13 +126,15 @@ export default async function DashboardPage() {
           <Link href="/waitlist">Open waitlist →</Link>
           {" · "}
           <Link href="/schedule">Open schedule →</Link>
+          {" · "}
+          <Link href="/parts">Open parts →</Link>
         </p>
       </OwnerShell>
     );
   } catch (error) {
     const message = await handlePageError(error);
     return (
-      <OwnerShell current="home">
+      <OwnerShell current="home" wide>
         <p className="eyebrow">Owner · demo</p>
         <h1>Shop dashboard</h1>
         <div className="banner error">{message}</div>

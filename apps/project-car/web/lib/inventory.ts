@@ -106,7 +106,7 @@ export const BAY_KITS: Record<
   B5: { prefix: "B5", hoist: "Bay 5", location: "Center aisle", shopHoist: false },
   B6: {
     prefix: "B6",
-    hoist: "Shop",
+    hoist: "Bay 6",
     location: "Internal / business work",
     shopHoist: true,
   },

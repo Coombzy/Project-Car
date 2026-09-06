@@ -5,6 +5,7 @@ import {
   shopApiUrl,
   type Booking,
   type BookingQuote,
+  type CalendarStatus,
   type ChatMessage,
   type ChatMessagePage,
   type ChatRoom,
@@ -13,12 +14,14 @@ import {
   type FillPreview,
   type Hoist,
   type Member,
+  type MemberDashboard,
   type MemberDetail,
   type MemberSchedule,
   type MemberSelf,
   type MembershipTier,
   type NotificationOutbox,
   type Principal,
+  type Todo,
   type TokenTransaction,
   type WaitlistEntry,
 } from "./config";
@@ -111,6 +114,60 @@ export async function getMe(): Promise<Principal> {
 
 export async function getDashboard(): Promise<Dashboard> {
   return shopJson<Dashboard>("/dashboard", "Could not load the dashboard.");
+}
+
+export async function listTodos(): Promise<Todo[]> {
+  return shopJson<Todo[]>("/todos", "Could not load to-dos.");
+}
+
+export async function createTodo(payload: Record<string, unknown>): Promise<Todo> {
+  return shopJson<Todo>("/todos", "Could not create the to-do.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function patchTodo(id: string, payload: Record<string, unknown>): Promise<Todo> {
+  return shopJson<Todo>(`/todos/${id}`, "Could not update the to-do.", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteTodo(id: string): Promise<void> {
+  let response: Response;
+  try {
+    response = await shopFetch(`/todos/${id}`, { method: "DELETE" });
+  } catch {
+    throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
+  }
+  if (response.status === 204) {
+    return;
+  }
+  const body = await readJson(response);
+  throw parseApiError(response.status, body, "Could not delete the to-do.");
+}
+
+export async function downloadTodoIcs(id: string): Promise<{ filename: string; body: string }> {
+  let response: Response;
+  try {
+    response = await shopFetch(`/todos/${id}/ics`);
+  } catch {
+    throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
+  }
+  if (!response.ok) {
+    const body = await readJson(response);
+    throw parseApiError(response.status, body, "Could not download the calendar file.");
+  }
+  const disposition = response.headers.get("content-disposition") ?? "";
+  const match = disposition.match(/filename="([^"]+)"/);
+  return { filename: match?.[1] ?? `todo-${id}.ics`, body: await response.text() };
+}
+
+export async function getCalendarStatus(): Promise<CalendarStatus> {
+  return shopJson<CalendarStatus>("/calendar/status", "Could not load calendar status.");
 }
 
 export async function listWaitlist(): Promise<WaitlistEntry[]> {
@@ -374,6 +431,60 @@ export async function logoutMember(): Promise<void> {
 
 export async function getMemberMe(): Promise<MemberSelf> {
   return memberJson<MemberSelf>("/member/me", "Could not load your member profile.");
+}
+
+export async function getMemberDashboard(): Promise<MemberDashboard> {
+  return memberJson<MemberDashboard>("/member/dashboard", "Could not load your dashboard.");
+}
+
+export async function listMemberTodos(): Promise<Todo[]> {
+  return memberJson<Todo[]>("/todos", "Could not load to-dos.");
+}
+
+export async function createMemberTodo(payload: Record<string, unknown>): Promise<Todo> {
+  return memberJson<Todo>("/todos", "Could not create the to-do.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function patchMemberTodo(id: string, payload: Record<string, unknown>): Promise<Todo> {
+  return memberJson<Todo>(`/todos/${id}`, "Could not update the to-do.", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteMemberTodo(id: string): Promise<void> {
+  let response: Response;
+  try {
+    response = await memberFetch(`/todos/${id}`, { method: "DELETE" });
+  } catch {
+    throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
+  }
+  if (response.status === 204) {
+    return;
+  }
+  const body = await readJson(response);
+  throw parseApiError(response.status, body, "Could not delete the to-do.");
+}
+
+export async function downloadMemberTodoIcs(id: string): Promise<{ filename: string; body: string }> {
+  let response: Response;
+  try {
+    response = await memberFetch(`/todos/${id}/ics`);
+  } catch {
+    throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
+  }
+  if (!response.ok) {
+    const body = await readJson(response);
+    throw parseApiError(response.status, body, "Could not download the calendar file.");
+  }
+  const disposition = response.headers.get("content-disposition") ?? "";
+  const match = disposition.match(/filename="([^"]+)"/);
+  return { filename: match?.[1] ?? `todo-${id}.ics`, body: await response.text() };
 }
 
 export async function getMemberPrincipal(): Promise<Principal> {

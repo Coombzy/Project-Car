@@ -47,6 +47,28 @@ def pricing_next_day(now: datetime | None = None) -> date:
     return current.date() + timedelta(days=1)
 
 
+def next_24h_bounds(now: datetime | None = None) -> tuple[datetime, datetime]:
+    """Half-open [now, now+24h) window in America/Regina, returned in UTC."""
+    current = (now or pricing_now()).astimezone(PRICING_TZ)
+    end = current + timedelta(hours=24)
+    return as_utc(current), as_utc(end)
+
+
+def iter_regina_hours(start: datetime, end: datetime) -> list[tuple[datetime, datetime]]:
+    """Whole Regina clock hours that overlap [start, end)."""
+    local_start = as_utc(start).astimezone(PRICING_TZ)
+    local_end = as_utc(end).astimezone(PRICING_TZ)
+    if local_end <= local_start:
+        return []
+    hour = local_start.replace(minute=0, second=0, microsecond=0)
+    slots: list[tuple[datetime, datetime]] = []
+    while hour < local_end:
+        nxt = hour + timedelta(hours=1)
+        slots.append((as_utc(hour), as_utc(nxt)))
+        hour = nxt
+    return slots
+
+
 def day_bounds(day: date) -> tuple[datetime, datetime]:
     start = datetime.combine(day, time.min, tzinfo=SHOP_TZ)
     end = start + timedelta(days=1)

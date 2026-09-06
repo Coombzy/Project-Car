@@ -301,7 +301,7 @@ export function hourLabels(startHour = 0, endHour = DAY_HOURS): string[] {
 
 export function hoistChipLabel(name: string, isShop: boolean): string {
   if (isShop) {
-    return "Shop";
+    return "B6";
   }
   const match = name.match(/(\d+)/);
   return match ? `B${match[1]}` : name.slice(0, 3);

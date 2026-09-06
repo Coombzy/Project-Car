@@ -224,15 +224,15 @@ describe("param and label helpers", () => {
       "/schedule?view=week&week=2026-09-07&hoist=abc",
     );
     assert.equal(hoistChipLabel("Bay 3", false), "B3");
-    assert.equal(hoistChipLabel("Shop", true), "Shop");
+    assert.equal(hoistChipLabel("Bay 6", true), "B6");
     const sorted = sortHoists([
-      { name: "Shop", is_shop: true },
+      { name: "Bay 6", is_shop: true },
       { name: "Bay 2", is_shop: false },
       { name: "Bay 1", is_shop: false },
     ]);
     assert.deepEqual(
       sorted.map((row) => row.name),
-      ["Bay 1", "Bay 2", "Shop"],
+      ["Bay 1", "Bay 2", "Bay 6"],
     );
   });
 });

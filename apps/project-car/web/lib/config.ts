@@ -200,8 +200,23 @@ export type MemberSelf = Member & {
   tokens: TokenTransaction[];
 };
 
+export type BookedHour = {
+  booking_id: string;
+  hoist_id: string;
+  hoist_name: string;
+  kind: Booking["kind"];
+  status: Booking["status"];
+  hour_start: string;
+  hour_end: string;
+  member_id: string | null;
+  member_name: string;
+  vehicle_label: string;
+  notes: string | null;
+};
+
 export type HoistSnapshot = Hoist & {
   current_booking: Booking | null;
+  next_hours: BookedHour[];
 };
 
 export type MemberAtRisk = {
@@ -212,11 +227,70 @@ export type MemberAtRisk = {
   token_balance: string;
 };
 
+export type Todo = {
+  id: string;
+  owner_email: string | null;
+  member_id: string | null;
+  title: string;
+  notes: string | null;
+  due_at: string | null;
+  status: "open" | "done";
+  created_at: string;
+  updated_at: string;
+};
+
+export type PartsOrder = {
+  id: string;
+  po_number: string;
+  sku: string | null;
+  what: string;
+  vendor: string;
+  for_label: string;
+  status: "ordered" | "shipped" | "in_transit" | "received";
+  ordered_at: string;
+  shipped_at: string | null;
+  eta_at: string | null;
+  received_at: string | null;
+  tracking: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CalendarProviderStatus = {
+  connected: boolean;
+  status: string;
+  ready: boolean;
+  label: string;
+  hint?: string | null;
+};
+
+export type CalendarStatus = {
+  google: CalendarProviderStatus;
+  apple: CalendarProviderStatus;
+  next: string;
+};
+
 export type Dashboard = {
+  tz: string;
+  window_start: string;
+  window_end: string;
   hoists: HoistSnapshot[];
   today_bookings: Booking[];
   waitlist_count: number;
   token_at_risk: MemberAtRisk[];
+  todos: Todo[];
+  parts_orders: PartsOrder[];
+  calendar: CalendarStatus | null;
+};
+
+export type MemberDashboard = {
+  tz: string;
+  window_start: string;
+  window_end: string;
+  hoists: HoistSnapshot[];
+  todos: Todo[];
+  calendar: CalendarStatus;
 };
 
 export type ChatParticipant = {

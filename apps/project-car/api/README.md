@@ -72,7 +72,7 @@ python -m app.seed          # upsert demo IDs; rebuild this week's sample bookin
 python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then seed
 ```
 
-`--reset` refreshes Basic **1000** / Premium **1500** placeholders (Weekly / Pro seed leftovers are retired; Pro members move to Premium). Seed creates **6 hoists** (5 customer bays + 1 Owner-only shop hoist). Bookings are placed relative to **today** in `America/Edmonton` so a fresh DB always shows a live-looking week. Reserve amounts are computed from duration × band × overlay (`America/Regina`). Shop work (`kind=shop`) does not reserve member tokens. Customers cannot book the shop hoist (v1 choice A).
+`--reset` refreshes Basic **1000** / Premium **1500** placeholders (Weekly / Pro seed leftovers are retired; Pro members move to Premium). Seed creates **6 hoists** (Bay 1–5 customer + **Bay 6** Owner-only shop hoist). Bookings are placed relative to **today** in `America/Edmonton` so a fresh DB always shows a live-looking week. Reserve amounts are computed from duration × band × overlay (`America/Regina`). Shop work (`kind=shop`) does not reserve member tokens. Customers cannot book the shop hoist (v1 choice A).
 
 ## Endpoints
 
@@ -83,7 +83,7 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `POST` | `/auth/member/login` | — | Member session (demo password + existing member email) |
 | `POST` | `/auth/member/logout` | — | Clear Member session |
 | `GET` | `/me` | Owner or Member | Current principal |
-| `GET` | `/dashboard` | Owner | Hoist snapshot, today's bookings, waitlist count, token-at-risk |
+| `GET` | `/dashboard` | Owner | Bays 1–6 next-24h hour strips, todos, current parts POs, waitlist, token-at-risk |
 | `POST` | `/waitlist` | Public | Create waitlist entry |
 | `GET` | `/waitlist` | Owner | List entries, newest first |
 | `POST` | `/waitlist/{id}/contacted` | Owner | Mark contacted |
@@ -116,6 +116,12 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `GET` | `/member/chat/rooms` | Member | Own rooms only |
 | `GET` | `/member/chat/rooms/{id}` | Member | Own room detail |
 | `GET/POST` | `/member/chat/rooms/{id}/messages` | Member | Poll (`after_id`) / reply |
+| `GET` | `/member/dashboard` | Member | Own todos + next-24h hours on bays the member booked |
+| `GET/POST` | `/todos` | Owner or Member | Personal to-do list (scoped to the session) |
+| `GET/PATCH/DELETE` | `/todos/{id}` | Owner or Member | Own to-do only |
+| `GET` | `/todos/{id}/ics` | Owner or Member | ICS download for a due date (`America/Regina`) |
+| `GET` | `/calendar/status` | Owner or Member | Google / Apple connect stub |
+| `GET` | `/calendar/google/start` | Owner or Member | OAuth scaffold — `501` until env is set |
 | `POST` | `/member/bookings/quote` | Member | Duration × band × overlay × fill for self |
 | `POST` | `/member/bookings` | Member | Create own customer booking |
 | `POST` | `/member/bookings/{id}/confirm` | Member | Confirm own pending booking |
@@ -163,7 +169,7 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 
 ## Domain
 
-Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work. `20260906_0005` adds `fill_offers` and `notification_outbox`. `20260906_0006` adds `chat_rooms`, `chat_participants`, and `chat_messages`.
+Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work. `20260906_0005` adds `fill_offers` and `notification_outbox`. `20260906_0006` adds `chat_rooms`, `chat_participants`, and `chat_messages`. `20260906_0007` adds `todos`, `parts_orders` (PT SKU / PO stubs), and `calendar_connections` (OAuth scaffold).
 
 Membership tier seed rows (Basic 1000 / Premium 1500) are placeholders only. Two tiers in fixtures.
 
