@@ -122,6 +122,7 @@ export default async function SchedulePage({
             <p className="muted">Need at least one active member and one hoist.</p>
           ) : (
             <CreateBookingForm
+              key={`${defaultStart}-${hoistId ?? ""}`}
               members={activeMembers}
               hoists={ordered}
               weekStart={weekStart}

@@ -28,6 +28,11 @@ export function MemberBookingForm({
 }: Props) {
   const [startAt, setStartAt] = useState(defaultStart);
   const [endAt, setEndAt] = useState(defaultEnd);
+
+  useEffect(() => {
+    setStartAt(defaultStart);
+    setEndAt(defaultEnd);
+  }, [defaultStart, defaultEnd]);
   const [quote, setQuote] = useState<BookingQuote | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const bays = hoists.filter((hoist) => !hoist.is_shop);

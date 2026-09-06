@@ -131,6 +131,7 @@ export default async function MemberSchedulePage({
             <p className="muted">Need at least one customer bay.</p>
           ) : (
             <MemberBookingForm
+              key={`${defaultStart}-${hoistId ?? ""}`}
               member={me}
               hoists={ordered}
               weekStart={weekStart}
