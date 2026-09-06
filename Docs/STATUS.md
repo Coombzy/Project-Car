@@ -16,13 +16,13 @@ Living one-pager: what’s live, what’s next, locks. Product detail stays in t
 
 ## Next
 
-1. **Owner booking hardened + live** on Doc / `app.projectcar.ca`.
+1. **Owner booking live** on Doc / `app.projectcar.ca`. Duration pricing (hours × 100 × band × overlay) is **in the Owner API + schedule** — not claimed live on `app.projectcar.ca` yet.
 2. **Member self-serve booking + token balance UI** (+ Member auth / OIDC as needed) — first-class next slice after Owner live. Not buried under “later.” Token balance + hoist booking is a primary customer (Member) page. **Not shipped.** May unlock OIDC / Member auth earlier than a vague v2 dump.
 3. Hold **Mission Control cockpit** until Owner booking is merged **and** live on Doc. Do not start the cockpit early.
 4. Brochure hygiene P0-3…P0-7 is **in git** (`apps/website/html`: robots, sitemap, `404.html`, favicon set, Home progress bar removed). Live Worker picks it up on the next Direct Upload (Zone). Classic Pages git still skipped.
 5. Public Apex chat: **deferred (Ben)**. Not P0. Do not revive.
 6. Payments / Stripe: later. Staff login can follow Member auth; do not dump Member into a vague v2.
-7. **Token pricing** (bands + overlay) is **spec-locked** — `token-pricing.md`. Implement later. Not this docs drop. Pricing math applies to Member bookings too.
+7. **Token pricing** v1 is **landed for Owner booking** — `token-pricing.md`. Member self-serve still not shipped. Pricing math will apply there the same way.
 
 ---
 

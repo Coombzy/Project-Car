@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BookingCost } from "../../../components/booking-cost";
 import { OwnerShell } from "../../../components/owner-shell";
 import { StatusPill } from "../../../components/status-pill";
 import { ShopApiError } from "../../../lib/config";
@@ -150,6 +151,7 @@ export default async function MemberDetailPage({
                   <th>Kind</th>
                   <th>Amount</th>
                   <th>Note</th>
+                  <th>Pricing</th>
                 </tr>
               </thead>
               <tbody>
@@ -159,6 +161,11 @@ export default async function MemberDetailPage({
                     <td>{row.kind}</td>
                     <td>{tokensLabel(row.amount)}</td>
                     <td className="notes">{row.note ?? "—"}</td>
+                    <td className="notes">
+                      {row.meta?.pricing_rule
+                        ? `${row.meta.pricing_rule.hours}h × 100 × ${row.meta.pricing_rule.band_multiplier} × ${row.meta.pricing_rule.advance_multiplier} = ${tokensLabel(row.meta.pricing_rule.final_reserve_cost)} · ${row.meta.pricing_rule.band_label} · ${row.meta.pricing_rule.overlay_label}`
+                        : "—"}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -188,7 +195,12 @@ export default async function MemberDetailPage({
                     <td>
                       <StatusPill value={booking.status} />
                     </td>
-                    <td>{tokensLabel(booking.reserved_tokens)}</td>
+                    <td>
+                      <BookingCost
+                        reservedTokens={booking.reserved_tokens}
+                        pricingRule={booking.pricing_rule}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>

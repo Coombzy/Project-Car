@@ -7,7 +7,7 @@
 
 How many tokens a hoist slot **costs** at reserve time. Not dollars. Not public brochure prices. Not live until Ben says the shop is open. **No Stripe.**
 
-This file is the lock. Implement later (not this docs PR). Do not invent API, Cloudflare, Apex, or Mission Control work from here.
+This file is the lock. Owner booking now computes reserve in the API. Do not invent Cloudflare, Apex, or Mission Control work from here.
 
 ---
 
@@ -24,9 +24,9 @@ final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier
 
 **`base_tokens` is duration × 100.** One hundred tokens per hour of hoist time. Not an arbitrary Owner-entered reserve amount.
 
-`hours` is the booking duration (end − start) in shop-local time. Fractional hours are allowed (`2.5` → `250`). Order is locked: duration base, then band, then overlay. Show all three factors and the total before confirm. Lock the same numbers onto the reserve ledger row (`pricing_rule` in meta). Cancel / complete **refund or debit that reserved amount** — do not reprice if bands or overlays change later.
+`hours` is the booking duration (end − start) in shop-local time. Fractional hours are allowed (`1.5` → `150`). Order is locked: duration base, then band, then overlay. Show all three factors and the total before confirm. Lock the same numbers onto the reserve ledger row (`pricing_rule` in meta). Cancel / complete **refund or debit that reserved amount** — do not reprice if bands or overlays change later.
 
-Bands and overlay never replace the append-only ledger.
+Bands and overlay never replace the append-only ledger. Owner create (`POST /bookings`) computes this in the API and ignores any client `tokens` field.
 
 ---
 
@@ -92,7 +92,7 @@ Week grid (same defaults):
 | Sat | 1.5 | 1.5 | 1.5 | 1.5 |
 | Sun | 1.5 | 1.5 | 1.5 | 0.75 (Sun→Mon) |
 
-Shop OS on `main` still labels schedule cells `America/Edmonton`. When pricing is implemented, shop-local TZ for bands **and** the week view must be `America/Regina`. Do not change that in this docs PR.
+Shop OS week cells and naive `datetime-local` values still use the existing `shop_time` helper `SHOP_TZ` = `America/Edmonton` (Owner labels stay `America/Edmonton`). Band and overlay math use `PRICING_TZ` = `America/Regina`. During Mountain Daylight both are UTC−6, so clock times match. In winter Edmonton is UTC−7 and Regina stays UTC−6 — the engine converts the stored UTC instant to Regina before picking a band.
 
 ---
 
@@ -164,9 +164,10 @@ Same 2-hour slot reserved **30 hours** ahead: overlay **1.25×** → `200 × 1.2
 
 ## Out of scope
 
-- No API / settings-table implementation in the PR that added this file.
+- Owner-editable settings table for bands / overlays (v1 ships the default table in code).
 - No Cloudflare. No Apex. No Mission Control cockpit.
 - No Stripe. No “shop is open.” Do not put these multipliers on projectcar.ca.
+- Member self-serve booking UI.
 
 ---
 

@@ -13,10 +13,9 @@ Weekly seed row is dropped.
 Default (no flag) upserts the demo IDs and rebuilds this week's sample
 bookings so a fresh or existing demo DB is never an empty shell.
 
-Base hoist rate (lock, `Docs/token-pricing.md`): **100 tokens per hour**.
+Reserve cost is computed from duration (`Docs/token-pricing.md`):
 `final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier`.
-Demo booking `reserved_tokens` below are still small stand-in amounts until
-the API computes that duration rule. Do not treat them as live prices.
+Demo bookings use that engine. Not live prices.
 
 This is sample data for localhost prospect walkthroughs. The shop is not
 open. There is no live payment processor (no Stripe). Shop members do not
@@ -49,6 +48,7 @@ from app.models import (
     TokenTransactionKind,
     WaitlistEntry,
 )
+from app.services.pricing import BASE_TOKENS_PER_HOUR, quote_reserve
 from app.services.tokens import apply_ledger, rebuild_token_balance
 from app.shop_time import SHOP_TZ, shop_now
 
@@ -190,10 +190,13 @@ def _make_booking(
     start: datetime,
     end: datetime,
     status: BookingStatus,
-    tokens: Decimal,
     notes: str,
     unused: Decimal = Decimal("0"),
 ) -> Booking:
+    quote = quote_reserve(start, end)
+    tokens = quote.final_reserve_cost
+    rule = quote.as_rule()
+    meta = quote.ledger_meta()
     booking = Booking(
         id=seed_id("booking", key),
         member_id=member.id,
@@ -202,6 +205,7 @@ def _make_booking(
         end_at=end,
         status=BookingStatus.PENDING,
         reserved_tokens=tokens,
+        pricing_rule=rule,
         notes=notes,
     )
     session.add(booking)
@@ -213,6 +217,7 @@ def _make_booking(
         amount=-tokens,
         booking_id=booking.id,
         note="Demo reserve",
+        meta=meta,
     )
 
     if status == BookingStatus.ACTIVE:
@@ -228,6 +233,7 @@ def _make_booking(
             amount=tokens,
             booking_id=booking.id,
             note="Demo release reserve",
+            meta=meta,
         )
         if used > 0:
             apply_ledger(
@@ -237,6 +243,7 @@ def _make_booking(
                 amount=-used,
                 booking_id=booking.id,
                 note="Demo debit",
+                meta=meta,
             )
         booking.reserved_tokens = Decimal("0")
         booking.status = BookingStatus.COMPLETED
@@ -248,6 +255,7 @@ def _make_booking(
             amount=tokens,
             booking_id=booking.id,
             note="Demo cancel refund",
+            meta=meta,
         )
         booking.reserved_tokens = Decimal("0")
         booking.status = BookingStatus.CANCELLED
@@ -360,8 +368,8 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         session.add(member)
     session.flush()
 
-    apply_ledger(session, ada, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("800"), note="Demo Pro allocation")
-    apply_ledger(session, sam, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("400"), note="Demo Basic allocation")
+    apply_ledger(session, ada, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("2000"), note="Demo Pro allocation + duration buffer")
+    apply_ledger(session, sam, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("1200"), note="Demo Basic allocation + duration buffer")
     apply_ledger(
         session,
         sam,
@@ -369,8 +377,8 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         amount=Decimal("-300"),
         note="Demo: prior month usage",
     )
-    apply_ledger(session, riley, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("400"), note="Demo Basic allocation")
-    apply_ledger(session, casey, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("400"), note="Demo Basic allocation")
+    apply_ledger(session, riley, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("800"), note="Demo Basic allocation + duration buffer")
+    apply_ledger(session, casey, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("800"), note="Demo Basic allocation + duration buffer")
     apply_ledger(session, morgan, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("400"), note="Demo Basic allocation")
     apply_ledger(
         session,
@@ -386,8 +394,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
 
     # Fill this calendar week so the Owner schedule is never an empty grid.
     # Past days are completed/cancelled (reserve released). Today and future hold reserve.
-    # reserved_tokens here are walkthrough stand-ins. Locked rule is
-    # hours × BASE_TOKENS_PER_HOUR (100); API does not compute that yet.
+    # reserved_tokens come from quote_reserve (hours × 100 × band × overlay).
     week_slots = [
         {
             "key": "mon-casey",
@@ -396,7 +403,6 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
             "hoist": bay1,
             "start": 9,
             "end": 12,
-            "tokens": Decimal("1"),
             "future": BookingStatus.CONFIRMED,
             "past": BookingStatus.COMPLETED,
             "notes": "Alignment check",
@@ -408,7 +414,6 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
             "hoist": bay2,
             "start": 10,
             "end": 13,
-            "tokens": Decimal("1"),
             "future": BookingStatus.CONFIRMED,
             "past": BookingStatus.COMPLETED,
             "notes": "Oil + inspection",
@@ -420,7 +425,6 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
             "hoist": bay3,
             "start": 9,
             "end": 12,
-            "tokens": Decimal("2"),
             "future": BookingStatus.CONFIRMED,
             "past": BookingStatus.COMPLETED,
             "notes": "Turbo mock-up",
@@ -432,7 +436,6 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
             "hoist": bay2,
             "start": 14,
             "end": 18,
-            "tokens": Decimal("2"),
             "future": BookingStatus.CONFIRMED,
             "past": BookingStatus.COMPLETED,
             "notes": "Long bay — exhaust",
@@ -444,7 +447,6 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
             "hoist": bay3,
             "start": 9,
             "end": 11,
-            "tokens": Decimal("1"),
             "future": BookingStatus.PENDING,
             "past": BookingStatus.COMPLETED,
             "notes": "Pending Owner confirm",
@@ -456,7 +458,6 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
             "hoist": bay3,
             "start": 14,
             "end": 16,
-            "tokens": Decimal("1"),
             "future": BookingStatus.CANCELLED,
             "past": BookingStatus.CANCELLED,
             "notes": "Cancelled — parts delayed",
@@ -476,7 +477,6 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
             start=_at(day, slot["start"]),
             end=_at(day, slot["end"]),
             status=status,
-            tokens=slot["tokens"],
             notes=slot["notes"],
         )
 
@@ -486,9 +486,8 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         member=riley,
         hoist=bay2,
         start=_at(today, 9),
-        end=_at(today, 13),
+        end=_at(today, 11),
         status=BookingStatus.ACTIVE,
-        tokens=Decimal("2"),
         notes="On the clock — clutch job",
     )
     _make_booking(
@@ -497,9 +496,8 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         member=ada,
         hoist=bay1,
         start=_at(today, 14),
-        end=_at(today, 17),
+        end=_at(today, 16),
         status=BookingStatus.CONFIRMED,
-        tokens=Decimal("2"),
         notes="Confirmed afternoon — turbo mock-up",
     )
     session.flush()

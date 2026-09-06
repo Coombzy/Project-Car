@@ -393,6 +393,76 @@ main.wide {
   display: block;
 }
 
+.booking-cost {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.3rem 0 0.15rem;
+}
+
+.token-badge,
+.band-chip,
+.overlay-chip {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.08rem 0.45rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--line);
+}
+
+.token-badge {
+  color: var(--text);
+  background: #1a1d22;
+}
+
+.band-chip {
+  color: var(--muted);
+}
+
+.band-weekday_day {
+  border-color: #3f5340;
+  color: #c5d6b8;
+  background: #1a2218;
+}
+
+.band-weekday_eve {
+  border-color: #6a5734;
+  color: #e6d3b0;
+  background: #241c12;
+}
+
+.band-weekend_fri_eve {
+  border-color: #8a6230;
+  color: #f0d3a4;
+  background: #2a1d10;
+}
+
+.band-late_night {
+  border-color: #3a4558;
+  color: #b8c4d6;
+  background: #161a22;
+}
+
+.overlay-chip {
+  border-color: #6d322b;
+  color: #f0c8c2;
+  background: #2a1614;
+}
+
+.quote-preview {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #101217;
+}
+
+.quote-math {
+  margin: 0.35rem 0 0.25rem;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
 .chip-actions {
   display: flex;
   flex-wrap: wrap;

@@ -4,6 +4,7 @@ import { OwnerShell } from "../components/owner-shell";
 import { StatusPill } from "../components/status-pill";
 import { getDashboard, getMe } from "../lib/shop-api";
 import { handlePageError } from "../lib/page";
+import { BookingCost } from "../components/booking-cost";
 import { formatShopDateTime, formatShopTime, tokensLabel } from "../lib/time";
 
 export const dynamic = "force-dynamic";
@@ -101,7 +102,12 @@ export default async function DashboardPage() {
                     <td>
                       <StatusPill value={booking.status} />
                     </td>
-                    <td>{tokensLabel(booking.reserved_tokens)}</td>
+                    <td>
+                      <BookingCost
+                        reservedTokens={booking.reserved_tokens}
+                        pricingRule={booking.pricing_rule}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>

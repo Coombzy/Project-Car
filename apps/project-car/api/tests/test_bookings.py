@@ -1,23 +1,34 @@
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
+from decimal import Decimal
 
 from fastapi.testclient import TestClient
 
-from app.shop_time import SHOP_TZ, shop_now
+from app.services.pricing import quote_reserve
+from app.shop_time import shop_now
 from tests.conftest import AUTH, create_hoist, create_member
 
 
-def _window(hours_from_now: int, length_hours: int = 2) -> tuple[str, str]:
+def _window(hours_from_now: int, length_hours: float = 2) -> tuple[str, str]:
     start = shop_now() + timedelta(hours=hours_from_now)
     end = start + timedelta(hours=length_hours)
     return start.isoformat(), end.isoformat()
+
+
+def _expected_reserve(start: str, end: str) -> Decimal:
+    return quote_reserve(datetime.fromisoformat(start), datetime.fromisoformat(end)).final_reserve_cost
+
+
+def _dec(value) -> Decimal:
+    return Decimal(str(value))
 
 
 def test_create_booking_reserves_tokens_and_writes_ledger(client: TestClient) -> None:
     member = create_member(client)
     hoist = create_hoist(client)
     start, end = _window(4)
+    expected = _expected_reserve(start, end)
     created = client.post(
         "/bookings",
         headers=AUTH,
@@ -33,18 +44,75 @@ def test_create_booking_reserves_tokens_and_writes_ledger(client: TestClient) ->
     assert created.status_code == 201, created.text
     body = created.json()
     assert body["status"] == "pending"
-    assert body["reserved_tokens"] == "2.00" or body["reserved_tokens"] in ("2", "2.0", "2.00")
+    assert _dec(body["reserved_tokens"]) == expected
+    assert body["pricing_rule"]["final_reserve_cost"] == str(expected)
+    assert body["pricing_rule"]["tz"] == "America/Regina"
     assert body["member_name"] == "Ada Reyes"
     assert body["hoist_name"] == "Bay 1"
 
     detail = client.get(f"/members/{member['id']}", headers=AUTH)
     assert detail.status_code == 200
-    assert float(detail.json()["token_balance"]) == 6
+    assert _dec(detail.json()["token_balance"]) == Decimal("800") - expected
 
     ledger = client.get(f"/members/{member['id']}/tokens", headers=AUTH)
     kinds = [row["kind"] for row in ledger.json()]
     assert "booking_reserve" in kinds
     assert "monthly_allocation" in kinds
+    reserve_row = next(row for row in ledger.json() if row["kind"] == "booking_reserve")
+    assert reserve_row["meta"]["pricing_rule"]["hours"] == body["pricing_rule"]["hours"]
+
+
+def test_create_booking_ignores_client_token_amount(client: TestClient) -> None:
+    member = create_member(client)
+    hoist = create_hoist(client)
+    start = datetime_in_regina_band()
+    end = start + timedelta(hours=1)
+    quoted = client.post(
+        "/bookings/quote",
+        headers=AUTH,
+        json={
+            "start_at": start.isoformat(),
+            "end_at": end.isoformat(),
+            "member_id": member["id"],
+            "tokens": "1",
+        },
+    )
+    assert quoted.status_code == 200, quoted.text
+    quote_body = quoted.json()
+    expected = quote_reserve(start, end).final_reserve_cost
+    assert _dec(quote_body["reserved_tokens"]) == expected
+    assert expected != Decimal("1")
+    assert quote_body["pricing_rule"]["band_id"] == "weekday_day"
+    assert quote_body["pricing_rule"]["base_tokens"] == "100"
+    assert _dec(quote_body["token_balance"]) == Decimal("800")
+    assert _dec(quote_body["token_balance_after"]) == Decimal("800") - expected
+
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start.isoformat(),
+            "end_at": end.isoformat(),
+            "tokens": "1",
+        },
+    )
+    assert created.status_code == 201, created.text
+    assert _dec(created.json()["reserved_tokens"]) == expected
+    assert created.json()["pricing_rule"]["base_tokens"] == "100"
+
+
+def datetime_in_regina_band():
+    """Next Tuesday 10:00 America/Edmonton, far enough for the standard overlay."""
+    now = shop_now()
+    days_ahead = (1 - now.weekday()) % 7
+    if days_ahead == 0:
+        days_ahead = 7
+    start = (now + timedelta(days=days_ahead)).replace(hour=10, minute=0, second=0, microsecond=0)
+    if start - now < timedelta(hours=48):
+        start = start + timedelta(days=7)
+    return start
 
 
 def test_confirm_overlap_returns_409(client: TestClient) -> None:
@@ -62,8 +130,8 @@ def test_confirm_overlap_returns_409(client: TestClient) -> None:
         headers=AUTH,
         json={"member_id": casey["id"], "hoist_id": hoist["id"], "start_at": start, "end_at": end},
     )
-    assert first.status_code == 201
-    assert second.status_code == 201
+    assert first.status_code == 201, first.text
+    assert second.status_code == 201, second.text
     assert client.post(f"/bookings/{first.json()['id']}/confirm", headers=AUTH).status_code == 200
     conflict = client.post(f"/bookings/{second.json()['id']}/confirm", headers=AUTH)
     assert conflict.status_code == 409
@@ -74,6 +142,7 @@ def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None
     member = create_member(client)
     hoist = create_hoist(client)
     start, end = _window(3)
+    expected = _expected_reserve(start, end)
     booking = client.post(
         "/bookings",
         headers=AUTH,
@@ -82,10 +151,9 @@ def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None
             "hoist_id": hoist["id"],
             "start_at": start,
             "end_at": end,
-            "tokens": "2",
         },
     ).json()
-    assert float(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == 6
+    assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == Decimal("800") - expected
 
     assert client.post(f"/bookings/{booking['id']}/confirm", headers=AUTH).status_code == 200
     checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)
@@ -93,6 +161,7 @@ def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None
     assert checked.json()["status"] == "active"
     assert client.get("/hoists", headers=AUTH).json()[0]["status"] == "occupied"
 
+    unused = Decimal("1")
     completed = client.post(
         f"/bookings/{booking['id']}/complete",
         headers=AUTH,
@@ -100,11 +169,15 @@ def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None
     )
     assert completed.status_code == 200, completed.text
     assert completed.json()["status"] == "completed"
-    # reserve 2, refund 2, debit 1 → net -1 from the original 8
-    assert float(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == 7
+    used = expected - unused
+    assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == Decimal("800") - used
     assert client.get("/hoists", headers=AUTH).json()[0]["status"] == "available"
+    complete_ledger = client.get(f"/members/{member['id']}/tokens", headers=AUTH).json()
+    refund = next(row for row in complete_ledger if row["kind"] == "booking_refund")
+    assert refund["meta"]["pricing_rule"]["final_reserve_cost"] == str(expected)
 
     other_start, other_end = _window(8)
+    other_expected = _expected_reserve(other_start, other_end)
     other = client.post(
         "/bookings",
         headers=AUTH,
@@ -113,14 +186,14 @@ def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None
             "hoist_id": hoist["id"],
             "start_at": other_start,
             "end_at": other_end,
-            "tokens": "1",
         },
     ).json()
-    assert float(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == 6
+    after_other = Decimal("800") - used - other_expected
+    assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == after_other
     cancelled = client.post(f"/bookings/{other['id']}/cancel", headers=AUTH)
     assert cancelled.status_code == 200
     assert cancelled.json()["status"] == "cancelled"
-    assert float(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == 7
+    assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == Decimal("800") - used
 
 
 def test_tier_rules_enforced(client: TestClient) -> None:
@@ -132,7 +205,7 @@ def test_tier_rules_enforced(client: TestClient) -> None:
         headers=AUTH,
         json={"member_id": basic["id"], "hoist_id": hoist["id"], "start_at": start, "end_at": end},
     )
-    assert first.status_code == 201
+    assert first.status_code == 201, first.text
     second = client.post(
         "/bookings",
         headers=AUTH,
@@ -199,3 +272,29 @@ def test_inactive_member_and_insufficient_tokens(client: TestClient) -> None:
     )
     assert poor.status_code == 400
     assert poor.json()["error"]["code"] == "insufficient_tokens"
+
+
+def test_ninety_minute_booking_via_api(client: TestClient) -> None:
+    member = create_member(client)
+    hoist = create_hoist(client)
+    start = shop_now() + timedelta(days=3)
+    start = start.replace(hour=10, minute=0, second=0, microsecond=0)
+    if start.weekday() >= 5:
+        start = start + timedelta(days=2)
+        start = start.replace(hour=10, minute=0, second=0, microsecond=0)
+    end = start + timedelta(minutes=90)
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start.isoformat(),
+            "end_at": end.isoformat(),
+        },
+    )
+    assert created.status_code == 201, created.text
+    body = created.json()
+    assert body["pricing_rule"]["hours"] == "1.5"
+    assert body["pricing_rule"]["base_tokens"] == "150"
+    assert _dec(body["reserved_tokens"]) == quote_reserve(start, end).final_reserve_cost

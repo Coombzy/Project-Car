@@ -56,6 +56,19 @@ export type Member = {
   updated_at: string;
 };
 
+export type PricingRule = {
+  band_id: string;
+  band_label: string;
+  band_multiplier: string;
+  overlay_id: string;
+  overlay_label: string;
+  advance_multiplier: string;
+  hours: string;
+  base_tokens: string;
+  final_reserve_cost: string;
+  tz: string;
+};
+
 export type Booking = {
   id: string;
   member_id: string;
@@ -66,9 +79,17 @@ export type Booking = {
   end_at: string;
   status: "pending" | "confirmed" | "active" | "completed" | "overdue" | "cancelled";
   reserved_tokens: string;
+  pricing_rule: PricingRule | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type BookingQuote = {
+  pricing_rule: PricingRule;
+  reserved_tokens: string;
+  token_balance: string | null;
+  token_balance_after: string | null;
 };
 
 export type MemberDetail = Member & {
@@ -82,6 +103,7 @@ export type TokenTransaction = {
   kind: string;
   amount: string;
   note: string | null;
+  meta: { pricing_rule?: PricingRule } | null;
   created_at: string;
 };
 

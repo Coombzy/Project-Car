@@ -46,7 +46,7 @@ def test_member_detail_and_admin_tokens(client: TestClient) -> None:
     body = detail.json()
     assert body["tier_name"] == "pro"
     assert body["phone"] == "403-555-0100"
-    assert float(body["token_balance"]) == 8
+    assert float(body["token_balance"]) == 800
     assert body["bookings"] == []
 
     adjusted = client.post(
@@ -57,7 +57,7 @@ def test_member_detail_and_admin_tokens(client: TestClient) -> None:
     assert adjusted.status_code == 201
     assert adjusted.json()["kind"] == "admin_adjustment"
     refreshed = client.get(f"/members/{member['id']}", headers=AUTH)
-    assert float(refreshed.json()["token_balance"]) == 6.5
+    assert float(refreshed.json()["token_balance"]) == 798.5
 
 
 def test_hoist_status_patch(client: TestClient) -> None:

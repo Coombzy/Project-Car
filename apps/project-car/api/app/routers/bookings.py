@@ -10,7 +10,14 @@ from sqlalchemy.orm import selectinload
 
 from app.deps import DbSession, Owner
 from app.models import Booking, BookingStatus
-from app.schemas import BookingComplete, BookingCreate, BookingOut
+from app.schemas import (
+    BookingComplete,
+    BookingCreate,
+    BookingOut,
+    BookingQuoteOut,
+    BookingQuoteRequest,
+    PricingRuleOut,
+)
 from app.services import bookings as booking_service
 from app.shop_time import as_utc
 
@@ -65,6 +72,22 @@ def list_bookings(
     return [BookingOut.from_booking(row) for row in rows]
 
 
+@router.post("/bookings/quote", response_model=BookingQuoteOut)
+def quote_booking(body: BookingQuoteRequest, session: DbSession, _owner: Owner) -> BookingQuoteOut:
+    quote, balance, after = booking_service.preview_reserve(
+        session,
+        start_at=body.start_at,
+        end_at=body.end_at,
+        member_id=body.member_id,
+    )
+    return BookingQuoteOut(
+        pricing_rule=PricingRuleOut.model_validate(quote.as_rule()),
+        reserved_tokens=quote.final_reserve_cost,
+        token_balance=balance,
+        token_balance_after=after,
+    )
+
+
 @router.post("/bookings", response_model=BookingOut, status_code=201)
 def create_booking(body: BookingCreate, session: DbSession, _owner: Owner) -> BookingOut:
     booking = booking_service.create_booking(
@@ -73,7 +96,6 @@ def create_booking(body: BookingCreate, session: DbSession, _owner: Owner) -> Bo
         hoist_id=body.hoist_id,
         start_at=body.start_at,
         end_at=body.end_at,
-        tokens=body.tokens,
         notes=body.notes,
     )
     return BookingOut.from_booking(booking)

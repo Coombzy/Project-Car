@@ -1,4 +1,13 @@
-"""Shop-local time helpers. The shop is Calgary / Northern Alberta."""
+"""Shop-local time helpers. The shop is Calgary / Northern Alberta.
+
+Display and naive datetimes (Owner `datetime-local`, `as_utc`, week bounds)
+stay on `SHOP_TZ` = America/Edmonton so existing schedule labels stay honest.
+
+Token pricing bands and the advance overlay use `PRICING_TZ` = America/Regina
+(`Docs/token-pricing.md`). During Mountain Daylight both zones are UTC−6, so
+clock times match. In winter Edmonton is UTC−7 and Regina stays UTC−6 — band
+lookup uses the Regina wall clock of the stored UTC instant.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +15,7 @@ from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 SHOP_TZ = ZoneInfo("America/Edmonton")
+PRICING_TZ = ZoneInfo("America/Regina")
 
 
 def as_utc(value: datetime) -> datetime:

@@ -189,6 +189,7 @@ class TokenTransactionOut(BaseModel):
     kind: TokenTransactionKind
     amount: Decimal
     note: str | None
+    meta: dict | None = None
     created_at: datetime
 
 
@@ -220,6 +221,19 @@ class HoistPatch(BaseModel):
     status: HoistStatus | None = None
 
 
+class PricingRuleOut(BaseModel):
+    band_id: str
+    band_label: str
+    band_multiplier: str
+    overlay_id: str
+    overlay_label: str
+    advance_multiplier: str
+    hours: str
+    base_tokens: str
+    final_reserve_cost: str
+    tz: str
+
+
 class BookingOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -232,12 +246,14 @@ class BookingOut(BaseModel):
     end_at: datetime
     status: BookingStatus
     reserved_tokens: Decimal
+    pricing_rule: PricingRuleOut | None = None
     notes: str | None
     created_at: datetime
     updated_at: datetime
 
     @classmethod
     def from_booking(cls, booking) -> BookingOut:
+        rule = booking.pricing_rule
         return cls(
             id=booking.id,
             member_id=booking.member_id,
@@ -248,6 +264,7 @@ class BookingOut(BaseModel):
             end_at=booking.end_at,
             status=booking.status,
             reserved_tokens=booking.reserved_tokens,
+            pricing_rule=PricingRuleOut.model_validate(rule) if rule else None,
             notes=booking.notes,
             created_at=booking.created_at,
             updated_at=booking.updated_at,
@@ -259,8 +276,22 @@ class BookingCreate(BaseModel):
     hoist_id: UUID
     start_at: datetime
     end_at: datetime
-    tokens: Decimal = Field(default=Decimal("1"), gt=0)
+    tokens: Decimal | None = Field(default=None, description="Ignored. Server computes reserve from duration.")
     notes: str | None = Field(default=None, max_length=2000)
+
+
+class BookingQuoteRequest(BaseModel):
+    start_at: datetime
+    end_at: datetime
+    member_id: UUID | None = None
+    tokens: Decimal | None = Field(default=None, description="Ignored display hint.")
+
+
+class BookingQuoteOut(BaseModel):
+    pricing_rule: PricingRuleOut
+    reserved_tokens: Decimal
+    token_balance: Decimal | None = None
+    token_balance_after: Decimal | None = None
 
 
 class BookingComplete(BaseModel):

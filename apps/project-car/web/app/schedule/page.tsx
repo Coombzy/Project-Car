@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { BookingCost } from "../../components/booking-cost";
+import { CreateBookingForm } from "../../components/create-booking-form";
 import { OwnerShell } from "../../components/owner-shell";
 import { StatusPill } from "../../components/status-pill";
 import { handlePageError } from "../../lib/page";
@@ -8,6 +10,7 @@ import {
   addDays,
   formatShopTime,
   parseWeekParam,
+  shopDateTimeLocal,
   shopTodayIso,
   weekdayLabel,
 } from "../../lib/time";
@@ -16,7 +19,6 @@ import {
   checkInBookingAction,
   completeBookingAction,
   confirmBookingAction,
-  createBookingAction,
 } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -59,8 +61,9 @@ export default async function SchedulePage({
         <p className="eyebrow">Week view · America/Edmonton</p>
         <h1>Schedule</h1>
         <p className="lede">
-          One hoist, one overlapping confirmed or active booking. Create reserves
-          tokens; complete debits; cancel refunds.
+          One hoist, one overlapping confirmed or active booking. Reserve cost is
+          duration × 100 × band × overlay. Complete debits; cancel refunds the
+          locked reserve.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
 
@@ -117,6 +120,10 @@ export default async function SchedulePage({
                               <div>
                                 {formatShopTime(booking.start_at)}–{formatShopTime(booking.end_at)}
                               </div>
+                              <BookingCost
+                                reservedTokens={booking.reserved_tokens}
+                                pricingRule={booking.pricing_rule}
+                              />
                               <StatusPill value={booking.status} />
                               <div className="chip-actions">
                                 {booking.status === "pending" ? (
@@ -168,55 +175,19 @@ export default async function SchedulePage({
         <section className="card" style={{ marginTop: "1.4rem" }}>
           <h2>Create booking</h2>
           <p className="lede">
-            Starts as pending and reserves tokens. Confirm to hold the bay.
+            Starts as pending. Server computes reserve from the window — Owner does
+            not type a token amount.
           </p>
           {activeMembers.length === 0 || hoists.length === 0 ? (
             <p className="muted">Need at least one active member and one hoist.</p>
           ) : (
-            <form action={createBookingAction} className="stack-form">
-              <input type="hidden" name="week" value={weekStart} />
-              <div className="form-grid">
-                <label>
-                  Member
-                  <select name="member_id" required defaultValue={activeMembers[0]?.id}>
-                    {activeMembers.map((member) => (
-                      <option key={member.id} value={member.id}>
-                        {member.name} · {member.tier_name} · {member.token_balance} tok
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Hoist
-                  <select name="hoist_id" required defaultValue={hoists[0]?.id}>
-                    {hoists.map((hoist) => (
-                      <option key={hoist.id} value={hoist.id}>
-                        {hoist.name} · {hoist.status}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Start
-                  <input type="datetime-local" name="start_at" required />
-                </label>
-                <label>
-                  End
-                  <input type="datetime-local" name="end_at" required />
-                </label>
-                <label>
-                  Tokens to reserve
-                  <input type="number" name="tokens" min="1" step="1" defaultValue="1" />
-                </label>
-                <label>
-                  Notes
-                  <input type="text" name="notes" placeholder="Optional" />
-                </label>
-              </div>
-              <div className="actions">
-                <button type="submit">Reserve booking</button>
-              </div>
-            </form>
+            <CreateBookingForm
+              members={activeMembers}
+              hoists={hoists}
+              weekStart={weekStart}
+              defaultStart={shopDateTimeLocal(new Date(Date.now() + 72 * 3600 * 1000))}
+              defaultEnd={shopDateTimeLocal(new Date(Date.now() + 73 * 3600 * 1000))}
+            />
           )}
         </section>
       </OwnerShell>
