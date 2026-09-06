@@ -278,14 +278,6 @@ def confirm_booking(session: Session, booking_id: UUID) -> Booking:
         raise _error(400, "invalid_transition", "Only pending bookings can be confirmed.")
     if booking.hoist.status in UNAVAILABLE_HOIST:
         raise _error(400, "hoist_unavailable", "That hoist is in maintenance or locked.")
-    if hoist_has_overlap(
-        session,
-        booking.hoist_id,
-        booking.start_at,
-        booking.end_at,
-        exclude_id=booking.id,
-    ):
-        raise _error(409, "hoist_overlap", "That hoist already has a confirmed or active booking in this window.")
     if booking.kind == BookingKind.CUSTOMER and shop_work_blocks_customer(
         session,
         booking.hoist_id,
@@ -298,6 +290,14 @@ def confirm_booking(session: Session, booking_id: UUID) -> Booking:
             "shop_priority",
             "Shop work already claims this window on that hoist. Customer bookings cannot displace it.",
         )
+    if hoist_has_overlap(
+        session,
+        booking.hoist_id,
+        booking.start_at,
+        booking.end_at,
+        exclude_id=booking.id,
+    ):
+        raise _error(409, "hoist_overlap", "That hoist already has a confirmed or active booking in this window.")
     booking.status = BookingStatus.CONFIRMED
     session.add(booking)
     session.flush()
