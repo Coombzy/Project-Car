@@ -1,0 +1,32 @@
+# Shop OS Postgres only.
+# Dedicated volume. Never share with or point at Nextcloud MariaDB.
+name: project-car-shop
+
+services:
+  shop-postgres:
+    image: postgres:16
+    container_name: project-car-shop-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${SHOP_POSTGRES_USER:-projectcar}
+      POSTGRES_PASSWORD: ${SHOP_POSTGRES_PASSWORD:-projectcar}
+      POSTGRES_DB: ${SHOP_POSTGRES_DB:-projectcar}
+    ports:
+      - "${SHOP_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - shop_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - shop
+
+volumes:
+  shop_pgdata:
+    name: project-car-shop-pgdata
+
+networks:
+  shop:
+    name: project-car-shop
