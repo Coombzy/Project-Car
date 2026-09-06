@@ -1,10 +1,12 @@
-# Project Car shop web (Owner + Member)
+# Project Car shop web (management UI)
 
-Next.js Shop OS shell. The browser talks to this app only; the Next.js server calls the FastAPI shop API with the v1 session cookies (`pc_owner_session` or `pc_member_session`).
+Next.js Shop OS shell for **management** (`app.projectcar.ca`). The browser talks to this app only; the Next.js server calls the FastAPI shop API with the v1 session cookies (`pc_owner_session` or `pc_member_session`).
+
+**Host lock (Ben 2026-09-06):** `app.projectcar.ca` = management (Owner calendar stays here). `projectcar.ca` = customer app later. Member `/member` is **temporarily parked** on this demo — not a permanent `app` home. Do not deploy this app to the brochure/Pages origin and do not migrate Member onto `apps/website` in the calendar slice.
 
 Specs: `Docs/project-car-application-specification.md` §7–9, `Docs/platform-architecture.md`.
 
-This is **not** projectcar.ca. Do not deploy it to the marketing domain. The shop is not open.
+The shop is not open.
 
 ## Local run (API + web + demo data)
 
@@ -72,7 +74,7 @@ After the same seed:
 | Email | `ada.reyes@example.com` |
 | Password | `changeme` |
 
-Open `/member/login`, then Balance (tokens + ledger) and Schedule (Bays 1–5 month heat-map + weekly hour grids, band + overlay + total, book / cancel). The shop hoist is not on the Member calendar. Not OIDC.
+Open `/member/login`, then Balance (tokens + ledger) and Schedule (Bays 1–5 month heat-map + weekly hour grids, band + overlay + total, book / cancel). The shop hoist is not on the Member calendar. Not OIDC. This `/member` park is temporary — customer app destination is `projectcar.ca`, not a permanent claim on `app`.
 
 Re-seed anytime from the API directory: `python -m app.seed --reset`. See `../api/README.md`.
 

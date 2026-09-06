@@ -66,10 +66,10 @@ export default async function SchedulePage({
         </p>
         <h1>Schedule</h1>
         <p className="lede">
-          Month shows how booked each hoist is that day (Bays 1–5 plus the
-          Owner-only shop hoist). Week is a separate hour grid per hoist.
-          Reserve is duration × 100 × band × overlay × fill. Complete debits;
-          cancel refunds the locked reserve.
+          Management calendar. Month shows how booked each hoist is that day
+          (Bays 1–5 plus the Owner-only shop hoist). Week is a separate hour
+          grid per hoist. Reserve is duration × 100 × band × overlay × fill.
+          Complete debits; cancel refunds the locked reserve.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
 

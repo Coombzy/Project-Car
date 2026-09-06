@@ -1,10 +1,13 @@
 # Project Car shop API
 
 FastAPI + SQLAlchemy 2 + Alembic for the shop OS. This slice covers the Owner
-dashboard plus Member self-serve (balance, book / cancel, schedule quote),
-members, hoists, bookings, token ledger, tiers, and waitlist.
+management dashboard plus Member self-serve parked at `/member` for now
+(balance, book / cancel, schedule quote), members, hoists, bookings, token
+ledger, tiers, and waitlist.
 
-The Owner UI is `apps/project-car/web`.
+The management UI is `apps/project-car/web` (`app.projectcar.ca`). Member
+`/member` on that host is a temporary park — customer app is `projectcar.ca`
+later. Do not migrate Member onto brochure/Pages in the calendar slice.
 
 Specs: `Docs/platform-architecture.md` §8, `Docs/project-car-application-specification.md` §4–9.
 

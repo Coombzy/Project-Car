@@ -16,11 +16,11 @@ export default async function LoginPage({
   return (
     <main>
       <section className="card" style={{ maxWidth: 460, margin: "10vh auto" }}>
-        <p className="eyebrow">Owner demo session</p>
+        <p className="eyebrow">Management · Owner demo</p>
         <h1>Sign in to Shop OS</h1>
         <p className="lede">
-          v1 owner stub against the shop API. Not OIDC. Hand this browser to a
-          prospect after seeding — the shop is not open.
+          Management UI (app.projectcar.ca). v1 owner stub against the shop
+          API. Not OIDC. The shop is not open.
         </p>
         <div className="banner demo">
           <strong>Demo Owner credentials</strong>
@@ -37,8 +37,10 @@ export default async function LoginPage({
         ) : null}
         <LoginForm nextPath={nextPath} />
         <p className="muted" style={{ marginTop: "1.2rem" }}>
-          Seeded Member demo is on <Link href="/member/login">/member/login</Link>{" "}
-          (<code>ada.reyes@example.com</code>).
+          Temporary Member demo is still on{" "}
+          <Link href="/member/login">/member/login</Link>{" "}
+          (<code>ada.reyes@example.com</code>) — parked here for now, not the
+          permanent customer home.
         </p>
       </section>
     </main>

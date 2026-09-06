@@ -19,8 +19,9 @@ export default async function MemberLoginPage({
         <p className="eyebrow">Member demo session</p>
         <h1>Sign in to your bay</h1>
         <p className="lede">
-          v1 Member session cookie against the shop API. Not OIDC — Staff login
-          can follow later. Seeded demo only — the shop is not open.
+          Temporary Member demo parked on the management host. Customer app
+          will be projectcar.ca later. v1 session cookie — not OIDC. The shop
+          is not open.
         </p>
         <div className="banner demo">
           <strong>Demo Member credentials</strong>
@@ -38,7 +39,7 @@ export default async function MemberLoginPage({
         ) : null}
         <MemberLoginForm nextPath={nextPath} />
         <p className="muted" style={{ marginTop: "1.2rem" }}>
-          Owner demo is on <Link href="/login">/login</Link>.
+          Management Owner demo is on <Link href="/login">/login</Link>.
         </p>
       </section>
     </main>

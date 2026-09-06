@@ -62,9 +62,11 @@ export default async function MemberSchedulePage({
         </p>
         <h1>Schedule</h1>
         <p className="lede">
-          Customer bays only. Month is a density heat-map; week is an hour grid
-          per bay. Reserve is duration × 100 × band × overlay × fill. Cancel
-          refunds the locked reserve. The shop hoist is not on this calendar.
+          Customer bays only — temporary /member demo on this management alias.
+          Customer app is projectcar.ca. Month is a density heat-map; week is
+          an hour grid per bay. Reserve is duration × 100 × band × overlay ×
+          fill. Cancel refunds the locked reserve. The shop hoist is not on
+          this calendar.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
         {fill?.applies ? (
