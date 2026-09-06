@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     session_secret: str = "dev-session-secret-change-me"
     session_ttl_seconds: int = 86_400
     cookie_name: str = "pc_owner_session"
+    member_cookie_name: str = "pc_member_session"
+    # Demo Member password stub. Email must match an existing member row.
+    # Not OIDC. Staff OIDC can replace this later without rewriting shop tables.
+    member_demo_password: str = "changeme"
     cookie_secure: bool = False
     # Explicit allowlist only. Never "*". Public waitlist POSTs need the brochure origins.
     cors_origins: str = (

@@ -683,6 +683,7 @@ def main(argv: list[str] | None = None) -> int:
         "(Basic 1000 / Premium 1500).".format(**summary)
     )
     print("  Owner login (localhost demo): owner@projectcar.ca / changeme")
+    print("  Member login (localhost demo): ada.reyes@example.com / changeme")
     print("  The shop is not open. This is sample data for walkthroughs.")
     return 0
 

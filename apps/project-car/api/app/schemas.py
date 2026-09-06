@@ -65,6 +65,7 @@ class LoginRequest(BaseModel):
 class PrincipalOut(BaseModel):
     role: str
     email: str
+    member_id: UUID | None = None
 
 
 class TierOut(BaseModel):
@@ -302,6 +303,44 @@ class BookingQuoteOut(BaseModel):
 
 class BookingComplete(BaseModel):
     unused_tokens: Decimal = Field(default=Decimal("0"), ge=0)
+
+
+class MemberBookingCreate(BaseModel):
+    hoist_id: UUID
+    start_at: datetime
+    end_at: datetime
+    tokens: Decimal | None = Field(default=None, description="Ignored. Server computes reserve from duration.")
+    notes: str | None = Field(default=None, max_length=2000)
+
+
+class MemberBookingQuoteRequest(BaseModel):
+    start_at: datetime
+    end_at: datetime
+    tokens: Decimal | None = Field(default=None, description="Ignored display hint.")
+
+
+class MemberSelfOut(MemberOut):
+    booking_window_days: int
+    max_simultaneous_bookings: int
+    included_tokens: int
+    bookings: list[BookingOut]
+    tokens: list[TokenTransactionOut]
+
+
+class OccupancyOut(BaseModel):
+    booking_id: UUID
+    hoist_id: UUID
+    hoist_name: str
+    start_at: datetime
+    end_at: datetime
+    status: BookingStatus
+    own: bool
+
+
+class MemberScheduleOut(BaseModel):
+    hoists: list[HoistOut]
+    bookings: list[BookingOut]
+    occupancy: list[OccupancyOut]
 
 
 class MemberDetailOut(MemberOut):

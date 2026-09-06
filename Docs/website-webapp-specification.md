@@ -79,7 +79,7 @@ Do not treat McKing as the brochure host plan. McKing remains the later hub for 
 - Planned private / extra hostnames (not live):
   - `cloud.` → `:8080` (Nextcloud)
   - `vault.` → `:8222` (Vaultwarden)
-  - `app.projectcar.ca` — Owner shop UI **after** booking is live on Doc
+  - `app.projectcar.ca` — Owner + Member shop UI **after** booking is live on Doc (Member routes live under `apps/project-car/web` `/member`, not the brochure)
 
 ---
 
