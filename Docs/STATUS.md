@@ -2,7 +2,7 @@
 
 Living one-pager: what’s live, what’s next, locks. Product detail stays in the start-here specs. Stay-up / CORS / Pages runbooks live elsewhere — this file is not a runbook.
 
-Reality sync to `main` tip **`91c547e`** (PR **#24**). Distinguishes **Live** vs **Next** vs **Later**, and **build-breadth (now)** vs **ship-MVP cut (later)**. Do not invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, or a live chat product.
+Reality sync to `main` tip **`91c547e`** (PR **#24**). Distinguishes **Live** vs **Next** vs **Later**, and **build-breadth (now)** vs **ship-MVP cut (later)**. Do not invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, or Matrix / Apex / Grok chat. **Chat v1** is the human/polling evening demo.
 
 ---
 
@@ -29,10 +29,10 @@ Ben / Chief lock. Two horizons — do **not** collapse them into one “v1 inclu
 
 | Horizon | Meaning |
 |---------|---------|
-| **Build breadth (now)** | Breadth-first **placeholders** / rough IA so layout can be ironed out. Put planned features in the app (Parts, Tools, job board, cams, calendar / fill, member surfaces, Payments, **chat shells when we build them**). Do **not** leave a planned surface out of the **build** for polish. A placeholder is not shipped product. |
+| **Build breadth (now)** | Breadth-first **placeholders** / rough IA so layout can be ironed out. Put planned features in the app (Parts, Tools, job board, cams, calendar / fill, member surfaces, Payments, Chat v1 demo). Do **not** leave a planned surface out of the **build** for polish. A placeholder is not shipped product. |
 | **Ship-MVP cut (later gate)** | At **public MVP release**, cut unfinished and unnecessary features. Do **not** ship every placeholder as the public product. What ships then is a later Ben cut — not “everything we sketched now.” |
 
-Do not invent extra product from this table. Calendar heat-map / weekly per-hoist is on `main` (PR #18). Next-day fill is on `main` (PR #20). Breadth placeholders are on `main` (PR #21). Tools / Parts inventory prefixes are locked (B1–B6 / TC / PT; CM later) — demo lists, not live checkout. Member parts is a **request desk** now; **full** purchasing is **Later**. Chat is **planned**, not on `main`. Do not invent Chat mode here.
+Do not invent extra product from this table. Calendar heat-map / weekly per-hoist is on `main` (PR #18). Next-day fill is on `main` (PR #20). Breadth placeholders are on `main` (PR #21). Tools / Parts inventory prefixes are locked (B1–B6 / TC / PT; CM later) — demo lists, not live checkout. Member parts is a **request desk** now; **full** purchasing is **Later**. **Chat v1** (human / polling / Owner-starts-rooms) is the evening demo slice — not Matrix, not Apex, not Grok.
 
 ---
 
@@ -51,6 +51,7 @@ Do not invent extra product from this table. Calendar heat-map / weekly per-hois
 - **Next-day fill (on `main`, PR #20):** leftover customer-bay hours tomorrow get a **10–25%** fill factor; urgency drives the cut. Notification outbox (email stub / later push / SMS). Management `/fill` on Doc demo (`ops.` + temporary `app.` alias). Explicit extra multiplier — not a change to the locked v1 band / overlay tables. See `token-pricing.md`. Not a public price. No Stripe.
 - **Breadth-first placeholders (on `main`, PR #21 — demo UI only; Tools / Parts deepened this slice):** Ops on **`ops.`** and the temporary `app.` alias: `/parts` (PT stock + qty / reorder + POs — **not** the member catalog), `/tools` (B1–B6 bay kits + TC crib checkout stub + orders / requests / planned), `/jobs` (sample tasks **with token bounties**), `/cameras` (every cam + door logs + AI stubs), `/payments` (membership + parts billing stubs; **AI tracks by default**, humans on exceptions). Member (customer-facing `/member`): Parts **request desk** (PT / TC SKUs, not commerce), job board with token amounts, **primary camera only**. **Not** live purchasing, QR checkout, Frigate, Stripe, or claim/complete. Demo SKUs are labeled placeholder.
 - **Schedule harden (on `main`, PR #24 / `91c547e`):** Owner `/schedule` and Member `/member/schedule` **fail-soft** if bookings list 500s — month heat-map + weekly grids still render. Windows are sent as **America/Regina instants (UTC ISO)** so FastAPI cannot 422 on naive wall-clock strings.
+- **Shop OS Chat v1 (human / polling demo):** Owner/Ops `/chat` — see-all threads, **Owner-only create room**, mute. Member `/member/chat` — own rooms, reply, poll every few seconds while a thread is open. Seeded demo threads. **Not** live Matrix, **not** Apex, **not** Grok. Demo cookies. The shop is not open. Do not claim live on Doc until merge/deploy.
 
 ---
 
@@ -60,12 +61,12 @@ Two gates — do **not** collapse them into “v1 includes everything forever.�
 
 | Gate | Meaning |
 |------|---------|
-| **Build breadth (now)** | Put planned features into the app as placeholders / rough IA (Parts, Tools, job board, cams, calendar / fill, member surfaces, **chat when we build it**, …) so layout can be ironed out. Placeholders are OK. Do **not** leave a planned surface out of the **build** for polish. |
+| **Build breadth (now)** | Put planned features into the app as placeholders / rough IA (Parts, Tools, job board, cams, calendar / fill, member surfaces, Chat v1 demo, …) so layout can be ironed out. Placeholders are OK. Do **not** leave a planned surface out of the **build** for polish. |
 | **Ship-MVP cut (later gate)** | Before the **public MVP** ship, cut unfinished and unnecessary features. Do **not** ship every placeholder as the public product. |
 
 1. **Host migration — Member UI on projectcar.ca.** Customer surface (self-serve booking + balance) moves to **projectcar.ca**. Management stays on **`ops.`** (temporary `app.` alias still live). Today Member demo still lives on shop-UI `/member`. Do **not** claim this is shipped.
 2. **Ben cuts the `app.` alias.** `ops.` is already LIVE at the edge. `app.` stays until Ben cuts that DNS. Do not remove the alias from docs or edge config in a docs PR.
-3. **Chat (planned — not live).** Dual surface when we build it: **Member / customer chat** (later **Grok** on **projectcar.ca**) and **Ops admin** (all threads, assign / mute / staff notes / escalate). v1 shape is still open: **human messaging vs AI vs both**. Document as planned. Do **not** invent an implementation. Do **not** claim chat is shipped. **Apex sidecar stays deferred** — this is not a revive of Apex on the brochure Worker/Pages origin.
+3. **Chat follow-ons (not this slice).** Chat v1 human/polling/Owner-starts-rooms is the evening demo (Live above). Later: Grok on **projectcar.ca**, assign / staff notes / escalate, websockets. **Apex sidecar stays deferred.** Do not revive Matrix.
 4. **Mission Control cockpit** still needs **Ben GO** before start. Owner + Member booking are already live on Doc **and** the public ops / app hosts — that earlier hold is satisfied. Do not start the cockpit from a docs PR.
 5. Staff **OIDC** later (on **`ops.`**). **Full Stripe later.** Public Apex chat **deferred (Ben)** — not P0; do not revive. Do not dump the rest of v2 here.
 
@@ -96,7 +97,7 @@ Placeholder pages (Parts, Tools, Job board, Cameras, Payments) are **demo UI** (
 - **Job board (locked IA, placeholder now):** shop chores (cleaning, tool maintenance, random upkeep). Ops posts a **token bounty**; member claim/complete credits the **append-only token ledger** (same tokens as hoist booking, **not Stripe**). Placeholder must show sample amounts. Full workflow Later.
 - **Cameras (locked IA, placeholder now):** members = **one primary shop cam**. Ops = **all cams** + door entry logs + Frigate / AI collection. Not a claim that Frigate is wired on `main`.
 - **Member parts / tool requests** = request desk now; **full purchasing Later**. No member Tools nav.
-- **Chat** = **planned dual surface**, not shipped. Member/customer (+ later Grok on projectcar.ca) and Ops admin (all threads / assign / mute / staff notes / escalate). Human vs AI vs both is still open. Apex sidecar **deferred**. Do not invent an implementation.
+- **Chat v1** = human messaging + polling. **Owners start rooms.** Members reply in rooms they are in. Ops/Owner see-all + mute. Dual surfaces `/chat` and `/member/chat`. No AI/Grok/Matrix bridge. Not the brochure Chat page (still stripped). Apex sidecar **deferred**.
 - No Stripe. No “shop is open” claims. No live public pricing until Ben says so.
 - Token pricing v1 is locked: bands + overlay in `America/Regina` — `token-pricing.md`. `hours × 100 × band × overlay × fill`. Defaults are Owner-editable placeholders, not public prices. Allotments: **Basic 1000 / Premium 1500** per period. Two tiers only (no Pro, no Weekly). Fill is an explicit extra factor (10–25%), not a rewrite of the overlay table.
 - **6 hoists** in calendar/seed. Exactly one is the shop hoist (`is_shop`). **v1 = (A) Owner-only** — customers cannot book that **bay** (`400 shop_hoist_owner_only`). **(B) bumpable** is a later tweak only. See `token-pricing.md`.

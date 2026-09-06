@@ -2,8 +2,8 @@
 
 FastAPI + SQLAlchemy 2 + Alembic for the shop OS. This slice covers the Owner
 management dashboard plus Member self-serve parked at `/member` for now
-(balance, book / cancel, schedule quote), members, hoists, bookings, token
-ledger, tiers, and waitlist.
+(balance, book / cancel, schedule quote), Chat v1 (human / polling),
+members, hoists, bookings, token ledger, tiers, and waitlist.
 
 The management UI is `apps/project-car/web`. Live alias today is
 `app.projectcar.ca`; intended name is `ops.projectcar.ca` (naming only — no
@@ -109,6 +109,13 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `GET` | `/member/bookings` | Member | Own bookings |
 | `GET` | `/member/schedule` | Member | Customer-bay occupancy + own bookings |
 | `GET` | `/member/fill` | Member | Next-day openings + fill discount |
+| `GET/POST` | `/chat/rooms` | Owner | List all rooms / create (Owner only; pick members) |
+| `GET` | `/chat/rooms/{id}` | Owner | Room detail |
+| `POST` | `/chat/rooms/{id}/mute` | Owner | Mute / unmute |
+| `GET/POST` | `/chat/rooms/{id}/messages` | Owner | Poll (`after_id`) / post |
+| `GET` | `/member/chat/rooms` | Member | Own rooms only |
+| `GET` | `/member/chat/rooms/{id}` | Member | Own room detail |
+| `GET/POST` | `/member/chat/rooms/{id}/messages` | Member | Poll (`after_id`) / reply |
 | `POST` | `/member/bookings/quote` | Member | Duration × band × overlay × fill for self |
 | `POST` | `/member/bookings` | Member | Create own customer booking |
 | `POST` | `/member/bookings/{id}/confirm` | Member | Confirm own pending booking |
@@ -156,7 +163,7 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 
 ## Domain
 
-Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work. `20260906_0005` adds `fill_offers` and `notification_outbox`.
+Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work. `20260906_0005` adds `fill_offers` and `notification_outbox`. `20260906_0006` adds `chat_rooms`, `chat_participants`, and `chat_messages`.
 
 Membership tier seed rows (Basic 1000 / Premium 1500) are placeholders only. Two tiers in fixtures.
 

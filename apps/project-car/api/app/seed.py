@@ -39,6 +39,10 @@ from app.models import (
     Booking,
     BookingKind,
     BookingStatus,
+    ChatMessage,
+    ChatParticipant,
+    ChatRoom,
+    ChatSenderRole,
     FillOffer,
     Hoist,
     HoistStatus,
@@ -190,6 +194,9 @@ def _clear_member_activity(session: Session, member_ids: list[UUID]) -> None:
 
 
 def _reset_shop(session: Session) -> None:
+    session.execute(delete(ChatMessage))
+    session.execute(delete(ChatParticipant))
+    session.execute(delete(ChatRoom))
     session.execute(delete(NotificationOutbox))
     session.execute(delete(FillOffer))
     session.execute(delete(TokenTransaction))
@@ -298,6 +305,107 @@ def _make_booking(
 
     session.add(booking)
     return booking
+
+
+def _seed_chat_threads(session: Session, *, ada: Member, riley: Member) -> None:
+    """Two Owner-started demo rooms. Human messages only — not Matrix / Grok."""
+    now = shop_now()
+    threads = [
+        {
+            "key": "riley-clutch",
+            "title": "Riley — clutch job (Bay 2)",
+            "member": riley,
+            "messages": [
+                (
+                    ChatSenderRole.OWNER,
+                    None,
+                    "owner@projectcar.ca",
+                    "Owner",
+                    "Riley, you're on Bay 2 this morning for the clutch. Ping if you need a second set of hands.",
+                    now - timedelta(hours=3, minutes=20),
+                ),
+                (
+                    ChatSenderRole.MEMBER,
+                    riley,
+                    riley.email,
+                    riley.name,
+                    "On it. Flywheel looks scored — I'll send a photo when I pull it.",
+                    now - timedelta(hours=3, minutes=5),
+                ),
+                (
+                    ChatSenderRole.OWNER,
+                    None,
+                    "owner@projectcar.ca",
+                    "Owner",
+                    "Thanks. Parts are on the bench if you need them.",
+                    now - timedelta(hours=2, minutes=50),
+                ),
+            ],
+        },
+        {
+            "key": "ada-turbo",
+            "title": "Ada — turbo mock-up",
+            "member": ada,
+            "messages": [
+                (
+                    ChatSenderRole.OWNER,
+                    None,
+                    "owner@projectcar.ca",
+                    "Owner",
+                    "Ada — afternoon bay is confirmed. Bring the turbo kit and we'll mock it up.",
+                    now - timedelta(hours=5),
+                ),
+                (
+                    ChatSenderRole.MEMBER,
+                    ada,
+                    ada.email,
+                    ada.name,
+                    "Will do. Any chance of an extra hour if it runs long?",
+                    now - timedelta(hours=4, minutes=40),
+                ),
+            ],
+        },
+    ]
+    for thread in threads:
+        room_id = seed_id("chat-room", thread["key"])
+        room = session.get(ChatRoom, room_id)
+        if room is None:
+            room = ChatRoom(
+                id=room_id,
+                title=thread["title"],
+                created_by_email="owner@projectcar.ca",
+                muted=False,
+            )
+            session.add(room)
+        else:
+            room.title = thread["title"]
+            room.created_by_email = "owner@projectcar.ca"
+            room.muted = False
+            session.add(room)
+        session.flush()
+        session.execute(delete(ChatMessage).where(ChatMessage.room_id == room.id))
+        session.execute(delete(ChatParticipant).where(ChatParticipant.room_id == room.id))
+        session.flush()
+        session.add(ChatParticipant(id=seed_id("chat-part", thread["key"]), room_id=room.id, member_id=thread["member"].id))
+        last_at = now
+        for index, payload in enumerate(thread["messages"]):
+            role, member, email, name, body, created_at = payload
+            last_at = created_at
+            session.add(
+                ChatMessage(
+                    id=seed_id("chat-msg", thread["key"], str(index)),
+                    room_id=room.id,
+                    sender_role=role,
+                    sender_member_id=member.id if member is not None else None,
+                    sender_email=email,
+                    sender_name=name,
+                    body=body,
+                    created_at=created_at,
+                )
+            )
+        room.updated_at = last_at
+        session.add(room)
+    session.flush()
 
 
 def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
@@ -652,13 +760,16 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
             session.add(row)
 
     session.flush()
+    _seed_chat_threads(session, ada=ada, riley=riley)
     booking_count = session.scalar(select(func.count()).select_from(Booking)) or 0
+    chat_count = session.scalar(select(func.count()).select_from(ChatRoom)) or 0
     return {
         "tiers": len(PLACEHOLDER_TIERS),
         "members": len(demo_members),
         "hoists": 6,
         "bookings": int(booking_count),
         "waitlist": len(waitlist),
+        "chat_rooms": int(chat_count),
     }
 
 
@@ -684,8 +795,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Shop OS demo data ready ({mode}).")
     print(
         "  {members} members, {hoists} hoists (5 customer bays + 1 Owner-only shop hoist), "
-        "{bookings} bookings this week, {waitlist} waitlist entries, {tiers} tiers "
-        "(Basic 1000 / Premium 1500).".format(**summary)
+        "{bookings} bookings this week, {waitlist} waitlist entries, {chat_rooms} chat rooms, "
+        "{tiers} tiers (Basic 1000 / Premium 1500).".format(**summary)
     )
     print("  Owner login (localhost demo): owner@projectcar.ca / changeme")
     print("  Member login (localhost demo): ada.reyes@example.com / changeme")

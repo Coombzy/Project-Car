@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationError, fi
 from app.models import (
     BookingKind,
     BookingStatus,
+    ChatSenderRole,
     HoistStatus,
     MemberStatus,
     NotificationChannel,
@@ -474,3 +475,88 @@ class FillNotifyOut(BaseModel):
     published: bool
     queued: int
     notifications: list[NotificationOutboxOut]
+
+
+class ChatParticipantOut(BaseModel):
+    member_id: UUID
+    name: str
+    email: str
+
+
+class ChatMessageOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    room_id: UUID
+    sender_role: ChatSenderRole
+    sender_member_id: UUID | None
+    sender_email: str
+    sender_name: str
+    body: str
+    created_at: datetime
+
+
+class ChatRoomOut(BaseModel):
+    id: UUID
+    title: str
+    muted: bool
+    created_by_email: str
+    created_at: datetime
+    updated_at: datetime
+    participants: list[ChatParticipantOut]
+    last_message: ChatMessageOut | None = None
+    last_message_at: datetime | None = None
+
+    @classmethod
+    def from_room(cls, room, last=None) -> ChatRoomOut:
+        participants = []
+        for row in sorted(room.participants, key=lambda item: (item.member.name if item.member else "")):
+            if row.member is None:
+                continue
+            participants.append(
+                ChatParticipantOut(
+                    member_id=row.member_id,
+                    name=row.member.name,
+                    email=row.member.email,
+                )
+            )
+        last_out = ChatMessageOut.model_validate(last) if last is not None else None
+        return cls(
+            id=room.id,
+            title=room.title,
+            muted=room.muted,
+            created_by_email=room.created_by_email,
+            created_at=room.created_at,
+            updated_at=room.updated_at,
+            participants=participants,
+            last_message=last_out,
+            last_message_at=last.created_at if last is not None else None,
+        )
+
+
+class ChatRoomCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    member_ids: list[UUID] = Field(min_length=1)
+
+    @field_validator("title")
+    @classmethod
+    def strip_title(cls, value: str) -> str:
+        return value.strip()
+
+
+class ChatMessageCreate(BaseModel):
+    body: str = Field(min_length=1, max_length=4000)
+
+    @field_validator("body")
+    @classmethod
+    def strip_body(cls, value: str) -> str:
+        return value.strip()
+
+
+class ChatMuteRequest(BaseModel):
+    muted: bool
+
+
+class ChatMessagePage(BaseModel):
+    messages: list[ChatMessageOut]
+    cursor: UUID | None = None
