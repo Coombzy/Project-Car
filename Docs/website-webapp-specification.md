@@ -22,13 +22,13 @@ This document covers the public website and any future web application surfaces 
 
 It sits alongside `high-level-apps-and-business-specification.md`, `project-car-application-specification.md`, `integration-plan.md`, `mission-control-architecture.md`, and the living public-site backlog `website-improvements.md`.
 
-**Host split (LOCKED — 2026-09-06 ~12:28 America/Edmonton):**
+**Host split (LOCKED — Ben GO 2026-09-06 ~12:22; `ops.` LIVE at edge ~12:55):**
 
 | Host | Role |
 |------|------|
 | `projectcar.ca` / `www` | **Customer app.** Brochure + waitlist live. Member self-serve booking / balance migrates here (Next — not shipped). |
-| `ops.projectcar.ca` | **Intended management hostname.** Staff-on-shift / ops UI. Owner uses it too. Staff OIDC later. **Naming lock only — no live DNS cut in this PR.** Do not call this an Owner-only host. |
-| `app.projectcar.ca` | **Temporary alias** until the DNS cut to `ops.`. Live today → Doc `:3000`. |
+| `ops.projectcar.ca` | **LIVE management hostname.** Staff-on-shift / ops UI → Doc `:3000`. Owner uses it too. Staff OIDC later. **Not Owner-only.** Some clients still have local DNS cache — use the `app.` alias or flush cache. |
+| `app.projectcar.ca` | **Temporary alias** for the same Doc `:3000` shop UI until Ben cuts that DNS. **Not removed.** |
 | `api.projectcar.ca` | Shop API. Live → Doc `:8000`. |
 
 Mission Control (Nextcloud, Vaultwarden, future cockpit) is private and is not this site.
@@ -57,7 +57,7 @@ Mission Control (Nextcloud, Vaultwarden, future cockpit) is private and is not t
 
 ---
 
-## 3. Current Hosting Architecture (as of 2026-09-06 ~12:28)
+## 3. Current Hosting Architecture (as of 2026-09-06 ~14:10, `main` `91c547e`)
 
 ### Brochure — git vs live vs target
 
@@ -76,14 +76,15 @@ Do not treat McKing as the brochure host plan. McKing remains the later hub for 
 - **Path:** Cloudflare Tunnel → Doc `localhost:8000`
 - **Code:** `apps/project-car/api`
 - **Stay-up:** LaunchAgent `com.projectcar.shop-api` (KeepAlive) on Doc. Details in `api-stay-up.md` — do not expand the runbook here.
-- **CORS:** `cors-origins.md` — brochure `POST /waitlist` from `projectcar.ca` / `www` / localhost, plus the temporary alias **`https://app.projectcar.ca`**. Add `https://ops.projectcar.ca` when Zone cuts DNS — **not this PR**.
+- **CORS:** `cors-origins.md` — brochure `POST /waitlist` from `projectcar.ca` / `www` / localhost, plus **`https://ops.projectcar.ca`** (LIVE management) and the temporary alias **`https://app.projectcar.ca`**.
 
 ### Ops management UI (lab tunnel)
 
-- **Intended public hostname:** `ops.projectcar.ca` — staff on shift / ops UI. Owner uses it too. **Naming lock only. No live DNS cut in this PR.**
-- **Live today:** temporary alias `app.projectcar.ca` → Doc shop UI `:3000` (Ben GO 2026-09-06 ~11:41). KeepAlive `com.projectcar.shop-web`. Tunnel origin preferred `http://127.0.0.1:3000`.
+- **LIVE public hostname:** `ops.projectcar.ca` — staff on shift / ops UI. Owner uses it too. Zone tunnel v8 `ops` → `http://127.0.0.1:3000`. **Not Owner-only.** Some clients still have local DNS cache — use `app.` or flush cache.
+- **Temporary alias (still live):** `app.projectcar.ca` → the same Doc shop UI `:3000`. Ben cuts this DNS later. **Not removed.**
+- KeepAlive `com.projectcar.shop-web` on Doc. Shop-web **BUILD** after #21 + #24; process is **`next start`** (not `next dev`). Tunnel origin preferred `http://127.0.0.1:3000`.
 - **Code:** `apps/project-car/web`
-- Member demo still lives at `/member` on this same Next.js app (temporary alias). Customer-host migration is Next. Demo session cookies — not OIDC. The shop is not open.
+- Member demo still lives at `/member` on this same Next.js app (`ops.` + temporary `app.`). Customer-host migration is Next. Demo session cookies — not OIDC. The shop is not open.
 
 ### Cloudflare Tunnel (Doc)
 
@@ -91,13 +92,12 @@ Do not treat McKing as the brochure host plan. McKing remains the later hub for 
 - Public hostnames:
   - `projectcar.ca` / `www.projectcar.ca` → Worker `projectcar-brochure` — **live** (customer brochure + waitlist)
   - `api.projectcar.ca` → shop API `:8000` — **live** (public waitlist + authenticated API)
-  - `app.projectcar.ca` → Doc shop UI `:3000` — **live temporary alias** (Ben GO 2026-09-06 ~11:41). Tunnel origin preferred `http://127.0.0.1:3000`. Still demo cookies — not OIDC. The shop is not open.
-- Naming-locked, **not live DNS yet:**
-  - `ops.projectcar.ca` — intended management hostname (same Doc `:3000` origin after cut)
+  - `ops.projectcar.ca` → Doc shop UI `:3000` — **LIVE management** (2026-09-06 ~12:55). Tunnel origin preferred `http://127.0.0.1:3000`. Still demo cookies — not OIDC. The shop is not open.
+  - `app.projectcar.ca` → Doc shop UI `:3000` — **live temporary alias** (same origin as `ops.`). Still demo cookies — not OIDC.
 - Planned private / extra hostnames (not live):
   - `cloud.` → `:8080` (Nextcloud)
   - `vault.` → `:8222` (Vaultwarden)
-  - Member routes on Doc Shop OS `/member` (temporary `app.` alias) are the existing demo, not a `projectcar.ca` customer app. Do not build the brochure / Pages customer app in the fill-gaps slice.
+  - Member routes on Doc Shop OS `/member` (`ops.` + temporary `app.` alias) are the existing demo, not a `projectcar.ca` customer app.
 
 ---
 
@@ -115,12 +115,12 @@ Do not treat McKing as the brochure host plan. McKing remains the later hub for 
 - Membership page describes intended bay/hoist/token model and says it is **not a live offer yet**
 - Member self-serve is **not** on this host yet. That migration is Next (`STATUS.md`).
 
-**Next site work:** see living backlog **`website-improvements.md`**. Waitlist (`POST /waitlist`) is **done**. Hygiene P0-3…P0-7 is **already live** on the Worker. Apex is **deferred** (not active P0). **Brochure host next:** Cloudflare Pages cutover (GO’d; blocked on CF ↔ GitHub auth). **Product next (not brochure P0):** Member UI on projectcar.ca; calendar / fill on the shop app. Do not publish live prices or “book now” until Ben says the shop is open.
+**Next site work:** see living backlog **`website-improvements.md`**. Waitlist (`POST /waitlist`) is **done**. Hygiene P0-3…P0-7 is **already live** on the Worker. Apex is **deferred** (not active P0). **Brochure host next:** Cloudflare Pages cutover (GO’d; blocked on CF ↔ GitHub auth). **Product next (not brochure P0):** Member UI on projectcar.ca. Calendar / fill / placeholders are already on `main` (PRs #18 / #20 / #21). Do not publish live prices or “book now” until Ben says the shop is open.
 
 **Known leftovers (detail in improvements doc + this file):**
 - Pages cutover GO’d, blocked on CF ↔ GitHub auth
-- Member customer surface still on the temporary `app.` alias — migrate to projectcar.ca (Next)
-- DNS cut `app.` → `ops.` — naming locked; not this PR
+- Member customer surface still on shop-UI `/member` (`ops.` + temporary `app.` alias) — migrate to projectcar.ca (Next)
+- Ben cuts the `app.` alias later — `ops.` is already LIVE; alias stays until Ben cuts that DNS
 
 Canonical files:
 ```
@@ -141,7 +141,7 @@ apps/website/
 
 - **Brochure target is Pages** — Static files from `apps/website/`. Cutover is GO’d, not done.
 - **Shop API stays lab tunnel** — `api.projectcar.ca` → Doc `:8000`. Not hosted on Pages.
-- **Cloudflare in front** — DNS, Tunnel (API + temporary `app.` alias + later `ops.`), Worker brochure, SSL, CDN, basic DDoS/WAF via free plan.
+- **Cloudflare in front** — DNS, Tunnel (API + **LIVE `ops.`** + temporary `app.` alias), Worker brochure, SSL, CDN, basic DDoS/WAF via free plan.
 - **No open inbound ports** — cloudflared outbound only.
 - **McKing is not the brochure host** — later hub for Nextcloud / mail / backups, not the next public-site origin.
 
@@ -243,9 +243,9 @@ Most projects keep the simple alias model initially and only create separate mai
 | 8 | Proton custom domain + paid plan when ready | Pending |
 | 9 | Proton Drive setup as part of leaving Google | Pending |
 | 10 | Basic uptime monitoring | Pending |
-| 11 | Shop UI public host (temporary `app.` alias) | **Done** (2026-09-06 ~11:41) — `app.projectcar.ca` live pointing at Doc demo. Still demo cookies. The shop is not open. |
-| 12 | Intended management hostname `ops.projectcar.ca` | **Named** (2026-09-06 ~12:28). Staff-on-shift / ops UI; Owner uses it too. **No live DNS cut in this PR.** |
-| 13 | Member customer surface on `projectcar.ca` | **Next** — not shipped. Today Member demo still lives on `app.` `/member`. |
+| 11 | Shop UI public host (temporary `app.` alias) | **Done** (2026-09-06 ~11:41) — `app.projectcar.ca` live pointing at Doc `:3000`. Temporary alias. Still demo cookies. The shop is not open. |
+| 12 | Management hostname `ops.projectcar.ca` | **LIVE** (2026-09-06 ~12:55) → Doc `:3000`. Staff-on-shift / ops UI; Owner uses it too. Not Owner-only. Some clients still have local DNS cache — use `app.`. |
+| 13 | Member customer surface on `projectcar.ca` | **Next** — not shipped. Today Member demo still lives on shop-UI `/member` (`ops.` + temporary `app.`). |
 | 14 | McKing as later hub (NC / mail / backups) | When McKing is home and stable — **not** the brochure host |
 
 ---
@@ -275,4 +275,4 @@ One tunnel is sufficient for the current public site. Additional tunnels are lik
 ---
 
 **Synchronized with Project Car documentation practice.**  
-**Updated 2026-09-06 ~12:28:** host split locked — customer = `projectcar.ca` / www; management = **`ops.projectcar.ca`**; `app.` = temporary alias (live today). No DNS cut in this PR. Waitlist Done; Worker brochure live; Apex deferred; `api.projectcar.ca` lab tunnel; McKing is not the brochure host. Email decision (Proton start) unchanged from 2026-07-24.
+**Updated 2026-09-06 ~14:10:** host split locked — customer = `projectcar.ca` / www; management = **`ops.projectcar.ca` LIVE** → Doc `:3000`; `app.` = temporary alias (still live). CORS includes `ops.` + `app.`. Waitlist Done; Worker brochure live; Apex sidecar deferred; `api.projectcar.ca` lab tunnel; McKing is not the brochure host. Email decision (Proton start) unchanged from 2026-07-24.

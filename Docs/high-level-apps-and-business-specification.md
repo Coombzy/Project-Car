@@ -18,7 +18,7 @@ Sits next to `master-overview-specification.md`. Detail lives in the child specs
 
 **Now:** Nextcloud 30 (Files, Calendar, Talk, Deck, Forms, Photos, Passwords) + Vaultwarden on Doc.
 
-**Next:** Custom Next.js cockpit over those APIs — health, calendar, tasks, agent feed — plus deep links. Do not rebuild Nextcloud. **Held** until Owner booking is merged **and** live on Doc.
+**Next:** Custom Next.js cockpit over those APIs — health, calendar, tasks, agent feed — plus deep links. Do not rebuild Nextcloud. **Parked** until **Ben GO**. Owner + Member booking are already live.
 
 **Spec:** `mission-control-architecture.md`
 
@@ -28,9 +28,9 @@ Sits next to `master-overview-specification.md`. Detail lives in the child specs
 
 **Users:** Public visitors now. Ben as Owner in v1. Staff and paying members later.
 
-**Now:** [projectcar.ca](https://projectcar.ca) brochure (Home, About, The Shop, Membership, Roadmap, Chat, Contact) + public waitlist (`POST https://api.projectcar.ca/waitlist`). Apex public chat is **deferred** (Ben). Owner shop OS is on `main` (API + web); not claimed live on `app.projectcar.ca`.
+**Now:** [projectcar.ca](https://projectcar.ca) brochure (Home, About, The Shop, Membership, Roadmap, Contact) + public waitlist (`POST https://api.projectcar.ca/waitlist`). Apex sidecar **deferred** (Ben). Shop OS (Owner + Member booking, calendar #18, fill #20, placeholders #21, schedule harden #24) is **live** on **`ops.projectcar.ca`** → Doc `:3000` plus temporary alias `app.projectcar.ca`. Member demo still `/member` on that UI. The shop is not open.
 
-**v1 (on main):** Waitlist + Owner shop OS (tiers, members, hoist booking, token ledger, week schedule). Remaining: harden booking and take it live on Doc.
+**v1 (on main `91c547e`):** Waitlist + Owner/Member shop OS (tiers, members, hoist booking, token ledger, month/week calendar, fill). Remaining Next: Member host migration to projectcar.ca; Ben cuts `app.`; MC cockpit needs Ben GO.
 
 **Later:** Member/staff login, payments, NFC, cameras, marketplace, fabrication calculators.
 

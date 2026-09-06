@@ -167,8 +167,8 @@ No third party writes shop SQL directly.
 - [x] Public brochure on projectcar.ca
 - [x] Docs reconciled in this repo
 - [x] Waitlist API + form
-- [x] Shop booking (Owner) on `main` — not yet live on Doc / `app.projectcar.ca`
-- [ ] MC cockpit over CalDAV/Deck/WebDAV (**held** until Owner booking is live on Doc)
+- [x] Shop booking (Owner + Member) live on Doc / **`ops.projectcar.ca`** + temporary `app.` alias (`main` `91c547e`: calendar #18, fill #20, placeholders #21, schedule harden #24)
+- [ ] MC cockpit over CalDAV/Deck/WebDAV (**parked** — needs **Ben GO**; booking-live hold is already satisfied)
 - [ ] Off-box backup to McKing
 
 ### Next
@@ -210,9 +210,9 @@ No third party writes shop SQL directly.
 
 ## 13. Settled vs open
 
-**Settled:** no n8n; Doc→McKing host plan; Talk not Matrix; MC Ben-only; PC = site + waitlist + booking; separate Postgres; members ≠ Nextcloud users.
+**Settled:** no n8n; Doc→McKing host plan; Talk not Matrix; MC Ben-only; PC = site + waitlist + booking; separate Postgres; members ≠ Nextcloud users. Host split: customer = `projectcar.ca`; management = **`ops.projectcar.ca` LIVE** (staff-on-shift, not Owner-only); `app.` = temporary alias.
 
-**Still open:** fitness backend; exact tiers/prices; `app.projectcar.ca` vs Tailscale-only for v1 shop UI; cockpit hostname.
+**Still open:** fitness backend; exact public dollar prices; chat v1 mode (human vs AI vs both — planned, not shipped); cockpit hostname (MC still needs Ben GO).
 
 ---
 

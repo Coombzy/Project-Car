@@ -75,11 +75,11 @@ Spec: `mission-control-architecture.md`.
 
 A 24/7 community automotive maker-space and the software around it.
 
-**Live:** [projectcar.ca](https://projectcar.ca) — brochure (Home, About, The Shop, Membership, Roadmap, Chat, Contact) + waitlist form → `https://api.projectcar.ca/waitlist`. Apex public chat is **deferred** (Ben). Brochure git SSOT is `apps/website/`; Pages cutover is GO’d but not done.
+**Live:** [projectcar.ca](https://projectcar.ca) — brochure (Home, About, The Shop, Membership, Roadmap, Contact) + waitlist form → `https://api.projectcar.ca/waitlist`. Chat nav stripped. Apex sidecar **deferred** (Ben). Brochure git SSOT is `apps/website/`; Pages cutover is GO’d but not done.
 
-**On `main` (PR #2 + #3):** Owner shop OS — membership tiers, members, hoist booking, append-only token ledger, week schedule + dashboard (`apps/project-car/api` + `web`). Only Ben logs in. Not claimed live on `app.projectcar.ca`.
+**Live Shop OS (`main` `91c547e`):** Owner + Member booking + tokens, calendar heat-map / weekly per-hoist grids (#18), next-day fill (#20), breadth placeholders (#21), schedule harden (#24). Management host **`ops.projectcar.ca` LIVE** → Doc `:3000` (staff-on-shift, not Owner-only). `app.projectcar.ca` is a **temporary alias**. Member demo still `/member` on that UI — customer-host migration is Next. Demo cookies, not OIDC. The shop is not open.
 
-**Later:** member/staff login, payments, NFC, cameras, marketplace, fabrication tools.
+**Later:** staff OIDC on `ops.`, full Stripe, NFC, live Frigate, marketplace, fabrication tools. Chat dual surface is **planned**, not shipped. MC cockpit parked until Ben GO.
 
 Spec: `project-car-application-specification.md`.  
 Site: `website-webapp-specification.md`.  
@@ -145,8 +145,9 @@ Full: `integration-plan.md` and `platform-architecture.md`.
 ## 9. Next steps
 
 1. Cloudflare Pages cutover for the brochure (blocked on CF ↔ GitHub auth). Shop API stays the lab tunnel.
-2. Owner booking hardened + live on Doc / `app.projectcar.ca`. Then — and only then — the MC cockpit.
-3. Expand `home-lab-specification.md` from the stub + live MC facts when convenient — not from the July skill draft.
+2. Member customer surface → **projectcar.ca**. `ops.` is already LIVE; Ben cuts the `app.` alias later.
+3. Mission Control cockpit still needs **Ben GO**. Owner + Member booking are already live — that earlier hold is satisfied.
+4. Expand `home-lab-specification.md` from the stub + live MC facts when convenient — not from the July skill draft.
 
 ---
 
