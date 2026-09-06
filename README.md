@@ -25,6 +25,8 @@ Product lock (read these first):
 
 `Coombzy/Automation` is historical coordination, **not** the product SSOT. Do not author new specs there.
 
+Living ops (API stay-up + CORS): [`Docs/api-stay-up.md`](Docs/api-stay-up.md), [`Docs/cors-origins.md`](Docs/cors-origins.md) — index in [`Docs/README.md`](Docs/README.md#living-ops).
+
 ## Repo vs runtime
 
 | Path | Role |

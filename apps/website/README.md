@@ -8,7 +8,7 @@ Membership and Contact `POST` JSON to `{PC_SHOP_API_BASE}/waitlist` (`html/shop-
 
 ## Apex
 
-Deferred. No Apex sidecar in this Pages-ready tree.
+Deferred (not active P0). No Apex sidecar in this Pages-ready tree. Backlog: [`Docs/website-improvements.md`](../../Docs/website-improvements.md).
 
 ## Local (optional)
 

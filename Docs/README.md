@@ -3,7 +3,7 @@
 **Canonical:** `Coombzy/Project-Car` → `Docs/`  
 **Engineering clone:** `~/src/Project-Car/Docs/`  
 **Optional Desktop mirror:** `~/Desktop/Project Car/docs/` (read copy; do not author there)  
-**Updated:** 2026-08-16
+**Updated:** 2026-09-06
 
 `Coombzy/Automation/Docs/` is a **historical mirror**. Do not author product specs there.  
 `~/Desktop/Project-Car-Docs/` is **retired**.  
@@ -33,6 +33,8 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 | [nextcloud-progress.md](nextcloud-progress.md) | Live hub status on Doc (no secrets) |
 | [doc-software-baseline.md](doc-software-baseline.md) | Doc M1 Max apps / settings |
 | [home-lab-specification.md](home-lab-specification.md) | Host lock card (stub — do not restore the July skill draft blindly) |
+| [api-stay-up.md](api-stay-up.md) | Keep https://api.projectcar.ca up (uvicorn on Doc; Zone owns tunnel) |
+| [cors-origins.md](cors-origins.md) | `CORS_ORIGINS` for brochure waitlist from https://projectcar.ca |
 
 ---
 
