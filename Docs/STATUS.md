@@ -32,7 +32,7 @@ Ben / Chief lock. Do not collapse these into one “v1 is everything” claim.
 | **Build-breadth (now)** | Breadth-first **placeholders** for layout / IA — even rough. Locked surfaces: **Parts**, **Tools**, job board, cams, calendar / fill, member surfaces. Build the shells so the shop OS has the right rooms. Do **not** treat a placeholder as shipped product. |
 | **Ship-MVP cut (later)** | At **public MVP release**, cut unfinished / unnecessary features. What ships then is a later Ben cut — not “everything we sketched now.” |
 
-Do not invent extra product from this table. Calendar heat-map / weekly per-hoist is **this slice** (#18 — not live until merge). Next-day fill is on `main` (PR #20). Member parts **purchasing** is a placeholder now; **full** purchasing is **Later**.
+Do not invent extra product from this table. Calendar heat-map / weekly per-hoist is on `main` (PR #18). Next-day fill is on `main` (PR #20). Member parts **purchasing** is a placeholder now; **full** purchasing is **Later**.
 
 ---
 
@@ -48,19 +48,22 @@ Do not invent extra product from this table. Calendar heat-map / weekly per-hois
 - **Ops booking (live on Doc + `ops.` + temporary `app.` alias):** duration × band × overlay is on `main` (PR #12) and **live on Doc** — shop UI `:3000` — **and reachable via `https://ops.projectcar.ca` and `https://app.projectcar.ca`**. Shop OS seed: **6 hoists** (one shop-priority, Owner-only bay) and **Basic 1000 / Premium 1500**. Demo session cookies — **not OIDC**. HTTPS ops/app demo requires **Secure** cookies (`COOKIE_SECURE` / `SHOP_COOKIE_SECURE`). No Stripe. The shop is not open.
 - **Member self-serve (demo, still `/member` on the shop UI):** PR #14 merged → `main` `9baf3c4` and walked on Doc; reachable via `https://ops.projectcar.ca/member` and `https://app.projectcar.ca/member`. Member login (seed `ada.reyes@example.com`); `/member/me` balance + ledger; `/member/hoists` + schedule on **Bays 1–5 only**; shop hoist Owner-only (`400 shop_hoist_owner_only`). Demo session cookie (`pc_member_session`) — **not OIDC**. Secure cookies required on HTTPS ops/app. **Not** migrated to projectcar.ca. No Stripe. The shop is not open.
 - **Token pricing engine (live for Owner + Member booking):** `hours × 100 × band × overlay` in `America/Regina`. Same `token-pricing.md` lock. Defaults are Owner-editable placeholders, **not** public brochure prices.
+- **Parts / Job board / Cameras placeholders (demo UI only):** Ops nav on **`ops.`** and the temporary `app.` alias (`/parts`, `/jobs`, `/cameras`) and customer-facing Member nav (`/member/parts`, `/member/jobs`, `/member/cameras`). Sample catalog, sample shop tasks, camera tiles + ops door-log / AI stubs. **Not** live purchasing. **Not** live Frigate. **Not** claim/complete. No Stripe. The shop is not open.
 
 ---
 
 ## Next (in flight — Ben GO ~12:22)
 
-Calendar redesign is this PR (#18). Fill landed on `main` as #20. Do not implement other Next items here. **No DNS cut** here.
+Calendar redesign is on `main` (#18). Fill landed on `main` as #20. This PR is placeholders only — do not rewrite calendar or drop fill. **No DNS cut** here.
 
-1. **Calendar redesign (this slice).** Monthly = heat-map by hoist booking density vs 08:00–21:00. Weekly = **separate per-hoist hour grids** (not the old combined week table). Owner includes the shop hoist (Owner-only); Member is Bays 1–5. Create / quote / cancel unchanged. Fill chips and quote math from #20 stay. Doc + `ops.` / temporary `app.` alias pick the new grid up after merge — do not claim calendar live until then.
+1. **Calendar redesign (on `main`, PR #18).** Monthly = heat-map by hoist booking density vs 08:00–21:00. Weekly = **separate per-hoist hour grids** (not the old combined week table). Owner includes the shop hoist (Owner-only); Member is Bays 1–5. Create / quote / cancel unchanged. Fill chips and quote math from #20 stay. Do not rewrite this UI from a placeholders PR.
 2. **Next-day open-slot fill (on `main`, PR #20).** Notify members (email stub / later push / SMS) of leftover hours with a **10–25%** fill factor on available hours. Urgency drives the discount (emptier / closer to start → bigger cut inside that range). Explicit extra multiplier — not a change to the locked v1 band / overlay tables. See `token-pricing.md`. Management `/fill` on Doc demo (`ops.` + temporary `app.` alias); notify targets members. Not a public price. No Stripe.
 3. **Host migration — Member UI on projectcar.ca.** Customer surface (self-serve booking + balance) moves to **projectcar.ca**. Management stays on **`ops.`** (temporary `app.` alias still live). Today Member demo still lives on shop-UI `/member`. Do **not** claim this is shipped.
 4. **Ben cuts the `app.` alias.** `ops.` is already LIVE. `app.` stays until Ben cuts that DNS. Do not remove the alias from docs or edge config in this PR.
 5. **Mission Control cockpit** still needs **Ben GO** before start. Owner + Member booking are already live on Doc **and** the public ops / app hosts — that earlier hold is satisfied. Do not start the cockpit in this PR.
 6. Staff **OIDC** later (on **`ops.`**). Payments / Stripe later. Public Apex chat **deferred (Ben)** — not P0; do not revive. Do not dump the rest of v2 here.
+
+Placeholder pages for Parts, Job board, and Cameras are **shipped as demo UI** (Live above). They are not these Next items and do not rewrite calendar (#18) or drop fill (#20).
 
 ---
 
@@ -68,7 +71,9 @@ Calendar redesign is this PR (#18). Fill landed on `main` as #20. Do not impleme
 
 - Member-to-member hoist time trades/offers — bookings should not be glued to one member forever (transferable booking or trade-offer entity). Design note only; do not design the trade system now.
 - Member booking assistant (Ben later-want) — a bot that helps members book hoist dates. Same Later bucket as trades. After Member UI is solid; likely Grok / Apex-replacement public chat lane, **not** Owner admin. Do **not** build in current Shop OS slices.
-- **Member parts purchasing (full).** Placeholder on the Parts surface is **build-breadth (now)**. Full member purchasing is **Later**. Do not claim a shop is selling parts.
+- **Member parts purchasing (full).** Placeholder on the Parts surface is **build-breadth (now)**. Full member purchasing is **Later**. Do not claim a shop is selling parts. Flag `pc.marketplace` stays **off**.
+- **Job board claim / complete / assign** — workflow is Later. Placeholder board with sample token-paid chores is what shipped.
+- **Live Frigate (or equivalent NVR)** — flag `pc.cameras` stays **off** until wired. Occupancy is a **hint, not source of truth**. Door logs ops-only.
 
 ---
 
@@ -90,4 +95,4 @@ Calendar redesign is this PR (#18). Fill landed on `main` as #20. Do not impleme
 - No n8n.
 - **Lead owns Doc `:8000`.**
 
-Specs: `project-car-application-specification.md` §2 / §13 / §15, `token-pricing.md`, `website-webapp-specification.md`.
+Specs: `project-car-application-specification.md` §2 / §13 / §15 / §16, `token-pricing.md`, `website-webapp-specification.md`, `platform-architecture.md` §5.

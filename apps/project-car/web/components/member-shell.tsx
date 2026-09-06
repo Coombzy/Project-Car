@@ -6,6 +6,9 @@ import { memberLogoutAction } from "../app/member/logout-action";
 const NAV = [
   { href: "/member", current: "home", label: "Balance" },
   { href: "/member/schedule", current: "schedule", label: "Schedule" },
+  { href: "/member/parts", current: "parts", label: "Parts" },
+  { href: "/member/jobs", current: "jobs", label: "Job board" },
+  { href: "/member/cameras", current: "cameras", label: "Cameras" },
 ] as const;
 
 export type MemberSection = (typeof NAV)[number]["current"];
@@ -49,7 +52,9 @@ export function MemberShell({
       <div className="demo-banner">
         Temporary Member demo on this management alias — customer bays 1–5.
         Customer app is projectcar.ca. Intended management host is
-        ops.projectcar.ca. The shop hoist is Owner-only. The shop is not open.
+        ops.projectcar.ca. Parts, job board, and the primary shop camera are
+        labeled placeholders. The shop hoist is Owner-only. The shop is not
+        open.
       </div>
       <main className={wide ? "wide" : undefined}>{children}</main>
     </div>

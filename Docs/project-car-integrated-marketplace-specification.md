@@ -4,7 +4,7 @@
 **Last Updated:** 2026-08-16 (banner only; body is a July sketch)  
 **Canonical:** `Coombzy/Project-Car` → `Docs/project-car-integrated-marketplace-specification.md`
 
-v1 does not include a parts marketplace or eBay. Flag `pc.marketplace` is **off**. Shop members and listings do not live in Nextcloud. See `project-car-application-specification.md` §4 Out / §11.
+v1 does not include a parts marketplace or eBay. Flag `pc.marketplace` is **off**. A **customer-facing parts placeholder** on Member UI is OK so people can see the desk; it is not checkout and not this module. Shop members and listings do not live in Nextcloud. See `project-car-application-specification.md` §4 Out / §11 / §16.
 
 ## Overview
 Integrated marketplace in Project Car for subscribers to list used/new parts.

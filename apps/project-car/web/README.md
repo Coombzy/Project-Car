@@ -52,6 +52,12 @@ npm run dev
 | Waitlist | http://localhost:3000/waitlist |
 | Tiers | http://localhost:3000/tiers |
 | Fill gaps | http://localhost:3000/fill |
+| Parts (placeholder) | http://localhost:3000/parts |
+| Job board (placeholder) | http://localhost:3000/jobs |
+| Cameras (placeholder) | http://localhost:3000/cameras |
+| Member parts (placeholder) | http://localhost:3000/member/parts |
+| Member job board (placeholder) | http://localhost:3000/member/jobs |
+| Member camera (primary only) | http://localhost:3000/member/cameras |
 | Shop API | http://127.0.0.1:8000 |
 | API OpenAPI | http://127.0.0.1:8000/docs |
 | `SHOP_API_URL` | `http://127.0.0.1:8000` (web `.env.local`) |
@@ -65,7 +71,7 @@ The login screen is pre-filled and labeled as a **demo**. After `python -m app.s
 | Email | `owner@projectcar.ca` |
 | Password | `changeme` |
 
-These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (6 hoist cards including the Owner-only shop hoist, today's bookings, token-at-risk), Schedule (month heat-map, then week-by-hoist hour grids), Members (Basic / Premium), Hoists, Waitlist (mark contacted), Tiers (edit allowances), and Fill gaps (next-day openings + notify). Re-seed notes: 6 bays + one Owner-only shop hoist (v1 choice A).
+These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (6 hoist cards including the Owner-only shop hoist, today's bookings, token-at-risk), Schedule (month heat-map, then week-by-hoist hour grids), Members (Basic / Premium), Hoists, Waitlist (mark contacted), Tiers (edit allowances), Fill gaps (next-day openings + notify), and the Parts / Job board / Cameras **placeholders** (not live purchasing or Frigate). Re-seed notes: 6 bays + one Owner-only shop hoist (v1 choice A).
 
 ### Demo Member — Ada on localhost
 
@@ -76,7 +82,7 @@ After the same seed:
 | Email | `ada.reyes@example.com` |
 | Password | `changeme` |
 
-Open `/member/login`, then Balance (tokens + ledger) and Schedule (Bays 1–5 month heat-map + weekly hour grids, band + overlay + total, book / cancel). The shop hoist is not on the Member calendar. Not OIDC. This `/member` park is temporary — customer app is `projectcar.ca`; management’s intended name is `ops.projectcar.ca`.
+Open `/member/login`, then Balance (tokens + ledger), Schedule (Bays 1–5 month heat-map + weekly hour grids, band + overlay + total, book / cancel), and the customer-facing Parts / Job board / primary-camera **placeholders**. The shop hoist is not on the Member calendar. Not OIDC. This `/member` park is temporary — customer app is `projectcar.ca`; management’s intended name is `ops.projectcar.ca`.
 
 Re-seed anytime from the API directory: `python -m app.seed --reset`. See `../api/README.md`.
 
@@ -90,4 +96,4 @@ Public hosts (`https://ops.projectcar.ca`, `https://app.projectcar.ca`) need **S
 
 ## Out of scope
 
-Website / apex / Cloudflare, Mission Control, Stripe live charges, NFC, cameras, Member/Staff OIDC, n8n.
+Website / apex / Cloudflare, Mission Control, Stripe live charges, NFC, live Frigate / NVR wiring, full parts purchase / eBay, job claim-complete, Member/Staff OIDC, n8n. Placeholder pages for Parts, Job board, and Cameras are in the demo UI only.
