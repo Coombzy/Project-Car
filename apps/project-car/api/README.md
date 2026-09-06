@@ -1,6 +1,6 @@
 # Project Car shop API
 
-FastAPI + SQLAlchemy 2 + Alembic for the shop OS. This is **slice 1**: the corrected domain model (including `waitlist_entries`) and the waitlist HTTP surface.
+FastAPI + SQLAlchemy 2 + Alembic for the shop OS. Slice 1 is the corrected domain model (including `waitlist_entries`) and the waitlist HTTP surface. The Owner UI is `apps/project-car/web`.
 
 Specs: `Docs/platform-architecture.md` §8, `Docs/project-car-application-specification.md`.
 
@@ -28,6 +28,8 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 OpenAPI: <http://127.0.0.1:8000/docs>  
 Health: `GET /health`
+
+Owner UI (slice 2): from `apps/project-car/web` run `npm install && npm run dev`, then open <http://localhost:3000>. Set `SHOP_API_URL=http://127.0.0.1:8000` in the web `.env.local`. See that README for the combined run.
 
 ## Endpoints in this slice
 
@@ -88,4 +90,4 @@ pytest
 
 ## Out of scope (do not add here)
 
-Website / apex, Owner dashboard (`apps/project-car/web`), Mission Control, Stripe, NFC, cameras, member login, n8n, Disney/Pixar assets.
+Website / apex, Mission Control, Stripe, NFC, cameras, member login, n8n, Disney/Pixar assets. Owner UI lives in `../web`.
