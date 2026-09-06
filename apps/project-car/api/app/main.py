@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.config import settings
+from app.config import get_settings
 from app.errors import register_error_handlers
 from app.routers import auth, bookings, dashboard, hoists, members, tiers, waitlist
 
@@ -22,14 +22,14 @@ def create_app() -> FastAPI:
     )
     register_error_handlers(application)
 
-    origins = settings.cors_origin_list
+    origins = get_settings().cors_origin_list
     if origins:
         application.add_middleware(
             CORSMiddleware,
             allow_origins=origins,
             allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
+            allow_methods=["GET", "POST", "PATCH", "OPTIONS", "HEAD"],
+            allow_headers=["Accept", "Content-Type", "Authorization"],
         )
 
     application.include_router(auth.router)

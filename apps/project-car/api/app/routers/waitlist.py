@@ -20,7 +20,7 @@ def create_waitlist_entry(
     session: DbSession,
     settings: AppSettings,
 ) -> WaitlistEntryOut:
-    """Public. Persist a waitlist row. Does not require login."""
+    """Public. Persist a waitlist row. No Owner cookie or bearer token."""
     if not settings.pc_waitlist:
         raise HTTPException(
             status_code=404,

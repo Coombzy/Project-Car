@@ -26,7 +26,11 @@ class Settings(BaseSettings):
     session_ttl_seconds: int = 86_400
     cookie_name: str = "pc_owner_session"
     cookie_secure: bool = False
-    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+    # Explicit allowlist only. Never "*". Public waitlist POSTs need the brochure origins.
+    cors_origins: str = (
+        "http://localhost:3000,http://127.0.0.1:3000,"
+        "https://projectcar.ca,https://www.projectcar.ca"
+    )
     pc_waitlist: bool = True
 
     @field_validator("owner_email", mode="before")
@@ -36,7 +40,14 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> list[str]:
-        return [item.strip() for item in self.cors_origins.split(",") if item.strip()]
+        """Comma-separated origins. `*` is dropped so the API is never wide open."""
+        origins: list[str] = []
+        for item in self.cors_origins.split(","):
+            origin = item.strip()
+            if not origin or origin == "*":
+                continue
+            origins.append(origin)
+        return origins
 
 
 @lru_cache

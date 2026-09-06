@@ -86,6 +86,33 @@ Owner auth is the v1 stub from the product spec (email + password **or** `Author
 
 Errors are `{ "error": { "code", "message" } }`. Overlap conflicts return `409`.
 
+### Public site: `POST /waitlist`
+
+The brochure site (`projectcar.ca` / `www`) should call this from the browser. **No Owner cookie and no bearer token.** This PR does not move `apps/website` or change Cloudflare.
+
+```
+POST /waitlist
+Content-Type: application/json
+Origin: https://projectcar.ca
+
+{
+  "name": "Ada Owner",
+  "email": "ada@example.com",
+  "phone": "403-555-0100",
+  "notes": "Optional"
+}
+```
+
+`phone` and `notes` are optional. Email is stored lowercased. Success is `201` with the stored row (`id`, `name`, `email`, `phone`, `notes`, `contacted_at`, `created_at`).
+
+| Status | `error.code` | When |
+|--------|----------------|------|
+| 422 | `validation_error` | Empty name, bad email, etc. (`details` lists fields) |
+| 409 | `duplicate_email` | That email is already on the waitlist |
+| 404 | `waitlist_disabled` | `PC_WAITLIST=false` |
+
+CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is ignored. Defaults include `https://projectcar.ca`, `https://www.projectcar.ca`, `http://localhost:3000`, and `http://127.0.0.1:3000`. Add another localhost port there when the public site is served locally. The form's `Origin` must match one entry or the browser will drop the response.
+
 ### Booking / token rules (spec §5)
 
 1. A hoist has at most one overlapping **confirmed** or **active** booking (`409 hoist_overlap`).
