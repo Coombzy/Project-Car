@@ -8,7 +8,6 @@
   --line: rgba(255, 255, 255, 0.1);
   --card: rgba(18, 22, 28, 0.94);
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  --track: rgba(255, 255, 255, 0.08);
   font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -241,6 +240,19 @@ body {
   margin-bottom: 0.25rem;
 }
 
+.description a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(192, 132, 252, 0.35);
+}
+
+.description a:hover,
+.description a:focus-visible {
+  color: #ddd6fe;
+  border-bottom-color: rgba(221, 214, 254, 0.7);
+  outline: none;
+}
+
 .hero-cta {
   margin: 1.15rem 0 0.15rem;
 }
@@ -292,7 +304,7 @@ body {
   background: linear-gradient(90deg, var(--accent), #a78bfa);
   padding: 0.36rem 0.72rem;
   border-radius: 999px;
-  margin-bottom: 0.85rem;
+  margin-bottom: 0;
 }
 
 .features {
@@ -342,51 +354,6 @@ body {
   color: #ddd6fe;
   border-bottom-color: rgba(221, 214, 254, 0.7);
   outline: none;
-}
-
-.progress-block {
-  max-width: 280px;
-  margin: 0 auto;
-  text-align: left;
-}
-
-.progress-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.45rem;
-}
-
-.progress-label {
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.progress-value {
-  font-size: 0.78rem;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-  opacity: 0.85;
-}
-
-.progress-track {
-  width: 100%;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--track);
-  border: 1px solid var(--line);
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--accent), var(--accent-warm));
-  min-width: 0;
 }
 
 footer {
@@ -730,9 +697,6 @@ footer {
     margin-right: auto;
   }
 
-  .progress-header {
-    justify-content: space-between;
-  }
 }
 
 @media (max-height: 520px) and (orientation: landscape) {

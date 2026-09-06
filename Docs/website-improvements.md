@@ -1,12 +1,12 @@
 # Project Car — Website Improvements (Living)
 
 **Status:** Living document — update when items ship, get deferred, or new issues are found  
-**Last audited:** 2026-09-06 (status sync: waitlist shipped, Apex deferred — not a full live re-audit)  
-**Owner:** Ben (decisions) · Doc (implement / infra on M1 Max host) · Porsche (coord)  
+**Last audited:** 2026-09-06 (brochure hygiene P0-3…P0-7 shipped in git; live Worker still on PR #5 until next Direct Upload)  
+**Owner:** Ben (decisions) · Garage (brochure HTML/CSS) · Zone (Cloudflare Worker upload) · Doc (Shop API host)  
 **Canonical:** `Coombzy/Project-Car` → `Docs/website-improvements.md`  
 **Local clone:** `~/src/Project-Car/Docs/website-improvements.md`  
 **Desktop mirror:** `~/Desktop/Project Car/docs/website-improvements.md`  
-**Site code:** `apps/website/` (git SSOT). Doc runtime copy may still live under `~/hermes-tools/project-car-website`. Apex is **deferred** (stripped from this tree).  
+**Site code:** `apps/website/` (git SSOT). **Live origin:** Cloudflare Worker `projectcar-brochure` Direct Upload of `apps/website/html` (not Doc `:8088` tunnel). Classic Pages git skipped for now. Apex is **deferred** (stripped from this tree).  
 **Related:**
 - `website-webapp-specification.md` — domain, tunnel, email, architecture (SSOT; do not dual-author a second plan under `apps/website/`)
 - `api-stay-up.md` / `cors-origins.md` — public Shop API stay-up + waitlist CORS
@@ -32,21 +32,22 @@
 
 ---
 
-## Snapshot (2026-08-12)
+## Snapshot (2026-09-06)
 
 | Check | Result |
 |--------|--------|
-| https://projectcar.ca HTTPS | 200, SSL OK (~0.5s from Doc/YVR) |
-| Local http://127.0.0.1:8088 | 200 |
-| Docker `project-car-website` | Up, healthy, `:8088→80` |
-| Docker `project-car-apex` | **Deferred** — not an active P0. Pages-ready `apps/website/` has no Apex sidecar. |
-| Waitlist | **Done** — Membership/Contact `POST` to `https://api.projectcar.ca/waitlist` |
-| Pages live | Home, About, The Shop, Membership, Roadmap, Chat, Contact |
-| Discord invite | `https://discord.gg/projectcar` → 200 |
-| Soft-404 | Missing paths (incl. robots/sitemap/favicon) return **200 + Home HTML** |
-| Mission Control | Separate (`:8080`); not this site |
+| https://projectcar.ca / www | Worker `projectcar-brochure` Direct Upload of `apps/website/html` (PR #5 on `main`). HTML from this agent often hits CF challenge (403); SSL in front is Cloudflare. |
+| robots.txt (live, pre-upload) | 200 `text/plain` — Cloudflare managed content-signals text, **not** the brochure `Allow`/`Sitemap` file yet. |
+| sitemap.xml (live, pre-upload) | Missing (404 or CF challenge). |
+| favicon.ico (live, pre-upload) | **404** (real, not soft Home HTML). |
+| Home (live, pre-upload) | Still “Website progress 10%” until next Worker upload. |
+| Waitlist | **e2e PASS** — Membership/Contact `POST` to `https://api.projectcar.ca/waitlist` |
+| Pages | Home, About, The Shop, Membership, Roadmap, Contact. Chat nav stripped (PR #5). |
+| Discord invite | `https://discord.gg/projectcar` |
+| Soft-404 | Live Worker already 404s missing static files (`/favicon.ico`). Git now has `404.html` + nginx `error_page 404`. Zone: set Worker `not_found_handling = "404-page"` on next Direct Upload so unknown HTML paths serve the branded page with HTTP 404. Do not add SPA `/* /index.html 200`. |
+| Mission Control | Separate; held until Owner booking is live on Doc / `app.projectcar.ca`. |
 
-**Overall:** Brochure waitlist is shipped. Highest leverage left is remaining P0 hygiene (robots/404/favicon/home bar) and conversion—not Apex, not a redesign.
+**Overall:** Waitlist is live. Chat/Apex stay gone. Remaining brochure P0 hygiene is in `apps/website/` (this ship). Next product path is Owner booking — not Mission Control, not Apex, not a redesign.
 
 ---
 
@@ -68,11 +69,11 @@ Apex is **not** in this list. See Deferred — Apex.
 
 | ID | Item | Status | Notes / acceptance |
 |----|------|--------|-------------------|
-| P0-3 | **Real `robots.txt`** | open | Today returns Home HTML (200). Add static file; nginx must serve it as `text/plain`. |
-| P0-4 | **Real `sitemap.xml`** | open | List canonical public HTML URLs; `application/xml`. Keep in sync when pages added/removed. |
-| P0-5 | **Stop soft-404 SPA fallback for static site** | open | nginx `try_files … /index.html` makes unknown paths look live. Prefer real **404** page with status 404 (optional branded 404.html). Keep pretty paths only if intentional. |
-| P0-6 | **Favicon set** | open | `/favicon.ico` soft-404s; pages use full JPEG portrait as icon. Add proper ICO/PNG/SVG. |
-| P0-7 | **Home “Website progress 10%”** | open | Undercuts a 7-page live site. Drop bar, reframe as **shop build-out**, or set an honest metric with owner approval—do not leave stale 10%. |
+| P0-3 | **Real `robots.txt`** | done | 2026-09-06 — `apps/website/html/robots.txt` is `User-agent: *` / `Allow: /` + `Sitemap:` (no extra Disallow). Local: `curl -sS http://127.0.0.1:8088/robots.txt` is `text/plain`, not Home HTML. Live after next Worker Direct Upload. |
+| P0-4 | **Real `sitemap.xml`** | done | 2026-09-06 — `apps/website/html/sitemap.xml` lists canonical public HTML only: `/`, about, the-shop, membership, roadmap, contact. No Chat/Apex. Local: `curl -sSI http://127.0.0.1:8088/sitemap.xml`. |
+| P0-5 | **Stop soft-404 SPA fallback for static site** | done | 2026-09-06 — `404.html` + nginx `error_page 404 /404.html`; `_redirects` stays Chat→Contact 301 only (no SPA fallback). Local nginx: unknown path → **404** + branded page. Worker already 404s missing files; Zone should set `not_found_handling = "404-page"` on next upload. |
+| P0-6 | **Favicon set** | done | 2026-09-06 — `html/favicon.ico` + `assets/favicon.svg` / `favicon-32.png` / `apple-touch-icon.png`. Pages no longer use `mcking.jpg` as the only icon. Local: `curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8088/favicon.ico` → 200. |
+| P0-7 | **Home “Website progress 10%”** | done | 2026-09-06 — progress-block removed (no owner-approved metric; did not invent a %). Home keeps honest “Project Underway” + waitlist CTA. Local: Home HTML has no “Website progress” / `10%`. |
 
 ### Deferred — Apex (not active P0)
 
@@ -90,7 +91,7 @@ IDs kept so old links resolve. Do not treat these as current P0.
 | ID | Item | Status | Notes / acceptance |
 |----|------|--------|-------------------|
 | P1-1 | **Home primary CTAs** | open | Strong actions: waitlist / membership interest, Discord join, Contact. Secondary: About / The Shop. Less feature laundry on home. Waitlist form itself is **done** (P1-5). |
-| P1-2 | **Chat page honesty** | open | Copy reads like live human+AI member chat. Label **planned / not live**, fold into Roadmap, or ship a real join path. No fake “you get” present tense. |
+| P1-2 | **Chat page honesty** | done | 2026-09-06 — Chat page/nav stripped in PR #5. No public chat copy left to overpromise. Do not revive. |
 | P1-3 | **Contact: only live channels** | open | Keep email + Discord. Collapse Phone / IG / TikTok / YouTube / Skool “Coming soon” into one line until URLs exist. |
 | P1-4 | **Nav weight** | deferred | Optional: Home · About · Shop · Membership · Contact in primary nav; Roadmap/Chat in footer until chat is real. |
 | P1-5 | **Interest capture (waitlist)** | done | 2026-09-06 — Membership/Contact `POST` JSON to `https://api.projectcar.ca/waitlist` (`apps/website/html/waitlist.js`). Name, email, optional phone/notes. No pricing / book-now. Ops: `cors-origins.md`, `api-stay-up.md`. |
@@ -139,31 +140,34 @@ Follow skill **project-car-web-copy**. Tighten; don’t rewrite the story. No fa
 
 ## Suggested implementation order
 
-1. P0-3 … P0-6 (robots, sitemap, 404, favicon) + nginx tweak  
-2. P0-7 + P1-1 (home status + CTAs)  
-3. P1-2, P1-3 (Chat/Contact honesty)  
-4. P2-1 … P2-4 (OG, canonical, cache, headers)  
-5. P3 copy pass  
-6. P4 as interest grows  
+1. Zone: next Worker Direct Upload of `apps/website/html` (this hygiene ship). Optional: `not_found_handling = "404-page"`.  
+2. P1-1 / P1-3 (home CTA weight, Contact channel honesty)  
+3. P2-1 … P2-4 (OG, canonical, cache, headers)  
+4. P3 copy pass  
+5. P4 as interest grows  
 
-Waitlist (P1-5) and git home (P2-7) are **done**. Apex (P0-1 / P0-2) is **deferred** — do not start the queue there.  
+Product path after brochure hygiene: **Owner booking hardened + live** on Doc / `app.projectcar.ca`. Hold Mission Control cockpit until then.
+
+Waitlist (P1-5), Chat strip (P1-2), git home (P2-7), and P0-3…P0-7 are **done** in git. Apex (P0-1 / P0-2) is **deferred** — do not start the queue there.  
 
 ---
 
 ## Quick verification commands (Doc)
 
 ```bash
-# Site + local
-curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca
-curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8088/
-docker ps --filter name=project-car --format '{{.Names}} {{.Status}}'
+# Local from apps/website (python http.server 8088 --directory html)
+curl -sSI http://127.0.0.1:8088/robots.txt | head -8
+curl -sS http://127.0.0.1:8088/robots.txt
+curl -sSI http://127.0.0.1:8088/sitemap.xml | head -8
+curl -sS -o /dev/null -w '%{http_code} %{content_type}\n' http://127.0.0.1:8088/favicon.ico
+# nginx (optional): unknown path must be HTTP 404 + 404.html, not Home
+curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8088/this-should-404
 
-# Must NOT be HTML forever
+# Live (after next Worker Direct Upload). HTML may 403 under CF challenge from datacenters.
+curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca
 curl -sSI https://projectcar.ca/robots.txt | head -5
 curl -sS https://projectcar.ca/robots.txt | head -20
 curl -sSI https://projectcar.ca/sitemap.xml | head -5
-
-# Soft-404 check (want 404, not 200 home)
 curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/this-should-404
 
 # Apex — deferred (not an active P0). Skip unless chat is back in scope.
@@ -193,6 +197,7 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 
 | Date | Change |
 |------|--------|
+| 2026-09-06 | P0-3…P0-7 **done** in `apps/website/` (robots, sitemap, 404.html, favicon set, Home progress bar removed). Live origin noted as Worker Direct Upload, not Doc `:8088`. P1-2 Chat strip **done** (PR #5). Next product path: Owner booking; MC held. |
 | 2026-09-06 | Status sync: P1-5 waitlist **done**; P2-7 site-under-git **done**; Apex P0-1 / P0-2 **deferred** (not active P0). |
 | 2026-08-12 | Initial living doc from full live + local audit (Doc). P0–P4 backlog, maintain rules, verify commands. Linked from `website-webapp-specification.md`. |
 
@@ -202,5 +207,6 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 
 | Date | Decision | By |
 |------|----------|-----|
+| 2026-09-06 | Brochure live host is Worker Direct Upload (`projectcar-brochure`), not Doc `:8088`. Classic Pages git skipped. Hygiene P0s ship as static files; Zone owns the next upload + `not_found_handling`. | Ben (task) · Garage (site) · Zone (CF) |
 | 2026-09-06 | Waitlist on brochure is **done**. Apex is **deferred**, not active P0. `Docs/` is SSOT; `apps/website/WEBSITE-*` files are pointers only. | Status sync (living ops) |
 | 2026-08-12 | Keep improvements as a **living git doc** in Project-Car `Docs/`, separate from architecture spec. | Ben (request) · Doc (author) |

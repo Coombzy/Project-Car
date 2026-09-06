@@ -1,0 +1,5 @@
+# projectcar.ca — public brochure
+User-agent: *
+Allow: /
+
+Sitemap: https://projectcar.ca/sitemap.xml
