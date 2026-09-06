@@ -27,12 +27,12 @@ It is **not** Mission Control. Mission Control is Ben’s private cockpit over N
 | Host | Audience | Role |
 |------|----------|------|
 | `projectcar.ca` / `www` | Public | Brochure, membership story, contact, waitlist. Apex chat **deferred** |
-| `app.projectcar.ca` | Owner now; Member self-serve **in git** (demo); Staff later | Shop OS: members, hoists, bookings, tokens — Owner + Member UI **not claimed live** on `app.` yet. |
+| `app.projectcar.ca` | Owner + Member demo live on Doc; Staff later | Shop OS: members, hoists, bookings, tokens — Owner + Member UI **live on Doc** (`:3000`). **Not claimed live** on `app.` yet. |
 | `api.projectcar.ca` | Public waitlist + authenticated Owner API | FastAPI. Tunnel → Doc `:8000` |
 
 Private Mission Control stays off the marketing domain (Tailscale / Access / a private hostname). Vaultwarden and Nextcloud stay off `projectcar.ca` apex.
 
-**Today (2026-09-06):** the public site is a multi-page brochure plus a real waitlist form. Owner shop OS (API + Next.js) is on `main`. Member self-serve (session cookie + balance + book/cancel) is **in git** under `apps/project-car/` — demo seed only, not claimed live on `app.projectcar.ca`. Apex public chat is deferred (Ben). See §13 for shipped vs remaining.
+**Today (2026-09-06 ~11:20 America/Edmonton):** the public site is a multi-page brochure plus a real waitlist form. Owner booking (duration × band × overlay) and Member self-serve (session cookie + `/member/me` + Bays 1–5 schedule) are on `main` (`9baf3c4`) **and live on Doc** (`:3000` / `:8000`) — demo seed only, not claimed live on `app.projectcar.ca`. Apex public chat is deferred (Ben). See §13 for shipped vs remaining.
 
 ---
 
@@ -268,13 +268,14 @@ Mission Control does **not** own members, tokens, or hoist state.
 ### v1 (this spec — on `main`)
 
 - Waitlist on the public site (**Done**).
-- Owner shop OS: tiers, members, hoists, bookings, token ledger, dashboard + week schedule (**on `main`**; harden + live on Doc still remaining).
-- v1 Owner-operated admin is on `main`. Member self-serve is **in git** as a demo session — do **not** claim it live on `app.projectcar.ca`.
+- Owner shop OS: tiers, members, hoists, bookings, token ledger, dashboard + week schedule (**on `main` and live on Doc** `:3000`).
+- Member self-serve is **live on Doc demo** (PR #14 / `9baf3c4`) — session cookie, own balance, book / cancel on Bays 1–5. Do **not** claim it live on `app.projectcar.ca`.
 
-### Next (after Owner live — first-class, not a v2 dump)
+### Next (not a v2 dump)
 
-- **Member self-serve booking + token balance** is **in git** (session cookie, own balance, book / cancel, schedule quote). Harden + walk on Doc. Pricing math is the same Owner engine (`token-pricing.md`).
+- Public `app.projectcar.ca` is still not claimed. Owner + Member stay Doc demo until Ben says otherwise.
 - Staff **OIDC** can follow the Member session stub. Do not dump the rest of v2 here.
+- Mission Control cockpit still needs **Ben GO** before start. Do not start the cockpit from a docs PR.
 
 ### v2 (rest)
 
@@ -294,6 +295,8 @@ Mission Control does **not** own members, tokens, or hoist state.
 - Marketplace / eBay module.
 - Estate-sale product (separate app, shared patterns).
 - Fabrication calculators.
+- Member-to-member hoist time trades/offers — design note only; do not design the trade system now.
+- Member booking assistant (Ben later-want) — bot that helps members book hoist dates. Same Later bucket as trades. After Member UI is solid; likely Grok / Apex-replacement public chat lane, **not** Owner admin. Do **not** build in current Shop OS slices.
 
 ---
 
@@ -309,14 +312,14 @@ Mission Control does **not** own members, tokens, or hoist state.
 
 ## 13. Shop OS: shipped vs remaining
 
-Reality as of 2026-09-06. Do not invent Stripe, “shop is open,” or a live `app.projectcar.ca` from this section.
+Reality as of 2026-09-06 ~11:20 America/Edmonton. Do not invent Stripe, “shop is open,” or a live `app.projectcar.ca` from this section.
 
 ### Shipped on `main` (PR #2 + #3)
 
 - **Public waitlist:** `POST /waitlist` on the shop API; Membership / Contact form posts to `https://api.projectcar.ca/waitlist` (`apps/website/html/waitlist.js`). CORS allowlist includes `projectcar.ca` / `www` / localhost. See `cors-origins.md`.
 - **Owner API** (`apps/project-car/api`): auth session, tiers, members, hoists, bookings (create / confirm / check-in / complete / cancel), append-only token ledger, dashboard snapshot, waitlist list + mark contacted.
 - **Owner web** (`apps/project-car/web`): dashboard, week schedule, members, hoists, waitlist, tiers. Demo seed only.
-- **Member self-serve** (`/member`, `/member/schedule`): session cookie, own balance + ledger, quote + book/confirm/cancel on customer bays. Demo seed: `ada.reyes@example.com` / `changeme`.
+- **Member self-serve** (`/member/me`, `/member/hoists`, `/member/schedule`): session cookie, own balance + ledger, quote + book/confirm/cancel on customer bays. **Live on Doc demo.** Demo seed: `ada.reyes@example.com`. Shop hoist stays Owner-only.
 - **Shop Postgres** in `infra/compose` (API is not a compose service).
 - **Live API edge:** `api.projectcar.ca` → Doc `:8000`. Stay-up is LaunchAgent `com.projectcar.shop-api` (KeepAlive) — `api-stay-up.md`.
 
@@ -332,14 +335,13 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 
 ### Remaining
 
-- Owner booking **hardened + live** on Doc / `app.projectcar.ca`.
-- **Member self-serve** is **in git**. Walk + harden on Doc. Not claimed live on `app.projectcar.ca`. Token balance + hoist booking is a primary customer page.
-- Cloudflare Pages cutover for the brochure (GO’d; blocked on CF ↔ GitHub auth). Shop API stays the lab tunnel.
+- Public `app.projectcar.ca` — **not claimed.** Owner + Member booking are live on Doc demo only.
+- Classic Pages git cutover for the brochure (GO’d; blocked on CF ↔ GitHub auth). Live origin is already Worker `projectcar-brochure`. Shop API stays the lab tunnel.
 - Public chat (Apex) later — deferred (Ben), not P0.
-- Staff login later (unless pulled forward with Member auth). Do not dump Member into a vague v2.
+- Staff login (OIDC) later. Do not dump the rest of v2 here.
 - Payments later (v3). No Stripe now.
 - Token pricing: **spec-locked** (`token-pricing.md`) — `base_tokens = hours × 100`, then bands + overlay. Owner and Member booking use the same engine.
-- Mission Control cockpit **held** until Owner booking is merged **and** live on Doc. Do not start the cockpit early.
+- Mission Control cockpit still needs **Ben GO** before start. Owner + Member booking are already live on Doc demo. Do not start the cockpit from a docs PR.
 
 ### Implementation notes
 

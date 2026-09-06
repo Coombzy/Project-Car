@@ -90,7 +90,7 @@ Token balance + hoist booking is a **primary Member** page — not Owner-only ad
 | **Owner** | Tiers, band / overlay settings, overrides, at-risk, everyone else's ledger. Still required. |
 | **Member** | See their own balance, book / cancel within tier rules, see **band + overlay + total** on their schedule. |
 
-Member self-serve UI is **in git** under `apps/project-car/web` (`/member`). Demo seed only — not claimed live on `app.projectcar.ca`.
+Member self-serve UI is **live on Doc demo** (`/member`, seed `ada.reyes@example.com`). Demo session cookie — not claimed live on `app.projectcar.ca`.
 
 ---
 

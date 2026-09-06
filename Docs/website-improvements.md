@@ -1,7 +1,7 @@
 # Project Car — Website Improvements (Living)
 
 **Status:** Living document — update when items ship, get deferred, or new issues are found  
-**Last audited:** 2026-09-06 (brochure hygiene P0-3…P0-7 shipped in git; live Worker still on PR #5 until next Direct Upload)  
+**Last audited:** 2026-09-06 (brochure hygiene P0-3…P0-7 in git **and already live** on Worker `projectcar-brochure`; re-uploaded 2026-09-06)  
 **Owner:** Ben (decisions) · Garage (brochure HTML/CSS) · Zone (Cloudflare Worker upload) · Doc (Shop API host)  
 **Canonical:** `Coombzy/Project-Car` → `Docs/website-improvements.md`  
 **Local clone:** `~/src/Project-Car/Docs/website-improvements.md`  
@@ -37,17 +37,14 @@
 | Check | Result |
 |--------|--------|
 | https://projectcar.ca / www | Worker `projectcar-brochure` Direct Upload of `apps/website/html` (PR #5 on `main`). HTML from this agent often hits CF challenge (403); SSL in front is Cloudflare. |
-| robots.txt (live, pre-upload) | 200 `text/plain` — Cloudflare managed content-signals text, **not** the brochure `Allow`/`Sitemap` file yet. |
-| sitemap.xml (live, pre-upload) | Missing (404 or CF challenge). |
-| favicon.ico (live, pre-upload) | **404** (real, not soft Home HTML). |
-| Home (live, pre-upload) | Still “Website progress 10%” until next Worker upload. |
+| robots.txt / sitemap / favicon / Home bar | Pre-upload snapshot from earlier 2026-09-06 is **stale**. Worker was re-uploaded later that day with P0-3…P0-7. Do not treat hygiene as pending. |
 | Waitlist | **e2e PASS** — Membership/Contact `POST` to `https://api.projectcar.ca/waitlist` |
 | Pages | Home, About, The Shop, Membership, Roadmap, Contact. Chat nav stripped (PR #5). |
 | Discord invite | `https://discord.gg/projectcar` |
-| Soft-404 | Live Worker already 404s missing static files (`/favicon.ico`). Git now has `404.html` + nginx `error_page 404`. Zone: set Worker `not_found_handling = "404-page"` on next Direct Upload so unknown HTML paths serve the branded page with HTTP 404. Do not add SPA `/* /index.html 200`. |
-| Mission Control | Separate; held until Owner booking is live on Doc / `app.projectcar.ca`. |
+| Soft-404 | Live Worker 404s missing static files. Git has `404.html` + nginx `error_page 404`. Do not add SPA `/* /index.html 200`. |
+| Mission Control | Separate; Owner + Member booking are live on Doc demo. Cockpit still needs **Ben GO** — do not start it from brochure work. |
 
-**Overall:** Waitlist is live. Chat/Apex stay gone. Remaining brochure P0 hygiene is in `apps/website/` (this ship). Next product path is Owner booking — not Mission Control, not Apex, not a redesign.
+**Overall:** Waitlist is live. Chat/Apex stay gone. Brochure hygiene P0-3…P0-7 is **already live** on the Worker. Owner + Member booking are live on Doc demo — not Mission Control, not Apex, not a redesign. `app.projectcar.ca` is still not claimed.
 
 ---
 
@@ -140,15 +137,14 @@ Follow skill **project-car-web-copy**. Tighten; don’t rewrite the story. No fa
 
 ## Suggested implementation order
 
-1. Zone: next Worker Direct Upload of `apps/website/html` (this hygiene ship). Optional: `not_found_handling = "404-page"`.  
-2. P1-1 / P1-3 (home CTA weight, Contact channel honesty)  
-3. P2-1 … P2-4 (OG, canonical, cache, headers)  
-4. P3 copy pass  
-5. P4 as interest grows  
+1. P1-1 / P1-3 (home CTA weight, Contact channel honesty)  
+2. P2-1 … P2-4 (OG, canonical, cache, headers)  
+3. P3 copy pass  
+4. P4 as interest grows  
 
-Product path after brochure hygiene: **Owner booking hardened + live** on Doc / `app.projectcar.ca`. Hold Mission Control cockpit until then.
+Brochure hygiene is **already live** on Worker `projectcar-brochure` (re-uploaded 2026-09-06). Do not invent another Zone upload for that ship. Owner + Member booking are live on Doc demo; `app.projectcar.ca` is still not claimed. Mission Control cockpit still needs **Ben GO**.
 
-Waitlist (P1-5), Chat strip (P1-2), git home (P2-7), and P0-3…P0-7 are **done** in git. Apex (P0-1 / P0-2) is **deferred** — do not start the queue there.  
+Waitlist (P1-5), Chat strip (P1-2), git home (P2-7), and P0-3…P0-7 are **done** (git + live Worker). Apex (P0-1 / P0-2) is **deferred** — do not start the queue there.  
 
 ---
 
@@ -197,6 +193,7 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 
 | Date | Change |
 |------|--------|
+| 2026-09-06 | Reality sync ~11:20 America/Edmonton: P0-3…P0-7 **already live** on Worker (re-uploaded). No pending hygiene upload. Owner + Member booking live on Doc demo; `app.projectcar.ca` not claimed; MC cockpit still needs Ben GO. |
 | 2026-09-06 | P0-3…P0-7 **done** in `apps/website/` (robots, sitemap, 404.html, favicon set, Home progress bar removed). Live origin noted as Worker Direct Upload, not Doc `:8088`. P1-2 Chat strip **done** (PR #5). Next product path: Owner booking; MC held. |
 | 2026-09-06 | Status sync: P1-5 waitlist **done**; P2-7 site-under-git **done**; Apex P0-1 / P0-2 **deferred** (not active P0). |
 | 2026-08-12 | Initial living doc from full live + local audit (Doc). P0–P4 backlog, maintain rules, verify commands. Linked from `website-webapp-specification.md`. |
@@ -207,6 +204,6 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 
 | Date | Decision | By |
 |------|----------|-----|
-| 2026-09-06 | Brochure live host is Worker Direct Upload (`projectcar-brochure`), not Doc `:8088`. Classic Pages git skipped. Hygiene P0s ship as static files; Zone owns the next upload + `not_found_handling`. | Ben (task) · Garage (site) · Zone (CF) |
+| 2026-09-06 | Brochure live host is Worker Direct Upload (`projectcar-brochure`), not Doc `:8088`. Classic Pages git skipped. Hygiene P0s are in git **and already live** (Worker re-uploaded 2026-09-06). | Ben (task) · Garage (site) · Zone (CF) |
 | 2026-09-06 | Waitlist on brochure is **done**. Apex is **deferred**, not active P0. `Docs/` is SSOT; `apps/website/WEBSITE-*` files are pointers only. | Status sync (living ops) |
 | 2026-08-12 | Keep improvements as a **living git doc** in Project-Car `Docs/`, separate from architecture spec. | Ben (request) · Doc (author) |
