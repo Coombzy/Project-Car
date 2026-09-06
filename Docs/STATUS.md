@@ -11,18 +11,19 @@ Living one-pager: what’s live, what’s next, locks. Product detail stays in t
 - **Waitlist:** Membership / Contact `POST` JSON to `https://api.projectcar.ca/waitlist`. CORS allowlist includes `https://projectcar.ca`, `https://www.projectcar.ca`, and localhost. **e2e PASS.** See `cors-origins.md`.
 - **Shop API:** `api.projectcar.ca` = Cloudflare tunnel → Doc `localhost:8000`. Primary stay-up: LaunchAgent `com.projectcar.shop-api` (KeepAlive) → `~/hermes-tools/mission-control/shop-api/run-shop-api.sh` → uvicorn `:8000`. Lid-close / sleep still kills the Mac. See `api-stay-up.md`.
 - **Shop OS on `main` (PR #2 + #3 + later):** public waitlist path; Owner API + Next.js UI under `apps/project-car/` — tiers, members, hoists, bookings, append-only token ledger, dashboard / week schedule. Seed: **6 hoists** (one shop-priority) and **Basic 1000 / Premium 1500**. **Not** claimed live on `app.projectcar.ca`. The shop is not open.
+- **Member self-serve (demo, this slice):** Member session cookie (`pc_member_session`) parallel to Owner. Seeded Member (`ada.reyes@example.com` / `changeme`) can see their token balance + ledger, quote duration × band × overlay, and book / confirm / cancel on **Bays 1–5 only**. Shop hoist stays Owner-only (`400 shop_hoist_owner_only`). Not OIDC — Staff OIDC can follow. **Not** claimed live on `app.projectcar.ca`.
 
 ---
 
 ## Next
 
 1. **Owner booking live** on Doc / `app.projectcar.ca`. Duration pricing (hours × 100 × band × overlay) is **in the Owner API + schedule** — not claimed live on `app.projectcar.ca` yet.
-2. **Member self-serve booking + token balance UI** (+ Member auth / OIDC as needed) — first-class next slice after Owner live. Not buried under “later.” Token balance + hoist booking is a primary customer (Member) page. **Not shipped.** May unlock OIDC / Member auth earlier than a vague v2 dump.
+2. **Member self-serve** is **in git** (balance + book/cancel + schedule quote; Member session cookie). Harden + walk it on Doc after merge. Not claimed live on `app.projectcar.ca`. Staff OIDC can follow; do not dump the rest of v2 here.
 3. Hold **Mission Control cockpit** until Owner booking is merged **and** live on Doc. Do not start the cockpit early.
 4. Brochure hygiene P0-3…P0-7 is **in git** (`apps/website/html`: robots, sitemap, `404.html`, favicon set, Home progress bar removed). Live Worker picks it up on the next Direct Upload (Zone). Classic Pages git still skipped.
 5. Public Apex chat: **deferred (Ben)**. Not P0. Do not revive.
-6. Payments / Stripe: later. Staff login can follow Member auth; do not dump Member into a vague v2.
-7. **Token pricing** v1 is **landed for Owner booking** — `token-pricing.md`. Member self-serve still not shipped. Pricing math will apply there the same way.
+6. Payments / Stripe: later. Staff login (OIDC) can follow the Member session stub; do not dump the rest of v2 here.
+7. **Token pricing** v1 is landed for Owner **and** Member booking — same `token-pricing.md` engine. Defaults are Owner-editable placeholders, not public prices.
 
 ---
 

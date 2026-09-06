@@ -85,6 +85,12 @@ def create_member(client: TestClient, **overrides) -> dict:
     return response.json()
 
 
+def login_member(client: TestClient, email: str, password: str = "changeme") -> dict:
+    response = client.post("/auth/member/login", json={"email": email, "password": password})
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
 def create_hoist(client: TestClient, **overrides) -> dict:
     payload = {"name": "Bay 1", "location_label": "North wall", **overrides}
     response = client.post("/hoists", json=payload, headers=AUTH)

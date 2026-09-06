@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Project Car · Shop OS",
-  description: "Owner shop OS demo for Project Car members, hoists, and bookings.",
+  description: "Shop OS demo for Project Car — Owner admin and Member self-serve booking.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

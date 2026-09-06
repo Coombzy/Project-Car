@@ -1,4 +1,5 @@
 export const SESSION_COOKIE = "pc_owner_session";
+export const MEMBER_SESSION_COOKIE = "pc_member_session";
 
 export function shopApiUrl(): string {
   const raw = process.env.SHOP_API_URL ?? "http://127.0.0.1:8000";
@@ -15,6 +16,7 @@ export type ApiErrorBody = {
 export type Principal = {
   role: string;
   email: string;
+  member_id?: string | null;
 };
 
 export type WaitlistEntry = {
@@ -116,6 +118,30 @@ export type Hoist = {
   is_shop: boolean;
   created_at: string;
   updated_at: string;
+};
+
+export type Occupancy = {
+  booking_id: string;
+  hoist_id: string;
+  hoist_name: string;
+  start_at: string;
+  end_at: string;
+  status: Booking["status"];
+  own: boolean;
+};
+
+export type MemberSchedule = {
+  hoists: Hoist[];
+  bookings: Booking[];
+  occupancy: Occupancy[];
+};
+
+export type MemberSelf = Member & {
+  booking_window_days: number;
+  max_simultaneous_bookings: number;
+  included_tokens: number;
+  bookings: Booking[];
+  tokens: TokenTransaction[];
 };
 
 export type HoistSnapshot = Hoist & {

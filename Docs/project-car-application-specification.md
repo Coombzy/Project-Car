@@ -27,12 +27,12 @@ It is **not** Mission Control. Mission Control is Ben’s private cockpit over N
 | Host | Audience | Role |
 |------|----------|------|
 | `projectcar.ca` / `www` | Public | Brochure, membership story, contact, waitlist. Apex chat **deferred** |
-| `app.projectcar.ca` | Owner now; **Member self-serve next** after Owner live; Staff later | Shop OS: members, hoists, bookings, tokens — Owner UI **not live yet**. Member booking + balance UI **not shipped**. |
+| `app.projectcar.ca` | Owner now; Member self-serve **in git** (demo); Staff later | Shop OS: members, hoists, bookings, tokens — Owner + Member UI **not claimed live** on `app.` yet. |
 | `api.projectcar.ca` | Public waitlist + authenticated Owner API | FastAPI. Tunnel → Doc `:8000` |
 
 Private Mission Control stays off the marketing domain (Tailscale / Access / a private hostname). Vaultwarden and Nextcloud stay off `projectcar.ca` apex.
 
-**Today (2026-09-06):** the public site is a multi-page brochure plus a real waitlist form. Owner shop OS (API + Next.js) is on `main`. Apex public chat is deferred (Ben). Token balance + hoist booking is a **primary Member** page of the product — elevated next after Owner booking is live; **not shipped**. See §13 for shipped vs remaining.
+**Today (2026-09-06):** the public site is a multi-page brochure plus a real waitlist form. Owner shop OS (API + Next.js) is on `main`. Member self-serve (session cookie + balance + book/cancel) is **in git** under `apps/project-car/` — demo seed only, not claimed live on `app.projectcar.ca`. Apex public chat is deferred (Ben). See §13 for shipped vs remaining.
 
 ---
 
@@ -44,13 +44,13 @@ Design the data model for all three roles now. Only **Owner** is used in v1.
 |------|-----|----|-------|
 | **Owner** | Ben | Full admin. The only login. | Same |
 | **Staff** | Employees / mentors | Schema only | Check-in help, incidents, override bookings |
-| **Member** | Paying customers | Schema + waitlist records | **Next first-class slice** after Owner live: self-serve book / cancel + see their token balance. Not shipped. |
+| **Member** | Paying customers | Schema + waitlist + **self-serve demo** (session cookie, own balance, book / cancel on Bays 1–5) | Staff OIDC later. Not claimed live on `app.` |
 | **Waitlist** | Public visitors | Email + name + notes | Convert to Member on onboarding |
 
 Identity rules:
 
-- v1 auth is a single Owner session (email + password or a strong app secret).
-- Member self-serve booking + balance may unlock **OIDC / Member auth earlier** than a vague v2 dump. Staff login can follow. Build tables so we do not rewrite them.
+- v1 Owner auth is a session (email + password or a strong app secret).
+- Member self-serve uses a **parallel Member session cookie** (`pc_member_session`) keyed to an existing `members` row. Not OIDC. Staff OIDC can follow without rewriting shop tables.
 - **Shop members must not receive Nextcloud accounts.**
 - Agents do not log into this app. If they write anything, they use a scoped service token against the API.
 
@@ -174,7 +174,8 @@ Do not share this database with Nextcloud.
 | Shop DB | Postgres 16 (dedicated). Never Nextcloud MariaDB |
 | Files | Nextcloud via API WebDAV when needed |
 | Auth v1 | Owner session (httpOnly cookie) against the API |
-| Auth later | OIDC for Staff/Member |
+| Auth now (Member demo) | Parallel Member session cookie (`pc_member_session`). Email must match a `members` row. Not OIDC. |
+| Auth later | OIDC for Staff (and Member if we replace the cookie stub) |
 | Mobile | Responsive PWA. No Capacitor/RN until a real offline field loop exists |
 | Hosting now | Brochure: live Doc tunnel, **target Cloudflare Pages**. Shop API: `api.projectcar.ca` tunnel → Doc `:8000`. Owner UI not live on `app.` yet |
 | Hosting later | McKing |
@@ -185,13 +186,15 @@ UI calls **our API only**. The browser never holds Nextcloud admin credentials.
 
 ## 8. API outline (v1)
 
-All authenticated routes require Owner (later: role-aware).
+Authenticated routes are role-aware: Owner session/bearer for admin; Member session for `/member/*`.
 
 | Method | Path | Purpose |
 |--------|------|---------|
 | `POST` | `/auth/login` | Owner session |
-| `POST` | `/auth/logout` | Clear session |
-| `GET` | `/me` | Current principal |
+| `POST` | `/auth/logout` | Clear Owner session |
+| `POST` | `/auth/member/login` | Member session (demo password stub) |
+| `POST` | `/auth/member/logout` | Clear Member session |
+| `GET` | `/me` | Current principal (Owner or Member) |
 | `POST` | `/waitlist` | **Public** (CORS). Create waitlist entry. No Owner cookie / bearer. |
 | `GET` | `/waitlist` | Owner list (auth required) |
 | `GET/POST` | `/tiers` | List / create tiers |
@@ -208,6 +211,15 @@ All authenticated routes require Owner (later: role-aware).
 | `POST` | `/bookings/{id}/complete` | Debit tokens, free hoist |
 | `POST` | `/bookings/{id}/cancel` | Refund reserve |
 | `GET` | `/dashboard` | Hoist snapshot + today + waitlist count |
+| `GET` | `/member/me` | Own profile, balance, ledger, bookings |
+| `GET` | `/member/tokens` | Own ledger |
+| `GET` | `/member/hoists` | Customer bays only (no shop hoist) |
+| `GET` | `/member/bookings` | Own bookings |
+| `GET` | `/member/schedule` | Customer-bay occupancy + own bookings |
+| `POST` | `/member/bookings/quote` | Duration × band × overlay for self |
+| `POST` | `/member/bookings` | Create own customer booking (same reserve rules) |
+| `POST` | `/member/bookings/{id}/confirm` | Confirm own pending booking |
+| `POST` | `/member/bookings/{id}/cancel` | Cancel own booking, refund reserve |
 
 Errors: JSON `{ "error": { "code", "message" } }`. Validation via Pydantic. Overlap conflicts return `409`.
 
@@ -233,7 +245,7 @@ Owner-only shell:
 4. **Waitlist** — convert-to-member is a later button; v1 can be “mark contacted”.
 5. **Tiers / settings** — edit allowances.
 
-Owner screens exist under `apps/project-car/web` (dashboard, schedule, members, hoists, waitlist, tiers). Demo seed only — the shop is not open.
+Owner screens exist under `apps/project-car/web` (dashboard, schedule, members, hoists, waitlist, tiers). Member self-serve is `/member` (balance + ledger) and `/member/schedule` (Bays 1–5, quote, book/cancel). Demo seed only — the shop is not open.
 
 ---
 
@@ -257,12 +269,12 @@ Mission Control does **not** own members, tokens, or hoist state.
 
 - Waitlist on the public site (**Done**).
 - Owner shop OS: tiers, members, hoists, bookings, token ledger, dashboard + week schedule (**on `main`**; harden + live on Doc still remaining).
-- v1 stays Owner-operated. Do **not** claim Member UI is shipped.
+- v1 Owner-operated admin is on `main`. Member self-serve is **in git** as a demo session — do **not** claim it live on `app.projectcar.ca`.
 
 ### Next (after Owner live — first-class, not a v2 dump)
 
-- **Member self-serve booking + token balance.** Members see their balance, book / cancel within tier rules, and see band + overlay + total on their schedule. Pricing math applies to Member bookings (`token-pricing.md`).
-- May pull **OIDC / Member auth** earlier than the rest of v2. **Not shipped.**
+- **Member self-serve booking + token balance** is **in git** (session cookie, own balance, book / cancel, schedule quote). Harden + walk on Doc. Pricing math is the same Owner engine (`token-pricing.md`).
+- Staff **OIDC** can follow the Member session stub. Do not dump the rest of v2 here.
 
 ### v2 (rest)
 
@@ -304,6 +316,7 @@ Reality as of 2026-09-06. Do not invent Stripe, “shop is open,” or a live `a
 - **Public waitlist:** `POST /waitlist` on the shop API; Membership / Contact form posts to `https://api.projectcar.ca/waitlist` (`apps/website/html/waitlist.js`). CORS allowlist includes `projectcar.ca` / `www` / localhost. See `cors-origins.md`.
 - **Owner API** (`apps/project-car/api`): auth session, tiers, members, hoists, bookings (create / confirm / check-in / complete / cancel), append-only token ledger, dashboard snapshot, waitlist list + mark contacted.
 - **Owner web** (`apps/project-car/web`): dashboard, week schedule, members, hoists, waitlist, tiers. Demo seed only.
+- **Member self-serve** (`/member`, `/member/schedule`): session cookie, own balance + ledger, quote + book/confirm/cancel on customer bays. Demo seed: `ada.reyes@example.com` / `changeme`.
 - **Shop Postgres** in `infra/compose` (API is not a compose service).
 - **Live API edge:** `api.projectcar.ca` → Doc `:8000`. Stay-up is LaunchAgent `com.projectcar.shop-api` (KeepAlive) — `api-stay-up.md`.
 
@@ -312,19 +325,20 @@ Reality as of 2026-09-06. Do not invent Stripe, “shop is open,” or a live `a
 | Surface | Auth | Who |
 |---------|------|-----|
 | `POST /waitlist` | **None.** Browser CORS. | Public brochure |
-| `GET /waitlist`, `/dashboard`, `/tiers`, `/members`, `/hoists`, `/bookings`, `/auth/*`, `/me` | Owner session or bearer | Ben / Owner UI |
+| `GET /waitlist`, `/dashboard`, `/tiers`, `/members`, `/hoists`, `/bookings`, `/auth/login` | Owner session or bearer | Ben / Owner UI |
+| `POST /auth/member/login`, `GET /me` (Member cookie), `/member/*` | Member session (`pc_member_session`) | Seeded Member demo |
 
 Do not put Owner cookies on the brochure. Do not require auth for the public waitlist POST.
 
 ### Remaining
 
 - Owner booking **hardened + live** on Doc / `app.projectcar.ca`.
-- **Member self-serve booking + token balance UI** (+ Member auth / OIDC as needed) — next first-class slice after Owner live. **Not shipped.** Token balance + hoist booking is a primary customer page.
+- **Member self-serve** is **in git**. Walk + harden on Doc. Not claimed live on `app.projectcar.ca`. Token balance + hoist booking is a primary customer page.
 - Cloudflare Pages cutover for the brochure (GO’d; blocked on CF ↔ GitHub auth). Shop API stays the lab tunnel.
 - Public chat (Apex) later — deferred (Ben), not P0.
 - Staff login later (unless pulled forward with Member auth). Do not dump Member into a vague v2.
 - Payments later (v3). No Stripe now.
-- Token pricing: **spec-locked** (`token-pricing.md`) — `base_tokens = hours × 100`, then bands + overlay. Owner API / schedule implement it; Member self-serve later. Pricing math applies to Member bookings too.
+- Token pricing: **spec-locked** (`token-pricing.md`) — `base_tokens = hours × 100`, then bands + overlay. Owner and Member booking use the same engine.
 - Mission Control cockpit **held** until Owner booking is merged **and** live on Doc. Do not start the cockpit early.
 
 ### Implementation notes

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { LoginForm } from "./login-form";
 
 export default async function LoginPage({
@@ -34,6 +36,10 @@ export default async function LoginPage({
           <p className="banner error">Session expired. Sign in again.</p>
         ) : null}
         <LoginForm nextPath={nextPath} />
+        <p className="muted" style={{ marginTop: "1.2rem" }}>
+          Seeded Member demo is on <Link href="/member/login">/member/login</Link>{" "}
+          (<code>ada.reyes@example.com</code>).
+        </p>
       </section>
     </main>
   );

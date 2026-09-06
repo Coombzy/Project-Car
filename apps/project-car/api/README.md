@@ -1,7 +1,8 @@
 # Project Car shop API
 
 FastAPI + SQLAlchemy 2 + Alembic for the shop OS. This slice covers the Owner
-dashboard, members, hoists, bookings, token ledger, tiers, and waitlist.
+dashboard plus Member self-serve (balance, book / cancel, schedule quote),
+members, hoists, bookings, token ledger, tiers, and waitlist.
 
 The Owner UI is `apps/project-car/web`.
 
@@ -45,7 +46,17 @@ Owner UI: from `apps/project-car/web` run `npm install && npm run dev`, then ope
 | Password | `changeme` |
 | Bearer | `OWNER_API_SECRET` (default `dev-owner-secret`) |
 
-These are local defaults from `.env.example`. The shop is **not** open. There is no live Stripe. Seeded names, bookings, and placeholder prices are sample data so a prospect can click through Dashboard, Schedule, Members, Hoists, Waitlist, and Tiers.
+These are local defaults from `.env.example`. The shop is **not** open. There is no live Stripe. Seeded names, bookings, and placeholder prices are sample data so a prospect can click through Dashboard, Schedule, Members, Hoists, Waitlist, Tiers, and the Member self-serve pages.
+
+### Demo Member login (localhost walkthrough)
+
+| Field | Value |
+|-------|--------|
+| Email | `ada.reyes@example.com` (any seeded **active** member email) |
+| Password | `changeme` (`MEMBER_DEMO_PASSWORD`) |
+| Cookie | `pc_member_session` |
+
+Member routes are under `/member/*`. Members can only see their own balance / ledger / bookings. Customer bookings use Bays 1–5. The shop hoist returns `400 shop_hoist_owner_only`. Not OIDC — Staff OIDC can follow later.
 
 ## Re-seed
 
@@ -63,8 +74,10 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
 | `POST` | `/auth/login` | — | Owner session (httpOnly cookie) |
-| `POST` | `/auth/logout` | — | Clear session |
-| `GET` | `/me` | Owner | Current principal |
+| `POST` | `/auth/logout` | — | Clear Owner session |
+| `POST` | `/auth/member/login` | — | Member session (demo password + existing member email) |
+| `POST` | `/auth/member/logout` | — | Clear Member session |
+| `GET` | `/me` | Owner or Member | Current principal |
 | `GET` | `/dashboard` | Owner | Hoist snapshot, today's bookings, waitlist count, token-at-risk |
 | `POST` | `/waitlist` | Public | Create waitlist entry |
 | `GET` | `/waitlist` | Owner | List entries, newest first |
@@ -82,8 +95,17 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `POST` | `/bookings/{id}/check-in` | Owner | → active |
 | `POST` | `/bookings/{id}/complete` | Owner | Debit used tokens, refund unused reserve |
 | `POST` | `/bookings/{id}/cancel` | Owner | Refund remaining reserve |
+| `GET` | `/member/me` | Member | Own profile, balance, ledger, bookings |
+| `GET` | `/member/tokens` | Member | Own ledger |
+| `GET` | `/member/hoists` | Member | Customer bays only |
+| `GET` | `/member/bookings` | Member | Own bookings |
+| `GET` | `/member/schedule` | Member | Customer-bay occupancy + own bookings |
+| `POST` | `/member/bookings/quote` | Member | Duration × band × overlay for self |
+| `POST` | `/member/bookings` | Member | Create own customer booking |
+| `POST` | `/member/bookings/{id}/confirm` | Member | Confirm own pending booking |
+| `POST` | `/member/bookings/{id}/cancel` | Member | Cancel own booking, refund reserve |
 
-Owner auth is the v1 stub from the product spec (email + password **or** `Authorization: Bearer $OWNER_API_SECRET`). It is **not** OIDC.
+Owner auth is the v1 stub from the product spec (email + password **or** `Authorization: Bearer $OWNER_API_SECRET`). Member auth is a parallel session cookie (`pc_member_session`) — email must match a `members` row; password is `MEMBER_DEMO_PASSWORD`. Neither is OIDC.
 
 Errors are `{ "error": { "code", "message" } }`. Overlap conflicts return `409`.
 
@@ -139,4 +161,4 @@ pytest
 
 ## Out of scope (do not add here)
 
-Website / apex, Mission Control, Stripe live charges, NFC, cameras, member OIDC signup, n8n, Disney/Pixar assets. Owner UI lives in `../web`.
+Website / apex, Mission Control, Stripe live charges, NFC, cameras, Member/Staff OIDC, n8n, Disney/Pixar assets. Owner + Member UI lives in `../web`.

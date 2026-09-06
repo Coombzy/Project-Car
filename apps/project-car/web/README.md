@@ -1,6 +1,6 @@
-# Project Car shop web (Owner)
+# Project Car shop web (Owner + Member)
 
-Next.js Owner shell for Shop OS. The browser talks to this app only; the Next.js server calls the FastAPI shop API with the v1 owner session cookie (`pc_owner_session`).
+Next.js Shop OS shell. The browser talks to this app only; the Next.js server calls the FastAPI shop API with the v1 session cookies (`pc_owner_session` or `pc_member_session`).
 
 Specs: `Docs/project-car-application-specification.md` §7–9, `Docs/platform-architecture.md`.
 
@@ -37,7 +37,10 @@ npm run dev
 | What | URL / value |
 |------|-------------|
 | Owner UI | http://localhost:3000 |
-| Login | http://localhost:3000/login |
+| Owner login | http://localhost:3000/login |
+| Member login | http://localhost:3000/member/login |
+| Member balance | http://localhost:3000/member |
+| Member schedule | http://localhost:3000/member/schedule |
 | Dashboard | http://localhost:3000/ |
 | Schedule | http://localhost:3000/schedule |
 | Members | http://localhost:3000/members |
@@ -59,6 +62,17 @@ The login screen is pre-filled and labeled as a **demo**. After `python -m app.s
 
 These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (6 hoist cards including the Owner-only shop hoist, today's bookings, token-at-risk), Schedule (week by hoist), Members (Basic / Premium), Hoists, Waitlist (mark contacted), and Tiers (edit allowances). Re-seed notes: 6 bays + one Owner-only shop hoist (v1 choice A).
 
+### Demo Member — Ada on localhost
+
+After the same seed:
+
+| Field | Local default |
+|-------|----------------|
+| Email | `ada.reyes@example.com` |
+| Password | `changeme` |
+
+Open `/member/login`, then Balance (tokens + ledger) and Schedule (Bays 1–5, band + overlay + total, book / cancel). The shop hoist is not on the Member grid. Not OIDC.
+
 Re-seed anytime from the API directory: `python -m app.seed --reset`. See `../api/README.md`.
 
 A demo banner stays in the Owner chrome. It does **not** claim the shop is open and does not wire live payments.
@@ -67,4 +81,4 @@ Login uses `POST /auth/login` and stores the API’s httpOnly `pc_owner_session`
 
 ## Out of scope
 
-Website / apex / Cloudflare, Mission Control, Stripe live charges, NFC, cameras, member OIDC self-serve, n8n.
+Website / apex / Cloudflare, Mission Control, Stripe live charges, NFC, cameras, Member/Staff OIDC, n8n.

@@ -314,6 +314,10 @@ main.wide {
   color: #c9d6ea;
 }
 
+.occupancy-chip {
+  opacity: 0.78;
+}
+
 .pill-shop {
   background: #161c28;
 }

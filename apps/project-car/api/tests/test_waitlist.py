@@ -52,7 +52,8 @@ def test_owner_login_cookie_lists_waitlist(client: TestClient) -> None:
         json={"email": "owner@projectcar.ca", "password": "changeme"},
     )
     assert login.status_code == 200
-    assert login.json() == {"role": "owner", "email": "owner@projectcar.ca"}
+    assert login.json()["role"] == "owner"
+    assert login.json()["email"] == "owner@projectcar.ca"
     me = client.get("/me")
     assert me.status_code == 200
     listed = client.get("/waitlist")
