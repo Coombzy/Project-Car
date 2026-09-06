@@ -1,19 +1,13 @@
-# Project Car — public website + Apex community agent
-name: project-car-website
-
+# Project Car — public brochure site (Pages-ready static; local nginx optional)
 services:
   website:
     image: nginx:1.27-alpine
     container_name: project-car-website
-    hostname: project-car-website
-    restart: unless-stopped
     ports:
-      - "${HOST_PORT:-8088}:80"
+      - "8088:80"
     volumes:
       - ./html:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - apex
     networks:
       default: {}
       edge:
@@ -27,31 +21,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
-
-  apex:
-    image: python:3.12-slim
-    container_name: project-car-apex
-    restart: unless-stopped
-    working_dir: /app
-    command: ["python", "-u", "/app/server.py"]
-    environment:
-      APEX_HOST: "0.0.0.0"
-      APEX_PORT: "8090"
-      APEX_MODEL: "${APEX_MODEL:-grok-4.5}"
-      APEX_AUTH_FILE: /auth/auth.json
-      APEX_LOG_DIR: /app/logs
-    volumes:
-      - ./apex/server.py:/app/server.py:ro
-      - ./apex/logs:/app/logs
-      - /Users/dochak/.hermes/auth.json:/auth/auth.json:ro
-    networks:
-      - default
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health', timeout=3)"]
-      interval: 20s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
 
 networks:
   edge:

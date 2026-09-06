@@ -1,19 +1,18 @@
-# apps/website — projectcar.ca public site
+# apps/website — projectcar.ca public brochure
 
-Imported from Doc `~/hermes-tools/project-car-website` (live tree). Static HTML + nginx + Apex companion.
+Static HTML for Cloudflare Pages (cutover planned). Source imported from Doc `~/hermes-tools/project-car-website`; this tree is the git SSOT going forward for the brochure.
 
 ## Waitlist
 
-Membership and Contact include a public waitlist form that `POST`s JSON to:
+Membership and Contact `POST` JSON to `{PC_SHOP_API_BASE}/waitlist` (`html/shop-config.js`, default `https://api.projectcar.ca`). Fields: `name`, `email`, optional `phone`/`notes`. Interest only — no pricing, no book-now, no shop-is-open claims.
 
-`{PC_SHOP_API_BASE}/waitlist`
+## Apex
 
-Fields: `name`, `email`, optional `phone`, optional `notes`.
+Deferred. No Apex sidecar in this Pages-ready tree.
 
-Default base URL is `https://api.projectcar.ca` (see `html/shop-config.js`). Override at runtime with `window.PC_SHOP_API_BASE` before the config script, or edit the default for a given deploy. The hostname may not be live until Zone finishes DNS/tunnel.
+## Local (optional)
 
-This is interest capture only — no pricing, no “book now”, no claim the shop is open. Apex on Contact remains chat-only.
-
-## Local
-
-See `docker-compose.yml` / `nginx.conf`. Prefer editing here in git going forward; sync back to the Doc hermes-tools tree when deploying until that cutover is explicit.
+```bash
+docker compose up -d
+# http://127.0.0.1:8088/
+```
