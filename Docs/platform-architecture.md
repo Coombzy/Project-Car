@@ -85,7 +85,7 @@ Do **not** vendor Nextcloud’s `data/` or MariaDB files into this tree.
 | NC DB | MariaDB 11.4 | Untouched by apps |
 | Orchestration | Hermes + custom adapters + Discord | **No n8n** |
 | Chat (personal) | Nextcloud Talk + Discord | Matrix deferred |
-| Chat (public / shop) | **Planned** dual surface — Member/customer (+ later Grok on projectcar.ca) and Ops admin. Human vs AI vs both still **open**. Apex sidecar **deferred**. Not shipped. |
+| Chat (public / shop) | **Chat v1 LIVE** on ops/app demo — human / polling / Owner-starts-rooms. Dual surfaces `/chat` (ops) + `/member/chat` (auth-gate 307 when logged out). Later Grok on projectcar.ca stays **deferred**. Apex sidecar **deferred**. Not Matrix. |
 | Identity (MC) | Single-user session / mesh | |
 | Identity (PC v1) | Owner + Member demo session cookies (not OIDC) | |
 | Identity (PC later) | OIDC (Pocket ID / Authelia) for Staff on `ops.` | |
@@ -154,7 +154,7 @@ Do **not** treat “add `apps/…`” as future work where the trees already exi
 |------|--------|
 | `~/src/Project-Car` as the git worktree | Ongoing |
 | `apps/project-car/api` + Alembic + `waitlist_entries` | **Done** on `main` (PR #2 + #3) |
-| `apps/project-car/web` Owner + Member booking, calendar (#18), fill (#20), placeholders (#21), schedule harden (#24) | **Live** on Doc `:3000` / `ops.` + temporary `app.` alias (`main` `91c547e`) |
+| `apps/project-car/web` Owner + Member booking, calendar (#18), fill (#20), placeholders (#21), inventory (#26), Chat v1 (#27), Dashboard (#28) | **Live** on Doc `:3000` / `ops.` + temporary `app.` alias (`main` `afb37f9`) |
 | `POST /waitlist` + public Membership/Contact form | **Done** (e2e PASS brochure → api) |
 | `infra/compose` shop Postgres only | **Done** |
 | Member customer surface on `projectcar.ca` | **Next** — still shop-UI `/member` today |

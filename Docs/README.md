@@ -30,7 +30,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 
 | Doc | What |
 |-----|------|
-| [STATUS.md](STATUS.md) | What’s live, what’s next, locks — start here for 2026-09-06 ~14:10 (`main` `91c547e`). **`ops.projectcar.ca` LIVE** (staff-on-shift, not Owner-only); `app.` = temporary alias. Calendar #18 + fill #20 + placeholders #21 + schedule harden #24 are Live. Inventory prefixes locked: B1–B6 / TC / PT (CM later). Build breadth vs Ship-MVP cut stay two gates. Chat planned, not live. Stripe / shop-open / Apex / MC cockpit still need Ben GO. |
+| [STATUS.md](STATUS.md) | What’s live, what’s next, locks — start here for 2026-09-06 ~16:16 (`main` `afb37f9`). **`ops.projectcar.ca` LIVE** (staff-on-shift, not Owner-only); `app.` = temporary alias. Calendar #18 + fill #20 + placeholders #21 + cookies #22 + Docs #23/#25 + schedule harden #24 + inventory #26 + Chat #27 + Dashboard #28 are Live. Inventory prefixes locked: B1–B6 / TC / PT (CM later). Chat v1 (human / polling) LIVE on ops/app demo. Build breadth vs Ship-MVP cut stay two gates. Stripe / shop-open / Apex / MC cockpit still need Ben GO. |
 | [token-pricing.md](token-pricing.md) | Token pricing lock (bands + overlay; Basic 1000 / Premium 1500; 6 hoists; shop hoist = Owner-only) |
 | [website-improvements.md](website-improvements.md) | P0–P4 backlog for projectcar.ca (tick status as work ships) |
 | [nextcloud-progress.md](nextcloud-progress.md) | Live hub status on Doc (no secrets) |
