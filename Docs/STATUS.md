@@ -30,6 +30,7 @@ Living one-pager: what’s live, what’s next, locks. Product detail stays in t
 ## Later (not v1)
 
 - Member-to-member hoist time trades/offers — bookings should not be glued to one member forever (transferable booking or trade-offer entity). Design note only; do not design the trade system now.
+- Member booking assistant (Ben later-want) — a bot that helps members book hoist dates. Same Later bucket as trades. After Member UI is solid; likely Grok / Apex-replacement public chat lane, **not** Owner admin. Do **not** build in current Shop OS slices.
 
 ---
 

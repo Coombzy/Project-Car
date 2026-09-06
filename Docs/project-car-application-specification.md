@@ -295,6 +295,8 @@ Mission Control does **not** own members, tokens, or hoist state.
 - Marketplace / eBay module.
 - Estate-sale product (separate app, shared patterns).
 - Fabrication calculators.
+- Member-to-member hoist time trades/offers — design note only; do not design the trade system now.
+- Member booking assistant (Ben later-want) — bot that helps members book hoist dates. Same Later bucket as trades. After Member UI is solid; likely Grok / Apex-replacement public chat lane, **not** Owner admin. Do **not** build in current Shop OS slices.
 
 ---
 
