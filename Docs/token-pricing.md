@@ -18,12 +18,15 @@ This file is the lock. Implement later (not this docs PR). Do not invent API, Cl
 3. **UI must show the math.** Band + overlay + total before confirm. Existing Shop OS UX must-haves stay (below).
 
 ```
-final_reserve_cost = base_tokens × band_multiplier × advance_multiplier
+base_tokens = hours × 100
+final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier
 ```
 
-Order is locked: base, then band, then overlay. Show all three factors and the total before confirm. Lock the same numbers onto the reserve ledger row (`pricing_rule` in meta). Cancel / complete **refund or debit that reserved amount** — do not reprice if bands or overlays change later.
+**`base_tokens` is duration × 100.** One hundred tokens per hour of hoist time. Not an arbitrary Owner-entered reserve amount.
 
-`base_tokens` is the unadjusted slot cost (today: Owner-entered reserve amount; later a duration rule if Ben locks one). Bands and overlay never replace the append-only ledger.
+`hours` is the booking duration (end − start) in shop-local time. Fractional hours are allowed (`2.5` → `250`). Order is locked: duration base, then band, then overlay. Show all three factors and the total before confirm. Lock the same numbers onto the reserve ledger row (`pricing_rule` in meta). Cancel / complete **refund or debit that reserved amount** — do not reprice if bands or overlays change later.
+
+Bands and overlay never replace the append-only ledger.
 
 ---
 
@@ -34,6 +37,20 @@ Order is locked: base, then band, then overlay. Show all three factors and the t
 - `member.token_balance` is a **cache** of the ledger. Ledger wins.
 - Tier `included_tokens`, `booking_window_days`, and `max_simultaneous_bookings` stay enforced.
 - Overdue does **not** auto-charge money.
+- Two membership tiers in seed (not three). Allotments below.
+
+---
+
+## Membership allotments (two tiers)
+
+Two tiers. One includes more tokens per period than the other. **Names and dollar prices stay Owner-editable.** Included-token counts below are **Owner-editable placeholders, not public prices.** Do not put them on projectcar.ca.
+
+| Placeholder name | `included_tokens` / period |
+|------------------|----------------------------|
+| Basic | **400** |
+| Pro | **800** |
+
+No third **Weekly** tier in this lock. Drop it from seed notes and seed tier rows. Owner can still add or rename tiers later in data — this is not a schema ban.
 
 ---
 
@@ -108,8 +125,9 @@ Every `booking_reserve` (and the matching debit / refund rows) stores the math. 
     "overlay_id": "last_minute",
     "overlay_label": "Last-minute",
     "advance_multiplier": "1.25",
-    "base_tokens": "2",
-    "final_reserve_cost": "3.13",
+    "hours": "2",
+    "base_tokens": "200",
+    "final_reserve_cost": "312.50",
     "tz": "America/Regina"
   }
 }
@@ -121,7 +139,7 @@ Every `booking_reserve` (and the matching debit / refund rows) stores the math. 
 
 ## UX must-haves (non-optional)
 
-1. **Create booking.** Show `base × band × overlay = total`, balance **before** and **after**, plus **band label** and **overlay label**, before confirm / reserve.
+1. **Create booking.** Show `(hours × 100) × band × overlay = total`, balance **before** and **after**, plus **band label** and **overlay label**, before confirm / reserve.
 2. **Week schedule cells.** Band color + token-cost badge. Overlay chip when overlay ≠ 1.0.
 3. **Member detail.** Balance + recent ledger. **At-risk** when open reserved tokens **>** remaining (cached) free balance.
 4. **Cancel / complete.** Show refund or debit **inline** (the locked reserved amount).
@@ -133,13 +151,14 @@ Existing Owner chrome stays: hoist overlap, reserve → debit / refund, token-at
 
 ## Worked example (defaults only)
 
-Tuesday 17:00 start, reserved **20 hours** ahead, `base_tokens = 2`.
+Tuesday 17:00 start, **2-hour** slot, reserved **20 hours** ahead.
 
+- Base: `2 × 100` = **200**
 - Band: `weekday_eve` **1.25×**
 - Overlay: 48h–7d **1.0×**
-- Total: `2 × 1.25 × 1.0 = 2.50` tokens reserved
+- Total: `200 × 1.25 × 1.0 = 250` tokens reserved
 
-Same slot reserved **30 hours** ahead: overlay **1.25×** → `2 × 1.25 × 1.25 = 3.13`.
+Same 2-hour slot reserved **30 hours** ahead: overlay **1.25×** → `200 × 1.25 × 1.25 = 312.50`.
 
 ---
 
@@ -157,5 +176,5 @@ Member-to-member hoist time trades/offers: bookings should not be glued to one m
 
 ---
 
-**Approved by:** Ben (2026-09-06 GO: bands primary, overlay on top, UI shows the math; Member balance + booking is a primary customer surface)  
+**Approved by:** Ben (2026-09-06 GO: bands primary, overlay on top, UI shows the math; Member balance + booking is a primary customer surface. 2026-09-06 recall: `base_tokens = hours × 100`; two tiers, Basic 400 / Pro 800 placeholders.)  
 **Maintained with:** `Docs/` in `Coombzy/Project-Car`

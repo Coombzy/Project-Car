@@ -7,14 +7,20 @@ Usage (from apps/project-car/api, venv active, after `alembic upgrade head`):
 
 `--reset` deletes members, hoists, bookings, token ledger rows, waitlist
 entries, and related operational rows, then inserts the demo set. Tiers are
-kept and refreshed to the Basic / Pro / Weekly placeholders.
+refreshed to the two Owner-editable placeholders (Basic / Pro). A leftover
+Weekly seed row is dropped.
 
 Default (no flag) upserts the demo IDs and rebuilds this week's sample
 bookings so a fresh or existing demo DB is never an empty shell.
 
+Base hoist rate (lock, `Docs/token-pricing.md`): **100 tokens per hour**.
+`final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier`.
+Demo booking `reserved_tokens` below are still small stand-in amounts until
+the API computes that duration rule. Do not treat them as live prices.
+
 This is sample data for localhost prospect walkthroughs. The shop is not
-open. There is no live payment processor. Shop members do not get Nextcloud
-accounts.
+open. There is no live payment processor (no Stripe). Shop members do not
+get Nextcloud accounts.
 """
 
 from __future__ import annotations
@@ -48,38 +54,43 @@ from app.shop_time import SHOP_TZ, shop_now
 
 SEED_NS = UUID("a11ce000-5e1d-4000-8000-000000000001")
 
+# Locked demo notes (Docs/token-pricing.md). Not public prices. No Stripe.
+# Reserve cost is duration × 100 × band × overlay — not an Owner-typed amount.
+BASE_TOKENS_PER_HOUR = 100
+
 
 def seed_id(*parts: str) -> UUID:
     return uuid5(SEED_NS, ":".join(parts))
 
 
+# Two tiers only. included_tokens are period allotments (Owner-editable
+# placeholders). Dollar prices here are leftover demo numbers, not live.
 PLACEHOLDER_TIERS = [
     {
         "name": "basic",
         "display_name": "Basic",
         "price": Decimal("150.00"),
-        "included_tokens": 4,
+        "included_tokens": 400,
         "booking_window_days": 14,
         "max_simultaneous_bookings": 1,
-        "notes": "Placeholder. Owner can edit. Not live pricing.",
+        "notes": (
+            "Placeholder. Owner can edit. Not live pricing. "
+            "Allotment 400 tokens/period. Base hoist rate is "
+            f"{BASE_TOKENS_PER_HOUR} tokens/hour."
+        ),
     },
     {
         "name": "pro",
         "display_name": "Pro",
         "price": Decimal("250.00"),
-        "included_tokens": 8,
+        "included_tokens": 800,
         "booking_window_days": 21,
         "max_simultaneous_bookings": 2,
-        "notes": "Placeholder. Owner can edit. Not live pricing.",
-    },
-    {
-        "name": "weekly",
-        "display_name": "Weekly",
-        "price": Decimal("80.00"),
-        "included_tokens": 2,
-        "booking_window_days": 7,
-        "max_simultaneous_bookings": 1,
-        "notes": "Placeholder. Owner can edit. Not live pricing.",
+        "notes": (
+            "Placeholder. Owner can edit. Not live pricing. "
+            "Allotment 800 tokens/period. Base hoist rate is "
+            f"{BASE_TOKENS_PER_HOUR} tokens/hour."
+        ),
     },
 ]
 
@@ -94,6 +105,23 @@ def _upsert_tier(session: Session, payload: dict) -> MembershipTier:
             setattr(row, key, value)
         session.add(row)
     return row
+
+
+def _retire_extra_tiers(session: Session) -> None:
+    """Drop seed leftovers (Weekly) so demo DBs match the two-tier lock."""
+    keep = {payload["name"] for payload in PLACEHOLDER_TIERS}
+    extras = session.scalars(select(MembershipTier).where(~MembershipTier.name.in_(keep))).all()
+    if not extras:
+        return
+    extra_names = [row.name for row in extras]
+    fallback = "basic"
+    for member in session.scalars(select(Member).where(Member.tier_name.in_(extra_names))).all():
+        member.tier_name = fallback
+        session.add(member)
+    session.flush()
+    for row in extras:
+        session.delete(row)
+    session.flush()
 
 
 def _upsert_hoist(session: Session, key: str, name: str, location: str, status: HoistStatus) -> Hoist:
@@ -276,7 +304,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         name="Riley Park",
         email="riley.park@example.com",
         phone="403-555-0103",
-        tier_name="weekly",
+        tier_name="basic",
         status=MemberStatus.ACTIVE,
         waiver_signed_at=waiver_at,
         waiver_version="2026-08-waiver",
@@ -315,7 +343,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
         name="Morgan Blake",
         email="morgan.blake@example.com",
         phone="403-555-0106",
-        tier_name="weekly",
+        tier_name="basic",
         status=MemberStatus.ACTIVE,
         waiver_signed_at=None,
         waiver_version=None,
@@ -325,29 +353,30 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     session.flush()
 
     demo_members = [ada, sam, riley, jordan, casey, morgan]
+    _retire_extra_tiers(session)
     _clear_member_activity(session, [row.id for row in demo_members])
     for member in demo_members:
         member.token_balance = Decimal("0")
         session.add(member)
     session.flush()
 
-    apply_ledger(session, ada, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("8"), note="Demo Pro allocation")
-    apply_ledger(session, sam, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("4"), note="Demo Basic allocation")
+    apply_ledger(session, ada, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("800"), note="Demo Pro allocation")
+    apply_ledger(session, sam, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("400"), note="Demo Basic allocation")
     apply_ledger(
         session,
         sam,
         kind=TokenTransactionKind.ADMIN_ADJUSTMENT,
-        amount=Decimal("-3"),
-        note="Demo: prior month usage (at-risk)",
+        amount=Decimal("-300"),
+        note="Demo: prior month usage",
     )
-    apply_ledger(session, riley, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("2"), note="Demo Weekly allocation")
-    apply_ledger(session, casey, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("4"), note="Demo Basic allocation")
-    apply_ledger(session, morgan, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("2"), note="Demo Weekly allocation")
+    apply_ledger(session, riley, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("400"), note="Demo Basic allocation")
+    apply_ledger(session, casey, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("400"), note="Demo Basic allocation")
+    apply_ledger(session, morgan, kind=TokenTransactionKind.MONTHLY_ALLOCATION, amount=Decimal("400"), note="Demo Basic allocation")
     apply_ledger(
         session,
         morgan,
         kind=TokenTransactionKind.ADMIN_ADJUSTMENT,
-        amount=Decimal("-2"),
+        amount=Decimal("-400"),
         note="Demo: used prior month (at-risk)",
     )
 
@@ -357,6 +386,8 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
 
     # Fill this calendar week so the Owner schedule is never an empty grid.
     # Past days are completed/cancelled (reserve released). Today and future hold reserve.
+    # reserved_tokens here are walkthrough stand-ins. Locked rule is
+    # hours × BASE_TOKENS_PER_HOUR (100); API does not compute that yet.
     week_slots = [
         {
             "key": "mon-casey",
@@ -535,7 +566,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     session.flush()
     booking_count = session.scalar(select(func.count()).select_from(Booking)) or 0
     return {
-        "tiers": 3,
+        "tiers": len(PLACEHOLDER_TIERS),
         "members": len(demo_members),
         "hoists": 3,
         "bookings": int(booking_count),
