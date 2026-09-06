@@ -20,6 +20,7 @@ from app.models import (
     MemberStatus,
     TokenTransactionKind,
 )
+from app.services.fill import resolve_fill_for_slot
 from app.services.pricing import PricingError, quote_reserve
 from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
@@ -95,8 +96,9 @@ def preview_reserve(
     """Return (quote, token_balance, token_balance_after). Balances are None without a member."""
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
+    fill = resolve_fill_for_slot(session, start_at, end_at)
     try:
-        quote = quote_reserve(start_at, end_at)
+        quote = quote_reserve(start_at, end_at, fill=fill)
     except PricingError as exc:
         raise _error(400, exc.code, exc.message) from exc
     if member_id is None:
@@ -140,8 +142,9 @@ def create_booking(
     if member_id is None:
         raise _error(400, "member_required", "Customer bookings need a member.")
 
+    fill = resolve_fill_for_slot(session, start_at, end_at)
     try:
-        quote = quote_reserve(start_at, end_at)
+        quote = quote_reserve(start_at, end_at, fill=fill)
     except PricingError as exc:
         raise _error(400, exc.code, exc.message) from exc
     tokens = quote.final_reserve_cost

@@ -28,8 +28,8 @@ It is **not** Mission Control. Mission Control is Ben’s private cockpit over N
 
 | Host | Audience | Role |
 |------|----------|------|
-| `projectcar.ca` / `www` | **Customer app** — public today; Members next | Brochure, membership story, contact, waitlist (**live**). Member self-serve booking / balance **migrates here** as a follow-up slice. Apex chat **deferred**. Do **not** claim that Member UI is on this host yet. |
-| `ops.projectcar.ca` | **LIVE management hostname** — staff on shift + Owner | Ops management UI. Staff will use this host (OIDC later). Owner uses it too. Do **not** call this an Owner-only host. Zone tunnel v8 `ops` → `http://127.0.0.1:3000`. Public `/` → `https://ops.projectcar.ca/login` (no localhost hop); `/login` **200**. |
+| `projectcar.ca` / `www` | **Customer app** — public today; Members next | Brochure, membership story, contact, waitlist (**live**). Member self-serve booking / balance **migrates here** as a follow-up slice. Apex chat **deferred**. Do **not** claim that Member UI is on this host yet. Do **not** build that customer app in the fill-gaps slice. |
+| `ops.projectcar.ca` | **LIVE management hostname** — staff on shift + Owner | Ops management UI (fill preview / send, hoists, ledgers). Staff will use this host (OIDC later). Owner uses it too. Do **not** call this an Owner-only host. Zone tunnel v8 `ops` → `http://127.0.0.1:3000`. Public `/` → `https://ops.projectcar.ca/login` (no localhost hop); `/login` **200**. **No DNS cut in this PR.** |
 | `app.projectcar.ca` | **Temporary alias** until Ben cuts this DNS | Still live on the same Doc `:3000` shop UI. Member demo **still lives** at `/member` on the shop UI (reachable on `ops.` and `app.`) until the customer-host migration. Demo session cookies — not OIDC. The shop is not open. **Not removed.** |
 | `api.projectcar.ca` | Public waitlist + authenticated Owner / Member API | FastAPI. Tunnel → Doc `:8000`. **Lead owns Doc `:8000`.** |
 
@@ -226,10 +226,14 @@ Authenticated routes are role-aware: Owner session/bearer for admin; Member sess
 | `GET` | `/member/hoists` | Customer bays only (no shop hoist) |
 | `GET` | `/member/bookings` | Own bookings |
 | `GET` | `/member/schedule` | Customer-bay occupancy + own bookings |
-| `POST` | `/member/bookings/quote` | Duration × band × overlay for self |
+| `POST` | `/member/bookings/quote` | Duration × band × overlay × fill for self |
 | `POST` | `/member/bookings` | Create own customer booking (same reserve rules) |
 | `POST` | `/member/bookings/{id}/confirm` | Confirm own pending booking |
 | `POST` | `/member/bookings/{id}/cancel` | Cancel own booking, refund reserve |
+| `GET` | `/member/fill` | Next-day customer-bay openings + fill discount |
+| `GET` | `/fill/preview` | Owner: next-day openings, urgency, discount |
+| `POST` | `/fill/notify` | Owner: dry-run or send fill notices (outbox) |
+| `GET` | `/fill/outbox` | Owner: notification outbox |
 
 Errors: JSON `{ "error": { "code", "message" } }`. Validation via Pydantic. Overlap conflicts return `409`.
 

@@ -14,12 +14,13 @@ from __future__ import annotations
 
 import enum
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 
 from sqlalchemy import (
     Boolean,
+    Date,
     DateTime,
     Enum as SAEnum,
     ForeignKey,
@@ -113,6 +114,26 @@ class AccessEventType(str, enum.Enum):
     DENIED = "denied"
 
 
+class NotificationChannel(str, enum.Enum):
+    EMAIL = "email"
+    SMS = "sms"
+    PUSH = "push"
+
+
+class NotificationStatus(str, enum.Enum):
+    PENDING = "pending"
+    SENT = "sent"
+    FAILED = "failed"
+    DRY_RUN = "dry_run"
+    SKIPPED = "skipped"
+
+
+class FillOfferStatus(str, enum.Enum):
+    DRAFT = "draft"
+    PUBLISHED = "published"
+    CANCELLED = "cancelled"
+
+
 class MembershipTier(Base):
     """Membership plan. Prices and token allowances are data, not UI copy."""
 
@@ -199,6 +220,7 @@ class Member(Base):
         foreign_keys="Incident.reviewed_by_member_id",
         back_populates="reviewer",
     )
+    notifications: Mapped[list[NotificationOutbox]] = relationship(back_populates="member")
 
     def __repr__(self) -> str:
         return f"<Member(id={self.id!r}, email={self.email!r})>"
@@ -513,6 +535,84 @@ class AccessEvent(Base):
         return f"{self.event_type.value} @ {self.reader_location}"
 
 
+class FillOffer(Base):
+    """Owner-published next-day fill discount. One row per Regina calendar day."""
+
+    __tablename__ = "fill_offers"
+    __table_args__ = (UniqueConstraint("target_date", name="uq_fill_offers_target_date"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    target_date: Mapped[date] = mapped_column(Date, nullable=False)
+    window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    window_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    open_hours: Mapped[Decimal] = mapped_column(Numeric(12, 4), nullable=False, default=Decimal("0"))
+    booked_hours: Mapped[Decimal] = mapped_column(Numeric(12, 4), nullable=False, default=Decimal("0"))
+    capacity_hours: Mapped[Decimal] = mapped_column(Numeric(12, 4), nullable=False, default=Decimal("0"))
+    discount_pct: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False, default=Decimal("0"))
+    fill_multiplier: Mapped[Decimal] = mapped_column(Numeric(8, 4), nullable=False, default=Decimal("1"))
+    urgency: Mapped[str] = mapped_column(String(16), nullable=False, default="none")
+    status: Mapped[FillOfferStatus] = mapped_column(
+        _enum_column(FillOfferStatus),
+        nullable=False,
+        default=FillOfferStatus.DRAFT,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    notifications: Mapped[list[NotificationOutbox]] = relationship(back_populates="fill_offer")
+
+    def __repr__(self) -> str:
+        return f"<FillOffer(target_date={self.target_date!r}, discount_pct={self.discount_pct!r})>"
+
+
+class NotificationOutbox(Base):
+    """Durable notification queue. Adapters mark sent / skipped / failed."""
+
+    __tablename__ = "notification_outbox"
+    __table_args__ = (
+        Index("ix_notification_outbox_status_created", "status", "created_at"),
+        Index("ix_notification_outbox_member_created", "member_id", "created_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    channel: Mapped[NotificationChannel] = mapped_column(
+        _enum_column(NotificationChannel),
+        nullable=False,
+    )
+    member_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("members.id", ondelete="SET NULL")
+    )
+    fill_offer_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("fill_offers.id", ondelete="SET NULL")
+    )
+    to_address: Mapped[Optional[str]] = mapped_column(String(320))
+    subject: Mapped[Optional[str]] = mapped_column(String(240))
+    body: Mapped[Optional[str]] = mapped_column(Text)
+    payload: Mapped[Optional[dict]] = mapped_column(JsonObject)
+    status: Mapped[NotificationStatus] = mapped_column(
+        _enum_column(NotificationStatus),
+        nullable=False,
+        default=NotificationStatus.PENDING,
+    )
+    attempts: Mapped[int] = mapped_column(nullable=False, default=0)
+    last_error: Mapped[Optional[str]] = mapped_column(String(500))
+    dry_run: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    member: Mapped[Optional[Member]] = relationship(back_populates="notifications")
+    fill_offer: Mapped[Optional[FillOffer]] = relationship(back_populates="notifications")
+
+    def __repr__(self) -> str:
+        return f"<NotificationOutbox(id={self.id!r}, channel={self.channel!r}, status={self.status!r})>"
+
+
 ALL_MODELS = [
     MembershipTier,
     Member,
@@ -524,6 +624,8 @@ ALL_MODELS = [
     Incident,
     BillingTransaction,
     AccessEvent,
+    FillOffer,
+    NotificationOutbox,
 ]
 
 

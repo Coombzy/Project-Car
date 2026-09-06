@@ -62,7 +62,8 @@ export default async function SchedulePage({
         <h1>Schedule</h1>
         <p className="lede">
           Six bays — the shop hoist is Owner-only (v1 choice A). Customers
-          book the other five. Reserve cost is duration × 100 × band × overlay.
+          book the other five. Reserve cost is duration × 100 × band × overlay ×
+          fill.
           Complete debits; cancel refunds the locked reserve.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}

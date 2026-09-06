@@ -65,10 +65,66 @@ export type PricingRule = {
   overlay_id: string;
   overlay_label: string;
   advance_multiplier: string;
+  fill_id?: string;
+  fill_label?: string;
+  fill_multiplier?: string;
+  fill_discount_pct?: string;
   hours: string;
   base_tokens: string;
   final_reserve_cost: string;
   tz: string;
+};
+
+export type FillGap = {
+  hoist_id: string;
+  hoist_name: string;
+  start_at: string;
+  end_at: string;
+  hours: string;
+};
+
+export type FillPreview = {
+  target_date: string;
+  tz: string;
+  window_start: string;
+  window_end: string;
+  bay_count: number;
+  capacity_hours: string;
+  booked_hours: string;
+  open_hours: string;
+  open_ratio: string;
+  discount_pct: string;
+  fill_multiplier: string;
+  urgency: string;
+  applies: boolean;
+  gaps: FillGap[];
+  offer_id: string | null;
+  source: string;
+};
+
+export type NotificationOutbox = {
+  id: string;
+  channel: "email" | "sms" | "push";
+  member_id: string | null;
+  fill_offer_id: string | null;
+  to_address: string | null;
+  subject: string | null;
+  body: string | null;
+  payload: Record<string, unknown> | null;
+  status: "pending" | "sent" | "failed" | "dry_run" | "skipped";
+  attempts: number;
+  last_error: string | null;
+  dry_run: boolean;
+  sent_at: string | null;
+  created_at: string;
+};
+
+export type FillNotifyResult = {
+  preview: FillPreview;
+  dry_run: boolean;
+  published: boolean;
+  queued: number;
+  notifications: NotificationOutbox[];
 };
 
 export type Booking = {

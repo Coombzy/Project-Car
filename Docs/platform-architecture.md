@@ -16,8 +16,9 @@ The old stub `Architecture/Modular-Architecture.md` points here.
 ## 1. Two products, one repo
 
 ```
-projectcar.ca          Public brand + waitlist + brochure
-app.projectcar.ca      Project Car shop OS (Owner now; Staff + Members later)
+projectcar.ca          Customer app (brochure + waitlist now)
+ops.projectcar.ca      Management (not Owner-only). Planned; no DNS cut in fill-gaps
+app.projectcar.ca      Temporary alias for ops. Live today; not the intended name
 mc. / Tailscale        Mission Control cockpit — Ben only
 cloud. / :8080         Nextcloud — Ben's files/calendar/tasks
 vault. / :8222         Vaultwarden

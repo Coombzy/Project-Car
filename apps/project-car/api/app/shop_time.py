@@ -33,10 +33,37 @@ def shop_today() -> date:
     return shop_now().date()
 
 
+def pricing_now() -> datetime:
+    """Wall clock for fill / band-adjacent calendar math (America/Regina)."""
+    return datetime.now(PRICING_TZ)
+
+
+def pricing_today() -> date:
+    return pricing_now().date()
+
+
+def pricing_next_day(now: datetime | None = None) -> date:
+    current = (now or pricing_now()).astimezone(PRICING_TZ)
+    return current.date() + timedelta(days=1)
+
+
 def day_bounds(day: date) -> tuple[datetime, datetime]:
     start = datetime.combine(day, time.min, tzinfo=SHOP_TZ)
     end = start + timedelta(days=1)
     return start.astimezone(timezone.utc), end.astimezone(timezone.utc)
+
+
+def pricing_clock_window(
+    day: date,
+    start_clock: time,
+    end_clock: time,
+) -> tuple[datetime, datetime]:
+    """Half-open [start, end) window on a Regina calendar day, returned in UTC."""
+    start = datetime.combine(day, start_clock, tzinfo=PRICING_TZ)
+    end = datetime.combine(day, end_clock, tzinfo=PRICING_TZ)
+    if end <= start:
+        raise ValueError("Fill window end must be after start.")
+    return as_utc(start), as_utc(end)
 
 
 def week_monday(day: date | None = None) -> date:

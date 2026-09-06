@@ -15,16 +15,17 @@ This file is the lock. Owner booking now computes reserve in the API. Do not inv
 
 1. **PRIMARY — rate band.** Time-of-day / day-of-week in shop local TZ `America/Regina`. Owner-editable settings table.
 2. **OVERLAY — advance / last-minute.** Applied at **reserve time** on top of the band rate.
-3. **UI must show the math.** Band + overlay + total before confirm. Existing Shop OS UX must-haves stay (below).
+3. **FILL — next-day open-hour factor.** Explicit extra multiplier. Default **1.0**. Does **not** change band or overlay math.
+4. **UI must show the math.** Band + overlay + fill (when it applies) + total before confirm. Existing Shop OS UX must-haves stay (below).
 
 ```
 base_tokens = hours × 100
-final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier
+final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier × fill_multiplier
 ```
 
 **`base_tokens` is duration × 100.** One hundred tokens per hour of hoist time. Not an arbitrary Owner-entered reserve amount.
 
-`hours` is the booking duration (end − start) in shop-local time. Fractional hours are allowed (`1.5` → `150`). Order is locked: duration base, then band, then overlay. Show all three factors and the total before confirm. Lock the same numbers onto the reserve ledger row (`pricing_rule` in meta). Cancel / complete **refund or debit that reserved amount** — do not reprice if bands or overlays change later.
+`hours` is the booking duration (end − start) in shop-local time. Fractional hours are allowed (`1.5` → `150`). Order is locked: duration base, then band, then overlay, then fill. Band and overlay stay the locked tables below — fill is a separate factor, never folded into either. Show the factors and the total before confirm. Lock the same numbers onto the reserve ledger row (`pricing_rule` in meta). Cancel / complete **refund or debit that reserved amount** — do not reprice if bands, overlays, or fill offers change later.
 
 Bands and overlay never replace the append-only ledger. Owner create (`POST /bookings`) computes this in the API and ignores any client `tokens` field.
 
@@ -87,10 +88,10 @@ Token balance + hoist booking is a **primary Member** page — not ops-only admi
 
 | Who | What | Host |
 |-----|------|------|
-| **Owner / Staff** | Tiers, band / overlay settings, overrides, at-risk, everyone else's ledger. Still required. | Intended **`ops.projectcar.ca`**. Live today via temporary alias `app.projectcar.ca`. Do not call this an Owner-only host. |
-| **Member** | See their own balance, book / cancel within tier rules, see **band + overlay + total** on their schedule. | **Next:** **projectcar.ca**. **Today:** still `app.` `/member` (temporary alias). Not shipped on the customer host. |
+| **Owner / Staff** | Tiers, band / overlay / fill controls, overrides, at-risk, everyone else's ledger. Fill preview / dry-run / send lives here. | Intended **`ops.projectcar.ca`**. Live today via temporary alias `app.projectcar.ca`. Do not call this an Owner-only host. **No DNS cut in this PR.** |
+| **Member** | See their own balance, book / cancel within tier rules, see **band + overlay + fill + total** on their schedule when next-day openings apply. Fill **notify** targets members. | **Next:** **projectcar.ca**. **Today:** still `app.` `/member` (temporary alias). Not shipped on the customer host. |
 
-Member self-serve UI is **live on Doc demo and the temporary alias `https://app.projectcar.ca`** (`/member`, seed `ada.reyes@example.com`). Demo session cookie — **not OIDC**. The shop is not open. Do not claim Member UI is on projectcar.ca yet.
+Member self-serve UI is **live on Doc demo and the temporary alias `https://app.projectcar.ca`** (`/member`, seed `ada.reyes@example.com`). Demo session cookie — **not OIDC**. The shop is not open. Do not claim Member UI is on projectcar.ca yet. Fill controls stay on management (`ops.` intended; `app.` alias today). **No DNS cut in this slice.**
 
 ---
 
@@ -139,6 +140,39 @@ Same rule: Owner-editable placeholders, not public prices.
 
 ---
 
+## Fill the gaps (next-day openings)
+
+When **customer bays** have open hours **tomorrow** (`America/Regina`), Shop OS can discount those leftover slots so they fill. The shop hoist is excluded. Maintenance / locked bays do not count toward capacity.
+
+This is **not** a public brochure price. The shop is not open. Tokens only. **No Stripe.**
+
+**Window (Owner-configurable defaults):** next calendar day **08:00–21:00** America/Regina (13 hours × customer bays). Env: `FILL_DAY_START`, `FILL_DAY_END`, `FILL_MIN_DISCOUNT_PCT`, `FILL_MAX_DISCOUNT_PCT`.
+
+**Open hours** = capacity − overlapping pending/confirmed/active bookings on those bays, clipped to the window.
+
+**Discount selection (default):** more empty bay-hours → higher discount, linear in `[10%, 25%]`.
+
+```
+open_ratio = open_hours / capacity_hours
+discount_pct = 10 + 15 × open_ratio     # clamped to 10–25 when open_hours > 0
+fill_multiplier = 1 − discount_pct / 100
+```
+
+| Open ratio | Discount | `fill_multiplier` | Urgency |
+|------------|----------|-------------------|---------|
+| 0 (no gaps) | **none** — fill does not apply | **1.0** | none |
+| sliver | **10%** | **0.90** | low |
+| half empty | **17.5%** | **0.825** | medium |
+| fully empty | **25%** | **0.75** | high |
+
+Owner can override the discount in that 10–25% band when previewing / sending. Publishing a campaign **locks** that day's factor onto a `fill_offers` row; quotes then reuse the published number until the day rolls. Without a published offer, quotes use the live opening math.
+
+**When fill applies:** the booking window overlaps tomorrow's fill window **and** there are openings (or a published offer). Same-day and later-week slots stay `fill_multiplier = 1`. Shop work never takes fill (no tokens).
+
+Notify **active members** over a durable **notification outbox** (not the public brochure). v1 email path: SMTP when `SMTP_HOST` is set, otherwise an in-process stub that records `sent`. SMS and push are stub adapters (`sms_not_configured` / `push_not_configured`) so Twilio / Inbox can plug in later. Dry-run / send stays on **management** (`ops.` intended; `app.` temporary alias; Doc Shop OS `/fill` today). No DNS cut here. Do not ship fill UI or live prices on `projectcar.ca` Pages.
+
+---
+
 ## `pricing_rule` on ledger meta
 
 Every `booking_reserve` (and the matching debit / refund rows) stores the math. Never hide it.
@@ -152,6 +186,10 @@ Every `booking_reserve` (and the matching debit / refund rows) stores the math. 
     "overlay_id": "last_minute",
     "overlay_label": "Last-minute",
     "advance_multiplier": "1.25",
+    "fill_id": "none",
+    "fill_label": "No fill",
+    "fill_multiplier": "1",
+    "fill_discount_pct": "0",
     "hours": "2",
     "base_tokens": "200",
     "final_reserve_cost": "312.50",
@@ -166,8 +204,8 @@ Every `booking_reserve` (and the matching debit / refund rows) stores the math. 
 
 ## UX must-haves (non-optional)
 
-1. **Create booking.** Show `(hours × 100) × band × overlay = total`, balance **before** and **after**, plus **band label** and **overlay label**, before confirm / reserve.
-2. **Week schedule cells.** Band color + token-cost badge. Overlay chip when overlay ≠ 1.0.
+1. **Create booking.** Show `(hours × 100) × band × overlay × fill = total`, balance **before** and **after**, plus **band label**, **overlay label**, and **fill label** when fill ≠ 1.0, before confirm / reserve.
+2. **Week schedule cells.** Band color + token-cost badge. Overlay chip when overlay ≠ 1.0. Fill chip when fill ≠ 1.0.
 3. **Member detail.** Balance + recent ledger. **At-risk** when open reserved tokens **>** remaining (cached) free balance.
 4. **Cancel / complete.** Show refund or debit **inline** (the locked reserved amount).
 5. **Never hide math.** `pricing_rule` (band id + multipliers + factors + total) on ledger meta; surface it on the ledger, not only in a tooltip.
@@ -183,9 +221,12 @@ Tuesday 17:00 start, **2-hour** slot, reserved **20 hours** ahead.
 - Base: `2 × 100` = **200**
 - Band: `weekday_eve` **1.25×**
 - Overlay: 48h–7d **1.0×**
-- Total: `200 × 1.25 × 1.0 = 250` tokens reserved
+- Fill: none **1.0×**
+- Total: `200 × 1.25 × 1.0 × 1.0 = 250` tokens reserved
 
-Same 2-hour slot reserved **30 hours** ahead: overlay **1.25×** → `200 × 1.25 × 1.25 = 312.50`.
+Same 2-hour slot reserved **30 hours** ahead: overlay **1.25×** → `200 × 1.25 × 1.25 × 1.0 = 312.50`.
+
+Same last-minute slot on **tomorrow** when customer bays are fully open (25% fill): `200 × 1.25 × 1.25 × 0.75 = 234.38`.
 
 ---
 
@@ -200,7 +241,7 @@ Same 2-hour slot reserved **30 hours** ahead: overlay **1.25×** → `200 × 1.2
 
 ## Next (not a v1 table change)
 
-**Next-day open-slot fill** (Ben GO 2026-09-06 ~12:22): leftover hours get a **10–25%** discount; urgency drives the cut inside that range. Members are notified (email / push / SMS). This is **not** a rewrite of the locked advance overlay table above. Do not invent a third v1 multiplier or ship fill from a docs PR.
+**Next-day open-slot fill** ships as the explicit `fill_multiplier` above (Ben GO 2026-09-06). Leftover hours get a **10–25%** discount; urgency drives the cut. Members are notified (email stub / later push / SMS). This is **not** a rewrite of the locked advance overlay table. Management `/fill` on Doc demo; **no DNS cut**.
 
 ---
 
@@ -208,6 +249,7 @@ Same 2-hour slot reserved **30 hours** ahead: overlay **1.25×** → `200 × 1.2
 
 - **(B) bumpable shop hoist** — customer overflow on the shop hoist, with shop/business work able to override / displace (cancel + refund). Not v1.
 - Member-to-member hoist time trades/offers: bookings should not be glued to one member forever (transferable booking or trade-offer entity). Design note only — do not design the trade system here, and do not put trades in v1 pricing rules.
+- Live SMS (Twilio / Inbox) and push adapters — v1 ships interfaces + skipped outbox rows only.
 
 ---
 

@@ -89,7 +89,10 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `GET/POST` | `/members/{id}/tokens` | Owner | Ledger / admin adjustment |
 | `GET/POST` | `/hoists` | Owner | List / create |
 | `PATCH` | `/hoists/{id}` | Owner | Status, labels |
-| `POST` | `/bookings/quote` | Owner | Duration × band × overlay preview |
+| `POST` | `/bookings/quote` | Owner | Duration × band × overlay × fill preview |
+| `GET` | `/fill/preview` | Owner | Next-day customer-bay openings + fill discount |
+| `POST` | `/fill/notify` | Owner | Dry-run or send fill notices (email stub / SMTP) |
+| `GET` | `/fill/outbox` | Owner | Notification outbox |
 | `GET/POST` | `/bookings` | Owner | List (hoist/member/window) / create (server computes reserve) |
 | `POST` | `/bookings/{id}/confirm` | Owner | Pending → confirmed (overlap → 409) |
 | `POST` | `/bookings/{id}/check-in` | Owner | → active |
@@ -100,7 +103,8 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `GET` | `/member/hoists` | Member | Customer bays only |
 | `GET` | `/member/bookings` | Member | Own bookings |
 | `GET` | `/member/schedule` | Member | Customer-bay occupancy + own bookings |
-| `POST` | `/member/bookings/quote` | Member | Duration × band × overlay for self |
+| `GET` | `/member/fill` | Member | Next-day openings + fill discount |
+| `POST` | `/member/bookings/quote` | Member | Duration × band × overlay × fill for self |
 | `POST` | `/member/bookings` | Member | Create own customer booking |
 | `POST` | `/member/bookings/{id}/confirm` | Member | Confirm own pending booking |
 | `POST` | `/member/bookings/{id}/cancel` | Member | Cancel own booking, refund reserve |
@@ -139,7 +143,7 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 ### Booking / token rules (spec §5)
 
 1. A hoist has at most one overlapping **confirmed** or **active** booking (`409 hoist_overlap`).
-2. Creating a **customer** booking **reserves** tokens (`booking_reserve`, negative) and starts `pending`. The API computes `reserved_tokens` from duration (`hours × 100 × band × overlay`) and ignores a client `tokens` field. The quote is stored on `booking.pricing_rule` and ledger `meta`. Shop work (`kind=shop`) skips the ledger.
+2. Creating a **customer** booking **reserves** tokens (`booking_reserve`, negative) and starts `pending`. The API computes `reserved_tokens` from duration (`hours × 100 × band × overlay × fill`) and ignores a client `tokens` field. The quote is stored on `booking.pricing_rule` and ledger `meta`. Shop work (`kind=shop`) skips the ledger. Fill applies only to next-day customer-bay openings (`token-pricing.md`).
 3. Completing an active booking releases the reserve, then **debits** used tokens (`booking_debit`) and **refunds** any unused reserve (`booking_refund`).
 4. Cancel refunds remaining reserve. `member.token_balance` is a cached ledger sum — never changed without a row.
 5. Tier `included_tokens`, `booking_window_days`, and `max_simultaneous_bookings` are enforced in the API.
@@ -147,7 +151,7 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 
 ## Domain
 
-Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work.
+Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work. `20260906_0005` adds `fill_offers` and `notification_outbox`.
 
 Membership tier seed rows (Basic 1000 / Premium 1500) are placeholders only. Two tiers in fixtures.
 

@@ -18,6 +18,7 @@ from app.models import Booking, BookingKind, Hoist, Member, TokenTransaction
 from app.schemas import (
     BookingOut,
     BookingQuoteOut,
+    FillPreviewOut,
     HoistOut,
     MemberBookingCreate,
     MemberBookingQuoteRequest,
@@ -28,6 +29,7 @@ from app.schemas import (
     TokenTransactionOut,
 )
 from app.services import bookings as booking_service
+from app.services.fill import snapshot_next_day
 from app.shop_time import as_utc
 
 router = APIRouter(prefix="/member", tags=["member"])
@@ -187,6 +189,11 @@ def member_schedule(
         bookings=own,
         occupancy=occupancy,
     )
+
+
+@router.get("/fill", response_model=FillPreviewOut)
+def member_fill(session: DbSession, _principal: MemberUser) -> FillPreviewOut:
+    return FillPreviewOut.from_snapshot(snapshot_next_day(session))
 
 
 @router.post("/bookings/quote", response_model=BookingQuoteOut)

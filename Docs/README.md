@@ -18,7 +18,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 | [master-overview-specification.md](master-overview-specification.md) | Vision and map |
 | [platform-architecture.md](platform-architecture.md) | Monorepo, stack, bans |
 | [project-car-application-specification.md](project-car-application-specification.md) | Shop product v1 (waitlist + Owner hoist booking) |
-| [token-pricing.md](token-pricing.md) | Shop OS token pricing v1 (bands + overlay; Owner-editable defaults) |
+| [token-pricing.md](token-pricing.md) | Shop OS token pricing v1 (bands + overlay + fill; Owner-editable defaults) |
 | [mission-control-architecture.md](mission-control-architecture.md) | Ben-only cockpit over Nextcloud |
 | [integration-plan.md](integration-plan.md) | How the pieces connect |
 | [high-level-apps-and-business-specification.md](high-level-apps-and-business-specification.md) | Two products + later fitness widget |

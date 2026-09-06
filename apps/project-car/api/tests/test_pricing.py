@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from app.services.pricing import quote_reserve
+from app.services.pricing import FillFactor, quote_reserve
 from app.shop_time import PRICING_TZ
 
 
@@ -86,3 +86,27 @@ def test_overlay_boundaries_seven_days_and_forty_eight_hours() -> None:
     assert exactly_48.overlay.id == "standard"
     assert just_under_48.overlay.id == "last_minute"
     assert just_under_48.final_reserve_cost == Decimal("125.00")
+
+
+def test_fill_factor_stacks_on_band_and_overlay() -> None:
+    start = _at(2026, 9, 8, 17)
+    end = start + timedelta(hours=2)
+    reserved_at = start - timedelta(hours=30)
+    fill = FillFactor(
+        id="next_day_open",
+        label="Fill the gaps 25%",
+        multiplier=Decimal("0.75"),
+        discount_pct=Decimal("25"),
+    )
+    quote = quote_reserve(start, end, reserved_at=reserved_at, fill=fill)
+    assert quote.band.multiplier == Decimal("1.25")
+    assert quote.overlay.multiplier == Decimal("1.25")
+    assert quote.fill.multiplier == Decimal("0.75")
+    assert quote.final_reserve_cost == Decimal("234.38")
+    rule = quote.as_rule()
+    assert rule["fill_multiplier"] == "0.75"
+    assert rule["fill_discount_pct"] == "25"
+    assert rule["advance_multiplier"] == "1.25"
+    unchanged = quote_reserve(start, end, reserved_at=reserved_at)
+    assert unchanged.final_reserve_cost == Decimal("312.50")
+    assert unchanged.fill.id == "none"

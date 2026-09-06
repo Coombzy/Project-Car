@@ -36,6 +36,18 @@ class Settings(BaseSettings):
         "https://projectcar.ca,https://www.projectcar.ca"
     )
     pc_waitlist: bool = True
+    # Next-day fill-the-gaps defaults (America/Regina). Owner can override per send.
+    fill_min_discount_pct: float = 10
+    fill_max_discount_pct: float = 25
+    fill_day_start: str = "08:00"
+    fill_day_end: str = "21:00"
+    # Email outbox. Empty SMTP_HOST uses the durable stub (records sent, no network).
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "shop@projectcar.ca"
+    smtp_use_tls: bool = True
 
     @field_validator("owner_email", mode="before")
     @classmethod

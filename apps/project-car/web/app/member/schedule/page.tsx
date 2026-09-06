@@ -5,7 +5,7 @@ import { MemberBookingForm } from "../../../components/member-booking-form";
 import { MemberShell } from "../../../components/member-shell";
 import { StatusPill } from "../../../components/status-pill";
 import { handleMemberPageError } from "../../../lib/page";
-import { getMemberMe, getMemberSchedule } from "../../../lib/shop-api";
+import { getMemberFill, getMemberMe, getMemberSchedule } from "../../../lib/shop-api";
 import {
   addDays,
   formatShopTime,
@@ -39,12 +39,13 @@ export default async function MemberSchedulePage({
     const days = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
     const today = shopTodayIso();
 
-    const [me, schedule] = await Promise.all([
+    const [me, schedule, fill] = await Promise.all([
       getMemberMe(),
       getMemberSchedule({
         windowStart: `${weekStart}T00:00:00`,
         windowEnd: `${weekEnd}T00:00:00`,
       }),
+      getMemberFill(),
     ]);
 
     return (
@@ -52,10 +53,17 @@ export default async function MemberSchedulePage({
         <p className="eyebrow">Your week · America/Edmonton</p>
         <h1>Schedule</h1>
         <p className="lede">
-          Customer bays only. Reserve is duration × 100 × band × overlay. Cancel
-          refunds the locked reserve. The shop hoist is not on this grid.
+          Customer bays only. Reserve is duration × 100 × band × overlay × fill.
+          Cancel refunds the locked reserve. The shop hoist is not on this grid.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
+        {fill.applies ? (
+          <div className="banner empty">
+            Tomorrow ({fill.target_date}, America/Regina) has {fill.open_hours} open
+            customer-bay hours. Next-day open slots take a {fill.discount_pct}% fill
+            discount (× {fill.fill_multiplier}). Not a public price.
+          </div>
+        ) : null}
 
         <div className="week-nav">
           <Link className="button ghost" href={`/member/schedule?week=${addDays(weekStart, -7)}`}>
@@ -167,7 +175,7 @@ export default async function MemberSchedulePage({
         <section className="card" style={{ marginTop: "1.4rem" }}>
           <h2>Book a customer bay</h2>
           <p className="lede">
-            Quote shows band + overlay + total before reserve. Book confirms the
+            Quote shows band + overlay + fill + total before reserve. Book confirms the
             slot. You cannot book the shop hoist.
           </p>
           {schedule.hoists.length === 0 ? (

@@ -6,12 +6,15 @@ import {
   type Booking,
   type BookingQuote,
   type Dashboard,
+  type FillNotifyResult,
+  type FillPreview,
   type Hoist,
   type Member,
   type MemberDetail,
   type MemberSchedule,
   type MemberSelf,
   type MembershipTier,
+  type NotificationOutbox,
   type Principal,
   type TokenTransaction,
   type WaitlistEntry,
@@ -240,6 +243,29 @@ export async function cancelBooking(id: string): Promise<Booking> {
   return shopJson<Booking>(`/bookings/${id}/cancel`, "Could not cancel the booking.", { method: "POST" });
 }
 
+export async function previewFill(discountPct?: string): Promise<FillPreview> {
+  const query = new URLSearchParams();
+  if (discountPct) query.set("discount_pct", discountPct);
+  const suffix = query.size ? `?${query.toString()}` : "";
+  return shopJson<FillPreview>(`/fill/preview${suffix}`, "Could not preview next-day openings.");
+}
+
+export async function listFillOutbox(): Promise<NotificationOutbox[]> {
+  return shopJson<NotificationOutbox[]>("/fill/outbox", "Could not load the notification outbox.");
+}
+
+export async function notifyFill(payload: {
+  dry_run: boolean;
+  discount_pct?: string;
+  channels: string[];
+}): Promise<FillNotifyResult> {
+  return shopJson<FillNotifyResult>("/fill/notify", "Could not queue fill notifications.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
 async function memberFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const token = await readMemberSessionToken();
   const headers = new Headers(init.headers);
@@ -316,6 +342,10 @@ export async function listMemberHoists(): Promise<Hoist[]> {
   return memberJson<Hoist[]>("/member/hoists", "Could not load customer bays.");
 }
 
+
+export async function getMemberFill(): Promise<FillPreview> {
+  return memberJson<FillPreview>("/member/fill", "Could not load tomorrow's fill openings.");
+}
 
 export async function getMemberSchedule(params?: {
   windowStart?: string;
