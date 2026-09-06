@@ -37,6 +37,19 @@ Order is locked: base, then band, then overlay. Show all three factors and the t
 
 ---
 
+## Surfaces
+
+Token balance + hoist booking is a **primary Member** page — not Owner-only admin. Pricing math applies to **Member bookings** the same as Owner-created ones.
+
+| Who | What |
+|-----|------|
+| **Owner** | Tiers, band / overlay settings, overrides, at-risk, everyone else's ledger. Still required. |
+| **Member** | See their own balance, book / cancel within tier rules, see **band + overlay + total** on their schedule. |
+
+Member self-serve UI is **not live**. Lock the surfaces now so the next product slice is not a vague v2 dump.
+
+---
+
 ## Default bands (Owner-editable placeholders)
 
 Hours are **approximate defaults**. Multipliers are placeholders Ben can edit in the settings table. Do not treat them as public prices.
@@ -138,5 +151,5 @@ Same slot reserved **30 hours** ahead: overlay **1.25×** → `2 × 1.25 × 1.25
 
 ---
 
-**Approved by:** Ben (2026-09-06 GO: bands primary, overlay on top, UI shows the math)  
+**Approved by:** Ben (2026-09-06 GO: bands primary, overlay on top, UI shows the math; Member balance + booking is a primary customer surface)  
 **Maintained with:** `Docs/` in `Coombzy/Project-Car`
