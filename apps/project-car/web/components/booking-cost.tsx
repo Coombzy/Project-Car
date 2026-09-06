@@ -9,9 +9,10 @@ export function BookingCost({
   pricingRule?: PricingRule | null;
 }) {
   const overlay = pricingRule && overlayIsNonStandard(pricingRule.advance_multiplier);
+  const cost = pricingRule?.final_reserve_cost ?? reservedTokens;
   return (
     <div className="booking-cost">
-      <span className="token-badge">{tokensLabel(reservedTokens)} tok</span>
+      <span className="token-badge">{tokensLabel(cost)} tok</span>
       {pricingRule ? (
         <span className={`band-chip band-${pricingRule.band_id}`}>{pricingRule.band_label}</span>
       ) : null}
