@@ -316,9 +316,6 @@ export async function listMemberHoists(): Promise<Hoist[]> {
   return memberJson<Hoist[]>("/member/hoists", "Could not load customer bays.");
 }
 
-export async function listMemberTokens(): Promise<TokenTransaction[]> {
-  return memberJson<TokenTransaction[]>("/member/tokens", "Could not load your token ledger.");
-}
 
 export async function getMemberSchedule(params?: {
   windowStart?: string;
