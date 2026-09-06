@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { MEMBER_SESSION_COOKIE, SESSION_COOKIE } from "./lib/config";
+import { publicUrl } from "./lib/request-origin";
+
+function redirectTo(request: NextRequest, path: string): URL {
+  return publicUrl(request.headers, request.url, path);
+}
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -13,14 +18,14 @@ export function middleware(request: NextRequest) {
 
   if (isMemberLogin) {
     if (memberSession) {
-      return NextResponse.redirect(new URL("/member", request.url));
+      return NextResponse.redirect(redirectTo(request, "/member"));
     }
     return NextResponse.next();
   }
 
   if (isMemberArea) {
     if (!memberSession) {
-      const login = new URL("/member/login", request.url);
+      const login = redirectTo(request, "/member/login");
       login.searchParams.set("next", path);
       return NextResponse.redirect(login);
     }
@@ -28,13 +33,13 @@ export function middleware(request: NextRequest) {
   }
 
   if (!ownerSession && !isOwnerLogin) {
-    const login = new URL("/login", request.url);
+    const login = redirectTo(request, "/login");
     login.searchParams.set("next", path);
     return NextResponse.redirect(login);
   }
 
   if (ownerSession && isOwnerLogin) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(redirectTo(request, "/"));
   }
 
   return NextResponse.next();
