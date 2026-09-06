@@ -261,13 +261,15 @@ Staff-on-shift / ops shell. **LIVE** host **`ops.projectcar.ca`**. Temporary ali
 3. **Members** — table + detail (tier, tokens, waiver, bookings).
 4. **Waitlist** — convert-to-member is a later button; v1 can be “mark contacted”.
 5. **Tiers / settings** — edit allowances.
-6. **Parts (placeholder)** — ops stand-in for the member/customer parts desk. Not live purchasing.
-7. **Job board (placeholder)** — sample shop tasks. Claim / assign / complete Later.
-8. **Cameras (placeholder)** — every camera tile, door entry logs, AI collection stubs. Not live Frigate.
+6. **Parts (ops placeholder)** — shop/parts **purchasing tracker** (POs, incoming, vendor). Distinct from the member Parts desk. Not live purchasing.
+7. **Tools (ops placeholder)** — inventory, orders, member requests, planned purchases. IA only. Not on Member nav.
+8. **Job board (placeholder)** — sample shop upkeep with **token bounties**. Claim / assign / complete Later.
+9. **Cameras (placeholder)** — every camera tile, door entry logs, AI collection stubs. Not live Frigate.
+10. **Payments (ops placeholder)** — membership + parts billing stubs. AI tracks by default; humans on exceptions. Not Stripe.
 
-**Build-breadth placeholders (locked IA, not shipped):** **Parts**, **Tools** (inventory, orders, customer/member requests, planned purchases), **job board** (shop chores; tokens on completion via ledger; Ops posts; members claim), **cameras** (members = one primary shop cam; ops = all cams + door entry logs + Frigate / AI collection). Member parts purchasing = placeholder now; full Later.
+**Build-breadth placeholders (locked IA, not shipped):** **Parts**, **Tools** (inventory, orders, customer/member requests, planned purchases), **job board** (shop chores; tokens on completion via ledger; Ops posts; members claim), **cameras** (members = one primary shop cam; ops = all cams + door entry logs + Frigate / AI collection), **Payments** (membership + parts; AI default, human on exceptions). Member parts purchasing = placeholder now; full Later.
 
-Ops screens exist under `apps/project-car/web` (dashboard, schedule, members, hoists, waitlist, tiers, plus Parts / Job board / Cameras placeholders). Member self-serve is **still** `/member` on the same Next.js app (balance + ledger) and `/member/schedule` (Bays 1–5, quote, book/cancel), plus customer-facing placeholders at `/member/parts`, `/member/jobs`, `/member/cameras` — reachable today at `https://ops.projectcar.ca/member` and `https://app.projectcar.ca/member` (temporary alias). Demo seed only — the shop is not open. Moving that customer surface to **projectcar.ca** is **Next** (§15). Do not claim it is shipped. See §16.
+Ops screens exist under `apps/project-car/web` (dashboard, schedule, members, hoists, waitlist, tiers, plus Parts / Tools / Job board / Cameras / Payments placeholders). Member self-serve is **still** `/member` on the same Next.js app (balance + ledger) and `/member/schedule` (Bays 1–5, quote, book/cancel), plus customer-facing placeholders at `/member/parts`, `/member/jobs`, `/member/cameras` — reachable today at `https://ops.projectcar.ca/member` and `https://app.projectcar.ca/member` (temporary alias). Demo seed only — the shop is not open. Moving that customer surface to **projectcar.ca** is **Next** (§15). Do not claim it is shipped. See §16.
 
 ---
 
@@ -348,7 +350,7 @@ Reality as of 2026-09-06 ~12:55 America/Edmonton. Do not invent Stripe or “sho
 
 - **Public waitlist:** `POST /waitlist` on the shop API; Membership / Contact form posts to `https://api.projectcar.ca/waitlist` (`apps/website/html/waitlist.js`). CORS allowlist includes brochure origins (`projectcar.ca` / `www`), localhost, **`https://ops.projectcar.ca`**, and the temporary alias **`https://app.projectcar.ca`**. See `cors-origins.md`.
 - **Ops API** (`apps/project-car/api`): auth session, tiers, members, hoists, bookings (create / confirm / check-in / complete / cancel), append-only token ledger, dashboard snapshot, waitlist list + mark contacted.
-- **Ops web** (`apps/project-car/web`): dashboard, schedule (month heat-map + weekly per-hoist hours), members, hoists, waitlist, tiers, fill, plus Parts / Job board / Cameras **placeholders**. Demo seed only. **LIVE** on `ops.`; temporary `app.` alias still up. Placeholders are not live purchasing or Frigate.
+- **Ops web** (`apps/project-car/web`): dashboard, schedule (month heat-map + weekly per-hoist hours), members, hoists, waitlist, tiers, fill, plus Parts / Tools / Job board / Cameras / Payments **placeholders**. Demo seed only. **LIVE** on `ops.`; temporary `app.` alias still up. Placeholders are not live purchasing, inventory, Frigate, or Stripe.
 - **Member self-serve** (`/member/me`, `/member/hoists`, `/member/schedule`): session cookie, own balance + ledger, quote + book/confirm/cancel on customer bays. **Live on Doc demo, `https://ops.projectcar.ca`, and the temporary alias `https://app.projectcar.ca`.** Demo seed: `ada.reyes@example.com`. Shop hoist bay stays Owner-only. Customer-facing placeholders: `/member/parts`, `/member/jobs`, `/member/cameras` (primary camera only).
 - **Shop Postgres** in `infra/compose` (API is not a compose service).
 - **Live API edge:** `api.projectcar.ca` → Doc `:8000`. Stay-up is LaunchAgent `com.projectcar.shop-api` (KeepAlive) — `api-stay-up.md`. **Lead owns Doc `:8000`.** Public `GET /health` **200**.
@@ -436,17 +438,27 @@ Placeholders now (even rough): Parts, Tools, job board, cams, calendar / fill, m
 
 ---
 
-## 16. Parts, job board, cameras (Ben product locks 2026-09-06)
+## 16. Breadth-first placeholders (Ben product locks 2026-09-06)
 
 Additive locks. Do **not** rewrite §15 calendar / fill / host-migration work. No Stripe. The shop is not open. No live Frigate / Twilio. Do not cut the `app.` alias from this PR. `ops.` is already LIVE.
 
-### Parts purchasing (member / customer)
+**Build breadth (now):** get planned surfaces into the app as placeholders / rough IA so layout can be ironed out. Do not leave planned features out of the build for polish.
 
-Not v1 full build. A **temporary placeholder** on the customer-facing Member UI (`/member/parts` on `ops.` / temporary `app.` alias; migrates to projectcar.ca later) so people can see what the desk is about. Ops has a matching stand-in (`/parts`). Full purchase + eBay stay **Later**. Flag `pc.marketplace` stays **off**. See `project-car-integrated-marketplace-specification.md` / `eBay-Automation-Module-Spec.md` (do not implement from those files).
+**Ship-MVP cut (later gate):** before a public MVP, cut unfinished and unnecessary features. Do not ship every placeholder as the public product.
 
-### Job board
+### Parts — two surfaces
 
-Members perform shop chores (cleaning, tool maintenance, upkeep). Ops posts a **token bounty**; complete credits the append-only ledger — not Stripe. Full claim / complete / assign is **Later**. Placeholder board with **sample token amounts** ships now (`/jobs` ops, `/member/jobs` customer-facing).
+- **Member / customer** (`/member/parts` on `ops.` / temporary `app.`): temporary desk so people can see what parts purchasing is about. Not checkout.
+- **Ops** (`/parts`): shop/parts **purchasing tracker** (POs, incoming, vendor, shop stock vs member request). Distinct from the member catalog.
+- Full purchase + eBay stay **Later**. Flag `pc.marketplace` stays **off**. See marketplace / eBay specs (do not implement from those files).
+
+### Tools (ops only)
+
+`/tools` — four stubs: **inventory**, **orders**, **customer/member requests**, **planned purchases**. Breadth-first IA. Not live QR / hardware. Not on the Member nav.
+
+### Job board (token pay)
+
+Members perform shop upkeep (cleaning, tool maintenance, random tasks). **Ops posts** a job with a **token bounty**. On complete, tokens credit the member’s account on the **append-only token ledger** — same token system as hoist booking, **not Stripe**. Full claim / complete / assign is **Later**. Placeholder board **must show sample token amounts** (`/jobs` ops, `/member/jobs` customer-facing).
 
 ### Security cameras
 
@@ -456,7 +468,11 @@ Members perform shop chores (cleaning, tool maintenance, upkeep). Ops posts a **
 - Frigate (or an equivalent NVR) is the later tie-in for **feeds + AI events**. Occupancy from cameras is a **hint, not source of truth** (booking calendar still owns the bay). Door access logs are **ops-only**.
 - Do **not** invent a live Frigate integration in a placeholder PR. Flag `pc.cameras` stays **off** until real wiring exists.
 
+### Payments / billing (ops)
+
+`/payments` — track **membership payments** and **parts payments**. **AI tracks almost all of that by default**; humans are alerted when there are **issues (exceptions)**, not for every normal payment. Placeholder + Docs model. Full Stripe stays Later (`pc.payments` off). Token job bounties are the job-board ledger, not this Stripe-shaped table.
+
 ---
 
-**Approved by:** Ben (2026-08-12 direction: site + waitlist, and shop membership / hoist booking; customers + employees later). 2026-09-06 host split: customer = projectcar.ca; management = **ops.projectcar.ca** (LIVE ~12:55); `app.` = temporary alias (not removed). 2026-09-06 parts / job board / cameras: placeholders + Docs locks; full purchase, claim/complete, and live NVR stay Later.  
+**Approved by:** Ben (2026-08-12 direction: site + waitlist, and shop membership / hoist booking; customers + employees later). 2026-09-06 host split: customer = projectcar.ca; management = **ops.projectcar.ca** (LIVE ~12:55); `app.` = temporary alias (not removed). 2026-09-06 breadth-first placeholders: parts (member + ops), tools, job board (token bounty), cameras, payments (AI-exception). Full purchase, claim/complete, live NVR, and Stripe stay Later. Ship-MVP cut is a later gate.
 **Maintained with:** `Docs/` in `Coombzy/Project-Car`

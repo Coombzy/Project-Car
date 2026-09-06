@@ -30,7 +30,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 
 | Doc | What |
 |-----|------|
-| [STATUS.md](STATUS.md) | What’s live, what’s next, locks — start here for 2026-09-06 ~12:28 reality (customer = projectcar.ca; ops = management; `app.` = temporary alias). Parts / job board / cameras are placeholders; full purchase, claim/complete, and live Frigate stay Later. |
+| [STATUS.md](STATUS.md) | What’s live, what’s next, locks — start here for 2026-09-06 ~12:28 reality. Build breadth (placeholders OK) vs Ship-MVP cut (later gate). Parts / Tools / job board (token pay) / cameras / Payments are placeholders; Stripe, live Frigate, and full purchase stay Later. |
 | [token-pricing.md](token-pricing.md) | Token pricing lock (bands + overlay; Basic 1000 / Premium 1500; 6 hoists; shop hoist = Owner-only) |
 | [website-improvements.md](website-improvements.md) | P0–P4 backlog for projectcar.ca (tick status as work ships) |
 | [nextcloud-progress.md](nextcloud-progress.md) | Live hub status on Doc (no secrets) |

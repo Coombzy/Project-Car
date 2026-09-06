@@ -52,9 +52,9 @@ export function MemberShell({
       <div className="demo-banner">
         Temporary Member demo on this management alias — customer bays 1–5.
         Customer app is projectcar.ca. Intended management host is
-        ops.projectcar.ca. Parts, job board, and the primary shop camera are
-        labeled placeholders. The shop hoist is Owner-only. The shop is not
-        open.
+        ops.projectcar.ca. Parts, job board (token bounties), and the primary
+        shop camera are labeled placeholders. The shop hoist is Owner-only. The
+        shop is not open. This is not live pricing or Stripe.
       </div>
       <main className={wide ? "wide" : undefined}>{children}</main>
     </div>

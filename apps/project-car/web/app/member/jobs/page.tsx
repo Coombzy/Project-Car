@@ -31,12 +31,15 @@ function MemberJobsBody() {
       <p className="eyebrow">Customer-facing · placeholder</p>
       <h1>Job board</h1>
       <p className="lede">
-        Tasks that need doing around the shop — sweep, restock, sort. Claim and
-        complete stay Later. These are sample jobs so the board is visible.
+        Shop upkeep — cleaning, tool maintenance, random tasks. Ops posts each
+        job with a <strong>token bounty</strong>. Completing one credits your
+        token ledger (append-only, not Stripe). Claim / complete stay Later;
+        amounts are visible so the model is clear.
       </p>
       <PlaceholderNote>
         Customer-facing placeholder on temporary <code>app.</code>{" "}
-        <code>/member</code>. Buttons do not claim work.
+        <code>/member</code>. Sample bounties only. Buttons do not claim work or
+        move tokens.
       </PlaceholderNote>
       <JobBoard audience="member" />
     </>

@@ -31,14 +31,16 @@ function OpsJobsBody() {
       <p className="eyebrow">Ops · placeholder</p>
       <h1>Job board</h1>
       <p className="lede">
-        Members pick up tasks that need doing around the shop. Ops sees the same
-        sample board. Claim, assign, and complete stay Later — buttons do
-        nothing.
+        Ops posts shop upkeep (cleaning, tool maintenance, random tasks) with a{" "}
+        <strong>token bounty</strong>. When a member completes a job, tokens
+        credit their account on the append-only ledger — same token system as
+        hoist booking, not Stripe. Claim / complete stay Later; the bounty
+        column is the model lock.
       </p>
       <PlaceholderNote>
-        Sample tasks only. Not a live work-order system. Intended host{" "}
-        <code>ops.projectcar.ca</code> (today the temporary <code>app.</code>{" "}
-        alias).
+        Sample jobs with token amounts. Buttons do not post or assign. Not a
+        live work-order system. Intended host <code>ops.projectcar.ca</code>{" "}
+        (today the temporary <code>app.</code> alias).
       </PlaceholderNote>
       <JobBoard audience="ops" />
     </>

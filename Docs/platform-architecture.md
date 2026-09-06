@@ -110,7 +110,7 @@ Flags are for **product modules we might add**, not for swapping chat platforms.
 | `pc.waitlist` | on | Public waitlist API |
 | `pc.booking` | on | Hoist booking |
 | `pc.member_login` | off | Staff/Member OIDC |
-| `pc.payments` | off | Stripe |
+| `pc.payments` | off | Live Stripe / processor. Ops Payments **placeholder** (membership + parts; AI default, human on exceptions) is OK with the flag off. |
 | `pc.access_readers` | off | NFC/FOB. Door **entry logs** are an ops-only surface; live readers stay Later. |
 | `pc.cameras` | off | Live **Frigate (or equivalent NVR)** feeds + AI events. Occupancy is a **hint, not source of truth**. Members: **one primary shop camera**. Ops (`ops.` / temp `app.`): **every** camera + door entry logs + AI collection. Placeholder pages exist without this flag. Do not invent live NVR wiring while the flag is off. |
 | `pc.marketplace` | off | Full eBay / parts **purchase**. Customer-facing parts **placeholder** is OK with the flag off. Do not ship checkout or eBay adapters until this flag is on. |

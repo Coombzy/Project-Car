@@ -52,9 +52,11 @@ npm run dev
 | Waitlist | http://localhost:3000/waitlist |
 | Tiers | http://localhost:3000/tiers |
 | Fill gaps | http://localhost:3000/fill |
-| Parts (placeholder) | http://localhost:3000/parts |
+| Parts (ops purchasing stub) | http://localhost:3000/parts |
+| Tools (ops placeholder) | http://localhost:3000/tools |
 | Job board (placeholder) | http://localhost:3000/jobs |
 | Cameras (placeholder) | http://localhost:3000/cameras |
+| Payments (ops placeholder) | http://localhost:3000/payments |
 | Member parts (placeholder) | http://localhost:3000/member/parts |
 | Member job board (placeholder) | http://localhost:3000/member/jobs |
 | Member camera (primary only) | http://localhost:3000/member/cameras |
@@ -71,7 +73,7 @@ The login screen is pre-filled and labeled as a **demo**. After `python -m app.s
 | Email | `owner@projectcar.ca` |
 | Password | `changeme` |
 
-These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (6 hoist cards including the Owner-only shop hoist, today's bookings, token-at-risk), Schedule (month heat-map, then week-by-hoist hour grids), Members (Basic / Premium), Hoists, Waitlist (mark contacted), Tiers (edit allowances), Fill gaps (next-day openings + notify), and the Parts / Job board / Cameras **placeholders** (not live purchasing or Frigate). Re-seed notes: 6 bays + one Owner-only shop hoist (v1 choice A).
+These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (6 hoist cards including the Owner-only shop hoist, today's bookings, token-at-risk), Schedule (month heat-map, then week-by-hoist hour grids), Members (Basic / Premium), Hoists, Waitlist (mark contacted), Tiers (edit allowances), Fill gaps (next-day openings + notify), and the Parts / Tools / Job board / Cameras / Payments **placeholders** (not live purchasing, inventory, Frigate, or Stripe). Re-seed notes: 6 bays + one Owner-only shop hoist (v1 choice A).
 
 ### Demo Member — Ada on localhost
 
@@ -96,4 +98,4 @@ Public hosts (`https://ops.projectcar.ca`, `https://app.projectcar.ca`) need **S
 
 ## Out of scope
 
-Website / apex / Cloudflare, Mission Control, Stripe live charges, NFC, live Frigate / NVR wiring, full parts purchase / eBay, job claim-complete, Member/Staff OIDC, n8n. Placeholder pages for Parts, Job board, and Cameras are in the demo UI only.
+Website / apex / Cloudflare, Mission Control, Stripe live charges, NFC, live Frigate / NVR wiring, full parts purchase / eBay, live tool inventory, job claim-complete, Member/Staff OIDC, n8n. Breadth-first placeholder pages (Parts, Tools, Job board, Cameras, Payments) are in the demo UI only.
