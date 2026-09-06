@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { createBookingAction } from "../app/schedule/actions";
 import type { BookingQuote, Hoist, Member } from "../lib/config";
 import { tokensLabel } from "../lib/time";
+import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
 
 type Props = {
   members: Member[];
@@ -12,9 +13,19 @@ type Props = {
   weekStart: string;
   defaultStart: string;
   defaultEnd: string;
+  defaultHoistId?: string;
+  returnTo: ScheduleReturn;
 };
 
-export function CreateBookingForm({ members, hoists, weekStart, defaultStart, defaultEnd }: Props) {
+export function CreateBookingForm({
+  members,
+  hoists,
+  weekStart,
+  defaultStart,
+  defaultEnd,
+  defaultHoistId,
+  returnTo,
+}: Props) {
   const [kind, setKind] = useState<"customer" | "shop">("customer");
   const [memberId, setMemberId] = useState(members[0]?.id ?? "");
   const [startAt, setStartAt] = useState(defaultStart);
@@ -71,7 +82,8 @@ export function CreateBookingForm({ members, hoists, weekStart, defaultStart, de
   const rule = quote?.pricing_rule;
 
   return (
-    <form action={createBookingAction} className="stack-form">
+    <form action={createBookingAction} className="stack-form" id="create-booking">
+      <ScheduleReturnFields returnTo={returnTo} />
       <input type="hidden" name="week" value={weekStart} />
       <div className="form-grid">
         <label>
@@ -102,7 +114,13 @@ export function CreateBookingForm({ members, hoists, weekStart, defaultStart, de
           <select
             name="hoist_id"
             required
-            defaultValue={kind === "shop" ? shopHoist?.id : hoistChoices[0]?.id}
+            defaultValue={
+              kind === "shop"
+                ? shopHoist?.id
+                : hoistChoices.some((hoist) => hoist.id === defaultHoistId)
+                  ? defaultHoistId
+                  : hoistChoices[0]?.id
+            }
             key={kind}
           >
             {hoistChoices.map((hoist) => (

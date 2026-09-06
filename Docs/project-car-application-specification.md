@@ -35,7 +35,7 @@ It is **not** Mission Control. Mission Control is Ben’s private cockpit over N
 
 Private Mission Control stays off the marketing domain (Tailscale / Access / a private hostname). Vaultwarden and Nextcloud stay off `projectcar.ca` apex.
 
-**Today (2026-09-06 ~12:55 America/Edmonton):** the public site is a multi-page brochure plus a real waitlist form. **`https://ops.projectcar.ca` is LIVE** (same Doc shop UI as `app.`). Ops booking (duration × band × overlay) and Member self-serve (session cookie + `/member/me` + Bays 1–5 schedule) are on `main` (`58827f0`, PR #16) **and live on Doc** (`:3000` / `:8000`) **and reachable via `https://ops.projectcar.ca` and the temporary alias `https://app.projectcar.ca`**. Member demo is still shop-UI `/member` — the move to projectcar.ca is **Next**, not shipped. Demo session cookies — not OIDC. HTTPS ops/app demo requires **Secure** cookies (`COOKIE_SECURE` / `SHOP_COOKIE_SECURE`). The shop is not open. Apex public chat is deferred (Ben). See §4 for **build-breadth (now)** vs **ship-MVP cut (later)**, §13 for shipped vs remaining, and §15 for Next locks (calendar redesign, next-day fill, Member host migration).
+**Today (2026-09-06 ~12:55 America/Edmonton):** the public site is a multi-page brochure plus a real waitlist form. **`https://ops.projectcar.ca` is LIVE** (same Doc shop UI as `app.`). Ops booking (duration × band × overlay × fill) and Member self-serve (session cookie + `/member/me` + Bays 1–5 schedule) are on `main` (`58827f0`, PR #16) **and live on Doc** (`:3000` / `:8000`) **and reachable via `https://ops.projectcar.ca` and the temporary alias `https://app.projectcar.ca`**. Member demo is still shop-UI `/member` — the move to projectcar.ca is **Next**, not shipped. Demo session cookies — not OIDC. HTTPS ops/app demo requires **Secure** cookies (`COOKIE_SECURE` / `SHOP_COOKIE_SECURE`). The shop is not open. Apex public chat is deferred (Ben). See §4 for **build-breadth (now)** vs **ship-MVP cut (later)**, §13 for shipped vs remaining, and §15 for Next locks (calendar redesign is this slice; fill is on `main` as #20; Member host migration stays Next).
 
 ---
 
@@ -256,7 +256,7 @@ Staff-on-shift / ops shell. **LIVE** host **`ops.projectcar.ca`**. Temporary ali
 **Shipped screens today** (do not invent more as shipped):
 
 1. **Dashboard** — hoist cards, today’s bookings, waitlist count, token-at-risk members.
-2. **Schedule (live today)** — combined week table: hoists as rows, days as columns. See §15 for the locked redesign (monthly heat-map; weekly = separate per-hoist hour grids). **Next / in flight — not shipped.**
+2. **Schedule (this slice)** — month heat-map (per-hoist density vs 08:00–21:00) that drills into a weekly hour grid per hoist (`America/Regina`). Owner sees Bays 1–5 plus the Owner-only shop hoist; Member sees customer bays only. Fill chips / quote math from #20 stay. **LIVE** host `ops.`; temporary `app.` alias still up. Do not claim the new grid live until merge.
 3. **Members** — table + detail (tier, tokens, waiver, bookings).
 4. **Waitlist** — convert-to-member is a later button; v1 can be “mark contacted”.
 5. **Tiers / settings** — edit allowances.
@@ -286,7 +286,7 @@ Mission Control does **not** own members, tokens, or hoist state.
 ### v1 (this spec — on `main`)
 
 - Waitlist on the public site (**Done**).
-- Ops shop OS: tiers, members, hoists, bookings, token ledger, dashboard + week schedule (**on `main`, live on Doc** `:3000`, **and** on **`https://ops.projectcar.ca`** plus the temporary alias `https://app.projectcar.ca`).
+- Ops shop OS: tiers, members, hoists, bookings, token ledger, dashboard + schedule (**on `main`, live on Doc** `:3000`, **and** on **`https://ops.projectcar.ca`** plus the temporary alias `https://app.projectcar.ca`). Schedule UX in this slice is month heat-map + weekly per-hoist hours (picks up after merge).
 - Member self-serve is **live on Doc demo, `ops.`, and the temporary `app.` alias** (PR #14 / `9baf3c4`; public host honors `main` `58827f0` / PR #16) — session cookie, own balance, book / cancel on Bays 1–5. Still on shop-UI `/member`. Still demo cookies — **not OIDC**. Secure cookies required on HTTPS ops/app. The shop is not open.
 - **Build-breadth placeholders** (locked IA, not shipped): Parts, Tools, job board, cams, calendar / fill shells, member surfaces. **Ship-MVP cut** later drops unfinished / unnecessary features.
 
@@ -294,10 +294,10 @@ Mission Control does **not** own members, tokens, or hoist state.
 
 Detail in §15. Summary:
 
-- **Calendar redesign** — monthly heat-map by hoist booking density; weekly = separate per-hoist hour grids. **Next / in flight — do not claim shipped.**
-- **Next-day open-slot fill** — notify members (email / push / SMS) with a **10–25%** discount on leftover hours; urgency drives the discount. **Next / in flight — do not claim shipped.**
+- **Calendar redesign (this slice)** — monthly heat-map by hoist booking density; weekly = separate per-hoist hour grids. Do not claim live until merge.
+- **Next-day open-slot fill** — on `main` (PR #20). Notify members (email stub / later push / SMS) with a **10–25%** fill factor on leftover hours; urgency drives the discount.
 - **Host migration** — Member customer surface → **projectcar.ca**. Management stays **`ops.`** (temporary `app.` alias still live). Do not claim this is shipped.
-- **Ben cuts the `app.` alias** — `ops.` is already LIVE; `app.` stays until Ben cuts that DNS. Not this docs PR.
+- **Ben cuts the `app.` alias** — `ops.` is already LIVE; `app.` stays until Ben cuts that DNS. Not this PR.
 - **Mission Control cockpit** still needs **Ben GO** before start. Do not start the cockpit from a docs PR.
 - Staff **OIDC** later (on **`ops.`**). Stripe later. Apex deferred. Do not dump the rest of v2 here.
 
@@ -342,7 +342,7 @@ Reality as of 2026-09-06 ~12:55 America/Edmonton. Do not invent Stripe or “sho
 
 - **Public waitlist:** `POST /waitlist` on the shop API; Membership / Contact form posts to `https://api.projectcar.ca/waitlist` (`apps/website/html/waitlist.js`). CORS allowlist includes brochure origins (`projectcar.ca` / `www`), localhost, **`https://ops.projectcar.ca`**, and the temporary alias **`https://app.projectcar.ca`**. See `cors-origins.md`.
 - **Ops API** (`apps/project-car/api`): auth session, tiers, members, hoists, bookings (create / confirm / check-in / complete / cancel), append-only token ledger, dashboard snapshot, waitlist list + mark contacted.
-- **Ops web** (`apps/project-car/web`): dashboard, week schedule, members, hoists, waitlist, tiers. Demo seed only. **LIVE** on `ops.`; temporary `app.` alias still up.
+- **Ops web** (`apps/project-car/web`): dashboard, schedule (month heat-map + weekly per-hoist hours after this slice), members, hoists, waitlist, tiers, fill. Demo seed only. **LIVE** on `ops.`; temporary `app.` alias still up.
 - **Member self-serve** (`/member/me`, `/member/hoists`, `/member/schedule`): session cookie, own balance + ledger, quote + book/confirm/cancel on customer bays. **Live on Doc demo, `https://ops.projectcar.ca`, and the temporary alias `https://app.projectcar.ca`.** Demo seed: `ada.reyes@example.com`. Shop hoist bay stays Owner-only.
 - **Shop Postgres** in `infra/compose` (API is not a compose service).
 - **Live API edge:** `api.projectcar.ca` → Doc `:8000`. Stay-up is LaunchAgent `com.projectcar.shop-api` (KeepAlive) — `api-stay-up.md`. **Lead owns Doc `:8000`.** Public `GET /health` **200**.
@@ -368,7 +368,7 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 - Payments later (v3). No Stripe now.
 - Token pricing: **spec-locked** (`token-pricing.md`) — `base_tokens = hours × 100`, then bands + overlay. Owner and Member booking use the same engine.
 - Mission Control cockpit still needs **Ben GO** before start. Ops + Member booking are already live on Doc demo **and** `ops.` / `app.`. Do not start the cockpit from a docs PR.
-- Calendar heat-map / weekly per-hoist / next-day fill — **Next / in flight**. Do not claim shipped.
+- Calendar heat-map / weekly per-hoist — **this slice (#18)**. Do not claim live until merge. Next-day fill is on `main` (PR #20).
 
 ### Implementation notes
 
@@ -393,7 +393,7 @@ Record decisions here when Ben makes them. Do not block v1 schema on them.
 
 ## 15. Next product locks (2026-09-06 ~12:22 / ~12:55)
 
-Ben GO ~12:22 (calendar, fill, Member host). Management hostname corrected via Master Chief to **`ops.`**. **`ops.` went LIVE ~12:55.** These calendar / fill / Member-host items are **Next**, not shipped. Calendar / fill are separate in-flight slices — do not start them from this docs PR. Do not claim them shipped unless already on `main`.
+Ben GO ~12:22 (calendar, fill, Member host). Management hostname corrected via Master Chief to **`ops.`**. **`ops.` went LIVE ~12:55.** Calendar redesign is **this slice** (not live until merge). Fill is on `main` (PR #20). Member-host migration stays **Next**. **No DNS cut** from this PR.
 
 ### Host split (repeat of §2)
 
@@ -401,14 +401,16 @@ Ben GO ~12:22 (calendar, fill, Member host). Management hostname corrected via M
 - **Management:** **`ops.projectcar.ca`** — **LIVE**. Staff on shift / ops UI. Owner uses it too. Staff OIDC later. Not an Owner-only host.
 - **`app.projectcar.ca`:** temporary alias until Ben cuts that DNS. Still live. Do not treat it as the intended name. **Not removed.**
 
-### Calendar redesign
+### Calendar redesign (this slice)
 
-Live today: one combined week table (`/schedule`, `/member/schedule`) — hoists as rows, days as columns.
+Was: one combined week table (`/schedule`, `/member/schedule`) — hoists as rows, days as columns.
 
-Locked Next / in flight (do **not** claim shipped):
+This slice:
 
-- **Monthly** — heat-map by hoist booking density (how full each hoist / day is).
-- **Weekly** — **separate per-hoist hour grids**, not the current combined table.
+- **Monthly** — heat-map by hoist booking density vs open hours 08:00–21:00 (`America/Regina`).
+- **Weekly** — **separate per-hoist hour grids**, not the old combined table.
+
+Owner includes the shop hoist (Owner-only); Member is Bays 1–5. Create / quote / cancel unchanged. Do not claim live on Doc / `app.` until merge.
 
 ### Next-day open-slot fill
 

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { memberCreateBookingAction } from "../app/member/schedule/actions";
 import type { BookingQuote, Hoist, MemberSelf } from "../lib/config";
 import { tokensLabel } from "../lib/time";
+import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
 
 type Props = {
   member: MemberSelf;
@@ -12,9 +13,19 @@ type Props = {
   weekStart: string;
   defaultStart: string;
   defaultEnd: string;
+  defaultHoistId?: string;
+  returnTo: ScheduleReturn;
 };
 
-export function MemberBookingForm({ member, hoists, weekStart, defaultStart, defaultEnd }: Props) {
+export function MemberBookingForm({
+  member,
+  hoists,
+  weekStart,
+  defaultStart,
+  defaultEnd,
+  defaultHoistId,
+  returnTo,
+}: Props) {
   const [startAt, setStartAt] = useState(defaultStart);
   const [endAt, setEndAt] = useState(defaultEnd);
   const [quote, setQuote] = useState<BookingQuote | null>(null);
@@ -63,12 +74,17 @@ export function MemberBookingForm({ member, hoists, weekStart, defaultStart, def
   const rule = quote?.pricing_rule;
 
   return (
-    <form action={memberCreateBookingAction} className="stack-form">
+    <form action={memberCreateBookingAction} className="stack-form" id="create-booking">
+      <ScheduleReturnFields returnTo={returnTo} />
       <input type="hidden" name="week" value={weekStart} />
       <div className="form-grid">
         <label>
           Bay
-          <select name="hoist_id" required defaultValue={bays[0]?.id}>
+          <select
+            name="hoist_id"
+            required
+            defaultValue={bays.some((hoist) => hoist.id === defaultHoistId) ? defaultHoistId : bays[0]?.id}
+          >
             {bays.map((hoist) => (
               <option key={hoist.id} value={hoist.id}>
                 {hoist.name} · {hoist.status}
