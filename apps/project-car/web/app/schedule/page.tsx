@@ -6,17 +6,17 @@ import { OwnerBookingCard } from "../../components/owner-booking-card";
 import { OwnerShell } from "../../components/owner-shell";
 import { ScheduleToolbar } from "../../components/schedule-toolbar";
 import { WeekHoistCalendars } from "../../components/week-hoist-calendars";
-import { handlePageError } from "../../lib/page";
+import { handlePageError, shopErrorMessage } from "../../lib/page";
 import { getMe, listBookings, listHoists, listMembers } from "../../lib/shop-api";
 import {
   addDays,
   calendarTodayIso,
   monthWindow,
-  naiveWindow,
   parseHoistParam,
   parseMonthParam,
   parseSlotParam,
   parseViewParam,
+  shopWindowQuery,
   slotEnd,
   sortHoists,
 } from "../../lib/calendar";
@@ -43,13 +43,36 @@ export default async function SchedulePage({
         : { start: weekStart, end: addDays(weekStart, 7) };
     const days = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
 
-    const [me, hoists, members, bookings] = await Promise.all([
-      getMe(),
-      listHoists(),
-      listMembers(),
+    let me;
+    try {
+      me = await getMe();
+    } catch (error) {
+      const message = await handlePageError(error);
+      return (
+        <OwnerShell current="schedule" wide>
+          <p className="eyebrow">Schedule</p>
+          <h1>Schedule</h1>
+          <div className="banner error">{message}</div>
+        </OwnerShell>
+      );
+    }
+
+    let loadError: string | null = null;
+    const [hoists, members, bookings] = await Promise.all([
+      listHoists().catch((error) => {
+        loadError = shopErrorMessage(error, "Could not load hoists.");
+        return [];
+      }),
+      listMembers().catch((error) => {
+        loadError = shopErrorMessage(error, "Could not load members.");
+        return [];
+      }),
       listBookings({
-        windowStart: naiveWindow(window.start),
-        windowEnd: naiveWindow(window.end),
+        windowStart: shopWindowQuery(window.start),
+        windowEnd: shopWindowQuery(window.end),
+      }).catch((error) => {
+        loadError = shopErrorMessage(error, "Could not load bookings.");
+        return [];
       }),
     ]);
 
@@ -73,6 +96,7 @@ export default async function SchedulePage({
           Complete debits; cancel refunds the locked reserve.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
+        {loadError ? <div className="banner error">{loadError}</div> : null}
 
         <ScheduleToolbar base="/schedule" view={view} weekStart={weekStart} month={month} hoist={hoistId} />
 
