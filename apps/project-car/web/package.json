@@ -6,7 +6,7 @@
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start --port 3000",
-    "test": "node --experimental-strip-types --test lib/request-origin.test.ts"
+    "test": "node --experimental-strip-types --test lib/request-origin.test.ts lib/cookie-secure.test.ts"
   },
   "dependencies": {
     "next": "^15.5.2",

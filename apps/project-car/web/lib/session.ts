@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 
+import { cookieSecure } from "./cookie-secure";
 import { MEMBER_SESSION_COOKIE, SESSION_COOKIE } from "./config";
 
 function extractNamedCookie(setCookieHeaders: string[], cookieName: string): string | null {
@@ -43,7 +44,7 @@ async function writeCookie(name: string, value: string, maxAge = 86_400): Promis
     value,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
     path: "/",
     maxAge,
   });

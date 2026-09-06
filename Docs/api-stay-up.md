@@ -75,3 +75,5 @@ Alerts can come from anyone who sees a 502 or a failed waitlist submit. **Recove
 6. **Garage — after.** When public health is 200, Garage may re-run brochure waitlist e2e. Form only. No process restarts.
 
 CORS / waitlist preflight after an `.env` change: `cors-origins.md`.
+
+Public HTTPS session cookies: KeepAlive `next dev` does not set NODE_ENV=production. Doc already uses `COOKIE_SECURE=true` (API) and `SHOP_COOKIE_SECURE=true` (shop UI) so Firefox will store cookies on `app.` / `ops.`. Local `http://127.0.0.1:3000` should leave those unset or false. See `apps/project-car/web/README.md`.
