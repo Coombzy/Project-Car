@@ -9,6 +9,7 @@
 **Site code:** `apps/website/` (git SSOT). **Live origin:** Cloudflare Worker `projectcar-brochure` Direct Upload of `apps/website/html` (not Doc `:8088` tunnel). Classic Pages git skipped for now. Apex is **deferred** (stripped from this tree).  
 **Related:**
 - `website-webapp-specification.md` — domain, tunnel, email, architecture (SSOT; do not dual-author a second plan under `apps/website/`)
+- `brochure-worker-deploy.md` — standing Zone Direct Upload of `apps/website/html` onto Worker `projectcar-brochure`
 - `api-stay-up.md` / `cors-origins.md` — public Shop API stay-up + waitlist CORS
 - Skill `project-car-web-copy` — public copy rules (tighten, no fake prices/dates)
 - Skill `project-car` — fleet / product context (public site ≠ Mission Control)

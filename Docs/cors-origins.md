@@ -2,7 +2,7 @@
 
 **Status:** Living ops  
 **Updated:** 2026-09-06 ~12:55 America/Edmonton  
-**Related:** `api-stay-up.md`, `member-host-cutover.md`, `apps/project-car/api/.env.example`, `apps/project-car/api/app/config.py`, `apps/website/html/waitlist.js`
+**Related:** `api-stay-up.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `apps/project-car/api/.env.example`, `apps/project-car/api/app/config.py`, `apps/website/html/waitlist.js`
 
 Browser waitlist from https://projectcar.ca must be allowed to call the Shop API. After any `.env` change, **Lead** restarts the API process on Doc.
 

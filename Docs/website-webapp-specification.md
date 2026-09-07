@@ -65,7 +65,8 @@ Mission Control (Nextcloud, Vaultwarden, future cockpit) is private and is not t
 |-------|--------|
 | **Git SSOT** | `apps/website/` in this repo (imported from Doc; Apex sidecar **stripped** for Pages) |
 | **Live origin today** | Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` from `main`. Not the Doc `:8088` tunnel. Classic Pages git skipped for now. |
-| **Brochure target** | **Cloudflare Pages** (GO’d; **not done** — blocked on CF ↔ GitHub auth). Shop API does **not** move to Pages. |
+| **Standing re-deploy** | `brochure-worker-deploy.md` — Zone Direct Upload of `apps/website/html`. Not Pages-git. |
+| **Brochure target** | **Cloudflare Pages** (GO’d; **not done** — blocked on CF ↔ GitHub auth). Shop API does **not** move to Pages. Do not invent that cutover from a brochure upload. |
 | **Optional local** | `docker compose` in `apps/website/` (nginx only; no Apex) → `http://localhost:8088` |
 
 Do not treat McKing as the brochure host plan. McKing remains the later hub for Nextcloud / mail / backups. The public brochure’s next home is Pages. Member self-serve is **not** on this Worker today — that migration is Next.

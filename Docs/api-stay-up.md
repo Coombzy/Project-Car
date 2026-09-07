@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-07  
 **Public URL:** https://api.projectcar.ca  
-**Related:** `cors-origins.md`, `member-host-cutover.md`, `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
+**Related:** `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
 
 Keep the Shop API reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 

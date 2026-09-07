@@ -3,7 +3,7 @@
 **Canonical:** `Coombzy/Project-Car` → `Docs/`  
 **Engineering clone:** `~/src/Project-Car/Docs/`  
 **Optional Desktop mirror:** `~/Desktop/Project Car/docs/` (read copy; do not author there)  
-**Updated:** 2026-09-06
+**Updated:** 2026-09-07
 
 `Coombzy/Automation/Docs/` is a **historical mirror**. Do not author product specs there.  
 `~/Desktop/Project-Car-Docs/` is **retired**.  
@@ -37,6 +37,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 | [doc-software-baseline.md](doc-software-baseline.md) | Doc M1 Max apps / settings |
 | [home-lab-specification.md](home-lab-specification.md) | Host lock card (stub — do not restore the July skill draft blindly) |
 | [api-stay-up.md](api-stay-up.md) | Keep https://api.projectcar.ca up (uvicorn on Doc; Zone owns tunnel). Brochure is Worker `projectcar-brochure`, not Doc `:8088`. |
+| [brochure-worker-deploy.md](brochure-worker-deploy.md) | Standing brochure re-deploy: Zone Direct Upload of `apps/website/html` onto Worker `projectcar-brochure`. Classic Pages git skipped. |
 | [cors-origins.md](cors-origins.md) | `CORS_ORIGINS` for brochure waitlist from https://projectcar.ca |
 | [member-host-cutover.md](member-host-cutover.md) | Member UI → projectcar.ca checklist (plan only; Ben GO before Garage/Zone). Linked from STATUS Next #1. |
 
@@ -68,7 +69,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 
 | Doc | Go here instead |
 |-----|-----------------|
-| [deployment-guide.md](deployment-guide.md) | platform + MC + nextcloud-progress |
+| [deployment-guide.md](deployment-guide.md) | Brochure re-deploy: `brochure-worker-deploy.md`. Else platform + MC + nextcloud-progress |
 | [phase-0-nextcloud-roadmap.md](phase-0-nextcloud-roadmap.md) | MC Phase A + nextcloud-progress |
 | [doc-nextcloud-headscale-setup-guide.md](doc-nextcloud-headscale-setup-guide.md) | Tailscale + MariaDB — not Headscale/Postgres |
 
