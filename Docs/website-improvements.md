@@ -133,7 +133,7 @@ Follow skill **project-car-web-copy**. Tighten; don’t rewrite the story. No fa
 | P4-2 | **Discord as equal CTA on Home/Membership** | open | Invite already works; surface it next to email. |
 | P4-3 | **YouTube / Skool links** | deferred | Post-MVP documenting the business build—only when channel/community URLs exist. |
 | P4-4 | **Analytics** | deferred | Privacy-friendly (e.g. CF Web Analytics) to see which CTA works. |
-| P4-5 | **Synthetic monitors** | deferred | Homepage 200 + Apex health + Discord invite check. |
+| P4-5 | **Synthetic monitors** | done | **Partial.** Lookout **`projectcar-api-health-watch`** owns API health flips (`https://api.projectcar.ca/health` — 200 when Doc origin is up; lid-close 502/530). Brochure homepage 200 optional. **Apex dropped** (sidecar deferred; do not monitor `/api/apex/health`). Discord invite check stays optional/deferred. Do not invent extra shipped monitors. Matches STATUS Lookout lock. |
 
 ---
 
@@ -196,6 +196,7 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 
 | Date | Change |
 |------|--------|
+| 2026-09-07 | P4-5 synthetic monitors **done / partial**: Lookout `projectcar-api-health-watch` live on `api.projectcar.ca/health`. Apex dropped (deferred). Brochure homepage 200 + Discord invite optional/deferred. Spec roadmap row 2 **Done** on Worker `projectcar-brochure`. |
 | 2026-09-06 | Reality sync ~16:16 America/Edmonton (`main` `afb37f9`): **`ops.projectcar.ca` LIVE** → Doc `:3000`; `app.` = temporary alias. Calendar #18 / fill #20 / placeholders #21 / inventory #26 / Chat #27 / Dashboard #28 are Live on Doc. Brochure Chat/Apex stay stripped. MC cockpit still needs Ben GO. No Stripe. The shop is not open. |
 | 2026-09-06 | Reality sync ~14:10 America/Edmonton (`main` `91c547e`): **`ops.projectcar.ca` LIVE** → Doc `:3000`; `app.` = temporary alias. Calendar #18 / fill #20 / placeholders #21 / schedule harden #24 are Live. Chat planned, not live (superseded ~16:16). MC cockpit still needs Ben GO. No Stripe. The shop is not open. |
 | 2026-09-06 | Reality sync ~12:28 America/Edmonton: host split locked — customer = projectcar.ca; management = **`ops.projectcar.ca`**; `app.` = temporary alias (live). Member UI on projectcar.ca is Next. No DNS cut. MC cockpit still needs Ben GO. No Stripe. The shop is not open. |
