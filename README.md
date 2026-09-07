@@ -4,7 +4,7 @@ Self-hosted shop + personal cockpit for a community automotive maker-space.
 
 | Surface | What | Who |
 |---------|------|-----|
-| [projectcar.ca](https://projectcar.ca) | **Customer** app (brochure + waitlist now) | Public / members later |
+| [projectcar.ca](https://projectcar.ca) | **Customer** app (brochure + waitlist now). Live origin: Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` — [`Docs/brochure-worker-deploy.md`](Docs/brochure-worker-deploy.md). Optional local `:8088` preview only. **Not** Doc. | Public / members later |
 | `ops.projectcar.ca` (**LIVE**) | **Management** — Shop OS (fill, hoists, ledgers) → Doc `:3000`; not Owner-only | Owner + staff/ops |
 | `app.projectcar.ca` | Temporary **alias** for `ops.` (same Doc `:3000`) until Ben cuts that DNS | Same as ops. |
 | Mission Control (private) | Cockpit over Nextcloud | Ben only |
@@ -26,7 +26,7 @@ Product lock (read these first):
 
 `Coombzy/Automation` is historical coordination, **not** the product SSOT. Do not author new specs there.
 
-Now / locks: [`Docs/STATUS.md`](Docs/STATUS.md). Living ops (API stay-up + CORS): [`Docs/api-stay-up.md`](Docs/api-stay-up.md), [`Docs/cors-origins.md`](Docs/cors-origins.md) — index in [`Docs/README.md`](Docs/README.md#living-ops).
+Now / locks: [`Docs/STATUS.md`](Docs/STATUS.md). Living ops (API stay-up + CORS + brochure deploy): [`Docs/api-stay-up.md`](Docs/api-stay-up.md), [`Docs/cors-origins.md`](Docs/cors-origins.md), [`Docs/brochure-worker-deploy.md`](Docs/brochure-worker-deploy.md) — index in [`Docs/README.md`](Docs/README.md#living-ops).
 
 ## Repo vs runtime
 
@@ -35,7 +35,7 @@ Now / locks: [`Docs/STATUS.md`](Docs/STATUS.md). Living ops (API stay-up + CORS)
 | This repo (`Coombzy/Project-Car`) | Specs + `apps/` source |
 | `~/src/Project-Car` | Git working tree on Doc |
 | `~/hermes-tools/mission-control` | Live Nextcloud + Vaultwarden (secrets, data — not git) |
-| `~/hermes-tools/project-car-website` | Live brochure origin until Pages cutover (`apps/website/` is git SSOT) |
+| `~/hermes-tools/project-car-website` | Leftover local `:8088` preview only — **not** the public brochure origin. Live = Worker **`projectcar-brochure`** (`Docs/brochure-worker-deploy.md`). Classic Pages git is plan only (`Docs/brochure-pages-cutover.md`). |
 | `~/Desktop/Project Car/` | Local notes / workspace, **not** this git repo |
 
 ## Hard rules
