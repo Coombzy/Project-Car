@@ -36,7 +36,7 @@ Live on **Doc** (M1 Max), path `~/hermes-tools/mission-control` (symlink `~/herm
 | MariaDB 11.4 | Nextcloud DB only |
 | Redis 7 | Nextcloud cache |
 | Vaultwarden | `:8222` |
-| Cloudflare Tunnel | Public marketing + selected private hostnames; NC should stay off the naked marketing apex or behind Access |
+| Cloudflare Tunnel | `api.` / `ops.` / temporary `app.` only — **not** the marketing apex. Live marketing = Worker **`projectcar-brochure`**. NC stays off the naked marketing apex or behind Access |
 | Tailscale | `docs-macbook-pro` / `100.97.10.72` |
 | Backups | `~/Desktop/Mission-Control/backups/nextcloud/` (daily/weekly/monthly) |
 | LaunchAgent | `ai.mission-control.hub` |

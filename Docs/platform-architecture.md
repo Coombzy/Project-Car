@@ -56,7 +56,7 @@ Coombzy/Project-Car
   Architecture/
     Modular-Architecture.md     pointer to this file
   apps/
-    website/                    projectcar.ca (git SSOT; Apex stripped; Pages target)
+    website/                    projectcar.ca (git SSOT; Apex stripped; Worker Direct Upload live)
     mission-control/            Next.js cockpit — **parked** until Ben GO (Owner + Member booking already live)
     project-car/
       web/                      Next.js shop UI (on `main`)
@@ -77,7 +77,7 @@ Do **not** vendor Nextcloud’s `data/` or MariaDB files into this tree.
 
 | Concern | Choice | Notes |
 |---------|--------|--------|
-| Public site | Static HTML/CSS in `apps/website/` | **Live** origin is Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` (`brochure-worker-deploy.md`). Optional local `:8088` preview only. Waitlist POSTs to `https://api.projectcar.ca/waitlist`. Pages target still GO’d, not done. |
+| Public site | Static HTML/CSS in `apps/website/` | **Live** origin is Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` (`brochure-worker-deploy.md`). Optional local `:8088` preview only. Waitlist POSTs to `https://api.projectcar.ca/waitlist`. Classic Pages git is **plan only** (`brochure-pages-cutover.md`) — blocked on CF ↔ GitHub auth, **outranked** by STATUS Next #1 Member host. **Do not claim Pages is started or GO’d.** |
 | MC cockpit | Next.js | Private; CalDAV/Deck/WebDAV server-side. **Parked** until Ben GO. Owner + Member booking are already live. |
 | Shop UI | Next.js | PWA, mobile-friendly. **LIVE** on `ops.projectcar.ca` → Doc `:3000`. Temporary alias `app.projectcar.ca`. |
 | Shop API | FastAPI + SQLAlchemy 2 + Alembic | OpenAPI generated |
@@ -89,7 +89,7 @@ Do **not** vendor Nextcloud’s `data/` or MariaDB files into this tree.
 | Identity (MC) | Single-user session / mesh | |
 | Identity (PC v1) | Owner + Member demo session cookies (not OIDC) | |
 | Identity (PC later) | OIDC (Pocket ID / Authelia) for Staff on `ops.` | |
-| Tunnel / DNS | Cloudflare | `projectcar.ca` / www → Worker **`projectcar-brochure`** (live) + `api.projectcar.ca` + **`ops.projectcar.ca` LIVE** + temporary `app.` alias. Pages cutover still GO’d, not done. |
+| Tunnel / DNS | Cloudflare | Marketing apex `projectcar.ca` / www → Worker **`projectcar-brochure`** (live). Tunnel is **`api.` / `ops.` / temporary `app.`** only — not the marketing apex. Classic Pages git is **plan only** (`brochure-pages-cutover.md`); **not started, not GO’d**; **outranked** by STATUS Next #1. |
 | Mesh | Tailscale | Remote access to private services |
 
 ### Banned
@@ -160,7 +160,7 @@ Do **not** treat “add `apps/…`” as future work where the trees already exi
 | `infra/compose` shop Postgres only | **Done** |
 | Member customer surface on `projectcar.ca` | **Next** — still shop-UI `/member` today |
 | Ben cuts the `app.` alias | **Next** — `ops.` already LIVE; alias stays |
-| Cloudflare Pages cutover for the brochure | **Next** (GO’d; blocked on CF ↔ GitHub auth) |
+| Classic Pages git for the brochure | **Plan only** (`brochure-pages-cutover.md`) — blocked on CF ↔ GitHub auth; **outranked** by STATUS Next #1 Member host. **Not started. Not GO’d.** Live origin stays Worker **`projectcar-brochure`** Direct Upload (`brochure-worker-deploy.md`). |
 | `apps/mission-control` health + CalDAV + Deck + heartbeat feed | **Parked** — needs **Ben GO**. Booking live hold is already satisfied. |
 
 Do not block on NFC, live cameras / Frigate, Stripe, or moving Nextcloud. Demo placeholders for Parts / Job board / Cameras do not turn `pc.cameras` or `pc.marketplace` on. Do not start the MC cockpit without Ben GO. Freeze major IA reshuffles — Ben is happy with the current app direction.

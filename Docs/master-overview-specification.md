@@ -1,6 +1,6 @@
 # Project Car Master Overview & Documentation Hierarchy
 
-**Last Updated:** 2026-09-06  
+**Last Updated:** 2026-09-07  
 **Owner:** Ben (decisions) / Porsche + Doc (maintenance)  
 **Audience:** Ben (Coombsy), Porsche, Lightning McKing, Doc Hudson  
 **Status:** Living document — map of the ecosystem. Product detail lives in child specs.
@@ -33,7 +33,7 @@ Two products, not one blob:
 ## 2. AI agent team
 
 - **Porsche** (M4 Pro): scheduler, planner, PA, coordinator. Travel client.
-- **Doc Hudson / Doc Hakosuka** (M1 Max, 64 GB): heavy local reasoning. **Temporary host** of Nextcloud + Vaultwarden + the public site.
+- **Doc Hudson / Doc Hakosuka** (M1 Max, 64 GB): heavy local reasoning. **Temporary host** of Nextcloud + Vaultwarden + Shop API / shop-web tunnels. **Not** the public brochure origin.
 - **Lightning McKing** (i9-9900K + RTX 5080, 30–50 TB): coding, GPU, **permanent hub** later.
 - **Code Mater** (Android + Hermes): field notifications and, later, device actions.
 
@@ -47,12 +47,12 @@ Orchestration: Hermes heartbeats + custom adapters + Discord. **No n8n.**
 
 | Tier | Machine | Role |
 |------|---------|------|
-| Hub (now) | **Doc** | Nextcloud 30, Vaultwarden, current brochure origin, shop API tunnel (`api.projectcar.ca` → `:8000`) |
+| Hub (now) | **Doc** | Nextcloud 30, Vaultwarden, Shop API + shop-web tunnels (`api.` / `ops.` / temporary `app.`). **Not** the brochure origin. Live marketing = Worker **`projectcar-brochure`**. |
 | Hub (later) | **McKing** | Always-on Linux home for the same services + backups + GPU |
 | Travel client | **Porsche** | Ben’s laptop. Does **not** host Nextcloud |
 | Mobile edge | **Code Mater** | Phone |
 
-Networking: Tailscale for private services; Cloudflare Tunnel for `projectcar.ca` (and selected hostnames).  
+Networking: Tailscale for private services. Cloudflare Tunnel is **`api.` / `ops.` / temporary `app.`** only — **not** the marketing apex. Live marketing = Worker **`projectcar-brochure`** Direct Upload (`brochure-worker-deploy.md`).  
 Backups: local on Doc today (`~/Desktop/Mission-Control/backups/`); McKing off-box next.
 
 Detail: `home-lab-specification.md` (stub lock card in this repo — do not restore the July skill draft blindly; it still has Porsche hosting Nextcloud).
