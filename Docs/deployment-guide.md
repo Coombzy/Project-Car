@@ -1,18 +1,32 @@
-# Deployment Guide — retired stub
+# Deployment guide — living-ops index
 
-**Status:** Retired 2026-08-16. This file used to be an empty placeholder (`[Full Deployment Guide content here]`).
+**Status:** Index (filename kept so old links resolve)  
+**Updated:** 2026-09-07  
+**Canonical:** `Coombzy/Project-Car` → `Docs/deployment-guide.md`
 
-Do **not** treat this as a runbook. The standing brochure deploy lives in `brochure-worker-deploy.md`.
+This file is **not** a runbook. Use the living docs below.
 
-Use instead:
+---
+
+## Stay-up / deploy
 
 | Need | Doc |
 |------|-----|
-| Brochure Worker Direct Upload | `brochure-worker-deploy.md` |
+| Shop UI stay-up on Doc (`ops.` / temporary `app.`, `:3000`, **`next start`**) | `shop-web-stay-up.md` |
+| Shop API stay-up on Doc (`api.`, `:8000`, uvicorn) | `api-stay-up.md` |
+| Member UI → projectcar.ca (plan only; **Ben GO**) | `member-host-cutover.md` |
+| Brochure Worker Direct Upload (`projectcar-brochure`) | `brochure-worker-deploy.md` |
+
+---
+
+## Elsewhere
+
+| Need | Doc |
+|------|-----|
+| What’s live / host split | `STATUS.md` |
 | Stack, host plan, bans | `platform-architecture.md` |
 | Nextcloud / Vaultwarden / cockpit | `mission-control-architecture.md` |
 | Live hub status on Doc | `nextcloud-progress.md` |
+| Doc apps / LaunchAgents / sleep | `doc-software-baseline.md` |
 | Public site origin + tunnel | `website-webapp-specification.md` |
 | Shop app first code slice | `project-car-application-specification.md` §13 |
-
-**Canonical:** `Coombzy/Project-Car` → `Docs/deployment-guide.md`
