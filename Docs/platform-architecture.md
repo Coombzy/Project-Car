@@ -1,6 +1,6 @@
 # Platform Architecture
 
-**Last Updated:** 2026-09-06  
+**Last Updated:** 2026-09-07  
 **Status:** Living spec (v1)  
 **Canonical location:** `Coombzy/Project-Car` → `Docs/platform-architecture.md`
 
@@ -77,7 +77,7 @@ Do **not** vendor Nextcloud’s `data/` or MariaDB files into this tree.
 
 | Concern | Choice | Notes |
 |---------|--------|--------|
-| Public site | Static HTML/CSS in `apps/website/` | Waitlist form POSTs to `https://api.projectcar.ca/waitlist`. Brochure target is **Cloudflare Pages** (not done). |
+| Public site | Static HTML/CSS in `apps/website/` | **Live** origin is Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` (`brochure-worker-deploy.md`). Optional local `:8088` preview only. Waitlist POSTs to `https://api.projectcar.ca/waitlist`. Pages target still GO’d, not done. |
 | MC cockpit | Next.js | Private; CalDAV/Deck/WebDAV server-side. **Parked** until Ben GO. Owner + Member booking are already live. |
 | Shop UI | Next.js | PWA, mobile-friendly. **LIVE** on `ops.projectcar.ca` → Doc `:3000`. Temporary alias `app.projectcar.ca`. |
 | Shop API | FastAPI + SQLAlchemy 2 + Alembic | OpenAPI generated |
@@ -89,7 +89,7 @@ Do **not** vendor Nextcloud’s `data/` or MariaDB files into this tree.
 | Identity (MC) | Single-user session / mesh | |
 | Identity (PC v1) | Owner + Member demo session cookies (not OIDC) | |
 | Identity (PC later) | OIDC (Pocket ID / Authelia) for Staff on `ops.` | |
-| Tunnel / DNS | Cloudflare | `projectcar.ca` / www + `api.projectcar.ca` + **`ops.projectcar.ca` LIVE** + temporary `app.` alias. Brochure target is Pages. |
+| Tunnel / DNS | Cloudflare | `projectcar.ca` / www → Worker **`projectcar-brochure`** (live) + `api.projectcar.ca` + **`ops.projectcar.ca` LIVE** + temporary `app.` alias. Pages cutover still GO’d, not done. |
 | Mesh | Tailscale | Remote access to private services |
 
 ### Banned
@@ -127,12 +127,13 @@ There is no `chat.legacy` / Rocket.Chat flag. That idea is retired.
 | Specs, app source | `Coombzy/Project-Car` |
 | Nextcloud + Vaultwarden compose, data, `.env` | `~/hermes-tools/mission-control` |
 | Public site git SSOT | `apps/website/` |
-| Public site runtime (until Pages cutover) | `~/hermes-tools/project-car-website` |
+| Public site live origin | Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` — `brochure-worker-deploy.md`. Not Doc `:8088`. Not `~/hermes-tools/project-car-website`. |
+| Public site local preview | Optional `apps/website/` nginx → `:8088` only |
 | Shop API stay-up on Doc | LaunchAgent `com.projectcar.shop-api` → `~/hermes-tools/mission-control/shop-api/run-shop-api.sh` (see `api-stay-up.md`) |
 | NC backups | `~/Desktop/Mission-Control/backups/nextcloud/` |
 | Agent local notes | `~/Desktop/Project Car/` |
 
-`apps/website/` is already in git. Live origin stays Doc tunnel until Pages. Shop API stays the lab tunnel.
+`apps/website/` is already in git. Live brochure origin is Worker **`projectcar-brochure`**. Shop API stays the lab tunnel.
 
 ---
 
