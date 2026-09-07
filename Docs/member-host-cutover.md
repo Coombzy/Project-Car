@@ -203,7 +203,7 @@ Lead sequences this vs more breadth placeholders: **cutover planning outranks ne
 
 **Ownership (unchanged):** Lead owns Doc `:8000` uvicorn. Zone owns tunnel / DNS / CORS edge. Garage waitlist e2e only (plus site work after GO). Do not hand uvicorn restarts to Chief or Garage.
 
-**Out of scope for the cutover itself:** Stripe, shop-open claims, Staff/Member OIDC, Matrix, Apex sidecar, Mission Control cockpit, cutting `app.`, Pages git cutover, new breadth placeholders.
+**Out of scope for the cutover itself:** Stripe, shop-open claims, Staff/Member OIDC, Matrix, Apex sidecar, Mission Control cockpit, cutting `app.`, Pages git cutover (`brochure-pages-cutover.md` — separate; this Member host plan outranks it), new breadth placeholders.
 
 ---
 

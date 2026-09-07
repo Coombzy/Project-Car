@@ -2,7 +2,7 @@
 
 Static HTML/CSS/assets. Garage owns this tree. Git SSOT: `apps/website/`.
 
-**Live origin:** Cloudflare Worker `projectcar-brochure` Direct Upload of `html/` from `main`. Classic Pages git is skipped for now. Optional local nginx (`docker compose`) still maps to `:8088` if you have the compose network.
+**Live origin:** Cloudflare Worker `projectcar-brochure` Direct Upload of `html/` from `main`. Classic Pages git is skipped pending CF ↔ GitHub auth — plan: [`Docs/brochure-pages-cutover.md`](../../Docs/brochure-pages-cutover.md). Optional local nginx (`docker compose`) still maps to `:8088` if you have the compose network.
 
 ## Waitlist
 
