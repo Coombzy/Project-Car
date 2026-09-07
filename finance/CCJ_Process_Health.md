@@ -3,13 +3,13 @@
 Lightweight tracker for long-term quality of the Analysis Automater and Audit Process.  
 One short line per day. Does **not** replace the main living analysis log.
 
-**Current prompt versions (as of 2026-09-02 audit):** Analysis **v1.12** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
+**Current prompt versions (as of 2026-09-07 audit):** Analysis **v1.12** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
 See `finance/CCJ_README.md`. Official cadence: Analysis **16:10 ET** weekdays · Audit 16:30 ET weekdays.
 
 | Date       | Analysis Confidence | Audit Score | Top Issue / Note                          | Data Sources OK? |
 |------------|---------------------|-------------|-------------------------------------------|------------------|
-| 2026-09-07 | N/A (Labor Day)     | (pending)   | Labor Day — NYSE closed; no official session; last EOD 2026-09-04 C$100.74 Rel 0.56x; Tue Sep 8 1d already published $95.50–$107.00; U3O8 $89.50 flat | Yes |
-| 2026-09-04 | 85                  | (pending)   | Official EOD C$100.74 Rel 0.56x digestion; $100 hold on light vol; Sep 3 1d printed hit; next session Tue Sep 8 Labor Day; Sep 3 Health row missing; log restore from 9353ad26 still pending | Yes |
+| 2026-09-07 | N/A (Labor Day)     | 10          | Labor Day catch-up audit of Fri 9/4 EOD; NYSE closed; no 1d/1w close; Sep 4 1d remains open to Tue Sep 8; log stub after Sep 3 still pending restore | Yes |
+| 2026-09-04 | 85                  | 10          | Official EOD C$100.74 Rel 0.56x digestion; $100 hold on light vol; Sep 3 1d CLOSED hit; next session Tue Sep 8; Sep 3 Health row missing; log restore from 9353ad26 still pending | Yes |
 | 2026-09-02 | 86                  | 10          | Official EOD C$96.38 Rel 0.87x digestion; Sep 1 1d CLOSED hit L95.13 H98.37 C96.38; Aug 26 1w CLOSED lower-exceed; prompt v1.12 applied; log restore from 9353ad26 still pending | Yes |
 | 2026-09-01 | 85                  | (pending)   | Official EOD C$96.30 Rel 0.74x digestion; 50-DMA test-reclaim L94.69; CCJ vs U3O8 −1.93pp flag; Aug 31 1d printed hit (auditor to close); log restore from 9353ad26 still pending | Fallback |
 | 2026-08-31 | 86                  | 9.5         | Official EOD C$98.76 Rel 1.14x digestion; Aug 28 1d CLOSED hit L97.53 H99.70 C98.76; Aug 24 1w CLOSED both-ends; rule 2 OFF; log truncated pending restore | Fallback |
