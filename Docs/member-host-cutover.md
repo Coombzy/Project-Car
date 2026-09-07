@@ -176,7 +176,7 @@ All of these must be true before calling the cutover done. **None of them are tr
 | 1 | Member login on customer host | `https://projectcar.ca/member/login` (and www if that host is in play) serves the demo form. Seed `ada.reyes@example.com` + demo password sets `pc_member_session` (Secure, Lax, host-only, Path as decided). Redirect stays on projectcar.ca / www — **no localhost hop**. |
 | 2 | Balance | Logged-in `GET /member` shows tokens + ledger (same demo as ops `/member`). |
 | 3 | Booking routes | `/member/schedule` renders Bays 1–5; quote / book / cancel still work; shop hoist still `400 shop_hoist_owner_only`. `/member/schedule/quote` same-origin. |
-| 4 | Member extras still gated | `/member/chat` auth-gate 307 when logged out; logged-in own rooms. Placeholders (`/member/parts`, `/jobs`, `/cameras`) load as demo UI — not Stripe / Frigate / checkout. |
+| 4 | Member extras still gated | `/member/chat` auth-gate 307 when logged out; logged-in own rooms. Placeholders (`/member/parts`, `/member/jobs`, `/member/cameras`) load as demo UI — not Stripe / Frigate / checkout. |
 | 5 | Brochure still brochure | Home / About / The Shop / Membership / Roadmap / Contact **200** from Worker HTML. Chat page stays gone. |
 | 6 | Waitlist e2e | Membership / Contact `POST` → `api.projectcar.ca/waitlist` still **PASS**. OPTIONS smoke still returns `Access-Control-Allow-Origin` for brochure origins. |
 | 7 | Ops still healthy | `https://ops.projectcar.ca/` → `Location: https://ops.projectcar.ca/login` (no localhost). `/login` **200**. Staff dashboard / schedule / chat still on ops. Temporary `https://app.projectcar.ca` still serves the same Doc `:3000` origin. |
