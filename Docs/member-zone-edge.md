@@ -1,0 +1,180 @@
+# Member zone edge — path split on projectcar.ca / www
+
+**Status:** Checklist / plan only — **not shipped**. Do **not** execute until **Ben GO**.  
+**Updated:** 2026-09-07  
+**Related:** `STATUS.md` Next #1, `member-host-cutover.md`, `brochure-worker-deploy.md`, `shop-web-stay-up.md`, `brochure-pages-cutover.md`, `cors-origins.md`, `website-webapp-specification.md` §3
+
+This file is the **edge / path-split** slice Zone needs for STATUS **Next #1** (Member UI on **projectcar.ca**). Cookie Domain / Path / Secure / SameSite, CORS allowlist, and Next middleware host allowlist live in `member-host-cutover.md` §2 — **summarize + point**, do not rewrite that essay here.
+
+This file does **not** implement the migration, change DNS, cut the `app.projectcar.ca` alias, upload shop-web as the apex origin, or start Garage / Zone / Hatch work. A docs merge is not GO.
+
+Do **not** invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, Matrix, or Apex revival. Demo session cookies stay demo cookies — **not OIDC**.
+
+---
+
+## Reality today (do not claim this is done)
+
+| Surface | Live origin |
+|---------|-------------|
+| **Brochure** | Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` from `main` (`brochure-worker-deploy.md`). Serves **all** public paths on `projectcar.ca` / `www` today. |
+| **Member demo** | Shop-UI `/member` on Doc `:3000` (`next start` via LaunchAgent `com.projectcar.shop-web`). Reachable on **`https://ops.projectcar.ca/member`** and **`https://app.projectcar.ca/member`**. **Not** on the customer host. |
+| **Ops / staff** | Same Doc `:3000` shop UI on **`ops.`** (LIVE when Doc origin is up). Temporary **`app.`** alias still live. **Not removed.** |
+| **Shop API** | `api.projectcar.ca` → Doc `:8000`. Lead owns uvicorn. |
+
+Exact Cloudflare product (tunnel public hostname vs Worker route vs Transform) is **Zone’s** after GO. This file locks the **traffic map**, not a dashboard click-path.
+
+---
+
+## 1. Path split
+
+Two products will share `projectcar.ca` / `www`. They are **not** the same app. Do **not** deploy shop-web as the apex catch-all — that would replace the brochure.
+
+| Path on `projectcar.ca` / `www` | Origin | Notes |
+|----------------------------------|--------|-------|
+| `/member` and `/member/*` | Doc shop-web tunnel → **`http://127.0.0.1:3000`** | **Same** KeepAlive origin as `ops.` / `app.` (`shop-web-stay-up.md`). Not a second Next process. Not Doc `:8088`. |
+| Everything else on those hosts | Worker **`projectcar-brochure`** Direct Upload | Home / About / The Shop / Membership / Roadmap / Contact, waitlist JS, robots, sitemap, 404, favicons. Standing upload: `brochure-worker-deploy.md`. |
+
+Route unit matches shop-web middleware: `path === "/member"` or `path.startsWith("/member/")` (`member-host-cutover.md` §1). That includes `/member/login`, `/member/schedule`, `/member/chat`, `/member/parts`, `/member/jobs`, `/member/cameras`, `/member/todos/{id}/ics`.
+
+| Do | Do not |
+|----|--------|
+| Add a **path** rule so only `/member*` leaves the Worker. | Point apex / www **catch-all** at Doc `:3000`. |
+| Keep Worker **`projectcar-brochure`** on all other customer-host paths. | Upload `apps/project-car/web` as the brochure. Fold Member into `apps/website`. |
+| Origin bind **`http://127.0.0.1:3000`** (not bare `localhost` — IPv6 `[::1]` historically **502**’d ops). | Retarget `ops.`, `app.`, or `api.` tunnels. |
+| Leave ops/app `/member` parked until Ben says otherwise. First cutover **adds** customer-host routing. | Delete the ops/app Member park as part of the edge add. |
+| Leave Chat stripped on the brochure. Apex sidecar **deferred**. | Revive brochure Chat or Apex to “make the split easier.” |
+
+Which `/member` routes move vs what stays on the brochure vs what stays on `ops.`: `member-host-cutover.md` §1. Do not copy that table here.
+
+---
+
+## 2. www vs apex Member cookies
+
+Full flags, CORS allowlist, and middleware host allowlist: **`member-host-cutover.md` §2**. Zone does not rewrite cookies from the edge. Garage / Lead own Path / Secure / `.env` **after GO**.
+
+What Zone must not break:
+
+| Rule | Why |
+|------|-----|
+| Cookies stay **host-only** (no `Domain=.projectcar.ca`). | A parent Domain would send `pc_member_session` to `ops.`, `app.`, and `api.`. Owner and Member cookies stay on different hosts. |
+| Prefer **`Path=/member`** after share-host. | Brochure pages must not receive the Member session. Login / logout / `delete_cookie` must use the same Path (`member-host-cutover.md` §2). |
+| **Pick a canonical customer host** for Member (`projectcar.ca` **or** `www.projectcar.ca`) — or document the hop. | Host-only cookies do **not** follow a www ↔ apex redirect. A login on www and a bounce to apex drops the session (and the reverse). |
+| Keep the existing brochure www / apex pair working. | Marketing + waitlist already use both. Do not assume one cookie covers both names. |
+| **Secure** stays true on HTTPS. **SameSite=Lax**. **HttpOnly**. | Same as ops/app today. Do not switch to `None` or `Strict` at the edge. **Not OIDC.** |
+
+If Zone 301s www → apex (or apex → www) on `/member*`, say so in the GO notes and put Member only on the **canonical** host. Silent hops are a cookie bug, not a “refresh.”
+
+CORS: `https://projectcar.ca` and `https://www.projectcar.ca` are **already** on `CORS_ORIGINS` (`cors-origins.md`). Sharing the customer host does **not** require a new origin. Lead restarts uvicorn only if `.env` changes.
+
+---
+
+## 3. Host / X-Forwarded-Host
+
+Tunnel / edge must forward the **real public host** and **https** into shop-web. Next `publicUrl` / `publicOrigin` (`lib/request-origin.ts`) trusts a well-formed `Host` or `X-Forwarded-Host` plus `X-Forwarded-Proto`.
+
+| Forward | Value |
+|---------|--------|
+| `Host` or `X-Forwarded-Host` | `projectcar.ca` or `www.projectcar.ca` (the host the browser actually hit) |
+| `X-Forwarded-Proto` | `https` |
+
+If these are missing or set to `localhost` / `127.0.0.1:3000`, login and auth-gate redirects hop to **`http://localhost:3000/...`**. That class of bug is **already fixed on ops** (`shop-web-stay-up.md` public smoke). Do not reintroduce it on the customer host.
+
+Do **not** allowlist `api.projectcar.ca` as a shop-web redirect host (`member-host-cutover.md` §2). Recommended explicit allowlist (Garage, after GO): localhost / `127.0.0.1`, `ops.projectcar.ca`, `app.projectcar.ca`, `projectcar.ca`, `www.projectcar.ca`.
+
+---
+
+## 4. Smoke curls
+
+**None of these are true yet.** Run only after Ben GO + Zone path rules + Garage Member surface. HTML from some networks hits a Cloudflare challenge (**403**) — that is WAF, not a failed split (`website-improvements.md`).
+
+Lid-close / sleep on Doc can still take shop-web and the API (Cloudflare **502** or **530 / error 1033**). That is **not** a path-split failure — see `shop-web-stay-up.md` and `api-stay-up.md`. Skip Member / waitlist / ops probes until Doc origin is up. Brochure Worker HTML should still **200** while Doc sleeps.
+
+| # | Check | Expect |
+|---|--------|--------|
+| 1 | Member login on customer host | `https://projectcar.ca/member/login` (and www **only** if that host is in play) serves the demo form. Seed `ada.reyes@example.com` + demo password sets `pc_member_session` (Secure, Lax, host-only, Path as decided). Redirect stays on projectcar.ca / www — **no localhost hop**. |
+| 2 | Brochure still Worker | Home / About / The Shop / Membership / Roadmap / Contact **200** Worker HTML. Chat page stays gone. Not Next HTML. |
+| 3 | Waitlist still works | Membership / Contact `POST` → `api.projectcar.ca/waitlist` still **PASS** when API health is 200. OPTIONS still returns `Access-Control-Allow-Origin` for brochure origins (`cors-origins.md`). |
+| 4 | Ops / app still healthy | `https://ops.projectcar.ca/` → `Location: https://ops.projectcar.ca/login` (no localhost). `/login` **200 when Doc origin is up**. Temporary `https://app.projectcar.ca` still the same Doc `:3000` origin. |
+| 5 | No localhost `Location` | Member, ops, and app redirects stay on their public hosts. |
+
+```bash
+# Member path (customer host) — expect shop-web, not Worker brochure HTML
+curl -sS -D - -o /dev/null https://projectcar.ca/member/login | grep -iE 'HTTP/|location:'
+# Brochure paths must stay Worker
+curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/
+curl -sS -o /dev/null -w '%{http_code}\n' https://www.projectcar.ca/
+curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/membership.html
+curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/contact.html
+# Waitlist / API — 200 only when Doc origin is up; 502 / 530 / 1033 = lid-close
+curl -sS -o /dev/null -w '%{http_code}\n' https://api.projectcar.ca/health
+# Ops / app must still be the shop UI (no localhost Location)
+curl -sS -D - -o /dev/null https://ops.projectcar.ca/ | grep -iE 'HTTP/|location:'
+curl -sS -o /dev/null -w '%{http_code}\n' https://ops.projectcar.ca/login
+curl -sS -D - -o /dev/null https://app.projectcar.ca/ | grep -iE 'HTTP/|location:'
+curl -sS -o /dev/null -w '%{http_code}\n' https://app.projectcar.ca/login
+```
+
+Full Member success criteria (balance, booking, chat gate): `member-host-cutover.md` §5. If brochure pages come back as Next, or waitlist JS 404s, treat it as **rollback** — not “Garage restart uvicorn.”
+
+---
+
+## 5. Rollback
+
+Undo the customer-host Member **path rules** only. Brochure returns to Worker-only on `projectcar.ca` / `www` (`brochure-worker-deploy.md`).
+
+| Step | Who | Do |
+|------|-----|----|
+| Remove path rules | **Zone** | Point `projectcar.ca` / `www` `/member*` back off the shop-web origin. Apex / www are Worker-only again. |
+| Confirm Worker attach | **Zone** | `projectcar.ca` and `www.projectcar.ca` still attach to Worker **`projectcar-brochure`**. Re-upload only if a bad split corrupted the Worker — otherwise leave the last good version. |
+| Keep `app.` alias | Zone / Ben | **Do not cut** `app.projectcar.ca`. Staff with stale `ops.` DNS keep working. Ben cuts the alias later (`STATUS.md` Next #2). |
+| Keep ops tunnel | **Zone** | `ops` → `http://127.0.0.1:3000` stays. Do not retarget ops to the Worker or to Member-only paths. |
+| Keep `/member` on ops/app | Garage / Lead | Safe Member demo until Ben says otherwise. |
+| Do not flip DNS for ops | **Zone** | Local DNS cache ≠ rollback. Tell staff to use `app.` or flush cache. |
+
+Rollback is **edge path rules**, not “remove the Worker,” not “cut `app.`,” and not “restart uvicorn.” Cookie / CORS revert only if Lead changed `.env` for the cutover (`member-host-cutover.md` §4).
+
+---
+
+## 6. Locks (do not weaken)
+
+- **Keep the `app.` alias.** Temporary until Ben cuts DNS. This plan does not touch `ops.` / `app.` tunnels except to leave them alone.
+- **Classic Pages git stays outranked.** `brochure-pages-cutover.md` is still blocked on CF ↔ GitHub auth and is **outranked** by this Member edge work **and** by STATUS Next #1. Direct Upload remains the locked live brochure method. Do not start Pages git from this file.
+- **No Apex.** Brochure stays Worker / Pages — no Apex sidecar, no brochure Chat page.
+- **No Stripe.** The shop is not open. Interest waitlist only.
+- **No Garage / Zone / Hatch fan-out from this PR.** Plan only. Ben GO gates execution.
+- **No shop-web apex catch-all.** Path split or nothing.
+- Host split: customer = `projectcar.ca` / www. Management = **`ops.projectcar.ca`**. `app.` = temporary alias.
+- Shop-web KeepAlive is **`next start`**, not `next dev`.
+- Lead owns Doc processes (`:8000` / `:3000`). Zone owns Cloudflare path rules / tunnel hostname for the Member path.
+
+---
+
+## 7. Who
+
+| Role | Owns | Does not own |
+|------|------|----------------|
+| **Zone** | Cloudflare **path rules** and **tunnel hostname** so `/member*` on `projectcar.ca` / `www` hits Doc `:3000` (`http://127.0.0.1:3000`) and all other paths stay Worker **`projectcar-brochure`**. Forward real host + https. Rollback = remove those path rules. | HTML content, shop-web code, uvicorn, `app.` cut, Pages git, cookie Path edits |
+| **Garage** | shop-web Member surface **after GO** (`member-host-cutover.md`). Waitlist e2e after public API health is **200**. | Cloudflare path rules, tunnel hostnames, DNS, Direct Upload, process restarts |
+| **Lead** | Doc processes — LaunchAgent `com.projectcar.shop-web` (`next start` `:3000`) and `com.projectcar.shop-api` (uvicorn `:8000`). Restarts if `.env` / cookie Path change. | Brochure edge. Do not hand path rules or Worker uploads to Lead. |
+| **Ben** | **GO** before anyone executes this file or `member-host-cutover.md`. Later `app.` cut (Next #2). | — |
+
+Alerts can come from anyone who sees Next HTML on Home, a localhost `Location`, or waitlist 404. **Recovery of a bad path split is Zone** (rollback above). **Recovery of a down shop-web / API is Lead** (process) / **Zone** (tunnel only).
+
+---
+
+## Sequencing vs `member-host-cutover.md`
+
+| Order | Gate | Who | Notes |
+|-------|------|-----|-------|
+| 0 | **Both plan docs exist** | Docs PR | You are here. No DNS. No `app.` cut. No path rules. |
+| 1 | **Ben GO** | Ben | Required. Do not start Zone path rules or Garage site work from this file alone. |
+| 2 | Cookie / CORS / middleware allowlist on Doc | Lead + Garage | `member-host-cutover.md` §2. Code + `.env` only after GO. |
+| 3 | **This file** — edge path split | **Zone** | `/member*` → `http://127.0.0.1:3000`. Everything else → Worker. Host + proto forwarding. |
+| 4 | Member UI on customer host | **Garage** | Wire the surface; do not replace the Worker brochure. |
+| 5 | Prove smoke (§4) + `member-host-cutover.md` §5 | Garage e2e; anyone can curl | If brochure / waitlist / ops/app break → §5 rollback. |
+| 6 | Ben cuts `app.` alias | Ben / Zone | **Later.** STATUS Next #2. Not this edge add. |
+| — | Classic Pages git | Zone | **Outranked.** `brochure-pages-cutover.md` after CF ↔ GitHub auth. Not a substitute for Next #1. |
+
+**Out of scope for this file:** app code, DNS edits, Garage / Zone / Hatch fan-out, Stripe, shop-open, Apex, Mission Control cockpit, cutting `app.`, executing Pages git.
+
+**Ownership (unchanged):** Zone owns Cloudflare path rules / Member-path tunnel hostname. Garage owns shop-web after GO. Lead owns Doc processes. Ben GO gates execution.

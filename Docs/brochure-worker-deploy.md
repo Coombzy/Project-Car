@@ -2,7 +2,7 @@
 
 **Status:** Standing runbook  
 **Updated:** 2026-09-07  
-**Related:** `STATUS.md` Live brochure, `website-webapp-specification.md` §3, `website-improvements.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `apps/website/README.md`
+**Related:** `STATUS.md` Live brochure, `website-webapp-specification.md` §3, `website-improvements.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md`, `apps/website/README.md`
 
 Re-deploy the public brochure after Garage merges HTML on `main`. This is the **locked live method**. It is not a one-off for a single hygiene ship.
 
@@ -117,7 +117,7 @@ A bad Direct Upload is a **Worker version** problem. Do **not** cut DNS. Do **no
 
 | Topic | Where / why |
 |-------|-------------|
-| Member host cutover | `member-host-cutover.md` — **Ben GO**. Do not start from a brochure upload. |
+| Member host cutover | `member-host-cutover.md` — **Ben GO**. Zone path-split: `member-zone-edge.md`. Do not start from a brochure upload. |
 | Mission Control cockpit | Needs **Ben GO**. Not this Worker. |
 | Stripe / shop-open claims | Locked off. Interest waitlist only. |
 | Classic Pages git | Skipped. Plan: `brochure-pages-cutover.md`. Do not invent a git-connected Pages cutover here. |

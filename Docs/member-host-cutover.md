@@ -2,7 +2,7 @@
 
 **Status:** Checklist / plan only — **not shipped**  
 **Updated:** 2026-09-07  
-**Related:** `STATUS.md` Next #1, `cors-origins.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`, `website-webapp-specification.md` §3
+**Related:** `STATUS.md` Next #1, `member-zone-edge.md` (Zone path-split), `cors-origins.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`, `brochure-pages-cutover.md`, `website-webapp-specification.md` §3
 
 Plan the move of Member self-serve from the shop UI `/member` (today on **`ops.`** + temporary **`app.`** alias) onto the customer host **projectcar.ca / www**. This file is a runbook. It does **not** implement the migration, change DNS, or cut the `app.projectcar.ca` alias.
 
@@ -78,7 +78,7 @@ Staff stay on **`ops.`**. Some clients still miss `ops.` in local DNS cache — 
 | Do not deploy shop-web as the apex origin. | That would replace the brochure. |
 | Do not fold Member into `apps/website`. | Different stack (Next.js + API cookies vs static HTML). |
 
-Exact Cloudflare route / Worker / tunnel wiring is **Zone**, after Ben GO — not this PR.
+Exact Cloudflare route / Worker / tunnel wiring is **Zone**, after Ben GO — not this PR. Path-split checklist (Zone slice): **`member-zone-edge.md`**.
 
 ---
 
@@ -127,7 +127,7 @@ Today there is **no** explicit host allowlist. `middleware.ts` redirects with `p
 
 Before Member is reachable on the customer host:
 
-- [ ] Tunnel / edge must forward `Host` or `X-Forwarded-Host` as `projectcar.ca` or `www.projectcar.ca` (and `https`). Otherwise redirects hop to `localhost:3000` — the same class of bug already fixed on ops.
+- [ ] Tunnel / edge must forward `Host` or `X-Forwarded-Host` as `projectcar.ca` or `www.projectcar.ca` (and `https`). Otherwise redirects hop to `localhost:3000` — the same class of bug already fixed on ops. Zone wiring: **`member-zone-edge.md`** §3.
 - [ ] Add an **explicit allowlist** (recommended): `localhost` / `127.0.0.1`, `ops.projectcar.ca`, `app.projectcar.ca`, `projectcar.ca`, `www.projectcar.ca`. Reject anything else so a junk `X-Forwarded-Host` cannot mint a login redirect.
 - [ ] Extend `request-origin` tests for customer-host redirects (`/member/login`, `/member`).
 - [ ] Do **not** allowlist `api.projectcar.ca` as a shop-web redirect host.
@@ -196,7 +196,7 @@ Lead sequences this vs more breadth placeholders: **cutover planning outranks ne
 | 0 | **This doc exists** | Docs PR | You are here. No DNS. No `app.` cut. No code migration. |
 | 1 | **Ben GO** | Ben | Required. Do not start Garage site work or Zone edge work from this file alone. |
 | 2 | Cookie / CORS / middleware allowlist on Doc | Lead (process) + Garage (shop-web change) | Code + `.env` only after GO. Lead restarts uvicorn if `CORS_ORIGINS` changes. |
-| 3 | Edge path split on projectcar.ca / www | **Zone** | Cloudflare DNS / tunnel / route so `/member*` hits Member and brochure paths stay Worker. CORS **edge** if Zone owns a WAF/origin check — API allowlist stays Lead `.env`. |
+| 3 | Edge path split on projectcar.ca / www | **Zone** | Checklist: **`member-zone-edge.md`**. Cloudflare path rules / tunnel hostname so `/member*` hits Doc `:3000` (`http://127.0.0.1:3000`) and brochure paths stay Worker. CORS **edge** if Zone owns a WAF/origin check — API allowlist stays Lead `.env`. |
 | 4 | Member UI on customer host | **Garage** (site) | Wire the Member surface; do not replace the Worker brochure. |
 | 5 | Prove success criteria | Garage e2e waitlist; anyone can curl health / ops probes | If ops/app or waitlist breaks → §4 rollback. |
 | 6 | Ben cuts `app.` alias | Ben / Zone | **Later.** `STATUS.md` Next #2. Not this cutover. |
