@@ -12,6 +12,7 @@
 - `brochure-worker-deploy.md` — standing Zone Direct Upload of `apps/website/html` onto Worker `projectcar-brochure`
 - `brochure-pages-cutover.md` — Classic Pages git plan (blocked on CF ↔ GitHub auth; do not start)
 - `api-stay-up.md` / `cors-origins.md` — public Shop API stay-up + waitlist CORS
+- `member-host-cutover.md` — Member UI on projectcar.ca (plan only; **Ben GO**). P1-6 waits on that cutover.
 - Skill `project-car-web-copy` — public copy rules (tighten, no fake prices/dates)
 - Skill `project-car` — fleet / product context (public site ≠ Mission Control)
 
@@ -94,6 +95,7 @@ IDs kept so old links resolve. Do not treat these as current P0.
 | P1-3 | **Contact: only live channels** | open | Keep email + Discord. Collapse Phone / IG / TikTok / YouTube / Skool “Coming soon” into one line until URLs exist. |
 | P1-4 | **Nav weight** | deferred | Optional: Home · About · Shop · Membership · Contact in primary nav; Roadmap/Chat in footer until chat is real. |
 | P1-5 | **Interest capture (waitlist)** | done | 2026-09-06 — Membership/Contact `POST` JSON to `https://api.projectcar.ca/waitlist` (`apps/website/html/waitlist.js`). Name, email, optional phone/notes. No pricing / book-now. Ops: `cors-origins.md`, `api-stay-up.md`. Public **OPTIONS** / **POST /waitlist** **530 / 1033** while Doc is asleep is expected lid-close — not a CORS regression. `waitlist.js` **mailto fallback** is the user path; e2e only when **GET /health** is **200**. |
+| P1-6 | **Membership secondary CTA: “Already a member? Sign in”** | deferred | After Member cutover — **Ben GO** (not now; not done). Link **only** apex `https://projectcar.ca/member/login`. Never www, never ops/app. Waitlist stays the interest path. No book-now / pricing / shop-open claims. Do **not** implement brochure HTML from a docs PR — Garage owns P1-1 / P1-3 separately; this item waits on cutover. Plan: `member-host-cutover.md`, STATUS Next #1. |
 
 ---
 
@@ -143,6 +145,7 @@ Follow skill **project-car-web-copy**. Tighten; don’t rewrite the story. No fa
 2. P2-1 … P2-4 (OG, canonical, cache, headers)  
 3. P3 copy pass  
 4. P4 as interest grows  
+5. P1-6 only **after Member cutover GO** — not in the current Garage P1-1 / P1-3 queue; no brochure HTML from a docs PR.
 
 Brochure hygiene is **already live** on Worker `projectcar-brochure` (re-uploaded 2026-09-06). Do not invent another Zone upload for that ship. Ops + Member booking are live on Doc demo **and** the temporary `app.` alias. Intended management host is **`ops.`**. Mission Control cockpit still needs **Ben GO**. The shop is not open.
 
@@ -196,6 +199,7 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 
 | Date | Change |
 |------|--------|
+| 2026-09-07 | P1-6 stub: Membership secondary “Already a member? Sign in” → apex `https://projectcar.ca/member/login` only. **Deferred** until Member cutover GO. Never www / ops / app. Waitlist stays the interest path. No brochure HTML in this docs PR. |
 | 2026-09-07 | P1-5 note: lid-close public **530 / 1033** on OPTIONS / POST /waitlist is expected — not a CORS regression. `waitlist.js` mailto fallback while origin is down; e2e only when GET /health is 200. See `cors-origins.md`. |
 | 2026-09-07 | P4-5 synthetic monitors **done / partial**: Lookout `projectcar-api-health-watch` live on `api.projectcar.ca/health`. Apex dropped (deferred). Brochure homepage 200 + Discord invite optional/deferred. Spec roadmap row 2 **Done** on Worker `projectcar-brochure`. |
 | 2026-09-06 | Reality sync ~16:16 America/Edmonton (`main` `afb37f9`): **`ops.projectcar.ca` LIVE** → Doc `:3000`; `app.` = temporary alias. Calendar #18 / fill #20 / placeholders #21 / inventory #26 / Chat #27 / Dashboard #28 are Live on Doc. Brochure Chat/Apex stay stripped. MC cockpit still needs Ben GO. No Stripe. The shop is not open. |
