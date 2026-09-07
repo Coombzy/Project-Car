@@ -1,6 +1,6 @@
 # Status — 2026-09-06 ~16:16 America/Edmonton
 
-Living one-pager: what’s live, what’s next, locks. Product detail stays in the start-here specs. Stay-up / CORS / Pages runbooks live elsewhere — this file is not a runbook.
+Living one-pager: what’s live, what’s next, locks. Product detail stays in the start-here specs. Stay-up / CORS / Pages runbooks live elsewhere — this file is not a runbook. Member host cutover checklist (plan only): `member-host-cutover.md`.
 
 Reality sync to `main` tip **`afb37f9`** (Dashboard **#28**). Distinguishes **Live** vs **Next** vs **Later**, and **build-breadth (now)** vs **ship-MVP cut (later)**. Do not invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, or Matrix / Apex / Grok chat. **Chat v1** (human / polling / Owner-starts-rooms) and **Dashboard** (24h bay strips + todos + parts POs) are **LIVE on Doc**.
 
@@ -66,7 +66,7 @@ Two gates — do **not** collapse them into “v1 includes everything forever.�
 | **Build breadth (now)** | Put planned features into the app as placeholders / rough IA (Parts, Tools, job board, cams, calendar / fill, member surfaces, Chat v1 demo, …) so layout can be ironed out. Placeholders are OK. Do **not** leave a planned surface out of the **build** for polish. |
 | **Ship-MVP cut (later gate)** | Before the **public MVP** ship, cut unfinished and unnecessary features. Do **not** ship every placeholder as the public product. |
 
-1. **Host migration — Member UI on projectcar.ca.** Customer surface (self-serve booking + balance) moves to **projectcar.ca**. Management stays on **`ops.`** (temporary `app.` alias still live). Today Member demo still lives on shop-UI `/member`. Do **not** claim this is shipped.
+1. **Host migration — Member UI on projectcar.ca.** Customer surface (self-serve booking + balance) moves to **projectcar.ca**. Management stays on **`ops.`** (temporary `app.` alias still live). Today Member demo still lives on shop-UI `/member`. Cutover checklist (plan only — not shipped, no DNS, no `app.` cut): **`member-host-cutover.md`**. Garage (site) / Zone (DNS / tunnel / CORS edge) wait for this doc **and Ben GO**. Cutover planning outranks new breadth placeholders. Do **not** claim this is shipped.
 2. **Ben cuts the `app.` alias.** `ops.` is already LIVE at the edge. `app.` stays until Ben cuts that DNS. Do not remove the alias from docs or edge config in a docs PR.
 3. **Chat follow-ons (not Chat v1).** Chat v1 human/polling/Owner-starts-rooms is **LIVE on Doc** (Live above). Later: Grok on **projectcar.ca**, assign / staff notes / escalate, websockets. **Apex sidecar stays deferred.** Do not revive Matrix.
 4. **Mission Control cockpit** still needs **Ben GO** before start. Owner + Member booking are already live on Doc **and** the public ops / app hosts — that earlier hold is satisfied. Do not start the cockpit from a docs PR.
