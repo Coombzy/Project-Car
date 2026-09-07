@@ -2,7 +2,7 @@
 
 **Status:** Checklist / plan only — **not shipped**  
 **Updated:** 2026-09-07  
-**Related:** `STATUS.md` Next #1, `member-zone-edge.md` (Zone path-split), `cors-origins.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`, `brochure-pages-cutover.md`, `website-webapp-specification.md` §3
+**Related:** `STATUS.md` Next #1, `member-zone-edge.md` (Zone path-split), `website-improvements.md` P1-6 (brochure Membership sign-in CTA after cutover GO), `cors-origins.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`, `brochure-pages-cutover.md`, `website-webapp-specification.md` §3
 
 Plan the move of Member self-serve from the shop UI `/member` (today on **`ops.`** + temporary **`app.`** alias) onto the customer host **projectcar.ca / www**. This file is a runbook. It does **not** implement the migration, change DNS, or cut the `app.projectcar.ca` alias.
 
@@ -58,7 +58,7 @@ Static `apps/website/html` — **do not** serve these from shop-web:
 | Roadmap | `roadmap.html` |
 | Contact | `contact.html` |
 
-Plus `waitlist.js`, `shop-config.js`, `robots.txt`, `sitemap.xml`, `404.html`, favicons. Chat nav/page stays **stripped**. Apex sidecar stays **deferred**.
+Plus `waitlist.js`, `shop-config.js`, `robots.txt`, `sitemap.xml`, `404.html`, favicons. Chat nav/page stays **stripped**. Apex sidecar stays **deferred**. After Member cutover GO, brochure Membership may add a secondary “Already a member? Sign in” CTA → apex `https://projectcar.ca/member/login` only (`website-improvements.md` **P1-6**). Never www, never ops/app. Waitlist stays the interest path. Not this PR — not live.
 
 ### Stays on ops. (and temporary app. alias)
 
