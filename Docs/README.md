@@ -36,8 +36,9 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 | [nextcloud-progress.md](nextcloud-progress.md) | Live hub status on Doc (no secrets) |
 | [doc-software-baseline.md](doc-software-baseline.md) | Doc M1 Max apps / settings |
 | [home-lab-specification.md](home-lab-specification.md) | Host lock card (stub — do not restore the July skill draft blindly) |
-| [api-stay-up.md](api-stay-up.md) | Keep https://api.projectcar.ca up (uvicorn on Doc; Zone owns tunnel) |
+| [api-stay-up.md](api-stay-up.md) | Keep https://api.projectcar.ca up (uvicorn on Doc; Zone owns tunnel). Brochure is Worker `projectcar-brochure`, not Doc `:8088`. |
 | [cors-origins.md](cors-origins.md) | `CORS_ORIGINS` for brochure waitlist from https://projectcar.ca |
+| [member-host-cutover.md](member-host-cutover.md) | Member UI → projectcar.ca checklist (plan only; Ben GO before Garage/Zone). Linked from STATUS Next #1. |
 
 ---
 
