@@ -62,7 +62,7 @@ Use whatever machine already has Cloudflare access for this Worker. Checkout `ma
    # or: git checkout main && git pull origin main
    ls apps/website/html
    ```
-   Expect at least: `index.html`, `about.html`, `the-shop.html`, `membership.html`, `roadmap.html`, `contact.html`, `waitlist.js`, `shop-config.js`, `robots.txt`, `sitemap.xml`, `404.html`, `assets/`. Chat page stays **absent**.
+   Expect at least: `index.html`, `about.html`, `the-shop.html`, `membership.html`, `roadmap.html`, `contact.html`, `waitlist.js`, `shop-config.js`, `styles.css`, `robots.txt`, `sitemap.xml`, `404.html`, `favicon.ico`, `_redirects`, `_headers`, `assets/`. Chat page stays **absent** (`_redirects` is Chat → Contact 301 only).
 3. **Open the existing Worker.** Cloudflare dashboard → Workers & Pages → Workers → **`projectcar-brochure`**. Do **not** create a new Worker or a Pages project.
 4. **Direct Upload** the **`apps/website/html` directory** (that folder is the site root). Confirm the Worker name is still **`projectcar-brochure`** before you commit the deploy.
 5. **Confirm hosts.** Apex `projectcar.ca` and `www.projectcar.ca` still attach to this Worker. Do **not** edit DNS, retarget `ops.` / `app.` / `api.`, or connect Classic Pages git.
@@ -80,7 +80,7 @@ HTML from some networks hits a Cloudflare challenge (**403**). That is WAF, not 
 | Check | Expect |
 |-------|--------|
 | Home | **200** Worker HTML. Waitlist / honest CTA present. **No** “Website progress” / `10%` bar (STATUS hygiene). Status line is “Project Underway” only — do not invent a %. |
-| Chat | **No** Chat nav or Chat page (stripped, PR #5). Contact stays email + Discord. |
+| Chat | **No** Chat nav or Chat page (stripped, PR #5). `_redirects` maps `/chat.html` and `/chat` → Contact 301 if the Worker honors it. Contact stays email + Discord. |
 | Pages | Home, About, The Shop, Membership, Roadmap, Contact all **200** from Worker HTML on **apex and www**. |
 | Waitlist API first | `GET https://api.projectcar.ca/health` → **200** `{"status":"ok","service":"project-car-api"}`. If **502** or **530 / error 1033**, Doc lid-close / tunnel — `api-stay-up.md`. Do not treat that as a bad HTML upload. |
 | Waitlist e2e | **Garage** after health is 200: Membership / Contact `POST` JSON to `https://api.projectcar.ca/waitlist` → **PASS**. CORS allowlist: `cors-origins.md`. |
