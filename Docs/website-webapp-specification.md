@@ -66,10 +66,10 @@ Mission Control (Nextcloud, Vaultwarden, future cockpit) is private and is not t
 | **Git SSOT** | `apps/website/` in this repo (imported from Doc; Apex sidecar **stripped** for Pages) |
 | **Live origin today** | Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` from `main`. Not the Doc `:8088` tunnel. Classic Pages git skipped for now. |
 | **Standing re-deploy** | `brochure-worker-deploy.md` — Zone Direct Upload of `apps/website/html`. Not Pages-git. |
-| **Brochure target** | **Cloudflare Pages** (GO’d; **not done** — blocked on CF ↔ GitHub auth). Plan only: `brochure-pages-cutover.md` (root `apps/website/html`). Shop API does **not** move to Pages. Do not invent that cutover from a brochure upload. Member host (`STATUS.md` Next #1) outranks executing Pages git. |
+| **Brochure target** | Classic **Cloudflare Pages** git — **plan only** (`brochure-pages-cutover.md`, root `apps/website/html`). Blocked on Ben CF↔GitHub auth; **outranked** by STATUS Next #1 Member host (`member-host-cutover.md` / `member-zone-edge.md`). Shop API does **not** move to Pages. Do not invent that cutover from a brochure upload. Do not start Pages git from a docs PR. |
 | **Optional local** | `docker compose` in `apps/website/` (nginx only; no Apex) → `http://localhost:8088` |
 
-Do not treat McKing as the brochure host plan. McKing remains the later hub for Nextcloud / mail / backups. The public brochure’s next home is Pages. Member self-serve is **not** on this Worker today — that migration is Next.
+Do not treat McKing as the brochure host plan. McKing remains the later hub for Nextcloud / mail / backups. The public brochure’s later home is Classic Pages git (**plan only**; outranked by STATUS Next #1). Member self-serve is **not** on this Worker today — that migration is Next.
 
 ### Shop API (stays lab tunnel)
 
@@ -112,14 +112,14 @@ Do not treat McKing as the brochure host plan. McKing remains the later hub for 
 - Pages: Home, About, The Shop, Membership, Roadmap, Contact. Chat nav/page stripped (PR #5).
 - **Waitlist: Done.** Membership / Contact post JSON to `https://api.projectcar.ca/waitlist`. Interest only — not a booking, not a sale.
 - Apex public chat: **deferred (Ben)**. Not in the `apps/website/` tree. Not active P0 (PR #4 ticks). Do not revive.
-- Stack (git): Static HTML/CSS in `apps/website/`. Live origin is Worker `projectcar-brochure`. Pages cutover still GO’d, not done — plan `brochure-pages-cutover.md`.
+- Stack (git): Static HTML/CSS in `apps/website/`. Live origin is Worker `projectcar-brochure` (`brochure-worker-deploy.md`). Classic Pages git is **plan only** (`brochure-pages-cutover.md`) — blocked on Ben CF↔GitHub auth; **outranked** by STATUS Next #1.
 - Membership page describes intended bay/hoist/token model and says it is **not a live offer yet**
 - Member self-serve is **not** on this host yet. That migration is Next (`STATUS.md`).
 
-**Next site work:** see living backlog **`website-improvements.md`**. Waitlist (`POST /waitlist`) is **done**. Hygiene P0-3…P0-7 is **already live** on the Worker. Apex is **deferred** (not active P0). **Brochure host (when auth is ready):** Classic Pages git — plan `brochure-pages-cutover.md` (GO’d; blocked on CF ↔ GitHub auth). Do not start it from a docs PR. **Product next (not brochure P0):** Member UI on projectcar.ca (`member-host-cutover.md`) — **outranks** polishing Pages git. Calendar / fill / placeholders / inventory / Chat v1 / Dashboard are already on `main` (PRs #18 / #20 / #21 / #26 / #27 / #28). Do not publish live prices or “book now” until Ben says the shop is open.
+**Next site work:** see living backlog **`website-improvements.md`**. Waitlist (`POST /waitlist`) is **done**. Hygiene P0-3…P0-7 is **already live** on the Worker. Apex is **deferred** (not active P0). **Brochure host (later, when Ben CF↔GitHub auth is ready):** Classic Pages git — **plan only** `brochure-pages-cutover.md`. Do not start it from a docs PR. **Product next (not brochure P0):** Member UI on projectcar.ca (`member-host-cutover.md` / `member-zone-edge.md`) — **outranks** Pages git. Calendar / fill / placeholders / inventory / Chat v1 / Dashboard are already on `main` (PRs #18 / #20 / #21 / #26 / #27 / #28). Do not publish live prices or “book now” until Ben says the shop is open.
 
 **Known leftovers (detail in improvements doc + this file):**
-- Pages cutover GO’d, blocked on CF ↔ GitHub auth — plan `brochure-pages-cutover.md`; Member host outranks executing it
+- Classic Pages git is **plan only** (`brochure-pages-cutover.md`) — blocked on Ben CF↔GitHub auth; **outranked** by STATUS Next #1 Member host (`member-host-cutover.md` / `member-zone-edge.md`)
 - Member customer surface still on shop-UI `/member` (`ops.` + temporary `app.` alias) — migrate to projectcar.ca (Next)
 - Ben cuts the `app.` alias later — `ops.` is already LIVE; alias stays until Ben cuts that DNS
 
@@ -140,7 +140,7 @@ apps/website/
 
 ## 5. Architecture Principles
 
-- **Brochure target is Pages** — Static files from `apps/website/`. Cutover is GO’d, not done.
+- **Brochure target is Pages (plan only)** — Static files from `apps/website/`. Live origin is Worker Direct Upload (`brochure-worker-deploy.md`). Classic Pages git (`brochure-pages-cutover.md`) is blocked on Ben CF↔GitHub auth and **outranked** by STATUS Next #1. Do not treat the cutover as started.
 - **Shop API stays lab tunnel** — `api.projectcar.ca` → Doc `:8000`. Not hosted on Pages.
 - **Cloudflare in front** — DNS, Tunnel (API + **LIVE `ops.`** + temporary `app.` alias), Worker brochure, SSL, CDN, basic DDoS/WAF via free plan.
 - **No open inbound ports** — cloudflared outbound only.
@@ -240,7 +240,7 @@ Most projects keep the simple alias model initially and only create separate mai
 | 4 | Email provider decision | **Done — Proton (start free)** |
 | 5 | Waitlist form → shop API (`POST /waitlist`) | **Done** (2026-09-06) |
 | 6 | `apps/website/` git SSOT (Apex stripped) | **Done** |
-| 7 | Cloudflare Pages cutover for brochure | **Plan ready** — GO’d; blocked on CF ↔ GitHub auth. Steps: `brochure-pages-cutover.md`. Do not start. Member host (item 13 / STATUS Next #1) outranks this. |
+| 7 | Cloudflare Pages cutover for brochure | **Plan only** — blocked on Ben CF↔GitHub auth. Steps: `brochure-pages-cutover.md`. Do not start. Member host (item 13 / STATUS Next #1) **outranks** this. Live brochure stays Worker Direct Upload (`brochure-worker-deploy.md`). |
 | 8 | Proton custom domain + paid plan when ready | Pending |
 | 9 | Proton Drive setup as part of leaving Google | Pending |
 | 10 | Basic uptime monitoring | Pending |

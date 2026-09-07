@@ -75,7 +75,7 @@ Spec: `mission-control-architecture.md`.
 
 A 24/7 community automotive maker-space and the software around it.
 
-**Live:** [projectcar.ca](https://projectcar.ca) — brochure (Home, About, The Shop, Membership, Roadmap, Contact) + waitlist form → `https://api.projectcar.ca/waitlist`. Chat nav stripped. Apex sidecar **deferred** (Ben). Brochure git SSOT is `apps/website/`; Pages cutover is GO’d but not done.
+**Live:** [projectcar.ca](https://projectcar.ca) — brochure (Home, About, The Shop, Membership, Roadmap, Contact) + waitlist form → `https://api.projectcar.ca/waitlist`. Chat nav stripped. Apex sidecar **deferred** (Ben). Brochure git SSOT is `apps/website/`. Live origin is Worker **`projectcar-brochure`** Direct Upload (`brochure-worker-deploy.md`). Classic Pages git is **plan only** (`brochure-pages-cutover.md`) — blocked on Ben CF↔GitHub auth; **outranked** by STATUS Next #1 Member host (`member-host-cutover.md` / `member-zone-edge.md`).
 
 **Live Shop OS (`main` `afb37f9`):** Owner + Member booking + tokens, calendar heat-map / weekly per-hoist grids (#18), next-day fill (#20), breadth placeholders (#21), schedule harden (#24), inventory prefixes (#26), Chat v1 human/polling (#27), Dashboard 24h strips + todos + parts POs (#28). Management host **`ops.projectcar.ca` LIVE** → Doc `:3000` (staff-on-shift, not Owner-only). `app.projectcar.ca` is a **temporary alias**. Member demo still `/member` on that UI — customer-host migration is Next. Demo cookies, not OIDC. The shop is not open.
 
@@ -145,8 +145,8 @@ Full: `integration-plan.md` and `platform-architecture.md`.
 
 ## 9. Next steps
 
-1. Cloudflare Pages cutover for the brochure (blocked on CF ↔ GitHub auth). Shop API stays the lab tunnel.
-2. Member customer surface → **projectcar.ca**. `ops.` is already LIVE; Ben cuts the `app.` alias later.
+1. Member customer surface → **projectcar.ca** (`member-host-cutover.md` / `member-zone-edge.md`). `ops.` is already LIVE; Ben cuts the `app.` alias later.
+2. Classic Pages git for the brochure is **plan only** (`brochure-pages-cutover.md`) — blocked on Ben CF↔GitHub auth; **outranked** by STATUS Next #1. Live brochure stays Worker **`projectcar-brochure`** Direct Upload (`brochure-worker-deploy.md`). Do not start Pages. Shop API stays the lab tunnel.
 3. Mission Control cockpit still needs **Ben GO**. Owner + Member booking are already live — that earlier hold is satisfied.
 4. Expand `home-lab-specification.md` from the stub + live MC facts when convenient — not from the July skill draft.
 
