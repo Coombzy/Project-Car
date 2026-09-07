@@ -212,8 +212,8 @@ curl -sS http://127.0.0.1:8088/api/apex/health
 5. VW DOMAIN must match the browser origin when it is up.
 6. Fleet seed ≠ Docker volumes.
 7. McKing offline = **do not** migrate.
-8. CF tunnel = **host mode only** on Doc.
-9. Do not treat `cloud.` / `vault.` / `www` as live until DNS resolves.
+8. CF tunnel = **host mode only** on Doc — for **`api.`** + **LIVE `ops.`** + temporary **`app.`**. Not the brochure.
+9. Do not treat `cloud.` / `vault.` as live until DNS resolves. **`www` is live on the Worker** (STATUS) — not a Doc `:8088` hostname.
 
 ---
 
