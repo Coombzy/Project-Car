@@ -26,7 +26,7 @@ Product lock (read these first):
 
 `Coombzy/Automation` is historical coordination, **not** the product SSOT. Do not author new specs there.
 
-Now / locks: [`Docs/STATUS.md`](Docs/STATUS.md). Living ops (API stay-up + CORS + brochure deploy): [`Docs/api-stay-up.md`](Docs/api-stay-up.md), [`Docs/cors-origins.md`](Docs/cors-origins.md), [`Docs/brochure-worker-deploy.md`](Docs/brochure-worker-deploy.md), [`Docs/brochure-security-headers.md`](Docs/brochure-security-headers.md) (P2-4 plan only) — index in [`Docs/README.md`](Docs/README.md#living-ops).
+Now / locks: [`Docs/STATUS.md`](Docs/STATUS.md). Living ops (API stay-up + CORS + brochure deploy): [`Docs/api-stay-up.md`](Docs/api-stay-up.md), [`Docs/cors-origins.md`](Docs/cors-origins.md), [`Docs/brochure-worker-deploy.md`](Docs/brochure-worker-deploy.md), [`Docs/brochure-security-headers.md`](Docs/brochure-security-headers.md) (P2-4 **LIVE**) — index in [`Docs/README.md`](Docs/README.md#living-ops).
 
 ## Repo vs runtime
 
