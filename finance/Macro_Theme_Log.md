@@ -1,3 +1,26 @@
+### 2026-09-07 | 08:00 America/Regina
+
+**Process:** Macro v1.3 · Write rules v1.2 · sources CENTCOM/Reuters/Al Jazeera/OilPrice/AAA/CME FedWatch/Canada.ca/GIE AGSI+/BLS/Investing.com 4–7 Sep 2026
+
+**Key Takeaway:** Weekend tanker-for-tanker plus Iran’s restricted-zone plan keep Hormuz risk inside already-open crude and TTF rows; Canada’s 8 Sep counters go live tomorrow on an unchanged list; the jobs surprise only lifts Sep-hike odds inside open duration rows — leftover liquid single-name convexity does not clear the screen, so this run books **0 new themes**.
+
+**Overlap scan:** Sat 5 Sep CENTCOM disabled/destroyed three IRGC crude carriers (M/T Downy off Kharg, M/T Stark 1 near Jask, M/T Kylo/Noxen in the Gulf of Oman) after IRGC ballistic missiles at a US carrier and DDG. Mon 7 Sep Rezaei said Iran will announce a restricted zone from the US blockade line into the Gulf plus Oman-corridor maps. Same Brent/WTI/WCS/jet cash-flow as open `20260831-hormuz-reesc` — do not rebook DVN/CNQ/DAL or XLE/USO. Thaw rows (`20260826-hormuz-thaw`) stay frozen opposite-sign. Qatar FM still through October; TTF ~€73–75 (session high €75.2 on 7 Sep; 52w high €75.33); EU storage 66.6% vs ~83% five-year average, Germany 54.2% vs an 80% Nov mandate — same TTF/JKM/liquefaction line as open `20260903-eu-lng-winter` (VG/GLNG/LYB). AAA diesel printed a record $5.850 on 4 Sep; USGC ULSD crack set records near $98–106/bbl into 1 Sep — product of the same constraint, overlay on `20260827-distillate-squeeze` (do not re-add STNG/VLO/KNX). Ven 2 Sep signings remain overlay on `20260829`. OPEC+ Sun 6 Sep held October quotas flat — same oil line as reesc. NFP +162k vs +56k (4 Sep; UE 4.1%; two-month avg ~80k after July revision) lifted CME Sep-16 hike odds to ~60%; CPI 11 Sep; FOMC 15–16 Sep; Bessent $4bn long-bond ops start 9–10 Sep — stack into open `20260828-warsh-hike-gold` and `20260826-treasury-fed-tension`; do not flip KGC/KEY/NLY/NEE/DHI/AMT/TLT. Canada counters still 12:01am 8 Sep; list last revised 26 Aug (seafood off); talks still suspended; in-transit carve-out blunts day-1 volume; Section 338 still **excludes energy, potash, fish, critical minerals**. WCS–WTI ~13.3 (WCS ~79.1 / WTI ~92.4) is the re-esc path working on open oil-sands rows, not a new tell. China: no 72h tariff print. Trump Fri 4 Sep deficit-embargo swagger is not a proclamation. Defense restock remains in the six-month-war multiple.
+
+**Ranking**
+- Hormuz restricted-zone / weekend tanker exchange — leftover E&P after DVN/CNQ and Brent already 90.5→97 — (50/100)×10 = **5.0** — dropped (overlay on `20260831`)
+- Jobs +162k → Sep FOMC hike — leftover duration/gold after KEY/KGC/NLY/DHI — (50/100)×10 = **5.0** — dropped (duplicate beta of open duration rows)
+- Canada 8 Sep go-live — WHR already booked (50/100)×18 = 9.0 on the existing 14d row; leftover DE/CAT/HPQ/LZB Canada-mix mid-single-digits and most farm equipment left off the list — (48/100)×8 = **3.8** — dropped (overlay on `20260827` + `20260826-us-canada-tariffs`)
+- EU LNG winter continuation — VG already open at (52/100)×18 = **9.4** — dropped (no new id)
+- Ven increment / OPEC+ Oct pause / defense restock / China overcapacity / pharma 232 calendar — priced, scheduled, or no 72h print — dropped
+
+**Kept:** none. Do not invent.
+
+**Drivers (7 Sep morning; US cash closed Labor Day):** Brent ~97.4 · WTI ~92.4 · WCS ~79.1 · WCS–WTI ~13.3 · TTF ~€73.4 (high €75.2) · JKM ~$24 · HH ~$2.98 · Au ~4400–4477 · 10y ~4.78% · 30y ~5.24 · CME Sep hike ~60% · EU storage ~66.6% (DE ~54%) · AAA diesel $5.85 record (4 Sep) · NFP +162k / UE 4.1%.
+
+**Calibration:** No closed tracker rows yet. First 14d grades due 2026-09-10 (Canada 8 Sep: SAP.TO/WHR/IP). First 30d grades 2026-09-25 (Hormuz thaw) and 2026-09-26 (distillate).
+
+**Disclaimer:** Not financial advice. Selection support only — no position sizes.
+
 ### 2026-09-03 | 09:50 America/Regina
 
 **Process:** Macro v1.3 · Write rules v1.2 · sources Axios/Reuters/Windward/OilPrice/ACER/EIA/Canada.ca 1–3 Sep 2026
