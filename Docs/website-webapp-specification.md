@@ -274,7 +274,7 @@ One Doc tunnel is sufficient for Shop API + ops/app. The marketing brochure is *
 - `security-playbook.md`
 - `api-stay-up.md` / `cors-origins.md` (living ops; do not duplicate here)
 - `brochure-worker-deploy.md` / `brochure-pages-cutover.md` (Worker upload vs Pages git plan)
-- `brochure-security-headers.md` (P2-4 Worker headers + cache split — plan only; Zone after Lead GO)
+- `brochure-security-headers.md` (P2-4 Worker headers + cache split — **LIVE** 2026-09-07; do not re-apply from a docs PR)
 
 ---
 
