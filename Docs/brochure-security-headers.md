@@ -18,8 +18,8 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 |------|---------|
 | **Do not execute from a docs PR** | Merging this file is **not** an apply. Do not edit Cloudflare, Transform Rules, Worker settings, or `apps/website/html/_headers` from docs work. No Garage / Zone / Hatch fan-out from this PR. |
 | **Lead GO before Zone applies** | Zone implements the table below **after Lead GO**. Standing brochure HTML upload GO (`brochure-worker-deploy.md`) is **not** this GO. |
-| **P2-4 stays open** until a Worker **200** smoke (below) passes. Challenge **403** headers are WAF, not origin. |
-| **P2-3 stays git-only** until Zone Direct Uploads `apps/website/html` from `main` **`be60a01`** (Website **#57**). Do not call the `?v=` bump live. |
+| **P2-4 stays open** | Until a Worker **200** smoke (below) passes. Challenge **403** headers are WAF, not origin. |
+| **P2-3 stays git-only** | Until Zone Direct Uploads `apps/website/html` from `main` **`be60a01`** (Website **#57**). Do not call the `?v=` bump live. |
 
 ---
 
