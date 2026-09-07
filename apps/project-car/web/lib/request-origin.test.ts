@@ -70,6 +70,122 @@ describe("publicOrigin", () => {
     );
     assert.equal(junk, "http://localhost:3000");
   });
+
+  it("uses ops.projectcar.ca forwarded host (management, unchanged)", () => {
+    const origin = publicOrigin(
+      headers({
+        "x-forwarded-host": "ops.projectcar.ca",
+        "x-forwarded-proto": "https",
+        host: "localhost:3000",
+      }),
+      listenUrl,
+    );
+    assert.equal(origin, "https://ops.projectcar.ca");
+    assert.notEqual(origin, "https://localhost:3000");
+  });
+
+  it("uses projectcar.ca forwarded host + https (no localhost hop)", () => {
+    const origin = publicOrigin(
+      headers({
+        "x-forwarded-host": "projectcar.ca",
+        "x-forwarded-proto": "https",
+        host: "localhost:3000",
+      }),
+      listenUrl,
+    );
+    assert.equal(origin, "https://projectcar.ca");
+    assert.notEqual(origin, "https://localhost:3000");
+    assert.notEqual(origin, "http://localhost:3000");
+  });
+
+  it("uses www.projectcar.ca forwarded host + https (no localhost hop)", () => {
+    const origin = publicOrigin(
+      headers({
+        "x-forwarded-host": "www.projectcar.ca",
+        "x-forwarded-proto": "https",
+        host: "localhost:3000",
+      }),
+      listenUrl,
+    );
+    assert.equal(origin, "https://www.projectcar.ca");
+    assert.notEqual(origin, "https://localhost:3000");
+  });
+
+  it("uses Host when X-Forwarded-Host is a customer host (cloudflared default)", () => {
+    const apex = publicOrigin(
+      headers({
+        host: "projectcar.ca",
+        "x-forwarded-proto": "https",
+      }),
+      listenUrl,
+    );
+    assert.equal(apex, "https://projectcar.ca");
+
+    const www = publicOrigin(
+      headers({
+        host: "www.projectcar.ca",
+        "x-forwarded-proto": "https",
+      }),
+      listenUrl,
+    );
+    assert.equal(www, "https://www.projectcar.ca");
+  });
+
+  it("rejects api.projectcar.ca as a shop-web redirect host", () => {
+    const viaForwarded = publicOrigin(
+      headers({
+        "x-forwarded-host": "api.projectcar.ca",
+        "x-forwarded-proto": "https",
+        host: "localhost:3000",
+      }),
+      "http://localhost:3000/",
+    );
+    assert.equal(viaForwarded, "https://localhost:3000");
+    assert.notEqual(viaForwarded, "https://api.projectcar.ca");
+
+    const viaHostOnly = publicOrigin(
+      headers({
+        host: "api.projectcar.ca",
+        "x-forwarded-proto": "https",
+      }),
+      "http://localhost:3000/",
+    );
+    assert.equal(viaHostOnly, "http://localhost:3000");
+    assert.notEqual(viaHostOnly, "https://api.projectcar.ca");
+  });
+
+  it("rejects a well-formed but disallowed forwarded host", () => {
+    const evil = publicOrigin(
+      headers({
+        "x-forwarded-host": "evil.example",
+        "x-forwarded-proto": "https",
+        host: "localhost:3000",
+      }),
+      "http://localhost:3000/",
+    );
+    assert.equal(evil, "https://localhost:3000");
+    assert.notEqual(evil, "https://evil.example");
+
+    const fallsThroughToAllowedHost = publicOrigin(
+      headers({
+        "x-forwarded-host": "evil.example",
+        "x-forwarded-proto": "https",
+        host: "app.projectcar.ca",
+      }),
+      listenUrl,
+    );
+    assert.equal(fallsThroughToAllowedHost, "https://app.projectcar.ca");
+
+    const bothDisallowed = publicOrigin(
+      headers({
+        "x-forwarded-host": "evil.example",
+        host: "api.projectcar.ca",
+        "x-forwarded-proto": "https",
+      }),
+      "http://localhost:3000/",
+    );
+    assert.equal(bothDisallowed, "http://localhost:3000");
+  });
 });
 
 describe("publicUrl", () => {
@@ -90,5 +206,72 @@ describe("publicUrl", () => {
     const login = publicUrl(headers({ host: "localhost:3000" }), "http://localhost:3000/", "/login");
     login.searchParams.set("next", "/");
     assert.equal(login.toString(), "http://localhost:3000/login?next=%2F");
+  });
+
+  it("builds /member/login?next=/member on projectcar.ca (no localhost hop)", () => {
+    const login = publicUrl(
+      headers({
+        "x-forwarded-host": "projectcar.ca",
+        "x-forwarded-proto": "https",
+        host: "localhost:3000",
+      }),
+      listenUrl,
+      "/member/login",
+    );
+    login.searchParams.set("next", "/member");
+    assert.equal(login.toString(), "https://projectcar.ca/member/login?next=%2Fmember");
+    assert.doesNotMatch(login.toString(), /localhost/);
+  });
+
+  it("builds /member/login?next=/member on www.projectcar.ca (no localhost hop)", () => {
+    const login = publicUrl(
+      headers({
+        "x-forwarded-host": "www.projectcar.ca",
+        "x-forwarded-proto": "https",
+        host: "localhost:3000",
+      }),
+      listenUrl,
+      "/member/login",
+    );
+    login.searchParams.set("next", "/member");
+    assert.equal(login.toString(), "https://www.projectcar.ca/member/login?next=%2Fmember");
+    assert.doesNotMatch(login.toString(), /localhost/);
+  });
+
+  it("builds /member on customer hosts when already logged in (redirect target)", () => {
+    const apex = publicUrl(
+      headers({
+        "x-forwarded-host": "projectcar.ca",
+        "x-forwarded-proto": "https",
+      }),
+      listenUrl,
+      "/member",
+    );
+    assert.equal(apex.toString(), "https://projectcar.ca/member");
+
+    const www = publicUrl(
+      headers({
+        host: "www.projectcar.ca",
+        "x-forwarded-proto": "https",
+      }),
+      listenUrl,
+      "/member",
+    );
+    assert.equal(www.toString(), "https://www.projectcar.ca/member");
+  });
+
+  it("does not mint a /member/login redirect to a disallowed host", () => {
+    const rejected = publicUrl(
+      headers({
+        "x-forwarded-host": "api.projectcar.ca",
+        "x-forwarded-proto": "https",
+        host: "localhost:3000",
+      }),
+      "http://localhost:3000/",
+      "/member/login",
+    );
+    rejected.searchParams.set("next", "/member");
+    assert.equal(rejected.toString(), "https://localhost:3000/member/login?next=%2Fmember");
+    assert.notEqual(rejected.origin, "https://api.projectcar.ca");
   });
 });

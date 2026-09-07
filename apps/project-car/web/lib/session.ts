@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 
 import { cookieSecure } from "./cookie-secure";
 import { MEMBER_SESSION_COOKIE, SESSION_COOKIE } from "./config";
+import { memberCookiePath } from "./member-cookie-path";
 
 function extractNamedCookie(setCookieHeaders: string[], cookieName: string): string | null {
   for (const header of setCookieHeaders) {
@@ -68,10 +69,19 @@ export async function readMemberSessionToken(): Promise<string | undefined> {
 }
 
 export async function writeMemberSessionCookie(value: string, maxAge = 86_400): Promise<void> {
-  await writeCookie(MEMBER_SESSION_COOKIE, value, maxAge);
+  const store = await cookies();
+  store.set({
+    name: MEMBER_SESSION_COOKIE,
+    value,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: cookieSecure(),
+    path: memberCookiePath(),
+    maxAge,
+  });
 }
 
 export async function clearMemberSessionCookie(): Promise<void> {
   const store = await cookies();
-  store.delete(MEMBER_SESSION_COOKIE);
+  store.delete({ name: MEMBER_SESSION_COOKIE, path: memberCookiePath() });
 }

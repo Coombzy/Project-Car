@@ -98,6 +98,8 @@ Login uses `POST /auth/login` and stores the API’s httpOnly `pc_owner_session`
 
 Public hosts (`https://ops.projectcar.ca`, `https://app.projectcar.ca`) need **Secure** cookies. KeepAlive often runs `next dev` (NODE_ENV unset), so set `SHOP_COOKIE_SECURE=true` on Doc for the shop UI and `COOKIE_SECURE=true` on the API. Local `http://127.0.0.1:3000` should leave `SHOP_COOKIE_SECURE` unset or false — a Secure cookie will not stick on plain HTTP. Firefox is pickier about this than some other browsers.
 
+Member cookie `Path` is **`/`** unless `SHOP_MEMBER_COOKIE_PATH_SCOPED=true` (then `Path=/member`). Login, logout, and delete share that path. Leave the flag **unset / OFF** on production Doc until a customer-host cutover. Owner cookies stay `Path=/`. Redirect hosts are allowlisted in `lib/request-origin.ts` (`localhost` / `127.0.0.1`, `ops.`, `app.`, `projectcar.ca`, `www.` — not `api.`).
+
 ## Out of scope
 
 Website / apex / Cloudflare, Mission Control, Stripe live charges, NFC, live Frigate / NVR wiring, full parts purchase / eBay, live tool QR / checkout hardware, job claim-complete, Member/Staff OIDC, n8n. Breadth-first placeholder pages (Parts, Tools, Job board, Cameras, Payments) are in the demo UI only. Inventory prefixes are locked (B1–B6 / TC / PT; CM later).

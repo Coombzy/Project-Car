@@ -99,7 +99,7 @@ Public HTTPS on ops/app already needs Secure. Shop-web KeepAlive is **`next star
 
 - **Domain:** keep **host-only** (omit `Domain`). Do **not** set `Domain=.projectcar.ca` — that would send `pc_member_session` to `ops.`, `app.`, and `api.`. Owner and Member cookies stay on different hosts.
 - **www vs apex:** pick one canonical customer host for Member cookies (or set the cookie on the host the browser actually hit). Host-only cookies do **not** follow a www ↔ apex hop. Zone should keep the existing brochure www/apex pair working; do not assume one cookie covers both.
-- **Path:** today `Path=/` because the whole shop-web origin is the app. After share-host, prefer **`Path=/member`** so brochure pages do not receive the Member session. Login / logout / `delete_cookie` must use the same Path. If Path stays `/`, brochure requests will send the cookie — avoid leaking it to static HTML unless you have a reason.
+- **Path:** today `Path=/` because the whole shop-web origin is the app. After share-host, prefer **`Path=/member`** so brochure pages do not receive the Member session. Login / logout / `delete_cookie` must use the same Path. If Path stays `/`, brochure requests will send the cookie — avoid leaking it to static HTML unless you have a reason. Shop-web already supports this behind **`SHOP_MEMBER_COOKIE_PATH_SCOPED=true`** (default **OFF** → `Path=/`). Do **not** flip the Doc env until Ben GO / cutover.
 - **Secure:** **must stay true** on HTTPS projectcar.ca / www. Same `COOKIE_SECURE` / `SHOP_COOKIE_SECURE` (and `next start` production).
 - **SameSite:** keep **`Lax`**. Member login is a same-site form POST; Lax is enough. Do not switch to `None` (needs Secure + cross-site; not this architecture). Do not switch to `Strict` without checking login redirects from brochure links.
 - **HttpOnly:** keep. Demo stub — still not OIDC.
@@ -123,14 +123,16 @@ Never `*`. After any `.env` change, **Lead** restarts uvicorn (`cors-origins.md`
 
 ### Next.js middleware host allowlist
 
-Today there is **no** explicit host allowlist. `middleware.ts` redirects with `publicUrl` → `publicOrigin` (`lib/request-origin.ts`), which trusts a well-formed `X-Forwarded-Host` / `Host` plus `X-Forwarded-Proto`. Tests cover `app.projectcar.ca` and localhost, not projectcar.ca / www.
+`middleware.ts` redirects with `publicUrl` → `publicOrigin` (`lib/request-origin.ts`). Shop-web now allowlists hosts that may drive those redirects: `localhost` / `127.0.0.1`, `ops.projectcar.ca`, `app.projectcar.ca`, `projectcar.ca`, `www.projectcar.ca`. Junk or unknown `X-Forwarded-Host` / `Host` falls back to the listen origin — it cannot mint a login redirect to a random host. `api.projectcar.ca` is **not** on the list. Tests cover ops/app/localhost plus customer-host `/member/login` and `/member`.
+
+This is **prep only**. Member is still **not** reachable on projectcar.ca / www until Zone edge work after Ben GO.
 
 Before Member is reachable on the customer host:
 
 - [ ] Tunnel / edge must forward `Host` or `X-Forwarded-Host` as `projectcar.ca` or `www.projectcar.ca` (and `https`). Otherwise redirects hop to `localhost:3000` — the same class of bug already fixed on ops. Zone wiring: **`member-zone-edge.md`** §3.
-- [ ] Add an **explicit allowlist** (recommended): `localhost` / `127.0.0.1`, `ops.projectcar.ca`, `app.projectcar.ca`, `projectcar.ca`, `www.projectcar.ca`. Reject anything else so a junk `X-Forwarded-Host` cannot mint a login redirect.
-- [ ] Extend `request-origin` tests for customer-host redirects (`/member/login`, `/member`).
-- [ ] Do **not** allowlist `api.projectcar.ca` as a shop-web redirect host.
+- [x] Add an **explicit allowlist** (recommended): `localhost` / `127.0.0.1`, `ops.projectcar.ca`, `app.projectcar.ca`, `projectcar.ca`, `www.projectcar.ca`. Reject anything else so a junk `X-Forwarded-Host` cannot mint a login redirect.
+- [x] Extend `request-origin` tests for customer-host redirects (`/member/login`, `/member`).
+- [x] Do **not** allowlist `api.projectcar.ca` as a shop-web redirect host.
 
 ---
 
@@ -193,9 +195,9 @@ Lead sequences this vs more breadth placeholders: **cutover planning outranks ne
 
 | Order | Gate | Who | Notes |
 |-------|------|-----|-------|
-| 0 | **This doc exists** | Docs PR | You are here. No DNS. No `app.` cut. No code migration. |
+| 0 | **This doc exists** | Docs PR | Done. No DNS. No `app.` cut. |
 | 1 | **Ben GO** | Ben | Required. Do not start Garage site work or Zone edge work from this file alone. |
-| 2 | Cookie / CORS / middleware allowlist on Doc | Lead (process) + Garage (shop-web change) | Code + `.env` only after GO. Lead restarts uvicorn if `CORS_ORIGINS` changes. |
+| 2 | Cookie / CORS / middleware allowlist on Doc | Lead (process) + Garage (shop-web change) | Shop-web **allowlist + customer-host redirect tests landed** (prep). `SHOP_MEMBER_COOKIE_PATH_SCOPED` exists, default **OFF**. Do **not** flip Doc `.env` / CORS until GO. Lead restarts uvicorn if `CORS_ORIGINS` changes. |
 | 3 | Edge path split on projectcar.ca / www | **Zone** | Checklist: **`member-zone-edge.md`**. Cloudflare path rules / tunnel hostname so `/member*` hits Doc `:3000` (`http://127.0.0.1:3000`) and brochure paths stay Worker. CORS **edge** if Zone owns a WAF/origin check — API allowlist stays Lead `.env`. |
 | 4 | Member UI on customer host | **Garage** (site) | Wire the Member surface; do not replace the Worker brochure. |
 | 5 | Prove success criteria | Garage e2e waitlist; anyone can curl health / ops probes | If ops/app or waitlist breaks → §4 rollback. |
