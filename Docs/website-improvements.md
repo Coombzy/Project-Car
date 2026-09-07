@@ -1,7 +1,7 @@
 # Project Car — Website Improvements (Living)
 
 **Status:** Living document — update when items ship, get deferred, or new issues are found  
-**Last audited:** 2026-09-07 (P2-1 live-verified on Worker `projectcar-brochure` from Garage PR #55 / `453e44d` + Zone smoke PASS; P2-2 canonicals in git this PR — Zone owns Worker upload after merge)  
+**Last audited:** 2026-09-07 (P2-1 live-verified on Worker `projectcar-brochure` from Garage PR #55 / `453e44d` — absolute `og:url` / `og:image` + `twitter:card`; Zone smoke PASS). P2-2 tags landed in git this PR (not Worker-live). P2-3 / P2-4 stay open.  
 **Owner:** Ben (decisions) · Garage (brochure HTML/CSS) · Zone (Cloudflare Worker upload) · Doc (Shop API host)  
 **Canonical:** `Coombzy/Project-Car` → `Docs/website-improvements.md`  
 **Local clone:** `~/src/Project-Car/Docs/website-improvements.md`  
@@ -47,7 +47,7 @@
 | Soft-404 | Live Worker 404s missing static files. Git has `404.html` + nginx `error_page 404`. Do not add SPA `/* /index.html 200`. |
 | Mission Control | Separate; ops + Member booking are live on Doc demo, **`https://ops.projectcar.ca`**, and the temporary alias `https://app.projectcar.ca`. Cockpit still needs **Ben GO** — do not start it from brochure work. |
 
-**Overall:** Waitlist is live. P1-1 Home `cta-hero` waitlist CTA weight and P1-3 Contact `contact-soon` collapse are **LIVE** on Worker `projectcar-brochure` (PR #52 / `5361212`; 2026-09-07 smoke PASS). P2-1 absolute OG/Twitter URLs are **LIVE** on that Worker (PR #55 / `453e44d`; Zone smoke PASS). P2-2 apex canonicals are **in git** this PR — Zone owns the next Worker upload; do not treat P2-2 as live until then. Brochure Chat/Apex stay gone (Apex sidecar deferred; public Chat page stays stripped). Shop OS **Chat v1** (human / polling) is **LIVE** on the ops/app demo — not the brochure. Brochure hygiene P0-3…P0-7 is **already live** on the Worker. Ops + Member booking, Chat #27, and Dashboard #28 are live on Doc demo, **`https://ops.projectcar.ca`**, and the temporary alias `https://app.projectcar.ca`. Some clients still have flaky local DNS for `ops.` — use `app.`. Not Mission Control, not Apex. The shop is not open. P1-6 stays deferred. P2-3 / P2-4 stay open.
+**Overall:** Waitlist is live. P1-1 Home `cta-hero` waitlist CTA weight and P1-3 Contact `contact-soon` collapse are **LIVE** on Worker `projectcar-brochure` (PR #52 / `5361212`; 2026-09-07 smoke PASS). **Only P2-1** is live-verified on that Worker (PR #55 / `453e44d`; absolute `og:url` / `og:image` + `twitter:card`; Zone smoke PASS). P2-2 canonical tags landed in git this PR — git/local verify only; do not invent Worker-live. P2-3 / P2-4 stay **open** (CSS `?v=` still lags). Brochure Chat/Apex stay gone (Apex sidecar deferred; public Chat page stays stripped). Shop OS **Chat v1** (human / polling) is **LIVE** on the ops/app demo — not the brochure. Brochure hygiene P0-3…P0-7 is **already live** on the Worker. Ops + Member booking, Chat #27, and Dashboard #28 are live on Doc demo, **`https://ops.projectcar.ca`**, and the temporary alias `https://app.projectcar.ca`. Some clients still have flaky local DNS for `ops.` — use `app.`. Not Mission Control, not Apex. The shop is not open. P1-6 stays deferred.
 
 ---
 
@@ -103,9 +103,9 @@ IDs kept so old links resolve. Do not treat these as current P0.
 
 | ID | Item | Status | Notes / acceptance |
 |----|------|--------|-------------------|
-| P2-1 | **Absolute Open Graph URLs** | done | 2026-09-07 live verify — Garage PR #55 → main `453e44d`. Absolute `og:url` / `og:image` / `twitter:image` at `https://projectcar.ca/...` plus `og:type` + `twitter:card` on all brochure HTML (Home `/`, about, the-shop, membership, roadmap, contact, 404). Zone Direct Upload Worker `projectcar-brochure` **LIVE** from that tip; Zone smoke PASS. Dedicated ~1200×630 share crop still later. |
-| P2-2 | **Canonical links per page** | done | 2026-09-07 — `<link rel="canonical" href="https://projectcar.ca/...">` on every public HTML page (Home `/`, about, the-shop, membership, roadmap, contact, 404). Apex host only (not www). Paths match existing P2-1 `og:url`. Git acceptance: one canonical per page (`rg -n 'rel="canonical"' apps/website/html/*.html`). Zone owns Worker upload after merge — not live until that upload. |
-| P2-3 | **Asset / CSS cache version single source** | open | about.html at `?v=29`, others mostly `?v=28`. One bump strategy; no-cache all HTML; long-cache fingerprinted static assets. |
+| P2-1 | **Absolute Open Graph URLs** | done | 2026-09-07 live verify — Garage PR #55 → main `453e44d` already on Worker. Absolute `og:url` / `og:image` + `twitter:card` (`og:type` / `twitter:image` too) at `https://projectcar.ca/...` on all brochure HTML. Zone Direct Upload Worker `projectcar-brochure` **LIVE**; Zone smoke PASS. Dedicated ~1200×630 share crop still later. |
+| P2-2 | **Canonical links per page** | done | 2026-09-07 — tags landed this PR. `<link rel="canonical" href="https://projectcar.ca/...">` on every public HTML page (Home `/`, about, the-shop, membership, roadmap, contact, 404). Apex host only (not www). Paths match P2-1 `og:url`. Verify (git/local, **not** Worker-live): `rg -n 'rel="canonical"' apps/website/html/*.html` — one tag per page. Zone owns upload after merge. Do not invent P2-3 / P2-4 as done. |
+| P2-3 | **Asset / CSS cache version single source** | open | CSS `?v=` still lags: `styles.css?v=33` on Home/Contact vs `?v=32` on about/404/the-shop/membership/roadmap; `banner-logo.png` `?v=28` vs about `?v=29`. One bump strategy; no-cache all HTML; long-cache fingerprinted static assets. |
 | P2-4 | **Security headers at origin** | open | e.g. `X-Content-Type-Options`, `Referrer-Policy`, frame denial / CSP baseline for static site (+ CF as today). |
 | P2-5 | **Image weight / modern formats** | deferred | shop ~444K, mcking ~312K OK; WebP/AVIF + srcset when polishing mobile. |
 | P2-6 | **JSON-LD LocalBusiness/Organization** | deferred | Only when real public location/hours exist—no invented NAP. |
@@ -146,9 +146,9 @@ Follow skill **project-car-web-copy**. Tighten; don’t rewrite the story. No fa
 3. P4 as interest grows  
 4. P1-6 only **after Member cutover GO** — still deferred; no brochure HTML from a docs PR.
 
-Brochure hygiene is **already live** on Worker `projectcar-brochure` (re-uploaded 2026-09-06). P1-1 / P1-3 are **LIVE** on that Worker (PR #52 / `5361212`; 2026-09-07 smoke PASS). P2-1 is **LIVE** (PR #55 / `453e44d`; Zone smoke PASS). P2-2 is **in git** this PR — Zone owns the next Worker upload; do not invent a CF deploy from this PR. Ops + Member booking are live on Doc demo **and** the temporary `app.` alias. Intended management host is **`ops.`**. Mission Control cockpit still needs **Ben GO**. The shop is not open.
+Brochure hygiene is **already live** on Worker `projectcar-brochure` (re-uploaded 2026-09-06). P1-1 / P1-3 are **LIVE** on that Worker (PR #52 / `5361212`; 2026-09-07 smoke PASS). **Only P2-1** is **LIVE** on that Worker (PR #55 / `453e44d`; Zone smoke PASS). P2-2 tags landed in git this PR (git/local verify; not Worker-live) — Zone owns the next upload; do not invent a CF deploy from this PR. P2-3 / P2-4 stay **open**. Ops + Member booking are live on Doc demo **and** the temporary `app.` alias. Intended management host is **`ops.`**. Mission Control cockpit still needs **Ben GO**. The shop is not open.
 
-Waitlist (P1-5), Chat strip (P1-2), Home CTA weight (P1-1), Contact channel honesty (P1-3), absolute OG (P2-1), git home (P2-7), and P0-3…P0-7 are **done** (git + live Worker). P2-2 canonicals are **done in git** this PR (live after Zone upload). P1-6 stays **deferred**. P2-3 / P2-4 stay **open**. Apex (P0-1 / P0-2) is **deferred** — do not start the queue there.  
+Waitlist (P1-5), Chat strip (P1-2), Home CTA weight (P1-1), Contact channel honesty (P1-3), absolute OG (P2-1), git home (P2-7), and P0-3…P0-7 are **done** (git + live Worker). P2-2 canonicals are **done** with git/local verify this PR (tags landed; not Worker-live). P1-6 stays **deferred**. P2-3 / P2-4 stay **open**. Apex (P0-1 / P0-2) is **deferred** — do not start the queue there.  
 
 ---
 
@@ -200,7 +200,7 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 
 | Date | Change |
 |------|--------|
-| 2026-09-07 | P2-1 **done** (live verify). Garage PR #55 → main `453e44d`. Absolute OG/Twitter URLs on all brochure HTML. Zone Worker `projectcar-brochure` **LIVE**; Zone smoke PASS. P2-2 **done** in git this PR: apex `<link rel="canonical">` on Home `/`, about, the-shop, membership, roadmap, contact, 404 — paths match P2-1 `og:url`. Zone owns upload after merge. P1-6 stays deferred. P2-3 / P2-4 stay open. |
+| 2026-09-07 | **Only P2-1 done** with Worker live verify. Garage PR #55 → main `453e44d` already on Worker: absolute `og:url` / `og:image` + `twitter:card`. Zone smoke PASS. P2-2 **done** with git/local verify this PR (canonical tags landed; not Worker-live). P2-3 / P2-4 stay **open** (CSS `?v=` still lags). P1-6 stays deferred. |
 | 2026-09-07 | P1-1 / P1-3 **done** (live verify). Garage PR #52 → main `5361212`. Home `cta-hero` waitlist CTA weight; Contact Phone/IG/TikTok/YouTube/Skool collapsed to one `contact-soon` line. Zone Direct Upload Worker `projectcar-brochure` **LIVE** from that tip; smoke PASS (Home CTA + Contact; apex/www 200). P1-6 stays deferred. P2 not invented as done. |
 | 2026-09-07 | P1-6 stub: Membership secondary “Already a member? Sign in” → apex `https://projectcar.ca/member/login` only. **Deferred** until Member cutover GO. Never www / ops / app. Waitlist stays the interest path. No brochure HTML in this docs PR. |
 | 2026-09-07 | P1-5 note: lid-close public **530 / 1033** on OPTIONS / POST /waitlist is expected — not a CORS regression. `waitlist.js` mailto fallback while origin is down; e2e only when GET /health is 200. See `cors-origins.md`. |
