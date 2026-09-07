@@ -52,17 +52,19 @@ Which `/member` routes move vs what stays on the brochure vs what stays on `ops.
 
 Full flags, CORS allowlist, and middleware host allowlist: **`member-host-cutover.md` §2**. Zone does not rewrite cookies from the edge. Garage / Lead own Path / Secure / `.env` **after GO**.
 
+**Canonical Member cookie host is apex `projectcar.ca`.** Locked for this plan. Not www. This is **plan only** — do **not** claim the hop is live and do **not** apply a Zone rule from this file.
+
 What Zone must not break:
 
 | Rule | Why |
 |------|-----|
 | Cookies stay **host-only** (no `Domain=.projectcar.ca`). | A parent Domain would send `pc_member_session` to `ops.`, `app.`, and `api.`. Owner and Member cookies stay on different hosts. |
-| Prefer **`Path=/member`** after share-host. | Brochure pages must not receive the Member session. Login / logout / `delete_cookie` must use the same Path (`member-host-cutover.md` §2). |
-| **Pick a canonical customer host** for Member (`projectcar.ca` **or** `www.projectcar.ca`) — or document the hop. | Host-only cookies do **not** follow a www ↔ apex redirect. A login on www and a bounce to apex drops the session (and the reverse). |
-| Keep the existing brochure www / apex pair working. | Marketing + waitlist already use both. Do not assume one cookie covers both names. |
+| Prefer **`Path=/member`** after share-host. | Brochure pages must not receive the Member session. Login / logout / `delete_cookie` must use the same Path (`member-host-cutover.md` §2). Shop-web already supports this behind **`SHOP_MEMBER_COOKIE_PATH_SCOPED=true`** (default **OFF** → `Path=/`). Do **not** flip the Doc env until Ben GO / cutover. |
+| **Canonical host = apex `projectcar.ca`.** Zone plan: **301** `www.projectcar.ca/member*` → `https://projectcar.ca/member*`. | Host-only `pc_member_session` does **not** follow a www ↔ apex hop. A login on www and a bounce to apex would drop the session. The 301 puts Member only on apex so that cannot happen. |
+| Brochure static stays **dual-host** on Worker (`projectcar.ca` + `www`). | Marketing + waitlist already use both. Do **not** 301 all of www — only `/member*`. |
 | **Secure** stays true on HTTPS. **SameSite=Lax**. **HttpOnly**. | Same as ops/app today. Do not switch to `None` or `Strict` at the edge. **Not OIDC.** |
 
-If Zone 301s www → apex (or apex → www) on `/member*`, say so in the GO notes and put Member only on the **canonical** host. Silent hops are a cookie bug, not a “refresh.”
+After Ben GO, say the 301 is in the GO notes and put Member only on apex. Silent hops without that 301 are a cookie bug, not a “refresh.” Do **not** invent a live edge flip from this PR.
 
 CORS: `https://projectcar.ca` and `https://www.projectcar.ca` are **already** on `CORS_ORIGINS` (`cors-origins.md`). Sharing the customer host does **not** require a new origin. Lead restarts uvicorn only if `.env` changes.
 
@@ -74,7 +76,7 @@ Tunnel / edge must forward the **real public host** and **https** into shop-web.
 
 | Forward | Value |
 |---------|--------|
-| `Host` or `X-Forwarded-Host` | `projectcar.ca` or `www.projectcar.ca` (the host the browser actually hit) |
+| `Host` or `X-Forwarded-Host` | **`projectcar.ca`** for `/member*` (canonical cookie host after the planned www→apex 301). Brochure paths may still be `www.projectcar.ca`. |
 | `X-Forwarded-Proto` | `https` |
 
 If these are missing or set to `localhost` / `127.0.0.1:3000`, login and auth-gate redirects hop to **`http://localhost:3000/...`**. That class of bug is **already fixed on ops** (`shop-web-stay-up.md` public smoke). Do not reintroduce it on the customer host.
@@ -91,16 +93,16 @@ Lid-close / sleep on Doc can still take shop-web and the API (Cloudflare **502**
 
 | # | Check | Expect |
 |---|--------|--------|
-| 1 | Member login on customer host | `https://projectcar.ca/member/login` (and www **only** if that host is in play) serves the demo form. Seed `ada.reyes@example.com` + demo password sets `pc_member_session` (Secure, Lax, host-only, Path as decided). Redirect stays on projectcar.ca / www — **no localhost hop**. |
+| 1 | Member login on customer host | **Apex only:** `https://projectcar.ca/member/login` serves the demo form. Seed `ada.reyes@example.com` + demo password sets `pc_member_session` (Secure, Lax, host-only, Path as decided — prefer `/member` when `SHOP_MEMBER_COOKIE_PATH_SCOPED` is on). Redirect stays on **`projectcar.ca`** — **no localhost hop**, **no www hop**. Do **not** smoke `https://www.projectcar.ca/member…` as a success path. After GO, Zone **301** `www…/member*` → `https://projectcar.ca/member*` (plan only — not live). |
 | 2 | Brochure still Worker | Home / About / The Shop / Membership / Roadmap / Contact **200** Worker HTML. Chat page stays gone. Not Next HTML. |
 | 3 | Waitlist still works | Membership / Contact `POST` → `api.projectcar.ca/waitlist` still **PASS** when API health is 200. OPTIONS still returns `Access-Control-Allow-Origin` for brochure origins (`cors-origins.md`). |
 | 4 | Ops / app still healthy | `https://ops.projectcar.ca/` → `Location: https://ops.projectcar.ca/login` (no localhost). `/login` **200 when Doc origin is up**. Temporary `https://app.projectcar.ca` still the same Doc `:3000` origin. |
 | 5 | No localhost `Location` | Member, ops, and app redirects stay on their public hosts. |
 
 ```bash
-# Member path (customer host) — expect shop-web, not Worker brochure HTML
+# Member path — apex only (canonical cookie host). Do not treat www as a Member host.
 curl -sS -D - -o /dev/null https://projectcar.ca/member/login | grep -iE 'HTTP/|location:'
-# Brochure paths must stay Worker
+# Brochure paths must stay Worker (dual-host; www brochure is fine)
 curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/
 curl -sS -o /dev/null -w '%{http_code}\n' https://www.projectcar.ca/
 curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/membership.html

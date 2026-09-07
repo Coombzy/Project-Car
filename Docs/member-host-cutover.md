@@ -98,7 +98,7 @@ Public HTTPS on ops/app already needs Secure. Shop-web KeepAlive is **`next star
 ### What must change for Member on projectcar.ca
 
 - **Domain:** keep **host-only** (omit `Domain`). Do **not** set `Domain=.projectcar.ca` — that would send `pc_member_session` to `ops.`, `app.`, and `api.`. Owner and Member cookies stay on different hosts.
-- **www vs apex:** pick one canonical customer host for Member cookies (or set the cookie on the host the browser actually hit). Host-only cookies do **not** follow a www ↔ apex hop. Zone should keep the existing brochure www/apex pair working; do not assume one cookie covers both.
+- **Canonical host:** apex **`projectcar.ca`**. Host-only `pc_member_session` is issued and read on apex only. Zone plan (after Ben GO, **not this PR**): **301** `www.projectcar.ca/member*` → `https://projectcar.ca/member*` so a www hit cannot drop the session on apex. Brochure static stays **dual-host** on Worker (`projectcar.ca` + `www`) — do **not** 301 the whole site. Do **not** claim this hop is live.
 - **Path:** today `Path=/` because the whole shop-web origin is the app. After share-host, prefer **`Path=/member`** so brochure pages do not receive the Member session. Login / logout / `delete_cookie` must use the same Path. If Path stays `/`, brochure requests will send the cookie — avoid leaking it to static HTML unless you have a reason. Shop-web already supports this behind **`SHOP_MEMBER_COOKIE_PATH_SCOPED=true`** (default **OFF** → `Path=/`). Do **not** flip the Doc env until Ben GO / cutover.
 - **Secure:** **must stay true** on HTTPS projectcar.ca / www. Same `COOKIE_SECURE` / `SHOP_COOKIE_SECURE` (and `next start` production).
 - **SameSite:** keep **`Lax`**. Member login is a same-site form POST; Lax is enough. Do not switch to `None` (needs Secure + cross-site; not this architecture). Do not switch to `Strict` without checking login redirects from brochure links.
@@ -129,7 +129,7 @@ This is **prep only**. Member is still **not** reachable on projectcar.ca / www 
 
 Before Member is reachable on the customer host:
 
-- [ ] Tunnel / edge must forward `Host` or `X-Forwarded-Host` as `projectcar.ca` or `www.projectcar.ca` (and `https`). Otherwise redirects hop to `localhost:3000` — the same class of bug already fixed on ops. Zone wiring: **`member-zone-edge.md`** §3.
+- [ ] Tunnel / edge must forward `Host` or `X-Forwarded-Host` as **`projectcar.ca`** for Member (and `https`) after the planned www→apex 301. Brochure may still hit www. Otherwise redirects hop to `localhost:3000` — the same class of bug already fixed on ops. Zone wiring: **`member-zone-edge.md`** §3.
 - [x] Add an **explicit allowlist** (recommended): `localhost` / `127.0.0.1`, `ops.projectcar.ca`, `app.projectcar.ca`, `projectcar.ca`, `www.projectcar.ca`. Reject anything else so a junk `X-Forwarded-Host` cannot mint a login redirect.
 - [x] Extend `request-origin` tests for customer-host redirects (`/member/login`, `/member`).
 - [x] Do **not** allowlist `api.projectcar.ca` as a shop-web redirect host.
@@ -175,7 +175,7 @@ All of these must be true before calling the cutover done. **None of them are tr
 
 | # | Check | Expect |
 |---|--------|--------|
-| 1 | Member login on customer host | `https://projectcar.ca/member/login` (and www if that host is in play) serves the demo form. Seed `ada.reyes@example.com` + demo password sets `pc_member_session` (Secure, Lax, host-only, Path as decided). Redirect stays on projectcar.ca / www — **no localhost hop**. |
+| 1 | Member login on customer host | **Apex only:** `https://projectcar.ca/member/login` serves the demo form. Seed `ada.reyes@example.com` + demo password sets `pc_member_session` (Secure, Lax, host-only, Path as decided — prefer `/member` when `SHOP_MEMBER_COOKIE_PATH_SCOPED` is on). Redirect stays on **`projectcar.ca`** — **no localhost hop**, **no www hop**. Do **not** smoke `https://www.projectcar.ca/member…` as a success path. After GO, Zone **301** `www…/member*` → `https://projectcar.ca/member*` (plan only — not live). |
 | 2 | Balance | Logged-in `GET /member` shows tokens + ledger (same demo as ops `/member`). |
 | 3 | Booking routes | `/member/schedule` renders Bays 1–5; quote / book / cancel still work; shop hoist still `400 shop_hoist_owner_only`. `/member/schedule/quote` same-origin. |
 | 4 | Member extras still gated | `/member/chat` auth-gate 307 when logged out; logged-in own rooms. Placeholders (`/member/parts`, `/member/jobs`, `/member/cameras`) load as demo UI — not Stripe / Frigate / checkout. |
