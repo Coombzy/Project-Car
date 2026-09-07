@@ -1,0 +1,109 @@
+# Doc lid-close restore — ordered wake sequence
+
+**Status:** Living ops (Lead checklist)  
+**Updated:** 2026-09-07  
+**Related:** `api-stay-up.md`, `shop-web-stay-up.md`, `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md`
+
+Single **ordered** wake/restore after Doc lid-close / sleep (the morning **530 / 1033** pattern). Plan/ops checklist for **Lead**. This file is the sequence. Process essays stay in the Related docs — do not copy them here.
+
+Do **not** invent an edge flip, a Cloudflare ↔ GitHub re-ask, or a Member **GO**. Soft 530 mornings are expected lid-close.
+
+---
+
+## Why this exists
+
+Doc is a MacBook (M1 Max). Lid close or host sleep stops or stalls origin processes and can drop the tunnel. Public tunneled hosts then return Cloudflare **502** or **530 / error 1033**.
+
+Amphetamine + plugged-in no-sleep (`doc-software-baseline.md`) plus LaunchAgent KeepAlive once the host is awake are **mitigation, not a guarantee**. If the lid is closed, public API / ops / app are down until Doc is awake.
+
+The public brochure (Worker `projectcar-brochure`) does **not** go down when Doc sleeps. Waitlist still needs the API.
+
+---
+
+## Soft 530 mornings vs ping Ben
+
+| Pattern | Action |
+|---------|--------|
+| Soft morning **530 / 1033** on `api.` / `ops.` / `app.` | **Expected lid-close.** Stay quiet. Restore when Doc is reachable. Do not page Ben. |
+| Doc will not wake, **Grok Bot desktop offline**, or a **prolonged** outage after a normal wake window | Ping **Ben**. Lead still owns process restore once the Mac is up. |
+
+Alerts can come from anyone who sees **502**, **530 / error 1033**, or a failed waitlist submit. **Recovery of the processes is Lead only.**
+
+---
+
+## Ownership (this run)
+
+| Role | Owns | Does not own |
+|------|------|----------------|
+| **Lead** | Restore processes on Doc (cloudflared up, shop-api KeepAlive, shop-web `next start` / pull+rebuild) | Cloudflare tunnel / DNS edits, edge flip, Member GO |
+| **Zone** | Only if **local origin is healthy** but public is still **1033** (tunnel / DNS) | Restarting uvicorn or shop-web |
+| **Garage** | Brochure waitlist e2e **after** public health is 200 | Restarting processes, tunnel, or DNS |
+
+No edge flip. No CF ↔ GitHub re-ask. No Member GO.
+
+---
+
+## Ordered restore
+
+Run these **in order**. Public probes mean nothing until cloudflared is up.
+
+### 1. cloudflared up
+
+Host **cloudflared** must be running on Doc before any public `api.` / `ops.` / `app.` probe means anything. Zone owns the hostname / DNS rules; Lead confirms the process is up on Doc.
+
+If cloudflared is down after wake, start it on Doc. Do not treat a public 1033 as “restart uvicorn” until this step is done.
+
+### 2. shop-api KeepAlive
+
+LaunchAgent **`com.projectcar.shop-api`** → `~/hermes-tools/mission-control/shop-api/run-shop-api.sh` → uvicorn `:8000`. **Lead owns.**
+
+1. Local: `GET http://127.0.0.1:8000/health` → **200** `{"status":"ok","service":"project-car-api"}`
+2. Public: `GET https://api.projectcar.ca/health` → **200** (same body)
+
+Essay: `api-stay-up.md`. Do not hand the restart to Garage or Zone.
+
+### 3. shop-web
+
+LaunchAgent **`com.projectcar.shop-web`** → **`next start`** `:3000`. **Not** `next dev`. **Lead owns.**
+
+If the Doc tree is behind `main` tip (especially after host-allowlist **#36** `f952cd3`):
+
+1. `git pull origin main` in `~/src/Project-Car`
+2. Rebuild path from `shop-web-stay-up.md`: bootout → `npm run build` in `apps/project-car/web` → kickstart `com.projectcar.shop-web` → verify `.next/BUILD_ID`
+
+Must be **`next start`**, not `next dev`.
+
+If already on tip and `BUILD_ID` is current, kickstart only if the process is down.
+
+Essay: `shop-web-stay-up.md`. Do **not** claim **#36** is live on Doc until this pull + build is done.
+
+### 4. Smoke
+
+When steps 1–3 are up:
+
+| Check | Expect |
+|-------|--------|
+| `GET https://api.projectcar.ca/health` | **200** |
+| ops/app `/login` | **200** — `https://ops.projectcar.ca/login`, or `https://app.projectcar.ca/login` if `ops.` DNS is flaky |
+| Waitlist OPTIONS CORS | Only when health is **200** — `cors-origins.md` |
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' https://api.projectcar.ca/health
+curl -sS -o /dev/null -w '%{http_code}\n' https://ops.projectcar.ca/login
+# if ops. DNS is flaky on this client:
+curl -sS -o /dev/null -w '%{http_code}\n' https://app.projectcar.ca/login
+```
+
+Garage may re-run brochure waitlist e2e **after** health is 200. Form only.
+
+---
+
+## Do not
+
+- Treat a soft morning 530 as a product break or a reason to ping Ben
+- Flip edge / path-split (`member-zone-edge.md`)
+- Re-ask Cloudflare ↔ GitHub auth (`brochure-pages-cutover.md`)
+- Take Member **GO** (`member-host-cutover.md`)
+- Cut the `app.` alias
+- Instruct Garage or Zone to restart uvicorn / shop-web
+- Call a `main` pull live without a new `.next/BUILD_ID`

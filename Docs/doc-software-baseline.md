@@ -55,7 +55,7 @@ Doc is a MacBook (M1 Max). Lid close or host sleep stops or stalls origin proces
 
 The public brochure (Worker `projectcar-brochure`) does **not** go down when Doc sleeps. Waitlist still needs the API. See `api-stay-up.md`.
 
-Amphetamine + plugged-in no-sleep plus LaunchAgent KeepAlive are mitigation, not a guarantee. If the lid is closed, public API / ops / app are down until Doc is awake.
+Amphetamine + plugged-in no-sleep plus LaunchAgent KeepAlive are mitigation, not a guarantee. If the lid is closed, public API / ops / app are down until Doc is awake. Ordered wake after lid-close: `doc-lid-restore.md`.
 
 ## Brochure is not Doc `:8088`
 
@@ -86,4 +86,4 @@ Do not treat `project-car-website` / `:8088` as a production bring-up step.
 - **Do not** follow retired `doc-nextcloud-headscale-setup-guide.md` (Headscale + Postgres)
 - **Do not** treat Doc `:8088` as live projectcar.ca
 
-Related: `home-lab-specification.md`, `nextcloud-progress.md`, `agent-profiles-specification.md`, `mission-control-architecture.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`
+Related: `home-lab-specification.md`, `nextcloud-progress.md`, `agent-profiles-specification.md`, `mission-control-architecture.md`, `doc-lid-restore.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`
