@@ -1,12 +1,12 @@
 # Integration Plan — Apps, Agents, Home Lab & Business
 
-**Last Updated:** 2026-09-06  
+**Last Updated:** 2026-09-07  
 **Status:** Living spec (v2)  
 **Canonical location:** `Coombzy/Project-Car` → `Docs/integration-plan.md`
 
-The previous repo copy of this file was an empty stub. This version matches the live hub and the 2026-09-06 shipped reality (waitlist + Owner shop OS on `main`).
+The previous repo copy of this file was an empty stub. This version matches the live hub and STATUS (2026-09-07): waitlist + Owner shop OS on `main` through Dashboard **#28** (`afb37f9`, last full Doc walk), shop-web host allowlist **#36** (`f952cd3`; Doc pull/rebuild **pending** while tunneled hosts can still be morning **530 / 1033**), and Docs lid-restore **#37** (`10a1596`). Live brochure is Worker **`projectcar-brochure`** Direct Upload — not Doc.
 
-Related: `master-overview-specification.md`, `platform-architecture.md`, `mission-control-architecture.md`, `project-car-application-specification.md`.
+Related: `master-overview-specification.md`, `platform-architecture.md`, `mission-control-architecture.md`, `project-car-application-specification.md`, `STATUS.md`.
 
 ---
 
@@ -42,9 +42,11 @@ Success: Ben runs personal ops from the cockpit, the public can join a waitlist,
 
 | Machine | Role |
 |---------|------|
-| Doc | Nextcloud, Vaultwarden, site origin (now) |
+| Doc | Nextcloud, Vaultwarden; Shop API (`:8000` → `api.projectcar.ca`); shop-web (`:3000` → `ops.` + temporary `app.`). **Not** the public brochure origin. |
 | McKing | Permanent hub, storage, GPU (later) |
 | Porsche | Travel client — not the NC server |
+
+**Public brochure** is Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` (`brochure-worker-deploy.md`). Optional local `:8088` is preview only — not production. Classic Pages git is still blocked on Ben CF↔GitHub auth (`brochure-pages-cutover.md`). Direct Upload remains live.
 
 ### Control planes
 
@@ -114,12 +116,20 @@ Routing: planning → Porsche; deep analysis → Doc; code/infra → McKing; pho
   Tailscale / HTTPS
         |
    [Doc — hub now]
-   Nextcloud · Vaultwarden · site · shop API (`api.projectcar.ca`) · (MC app held)
+   Nextcloud · Vaultwarden
+   shop API (`:8000` → `api.projectcar.ca`)
+   shop-web (`:3000` → `ops.` + temporary `app.`)
+   (MC app held)
         |
    later migrate
         |
    [McKing — hub later]
    same services · backups · GPU
+
+[Public brochure — not on Doc]
+   Cloudflare Worker `projectcar-brochure` Direct Upload
+   projectcar.ca / www
+   (optional local :8088 preview only — not production)
 ```
 
 Porsche joins as a client. Code Mater stays Discord-first until Termux/SSH is worth the security review.
@@ -164,15 +174,17 @@ No third party writes shop SQL directly.
 ### Now
 
 - [x] Nextcloud + apps on Doc
-- [x] Public brochure on projectcar.ca
+- [x] Public brochure on projectcar.ca (Worker `projectcar-brochure` Direct Upload; not Doc `:8088`)
 - [x] Docs reconciled in this repo
 - [x] Waitlist API + form
-- [x] Shop booking (Owner + Member) live on Doc / **`ops.projectcar.ca`** + temporary `app.` alias (`main` `afb37f9`: calendar #18, fill #20, placeholders #21, inventory #26, Chat v1 #27, Dashboard #28)
+- [x] Shop booking (Owner + Member) live on Doc / **`ops.projectcar.ca`** + temporary `app.` alias (`main` through **#36** `f952cd3` / Docs **#37** `10a1596`: calendar #18, fill #20, placeholders #21, inventory #26, Chat v1 #27, Dashboard #28). **Doc pull/rebuild for #36 pending** — last recorded Doc BUILD is still Dashboard #28 (`afb37f9`). Public `api.` / `ops.` / `app.` can still be morning **530 / 1033** (lid-close).
 - [ ] MC cockpit over CalDAV/Deck/WebDAV (**parked** — needs **Ben GO**; booking-live hold is already satisfied)
 - [ ] Off-box backup to McKing
 
 ### Next
 
+- [ ] **Member UI on projectcar.ca** (STATUS Next #1; plan only — **Ben GO** for execution: `member-host-cutover.md` / `member-zone-edge.md`). Not shipped. No edge flip from this doc.
+- [ ] Brochure Classic Pages git (blocked on Ben CF↔GitHub auth — `brochure-pages-cutover.md`). Direct Upload remains live. Do not re-ask from this doc.
 - [ ] Optional booking → calendar
 - [ ] Agent write paths into `MissionControl/` folders from the cockpit feed
 - [ ] Code Mater still Discord-only
@@ -190,10 +202,10 @@ No third party writes shop SQL directly.
 
 | Failure | Expected |
 |---------|----------|
-| Doc asleep | Site/NC unreachable; phone notes; catch up later |
+| Doc asleep / lid-close | **Brochure / www stay up** on Worker `projectcar-brochure`. **`api.` / `ops.` / `app.`** return Cloudflare **530 / 1033** (or 502). Nextcloud on Doc may be down — NC is not “the site.” Phone notes; catch up later. Ordered restore: `doc-lid-restore.md`. Stay-up: `api-stay-up.md`, `shop-web-stay-up.md`. |
 | McKing offline (today) | No effect on hub |
 | Discord down | Log locally; retry |
-| Nextcloud down | Cockpit shows health fail; shop OS still books if its API is up |
+| Nextcloud down | Cockpit shows health fail; shop OS still books if its API is up; brochure still up on the Worker |
 | Shop API down | Brochure still works; waitlist form errors honestly |
 
 ---
@@ -210,10 +222,10 @@ No third party writes shop SQL directly.
 
 ## 13. Settled vs open
 
-**Settled:** no n8n; Doc→McKing host plan; Talk not Matrix; MC Ben-only; PC = site + waitlist + booking; separate Postgres; members ≠ Nextcloud users. Host split: customer = `projectcar.ca`; management = **`ops.projectcar.ca` LIVE** (staff-on-shift, not Owner-only); `app.` = temporary alias.
+**Settled:** no n8n; Doc→McKing host plan; Talk not Matrix; MC Ben-only; PC = brochure (Worker `projectcar-brochure` Direct Upload) + waitlist + booking; separate Postgres; members ≠ Nextcloud users. Host split: customer = `projectcar.ca`; management = **`ops.projectcar.ca` LIVE** (staff-on-shift, not Owner-only); `app.` = temporary alias. Doc is API + shop-web tunnel origins, not the public site.
 
-**Still open:** fitness backend; exact public dollar prices; Chat follow-ons (Grok / websockets — Chat v1 human/polling is **LIVE**); cockpit hostname (MC still needs Ben GO).
+**Still open:** fitness backend; exact public dollar prices; Chat follow-ons (Grok / websockets — Chat v1 human/polling is **LIVE**); cockpit hostname (MC still needs Ben GO); Member host cutover (STATUS Next #1 — **Ben GO**; `member-host-cutover.md` / `member-zone-edge.md`; not shipped); Classic Pages git (blocked on Ben CF↔GitHub auth — `brochure-pages-cutover.md`).
 
 ---
 
-**Updated 2026-09-06.** Maintained in `Docs/` on `Coombzy/Project-Car`.
+**Updated 2026-09-07.** Maintained in `Docs/` on `Coombzy/Project-Car`.
