@@ -2,7 +2,7 @@
 
 **Status:** Checklist / plan only — **not shipped**  
 **Updated:** 2026-09-07  
-**Related:** `STATUS.md` Next #1, `member-zone-edge.md` (Zone path-split), `website-improvements.md` P1-6 (brochure Membership sign-in CTA after cutover GO), `cors-origins.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`, `brochure-pages-cutover.md`, `website-webapp-specification.md` §3
+**Related:** `STATUS.md` Next #1, `member-zone-edge.md` (Zone path-split), `app-alias-cut.md` (STATUS Next #2; plan only — **not** required first), `website-improvements.md` P1-6 (brochure Membership sign-in CTA after cutover GO), `cors-origins.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`, `brochure-pages-cutover.md`, `website-webapp-specification.md` §3
 
 Plan the move of Member self-serve from the shop UI `/member` (today on **`ops.`** + temporary **`app.`** alias) onto the customer host **projectcar.ca / www**. This file is a runbook. It does **not** implement the migration, change DNS, or cut the `app.projectcar.ca` alias.
 
@@ -158,7 +158,7 @@ Goal: undo the customer-host Member slice **without stranding staff** on ops.
 
 | Step | Who | Do |
 |------|-----|----|
-| Keep `app.` alias | Zone / Ben | **Do not cut** `app.projectcar.ca` in this cutover. Staff with stale `ops.` DNS keep working. Ben cuts the alias later (`STATUS.md` Next #2). |
+| Keep `app.` alias | Zone / Ben | **Do not cut** `app.projectcar.ca` in this cutover. Staff with stale `ops.` DNS keep working. Ben cuts the alias later (`STATUS.md` Next #2 — plan: **`app-alias-cut.md`**). |
 | Keep ops tunnel | Zone | `ops` → `http://127.0.0.1:3000` stays. Do not retarget ops to the Worker or to Member-only paths. |
 | Keep `/member` on shop-web | Garage / Lead | Until Ben says otherwise, ops/app `/member` remains the **safe** Member demo. First cutover is **add** customer-host routing, not **delete** the park. |
 | Revert customer-host path rules | Zone | Point `projectcar.ca` / `www` `/member*` back off the Member origin (Worker-only again). Brochure returns to the pre-cutover map. |
@@ -201,7 +201,7 @@ Lead sequences this vs more breadth placeholders: **cutover planning outranks ne
 | 3 | Edge path split on projectcar.ca / www | **Zone** | Checklist: **`member-zone-edge.md`**. Cloudflare path rules / tunnel hostname so `/member*` hits Doc `:3000` (`http://127.0.0.1:3000`) and brochure paths stay Worker. CORS **edge** if Zone owns a WAF/origin check — API allowlist stays Lead `.env`. |
 | 4 | Member UI on customer host | **Garage** (site) | Wire the Member surface; do not replace the Worker brochure. |
 | 5 | Prove success criteria | Garage e2e waitlist; anyone can curl health / ops probes | If ops/app or waitlist breaks → §4 rollback. |
-| 6 | Ben cuts `app.` alias | Ben / Zone | **Later.** `STATUS.md` Next #2. Not this cutover. |
+| 6 | Ben cuts `app.` alias | Ben / Zone | **Later.** `STATUS.md` Next #2. Checklist: **`app-alias-cut.md`**. Not this cutover — Member host does **not** require cutting `app.` first. |
 
 **Ownership (unchanged):** Lead owns Doc `:8000` uvicorn. Zone owns tunnel / DNS / CORS edge. Garage waitlist e2e only (plus site work after GO). Do not hand uvicorn restarts to Chief or Garage.
 

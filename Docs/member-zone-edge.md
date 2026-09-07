@@ -2,7 +2,7 @@
 
 **Status:** Checklist / plan only — **not shipped**. Do **not** execute until **Ben GO**.  
 **Updated:** 2026-09-07  
-**Related:** `STATUS.md` Next #1, `member-host-cutover.md`, `brochure-worker-deploy.md`, `shop-web-stay-up.md`, `brochure-pages-cutover.md`, `cors-origins.md`, `website-webapp-specification.md` §3
+**Related:** `STATUS.md` Next #1, `member-host-cutover.md`, `app-alias-cut.md` (STATUS Next #2; later — do **not** cut `app.` here), `brochure-worker-deploy.md`, `shop-web-stay-up.md`, `brochure-pages-cutover.md`, `cors-origins.md`, `website-webapp-specification.md` §3
 
 This file is the **edge / path-split** slice Zone needs for STATUS **Next #1** (Member UI on **projectcar.ca**). Cookie Domain / Path / Secure / SameSite, CORS allowlist, and Next middleware host allowlist live in `member-host-cutover.md` §2 — **summarize + point**, do not rewrite that essay here.
 
@@ -128,7 +128,7 @@ Undo the customer-host Member **path rules** only. Brochure returns to Worker-on
 |------|-----|----|
 | Remove path rules | **Zone** | Point `projectcar.ca` / `www` `/member*` back off the shop-web origin. Apex / www are Worker-only again. |
 | Confirm Worker attach | **Zone** | `projectcar.ca` and `www.projectcar.ca` still attach to Worker **`projectcar-brochure`**. Re-upload only if a bad split corrupted the Worker — otherwise leave the last good version. |
-| Keep `app.` alias | Zone / Ben | **Do not cut** `app.projectcar.ca`. Staff with stale `ops.` DNS keep working. Ben cuts the alias later (`STATUS.md` Next #2). |
+| Keep `app.` alias | Zone / Ben | **Do not cut** `app.projectcar.ca`. Staff with stale `ops.` DNS keep working. Ben cuts the alias later (`STATUS.md` Next #2 — plan: **`app-alias-cut.md`**). |
 | Keep ops tunnel | **Zone** | `ops` → `http://127.0.0.1:3000` stays. Do not retarget ops to the Worker or to Member-only paths. |
 | Keep `/member` on ops/app | Garage / Lead | Safe Member demo until Ben says otherwise. |
 | Do not flip DNS for ops | **Zone** | Local DNS cache ≠ rollback. Tell staff to use `app.` or flush cache. |
@@ -158,7 +158,7 @@ Rollback is **edge path rules**, not “remove the Worker,” not “cut `app.`,
 | **Zone** | Cloudflare **path rules** and **tunnel hostname** so `/member*` on `projectcar.ca` / `www` hits Doc `:3000` (`http://127.0.0.1:3000`) and all other paths stay Worker **`projectcar-brochure`**. Forward real host + https. Rollback = remove those path rules. | HTML content, shop-web code, uvicorn, `app.` cut, Pages git, cookie Path edits |
 | **Garage** | shop-web Member surface **after GO** (`member-host-cutover.md`). Waitlist e2e after public API health is **200**. | Cloudflare path rules, tunnel hostnames, DNS, Direct Upload, process restarts |
 | **Lead** | Doc processes — LaunchAgent `com.projectcar.shop-web` (`next start` `:3000`) and `com.projectcar.shop-api` (uvicorn `:8000`). Restarts if `.env` / cookie Path change. | Brochure edge. Do not hand path rules or Worker uploads to Lead. |
-| **Ben** | **GO** before anyone executes this file or `member-host-cutover.md`. Later `app.` cut (Next #2). | — |
+| **Ben** | **GO** before anyone executes this file or `member-host-cutover.md`. Later `app.` cut (Next #2 — `app-alias-cut.md`). | — |
 
 Alerts can come from anyone who sees Next HTML on Home, a localhost `Location`, or waitlist 404. **Recovery of a bad path split is Zone** (rollback above). **Recovery of a down shop-web / API is Lead** (process) / **Zone** (tunnel only).
 
@@ -174,7 +174,7 @@ Alerts can come from anyone who sees Next HTML on Home, a localhost `Location`, 
 | 3 | **This file** — edge path split | **Zone** | `/member*` → `http://127.0.0.1:3000`. Everything else → Worker. Host + proto forwarding. |
 | 4 | Member UI on customer host | **Garage** | Wire the surface; do not replace the Worker brochure. |
 | 5 | Prove smoke (§4) + `member-host-cutover.md` §5 | Garage e2e; anyone can curl | If brochure / waitlist / ops/app break → §5 rollback. |
-| 6 | Ben cuts `app.` alias | Ben / Zone | **Later.** STATUS Next #2. Not this edge add. |
+| 6 | Ben cuts `app.` alias | Ben / Zone | **Later.** STATUS Next #2. Checklist: **`app-alias-cut.md`**. Not this edge add — Member path-split does **not** require cutting `app.` first. |
 | — | Classic Pages git | Zone | **Outranked.** `brochure-pages-cutover.md` after CF ↔ GitHub auth. Not a substitute for Next #1. |
 
 **Out of scope for this file:** app code, DNS edits, Garage / Zone / Hatch fan-out, Stripe, shop-open, Apex, Mission Control cockpit, cutting `app.`, executing Pages git.
