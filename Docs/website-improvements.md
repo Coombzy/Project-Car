@@ -93,7 +93,7 @@ IDs kept so old links resolve. Do not treat these as current P0.
 | P1-2 | **Chat page honesty** | done | 2026-09-06 — Chat page/nav stripped in PR #5. No public chat copy left to overpromise. Do not revive. |
 | P1-3 | **Contact: only live channels** | open | Keep email + Discord. Collapse Phone / IG / TikTok / YouTube / Skool “Coming soon” into one line until URLs exist. |
 | P1-4 | **Nav weight** | deferred | Optional: Home · About · Shop · Membership · Contact in primary nav; Roadmap/Chat in footer until chat is real. |
-| P1-5 | **Interest capture (waitlist)** | done | 2026-09-06 — Membership/Contact `POST` JSON to `https://api.projectcar.ca/waitlist` (`apps/website/html/waitlist.js`). Name, email, optional phone/notes. No pricing / book-now. Ops: `cors-origins.md`, `api-stay-up.md`. |
+| P1-5 | **Interest capture (waitlist)** | done | 2026-09-06 — Membership/Contact `POST` JSON to `https://api.projectcar.ca/waitlist` (`apps/website/html/waitlist.js`). Name, email, optional phone/notes. No pricing / book-now. Ops: `cors-origins.md`, `api-stay-up.md`. Public **OPTIONS** / **POST /waitlist** **530 / 1033** while Doc is asleep is expected lid-close — not a CORS regression. `waitlist.js` **mailto fallback** is the user path; e2e only when **GET /health** is **200**. |
 
 ---
 
@@ -196,6 +196,7 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 
 | Date | Change |
 |------|--------|
+| 2026-09-07 | P1-5 note: lid-close public **530 / 1033** on OPTIONS / POST /waitlist is expected — not a CORS regression. `waitlist.js` mailto fallback while origin is down; e2e only when GET /health is 200. See `cors-origins.md`. |
 | 2026-09-07 | P4-5 synthetic monitors **done / partial**: Lookout `projectcar-api-health-watch` live on `api.projectcar.ca/health`. Apex dropped (deferred). Brochure homepage 200 + Discord invite optional/deferred. Spec roadmap row 2 **Done** on Worker `projectcar-brochure`. |
 | 2026-09-06 | Reality sync ~16:16 America/Edmonton (`main` `afb37f9`): **`ops.projectcar.ca` LIVE** → Doc `:3000`; `app.` = temporary alias. Calendar #18 / fill #20 / placeholders #21 / inventory #26 / Chat #27 / Dashboard #28 are Live on Doc. Brochure Chat/Apex stay stripped. MC cockpit still needs Ben GO. No Stripe. The shop is not open. |
 | 2026-09-06 | Reality sync ~14:10 America/Edmonton (`main` `91c547e`): **`ops.projectcar.ca` LIVE** → Doc `:3000`; `app.` = temporary alias. Calendar #18 / fill #20 / placeholders #21 / schedule harden #24 are Live. Chat planned, not live (superseded ~16:16). MC cockpit still needs Ben GO. No Stripe. The shop is not open. |

@@ -1,8 +1,8 @@
 # CORS_ORIGINS — brochure waitlist
 
 **Status:** Living ops  
-**Updated:** 2026-09-06 ~12:55 America/Edmonton  
-**Related:** `api-stay-up.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `apps/project-car/api/.env.example`, `apps/project-car/api/app/config.py`, `apps/website/html/waitlist.js`
+**Updated:** 2026-09-07  
+**Related:** `api-stay-up.md`, `doc-lid-restore.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `apps/project-car/api/.env.example`, `apps/project-car/api/app/config.py`, `apps/website/html/waitlist.js`
 
 Browser waitlist from https://projectcar.ca must be allowed to call the Shop API. After any `.env` change, **Lead** restarts the API process on Doc.
 
@@ -57,3 +57,13 @@ curl -sS -D - -o /dev/null -X OPTIONS https://api.projectcar.ca/waitlist \
 **Expect:** HTTP **200** and `Access-Control-Allow-Origin: https://projectcar.ca`.
 
 Wrong or missing origin → no `Access-Control-Allow-Origin: https://projectcar.ca`. Public health can still be 200 (`GET /health`); that does not prove CORS.
+
+---
+
+## Doc lid-close / 530
+
+When Doc is asleep or the tunnel origin is unreachable, public **OPTIONS** and **POST /waitlist** fail with Cloudflare **530 / error 1033**. That is **expected lid-close** — **not a CORS regression**. Do **not** restart uvicorn chasing it.
+
+Brochure `waitlist.js` **mailto fallback** is the user path while the origin is down. Run brochure waitlist e2e **only** when public **GET /health** is **200**.
+
+Live probe: Lookout **`projectcar-api-health-watch`**. Ordered restore: [doc-lid-restore.md](doc-lid-restore.md).
