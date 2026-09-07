@@ -2,12 +2,13 @@
 
 **Status:** Retired 2026-08-16. This file used to be an empty placeholder (`[Full Deployment Guide content here]`).
 
-Do **not** treat this as a runbook. There is no deployment guide in this repo yet.
+Do **not** treat this as a runbook. The standing brochure deploy lives in `brochure-worker-deploy.md`.
 
 Use instead:
 
 | Need | Doc |
 |------|-----|
+| Brochure Worker Direct Upload | `brochure-worker-deploy.md` |
 | Stack, host plan, bans | `platform-architecture.md` |
 | Nextcloud / Vaultwarden / cockpit | `mission-control-architecture.md` |
 | Live hub status on Doc | `nextcloud-progress.md` |

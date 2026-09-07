@@ -1,6 +1,6 @@
 # Status — 2026-09-06 ~16:16 America/Edmonton
 
-Living one-pager: what’s live, what’s next, locks. Product detail stays in the start-here specs. Stay-up / CORS / Pages runbooks live elsewhere — this file is not a runbook. Member host cutover checklist (plan only): `member-host-cutover.md`.
+Living one-pager: what’s live, what’s next, locks. Product detail stays in the start-here specs. Stay-up / CORS / brochure-deploy runbooks live elsewhere — this file is not a runbook. Brochure re-deploy: `brochure-worker-deploy.md`. Member host cutover checklist (plan only): `member-host-cutover.md`.
 
 Reality sync to `main` tip **`afb37f9`** (Dashboard **#28**). Distinguishes **Live** vs **Next** vs **Later**, and **build-breadth (now)** vs **ship-MVP cut (later)**. Do not invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, or Matrix / Apex / Grok chat. **Chat v1** (human / polling / Owner-starts-rooms) and **Dashboard** (24h bay strips + todos + parts POs) are **LIVE on Doc**.
 
@@ -38,7 +38,7 @@ Do not invent extra product from this table. Calendar heat-map / weekly per-hois
 
 ## Live
 
-- **Brochure:** https://projectcar.ca and https://www.projectcar.ca. Origin: Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` from `main`. Classic Pages git is skipped for now. Not the Doc `:8088` tunnel. **Apex sidecar deferred** (brochure stays Pages/Worker).
+- **Brochure:** https://projectcar.ca and https://www.projectcar.ca. Origin: Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` from `main`. Classic Pages git is skipped for now. Not the Doc `:8088` tunnel. **Apex sidecar deferred** (brochure stays Pages/Worker). Standing re-deploy: `brochure-worker-deploy.md`.
 - **Pages:** Home, About, The Shop, Membership, Roadmap, Contact. Chat nav/page stripped (PR #5). Apex deferred.
 - **Brochure hygiene:** P0-3…P0-7 is in git (`apps/website/html`: robots, sitemap, `404.html`, favicon set, Home progress bar removed) **and already live** on the Worker (re-uploaded 2026-09-06). Classic Pages git still skipped.
 - **Waitlist:** Membership / Contact `POST` JSON to `https://api.projectcar.ca/waitlist`. CORS allowlist includes brochure origins (`https://projectcar.ca`, `https://www.projectcar.ca`), localhost, **`https://ops.projectcar.ca`**, and the temporary alias **`https://app.projectcar.ca`**. **e2e PASS** (brochure → api). See `cors-origins.md`.
