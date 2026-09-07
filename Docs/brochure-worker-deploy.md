@@ -2,7 +2,7 @@
 
 **Status:** Standing runbook  
 **Updated:** 2026-09-07  
-**Related:** `STATUS.md` Live brochure, `website-webapp-specification.md` §3, `website-improvements.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md`, `apps/website/README.md`
+**Related:** `STATUS.md` Live brochure, `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 plan only — do not apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md`, `apps/website/README.md`
 
 Re-deploy the public brochure after Garage merges HTML on `main`. This is the **locked live method**. It is not a one-off for a single hygiene ship.
 
@@ -113,6 +113,12 @@ A bad Direct Upload is a **Worker version** problem. Do **not** cut DNS. Do **no
 
 ---
 
+## Security + cache headers (P2-4 — plan only)
+
+Worker **`projectcar-brochure` 200s** do **not** send the P2-4 security headers today. Cache is not split (HTML vs `?v=` assets). Checklist: **`brochure-security-headers.md`**. Zone implements **after Lead GO**. Do **not** apply headers, Transform Rules, or `_headers` from this runbook or a docs PR. Do **not** invent P2-4 done. P2-3 `?v=` is on git (`be60a01` / **#57**) until the next Direct Upload.
+
+---
+
 ## Out of scope
 
 | Topic | Where / why |
@@ -120,6 +126,7 @@ A bad Direct Upload is a **Worker version** problem. Do **not** cut DNS. Do **no
 | Member host cutover | `member-host-cutover.md` — **Ben GO**. Zone path-split: `member-zone-edge.md`. Do not start from a brochure upload. |
 | Mission Control cockpit | Needs **Ben GO**. Not this Worker. |
 | Stripe / shop-open claims | Locked off. Interest waitlist only. |
+| P2-4 security / cache headers | Plan: `brochure-security-headers.md`. Do not apply from this upload. |
 | Classic Pages git | Skipped. Plan: `brochure-pages-cutover.md`. Do not invent a git-connected Pages cutover here. |
 | Apex sidecar | Deferred. Do not revive. |
 | DNS / `app.` alias | Do not cut or retarget. |
