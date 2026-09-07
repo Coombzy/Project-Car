@@ -1,6 +1,6 @@
 # High-Level Overview — Apps + Business
 
-**Last Updated:** 2026-09-06  
+**Last Updated:** 2026-09-07  
 **Part of:** Project Car documentation hierarchy  
 **Canonical location:** `Coombzy/Project-Car` → `Docs/high-level-apps-and-business-specification.md`
 
@@ -76,4 +76,4 @@ v1 software does not collect payment.
 
 ---
 
-**Updated 2026-09-06** to match shipped reality: waitlist + Owner shop OS are on `main`; Apex deferred; Pages is the brochure target (not done); MC cockpit held. Locks unchanged: no Stripe / no “shop is open”; members ≠ Nextcloud; no n8n.
+**Updated 2026-09-07** to match shipped reality: waitlist + Owner shop OS are on `main`; Apex deferred; live brochure is Worker **`projectcar-brochure`** Direct Upload (`brochure-worker-deploy.md`); Classic Pages git is **plan only** (`brochure-pages-cutover.md`) — not started, not GO’d; MC cockpit held. Locks unchanged: no Stripe / no “shop is open”; members ≠ Nextcloud; no n8n.
