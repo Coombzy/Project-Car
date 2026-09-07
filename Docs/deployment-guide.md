@@ -17,6 +17,7 @@ This file is **not** a runbook. Use the living docs below.
 | Member UI → projectcar.ca (plan only; **Ben GO**) | `member-host-cutover.md` |
 | Public MVP cut-vs-keep (draft; not a Ben lock) | `ship-mvp-cut.md` |
 | Brochure Worker Direct Upload (`projectcar-brochure`) | `brochure-worker-deploy.md` |
+| Brochure → Classic Pages git (plan only; blocked on CF ↔ GitHub auth) | `brochure-pages-cutover.md` |
 
 ---
 

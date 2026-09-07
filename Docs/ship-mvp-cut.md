@@ -2,7 +2,7 @@
 
 **Status:** Draft planning doc — **not** a Ben decision lock  
 **Updated:** 2026-09-07  
-**Related:** `STATUS.md` (Ship-MVP cut later gate; Next #1), `member-host-cutover.md`, `project-car-application-specification.md` §11 / §15 / §16, `platform-architecture.md` §5, `token-pricing.md`
+**Related:** `STATUS.md` (Ship-MVP cut later gate; Next #1), `member-host-cutover.md`, `brochure-pages-cutover.md`, `project-car-application-specification.md` §11 / §15 / §16, `platform-architecture.md` §5, `token-pricing.md`
 
 Propose a **cut-vs-keep** table for the **public MVP gate** (`STATUS.md` “Ship-MVP cut (later gate)”). Purpose: **stop polishing cut-candidates** before STATUS Next #1 — Member UI on **projectcar.ca** (`member-host-cutover.md`; **Ben GO** for execution).
 
@@ -63,7 +63,7 @@ Explicit table for STATUS Later + build-breadth placeholders that are easy to ov
 | **Waiver capture / v2 billing records** | Not built. | **DEFER** | App spec v2. Not the public-MVP keep-path. | Do not start a waiver desk as a substitute for Member host. |
 | **Mission Control cockpit** | Parked. | **DEFER** | Needs **Ben GO**. Private hub, not Shop OS public MVP. | Do not start from a docs PR. Shop members never get Nextcloud accounts. |
 | **Apex sidecar / brochure Chat page** | Brochure Chat stripped. Apex deferred (Ben). | **DEFER** | Already locked deferred. | Brochure stays Worker / Pages. Do not revive. |
-| **Classic Pages git cutover** | Worker Direct Upload is live. Pages git skipped (CF ↔ GitHub auth). | **DEFER** | Not required for public MVP while Worker serves the brochure. | Zone owns CF. Not a Garage e2e rewrite. |
+| **Classic Pages git cutover** | Worker Direct Upload is live. Pages git skipped (CF ↔ GitHub auth). | **DEFER** | Not required for public MVP while Worker serves the brochure. Member host outranks executing it. | Plan: `brochure-pages-cutover.md`. Zone owns CF. Not a Garage e2e rewrite. Do not start Google Calendar OAuth instead. |
 | **`app.` alias removal** | Temporary alias still live. | **DEFER** | STATUS Next #2. **Ben** cuts that DNS. | This doc does **not** cut `app.`. Ops stay-up still documents the alias. |
 
 ---

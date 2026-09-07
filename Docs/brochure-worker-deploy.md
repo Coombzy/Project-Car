@@ -2,7 +2,7 @@
 
 **Status:** Standing runbook  
 **Updated:** 2026-09-07  
-**Related:** `STATUS.md` Live brochure, `website-webapp-specification.md` §3, `website-improvements.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `apps/website/README.md`
+**Related:** `STATUS.md` Live brochure, `website-webapp-specification.md` §3, `website-improvements.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `apps/website/README.md`
 
 Re-deploy the public brochure after Garage merges HTML on `main`. This is the **locked live method**. It is not a one-off for a single hygiene ship.
 
@@ -21,7 +21,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Deploy method** | **Direct Upload** of `apps/website/html` from the `main` tip you are shipping |
 | **Public hosts** | https://projectcar.ca and https://www.projectcar.ca |
 | **Not the origin** | Doc `:8088`, `~/hermes-tools/project-car-website`, optional local nginx preview |
-| **Classic Pages git** | **Skipped.** Do not invent a Pages-git cutover from this runbook. |
+| **Classic Pages git** | **Skipped** pending CF ↔ GitHub auth. Plan only: `brochure-pages-cutover.md`. Do not invent a live cutover from this runbook. |
 | **Apex sidecar** | **Deferred.** Do not revive. |
 
 Waitlist on Membership / Contact is a **browser POST** to the Shop API (`https://api.projectcar.ca/waitlist`). The Worker only serves static HTML/JS. API health and CORS live in `api-stay-up.md` and `cors-origins.md` — a green upload does not prove waitlist.
@@ -120,7 +120,7 @@ A bad Direct Upload is a **Worker version** problem. Do **not** cut DNS. Do **no
 | Member host cutover | `member-host-cutover.md` — **Ben GO**. Do not start from a brochure upload. |
 | Mission Control cockpit | Needs **Ben GO**. Not this Worker. |
 | Stripe / shop-open claims | Locked off. Interest waitlist only. |
-| Classic Pages git | Skipped. Do not invent a git-connected Pages cutover here. |
+| Classic Pages git | Skipped. Plan: `brochure-pages-cutover.md`. Do not invent a git-connected Pages cutover here. |
 | Apex sidecar | Deferred. Do not revive. |
 | DNS / `app.` alias | Do not cut or retarget. |
 | Shop API / shop-web process | Lead (`:8000`) / `com.projectcar.shop-web` (`next start` on `:3000`). See `api-stay-up.md` / `shop-web-stay-up.md`. |

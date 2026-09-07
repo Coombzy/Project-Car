@@ -10,6 +10,7 @@
 **Related:**
 - `website-webapp-specification.md` — domain, tunnel, email, architecture (SSOT; do not dual-author a second plan under `apps/website/`)
 - `brochure-worker-deploy.md` — standing Zone Direct Upload of `apps/website/html` onto Worker `projectcar-brochure`
+- `brochure-pages-cutover.md` — Classic Pages git plan (blocked on CF ↔ GitHub auth; do not start)
 - `api-stay-up.md` / `cors-origins.md` — public Shop API stay-up + waitlist CORS
 - Skill `project-car-web-copy` — public copy rules (tighten, no fake prices/dates)
 - Skill `project-car` — fleet / product context (public site ≠ Mission Control)
