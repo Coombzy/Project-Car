@@ -1,7 +1,7 @@
 # Project Car — Website Improvements (Living)
 
 **Status:** Living document — update when items ship, get deferred, or new issues are found  
-**Last audited:** 2026-09-06 (brochure hygiene P0-3…P0-7 in git **and already live** on Worker `projectcar-brochure`; re-uploaded 2026-09-06)  
+**Last audited:** 2026-09-07 (P1-1 / P1-3 live-verified on Worker `projectcar-brochure` from Garage PR #52 / `5361212`; smoke PASS Home CTA + Contact, apex/www 200)  
 **Owner:** Ben (decisions) · Garage (brochure HTML/CSS) · Zone (Cloudflare Worker upload) · Doc (Shop API host)  
 **Canonical:** `Coombzy/Project-Car` → `Docs/website-improvements.md`  
 **Local clone:** `~/src/Project-Car/Docs/website-improvements.md`  
@@ -35,11 +35,11 @@
 
 ---
 
-## Snapshot (2026-09-06)
+## Snapshot (2026-09-07)
 
 | Check | Result |
 |--------|--------|
-| https://projectcar.ca / www | Worker `projectcar-brochure` Direct Upload of `apps/website/html` (PR #5 on `main`). HTML from this agent often hits CF challenge (403); SSL in front is Cloudflare. |
+| https://projectcar.ca / www | Worker `projectcar-brochure` Direct Upload of `apps/website/html` (PR #52 / `5361212` on `main`; smoke PASS apex/www **200**). HTML from this agent often hits CF challenge (403); SSL in front is Cloudflare. |
 | robots.txt / sitemap / favicon / Home bar | Pre-upload snapshot from earlier 2026-09-06 is **stale**. Worker was re-uploaded later that day with P0-3…P0-7. Do not treat hygiene as pending. |
 | Waitlist | **e2e PASS** — Membership/Contact `POST` to `https://api.projectcar.ca/waitlist` |
 | Pages | Home, About, The Shop, Membership, Roadmap, Contact. Chat nav stripped (PR #5). |
@@ -47,7 +47,7 @@
 | Soft-404 | Live Worker 404s missing static files. Git has `404.html` + nginx `error_page 404`. Do not add SPA `/* /index.html 200`. |
 | Mission Control | Separate; ops + Member booking are live on Doc demo, **`https://ops.projectcar.ca`**, and the temporary alias `https://app.projectcar.ca`. Cockpit still needs **Ben GO** — do not start it from brochure work. |
 
-**Overall:** Waitlist is live. Brochure Chat/Apex stay gone (Apex sidecar deferred; public Chat page stays stripped). Shop OS **Chat v1** (human / polling) is **LIVE** on the ops/app demo — not the brochure. Brochure hygiene P0-3…P0-7 is **already live** on the Worker. Ops + Member booking, Chat #27, and Dashboard #28 are live on Doc demo, **`https://ops.projectcar.ca`**, and the temporary alias `https://app.projectcar.ca`. Some clients still have flaky local DNS for `ops.` — use `app.`. Not Mission Control, not Apex. The shop is not open.
+**Overall:** Waitlist is live. P1-1 Home `cta-hero` waitlist CTA weight and P1-3 Contact `contact-soon` collapse are **LIVE** on Worker `projectcar-brochure` (PR #52 / `5361212`; 2026-09-07 smoke PASS). Brochure Chat/Apex stay gone (Apex sidecar deferred; public Chat page stays stripped). Shop OS **Chat v1** (human / polling) is **LIVE** on the ops/app demo — not the brochure. Brochure hygiene P0-3…P0-7 is **already live** on the Worker. Ops + Member booking, Chat #27, and Dashboard #28 are live on Doc demo, **`https://ops.projectcar.ca`**, and the temporary alias `https://app.projectcar.ca`. Some clients still have flaky local DNS for `ops.` — use `app.`. Not Mission Control, not Apex. The shop is not open. P1-6 stays deferred. P2 is not done.
 
 ---
 
@@ -90,12 +90,12 @@ IDs kept so old links resolve. Do not treat these as current P0.
 
 | ID | Item | Status | Notes / acceptance |
 |----|------|--------|-------------------|
-| P1-1 | **Home primary CTAs** | open | Strong actions: waitlist / membership interest, Discord join, Contact. Secondary: About / The Shop. Less feature laundry on home. Waitlist form itself is **done** (P1-5). |
+| P1-1 | **Home primary CTAs** | done | 2026-09-07 live verify — Garage PR #52 → main `5361212`. Home `cta-hero` waitlist CTA weight (Join the waitlist is the dominant above-the-fold action). Zone Direct Upload Worker `projectcar-brochure` **LIVE** from that tip; smoke PASS (Home CTA; apex/www 200). |
 | P1-2 | **Chat page honesty** | done | 2026-09-06 — Chat page/nav stripped in PR #5. No public chat copy left to overpromise. Do not revive. |
-| P1-3 | **Contact: only live channels** | open | Keep email + Discord. Collapse Phone / IG / TikTok / YouTube / Skool “Coming soon” into one line until URLs exist. |
+| P1-3 | **Contact: only live channels** | done | 2026-09-07 live verify — Garage PR #52 → main `5361212`. Phone / IG / TikTok / YouTube / Skool collapsed to one `contact-soon` line. Email + Discord + waitlist stay. Zone Direct Upload Worker `projectcar-brochure` **LIVE** from that tip; smoke PASS (Contact; apex/www 200). |
 | P1-4 | **Nav weight** | deferred | Optional: Home · About · Shop · Membership · Contact in primary nav; Roadmap/Chat in footer until chat is real. |
 | P1-5 | **Interest capture (waitlist)** | done | 2026-09-06 — Membership/Contact `POST` JSON to `https://api.projectcar.ca/waitlist` (`apps/website/html/waitlist.js`). Name, email, optional phone/notes. No pricing / book-now. Ops: `cors-origins.md`, `api-stay-up.md`. Public **OPTIONS** / **POST /waitlist** **530 / 1033** while Doc is asleep is expected lid-close — not a CORS regression. `waitlist.js` **mailto fallback** is the user path; e2e only when **GET /health** is **200**. |
-| P1-6 | **Membership secondary CTA: “Already a member? Sign in”** | deferred | After Member cutover — **Ben GO** (not now; not done). Link **only** apex `https://projectcar.ca/member/login`. Never www, never ops/app. Waitlist stays the interest path. No book-now / pricing / shop-open claims. Do **not** implement brochure HTML from a docs PR — Garage owns P1-1 / P1-3 separately; this item waits on cutover. Plan: `member-host-cutover.md`, STATUS Next #1. |
+| P1-6 | **Membership secondary CTA: “Already a member? Sign in”** | deferred | After Member cutover — **Ben GO** (not now; not done). Link **only** apex `https://projectcar.ca/member/login`. Never www, never ops/app. Waitlist stays the interest path. No book-now / pricing / shop-open claims. Do **not** implement brochure HTML from a docs PR. P1-1 / P1-3 already shipped (#52); this item still waits on cutover. Plan: `member-host-cutover.md`, STATUS Next #1. |
 
 ---
 
@@ -141,15 +141,14 @@ Follow skill **project-car-web-copy**. Tighten; don’t rewrite the story. No fa
 
 ## Suggested implementation order
 
-1. P1-1 / P1-3 (home CTA weight, Contact channel honesty)  
-2. P2-1 … P2-4 (OG, canonical, cache, headers)  
-3. P3 copy pass  
-4. P4 as interest grows  
-5. P1-6 only **after Member cutover GO** — not in the current Garage P1-1 / P1-3 queue; no brochure HTML from a docs PR.
+1. P2-1 … P2-4 (OG, canonical, cache, headers) — Garage next, separate  
+2. P3 copy pass  
+3. P4 as interest grows  
+4. P1-6 only **after Member cutover GO** — still deferred; no brochure HTML from a docs PR.
 
-Brochure hygiene is **already live** on Worker `projectcar-brochure` (re-uploaded 2026-09-06). Do not invent another Zone upload for that ship. Ops + Member booking are live on Doc demo **and** the temporary `app.` alias. Intended management host is **`ops.`**. Mission Control cockpit still needs **Ben GO**. The shop is not open.
+Brochure hygiene is **already live** on Worker `projectcar-brochure` (re-uploaded 2026-09-06). P1-1 / P1-3 are **LIVE** on that Worker (PR #52 / `5361212`; 2026-09-07 smoke PASS). Do not invent another Zone upload from this docs PR. Ops + Member booking are live on Doc demo **and** the temporary `app.` alias. Intended management host is **`ops.`**. Mission Control cockpit still needs **Ben GO**. The shop is not open.
 
-Waitlist (P1-5), Chat strip (P1-2), git home (P2-7), and P0-3…P0-7 are **done** (git + live Worker). Apex (P0-1 / P0-2) is **deferred** — do not start the queue there.  
+Waitlist (P1-5), Chat strip (P1-2), Home CTA weight (P1-1), Contact channel honesty (P1-3), git home (P2-7), and P0-3…P0-7 are **done** (git + live Worker). P1-6 stays **deferred**. P2-1…P2-4 stay **open**. Apex (P0-1 / P0-2) is **deferred** — do not start the queue there.  
 
 ---
 
@@ -199,6 +198,7 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 
 | Date | Change |
 |------|--------|
+| 2026-09-07 | P1-1 / P1-3 **done** (live verify). Garage PR #52 → main `5361212`. Home `cta-hero` waitlist CTA weight; Contact Phone/IG/TikTok/YouTube/Skool collapsed to one `contact-soon` line. Zone Direct Upload Worker `projectcar-brochure` **LIVE** from that tip; smoke PASS (Home CTA + Contact; apex/www 200). P1-6 stays deferred. P2 not invented as done. |
 | 2026-09-07 | P1-6 stub: Membership secondary “Already a member? Sign in” → apex `https://projectcar.ca/member/login` only. **Deferred** until Member cutover GO. Never www / ops / app. Waitlist stays the interest path. No brochure HTML in this docs PR. |
 | 2026-09-07 | P1-5 note: lid-close public **530 / 1033** on OPTIONS / POST /waitlist is expected — not a CORS regression. `waitlist.js` mailto fallback while origin is down; e2e only when GET /health is 200. See `cors-origins.md`. |
 | 2026-09-07 | P4-5 synthetic monitors **done / partial**: Lookout `projectcar-api-health-watch` live on `api.projectcar.ca/health`. Apex dropped (deferred). Brochure homepage 200 + Discord invite optional/deferred. Spec roadmap row 2 **Done** on Worker `projectcar-brochure`. |
