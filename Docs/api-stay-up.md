@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-07  
 **Public URL:** https://api.projectcar.ca  
-**Related:** `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
+**Related:** `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `shop-web-stay-up.md`, `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
 
 Keep the Shop API reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -21,7 +21,7 @@ Keep the Shop API reachable. This is operational reality, not a product-lock rew
 | Compose | `infra/compose/compose.yaml` is **shop Postgres only** (`shop-postgres`). It does **not** start the API. Do not invent an API container. |
 | Edge | Host **cloudflared** on Doc for **this** API hostname. Zone owns the `api.projectcar.ca` hostname / DNS rule. Confirm the live Cloudflare mapping; do not assume a compose service. |
 | Brochure site | Separate stack. **Live** origin is Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` from `main` — **not** the Doc `:8088` tunnel, **not** `~/hermes-tools/project-car-website`. Optional local nginx in `apps/website/` still maps to `:8088` for preview only. Not this API process. |
-| Shop-web (ops / app) | LaunchAgent **`com.projectcar.shop-web`** on Doc runs **`next start`** (not `next dev`) on `:3000`. Not this API process. |
+| Shop-web (ops / app) | LaunchAgent **`com.projectcar.shop-web`** on Doc runs **`next start`** (not `next dev`) on `:3000`. Not this API process. Stay-up: `shop-web-stay-up.md`. |
 
 The LaunchAgent lives on **Doc**, not in this git repo. Compose still does not start the API. KeepAlive is the primary stay-up for process crashes / logout-style exits. **Lid-close / sleep still kills the Mac** — launchd cannot outrun sleep.
 
@@ -77,4 +77,4 @@ Alerts can come from anyone who sees a **502**, **530 / error 1033**, or a faile
 
 CORS / waitlist preflight after an `.env` change: `cors-origins.md`.
 
-Public HTTPS session cookies: shop-web KeepAlive **`com.projectcar.shop-web`** runs **`next start`** (`NODE_ENV=production`), not `next dev`. Doc already uses `COOKIE_SECURE=true` (API) and `SHOP_COOKIE_SECURE=true` (shop UI) so Firefox will store cookies on `app.` / `ops.`. Local `http://127.0.0.1:3000` should leave those unset or false. See `apps/project-car/web/README.md`. Member-on-projectcar.ca cookie / CORS plan: `member-host-cutover.md` (not shipped).
+Public HTTPS session cookies: shop-web KeepAlive **`com.projectcar.shop-web`** runs **`next start`** (`NODE_ENV=production`), not `next dev`. Doc already uses `COOKIE_SECURE=true` (API) and `SHOP_COOKIE_SECURE=true` (shop UI) so Firefox will store cookies on `app.` / `ops.`. Local `http://127.0.0.1:3000` should leave those unset or false. See `shop-web-stay-up.md` and `apps/project-car/web/README.md`. Member-on-projectcar.ca cookie / CORS plan: `member-host-cutover.md` (not shipped).

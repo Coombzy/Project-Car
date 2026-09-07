@@ -18,7 +18,7 @@ This file used to say “don’t dump the MC stack onto Doc.” That is **obsole
 | **Docker Desktop** | Required while Doc hosts Nextcloud | Running — `mission-control` (3). Optional `project-car-website` compose is **local `:8088` preview only**, not production brochure |
 | **Tailscale** | Remote reach from Porsche / Ben | Up — `docs-macbook-pro` `100.97.10.72` |
 | **LaunchAgent `com.projectcar.shop-api`** | Shop API stay-up (KeepAlive) → uvicorn `:8000` | Live — wrapper `~/hermes-tools/mission-control/shop-api/run-shop-api.sh`. Lead owns this. See `api-stay-up.md` |
-| **LaunchAgent `com.projectcar.shop-web`** | Ops / app UI stay-up | Live — **`next start`** on `:3000`, **not** `next dev` |
+| **LaunchAgent `com.projectcar.shop-web`** | Ops / app UI stay-up (KeepAlive) → **`next start`** `:3000` | Live — wrapper `~/hermes-tools/mission-control/shop-web/run-shop-web.sh`. **Not** `next dev`. Lead owns this. See `shop-web-stay-up.md` |
 | **Host cloudflared** | Public tunnels for `api.` + **LIVE `ops.`** + temporary `app.` | Live on Doc. Zone owns Cloudflare hostname / DNS rules |
 
 ## Strongly recommended
@@ -86,4 +86,4 @@ Do not treat `project-car-website` / `:8088` as a production bring-up step.
 - **Do not** follow retired `doc-nextcloud-headscale-setup-guide.md` (Headscale + Postgres)
 - **Do not** treat Doc `:8088` as live projectcar.ca
 
-Related: `home-lab-specification.md`, `nextcloud-progress.md`, `agent-profiles-specification.md`, `mission-control-architecture.md`, `api-stay-up.md`, `brochure-worker-deploy.md`
+Related: `home-lab-specification.md`, `nextcloud-progress.md`, `agent-profiles-specification.md`, `mission-control-architecture.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`

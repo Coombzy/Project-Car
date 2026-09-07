@@ -2,7 +2,7 @@
 
 **Status:** Standing runbook  
 **Updated:** 2026-09-07  
-**Related:** `STATUS.md` Live brochure, `website-webapp-specification.md` §3, `website-improvements.md`, `api-stay-up.md`, `cors-origins.md`, `apps/website/README.md`
+**Related:** `STATUS.md` Live brochure, `website-webapp-specification.md` §3, `website-improvements.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `apps/website/README.md`
 
 Re-deploy the public brochure after Garage merges HTML on `main`. This is the **locked live method**. It is not a one-off for a single hygiene ship.
 
@@ -123,6 +123,6 @@ A bad Direct Upload is a **Worker version** problem. Do **not** cut DNS. Do **no
 | Classic Pages git | Skipped. Do not invent a git-connected Pages cutover here. |
 | Apex sidecar | Deferred. Do not revive. |
 | DNS / `app.` alias | Do not cut or retarget. |
-| Shop API / shop-web process | Lead (`:8000`) / `com.projectcar.shop-web` (`next start` on `:3000`). |
+| Shop API / shop-web process | Lead (`:8000`) / `com.projectcar.shop-web` (`next start` on `:3000`). See `api-stay-up.md` / `shop-web-stay-up.md`. |
 
 **Ownership (unchanged):** Zone owns the Worker upload. Garage owns HTML + waitlist e2e. Lead owns Doc `:8000`.
