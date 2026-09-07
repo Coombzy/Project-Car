@@ -2,12 +2,16 @@
 
 **Audience:** Ben + Grok (and fleet agents)  
 **Author:** Doc Hakosuka  
-**Last updated (this doc):** 2026-08-16 (live re-check on Doc)  
+**Last updated (this doc):** 2026-09-07 (brochure-origin scrub; hub facts still the 2026-08-16 live re-check on Doc)  
 **Repo path:** `Docs/nextcloud-progress.md`  
 **Canonical:** `Coombzy/Project-Car` → `Docs/nextcloud-progress.md`  
 **Moved:** 2026-07-26 — from `communication/Nextcloud-progress.md` (stub redirect remains; target corrected 2026-08-16)
 
-**Status summary:** Temporary Docker hub on Doc is **live** (Nextcloud 30.0.17). Public site https://projectcar.ca returns **200**. Vaultwarden **sibling compose is down** (nothing on :8222 / :8443). Apex public chat is **degraded** (auth file missing in container). `cloud.` / `vault.` / `www` **do not resolve**. McKing (`lil-cachy`) still **offline** on the tailnet (~41 days).
+**Last hub re-check:** 2026-08-16 on Doc (facts below). Do **not** treat this file as a new hub probe.
+
+**Status summary (hub, 2026-08-16):** Temporary Docker hub on Doc is **live** (Nextcloud 30.0.17). Vaultwarden **sibling compose is down** (nothing on :8222 / :8443). `cloud.` / `vault.` **did not resolve** at that check. McKing (`lil-cachy`) still **offline** on the tailnet (~41 days).
+
+**Public brochure (current — not this file):** https://projectcar.ca / www is Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` — [STATUS.md](STATUS.md), [home-lab-specification.md](home-lab-specification.md), [brochure-worker-deploy.md](brochure-worker-deploy.md). **Not** Doc. **Not** `:8088`. **Not** a hermes-tools tunnel. Optional local `:8088` preview only. Apex sidecar is **deferred** (STATUS). Classic Pages git is plan only.
 
 No secrets in this file.
 
@@ -27,7 +31,7 @@ Self-hosted **Nextcloud** as Project Car fleet memory + collab hub (Files, Talk,
 
 | Phase | Host | Role |
 |-------|------|------|
-| **Now (temp)** | **Doc** — M1 Max 64GB | Docker Nextcloud + MariaDB + Redis; VW sibling when up; site origin |
+| **Now (temp)** | **Doc** — M1 Max 64GB | Docker Nextcloud + MariaDB + Redis; VW sibling when up. **Not** the public brochure origin. |
 | **Later (perm)** | **Lightning McKing** — CachyOS, i9-9900K + RTX 5080 | Same data migrate; Frigate GPU sibling optional |
 | Edge | **Porsche** — M4 Pro 24GB | Client only (NC Desktop + Bitwarden via Tailscale) |
 
@@ -66,27 +70,27 @@ Talk (`spreed`), Calendar, Deck, Forms, Photos, Passwords (`passwords` ≠ Vault
 
 `overwrite.cli.url` localhost:8080; trusted_domains include localhost / Tailscale; LaunchAgent `ai.mission-control.hub`; backup script `mission-control/backup-hub.sh` → `~/Desktop/Mission-Control/backups/nextcloud/`; daily hook from `daily-doc-backup.sh`.
 
-### 3.5 Cloudflare Tunnel — public site (host mode)
+### 3.5 Cloudflare Tunnel — public site (host mode) — **2026-08-16 check; brochure origin superseded**
 
 | Item | Status 2026-08-16 |
 |------|-------------------|
 | Runner | Host cloudflared (not Docker dual) |
-| `projectcar.ca` → site :8088 | **HTTPS 200** |
-| `www.projectcar.ca` | **DNS does not resolve** |
+| `projectcar.ca` → site :8088 | **HTTPS 200** at that check. **Superseded:** live origin is Worker `projectcar-brochure`, not this tunnel / `:8088`. See STATUS / home-lab / `brochure-worker-deploy.md`. |
+| `www.projectcar.ca` | **DNS does not resolve** (2026-08-16). **Current:** www is on the Worker (STATUS). |
 | `vault.projectcar.ca` | **DNS does not resolve** |
 | `cloud.projectcar.ca` | **DNS does not resolve** |
 
-Website spec text that lists `cloud.` / `vault.` as “existing other routes” is **ahead of DNS**. Treat those hostnames as **planned**, not live.
+Website spec text that lists `cloud.` / `vault.` as “existing other routes” is **ahead of DNS**. Treat those hostnames as **planned**, not live. Host cloudflared on Doc is for **`api.`** + **LIVE `ops.`** + temporary **`app.`** — not the brochure.
 
-### 3.6 Project Car public website (separate stack)
+### 3.6 Project Car public website (separate stack) — **2026-08-16 leftover; not live origin**
 
 | Item | Value |
 |------|--------|
-| Stack path | `/Users/dochak/hermes-tools/project-car-website/` |
-| Compose project | `project-car-website` (nginx + apex) |
-| Public URL | **https://projectcar.ca** = 200 |
-| Apex `/api/apex/health` | **degraded** — `auth.json` missing in container (`/auth/auth.json`). See `website-improvements.md` P0-1 / P0-2 |
-| Pages | Home, About, The Shop, Membership, Roadmap, Chat, Contact |
+| Stack path | leftover `/Users/dochak/hermes-tools/project-car-website/` — **not** the live origin |
+| Compose project | `project-car-website` (nginx + apex) — optional local `:8088` preview only |
+| Public URL | **https://projectcar.ca** = 200 at that check. **Current origin:** Worker `projectcar-brochure` Direct Upload (`brochure-worker-deploy.md`). |
+| Apex `/api/apex/health` | **degraded** on that Doc compose (`auth.json` missing). STATUS: Apex sidecar **deferred**. Do not treat this as current public chat. |
+| Pages (2026-08-16 list) | Home, About, The Shop, Membership, Roadmap, Chat, Contact. **Current (STATUS):** Chat nav stripped (PR #5). |
 
 ### 3.7 Desktop fleet seed
 
@@ -101,9 +105,9 @@ Website spec text that lists `cloud.` / `vault.` as “existing other routes” 
 | Docker Desktop | Running |
 | `mission-control` | nextcloud + db + redis — **up ~2d, healthy** |
 | Vaultwarden compose | **Stopped** — no containers |
-| `project-car-website` | nginx healthy; **apex unhealthy** |
-| https://projectcar.ca | **200** |
-| www / cloud / vault hostnames | **NXDOMAIN** |
+| `project-car-website` | nginx healthy; **apex unhealthy** (2026-08-16 leftover compose — **not** production) |
+| https://projectcar.ca | **200** (2026-08-16). **Current origin is the Worker**, not this Doc compose — STATUS / home-lab. |
+| www / cloud / vault hostnames | **NXDOMAIN** at that check. **Current:** www is on the Worker (STATUS). `cloud.` / `vault.` still planned. |
 | Nextcloud `status.php` | installed, not maintenance, 30.0.17.2 |
 | Tailscale self | `docs-macbook-pro` `100.97.10.72` |
 | McKing `lil-cachy` | **offline**, last seen ~41 days |
@@ -114,23 +118,23 @@ Website spec text that lists `cloud.` / `vault.` as “existing other routes” 
 
 - Local Nextcloud: http://localhost:8080
 - Local VW: **down** until compose is started
-- Public site: https://projectcar.ca
+- Public site: https://projectcar.ca (Worker today — not Doc `:8088`)
 - Login NC: `ben` (password in local credentials file only)
 
 ---
 
 ## 5. Completed (historical — Jul 14–26)
 
-Sections A–C from the July pass still stand: compose renamed to `mission-control`, paths updated, VW sibling **was** brought up and signups locked, host cloudflared, domain + public brochure live, backups re-targeted. VW being down **now** is a runtime regression, not “never built”.
+Sections A–C from the July pass still stand: compose renamed to `mission-control`, paths updated, VW sibling **was** brought up and signups locked, host cloudflared, domain + public brochure live (then Doc `:8088`; origin is Worker now), backups re-targeted. VW being down **now** is a runtime regression, not “never built”.
 
 ---
 
 ## 6. Not done / pending (priority)
 
 1. **Bring Vaultwarden compose back up** on Doc (or confirm Ben wants it left down). Local :8222 / :8443 currently dead.
-2. **Apex auth readable** in the website container — `website-improvements.md` P0-1. Until then, Contact chat must not pretend to work (P0-2).
+2. **Apex auth** — 2026-08-16 leftover on the Doc website compose. STATUS: Apex sidecar **deferred**. Do not revive from this list.
 3. **McKing migration** — wait until `lil-cachy` is on the tailnet. Do not start rsync now.
-4. **CF hostnames** that still have no DNS: `www`, `cloud`, `vault`. Do not document them as live.
+4. **CF hostnames:** `www` is live on the Worker (STATUS). `cloud.` / `vault.` still planned — do not invent them as live from this file.
 5. **Caddy drop for VW** only after a real `vault.` hostname exists.
 6. **Fleet users** in NC (`porsche`, `doc`, `mcking`) + app-passwords.
 7. **Import fleet seed** into NC Files — still deferred.
@@ -166,6 +170,7 @@ curl -sS http://127.0.0.1:8222/alive
 docker compose ls
 docker ps --format 'table {{.Names}}\t{{.Status}}'
 
+# Leftover local :8088 preview only — not production. Apex sidecar is deferred (STATUS).
 cd /Users/dochak/hermes-tools/project-car-website
 curl -sS http://127.0.0.1:8088/api/apex/health
 ```
@@ -178,7 +183,7 @@ curl -sS http://127.0.0.1:8088/api/apex/health
 |-----------------|------------|-------|
 | `mission-control` | nextcloud + mariadb + redis (**3**) | Running |
 | `mission-control-vaultwarden` | vaultwarden + caddy (**2**) | **Not listed** — down |
-| `project-car-website` | nginx + apex (**2**) | Running; apex unhealthy |
+| `project-car-website` | nginx + apex (**2**) | Running; apex unhealthy (2026-08-16 leftover — **not** live origin) |
 | **Live total** | **5 containers / 2 projects** | (was 7 / 3 when VW was up) |
 
 ---
@@ -192,7 +197,7 @@ curl -sS http://127.0.0.1:8088/api/apex/health
 | `./tunnel/.env` | CF Tunnel token (host) |
 | `~/Desktop/Mission-Control-Credentials.txt` | Local admin pointer (mode 600) |
 | `~/Desktop/Mission-Control/backups/nextcloud/` | NC dumps (sensitive, local only) |
-| `/Users/dochak/hermes-tools/project-car-website/` | Public site stack (:8088) |
+| `/Users/dochak/hermes-tools/project-car-website/` | Leftover local `:8088` preview — **not** the live brochure origin (Worker `projectcar-brochure`) |
 | `~/Desktop/Fleet-Nextcloud/` | Agent seed tree (not bound into NC) |
 | Hermes skill `nextcloud-fleet-hub` | Ops + migration notes for agents |
 
@@ -207,14 +212,14 @@ curl -sS http://127.0.0.1:8088/api/apex/health
 5. VW DOMAIN must match the browser origin when it is up.
 6. Fleet seed ≠ Docker volumes.
 7. McKing offline = **do not** migrate.
-8. CF tunnel = **host mode only** on Doc.
-9. Do not treat `cloud.` / `vault.` / `www` as live until DNS resolves.
+8. CF tunnel = **host mode only** on Doc — for **`api.`** + **LIVE `ops.`** + temporary **`app.`**. Not the brochure.
+9. Do not treat `cloud.` / `vault.` as live until DNS resolves. **`www` is live on the Worker** (STATUS) — not a Doc `:8088` hostname.
 
 ---
 
 ## 12. One-liner for agents
 
-> Mission Control **temp hub on Doc is live**: NC **30.0.17.2** (compose `mission-control`) + MariaDB + Redis. Public site https://projectcar.ca **200**. **VW compose down.** Apex **degraded** (auth path). `www` / `cloud` / `vault` **no DNS**. Backups current (2026-08-16). McKing still off tailnet. Next: VW up or explicit leave-down; Apex P0; then McKing when `lil-cachy` returns.
+> Mission Control **temp hub on Doc is live** (2026-08-16 check): NC **30.0.17.2** (compose `mission-control`) + MariaDB + Redis. **VW compose down.** McKing still off tailnet. Backups current (2026-08-16). **Public brochure** is Worker **`projectcar-brochure`** (STATUS / home-lab / `brochure-worker-deploy.md`) — not Doc `:8088`. Apex sidecar **deferred**. `cloud.` / `vault.` still no DNS from that check. Next: VW up or explicit leave-down; then McKing when `lil-cachy` returns.
 
 ---
 

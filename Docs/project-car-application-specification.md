@@ -1,12 +1,12 @@
 # Project Car Application Specification
 
-**Last Updated:** 2026-09-06  
+**Last Updated:** 2026-09-07  
 **Status:** Living spec (v1)  
 **Owner:** Ben (decisions) / Doc + Porsche (maintenance)  
 **Audience:** Anyone implementing the Project Car product  
 **Canonical location:** `Coombzy/Project-Car` → `Docs/project-car-application-specification.md`
 
-Related: `platform-architecture.md`, `mission-control-architecture.md`, `integration-plan.md`, `website-webapp-specification.md`, `high-level-apps-and-business-specification.md`, `token-pricing.md`.
+Related: `platform-architecture.md`, `mission-control-architecture.md`, `integration-plan.md`, `website-webapp-specification.md`, `high-level-apps-and-business-specification.md`, `token-pricing.md`, `brochure-worker-deploy.md`, `brochure-pages-cutover.md`.
 
 This is the product spec that was missing from the documentation hierarchy. Implement from this file, not from empty scaffolds or from Mission Control docs.
 
@@ -188,7 +188,7 @@ Do not share this database with Nextcloud.
 | Auth now (Member demo) | Parallel Member session cookie (`pc_member_session`). Email must match a `members` row. Same Secure-cookie requirement on HTTPS ops/app. Not OIDC. |
 | Auth later | OIDC for Staff (and Member if we replace the cookie stub) |
 | Mobile | Responsive PWA. No Capacitor/RN until a real offline field loop exists |
-| Hosting now | Brochure: Worker `projectcar-brochure` on `projectcar.ca` / `www` (Pages cutover GO’d, not done; **Apex sidecar deferred**). Shop API: `api.projectcar.ca` tunnel → Doc `:8000` (**Lead owns `:8000`** — do not hand uvicorn restarts to Chief). Ops management UI: **`ops.projectcar.ca` LIVE** at the edge (2026-09-06 ~12:55) → Doc `:3000` (KeepAlive `com.projectcar.shop-web` runs **`next start`**, not `next dev`). Temporary alias **`app.projectcar.ca`** still live on the same origin — **not removed**. Some clients still have local DNS cache for `ops.`. Member demo still on shop-UI `/member`. |
+| Hosting now | Brochure: Worker `projectcar-brochure` Direct Upload of `apps/website/html` on `projectcar.ca` / `www` (`brochure-worker-deploy.md`). Classic Pages git is **plan only** (`brochure-pages-cutover.md`) — blocked on CF ↔ GitHub auth, **outranked** by STATUS Next #1 Member host. **Do not claim Pages is started or GO’d.** **Apex sidecar deferred**. Shop API: `api.projectcar.ca` tunnel → Doc `:8000` (**Lead owns `:8000`** — do not hand uvicorn restarts to Chief). Ops management UI: **`ops.projectcar.ca` LIVE** at the edge (2026-09-06 ~12:55) → Doc `:3000` (KeepAlive `com.projectcar.shop-web` runs **`next start`**, not `next dev`). Temporary alias **`app.projectcar.ca`** still live on the same origin — **not removed**. Some clients still have local DNS cache for `ops.`. Member demo still on shop-UI `/member`. |
 | Hosting next | Member customer surface on **projectcar.ca**. Management stays **`ops.`**. Ben cuts the `app.` alias when ready. McKing later as hub. |
 
 UI calls **our API only**. The browser never holds Nextcloud admin credentials.
@@ -376,7 +376,7 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 
 ### Remaining
 
-- Classic Pages git cutover for the brochure (GO’d; blocked on CF ↔ GitHub auth). Live origin is already Worker `projectcar-brochure`. Shop API stays the lab tunnel.
+- Classic Pages git cutover for the brochure — **plan only** (`brochure-pages-cutover.md`); blocked on CF ↔ GitHub auth; **outranked** by STATUS Next #1 Member host. **Not started. Not GO’d.** Live origin is Worker `projectcar-brochure` Direct Upload. Shop API stays the lab tunnel.
 - Public Apex sidecar later — deferred (Ben), not P0. Do not revive.
 - **Chat follow-ons** — Grok / assign / staff notes / escalate / websockets. Chat v1 human/polling is **LIVE on Doc** (§17).
 - Staff login (OIDC) later on **`ops.`**. Do not dump the rest of v2 here.
@@ -391,7 +391,7 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 
 1. Git worktree is `~/src/Project-Car`. Do not treat `~/Desktop/Project Car/` as the repo.
 2. `apps/project-car/` and `apps/website/` already exist. Do not “add” them as greenfield.
-3. Brochure live origin may still be `~/hermes-tools/project-car-website` until Pages.
+3. Brochure live origin is Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` (`brochure-worker-deploy.md`). Leftover `~/hermes-tools/project-car-website` / `:8088` is **local preview only** — not production. Classic Pages git is plan only (`brochure-pages-cutover.md`); do not claim it is started or GO’d.
 4. Stay-up / CORS details stay in `api-stay-up.md` and `cors-origins.md` — do not duplicate runbooks here.
 
 ---
