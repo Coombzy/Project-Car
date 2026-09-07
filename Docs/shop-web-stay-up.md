@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-07  
 **Public URLs:** https://ops.projectcar.ca (LIVE management) · https://app.projectcar.ca (temporary alias)  
-**Related:** `api-stay-up.md`, `doc-software-baseline.md`, `brochure-worker-deploy.md`, `STATUS.md` host split, `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `apps/project-car/web/README.md`
+**Related:** `doc-lid-restore.md` (ordered wake), `api-stay-up.md`, `doc-software-baseline.md`, `brochure-worker-deploy.md`, `STATUS.md` host split, `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `apps/project-car/web/README.md`
 
 Keep the Shop OS UI reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -62,13 +62,13 @@ launchctl kickstart -k gui/$(id -u)/com.projectcar.shop-web
 # confirm next start (not next dev) and BUILD_ID still present
 ```
 
-Last recorded shop-web **BUILD** on Doc (STATUS): after Dashboard **#28** (`main` `afb37f9`, `BUILD_ID` `5swmVz-T2CqKEQzTk1ifU`). Update STATUS when Lead ships a newer build.
+Last recorded shop-web **BUILD** on Doc (STATUS): after Dashboard **#28** (`main` `afb37f9`, `BUILD_ID` `5swmVz-T2CqKEQzTk1ifU`). **`main` tip is `f952cd3` (#36 host allowlist)** — Doc pull/rebuild **pending**. Do not call #36 live on Doc until that build. Update STATUS when Lead ships it.
 
 ---
 
 ## Lid-close / sleep vs process flap
 
-Doc is a MacBook (M1 Max). Lid close or host sleep stops or stalls origin processes and can drop the tunnel. Amphetamine + plugged-in no-sleep (`doc-software-baseline.md`) plus LaunchAgent KeepAlive once the host is awake are mitigation, not a guarantee.
+Doc is a MacBook (M1 Max). Lid close or host sleep stops or stalls origin processes and can drop the tunnel. Amphetamine + plugged-in no-sleep (`doc-software-baseline.md`) plus LaunchAgent KeepAlive once the host is awake are mitigation, not a guarantee. Ordered wake after lid-close: `doc-lid-restore.md`.
 
 **Same class as `api-stay-up.md` (edge cannot reach Doc):**
 
@@ -169,4 +169,4 @@ Alerts can come from anyone who sees a **502**, **530 / error 1033**, a login re
 5. **Zone — edge.** Local `:3000` login OK but public **502** / **530 / 1033** / DNS miss → Zone checks host cloudflared + the `ops.` / `app.` hostname rules. Origin must be **`http://127.0.0.1:3000`**, not bare `localhost`. Lead does not edit Cloudflare. Do not cut the `app.` alias.
 6. **Garage — after.** When public smoke is green, Garage may re-walk ops/app UI. No process restarts.
 
-Host split: `STATUS.md`. API stay-up: `api-stay-up.md`. Brochure Worker: `brochure-worker-deploy.md`. Member-on-projectcar.ca: `member-host-cutover.md` (plan only — **Ben GO**, not shipped). Zone path-split: `member-zone-edge.md` (plan only — **Ben GO**).
+Host split: `STATUS.md`. Ordered lid-close restore: `doc-lid-restore.md`. API stay-up: `api-stay-up.md`. Brochure Worker: `brochure-worker-deploy.md`. Member-on-projectcar.ca: `member-host-cutover.md` (plan only — **Ben GO**, not shipped). Zone path-split: `member-zone-edge.md` (plan only — **Ben GO**).

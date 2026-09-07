@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-07  
 **Public URL:** https://api.projectcar.ca  
-**Related:** `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `shop-web-stay-up.md`, `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
+**Related:** `doc-lid-restore.md` (ordered wake), `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `shop-web-stay-up.md`, `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
 
 Keep the Shop API reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -35,7 +35,7 @@ Doc is a MacBook (M1 Max). Lid close or host sleep stops or stalls origin proces
 
 A Cloudflare **403** HTML challenge (`cf-mitigated: challenge`) is edge/WAF, not lid-close. Zone owns that. Do not treat it as “restart uvicorn.”
 
-Mitigation already on Doc: Amphetamine + plugged-in no-sleep (`doc-software-baseline.md`) plus LaunchAgent KeepAlive once the host is awake. Those are not a guarantee. If the lid is closed, the public API is down until Doc is awake; KeepAlive should then start the wrapper again. If local `:8000` is still dead after wake, Lead checks `com.projectcar.shop-api` + `run-shop-api.sh`.
+Mitigation already on Doc: Amphetamine + plugged-in no-sleep (`doc-software-baseline.md`) plus LaunchAgent KeepAlive once the host is awake. Those are not a guarantee. If the lid is closed, the public API is down until Doc is awake; KeepAlive should then start the wrapper again. If local `:8000` is still dead after wake, Lead checks `com.projectcar.shop-api` + `run-shop-api.sh`. Ordered wake after lid-close: `doc-lid-restore.md`.
 
 ---
 
@@ -67,6 +67,8 @@ Alerts can come from anyone who sees a **502**, **530 / error 1033**, or a faile
 ---
 
 ## Recovery checklist
+
+Morning lid-close / **530 / 1033** (ordered sequence): `doc-lid-restore.md`.
 
 1. **Public health.** `GET https://api.projectcar.ca/health` → 200? If yes, stop. 403 challenge page → Zone (not Lead).
 2. **Doc awake?** Lid closed / sleep → **502** or **530 / error 1033**. Wake Doc (Amphetamine session if it should stay up).

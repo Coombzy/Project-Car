@@ -30,15 +30,16 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 
 | Doc | What |
 |-----|------|
-| [STATUS.md](STATUS.md) | What’s live, what’s next, locks — start here for 2026-09-06 ~16:16 (`main` `afb37f9`). **`ops.projectcar.ca` LIVE** (staff-on-shift, not Owner-only); `app.` = temporary alias. Calendar #18 + fill #20 + placeholders #21 + cookies #22 + Docs #23/#25 + schedule harden #24 + inventory #26 + Chat #27 + Dashboard #28 are Live. Inventory prefixes locked: B1–B6 / TC / PT (CM later). Chat v1 (human / polling) LIVE on ops/app demo. Build breadth vs Ship-MVP cut stay two gates. Stripe / shop-open / Apex / MC cockpit still need Ben GO. |
+| [STATUS.md](STATUS.md) | What’s live, what’s next, locks — start here for 2026-09-07 (`main` **`f952cd3`**, host allowlist **#36**). **Doc pull/rebuild pending** — last Doc **BUILD** is still Dashboard #28 (`afb37f9`). Docs #30–#35 already on `main`. **`ops.projectcar.ca` LIVE** when Doc origin is up (staff-on-shift, not Owner-only); `app.` = temporary alias. Calendar #18 + fill #20 + placeholders #21 + cookies #22 + Docs #23/#25/#30–#35 + schedule harden #24 + inventory #26 + Chat #27 + Dashboard #28 are Live on Doc. Inventory prefixes locked: B1–B6 / TC / PT (CM later). Chat v1 (human / polling) LIVE on ops/app demo. Build breadth vs Ship-MVP cut stay two gates. Stripe / shop-open / Apex / MC cockpit still need Ben GO. |
 | [token-pricing.md](token-pricing.md) | Token pricing lock (bands + overlay; Basic 1000 / Premium 1500; 6 hoists; shop hoist = Owner-only) |
 | [website-improvements.md](website-improvements.md) | P0–P4 backlog for projectcar.ca (tick status as work ships) |
 | [nextcloud-progress.md](nextcloud-progress.md) | Live hub status on Doc (no secrets) |
 | [doc-software-baseline.md](doc-software-baseline.md) | Doc M1 Max apps / settings |
 | [home-lab-specification.md](home-lab-specification.md) | Host lock card (stub — do not restore the July skill draft blindly) |
+| [doc-lid-restore.md](doc-lid-restore.md) | Ordered Lead wake/restore after lid-close / morning **530 / 1033**. Sequence only — essays stay in api-stay-up / shop-web-stay-up / doc-software-baseline. |
 | [api-stay-up.md](api-stay-up.md) | Keep https://api.projectcar.ca up (uvicorn on Doc; Zone owns tunnel). Brochure is Worker `projectcar-brochure`, not Doc `:8088`. |
 | [shop-web-stay-up.md](shop-web-stay-up.md) | Keep https://ops.projectcar.ca (and temporary `app.`) up — LaunchAgent `com.projectcar.shop-web` runs **`next start`** on Doc `:3000`. Zone owns tunnel/DNS. |
-| [deployment-guide.md](deployment-guide.md) | Index of stay-up / deploy runbooks (shop-web, API, member cutover + Zone path-split plans, brochure Worker, Pages git plan, ship-MVP cut draft). |
+| [deployment-guide.md](deployment-guide.md) | Index of stay-up / deploy runbooks (lid-close restore, shop-web, API, member cutover + Zone path-split plans, brochure Worker, Pages git plan, ship-MVP cut draft). |
 | [brochure-worker-deploy.md](brochure-worker-deploy.md) | Standing brochure re-deploy: Zone Direct Upload of `apps/website/html` onto Worker `projectcar-brochure`. Classic Pages git skipped until auth — plan: `brochure-pages-cutover.md`. |
 | [brochure-pages-cutover.md](brochure-pages-cutover.md) | Brochure Worker → Classic Pages git checklist (plan only; blocked on CF ↔ GitHub auth). Do not start from this file. Member host + Zone path-split (`member-host-cutover.md`, `member-zone-edge.md`) outrank executing Pages git. |
 | [cors-origins.md](cors-origins.md) | `CORS_ORIGINS` for brochure waitlist from https://projectcar.ca |
@@ -74,7 +75,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 
 | Doc | Go here instead |
 |-----|-----------------|
-| [deployment-guide.md](deployment-guide.md) | Now a living-ops index — shop-web / API stay-up, member cutover + Zone path-split plans, brochure Worker, Pages git plan |
+| [deployment-guide.md](deployment-guide.md) | Now a living-ops index — lid-close restore, shop-web / API stay-up, member cutover + Zone path-split plans, brochure Worker, Pages git plan |
 | [phase-0-nextcloud-roadmap.md](phase-0-nextcloud-roadmap.md) | MC Phase A + nextcloud-progress |
 | [doc-nextcloud-headscale-setup-guide.md](doc-nextcloud-headscale-setup-guide.md) | Tailscale + MariaDB — not Headscale/Postgres |
 

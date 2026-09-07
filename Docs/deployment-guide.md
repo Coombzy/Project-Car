@@ -12,6 +12,7 @@ This file is **not** a runbook. Use the living docs below.
 
 | Need | Doc |
 |------|-----|
+| Doc lid-close / morning 530 restore (ordered Lead sequence) | `doc-lid-restore.md` |
 | Shop UI stay-up on Doc (`ops.` / temporary `app.`, `:3000`, **`next start`**) | `shop-web-stay-up.md` |
 | Shop API stay-up on Doc (`api.`, `:8000`, uvicorn) | `api-stay-up.md` |
 | Member UI → projectcar.ca (plan only; **Ben GO**) | `member-host-cutover.md` |
