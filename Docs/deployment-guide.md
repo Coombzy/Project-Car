@@ -15,6 +15,7 @@ This file is **not** a runbook. Use the living docs below.
 | Shop UI stay-up on Doc (`ops.` / temporary `app.`, `:3000`, **`next start`**) | `shop-web-stay-up.md` |
 | Shop API stay-up on Doc (`api.`, `:8000`, uvicorn) | `api-stay-up.md` |
 | Member UI → projectcar.ca (plan only; **Ben GO**) | `member-host-cutover.md` |
+| Member path-split on projectcar.ca / www (Zone; plan only; **Ben GO**) | `member-zone-edge.md` |
 | Public MVP cut-vs-keep (draft; not a Ben lock) | `ship-mvp-cut.md` |
 | Brochure Worker Direct Upload (`projectcar-brochure`) | `brochure-worker-deploy.md` |
 | Brochure → Classic Pages git (plan only; blocked on CF ↔ GitHub auth) | `brochure-pages-cutover.md` |

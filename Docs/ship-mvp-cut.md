@@ -2,7 +2,7 @@
 
 **Status:** Draft planning doc — **not** a Ben decision lock  
 **Updated:** 2026-09-07  
-**Related:** `STATUS.md` (Ship-MVP cut later gate; Next #1), `member-host-cutover.md`, `brochure-pages-cutover.md`, `project-car-application-specification.md` §11 / §15 / §16, `platform-architecture.md` §5, `token-pricing.md`
+**Related:** `STATUS.md` (Ship-MVP cut later gate; Next #1), `member-host-cutover.md`, `member-zone-edge.md`, `brochure-pages-cutover.md`, `project-car-application-specification.md` §11 / §15 / §16, `platform-architecture.md` §5, `token-pricing.md`
 
 Propose a **cut-vs-keep** table for the **public MVP gate** (`STATUS.md` “Ship-MVP cut (later gate)”). Purpose: **stop polishing cut-candidates** before STATUS Next #1 — Member UI on **projectcar.ca** (`member-host-cutover.md`; **Ben GO** for execution).
 
@@ -31,7 +31,7 @@ Do **not** trade these away to “finish” a Later placeholder.
 
 | Feature | Status today | MVP proposal | Why | Notes |
 |---------|--------------|--------------|-----|-------|
-| **Member host → projectcar.ca** | Still `/member` on ops/app shop-ui. Plan only. | **KEEP** | STATUS Next #1. Cutover planning outranks new breadth polish. | Checklist: `member-host-cutover.md`. **Ben GO** before Garage (site) / Zone (CF). This draft is not that GO. |
+| **Member host → projectcar.ca** | Still `/member` on ops/app shop-ui. Plan only. | **KEEP** | STATUS Next #1. Cutover planning outranks new breadth polish. | Checklist: `member-host-cutover.md`. Zone path-split: `member-zone-edge.md`. **Ben GO** before Garage (site) / Zone (CF). This draft is not that GO. |
 | **Token booking / hoist schedule** | Live on Doc + `ops.` / temp `app.`. Owner + Member self-serve on **Bays 1–5**; shop hoist **Owner-only** (`400 shop_hoist_owner_only`). Calendar #18 + fill #20 + harden #24. | **KEEP** | Core Shop OS. Public MVP without booking is not the product. | Token math locked: `token-pricing.md`. No Stripe. Shop not open. `(B) bumpable` stays Later. |
 | **Brochure + waitlist** | Worker `projectcar-brochure` live. Waitlist e2e PASS → `api.projectcar.ca/waitlist`. | **KEEP** | Customer host already does this. Do not replace the Worker with shop-web. | Re-deploy: `brochure-worker-deploy.md`. Apex sidecar **deferred**. Classic Pages git is not an MVP blocker. |
 | **Ops management on `ops.`** | `ops.projectcar.ca` LIVE at edge. Temp `app.` alias until Ben cuts DNS. | **KEEP** | Staff-on-shift host (not Owner-only). Member migrates off this host; ops stays. | Do **not** cut `app.` in this doc. Stay-up: `shop-web-stay-up.md`. |
@@ -71,7 +71,7 @@ Explicit table for STATUS Later + build-breadth placeholders that are easy to ov
 ## Sequencing
 
 1. **Now:** treat the DEFER / CUT rows as **do-not-polish**. IA freeze still allows the KEEP-thin shells to exist.
-2. **Next #1:** Member → projectcar.ca per `member-host-cutover.md` after **Ben GO**. Garage = site; Zone = tunnel / DNS / CORS edge; Lead = Doc `:8000`.
+2. **Next #1:** Member → projectcar.ca per `member-host-cutover.md` after **Ben GO**. Zone path-split: `member-zone-edge.md`. Garage = site; Zone = path rules / tunnel hostname / CORS edge; Lead = Doc `:8000`.
 3. **Later Ben cut:** public MVP feature set. Ben decides what disappears vs stays thin. This table is input, not the lock.
 4. **Later still:** Next #2 (`app.` cut), OIDC, Stripe, NVR, hardware, Chat follow-ons — only when STATUS / Ben say so.
 

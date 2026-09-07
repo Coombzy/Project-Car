@@ -2,7 +2,7 @@
 
 **Status:** Checklist / plan only — **not shipped**  
 **Updated:** 2026-09-07  
-**Related:** `STATUS.md` Live brochure, `website-webapp-specification.md` §3 / §9, `brochure-worker-deploy.md`, `member-host-cutover.md`, `ship-mvp-cut.md`, `api-stay-up.md`, `cors-origins.md`, `apps/website/README.md`
+**Related:** `STATUS.md` Live brochure, `website-webapp-specification.md` §3 / §9, `brochure-worker-deploy.md`, `member-host-cutover.md`, `member-zone-edge.md`, `ship-mvp-cut.md`, `api-stay-up.md`, `cors-origins.md`, `apps/website/README.md`
 
 Plan the future cut from live Worker **`projectcar-brochure`** (Direct Upload of `apps/website/html`) to **Classic Cloudflare Pages git** connected to this repo. This file is a runbook. It does **not** change DNS, invent a live cutover, or start Zone / Garage work.
 
@@ -113,7 +113,7 @@ Home HTML must not contain `Website progress` or a `10%` progress bar. Chat must
 
 - **No Apex revival.** Brochure stays Worker / Pages — no Apex sidecar, no brochure Chat page.
 - **No `app.` alias cut.** Temporary alias stays until Ben cuts that DNS (`STATUS.md` Next #2). This plan does not touch `ops.` / `app.` tunnels.
-- **Member host cutover is separate.** Customer-host Member UI is `member-host-cutover.md` (STATUS Next #1, **Ben GO**). Do not start it from a Pages bind.
+- **Member host cutover is separate.** Customer-host Member UI is `member-host-cutover.md` (STATUS Next #1, **Ben GO**). Zone path-split: `member-zone-edge.md`. Both **outrank** executing this Pages plan. Do not start Member work from a Pages bind.
 - **No Stripe / shop-open.** Interest waitlist only. Do not publish live prices or “book now.”
 - **Shop API stays the lab tunnel.** `api.projectcar.ca` → Doc `:8000`. Pages does not host FastAPI.
 - **Lead does not own brochure edge.** Do not hand Pages, Worker uploads, or domain binds to Lead.
@@ -155,7 +155,7 @@ This plan exists so the steps are clear **when auth is ready**. It is **not** a 
 | Order | Gate | Notes |
 |-------|------|--------|
 | **Now** | Direct Upload stays locked live | `brochure-worker-deploy.md`. Garage HTML PRs still upload via Zone. |
-| **Product Next #1** | Member UI → projectcar.ca | `member-host-cutover.md`. **Outranks** polishing or executing Pages git. |
+| **Product Next #1** | Member UI → projectcar.ca | `member-host-cutover.md` + Zone path-split `member-zone-edge.md`. **Outranks** polishing or executing Pages git. |
 | **This plan** | Classic Pages git | After Ben’s CF ↔ GitHub auth. Zone executes §3. Not a substitute for Next #1. |
 | **Do not start** | Google Calendar OAuth / two-way sync | `ship-mvp-cut.md` **DEFER**. STATUS Next #6 — outranked by Member host. ICS + Connect stub stay thin. |
 | **Later** | Ben cuts `app.` | STATUS Next #2. Not this file. |
