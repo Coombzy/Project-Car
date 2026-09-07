@@ -1,11 +1,18 @@
 # Mission Control Architecture
 
-**Last Updated:** 2026-08-12  
-**Status:** Living spec (v2) — rewritten to match the live hub and Ben-only cockpit decision  
+**Last Updated:** 2026-09-07  
+**Status:** Living spec (v2) — cockpit **parked** until **Ben GO**  
 **Owner:** Ben (decisions) / Doc + Porsche (maintenance)  
 **Canonical location:** `Coombzy/Project-Car` → `Docs/mission-control-architecture.md`
 
 Related: `platform-architecture.md`, `project-car-application-specification.md`, `integration-plan.md`, `home-lab-specification.md`, `security-playbook.md`.
+
+**Park:** Custom Next.js cockpit is **parked** until **Ben GO**. The old “until Owner booking is live” hold is **already satisfied** (Owner + Member booking live on Doc). Do **not** start the cockpit from a docs PR.
+
+**Prereqs (cockpit start):**
+- NC hub live ✓
+- Owner + Member booking live on Doc ✓
+- Ben GO ☐
 
 **This document replaces the July 2026 draft** that still planned n8n, Matrix-on-Porsche, a shared Postgres with Nextcloud, and a codebase at `~/Documents/mission-control/` (that tree does not exist).
 
@@ -43,7 +50,7 @@ Live on **Doc** (M1 Max), path `~/hermes-tools/mission-control` (symlink `~/herm
 
 **Does not exist and is not Phase 0 work:**
 
-- Custom Next.js cockpit (this spec defines it)
+- Custom Next.js cockpit (this spec defines it) — **parked** until **Ben GO**; not started. Booking-live hold already satisfied.
 - Matrix Synapse
 - n8n
 - Shared `missioncontrol` Postgres
@@ -95,7 +102,9 @@ Hosting later: Nextcloud + Vaultwarden + MC app migrate to **McKing**. Porsche k
 
 ---
 
-## 5. The cockpit app (to be built)
+## 5. The cockpit app (parked until Ben GO)
+
+**Parked.** Do **not** start this app from a docs PR. Owner + Member booking live on Doc does **not** unlock it.
 
 **Repo path (planned):** `apps/mission-control/` in `Coombzy/Project-Car`.  
 **Audience:** Ben.  
@@ -235,7 +244,15 @@ See `security-playbook.md`. MC-specific:
 - [ ] Backup restore drill documented
 - [ ] McKing off-box backup
 
-### Phase B — Cockpit (next software)
+### Phase B — Cockpit (parked until Ben GO)
+
+The old “until Owner booking is live” hold is **already satisfied**. Do **not** start the cockpit from a docs PR.
+
+- NC hub live ✓
+- Owner + Member booking live on Doc ✓
+- Ben GO ☐
+
+After GO (not started):
 
 - [ ] `apps/mission-control` Next.js app
 - [ ] Health view
