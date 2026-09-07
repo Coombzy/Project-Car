@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-07  
 **Public URLs:** https://ops.projectcar.ca (LIVE management) · https://app.projectcar.ca (temporary alias)  
-**Related:** `doc-lid-restore.md` (ordered wake), `api-stay-up.md`, `doc-software-baseline.md`, `brochure-worker-deploy.md`, `STATUS.md` host split, `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `apps/project-car/web/README.md`
+**Related:** `doc-lid-restore.md` (ordered wake), `api-stay-up.md`, `doc-software-baseline.md`, `brochure-worker-deploy.md`, `STATUS.md` host split, `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `app-alias-cut.md` (later `app.` cut; plan only), `apps/project-car/web/README.md`
 
 Keep the Shop OS UI reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -169,4 +169,4 @@ Alerts can come from anyone who sees a **502**, **530 / error 1033**, a login re
 5. **Zone — edge.** Local `:3000` login OK but public **502** / **530 / 1033** / DNS miss → Zone checks host cloudflared + the `ops.` / `app.` hostname rules. Origin must be **`http://127.0.0.1:3000`**, not bare `localhost`. Lead does not edit Cloudflare. Do not cut the `app.` alias.
 6. **Garage — after.** When public smoke is green, Garage may re-walk ops/app UI. No process restarts.
 
-Host split: `STATUS.md`. Ordered lid-close restore: `doc-lid-restore.md`. API stay-up: `api-stay-up.md`. Brochure Worker: `brochure-worker-deploy.md`. Member-on-projectcar.ca: `member-host-cutover.md` (plan only — **Ben GO**, not shipped). Zone path-split: `member-zone-edge.md` (plan only — **Ben GO**).
+Host split: `STATUS.md`. Ordered lid-close restore: `doc-lid-restore.md`. API stay-up: `api-stay-up.md`. Brochure Worker: `brochure-worker-deploy.md`. Member-on-projectcar.ca: `member-host-cutover.md` (plan only — **Ben GO**, not shipped). Zone path-split: `member-zone-edge.md` (plan only — **Ben GO**). Temporary `app.` cut: `app-alias-cut.md` (plan only — STATUS Next #2; do **not** execute from stay-up). **`ops.` stays** the management host.

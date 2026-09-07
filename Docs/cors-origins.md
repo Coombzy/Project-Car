@@ -2,7 +2,7 @@
 
 **Status:** Living ops  
 **Updated:** 2026-09-07  
-**Related:** `api-stay-up.md`, `doc-lid-restore.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `apps/project-car/api/.env.example`, `apps/project-car/api/app/config.py`, `apps/website/html/waitlist.js`
+**Related:** `api-stay-up.md`, `doc-lid-restore.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `app-alias-cut.md` (later drop of `https://app.projectcar.ca` — **not** this file), `apps/project-car/api/.env.example`, `apps/project-car/api/app/config.py`, `apps/website/html/waitlist.js`
 
 Browser waitlist from https://projectcar.ca must be allowed to call the Shop API. After any `.env` change, **Lead** restarts the API process on Doc.
 
@@ -14,7 +14,7 @@ Env var: **`CORS_ORIGINS`** (Pydantic `Settings.cors_origins` in `apps/project-c
 
 Comma-separated Origin allowlist. `*` is **dropped** in code — never set `*` for production, and do not rely on a wildcard “just this once.”
 
-Must include **`https://projectcar.ca`**. Live allowlist also includes `https://www.projectcar.ca`, localhost Owner-UI ports, **`https://ops.projectcar.ca`** (LIVE management origin, 2026-09-06 ~12:55), and the temporary alias **`https://app.projectcar.ca`** (still live until Ben cuts that DNS).
+Must include **`https://projectcar.ca`**. Live allowlist also includes `https://www.projectcar.ca`, localhost Owner-UI ports, **`https://ops.projectcar.ca`** (LIVE management origin, 2026-09-06 ~12:55), and the temporary alias **`https://app.projectcar.ca`** (still live until Ben cuts that DNS). Do **not** drop `app.` from a docs PR — plan only: `app-alias-cut.md` (after ops-only smoke). **`ops.` stays.**
 
 ```
 CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,https://projectcar.ca,https://www.projectcar.ca,https://ops.projectcar.ca,https://app.projectcar.ca
