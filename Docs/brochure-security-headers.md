@@ -6,7 +6,7 @@
 
 This file is the **Zone** checklist for website-improvements **P2-4** (security headers at origin) plus the HTML vs `?v=` **cache split** that P2-3 already named. Zone implements **after Lead GO**. A docs merge is **not** GO and is **not** a Worker upload.
 
-Live Worker **200** responses today (robots / CSS / favicon from this probe) carry **none** of the target security headers. `Cache-Control` is `public, max-age=0, must-revalidate` on those 200s — no HTML vs asset split. Do **not** invent P2-4 **done**. Do **not** invent P2-3 Worker-live.
+Live Worker **200** responses today (robots / CSS / favicon from this probe) carry **none** of the target security headers. `Cache-Control` is `public, max-age=0, must-revalidate` on those 200s — no HTML vs asset split. Do **not** invent P2-4 **done**. P2-3 `?v=` is **LIVE** on Worker (PR **#57** / `be60a01`; Zone Direct Upload ~2026-09-07 16:01 America/Regina).
 
 Do **not** invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, Matrix, or Apex revival. This file does **not** ping Ben.
 
@@ -19,7 +19,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Do not execute from a docs PR** | Merging this file is **not** an apply. Do not edit Cloudflare, Transform Rules, Worker settings, or `apps/website/html/_headers` from docs work. No Garage / Zone / Hatch fan-out from this PR. |
 | **Lead GO before Zone applies** | Zone implements the table below **after Lead GO**. Standing brochure HTML upload GO (`brochure-worker-deploy.md`) is **not** this GO. |
 | **P2-4 stays open** | Until a Worker **200** smoke (below) passes. Challenge **403** headers are WAF, not origin. |
-| **P2-3 stays git-only** | Until Zone Direct Uploads `apps/website/html` from `main` **`be60a01`** (Website **#57**). Do not call the `?v=` bump live. |
+| **P2-3 is LIVE** | Zone Direct Upload ~2026-09-07 16:01 America/Regina from `main` **`be60a01`** (Website **#57**). `styles.css?v=34` + `banner-logo.png?v=30` on public HTML (Home/About/Contact at minimum; apex+www). P2-4 cache-split headers are still **not** applied. |
 
 ---
 
@@ -31,7 +31,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Security headers on Worker 200** | **None** of `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Content-Security-Policy` `frame-ancestors`, or `Permissions-Policy`. |
 | **Cache today** | Worker 200s use `Cache-Control: public, max-age=0, must-revalidate` (robots, CSS, favicon). No long-cache for `?v=` assets. |
 | **HTML from some networks** | Cloudflare challenge (**403**, `cf-mitigated: challenge`). Those interstitial headers (challenge CSP, `X-Frame-Options: SAMEORIGIN`, …) are **WAF**, not Worker origin. Do **not** treat them as P2-4 live. See `brochure-worker-deploy.md` Smoke. |
-| **P2-3 `?v=` SSOT** | On git (PR **#57** / `be60a01`): all public HTML uses `styles.css?v=34` and `banner-logo.png?v=30`. Shared `shop-config.js?v=1` + `waitlist.js?v=2` already matched. **Not** Worker-live until Zone upload. |
+| **P2-3 `?v=` SSOT** | **LIVE** on Worker (PR **#57** / `be60a01`; Zone Direct Upload ~16:01 America/Regina). All public HTML uses `styles.css?v=34` and `banner-logo.png?v=30`. Shared `shop-config.js?v=1` + `waitlist.js?v=2` already matched. Smoke PASS: Home/About/Contact at minimum; apex+www. P2-4 cache split is **not** live. |
 | **`html/_headers`** | MIME hints for robots / sitemap only. Worker Direct Upload does **not** honor Pages `_headers` for this slice. Do not invent applying P2-4 by editing that file in a docs PR. |
 | **Classic Pages git** | **Skipped** (`brochure-pages-cutover.md`). Do not start. |
 | **Member edge / Apex / CF↔GitHub** | Out of scope. |
@@ -147,7 +147,7 @@ A bad header apply is a **Worker / Transform Rule** problem. Do **not** cut DNS.
 | Classic Pages git / CF↔GitHub | `brochure-pages-cutover.md`. Skipped. Do not start. |
 | Apex sidecar | Deferred. Do not revive. |
 | DNS / `app.` alias | Do not cut or retarget. |
-| Garage HTML / `?v=` bump | Already on git (P2-3 / **#57**). Zone upload is a separate standing deploy. |
+| Garage HTML / `?v=` bump | P2-3 **LIVE** on Worker (**#57** / `be60a01`; Zone Direct Upload ~16:01 America/Regina). P2-4 cache-split headers stay a separate apply. |
 | Shop API / shop-web | Lead (`:8000`) / `com.projectcar.shop-web`. Not this Worker. |
 
 **Ownership (unchanged):** Zone owns Worker headers + upload. Garage owns HTML. Lead owns Doc `:8000` and the GO for this apply.

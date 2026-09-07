@@ -115,7 +115,7 @@ A bad Direct Upload is a **Worker version** problem. Do **not** cut DNS. Do **no
 
 ## Security + cache headers (P2-4 — plan only)
 
-Worker **`projectcar-brochure` 200s** do **not** send the P2-4 security headers today. Cache is not split (HTML vs `?v=` assets). Checklist: **`brochure-security-headers.md`**. Zone implements **after Lead GO**. Do **not** apply headers, Transform Rules, or `_headers` from this runbook or a docs PR. Do **not** invent P2-4 done. P2-3 `?v=` is on git (`be60a01` / **#57**) until the next Direct Upload.
+Worker **`projectcar-brochure` 200s** do **not** send the P2-4 security headers today. Cache is not split (HTML vs `?v=` assets). Checklist: **`brochure-security-headers.md`**. Zone implements **after Lead GO**. Do **not** apply headers, Transform Rules, or `_headers` from this runbook or a docs PR. Do **not** invent P2-4 done. P2-3 `?v=` is **LIVE** on Worker (`be60a01` / **#57**; Zone Direct Upload ~2026-09-07 16:01 America/Regina).
 
 ---
 
