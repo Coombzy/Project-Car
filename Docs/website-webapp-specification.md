@@ -1,6 +1,6 @@
 # Website & Web App Specification
 
-**Last Updated:** 2026-09-06  
+**Last Updated:** 2026-09-07  
 **Status:** Living document  
 **Part of:** Project Car documentation hierarchy  
 **Canonical location:** `Coombzy/Project-Car` → `Docs/website-webapp-specification.md`  
@@ -90,11 +90,12 @@ Do not treat McKing as the brochure host plan. McKing remains the later hub for 
 ### Cloudflare Tunnel (Doc)
 
 - Tunnel runs on Doc
-- Public hostnames:
-  - `projectcar.ca` / `www.projectcar.ca` → Worker `projectcar-brochure` — **live** (customer brochure + waitlist)
+- **Scope:** `api.` / `ops.` / temporary `app.` only. **Not** the marketing apex (`projectcar.ca` / `www`). **Not** Doc `:8088`.
+- Public hostnames on this tunnel:
   - `api.projectcar.ca` → shop API `:8000` — **live** (public waitlist + authenticated API)
   - `ops.projectcar.ca` → Doc shop UI `:3000` — **LIVE management** (2026-09-06 ~12:55). Tunnel origin preferred `http://127.0.0.1:3000`. Still demo cookies — not OIDC. The shop is not open.
   - `app.projectcar.ca` → Doc shop UI `:3000` — **live temporary alias** (same origin as `ops.`). Still demo cookies — not OIDC.
+- Marketing apex (`projectcar.ca` / `www`) is Worker **`projectcar-brochure`** Direct Upload — **not** this tunnel, **not** Doc `:8088`.
 - Planned private / extra hostnames (not live):
   - `cloud.` → `:8080` (Nextcloud)
   - `vault.` → `:8222` (Vaultwarden)
@@ -142,7 +143,7 @@ apps/website/
 
 - **Brochure target is Pages (plan only)** — Static files from `apps/website/`. Live origin is Worker Direct Upload (`brochure-worker-deploy.md`). Classic Pages git (`brochure-pages-cutover.md`) is blocked on Ben CF↔GitHub auth and **outranked** by STATUS Next #1. Do not treat the cutover as started.
 - **Shop API stays lab tunnel** — `api.projectcar.ca` → Doc `:8000`. Not hosted on Pages.
-- **Cloudflare in front** — DNS, Tunnel (API + **LIVE `ops.`** + temporary `app.` alias), Worker brochure, SSL, CDN, basic DDoS/WAF via free plan.
+- **Cloudflare in front** — DNS, Tunnel (**`api.` / `ops.` / temporary `app.`** only — **not** Doc `:8088`, **not** the marketing apex), Worker brochure, SSL, CDN, basic DDoS/WAF via free plan.
 - **No open inbound ports** — cloudflared outbound only.
 - **McKing is not the brochure host** — later hub for Nextcloud / mail / backups, not the next public-site origin.
 
@@ -235,7 +236,7 @@ Most projects keep the simple alias model initially and only create separate mai
 | Priority | Item | Status |
 |----------|------|--------|
 | 1 | Domain registered + locked + 10-year term | Done |
-| 2 | Cloudflare Tunnel + multi-page brochure live | Done (on Doc) |
+| 2 | Multi-page brochure live (Worker Direct Upload) | **Done** — Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html`. Not Doc `:8088`. Not the marketing-apex tunnel. |
 | 3 | This specification document | Done |
 | 4 | Email provider decision | **Done — Proton (start free)** |
 | 5 | Waitlist form → shop API (`POST /waitlist`) | **Done** (2026-09-06) |
@@ -243,7 +244,7 @@ Most projects keep the simple alias model initially and only create separate mai
 | 7 | Cloudflare Pages cutover for brochure | **Plan only** — blocked on Ben CF↔GitHub auth. Steps: `brochure-pages-cutover.md`. Do not start. Member host (item 13 / STATUS Next #1) **outranks** this. Live brochure stays Worker Direct Upload (`brochure-worker-deploy.md`). |
 | 8 | Proton custom domain + paid plan when ready | Pending |
 | 9 | Proton Drive setup as part of leaving Google | Pending |
-| 10 | Basic uptime monitoring | Pending |
+| 10 | Basic uptime / synthetic monitoring | **Done / partial** — Lookout owns **`projectcar-api-health-watch`** (live flips on `https://api.projectcar.ca/health`; 200 when Doc origin is up; lid-close 502/530). Brochure homepage 200 optional. Apex dropped (deferred). Discord invite check optional/deferred. Do not invent extra shipped monitors. |
 | 11 | Shop UI public host (temporary `app.` alias) | **Done** (2026-09-06 ~11:41) — `app.projectcar.ca` live pointing at Doc `:3000`. Temporary alias. Still demo cookies. The shop is not open. |
 | 12 | Management hostname `ops.projectcar.ca` | **LIVE** (2026-09-06 ~12:55) → Doc `:3000`. Staff-on-shift / ops UI; Owner uses it too. Not Owner-only. Some clients still have local DNS cache — use `app.`. |
 | 13 | Member customer surface on `projectcar.ca` | **Next** — not shipped. Today Member demo still lives on shop-UI `/member` (`ops.` + temporary `app.`). |
@@ -253,7 +254,7 @@ Most projects keep the simple alias model initially and only create separate mai
 
 ## 10. Multiple Tunnels (future note)
 
-One tunnel is sufficient for the current public site. Additional tunnels are likely later for:
+One Doc tunnel is sufficient for Shop API + ops/app. The marketing brochure is **not** on this tunnel (Worker `projectcar-brochure`). Additional tunnels are likely later for:
 
 - Machine separation (Doc / McKing / Porsche)
 - Public vs private service isolation (website vs Mission Control / Vaultwarden / agents)
@@ -277,4 +278,4 @@ One tunnel is sufficient for the current public site. Additional tunnels are lik
 ---
 
 **Synchronized with Project Car documentation practice.**  
-**Updated 2026-09-06 ~16:16:** host split locked — customer = `projectcar.ca` / www; management = **`ops.projectcar.ca` LIVE** → Doc `:3000`; `app.` = temporary alias (still live). CORS includes `ops.` + `app.`. Waitlist Done; Worker brochure live; Apex sidecar deferred; Shop OS Chat v1 + Dashboard LIVE on Doc (`main` `afb37f9`); `api.projectcar.ca` lab tunnel; McKing is not the brochure host. Email decision (Proton start) unchanged from 2026-07-24.
+**Updated 2026-09-07:** Roadmap row 2 **Done** on Worker **`projectcar-brochure`** Direct Upload (not Doc `:8088`, not the marketing-apex tunnel). Item 10 **Done / partial** — Lookout **`projectcar-api-health-watch`** on `api.projectcar.ca/health`. Tunnel scope = `api.` / `ops.` / temporary `app.` only. Host split locked — customer = `projectcar.ca` / www; management = **`ops.projectcar.ca` LIVE** → Doc `:3000`; `app.` = temporary alias (still live). Waitlist Done; Apex sidecar deferred; Shop OS Chat v1 + Dashboard LIVE on Doc (`main` `afb37f9`); McKing is not the brochure host. Email decision (Proton start) unchanged from 2026-07-24.
