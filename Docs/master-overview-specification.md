@@ -132,7 +132,8 @@ Full: `integration-plan.md` and `platform-architecture.md`.
 | `code-mater-android-integration-guide.md` | Exists (headers 2026-08-16) |
 | `home-lab-specification.md` | **Stub lock card** — do not restore July skill draft blindly |
 | eBay / estate / marketplace specs | **LATER / NOT V1** — banners only |
-| `deployment-guide.md`, `phase-0-nextcloud-roadmap.md`, `doc-nextcloud-headscale-setup-guide.md` | **Retired stubs** |
+| `deployment-guide.md` | Living-ops index — shop-web / API stay-up, member cutover plan, brochure Worker |
+| `phase-0-nextcloud-roadmap.md`, `doc-nextcloud-headscale-setup-guide.md` | **Retired stubs** |
 | Project Car business plan | Still later |
 | Fitness spec | Not a v1 deliverable |
 
