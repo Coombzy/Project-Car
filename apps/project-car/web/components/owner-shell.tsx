@@ -2,24 +2,87 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { logoutAction } from "../app/logout-action";
+import { OwnerDemoBanner } from "./owner-demo-banner";
 
-const NAV = [
+const PRIMARY_NAV = [
   { href: "/", current: "home", label: "Dashboard" },
   { href: "/schedule", current: "schedule", label: "Schedule" },
-  { href: "/members", current: "members", label: "Members" },
-  { href: "/hoists", current: "hoists", label: "Hoists" },
-  { href: "/waitlist", current: "waitlist", label: "Waitlist" },
-  { href: "/tiers", current: "tiers", label: "Tiers" },
-  { href: "/fill", current: "fill", label: "Fill gaps" },
   { href: "/chat", current: "chat", label: "Chat" },
-  { href: "/parts", current: "parts", label: "Parts" },
-  { href: "/tools", current: "tools", label: "Tools" },
-  { href: "/jobs", current: "jobs", label: "Job board" },
-  { href: "/cameras", current: "cameras", label: "Cameras" },
-  { href: "/payments", current: "payments", label: "Payments" },
+  { href: "/members", current: "members", label: "Members" },
 ] as const;
 
-export type OwnerSection = (typeof NAV)[number]["current"];
+const SECONDARY_GROUPS = [
+  {
+    id: "inventory",
+    label: "Inventory",
+    items: [
+      { href: "/parts", current: "parts", label: "Parts" },
+      { href: "/tools", current: "tools", label: "Tools" },
+    ],
+  },
+  {
+    id: "floor",
+    label: "Floor",
+    items: [
+      { href: "/jobs", current: "jobs", label: "Jobs" },
+      { href: "/cameras", current: "cameras", label: "Cameras" },
+      { href: "/hoists", current: "hoists", label: "Hoists" },
+    ],
+  },
+  {
+    id: "admin",
+    label: "Admin",
+    items: [
+      { href: "/payments", current: "payments", label: "Payments" },
+      { href: "/tiers", current: "tiers", label: "Tiers" },
+      { href: "/fill", current: "fill", label: "Fill" },
+      { href: "/waitlist", current: "waitlist", label: "Waitlist" },
+    ],
+  },
+] as const;
+
+export type OwnerSection =
+  | (typeof PRIMARY_NAV)[number]["current"]
+  | (typeof SECONDARY_GROUPS)[number]["items"][number]["current"];
+
+function NavLink({
+  href,
+  label,
+  current,
+  section,
+}: {
+  href: string;
+  label: string;
+  current: OwnerSection;
+  section: OwnerSection;
+}) {
+  return (
+    <Link href={href} aria-current={current === section ? "page" : undefined}>
+      {label}
+    </Link>
+  );
+}
+
+function SecondaryClusters({ current }: { current: OwnerSection }) {
+  return (
+    <>
+      {SECONDARY_GROUPS.map((group) => (
+        <div key={group.id} className="nav-cluster">
+          <span className="nav-cluster-label">{group.label}</span>
+          {group.items.map((item) => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              label={item.label}
+              current={current}
+              section={item.current}
+            />
+          ))}
+        </div>
+      ))}
+    </>
+  );
+}
 
 export function OwnerShell({
   email,
@@ -32,40 +95,52 @@ export function OwnerShell({
   wide?: boolean;
   children: ReactNode;
 }) {
+  const moreCurrent = SECONDARY_GROUPS.some((group) =>
+    group.items.some((item) => item.current === current),
+  );
+
   return (
     <div className="shell">
-      <header className="topbar">
-        <div className="brand">
-          <strong>Project Car</strong>
-          <span>Management · Owner demo · app alias</span>
+      <header className="owner-chrome">
+        <div className="topbar">
+          <div className="brand">
+            <strong>Project Car</strong>
+            <span>Owner · demo</span>
+          </div>
+          <nav className="nav nav-primary" aria-label="Primary">
+            {PRIMARY_NAV.map((item) => (
+              <NavLink
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                current={current}
+                section={item.current}
+              />
+            ))}
+            <details className={`nav-more${moreCurrent ? " is-current" : ""}`}>
+              <summary>
+                More
+                {moreCurrent ? <span className="sr-only"> (current section)</span> : null}
+              </summary>
+              <div className="nav-more-panel">
+                <SecondaryClusters current={current} />
+              </div>
+            </details>
+          </nav>
+          <div className="topbar-end">
+            {email ? <span className="identity">{email}</span> : null}
+            <form action={logoutAction}>
+              <button className="ghost" type="submit">
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
-        <nav className="nav">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={current === item.current ? "page" : undefined}
-            >
-              {item.label}
-            </Link>
-          ))}
-          {email ? <span className="identity">{email}</span> : null}
-          <form action={logoutAction}>
-            <button className="ghost" type="submit">
-              Sign out
-            </button>
-          </form>
+        <nav className="nav-secondary" aria-label="Shop tools">
+          <SecondaryClusters current={current} />
         </nav>
       </header>
-      <div className="demo-banner">
-        Management demo on the current app.projectcar.ca alias (Doc). Intended
-        host is ops.projectcar.ca — naming only, no DNS yet. Calendar is the
-        month heat-map + weekly per-hoist grids. Dashboard is Bays 1–6 next
-        24h, personal to-dos, and current parts POs. Parts (PT) and Tools
-        (B1–B6 bay kits + TC crib) use locked SKU prefixes — labeled
-        placeholders, not live purchasing, checkout, or camera feeds. The
-        shop is not open. This is not live pricing or Stripe.
-      </div>
+      <OwnerDemoBanner />
       <main className={wide ? "wide" : undefined}>{children}</main>
     </div>
   );
