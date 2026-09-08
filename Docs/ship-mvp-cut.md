@@ -1,7 +1,7 @@
 # Ship-MVP cut — proposed keep vs cut (draft)
 
 **Status:** Draft planning doc — **not** a Ben decision lock  
-**Updated:** 2026-09-07  
+**Updated:** 2026-09-08  
 **Related:** `STATUS.md` (Ship-MVP cut later gate; Next #1), `member-host-cutover.md`, `member-zone-edge.md`, `brochure-pages-cutover.md`, `project-car-application-specification.md` §11 / §15 / §16, `platform-architecture.md` §5, `token-pricing.md`
 
 Propose a **cut-vs-keep** table for the **public MVP gate** (`STATUS.md` “Ship-MVP cut (later gate)”). Purpose: **stop polishing cut-candidates** before STATUS Next #1 — Member UI on **projectcar.ca** (`member-host-cutover.md`; **Ben GO** for execution).
@@ -36,7 +36,7 @@ Do **not** trade these away to “finish” a Later placeholder.
 | **Brochure + waitlist** | Worker `projectcar-brochure` live. Waitlist e2e PASS → `api.projectcar.ca/waitlist`. | **KEEP** | Customer host already does this. Do not replace the Worker with shop-web. | Re-deploy: `brochure-worker-deploy.md`. Apex sidecar **deferred**. Classic Pages git is not an MVP blocker. |
 | **Ops management on `ops.`** | `ops.projectcar.ca` LIVE at edge. Temp `app.` alias until Ben cuts DNS. | **KEEP** | Staff-on-shift host (not Owner-only). Member migrates off this host; ops stays. | Do **not** cut `app.` in this doc. Stay-up: `shop-web-stay-up.md`. |
 | **Chat v1 human / polling** | LIVE on Doc (#27). Owner starts rooms; Member reply; poll. Dual `/chat` + `/member/chat`. | **KEEP** | Already the demo chat. Do **not** elevate to Matrix / AI / Grok. | Auth-gate 307 when logged out. Demo cookies. Follow-ons are DEFER below. |
-| **Dashboard basics** | LIVE on Doc (#28). 24h bay strips (Bays 1–6), personal todos + ICS, parts PO strip. | **KEEP** | Demo IA already live. Do not rewrite. | No “Today’s bookings” list. Google / Apple Connect are stubs — two-way is not keep-path. |
+| **Dashboard basics** | LIVE on Doc (#28). Git **#69** (`b9f9019`) is OwnerShell + bay-hero polish **on the keep path** (not a new breadth slice) — **Doc pull/rebuild pending**. 24h bay strips (Bays 1–6), personal todos + ICS, parts PO strip. | **KEEP** | Demo IA already live. #69 is polish-on-keep-path, not a rewrite or new surface. | No “Today’s bookings” list. Google / Apple Connect are stubs — two-way is not keep-path. |
 
 ---
 
@@ -75,7 +75,7 @@ Explicit table for STATUS Later + build-breadth placeholders that are easy to ov
 3. **Later Ben cut:** public MVP feature set. Ben decides what disappears vs stays thin. This table is input, not the lock.
 4. **Later still:** Next #2 (`app.` cut), OIDC, Stripe, NVR, hardware, Chat follow-ons — only when STATUS / Ben say so.
 
-Cutover planning **outranks** new breadth placeholders. Calendar (#18), fill (#20), placeholders (#21), cookies (#22), schedule harden (#24), inventory (#26), Chat (#27), and Dashboard (#28) are already on `main`. Do not start another IA-deepening slice to dodge Member host.
+Cutover planning **outranks** new breadth placeholders. Calendar (#18), fill (#20), placeholders (#21), cookies (#22), schedule harden (#24), inventory (#26), Chat (#27), Dashboard (#28), and OwnerShell + bay-hero polish (#69, keep-path — not a new breadth slice) are already on `main`. Do not start another IA-deepening slice to dodge Member host.
 
 ---
 
