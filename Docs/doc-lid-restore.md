@@ -2,13 +2,13 @@
 
 **Status:** Living ops (Lead checklist)  
 **Updated:** 2026-09-08  
-**Related:** `api-stay-up.md`, `shop-web-stay-up.md`, `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md`
+**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file), `api-stay-up.md`, `shop-web-stay-up.md`, `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md`, `shop-os-ci.md` (green CI ≠ unfreeze)
 
 Single **ordered** wake/restore after Doc lid-close / sleep (the morning **530 / 1033** pattern). Plan/ops checklist for **Lead**. This file is the sequence. Process essays stay in the Related docs — do not copy them here.
 
 Do **not** invent an edge flip, a Cloudflare ↔ GitHub re-ask, or a Member **GO**. Soft 530 mornings are expected lid-close.
 
-**Doc checkout is frozen** at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**) until **Ben GO**. Lid-restore is process wake only — **not** a license to `git pull` or rebuild to tip. That would flip **#36** / **#69** live on Doc.
+**Doc checkout is frozen** at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**) until **Ben GO**. Lid-restore is process wake only — **not** a license to `git pull` or rebuild to tip. That would flip **#36** / **#69** live on Doc. After Ben GO, the ordered pull is [doc-unfreeze.md](doc-unfreeze.md). Green Shop OS CI is **not** that GO.
 
 ---
 
@@ -41,7 +41,7 @@ Alerts can come from anyone who sees **502**, **530 / error 1033**, or a failed 
 | **Zone** | Only if **local origin is healthy** but public is still **1033** (tunnel / DNS) | Restarting uvicorn or shop-web |
 | **Garage** | Brochure waitlist e2e **after** public health is 200 | Restarting processes, tunnel, or DNS |
 
-**Chief / plan-improve** must not treat lid-restore as license to pull tip. Pull/rebuild stays **Ben GO**.
+**Chief / plan-improve** must not treat lid-restore as license to pull tip. Pull/rebuild stays **Ben GO** — checklist: [doc-unfreeze.md](doc-unfreeze.md).
 
 No edge flip. No CF ↔ GitHub re-ask. No Member GO.
 
@@ -74,7 +74,7 @@ Doc checkout is **frozen** at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dash
 
 **Kickstart only if the process is down** (existing `next start` KeepAlive path). Do **not** `git pull origin main` or `npm run build` on wake.
 
-**Pull/rebuild remains Ben GO.** After that GO, the rebuild essay is `shop-web-stay-up.md`. Until then, do **not** claim **#36** or **#69** is live on Doc.
+**Pull/rebuild remains Ben GO.** After that GO, the ordered pull is [doc-unfreeze.md](doc-unfreeze.md) (rebuild essay: `shop-web-stay-up.md`). Until then, do **not** claim **#36** or **#69** is live on Doc.
 
 Must be **`next start`**, not `next dev`.
 
@@ -110,3 +110,4 @@ Garage may re-run brochure waitlist e2e **after** health is 200. Form only.
 - Auto-`git pull` or rebuild shop-web on wake while Doc checkout is frozen (`4cf8924` / `5swmVz-T2CqKEQzTk1ifU`)
 - Treat lid-restore as Chief / plan-improve / Lead license to pull tip
 - Call a `main` pull live without a new `.next/BUILD_ID`
+- Treat green Shop OS CI as unfreeze GO (`doc-unfreeze.md`)
