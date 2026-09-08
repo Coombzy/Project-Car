@@ -2,7 +2,7 @@
 
 **Status:** Living ops (Lead checklist)  
 **Updated:** 2026-09-08  
-**Related:** `doc-lid-restore.md` (process wake only — **not** this pull), `shop-web-stay-up.md` (rebuild essay), `api-stay-up.md`, `cors-origins.md`, `shop-os-ci.md` (git-only — **not** this GO), `STATUS.md`, `doc-software-baseline.md`
+**Related:** `doc-lid-restore.md` (process wake only — **not** this pull), `shop-web-stay-up.md` (rebuild essay), `api-stay-up.md`, `lookout-resume.md` (Lookout re-arm **after** this checklist or Ben resume GO — **not** a flip from this file), `cors-origins.md`, `shop-os-ci.md` (git-only — **not** this GO), `STATUS.md`, `doc-software-baseline.md`
 
 Ordered **Ben GO** pull/rebuild on Doc after the freeze at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**). This file is the pull sequence. Lid-close wake stays in `doc-lid-restore.md` — do **not** copy that process essay here.
 
@@ -194,6 +194,7 @@ Garage may re-run brochure waitlist e2e **after** health is 200. Form only. No p
 - **#36** and **#69** may be called **LIVE on Doc** only after steps 5–7.
 - Lid-restore **stays** process-only. A later morning 530 is still wake-only — do **not** pull again unless Ben GOs another unfreeze.
 - Shop OS CI remains git-only. Green CI on a *later* SHA is still **not** a new unfreeze GO.
+- Lookout re-arm is a **separate** checklist: [lookout-resume.md](lookout-resume.md). Unfreeze done is a valid **start** — it is **not** `enabled:true`. Do **not** flip Lookout from this file.
 
 ---
 
@@ -209,3 +210,4 @@ Garage may re-run brochure waitlist e2e **after** health is 200. Form only. No p
 - Implement Google Calendar OAuth, Member host cutover, `app.` alias cut, or Mission Control cockpit
 - Flip edge / path-split, re-ask Cloudflare ↔ GitHub, or start About P3-2 / P3-3
 - Invent a shop opening, Stripe, or Lookout GET-allow nag
+- Flip Lookout `projectcar-api-health-watch` `enabled` from this file — re-arm is [lookout-resume.md](lookout-resume.md)
