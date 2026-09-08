@@ -286,6 +286,18 @@ body {
   margin: 1.25rem 0 0.25rem;
 }
 
+.hero-cta-pair {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+}
+
+.hero-cta-pair .cta-hero {
+  width: 100%;
+  min-width: 0;
+}
+
 .cta-primary {
   display: inline-block;
   border: none;
@@ -750,7 +762,8 @@ footer {
     margin-right: auto;
   }
 
-  .cta-hero {
+  .cta-hero,
+  .hero-cta-pair .cta-hero {
     width: 100%;
     min-width: 0;
   }
@@ -931,4 +944,8 @@ footer {
   color: var(--muted);
   font-size: 0.88rem;
   line-height: 1.5;
+}
+
+.waitlist-next + .contact-primary {
+  margin-top: 1rem;
 }
