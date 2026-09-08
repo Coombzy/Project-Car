@@ -162,7 +162,7 @@ rg -n 'rel="canonical"' html/*.html
 rg -n 'styles\.css\?v=' html/*.html
 rg -n 'banner-logo\.png\?v=' html/*.html
 # leftover mismatched cache versions must be empty
-rg -n 'styles\.css\?v=(32|33)' html/*.html || true
+rg -n 'styles\.css\?v=(32|33|34)' html/*.html || true
 rg -n 'banner-logo\.png\?v=(28|29)' html/*.html || true
 curl -sSI http://127.0.0.1:8088/robots.txt | head -8
 curl -sS http://127.0.0.1:8088/robots.txt
@@ -180,7 +180,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/this-should-404
 # P2-4: Worker 200 headers only (challenge 403 is WAF). Record: brochure-security-headers.md
 curl -sSI https://projectcar.ca/
 curl -sSI https://www.projectcar.ca/
-curl -sSI "https://projectcar.ca/styles.css?v=34"
+curl -sSI "https://projectcar.ca/styles.css?v=35"
 curl -sSI https://projectcar.ca/robots.txt
 
 # Apex — deferred (not an active P0). Skip unless chat is back in scope.

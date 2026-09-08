@@ -3,7 +3,7 @@
 **Canonical:** `Coombzy/Project-Car` → `Docs/`  
 **Engineering clone:** `~/src/Project-Car/Docs/`  
 **Optional Desktop mirror:** `~/Desktop/Project Car/docs/` (read copy; do not author there)  
-**Updated:** 2026-09-07
+**Updated:** 2026-09-08
 
 `Coombzy/Automation/Docs/` is a **historical mirror**. Do not author product specs there.  
 `~/Desktop/Project-Car-Docs/` is **retired**.  
@@ -39,7 +39,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 | [doc-lid-restore.md](doc-lid-restore.md) | Ordered Lead wake/restore after lid-close / morning **530 / 1033**. Sequence only — essays stay in api-stay-up / shop-web-stay-up / doc-software-baseline. |
 | [api-stay-up.md](api-stay-up.md) | Keep https://api.projectcar.ca up (uvicorn on Doc; Zone owns tunnel). Brochure is Worker `projectcar-brochure`, not Doc `:8088`. |
 | [shop-web-stay-up.md](shop-web-stay-up.md) | Keep https://ops.projectcar.ca (and temporary `app.`) up — LaunchAgent `com.projectcar.shop-web` runs **`next start`** on Doc `:3000`. Zone owns tunnel/DNS. |
-| [deployment-guide.md](deployment-guide.md) | Index of stay-up / deploy runbooks (lid-close restore, shop-web, API, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, ship-MVP cut draft). |
+| [deployment-guide.md](deployment-guide.md) | Index of stay-up / deploy runbooks (lid-close restore, shop-web, API, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, ship-MVP cut draft, Google Calendar OAuth plan). |
 | [brochure-worker-deploy.md](brochure-worker-deploy.md) | Standing brochure re-deploy: Zone Direct Upload of `apps/website/html` onto Worker `projectcar-brochure`. Classic Pages git skipped until auth — plan: `brochure-pages-cutover.md`. |
 | [brochure-security-headers.md](brochure-security-headers.md) | P2-4 Zone Transform Rules **LIVE** (2026-09-07 smoke PASS): Worker `projectcar-brochure` security headers + HTML vs `?v=` cache split. Do **not** re-apply from a docs PR. |
 | [brochure-pages-cutover.md](brochure-pages-cutover.md) | Brochure Worker → Classic Pages git checklist (plan only; blocked on CF ↔ GitHub auth). Do not start from this file. Member host + Zone path-split (`member-host-cutover.md`, `member-zone-edge.md`) outrank executing Pages git. |
@@ -48,6 +48,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 | [member-zone-edge.md](member-zone-edge.md) | Zone Cloudflare path-split for `/member*` on apex (plan only; **Ben GO**). Planned 301 www `/member*` → `https://projectcar.ca/member*`. Brochure stays dual-host. Do not execute from this file. Cookie / CORS essay stays in `member-host-cutover.md`. |
 | [app-alias-cut.md](app-alias-cut.md) | Temporary `app.projectcar.ca` cut checklist (plan only; STATUS Next #2). Do **not** execute DNS / tunnel / CORS from this file. Member cutover does **not** require this first. **`ops.` stays** the management host. |
 | [ship-mvp-cut.md](ship-mvp-cut.md) | Draft public-MVP cut-vs-keep table (proposed candidates, not a Ben lock). Linked from STATUS Ship-MVP cut. |
+| [google-calendar-oauth.md](google-calendar-oauth.md) | Google Calendar OAuth / two-way sync standing plan (plan only; STATUS Next #6 — not a GO). Env names, scopes, 501→live, token store, Apple ICS-only, rollback. |
 
 ---
 
@@ -77,7 +78,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 
 | Doc | Go here instead |
 |-----|-----------------|
-| [deployment-guide.md](deployment-guide.md) | Now a living-ops index — lid-close restore, shop-web / API stay-up, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan |
+| [deployment-guide.md](deployment-guide.md) | Now a living-ops index — lid-close restore, shop-web / API stay-up, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, Google Calendar OAuth plan |
 | [phase-0-nextcloud-roadmap.md](phase-0-nextcloud-roadmap.md) | MC Phase A + nextcloud-progress |
 | [doc-nextcloud-headscale-setup-guide.md](doc-nextcloud-headscale-setup-guide.md) | Tailscale + MariaDB — not Headscale/Postgres |
 
