@@ -64,7 +64,7 @@ launchctl kickstart -k gui/$(id -u)/com.projectcar.shop-web
 # confirm next start (not next dev) and BUILD_ID still present
 ```
 
-Last recorded shop-web **BUILD** on Doc (STATUS): Dashboard **#28** — checkout **frozen** at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`**. `main` tip is **`a2ec088` / #72**. **#36** (`f952cd3`) and **#69** (`b9f9019`) stay **git-only**. Do **not** call them live on Doc. Update STATUS only after **Ben GO** + a new BUILD_ID.
+Last recorded shop-web **BUILD** on Doc (STATUS): Dashboard **#28** — checkout **frozen** at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`**. `main` tip is **`babdc58` / #73** (Shop OS CI — git-only, not a Doc unfreeze). **#36** (`f952cd3`) and **#69** (`b9f9019`) stay **git-only**. Do **not** call them live on Doc. Update STATUS only after **Ben GO** + a new BUILD_ID.
 
 ---
 
