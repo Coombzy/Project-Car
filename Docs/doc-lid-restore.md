@@ -2,7 +2,7 @@
 
 **Status:** Living ops (Lead checklist)  
 **Updated:** 2026-09-08  
-**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file), `api-stay-up.md`, `shop-web-stay-up.md`, `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md`, `shop-os-ci.md` (green CI ≠ unfreeze)
+**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file), `api-stay-up.md`, `shop-web-stay-up.md`, `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md`, `shop-os-ci.md` (green CI ≠ unfreeze), `member-host-cutover.md` / `member-zone-edge.md` (STATUS Next #1 — **blocked** until unfreeze lands **#36**; this wake is **not** that)
 
 Single **ordered** wake/restore after Doc lid-close / sleep (the morning **530 / 1033** pattern). Plan/ops checklist for **Lead**. This file is the sequence. Process essays stay in the Related docs — do not copy them here.
 
@@ -104,7 +104,7 @@ Garage may re-run brochure waitlist e2e **after** health is 200. Form only.
 - Treat a soft morning 530 as a product break or a reason to ping Ben
 - Flip edge / path-split (`member-zone-edge.md`)
 - Re-ask Cloudflare ↔ GitHub auth (`brochure-pages-cutover.md`)
-- Take Member **GO** (`member-host-cutover.md`)
+- Take Member **GO** (`member-host-cutover.md` / `member-zone-edge.md`) — Member edge also waits on **#36** live on Doc (`doc-unfreeze.md`)
 - Cut the `app.` alias
 - Instruct Garage or Zone to restart uvicorn / shop-web
 - Auto-`git pull` or rebuild shop-web on wake while Doc checkout is frozen (`4cf8924` / `5swmVz-T2CqKEQzTk1ifU`)
