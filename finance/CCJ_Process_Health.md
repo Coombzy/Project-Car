@@ -3,12 +3,12 @@
 Lightweight tracker for long-term quality of the Analysis Automater and Audit Process.  
 One short line per day. Does **not** replace the main living analysis log.
 
-**Current prompt versions (as of 2026-09-07 audit):** Analysis **v1.12** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
+**Current prompt versions (as of 2026-09-08 audit):** Analysis **v1.13** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
 See `finance/CCJ_README.md`. Official cadence: Analysis **16:10 ET** weekdays · Audit 16:30 ET weekdays.
 
 | Date       | Analysis Confidence | Audit Score | Top Issue / Note                          | Data Sources OK? |
 |------------|---------------------|-------------|-------------------------------------------|------------------|
-| 2026-09-08 | 86                  | (pending)   | Official EOD C$101.97 Rel 0.82x digestion; gap-fade H104.12; CCJ vs URA -1.91pp; Sep 4 1d closed hit; tracker Sep 8 rows present | Yes |
+| 2026-09-08 | 86                  | 10          | Official EOD C$101.97 Rel 0.82x digestion; gap-fade H104.12; CCJ vs URA -1.91pp; Sep 4 1d CLOSED hit; Aug 31 1w CLOSED hit; prompt v1.13 | Yes |
 | 2026-09-07 | N/A (Labor Day)     | 10          | Labor Day catch-up audit of Fri 9/4 EOD; NYSE closed; no 1d/1w close; Sep 4 1d remains open to Tue Sep 8; log stub after Sep 3 still pending restore | Yes |
 | 2026-09-04 | 85                  | 10          | Official EOD C$100.74 Rel 0.56x digestion; $100 hold on light vol; Sep 3 1d CLOSED hit; next session Tue Sep 8; Sep 3 Health row missing; log restore from 9353ad26 still pending | Yes |
 | 2026-09-02 | 86                  | 10          | Official EOD C$96.38 Rel 0.87x digestion; Sep 1 1d CLOSED hit L95.13 H98.37 C96.38; Aug 26 1w CLOSED lower-exceed; prompt v1.12 applied; log restore from 9353ad26 still pending | Yes |
