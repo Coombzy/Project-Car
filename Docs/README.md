@@ -39,7 +39,8 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 | [doc-lid-restore.md](doc-lid-restore.md) | Ordered Lead wake/restore after lid-close / morning **530 / 1033**. Sequence only — essays stay in api-stay-up / shop-web-stay-up / doc-software-baseline. |
 | [api-stay-up.md](api-stay-up.md) | Keep https://api.projectcar.ca up (uvicorn on Doc; Zone owns tunnel). Brochure is Worker `projectcar-brochure`, not Doc `:8088`. |
 | [shop-web-stay-up.md](shop-web-stay-up.md) | Keep https://ops.projectcar.ca (and temporary `app.`) up — LaunchAgent `com.projectcar.shop-web` runs **`next start`** on Doc `:3000`. Zone owns tunnel/DNS. |
-| [deployment-guide.md](deployment-guide.md) | Index of stay-up / deploy runbooks (lid-close restore, shop-web, API, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, ship-MVP cut draft, Google Calendar OAuth plan). |
+| [deployment-guide.md](deployment-guide.md) | Index of stay-up / deploy runbooks (lid-close restore, shop-web, API, Shop OS CI, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, ship-MVP cut draft, Google Calendar OAuth plan). |
+| [shop-os-ci.md](shop-os-ci.md) | Shop OS GitHub Actions quality gate (shop-api pytest + shop-web lint / typecheck / `next build`). Git-only — no Doc deploy, no tunnel secrets, no Worker upload. Doc checkout stays frozen at `4cf8924` / `5swmVz`. |
 | [brochure-worker-deploy.md](brochure-worker-deploy.md) | Standing brochure re-deploy: Zone Direct Upload of `apps/website/html` onto Worker `projectcar-brochure`. Classic Pages git skipped until auth — plan: `brochure-pages-cutover.md`. |
 | [brochure-security-headers.md](brochure-security-headers.md) | P2-4 Zone Transform Rules **LIVE** (2026-09-07 smoke PASS): Worker `projectcar-brochure` security headers + HTML vs `?v=` cache split. Do **not** re-apply from a docs PR. |
 | [brochure-pages-cutover.md](brochure-pages-cutover.md) | Brochure Worker → Classic Pages git checklist (plan only; blocked on CF ↔ GitHub auth). Do not start from this file. Member host + Zone path-split (`member-host-cutover.md`, `member-zone-edge.md`) outrank executing Pages git. |
@@ -78,7 +79,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 
 | Doc | Go here instead |
 |-----|-----------------|
-| [deployment-guide.md](deployment-guide.md) | Now a living-ops index — lid-close restore, shop-web / API stay-up, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, Google Calendar OAuth plan |
+| [deployment-guide.md](deployment-guide.md) | Now a living-ops index — lid-close restore, shop-web / API stay-up, Shop OS CI, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, Google Calendar OAuth plan |
 | [phase-0-nextcloud-roadmap.md](phase-0-nextcloud-roadmap.md) | MC Phase A + nextcloud-progress |
 | [doc-nextcloud-headscale-setup-guide.md](doc-nextcloud-headscale-setup-guide.md) | Tailscale + MariaDB — not Headscale/Postgres |
 
