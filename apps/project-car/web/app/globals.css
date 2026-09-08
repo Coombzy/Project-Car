@@ -1175,6 +1175,11 @@ main.wide {
   gap: 0.55rem 0.7rem;
 }
 
+.nav-secondary .nav-cluster + .nav-cluster {
+  padding-left: 1rem;
+  border-left: 1px solid var(--line);
+}
+
 .nav-cluster-label {
   color: var(--muted);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
@@ -1183,14 +1188,23 @@ main.wide {
   text-transform: uppercase;
 }
 
-.nav-secondary a {
+.nav-secondary a,
+.nav-more-panel a {
   color: var(--muted);
   font-size: 0.82rem;
 }
 
-.nav-secondary a:hover {
+.nav-secondary a:hover,
+.nav-more-panel a:hover {
   color: var(--text);
   text-decoration: none;
+}
+
+.nav-secondary a[aria-current="page"],
+.nav-more-panel a[aria-current="page"] {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent);
 }
 
 .nav-more {
