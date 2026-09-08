@@ -31,7 +31,7 @@ A **quality gate on git** for Shop OS while Doc stay-up stays a separate Lead la
 | **shop-api** | `apps/project-car/api` | `pytest` (SQLite in-memory via `tests/conftest.py` — **no** shop Postgres, **no** Nextcloud MariaDB) |
 | **shop-web** | `apps/project-car/web` | TypeScript lint / typecheck (`tsc --noEmit`) + existing `npm test` + `next build` smoke |
 
-shop-web has **no ESLint** package. `npm run lint` and `npm run typecheck` both run `tsc --noEmit` (tsconfig already `noEmit`). That is the static gate. `npm test` is the existing Node test runner (`lib/*.test.ts`). `npm run build` is compile smoke — pages are `force-dynamic`, so build does **not** need a live Shop API.
+shop-web has **no ESLint** package. `npm run lint` and `npm run typecheck` both run `tsc --noEmit` (tsconfig already `noEmit`). That is the static gate for app sources. `*.test.ts` is excluded from `tsconfig.json` because those files use Node’s `--experimental-strip-types` runner and `.ts` import specifiers — they are covered by `npm test`, not `tsc`. `npm run build` is compile smoke — pages are `force-dynamic`, so build does **not** need a live Shop API.
 
 Workflow file: `.github/workflows/shop-os-ci.yml`.
 
