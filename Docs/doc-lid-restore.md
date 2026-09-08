@@ -1,12 +1,14 @@
 # Doc lid-close restore — ordered wake sequence
 
 **Status:** Living ops (Lead checklist)  
-**Updated:** 2026-09-07  
+**Updated:** 2026-09-08  
 **Related:** `api-stay-up.md`, `shop-web-stay-up.md`, `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md`
 
 Single **ordered** wake/restore after Doc lid-close / sleep (the morning **530 / 1033** pattern). Plan/ops checklist for **Lead**. This file is the sequence. Process essays stay in the Related docs — do not copy them here.
 
 Do **not** invent an edge flip, a Cloudflare ↔ GitHub re-ask, or a Member **GO**. Soft 530 mornings are expected lid-close.
+
+**Doc checkout is frozen** at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**) until **Ben GO**. Lid-restore is process wake only — **not** a license to `git pull` or rebuild to tip. That would flip **#36** / **#69** live on Doc.
 
 ---
 
@@ -27,7 +29,7 @@ The public brochure (Worker `projectcar-brochure`) does **not** go down when Doc
 | Soft morning **530 / 1033** on `api.` / `ops.` / `app.` | **Expected lid-close.** Stay quiet. Restore when Doc is reachable. Do not page Ben. |
 | Doc will not wake, **Grok Bot desktop offline**, or a **prolonged** outage after a normal wake window | Ping **Ben**. Lead still owns process restore once the Mac is up. |
 
-Alerts can come from anyone who sees **502**, **530 / error 1033**, or a failed waitlist submit. **Recovery of the processes is Lead only.**
+Alerts can come from anyone who sees **502**, **530 / error 1033**, or a failed waitlist submit. **Recovery of the processes is Lead only.** Lookout `projectcar-api-health-watch` is **paused**; Lead owns the morning probe.
 
 ---
 
@@ -35,9 +37,11 @@ Alerts can come from anyone who sees **502**, **530 / error 1033**, or a failed 
 
 | Role | Owns | Does not own |
 |------|------|----------------|
-| **Lead** | Restore processes on Doc (cloudflared up, shop-api KeepAlive, shop-web `next start` / pull+rebuild) | Cloudflare tunnel / DNS edits, edge flip, Member GO |
+| **Lead** | Restore processes on Doc (cloudflared up, shop-api KeepAlive, shop-web `next start` **kickstart only if the process is down**) | Cloudflare tunnel / DNS edits, edge flip, Member GO, **`git pull` / rebuild to tip** while checkout is frozen |
 | **Zone** | Only if **local origin is healthy** but public is still **1033** (tunnel / DNS) | Restarting uvicorn or shop-web |
 | **Garage** | Brochure waitlist e2e **after** public health is 200 | Restarting processes, tunnel, or DNS |
+
+**Chief / plan-improve** must not treat lid-restore as license to pull tip. Pull/rebuild stays **Ben GO**.
 
 No edge flip. No CF ↔ GitHub re-ask. No Member GO.
 
@@ -66,16 +70,13 @@ Essay: `api-stay-up.md`. Do not hand the restart to Garage or Zone.
 
 LaunchAgent **`com.projectcar.shop-web`** → **`next start`** `:3000`. **Not** `next dev`. **Lead owns.**
 
-If the Doc tree is behind `main` tip (especially after host-allowlist **#36** `f952cd3`):
+Doc checkout is **frozen** at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**). Lid-restore must **not** auto-`git pull` or rebuild to tip — that would accidentally flip **#36** (host allowlist) and **#69** (ops layout) live on Doc.
 
-1. `git pull origin main` in `~/src/Project-Car`
-2. Rebuild path from `shop-web-stay-up.md`: bootout → `npm run build` in `apps/project-car/web` → kickstart `com.projectcar.shop-web` → verify `.next/BUILD_ID`
+**Kickstart only if the process is down** (existing `next start` KeepAlive path). Do **not** `git pull origin main` or `npm run build` on wake.
+
+**Pull/rebuild remains Ben GO.** After that GO, the rebuild essay is `shop-web-stay-up.md`. Until then, do **not** claim **#36** or **#69** is live on Doc.
 
 Must be **`next start`**, not `next dev`.
-
-If already on tip and `BUILD_ID` is current, kickstart only if the process is down.
-
-Essay: `shop-web-stay-up.md`. Do **not** claim **#36** is live on Doc until this pull + build is done.
 
 ### 4. Smoke
 
@@ -106,4 +107,6 @@ Garage may re-run brochure waitlist e2e **after** health is 200. Form only.
 - Take Member **GO** (`member-host-cutover.md`)
 - Cut the `app.` alias
 - Instruct Garage or Zone to restart uvicorn / shop-web
+- Auto-`git pull` or rebuild shop-web on wake while Doc checkout is frozen (`4cf8924` / `5swmVz-T2CqKEQzTk1ifU`)
+- Treat lid-restore as Chief / plan-improve / Lead license to pull tip
 - Call a `main` pull live without a new `.next/BUILD_ID`
