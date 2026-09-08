@@ -1,7 +1,7 @@
 # SPCX Daily Analysis Prompt
 
-**Version:** 1.9  
-**Last edited:** 2026-09-07T15:30:00Z  
+**Version:** 1.10  
+**Last edited:** 2026-09-08T16:45:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** SPCX Daily Stock Analysis automation
 
@@ -22,6 +22,7 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
    - Do **not** label digestion the day after a Rel Vol >= 1.0x trend-up close (close in the top third of the session range).
    - Rel Vol used for `pred_rel_vol` and the completed-session regime test is the **last completed** regular session vs 20d average volume. Mid-session volume is incomplete — do not flip `pred_rel_vol` from an in-progress print.
    - **Live-session impulse (v1.6):** if at as-of, (Last − last official RTH close) >= **+3%** OR >= **1.0 × ATR-proxy**, do **not** label digestion; default `trend-up`. Symmetric: <= −3% or <= −1.0 × ATR-proxy → default `trend-down`. Put `impulse-in-progress +X.X%` (or −) in 1d notes. **2026-09-03** titled digestion / emailed bands while Last was ~$149 (+5.4% vs $140.71) — that is a regime miss.
+   - **Post-write live-impulse (v1.10):** if after the mid-session Analysis lock the live tape later prints (Last − last official RTH close) >= +3% or <= −3% (or ±1.0× ATR), Analysis does **not** rewrite that day's bands. Auditor (or the next session-day run) refreshes path actuals only. **2026-09-08** locked ~10:11 ET at Last ~$147.5 digestion; by ~12:02 ET Yahoo Last $153.02 / H $154.08 (+3.43%) — path-refresh only.
 3. **Range construction**
    - **1-day is mandatory** and maps to the **next regular session**. Width >= **2.0 × ATR-proxy**. Trend-up never centered below last completed close. On a live-impulse day, `bias_low` >= Last.
    - 1-week width >= **3.0 × ATR-proxy**; if the last 5 completed sessions include a **>= +5%** RTH, 1-week width >= **4.0 × ATR-proxy**. If trend-up, upside leg from last completed close >= 1.5× downside leg.
@@ -54,7 +55,8 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
     - When updating path actuals, Analysis may tag 1w notes `Day N/5; closes after YYYY-MM-DD`.
     - **Day N definition (v1.8):** N = count of RTH sessions that have **begun after** `analysis_date` only. Do **not** count `analysis_date` itself — that is Day 0/5. After a completed Friday, Monday analysis is still Day 0/5 until the next RTH begins. **2026-09-04 close:** 8/31 1w = Day 4/5 (closes 9/08), 9/02 = Day 2/5, 9/03 = Day 1/5, 9/04 = Day 0/5.
 12. **pct_error format:** `X.X%` (include the percent sign). Compute `|close − bias midpoint| / bias midpoint` when a bias band exists.
-13. **Official RTH source order:** SpaceX IR, else Yahoo, else StockAnalysis / MarketWatch / Barchart. State which source. 14d ATR from Barchart is acceptable as the published ATR-proxy.
+13. **Official RTH source order:** SpaceX IR **if the widget session date equals analysis_date or the last completed RTH**, else Yahoo, else StockAnalysis / MarketWatch / Barchart. State which source. 14d ATR from Barchart is acceptable as the published ATR-proxy.
+    - **Stale-IR skip (v1.10):** if SpaceX IR still shows a prior session (e.g. 9/08 widget still printed 9/04 C $147.95), use Yahoo for live H/L/Last. Do not treat a delayed IR EOD widget as the live tape.
 14. **Session-day path maintenance:** On a session day, after appending today's four rows, also refresh already-open multi-day rows:
     - Path `actual_low` = min low from analysis as-of through the latest print; `actual_high` = max high; `actual_close` = official RTH close if complete, else **Last**.
     - Refresh every open 1w note to `Day N/5; closes after YYYY-MM-DD` (N = regular sessions that have **begun after** that row's `analysis_date`, including an in-progress session; **not** the analysis_date session).
@@ -62,15 +64,16 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
     - Do **not** change ranges, bias, conf, `pred_regime`, `pred_rel_vol`, or `prior_day_pct` on existing rows.
 15. **Write-first / TRACKER_SHA gate (v1.5/v1.6/v1.9 — hard).** After the parseable table is composed, the FIRST tool calls must be GitHub get_file_contents on `finance/SPCX_Prediction_Tracker.md` then create_or_update_file for today's 4 rows + rule-14 path refresh. Do not write snapshot/narrative until the response contains the new tracker blob SHA. First user-visible line after the table: `TRACKER_SHA: <blob sha>`.
     - **Never** output `TRACKER_SHA: write pending`, `see GitHub update below`, or any placeholder SHA. Those strings are a failed run.
-    - A run that emails a report but writes 0 rows is a failed run (**2026-09-01** 59s truncated before table; **2026-09-02** 138s table-in-email + `write pending`; **2026-09-03** 171s table-in-email + `write pending`; **2026-09-04** 45s table-in-email + `write pending`). Runtime length is irrelevant. Four consecutive session-day write misses.
+    - A run that emails a report but writes 0 rows is a failed run (**2026-09-01** 59s truncated before table; **2026-09-02** 138s table-in-email + `write pending`; **2026-09-03** 171s table-in-email + `write pending`; **2026-09-04** 45s table-in-email + `write pending`). Runtime length is irrelevant. Four consecutive session-day write misses (historical).
     - **Dual-write (v1.9):** if create_or_update_file errors **or** the returned blob SHA is unchanged from the pre-write get_file_contents SHA, immediately call `github___push_files` with the same payload (today's 4 rows + path refresh). Do **not** emit `WRITE FAILED` until both write tools have been tried once.
     - **SHA-delta gate (v1.9, session day only):** emitted `TRACKER_SHA` MUST differ from the SHA returned by the pre-write get_file_contents. Reprinting that pre-write SHA on a session day is `WRITE FAILED`, even if the hex is valid. Confirm today's four `(analysis_date, horizon)` rows exist in the re-get before emitting the SHA. Non-session SHA-reuse remains valid under rule 10.
     - If both write tools error or the SHA is still unchanged after one retry each: paste the 4 markdown rows and write `WRITE FAILED` as the next heading, then stop. Do not print `write pending` as a substitute.
     - Auditor recovery does not convert a failed Analysis write into a pass.
     - Auditor does not invent bands for dates with no parseable table (**2026-09-01 unrecoverable**).
-16. **Price-quote cap before write (v1.5).** After the two mandatory GitHub reads (prompt + tracker), allow at most one price-quote batch (Yahoo / SpaceX IR / MarketWatch OHLC + Barchart 14d ATR). The NEXT tool call MUST be the tracker write. No further web_search / browse / snapshot until `TRACKER_SHA` is in the response. Lock ranges from tracker context + that one quote batch; research narrative only after the SHA.
-17. **Write-streak emergency (v1.7/v1.8/v1.9 — hard).** If the last audit or tracker header documents **>=3 consecutive** *session-day* Analysis write misses, the ONLY tools after the two GitHub reads + one quote batch are: get_file_contents SHA → create_or_update_file (today's 4 rows + rule-14 path refresh) → if SHA unchanged or error, `github___push_files` → get_file_contents verify. No chatroom, no extra search, no snapshot, no narrative tools first. If the write is not among the first 8 tool calls, the run has already failed. Current streak: **2026-09-01 through 2026-09-04**. **2026-09-05 / 09-06 / 09-07** weekend/holiday SHA reprints do **not** clear the streak. Next session-day write is **2026-09-08** and starts in emergency mode. **Prefer `github___push_files` first on 9/08** given streak >=4.
-    - **9/08 last-completed facts (do not ignore):** 2026-09-04 official C **$147.95** (−1.20%), Rel Vol **~0.44×** → `pred_rel_vol` = **below-avg** (not elevated; 9/04's 1.10x elevated tag was a bucket miss on a different session). Post-impulse-high does **not** fire off 9/04. Coil-spring clearance = **0.75×** ATR (0.44x < 0.5x); **not** 1.0× (last-3 not all <0.6x — 9/03 was ~1.10x). Known-event extra **YES** (Sep 9/10 unlock within next 10 RTH). 1w width >= **4.0×** ATR-proxy because last 5 sessions include 9/03 +6.42%.
+16. **Price-quote cap before write (v1.5).** After the two mandatory GitHub reads (prompt + tracker), allow at most one price-quote batch (Yahoo / SpaceX IR / MarketWatch OHLC + Barchart 14d ATR). The NEXT tool call MUST be the tracker write. No further web_search / browse / snapshot until `TRACKER_SHA` is in the response. Lock ranges from tracker context + that one quote batch; research narrative only after the SHA. Apply the stale-IR skip in rule 13 inside that one batch.
+17. **Write-streak emergency (v1.7/v1.8/v1.9/v1.10 — hard).** If the last audit or tracker header documents **>=3 consecutive** *session-day* Analysis write misses, the ONLY tools after the two GitHub reads + one quote batch are: get_file_contents SHA → create_or_update_file (today's 4 rows + rule-14 path refresh) → if SHA unchanged or error, `github___push_files` → get_file_contents verify. No chatroom, no extra search, no snapshot, no narrative tools first. If the write is not among the first 8 tool calls, the run has already failed.
+    - **Current streak: 0.** **2026-09-08** session-day 4-row write succeeded. Emergency is **OFF**. Dual-write + SHA-delta remain standing gates. Do not prefer push_files-first unless a new streak reaches >=3 session-day misses. Historical misses 9/01–9/04 do not re-arm emergency.
+    - Weekend/holiday SHA reprints do **not** clear a streak (they also do not re-arm one that is already 0).
 
 ## Report structure
 
@@ -111,6 +114,6 @@ Get SHA of `finance/SPCX_Prediction_Tracker.md` immediately before write; retry 
 - **Dual-write (v1.9):** create_or_update_file first; if error or blob SHA unchanged, immediately `github___push_files` with the same file contents. Session-day emitted SHA must differ from the pre-write SHA.
 - **Post-write verify:** re-get the tracker and confirm today's four `(analysis_date, horizon)` rows exist (session day) or that path actuals / Day N/5 changed (non-session day). If absent after both write tools, paste the rows and write `WRITE FAILED`.
 - **Response must include the new tracker blob SHA** on its own line as `TRACKER_SHA: <sha>`. Never print `write pending`. If the write fails after both tools, paste the 4 rows (or the path-actual edits) and the SHA you needed — do not mark the run successful without the write.
-- **Write-streak emergency (rule 17)** overrides any extra research. Four consecutive session-day misses (9/01–9/04) means the next **session-day** Analysis run (9/08) starts in emergency mode with dual-write. Weekend/holiday 9/05–9/07 did not clear it.
+- **Write-streak emergency (rule 17)** is **OFF** after the 2026-09-08 session-day 4-row write. Dual-write + SHA-delta remain. Re-arm emergency only if a new streak of >=3 consecutive session-day write misses appears.
 
 Cite sources. Be objective and data-driven.
