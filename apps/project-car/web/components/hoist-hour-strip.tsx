@@ -28,18 +28,23 @@ export function HoistHourStrip({
   linkMembers?: boolean;
 }) {
   const groups = groupHours(hoist.next_hours);
+  const empty = groups.length === 0;
   return (
-    <article className={`card hoist-card${hoist.is_shop ? " hoist-card-shop" : ""}`}>
+    <article
+      className={`card hoist-card${hoist.is_shop ? " hoist-card-shop" : ""}${empty ? " hoist-card-empty" : " hoist-card-booked"}`}
+    >
       <div className="hoist-card-head">
-        <h3>{hoist.name}</h3>
+        <div>
+          <h3>{hoist.name}</h3>
+          <p className="muted hoist-location">{hoist.location_label || "No location label"}</p>
+        </div>
         <div className="hoist-pills">
           {hoist.is_shop ? <StatusPill value="shop" /> : null}
           <StatusPill value={hoist.status} />
         </div>
       </div>
-      <p className="muted">{hoist.location_label || "No location label"}</p>
-      {groups.length === 0 ? (
-        <div className="banner empty hoist-empty">No booked hours in the next 24 hours.</div>
+      {empty ? (
+        <div className="banner empty hoist-empty">Clear next 24 hours</div>
       ) : (
         <ol className="hour-strip">
           {groups.map((group) => {

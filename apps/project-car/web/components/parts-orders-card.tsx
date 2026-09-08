@@ -13,7 +13,7 @@ const STATUS_CLASS: Record<PartsOrder["status"], string> = {
 
 export function PartsOrdersCard({ orders }: { orders: PartsOrder[] }) {
   return (
-    <section>
+    <section className="dash-panel">
       <h2>Parts orders</h2>
       <p className="muted">
         Most current shop POs. SKUs use the PT prefix. Statuses are stubs —
