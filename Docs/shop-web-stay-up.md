@@ -42,9 +42,11 @@ If you see `next dev` in `ps`, repeated LaunchAgent exits, or a missing `.next/B
 
 ## Rebuild after web merges on Doc
 
-A `git pull` on `main` does **not** update the running UI. `next start` serves the last **`npm run build`**. Do not leave a stale `.next` behind a new `main` pull.
+**Frozen until Ben GO.** Doc checkout / shop-web BUILD stay at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** (Dashboard **#28**). **#36** and **#69** are **git-only**. Lid-restore / morning wake is **kickstart-if-down only** — do **not** `git pull` or `npm run build` to tip (`doc-lid-restore.md` **#72**). plan-improve / Chief / Lead must **not** treat a merge on `main` as license to pull.
 
-After Garage merges shop-web (`apps/project-car/web`) onto `main`, **Lead** on Doc:
+A `git pull` on `main` does **not** update the running UI. `next start` serves the last **`npm run build`**. Do not leave a stale `.next` behind a new `main` pull — and do not pull while frozen.
+
+**After Ben GO** (only), Lead on Doc may pull + rebuild:
 
 1. **Note the tip** you intend (`git rev-parse HEAD` in `~/src/Project-Car` after `git pull origin main`).
 2. **Boot out** LaunchAgent `com.projectcar.shop-web` so nothing is bound to `:3000`.
@@ -53,7 +55,7 @@ After Garage merges shop-web (`apps/project-car/web`) onto `main`, **Lead** on D
 5. **Verify `.next/BUILD_ID`** matches the tip you intended. If `BUILD_ID` is missing or stale, you are still on the old build — do not call the merge live.
 
 ```bash
-# on Doc, after pulling the intended main tip into ~/src/Project-Car
+# ONLY after Ben GO — not on lid-restore, not while checkout is frozen
 launchctl bootout gui/$(id -u)/com.projectcar.shop-web
 cd ~/src/Project-Car/apps/project-car/web
 npm run build
@@ -62,7 +64,7 @@ launchctl kickstart -k gui/$(id -u)/com.projectcar.shop-web
 # confirm next start (not next dev) and BUILD_ID still present
 ```
 
-Last recorded shop-web **BUILD** on Doc (STATUS): after Dashboard **#28** (`main` `afb37f9`, `BUILD_ID` `5swmVz-T2CqKEQzTk1ifU`). **`main` tip is `f952cd3` (#36 host allowlist)** — Doc pull/rebuild **pending**. Do not call #36 live on Doc until that build. Update STATUS when Lead ships it.
+Last recorded shop-web **BUILD** on Doc (STATUS): Dashboard **#28** — checkout **frozen** at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`**. `main` tip is **`a2ec088` / #72**. **#36** (`f952cd3`) and **#69** (`b9f9019`) stay **git-only**. Do **not** call them live on Doc. Update STATUS only after **Ben GO** + a new BUILD_ID.
 
 ---
 
@@ -165,7 +167,7 @@ Alerts can come from anyone who sees a **502**, **530 / error 1033**, a login re
    - **1033 / 530 / 502** and Doc asleep or cloudflared dead → lid-close / tunnel / Mac sleep (`api-stay-up.md` same class). Wake Doc (Amphetamine session if it should stay up).
    - **Process flap** (`next dev`, EADDRINUSE, repeated restart, `BUILD_ID` missing) → skip to step 4.
 3. **Doc awake?** Local `GET http://127.0.0.1:3000/login` after wake. If it fails, Lead checks LaunchAgent `com.projectcar.shop-web` (KeepAlive) and `~/hermes-tools/mission-control/shop-web/run-shop-web.sh`. Confirm the process is **`next start`**.
-4. **Lead — flap / stale build.** Boot out KeepAlive → `npm run build` in `apps/project-car/web` → kickstart → verify `.next/BUILD_ID`. Do not leave `next dev` in the LaunchAgent.
+4. **Lead — flap / down process.** While checkout is **frozen**: **kickstart-if-down only** (keep `next start` on the existing BUILD_ID). Do **not** `git pull` or rebuild to tip. After **Ben GO**, flap / stale-build recovery is bootout → `npm run build` → kickstart → verify `.next/BUILD_ID`. Do not leave `next dev` in the LaunchAgent.
 5. **Zone — edge.** Local `:3000` login OK but public **502** / **530 / 1033** / DNS miss → Zone checks host cloudflared + the `ops.` / `app.` hostname rules. Origin must be **`http://127.0.0.1:3000`**, not bare `localhost`. Lead does not edit Cloudflare. Do not cut the `app.` alias.
 6. **Garage — after.** When public smoke is green, Garage may re-walk ops/app UI. No process restarts.
 
