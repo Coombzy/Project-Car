@@ -1,8 +1,8 @@
 # Ship-MVP cut — proposed keep vs cut (draft)
 
 **Status:** Draft planning doc — **not** a Ben decision lock  
-**Updated:** 2026-09-07  
-**Related:** `STATUS.md` (Ship-MVP cut later gate; Next #1), `member-host-cutover.md`, `member-zone-edge.md`, `brochure-pages-cutover.md`, `project-car-application-specification.md` §11 / §15 / §16, `platform-architecture.md` §5, `token-pricing.md`
+**Updated:** 2026-09-08  
+**Related:** `STATUS.md` (Ship-MVP cut later gate; Next #1), `member-host-cutover.md`, `member-zone-edge.md`, `brochure-pages-cutover.md`, `project-car-application-specification.md` §11 / §15 / §16, `platform-architecture.md` §5, `token-pricing.md`, `doc-unfreeze.md` (**#69** git-only until Ben GO)
 
 Propose a **cut-vs-keep** table for the **public MVP gate** (`STATUS.md` “Ship-MVP cut (later gate)”). Purpose: **stop polishing cut-candidates** before STATUS Next #1 — Member UI on **projectcar.ca** (`member-host-cutover.md`; **Ben GO** for execution).
 
@@ -28,6 +28,8 @@ A row can be **KEEP-thin** (the IA shell stays) and **DEFER** (the real workflow
 ## Keep-path (must stay / land before or at MVP)
 
 Do **not** trade these away to “finish” a Later placeholder.
+
+**#69 OwnerShell** (ops layout) is **KEEP** once Doc-live. Git-only until Ben GO unfreeze (`doc-unfreeze.md` / frozen `4cf8924`).
 
 | Feature | Status today | MVP proposal | Why | Notes |
 |---------|--------------|--------------|-----|-------|
