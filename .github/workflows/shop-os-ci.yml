@@ -1,0 +1,78 @@
+# Shop OS quality gate — git-only.
+# Plan / runbook: Docs/shop-os-ci.md
+# Does not SSH to Doc, does not deploy Worker projectcar-brochure,
+# does not use production / tunnel / Cloudflare secrets.
+name: Shop OS CI
+
+on:
+  pull_request:
+    paths:
+      - "apps/project-car/**"
+      - ".github/workflows/shop-os-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/project-car/**"
+      - ".github/workflows/shop-os-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shop-os-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shop-api:
+    name: shop-api pytest
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/project-car/api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: apps/project-car/api/pyproject.toml
+
+      - name: Install shop-api (dev extras)
+        run: python -m pip install -e ".[dev]"
+
+      - name: pytest
+        run: pytest
+
+  shop-web:
+    name: shop-web lint / typecheck / build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/project-car/web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/project-car/web/package-lock.json
+
+      - name: Install shop-web
+        run: npm ci
+
+      - name: Lint / typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: next build smoke
+        run: npm run build
+        env:
+          SHOP_API_URL: http://127.0.0.1:8000

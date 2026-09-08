@@ -15,6 +15,7 @@ This file is **not** a runbook. Use the living docs below.
 | Doc lid-close / morning 530 restore (ordered Lead sequence) | `doc-lid-restore.md` |
 | Shop UI stay-up on Doc (`ops.` / temporary `app.`, `:3000`, **`next start`**) | `shop-web-stay-up.md` |
 | Shop API stay-up on Doc (`api.`, `:8000`, uvicorn) | `api-stay-up.md` |
+| Shop OS GitHub Actions quality gate (pytest + web typecheck / `next build`; git-only — **not** Doc deploy) | `shop-os-ci.md` |
 | Member UI → projectcar.ca (plan only; **Ben GO**) | `member-host-cutover.md` |
 | Member path-split on projectcar.ca / www (Zone; plan only; **Ben GO**) | `member-zone-edge.md` |
 | Temporary `app.` alias cut (plan only; STATUS Next #2 — do **not** execute) | `app-alias-cut.md` |
