@@ -1,9 +1,9 @@
 # Shop-web stay-up — `ops.projectcar.ca` / `app.projectcar.ca`
 
 **Status:** Living ops  
-**Updated:** 2026-09-07  
+**Updated:** 2026-09-08  
 **Public URLs:** https://ops.projectcar.ca (LIVE management) · https://app.projectcar.ca (temporary alias)  
-**Related:** `doc-lid-restore.md` (ordered wake), `api-stay-up.md`, `doc-software-baseline.md`, `brochure-worker-deploy.md`, `STATUS.md` host split, `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `app-alias-cut.md` (later `app.` cut; plan only), `apps/project-car/web/README.md`
+**Related:** `doc-lid-restore.md` (ordered wake — **not** a pull), `doc-unfreeze.md` (Ben GO pull), `api-stay-up.md`, `doc-software-baseline.md`, `brochure-worker-deploy.md`, `STATUS.md` host split, `shop-os-ci.md` (green CI ≠ unfreeze), `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `app-alias-cut.md` (later `app.` cut; plan only), `apps/project-car/web/README.md`
 
 Keep the Shop OS UI reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -46,6 +46,8 @@ If you see `next dev` in `ps`, repeated LaunchAgent exits, or a missing `.next/B
 
 A `git pull` on `main` does **not** update the running UI. `next start` serves the last **`npm run build`**. Do not leave a stale `.next` behind a new `main` pull — and do not pull while frozen.
 
+**While Doc checkout is frozen** (`4cf8924` / `5swmVz-T2CqKEQzTk1ifU`), do **not** run this rebuild from lid-restore or from a green Shop OS CI check. **Ben GO** first; ordered pull + migrate + rebuild + smoke: [doc-unfreeze.md](doc-unfreeze.md). This section is the rebuild essay that unfreeze step 4 calls.
+
 **After Ben GO** (only), Lead on Doc may pull + rebuild:
 
 1. **Note the tip** you intend (`git rev-parse HEAD` in `~/src/Project-Car` after `git pull origin main`).
@@ -64,7 +66,7 @@ launchctl kickstart -k gui/$(id -u)/com.projectcar.shop-web
 # confirm next start (not next dev) and BUILD_ID still present
 ```
 
-Last recorded shop-web **BUILD** on Doc (STATUS): Dashboard **#28** — checkout **frozen** at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`**. `main` tip is **`babdc58` / #73** (Shop OS CI — git-only, not a Doc unfreeze). **#36** (`f952cd3`) and **#69** (`b9f9019`) stay **git-only**. Do **not** call them live on Doc. Update STATUS only after **Ben GO** + a new BUILD_ID.
+Last recorded shop-web **BUILD** on Doc (STATUS): Dashboard **#28** — checkout **frozen** at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`**. `main` tip is **`2dd61a2` / #74** (doc-unfreeze checklist on `main` — **not** a Doc unfreeze). Green **shop-os-ci** / lid-restore process-wake are **not** Ben GO. **#36** (`f952cd3`) and **#69** (`b9f9019`) stay **git-only**. Do **not** call them live on Doc. After **Ben GO**, ordered pull: [doc-unfreeze.md](doc-unfreeze.md). Update STATUS only after **Ben GO** + a new BUILD_ID ≠ `5swmVz`.
 
 ---
 
@@ -167,8 +169,8 @@ Alerts can come from anyone who sees a **502**, **530 / error 1033**, a login re
    - **1033 / 530 / 502** and Doc asleep or cloudflared dead → lid-close / tunnel / Mac sleep (`api-stay-up.md` same class). Wake Doc (Amphetamine session if it should stay up).
    - **Process flap** (`next dev`, EADDRINUSE, repeated restart, `BUILD_ID` missing) → skip to step 4.
 3. **Doc awake?** Local `GET http://127.0.0.1:3000/login` after wake. If it fails, Lead checks LaunchAgent `com.projectcar.shop-web` (KeepAlive) and `~/hermes-tools/mission-control/shop-web/run-shop-web.sh`. Confirm the process is **`next start`**.
-4. **Lead — flap / down process.** While checkout is **frozen**: **kickstart-if-down only** (keep `next start` on the existing BUILD_ID). Do **not** `git pull` or rebuild to tip. After **Ben GO**, flap / stale-build recovery is bootout → `npm run build` → kickstart → verify `.next/BUILD_ID`. Do not leave `next dev` in the LaunchAgent.
+4. **Lead — flap / down process.** While checkout is **frozen**: **kickstart-if-down only** (keep `next start` on the existing BUILD_ID). Do **not** `git pull` or rebuild to tip. After **Ben GO**, flap / stale-build recovery is bootout → `npm run build` → kickstart → verify `.next/BUILD_ID` ([doc-unfreeze.md](doc-unfreeze.md)). Do not leave `next dev` in the LaunchAgent.
 5. **Zone — edge.** Local `:3000` login OK but public **502** / **530 / 1033** / DNS miss → Zone checks host cloudflared + the `ops.` / `app.` hostname rules. Origin must be **`http://127.0.0.1:3000`**, not bare `localhost`. Lead does not edit Cloudflare. Do not cut the `app.` alias.
 6. **Garage — after.** When public smoke is green, Garage may re-walk ops/app UI. No process restarts.
 
-Host split: `STATUS.md`. Ordered lid-close restore: `doc-lid-restore.md`. API stay-up: `api-stay-up.md`. Brochure Worker: `brochure-worker-deploy.md`. Member-on-projectcar.ca: `member-host-cutover.md` (plan only — **Ben GO**, not shipped). Zone path-split: `member-zone-edge.md` (plan only — **Ben GO**). Temporary `app.` cut: `app-alias-cut.md` (plan only — STATUS Next #2; do **not** execute from stay-up). **`ops.` stays** the management host.
+Host split: `STATUS.md`. Ordered lid-close restore: `doc-lid-restore.md` (process wake only). After **Ben GO**, pull/rebuild: `doc-unfreeze.md`. API stay-up: `api-stay-up.md`. Brochure Worker: `brochure-worker-deploy.md`. Member-on-projectcar.ca: `member-host-cutover.md` (plan only — **Ben GO**, not shipped). Zone path-split: `member-zone-edge.md` (plan only — **Ben GO**). Temporary `app.` cut: `app-alias-cut.md` (plan only — STATUS Next #2; do **not** execute from stay-up). **`ops.` stays** the management host.
