@@ -95,7 +95,7 @@
 
   function isShopUnreachable(res, rawText) {
     if (!res) return true;
-    if (res.status === 530) return true;
+    if (res.status === 502 || res.status === 530) return true;
     if (looksLikeCf1033(rawText)) return true;
     return looksLikeCf1033(headerHaystack(res));
   }
