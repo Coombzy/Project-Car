@@ -186,6 +186,13 @@ body {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
+.banner-logo-link {
+  display: block;
+  line-height: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
 .banner-logo {
   display: block;
   width: auto;
