@@ -1,5 +1,6 @@
 /chat.html /contact.html 301
 /chat /contact.html 301
-/shop /the-shop 302
-/shop/ /the-shop 302
+/ /index.html 302
+/shop /the-shop.html 302
+/shop/ /the-shop.html 302
 /shop.html /the-shop.html 302
