@@ -1,7 +1,7 @@
 # SPCX Daily Analysis Prompt
 
-**Version:** 1.11  
-**Last edited:** 2026-09-09T17:25:00Z  
+**Version:** 1.12  
+**Last edited:** 2026-09-10T16:20:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** SPCX Daily Stock Analysis automation
 
@@ -17,105 +17,55 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
 
 ## Process rules (always apply)
 
-1. **ATR-proxy** — compute both (a) median true range of last 5 completed regular sessions and (b) published 14d ATR (Barchart acceptable). State both dollar values. **Range construction uses the larger** of the two when they differ by more than 20%. Do not blend down to a mid-point that shrinks 1d/1w width after a quiet week while 14d ATR is still elevated.
+1. **ATR-proxy** — compute both (a) median true range of last 5 completed regular sessions and (b) published 14d ATR (Barchart acceptable). State both dollar values. **Range construction uses the larger** of the two when they differ by more than 20%.
 2. **Regime:** `trend-up` | `trend-down` | `digestion` | `failed-break`.
    - Do **not** label digestion the day after a Rel Vol >= 1.0x trend-up close (close in the top third of the session range).
-   - Rel Vol used for `pred_rel_vol` and the completed-session regime test is the **last completed** regular session vs **20d** average volume (not Yahoo 3m / MarketWatch 65d). Mid-session volume is incomplete — do not flip `pred_rel_vol` from an in-progress print.
-   - **Live-session impulse (v1.6):** if at as-of, (Last − last official RTH close) >= **+3%** OR >= **1.0 × ATR-proxy**, do **not** label digestion; default `trend-up`. Symmetric: <= −3% or <= −1.0 × ATR-proxy → default `trend-down`. Put `impulse-in-progress +X.X%` (or −) in 1d notes. **2026-09-03** titled digestion / emailed bands while Last was ~$149 (+5.4% vs $140.71) — that is a regime miss. **2026-09-09** titled digestion while Last ~$146.09 (−4.81% vs $153.47) — down-impulse miss; default `trend-down`.
-   - **Post-write live-impulse (v1.10):** if after the mid-session Analysis lock the live tape later prints (Last − last official RTH close) >= +3% or <= −3% (or ±1.0× ATR), Analysis does **not** rewrite that day's bands. Auditor (or the next session-day run) refreshes path actuals only. **2026-09-08** locked ~10:11 ET at Last ~$147.5 digestion; by ~12:02 ET Yahoo Last $153.02 / H $154.08 (+3.43%) — path-refresh only.
+   - Rel Vol for `pred_rel_vol` is last completed regular session vs **20d** average volume (not Yahoo 3m / MarketWatch 65d).
+   - **Live-session impulse (v1.6):** if (Last − last official RTH close) >= **+3%** OR >= **1.0 × ATR-proxy**, do **not** label digestion; default `trend-up`. Symmetric down → `trend-down`. **2026-09-09** titled digestion at −4.81% vs $153.47 — default `trend-down`.
+   - **Post-write live-impulse (v1.10):** do not rewrite that day's bands after lock; path-refresh only.
 3. **Range construction**
-   - **1-day is mandatory** and maps to the **next regular session**. Width >= **2.0 × ATR-proxy**. Trend-up never centered below last completed close. On an **up** live-impulse day, `bias_low` >= Last. On a **down** live-impulse day, `bias_high` <= Last.
-   - 1-week width >= **3.0 × ATR-proxy**; if the last 5 completed sessions include a **>= +5%** RTH, 1-week width >= **4.0 × ATR-proxy**. If trend-up, upside leg from last completed close >= 1.5× downside leg.
-   - 1-month and 3-month: wider numeric bands; bias optional but preferred.
-   - **Printed-high clearance:** `range_high` >= `max(last completed close, analysis-date session high already printed)` + **0.5 × ATR-proxy**. Never park the 1d/1w high on a wick or round magnet ($149 / $150 / $155).
-   - **Coil-spring high clearance (v1.6):** if last completed Rel Vol < 0.5x, printed-high clearance = **0.75 × ATR-proxy**. If **each of the last 3 completed sessions** had Rel Vol < 0.6x, use **1.0 × ATR-proxy** instead of 0.5×. **2026-09-02** 1d high $149 after a 0.45x coil; 9/03 official H **$152.30** closed as upper-exceed miss.
-   - **Known-event extra high (v1.6):** if a dated lock-up, unlock, or named catalyst falls within the **next 10 RTH days**, add **+0.5 × ATR-proxy** to 1d and 1w `range_high` (stacks on printed-high / coil-spring). Cite the event date in 1d notes. Sep 9/10 unlock was on the 9/02 note and did not lift the 1d high.
-   - **Known-event extra LOW (v1.11):** the same dated lock-up / unlock / catalyst window also subtracts **0.5 × ATR-proxy** from 1d and 1w `range_low` (stacks). Cite the event date. Supply events are two-sided. **2026-09-09** 319M unlock; 9/08 1d low $144 vs live L $145.71.
-   - **Live-impulse extra (v1.6/v1.11 — directional):** if the live-impulse test in rule 2 fires **up**, add **+0.5 × ATR-proxy** to 1d `range_high`. If it fires **down**, subtract **0.5 × ATR-proxy** from 1d `range_low`. Do not apply the extra only to the high on a down-impulse day.
-   - **Post-impulse high (v1.7):** if the last completed RTH was **>= +5%** OR (Rel Vol >= 1.0x AND close in the top third of that session range), next run's 1d printed-high clearance = **1.0 × ATR-proxy** (replaces the 0.5× base; still stacks with known-event extra). **2026-09-03** was +6.42% / ~1.10x / C $149.74 in the top third of $141.05–$152.30.
-   - **Spike-fade:** if (session high − last/close) >= 0.8 × ATR, do not treat that wick high as a hard cap; still apply the active clearance (0.5× / 0.75× / 1.0×).
+   - 1-day mandatory, next regular session. Width >= **2.0 × ATR-proxy**. On up live-impulse, `bias_low` >= Last. On down live-impulse, `bias_high` <= Last.
+   - 1-week width >= **3.0 × ATR-proxy**; >= **4.0 ×** if last 5 include a **>= +5%** RTH.
+   - Printed-high clearance: `range_high` >= max(last completed close, printed session high) + **0.5 × ATR**. Never park 1d/1w high on $149 / $150 / $155.
+   - Coil-spring: Rel Vol < 0.5x → 0.75× high clearance; last 3 each < 0.6x → 1.0×. **2026-09-02** 1d high $149; 9/03 H $152.30 miss.
+   - Known-event extra HIGH and LOW (v1.11): dated lock-up/unlock in next 10 RTH → +0.5×ATR to 1d/1w high AND −0.5×ATR from 1d/1w low. **2026-09-08** 1d low $144 held vs official 9/09 L $145.55.
+   - Live-impulse extra is directional. Post-impulse high: last completed >= +5% or Rel Vol >= 1.0x + close in top third → 1.0× high clearance.
 4. **Volume / confidence**
-   - `pred_rel_vol` = last **completed** session volume vs **20d** avg, bucketed `below-avg` | `normal` | `elevated`. **Buckets (v1.7/v1.8):** `<0.80x` = below-avg; `0.80–1.19x` = normal; `>=1.20x` = elevated. 1.20x exactly is elevated, not normal. Use the **same** value on all four rows for that `analysis_date`. Do not use Yahoo 3m or MarketWatch 65d as the Rel Vol denominator. **2026-09-04** tagged 1.10x as elevated — that is normal. **2026-09-08** Vol ~85.84M / last-20 RTH avg ~$83.9M ≈ 1.02x = normal.
-   - `prior_day_pct` = last **completed** regular session % change (not the in-progress session). Compute from official RTH close vs prior official RTH close.
-   - If last completed Rel Vol < 0.5x: cut 1d upside-bias confidence **10 points** and do not treat a coil as a confirmed breakout.
-5. Mid-session labels: price is **Last** (not Close). Rel Vol for the in-progress session is **incomplete**. Confidence <= 80 until a completed close is used as the as-of.
-6. Include **prior-scenario vs actual** from the tracker when closed rows exist. If none exist, write `prior-scenario: no closed tracker rows yet`.
-7. **Decision map** (3 bullets): confirm vs fail; path-changing levels; calibration from last closed miss/hit (or `no closed 1w yet`).
-8. **Parseable table first (v1.4):** immediately after Key Takeaway (before snapshot/narrative), output the 4-row table matching tracker columns: horizon, range_low, range_high, bias_low, bias_high, conf, pred_regime, pred_rel_vol, prior_day_pct. Notification emails truncate; Auditor recovery depends on this table being in the first screenful. **Unrecoverable date (v1.8):** if a run has no parseable 4-row table, Auditor does **not** invent bands. Tag tracker header `YYYY-MM-DD unrecoverable (no table)`. **2026-09-01** is the example (59s truncate).
-9. **Self-check** (one line): `1d width $X vs ATR-proxy $Y (last-5 med $A / 14d $B; used larger: yes/no); 1d maps to next session YYYY-MM-DD; last completed Rel Vol Z.Zx vs 20d; 1d high $C vs last session high $D; coil-spring clearance 0.5/0.75/1.0x; known-event extra-high yes/no; known-event extra-low yes/no; live-impulse dir up/down/no; post-impulse-high yes/no; write-streak emergency yes/no; dual-write used yes/no; SHA-delta session-day yes/n/a; pred_rel_vol same on all 4 rows (yes/no); Day N/5 after-only (yes/no); TRACKER_SHA present (yes/no).`
-10. **Non-session days (weekend / US market holiday):** If `analysis_date` has **no Nasdaq regular session**, do **not** append new `(analysis_date, horizon)` rows. Friday's (or last session's) 1d already maps to the next RTH — a Saturday/Sunday/holiday 1d is a duplicate window. First line: `session: closed (weekend/holiday YYYY-MM-DD); no new rows`. Still **update path actuals** (H/L/C) on existing open 1w/1m/3m rows using the last completed **official RTH** OHLC (SpaceX IR or Yahoo) if those actuals are stale or mid-session only. Do not change ranges on already-open rows.
-    - **Day N/5 stale write (v1.8):** if any open 1w `Day N/5` label is wrong vs last official RTH count, you **must** write a path-actual refresh. Reusing the prior SHA without that check is a miss when Day labels are wrong (**2026-09-05** reprinted `94025003` while 8/31 1w still said Day 5/5).
-    - **Write-streak does not reset on a weekend/holiday** no-new-rows run, even if that run printed a SHA. Streak clears only after the next **session-day** successful 4-row write.
-    - **Non-session SHA-reuse (v1.9):** reprinting the pre-write SHA is valid on a weekend/holiday **only if** Day N/5 is already correct and path H/L/C already equal last official RTH. **2026-09-06** reprinted `880285ee` and **2026-09-07** reprinted `49c3d68e` — both valid.
-11. **Horizon close windows (Auditor grades; Analysis may annotate notes):**
-    - **1d** closes after the mapped next regular session's official RTH close.
-    - **1w** closes after the **5th regular session that begins after `analysis_date`** (next 5 RTH days). Do not close a mid-week 1w on that week's Friday just because the calendar week ended.
-    - **1m** closes after the **21st** such session; **3m** after the **63rd**.
-    - Weekend/holiday `analysis_date`: subsequent sessions start at the next RTH (same 1w clock as Friday's 1w if both exist).
-    - Pre-existing weekend 1d rows written before rule 10: **keep and grade** vs the same next RTH as Friday's 1d. Do not delete or expire as duplicates.
-    - When updating path actuals, Analysis may tag 1w notes `Day N/5; closes after YYYY-MM-DD`.
-    - **Day N definition (v1.8):** N = count of RTH sessions that have **begun after** `analysis_date` only. Do **not** count `analysis_date` itself — that is Day 0/5. After a completed Friday, Monday analysis is still Day 0/5 until the next RTH begins. **2026-09-09 session begin:** 8/31 1w closed (5/5 ended 9/08); 9/02=4/5; 9/03=3/5; 9/04=2/5; 9/08=1/5; 9/09=0/5.
-12. **pct_error format:** `X.X%` (include the percent sign). Compute `|close − bias midpoint| / bias midpoint` when a bias band exists.
-13. **Official RTH source order:** SpaceX IR **if the widget session date equals analysis_date or the last completed RTH**, else Yahoo, else StockAnalysis / MarketWatch / Barchart. State which source. 14d ATR from Barchart is acceptable as the published ATR-proxy.
-    - **Stale-IR skip (v1.10):** if SpaceX IR still shows a prior session (e.g. 9/08 widget still printed 9/04 C $147.95), use Yahoo for live H/L/Last. Do not treat a delayed IR EOD widget as the live tape.
-14. **Session-day path maintenance:** On a session day, after appending today's four rows, also refresh already-open multi-day rows:
-    - Path `actual_low` = min low from analysis as-of through the latest print; `actual_high` = max high; `actual_close` = official RTH close if complete, else **Last**.
-    - **Official-EOD replace (v1.11):** after a session's official RTH close is available, replace any mid-session path H/L/Last on rows whose window includes that session with the official OHLC. Do not leave a stale intra print as the path high/low/close. **2026-09-08** mid-session H $154.08 / Last $153.02 must become official H **$155.00** C **$153.47**.
-    - Refresh every open 1w note to `Day N/5; closes after YYYY-MM-DD` (N = regular sessions that have **begun after** that row's `analysis_date`, including an in-progress session; **not** the analysis_date session).
-    - If a prior 1d row maps to the **current** session and RTH has not closed, set status=`preliminary` and fill intra-day H/L/Last. Leave hit / directional / pct_error blank until official RTH close.
-    - Do **not** change ranges, bias, conf, `pred_regime`, `pred_rel_vol`, or `prior_day_pct` on existing rows.
-15. **Write-first / TRACKER_SHA gate (v1.5/v1.6/v1.9 — hard).** After the parseable table is composed, the FIRST tool calls must be GitHub get_file_contents on `finance/SPCX_Prediction_Tracker.md` then create_or_update_file for today's 4 rows + rule-14 path refresh. Do not write snapshot/narrative until the response contains the new tracker blob SHA. First user-visible line after the table: `TRACKER_SHA: <blob sha>`.
-    - **Never** output `TRACKER_SHA: write pending`, `write pending (dual-write attempted`, `see GitHub update below`, or any placeholder SHA. Those strings are a failed run.
-    - A run that emails a report but writes 0 rows is a failed run (**2026-09-01** 59s truncated before table; **2026-09-02** 138s table-in-email + `write pending`; **2026-09-03** 171s table-in-email + `write pending`; **2026-09-04** 45s table-in-email + `write pending`; **2026-09-09** 237s table-in-email + `write pending (dual-write attempted...)`). Runtime length is irrelevant.
-    - **Dual-write (v1.9):** if create_or_update_file errors **or** the returned blob SHA is unchanged from the pre-write get_file_contents SHA, immediately call `github___push_files` with the same payload (today's 4 rows + path refresh). Do **not** emit `WRITE FAILED` until both write tools have been tried once.
-    - **SHA-delta gate (v1.9, session day only):** emitted `TRACKER_SHA` MUST differ from the SHA returned by the pre-write get_file_contents. Reprinting that pre-write SHA on a session day is `WRITE FAILED`, even if the hex is valid. Confirm today's four `(analysis_date, horizon)` rows exist in the re-get before emitting the SHA. Non-session SHA-reuse remains valid under rule 10.
-    - If both write tools error or the SHA is still unchanged after one retry each: paste the 4 markdown rows and write `WRITE FAILED` as the next heading, then stop. Do not print `write pending` as a substitute.
-    - Auditor recovery does not convert a failed Analysis write into a pass.
-    - Auditor does not invent bands for dates with no parseable table (**2026-09-01 unrecoverable**).
-16. **Price-quote cap before write (v1.5).** After the two mandatory GitHub reads (prompt + tracker), allow at most one price-quote batch (Yahoo / SpaceX IR / MarketWatch OHLC + Barchart 14d ATR). The NEXT tool call MUST be the tracker write. No further web_search / browse / snapshot until `TRACKER_SHA` is in the response. Lock ranges from tracker context + that one quote batch; research narrative only after the SHA. Apply the stale-IR skip in rule 13 inside that one batch.
-17. **Write-streak emergency (v1.7/v1.8/v1.9/v1.10/v1.11 — hard).** If the last audit or tracker header documents **>=3 consecutive** *session-day* Analysis write misses, the ONLY tools after the two GitHub reads + one quote batch are: get_file_contents SHA → create_or_update_file (today's 4 rows + rule-14 path refresh) → if SHA unchanged or error, `github___push_files` → get_file_contents verify. No chatroom, no extra search, no snapshot, no narrative tools first. If the write is not among the first 8 tool calls, the run has already failed.
-    - **Current streak: 1.** **2026-09-09** session-day write miss (emailed parseable table + `TRACKER_SHA: write pending`; 0 rows). Emergency is **OFF**. Dual-write + SHA-delta remain standing gates. Re-arm emergency only if the streak reaches >=3 consecutive session-day misses. Historical misses 9/01–9/04 do not re-arm emergency. 9/08 successful write reset the old streak to 0 before today's miss.
-    - Weekend/holiday SHA reprints do **not** clear a streak (they also do not re-arm one that is already 0).
+   - Buckets vs 20d: `<0.80x` below-avg; `0.80–1.19x` normal; `>=1.20x` elevated. Same value on all four rows. **2026-09-09** Vol ~120.59M / ~$83.9M ≈ 1.44x = elevated.
+   - `prior_day_pct` = last completed official RTH % change. Rel Vol < 0.5x: cut 1d upside conf 10 pts.
+5. Mid-session labels use **Last** (not Close). Confidence <= 80 until a completed close is the as-of.
+6. Include prior-scenario vs actual from closed tracker rows.
+7. Decision map: 3 bullets.
+8. **Parseable table first.** No table = unrecoverable (**2026-09-01**).
+9. Self-check must include payload-compact used yes/no and TRACKER_SHA present yes/no.
+10. Non-session days: no new rows; still refresh path + Day N/5. Weekend SHA-reuse does not clear write-streak.
+11. Close clocks: 1d = next RTH; 1w = 5th RTH after analysis_date; 1m = 21st; 3m = 63rd. **Day N/5 after 2026-09-10 begin:** 9/02=5/5 (open until 9/10 official close); 9/03=4/5; 9/04=3/5; 9/08=2/5; 9/09=1/5; 9/10=0/5.
+12. pct_error format `X.X%`.
+13. Official RTH source order: SpaceX IR if widget date matches, else Yahoo, else StockAnalysis / MarketWatch / Barchart. Stale-IR skip stands.
+14. Session-day path maintenance + official-EOD replace. **Frozen closed notes (v1.12):** after a row is closed, do not grow that row's notes.
+15. **Write-first / TRACKER_SHA gate.** Never emit `write pending`. Failed runs include **2026-09-10** 145s table + WRITE FAILED after dual-write (payload/schema size).
+    - Dual-write: create_or_update_file then push_files.
+    - **Payload-compact (v1.12):** on size/schema reject, compact already-closed notes, retry both tools once, then WRITE FAILED + today's 4 rows only.
+    - SHA-delta on session days.
+16. Price-quote cap before write.
+17. **Write-streak emergency.** Current streak: **2** (9/09 + 9/10). Emergency OFF until >=3 consecutive session-day misses.
 
 ## Report structure
 
 **Key Takeaway** (one sentence)
+**Parseable table** (4 rows; skip non-session)
+`TRACKER_SHA: <blob sha>`
+1. Current Market Snapshot
+2. Technical Analysis
+3. Fundamental & News
+4. Forward Scenarios (1d next session YYYY-MM-DD / 1w / 1m / 3m)
+5. Decision map (3 bullets)
+6. Risks & Disclaimer — not financial advice
 
-**Parseable table** (rule 8 — 4 rows, immediately here; skip on non-session days)
+## GitHub write (mandatory)
 
-`TRACKER_SHA: <blob sha>` (rule 15 — required before section 1; real blob SHA only)
-
-1. **Current Market Snapshot** — Last/Close, change %, day's range, volume vs 20d avg, mkt cap, 1d/5d/1m performance. Label Last vs Close.
-2. **Technical Analysis** — support/resistance, MAs, RSI, ATR-proxy (both last-5 and 14d), **regime**, short-term outlook.
-3. **Fundamental & News** — Starlink, Starship, contracts, lock-ups, regulatory, xAI/Tesla cross-news; each catalyst with probability + timing.
-4. **Forward Scenarios** (numeric bands required)
-   - 1-day / **next session YYYY-MM-DD**: `$low–$high` (bias; conf %)
-   - 1-week: `$low–$high` (bias; conf %)
-   - 1-month: `$low–$high` (bias; conf %)
-   - 3-month: `$low–$high` (bias; conf %)
-   - Key invalidation
-   - Prior scenarios vs actual
-   - Self-check (rule 9)
-5. **Decision map** (3 bullets)
-6. **Risks & Disclaimer** — not financial advice
-
-On a non-session day (rule 10), skip new bands; still state official last RTH OHLC and any path-actual updates. Path-actual write still requires `TRACKER_SHA`. Weekend/holiday SHA-reuse does not clear write-streak emergency.
-
-## GitHub write (mandatory — hard gate)
-
-Get SHA of `finance/SPCX_Prediction_Tracker.md` immediately before write; retry once on conflict.
-
-- **Session day:** Append **one row per (analysis_date, horizon)** for {1d, 1w, 1m, 3m}. Status = `open`.
-- Fill `pred_regime`, `pred_rel_vol`, `prior_day_pct` on every row. `pred_rel_vol` must be identical on all four rows. 1d notes must name the next session date. 1w notes should include `Day 0/5; closes after YYYY-MM-DD`.
-- **Then apply rule 14:** update path actuals + `Day N/5` on already-open 1w/1m/3m; mark mapped-today prior 1d rows `preliminary` with intra-day H/L/Last. After official RTH, replace mid-session path prints with official OHLC (v1.11).
-- **Non-session day:** Do not append rows. Update stale path actuals on open 1w/1m/3m only. Refresh `Day N/5` on open 1w notes when a session has elapsed or when the printed Day label is wrong. If Day N/5 is stale, you must write even if H/L/C are already current.
-- Do not duplicate existing (analysis_date, horizon) pairs.
-- Do not change ranges on already-open rows from prior days.
-- Do not invent backfill for missing prior dates; Auditor recovers those from task output **only when a parseable table exists**. No table = unrecoverable.
-- Do not overwrite `pred_regime`, `pred_rel_vol`, or `prior_day_pct` on existing rows.
-- **Dual-write (v1.9):** create_or_update_file first; if error or blob SHA unchanged, immediately `github___push_files` with the same file contents. Session-day emitted SHA must differ from the pre-write SHA.
-- **Post-write verify:** re-get the tracker and confirm today's four `(analysis_date, horizon)` rows exist (session day) or that path actuals / Day N/5 changed (non-session day). If absent after both write tools, paste the rows and write `WRITE FAILED`.
-- **Response must include the new tracker blob SHA** on its own line as `TRACKER_SHA: <sha>`. Never print `write pending`. If the write fails after both tools, paste the 4 rows (or the path-actual edits) and the SHA you needed — do not mark the run successful without the write.
-- **Write-streak emergency (rule 17)** is **OFF**. Current session-day miss streak = **1** (2026-09-09). Dual-write + SHA-delta remain. Re-arm emergency only if a new streak of >=3 consecutive session-day write misses appears.
+Get SHA immediately before write; retry once on conflict.
+Session day: append four rows; path-refresh; Day N/5; official-EOD replace; freeze closed notes.
+Never print `write pending`. Write-streak emergency is OFF. Streak = 2. Dual-write + SHA-delta + payload-compact remain.
 
 Cite sources. Be objective and data-driven.
