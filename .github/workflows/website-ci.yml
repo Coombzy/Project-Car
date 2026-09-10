@@ -1,0 +1,33 @@
+# Brochure quality gate — git-only.
+# Asserts Worker html/_redirects stays thin (chat → contact.html).
+# Does not deploy Worker projectcar-brochure, does not edit Zone / Cloudflare.
+name: Website CI
+
+on:
+  pull_request:
+    paths:
+      - "apps/website/**"
+      - ".github/workflows/website-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/website/**"
+      - ".github/workflows/website-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  thin-redirects:
+    name: thin Worker _redirects
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Assert thin Worker _redirects
+        run: bash apps/website/scripts/assert-thin-redirects.sh
