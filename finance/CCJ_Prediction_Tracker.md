@@ -8,42 +8,46 @@ Hit: actual regular-session H/L/Close inside **range** (not only bias).
 
 **Feature columns** (fill at prediction time): `pred_regime` = trend-up|trend-down|digestion|failed-break · `pred_rel_vol` = Rel Vol of the session being analyzed · `prior_day_pct` = prior regular-session % change.
 
-Last price context: 2026-09-09 official RTH close CCJ **$100.41** (Polygon; cluster StockAnalysis 16:00 C $100.41 V 1.62M / MarketWatch C $100.43) L **$99.34** H **$102.30** Vol **1.64M** (Rel **0.61×** vs 20d **2.67M**); prior close $101.97 (−1.53%). U3O8 $89.65/lb (+$0.15, UraniumTracker). URA C $46.86 (−1.35%). Regime **digestion** after light-vol $100 test-reclaim. Sep 8 1d **closed hit** L99.34 H102.30 C100.41. Sep 1 1w **closed hit** L95.13 H104.12 C100.41. Next session Thu Sep 10. See also `CCJ_Calibration.md`.
+Last price context: 2026-09-10 official RTH close CCJ **$97.42** (Polygon; cluster Yahoo 4:00:02 $97.42 V 2.03M / MarketWatch 3:59 $97.43) L **$97.26** H **$99.60** Vol **2.03M** (Rel **0.76×** vs 20d **2.66M**); prior close $100.41 (−2.98%). U3O8 $89.65/lb (unchanged, UraniumTracker daily print). URA C $45.00 (−3.97%). Regime **trend-down** after lost $100. Sep 9 1d **closed hit** L97.26 H99.60 C97.42. Sep 2 1w **closed hit** L97.26 H104.12 C97.42. Next session Fri Sep 11. See also `CCJ_Calibration.md`.
 
 | analysis_date | horizon | range_low | range_high | bias_low | bias_high | conf | pred_regime | pred_rel_vol | prior_day_pct | actual_low | actual_high | actual_close | hit | directional | pct_error | status | notes |
 |---------------|---------|-----------|------------|----------|-----------|------|-------------|--------------|---------------|------------|-------------|--------------|-----|-------------|-----------|--------|-------|
-| 2026-09-09 | 1d | 94.00 | 107.00 | 97.50 | 103.00 | 50 | digestion | 0.61 | -1.53 |  |  |  |  |  |  | open | v1.12 EOD; light-vol $100 test-reclaim Rel 0.61x; rules 4+5; width $13.00 = 4.01×ATR $3.24; magnet-clear $105→$107.00; grades Thu Sep 10 |
-| 2026-09-09 | 1w | 89.50 | 116.00 | 95.00 | 107.00 | 50 | digestion | 0.61 | -1.53 |  |  |  |  |  |  | open |  |
-| 2026-09-09 | 1m | 82.00 | 124.00 | 94.00 | 112.00 | 50 | digestion | 0.61 | -1.53 |  |  |  |  |  |  | open |  |
-| 2026-09-09 | 3m | 84.00 | 148.00 | 96.00 | 124.00 | 55 | digestion | 0.61 | -1.53 |  |  |  |  |  |  | open | 3m low below price |
+| 2026-09-10 | 1d | 91.00 | 104.00 | 94.00 | 99.00 | 50 | trend-down | 0.76 | -2.98 |  |  |  |  |  |  | open | v1.12 EOD; lost $100 Rel 0.76x trend-down; rules 4+5; width $13.00 = 4.13×ATR $3.15; magnet-clear $100→$104.00; grades Fri Sep 11 |
+| 2026-09-10 | 1w | 86.00 | 112.00 | 91.00 | 103.00 | 50 | trend-down | 0.76 | -2.98 |  |  |  |  |  |  | open |  |
+| 2026-09-10 | 1m | 80.00 | 122.00 | 90.00 | 110.00 | 50 | trend-down | 0.76 | -2.98 |  |  |  |  |  |  | open |  |
+| 2026-09-10 | 3m | 82.00 | 148.00 | 92.00 | 122.00 | 55 | trend-down | 0.76 | -2.98 |  |  |  |  |  |  | open | 3m low below price |
+| 2026-09-09 | 1d | 94.00 | 107.00 | 97.50 | 103.00 | 50 | digestion | 0.61 | -1.53 | 97.26 | 99.60 | 97.42 | yes | fade / close 8c under bias | 2.8% | closed | v1.12 EOD; L97.26 H99.60 C97.42 inside $94.00–$107.00; C 8c under bias $97.50–$103.00; bias mid $100.25 |
+| 2026-09-09 | 1w | 89.50 | 116.00 | 95.00 | 107.00 | 50 | digestion | 0.61 | -1.53 | 97.26 | 99.60 | 97.42 | on-track |  |  | open | Day 1 of 5 (Sep 10); path L97.26 H99.60 C97.42 inside $89.50–$116 |
+| 2026-09-09 | 1m | 82.00 | 124.00 | 94.00 | 112.00 | 50 | digestion | 0.61 | -1.53 | 97.26 | 99.60 | 97.42 | on-track |  |  | open | Path L97.26 holds $82 |
+| 2026-09-09 | 3m | 84.00 | 148.00 | 96.00 | 124.00 | 55 | digestion | 0.61 | -1.53 | 97.26 | 99.60 | 97.42 | on-track |  |  | open | Path L97.26 holds $84 |
 | 2026-09-08 | 1d | 96.00 | 107.50 | 99.00 | 104.00 | 50 | digestion | 0.82 | 1.22 | 99.34 | 102.30 | 100.41 | yes | hold / close inside bias | 1.1% | closed | v1.12 EOD; L99.34 H102.30 C100.41 inside $96.00–$107.50; C inside bias $99.00–$104.00; bias mid $101.50 |
-| 2026-09-08 | 1w | 90.50 | 117.00 | 96.00 | 108.00 | 50 | digestion | 0.82 | 1.22 | 99.34 | 102.30 | 100.41 | on-track |  |  | open | Day 1 of 5 (Sep 9); path L99.34 H102.30 C100.41 inside $90.50–$117 |
-| 2026-09-08 | 1m | 82.00 | 124.00 | 94.00 | 112.00 | 50 | digestion | 0.82 | 1.22 | 99.34 | 102.30 | 100.41 | on-track |  |  | open | Path L99.34 holds $82 |
-| 2026-09-08 | 3m | 84.00 | 148.00 | 96.00 | 124.00 | 55 | digestion | 0.82 | 1.22 | 99.34 | 102.30 | 100.41 | on-track |  |  | open | Path L99.34 holds $84 |
+| 2026-09-08 | 1w | 90.50 | 117.00 | 96.00 | 108.00 | 50 | digestion | 0.82 | 1.22 | 97.26 | 102.30 | 97.42 | on-track |  |  | open | Day 2 of 5 (Sep 9–10); path L97.26 H102.30 C97.42 inside $90.50–$117 |
+| 2026-09-08 | 1m | 82.00 | 124.00 | 94.00 | 112.00 | 50 | digestion | 0.82 | 1.22 | 97.26 | 102.30 | 97.42 | on-track |  |  | open | Path L97.26 holds $82 |
+| 2026-09-08 | 3m | 84.00 | 148.00 | 96.00 | 124.00 | 55 | digestion | 0.82 | 1.22 | 97.26 | 102.30 | 97.42 | on-track |  |  | open | Path L97.26 holds $84 |
 | 2026-09-04 | 1d | 95.50 | 107.00 | 98.50 | 103.00 | 50 | digestion | 0.56 | 0.12 | 101.50 | 104.12 | 101.97 | yes | hold / close inside bias | ~1.2% | closed | v1.12 EOD; L101.50 H104.12 C101.97 inside $95.50–$107.00; C inside bias $98.50–$103; bias mid $100.75 |
-| 2026-09-04 | 1w | 91.00 | 116.00 | 96.00 | 108.00 | 50 | digestion | 0.56 | 0.12 | 99.34 | 104.12 | 100.41 | on-track |  |  | open | Day 2 of 5 (Sep 8–9); path L99.34 H104.12 C100.41 inside $91–$116 |
-| 2026-09-04 | 1m | 82.00 | 124.00 | 94.00 | 112.00 | 50 | digestion | 0.56 | 0.12 | 99.34 | 104.12 | 100.41 | on-track |  |  | open | Path L99.34 holds $82 |
-| 2026-09-04 | 3m | 84.00 | 148.00 | 96.00 | 124.00 | 55 | digestion | 0.56 | 0.12 | 99.34 | 104.12 | 100.41 | on-track |  |  | open | Path L99.34 holds $84 |
+| 2026-09-04 | 1w | 91.00 | 116.00 | 96.00 | 108.00 | 50 | digestion | 0.56 | 0.12 | 97.26 | 104.12 | 97.42 | on-track |  |  | open | Day 3 of 5 (Sep 8–10); path L97.26 H104.12 C97.42 inside $91–$116 |
+| 2026-09-04 | 1m | 82.00 | 124.00 | 94.00 | 112.00 | 50 | digestion | 0.56 | 0.12 | 97.26 | 104.12 | 97.42 | on-track |  |  | open | Path L97.26 holds $82 |
+| 2026-09-04 | 3m | 84.00 | 148.00 | 96.00 | 124.00 | 55 | digestion | 0.56 | 0.12 | 97.26 | 104.12 | 97.42 | on-track |  |  | open | Path L97.26 holds $84 |
 | 2026-09-03 | 1d | 96.50 | 106.50 | 100.50 | 105.00 | 50 | trend-up | 0.98 | 4.40 | 99.52 | 101.54 | 100.74 | yes | hold / close inside bias | ~2.0% | closed | v1.11 EOD; L99.52 H101.54 C100.74 inside $96.50–$106.50; C inside bias $100.50–$105; bias mid $102.75 |
-| 2026-09-03 | 1w | 91.00 | 116.50 | 96.00 | 108.00 | 50 | trend-up | 0.98 | 4.40 | 99.34 | 104.12 | 100.41 | on-track |  |  | open | Day 3 of 5 (Sep 4, 8–9); path L99.34 H104.12 C100.41 inside $91–$116.50 |
-| 2026-09-03 | 1m | 82.00 | 124.00 | 94.00 | 112.00 | 50 | trend-up | 0.98 | 4.40 | 99.34 | 104.12 | 100.41 | on-track |  |  | open | Path L99.34 holds $82 |
-| 2026-09-03 | 3m | 84.00 | 148.00 | 96.00 | 124.00 | 55 | trend-up | 0.98 | 4.40 | 99.34 | 104.12 | 100.41 | on-track |  |  | open | Path L99.34 holds $84 |
+| 2026-09-03 | 1w | 91.00 | 116.50 | 96.00 | 108.00 | 50 | trend-up | 0.98 | 4.40 | 97.26 | 104.12 | 97.42 | on-track |  |  | open | Day 4 of 5 (Sep 4, 8–10); path L97.26 H104.12 C97.42 inside $91–$116.50 |
+| 2026-09-03 | 1m | 82.00 | 124.00 | 94.00 | 112.00 | 50 | trend-up | 0.98 | 4.40 | 97.26 | 104.12 | 97.42 | on-track |  |  | open | Path L97.26 holds $82 |
+| 2026-09-03 | 3m | 84.00 | 148.00 | 96.00 | 124.00 | 55 | trend-up | 0.98 | 4.40 | 97.26 | 104.12 | 97.42 | on-track |  |  | open | Path L97.26 holds $84 |
 | 2026-09-02 | 1d | 92.00 | 102.00 | 94.00 | 99.00 | 50 | digestion | 0.87 | 0.12 | 98.69 | 101.53 | 100.62 | yes | extension / close above bias | ~4.3% | closed | v1.11 EOD; L98.69 H101.53 C100.62 inside $92–$102; C above bias $94–$99; bias mid $96.50; H $101.53 cleared $102 by $0.47 |
-| 2026-09-02 | 1w | 87.00 | 107.00 | 92.00 | 102.00 | 50 | digestion | 0.87 | 0.12 | 98.69 | 104.12 | 100.41 | on-track |  |  | open | Day 4 of 5 (Sep 3–4, 8–9); path L98.69 H104.12 C100.41 inside $87–$107; closes Thu Sep 10 |
-| 2026-09-02 | 1m | 80.00 | 118.00 | 90.00 | 106.00 | 50 | digestion | 0.87 | 0.12 | 98.69 | 104.12 | 100.41 | on-track |  |  | open | Path L98.69 holds $80 |
-| 2026-09-02 | 3m | 84.00 | 145.00 | 94.00 | 120.00 | 55 | digestion | 0.87 | 0.12 | 98.69 | 104.12 | 100.41 | on-track |  |  | open | Path L98.69 holds $84 |
+| 2026-09-02 | 1w | 87.00 | 107.00 | 92.00 | 102.00 | 50 | digestion | 0.87 | 0.12 | 97.26 | 104.12 | 97.42 | yes | hold / close inside bias | 0.4% | closed | 5 sessions Sep 3–4 + Sep 8–10; L97.26 H104.12 C97.42 inside $87–$107; C inside bias $92–$102; bias mid $97.00; fourth full 1w hit |
+| 2026-09-02 | 1m | 80.00 | 118.00 | 90.00 | 106.00 | 50 | digestion | 0.87 | 0.12 | 97.26 | 104.12 | 97.42 | on-track |  |  | open | Path L97.26 holds $80 |
+| 2026-09-02 | 3m | 84.00 | 145.00 | 94.00 | 120.00 | 55 | digestion | 0.87 | 0.12 | 97.26 | 104.12 | 97.42 | on-track |  |  | open | Path L97.26 holds $84 |
 | 2026-09-01 | 1d | 91.50 | 102.00 | 93.50 | 98.00 | 50 | digestion | 0.74 | -2.49 | 95.13 | 98.37 | 96.38 | yes | hold / close inside bias | ~0.7% | closed | v1.11 EOD; L95.13 H98.37 C96.38 inside $91.50–$102; C inside bias $93.50–$98; bias mid $95.75 |
 | 2026-09-01 | 1w | 88.00 | 106.00 | 92.00 | 102.00 | 50 | digestion | 0.74 | -2.49 | 95.13 | 104.12 | 100.41 | yes | hold / close inside bias | 3.5% | closed | 5 sessions Sep 2–4 + Sep 8–9; L95.13 H104.12 C100.41 inside $88–$106; C inside bias $92–$102; bias mid $97.00; third full 1w hit |
-| 2026-09-01 | 1m | 80.00 | 118.00 | 90.00 | 106.00 | 50 | digestion | 0.74 | -2.49 | 95.13 | 104.12 | 100.41 | on-track |  |  | open | Path L95.13 holds $80 |
-| 2026-09-01 | 3m | 84.00 | 145.00 | 94.00 | 120.00 | 55 | digestion | 0.74 | -2.49 | 95.13 | 104.12 | 100.41 | on-track |  |  | open | Path L95.13 holds $84 |
+| 2026-09-01 | 1m | 80.00 | 118.00 | 90.00 | 106.00 | 50 | digestion | 0.74 | -2.49 | 95.13 | 104.12 | 97.42 | on-track |  |  | open | Path L95.13 holds $80 |
+| 2026-09-01 | 3m | 84.00 | 145.00 | 94.00 | 120.00 | 55 | digestion | 0.74 | -2.49 | 95.13 | 104.12 | 97.42 | on-track |  |  | open | Path L95.13 holds $84 |
 | 2026-08-31 | 1d | 93.50 | 108.00 | 96.00 | 101.00 | 50 | digestion | 1.14 | -1.25 | 94.69 | 97.42 | 96.30 | yes | fade / close inside bias | ~2.2% | closed | v1.11 EOD; L94.69 H97.42 C96.30 inside $93.50–$108; C inside bias $96–$101; bias mid $98.50 |
 | 2026-08-31 | 1w | 88.00 | 112.00 | 94.00 | 104.00 | 50 | digestion | 1.14 | -1.25 | 94.69 | 104.12 | 101.97 | yes | hold / close inside bias | ~3.0% | closed | 5 sessions Sep 1–4 + Sep 8; L94.69 H104.12 C101.97 inside $88–$112; C inside bias $94–$104; bias mid $99.00; second full 1w hit |
-| 2026-08-31 | 1m | 82.00 | 122.00 | 92.00 | 108.00 | 50 | digestion | 1.14 | -1.25 | 94.69 | 104.12 | 100.41 | on-track |  |  | open | Path L94.69 holds $82 |
-| 2026-08-31 | 3m | 86.00 | 148.00 | 98.00 | 124.00 | 55 | digestion | 1.14 | -1.25 | 94.69 | 104.12 | 100.41 | on-track |  |  | open | Path L94.69 holds $86 |
+| 2026-08-31 | 1m | 82.00 | 122.00 | 92.00 | 108.00 | 50 | digestion | 1.14 | -1.25 | 94.69 | 104.12 | 97.42 | on-track |  |  | open | Path L94.69 holds $82 |
+| 2026-08-31 | 3m | 86.00 | 148.00 | 98.00 | 124.00 | 55 | digestion | 1.14 | -1.25 | 94.69 | 104.12 | 97.42 | on-track |  |  | open | Path L94.69 holds $86 |
 | 2026-08-28 | 1d | 92.50 | 109.00 | 96.50 | 101.50 | 50 | trend-down | 1.36 | -5.94 | 97.53 | 99.70 | 98.76 | yes | mild fade / close inside bias | ~0.2% | closed | Closed after Aug 31 RTH; L97.53 H99.70 C98.76 inside $92.50–$109; bias mid $99.00 |
 | 2026-08-28 | 1w | 88.00 | 113.00 | 94.00 | 104.00 | 50 | trend-down | 1.36 | -5.94 | 94.69 | 101.54 | 100.74 | yes | hold / close inside bias | ~1.8% | closed | 5 sessions Aug 31–Sep 4; L94.69 H101.54 C100.74 inside $88–$113; C inside bias $94–$104; bias mid $99.00; first full 1w hit |
-| 2026-08-28 | 1m | 82.00 | 124.00 | 93.00 | 110.00 | 50 | trend-down | 1.36 | -5.94 | 94.69 | 106.47 | 100.41 | on-track |  |  | open | Path L94.69 holds $82 |
-| 2026-08-28 | 3m | 88.00 | 148.00 | 100.00 | 125.00 | 55 | trend-down | 1.36 | -5.94 | 94.69 | 106.47 | 100.41 | on-track |  |  | open | Path L94.69 holds $88 |
+| 2026-08-28 | 1m | 82.00 | 124.00 | 93.00 | 110.00 | 50 | trend-down | 1.36 | -5.94 | 94.69 | 106.47 | 97.42 | on-track |  |  | open | Path L94.69 holds $82 |
+| 2026-08-28 | 3m | 88.00 | 148.00 | 100.00 | 125.00 | 55 | trend-down | 1.36 | -5.94 | 94.69 | 106.47 | 97.42 | on-track |  |  | open | Path L94.69 holds $88 |
 | 2026-08-26 | 1d | 102.50 | 116.50 | 107.00 | 112.50 | 55 | digestion | 1.23 | 0.37 | 105.19 | 108.83 | 106.33 | yes | mild fade / below bias | ~3.1% | closed | v1.10 width $14 covered Rel ~0.5× fade; C 67c under bias low |
 | 2026-08-26 | 1w | 99.00 | 122.00 | 107.00 | 116.00 | 55 | digestion | 1.23 | 0.37 | 94.69 | 108.97 | 96.38 | no (lower exceed) | wrong (down vs higher bias) | ~13.6% | closed | 5 sessions through Sep 2; L+C through $99; H108.97 inside |
 | 2026-08-26 | 1m | 96.00 | 128.00 | 108.00 | 122.00 | 55 | digestion | 1.23 | 0.37 | 94.69 | 108.97 | 100.41 | path low exceed |  |  | open | L94.69 through $96 |
