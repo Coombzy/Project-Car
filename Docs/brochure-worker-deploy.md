@@ -2,7 +2,7 @@
 
 **Status:** Standing runbook  
 **Updated:** 2026-09-11  
-**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock, `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 **LIVE** — do not re-apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md` (Next #1 capacity-blocked until #82 + Bulk Phase1; **#83** is CI-only after **#82** base — **not** Bulk-gated; **never #81**), `apps/website/README.md`. **Queued (not drafted):** `brochure-worker-ci.md` — Option A matrix below is the Member-precondition receipt until that file exists. When drafted, that matrix should include the **#82 mandatory purge** (Worker/Cache, apex+www) before body-freshness asserts.
+**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock, `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 **LIVE** — do not re-apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md` (Next #1 capacity-blocked until #82 + Bulk Phase1; **#83** is CI-only after **#82** base — **not** Bulk-gated; **never #81**), `apps/website/README.md`, `brochure-worker-ci.md` (paper CI + Option A Member-precondition receipt — **#82** mandatory purge Worker/Cache apex+www before body-freshness asserts; **never** Direct Upload from **#81**).
 
 Re-deploy the public brochure after Garage merges HTML on `main`. This is the **locked live method**. It is not a one-off for a single hygiene ship.
 
@@ -37,7 +37,7 @@ Cloudflare Dynamic Redirect Rules for Option A are **FULL 10/10** Active **301**
 
 **Garage must not** invent new brochure extensionless pretty-URLs that need another Dynamic Redirect Rule until after **#82** is Worker-live **and** Bulk Phase1 frees Dynamic slots.
 
-Redirect plan A is already parked (agent `/workspace` parking is outside this repo). In-repo pointer to that parked Bulk Phase1 pretty-URL pack — this table is the **Member-precondition receipt** (Option A matrix). Fold into `brochure-worker-ci.md` when that file is drafted (include the **#82 mandatory purge** Worker/Cache apex+www before body-freshness asserts); until then this runbook + STATUS Next #1 + `member-zone-edge.md` §0 are the queue/index.
+Redirect plan A is already parked (agent `/workspace` parking is outside this repo). In-repo Member-precondition receipt (Option A matrix + **#82 mandatory purge** before body-freshness): `brochure-worker-ci.md`. This table stays the upload-runbook copy. Bulk Phase1 brochure redirects apply **after #82 live** — do **not** execute from this runbook.
 
 | Stay on Dynamic until migrate | Move to Bulk Phase1 (drafted, not live) |
 |-------------------------------|-----------------------------------------|
@@ -198,7 +198,7 @@ Worker **`projectcar-brochure` 200s** send the P2-4 security headers (2026-09-07
 | Topic | Where / why |
 |-------|-------------|
 | Member host cutover | `member-host-cutover.md` — **Ben GO** only after **#82** Worker-live + Bulk Phase1. Zone path-split: `member-zone-edge.md` §0. Capacity-blocked by Option A **FULL 10/10**. **#83** is CI-only after **#82** base — **not** this Bulk gate. **Never #81.** Do not start from a brochure upload. |
-| `brochure-worker-ci.md` | **Not drafted.** Queued. Option A matrix above is the Member-precondition receipt until it exists. When drafted, include the **#82 mandatory purge** (Worker/Cache, apex+www) before body-freshness asserts. |
+| `brochure-worker-ci.md` | **Drafted** (held **#70**). Paper CI + Option A Member-precondition receipt. **#82** ordered gate: Direct Upload → **mandatory** Worker/Cache purge (apex+www) → body freshness. **Never** Direct Upload from **#81** (draft + superseded). This runbook stays the upload click-path. |
 | Mission Control cockpit | Needs **Ben GO**. Not this Worker. |
 | Stripe / shop-open claims | Locked off. Interest waitlist only. |
 | P2-4 security / cache headers | **LIVE** (2026-09-07). Record: `brochure-security-headers.md`. Do not re-apply from this upload. |

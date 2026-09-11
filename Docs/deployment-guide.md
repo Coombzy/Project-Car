@@ -19,7 +19,7 @@ This file is **not** a runbook. Use the living docs below.
 | Shop OS GitHub Actions quality gate (pytest + web typecheck / `next build`; git-only — **not** Doc deploy, **not** unfreeze GO) | `shop-os-ci.md` |
 | Member UI → projectcar.ca (plan only; **Ben GO**) | `member-host-cutover.md` |
 | Member path-split on projectcar.ca / www (Zone; plan only; **capacity-blocked** by Option A **FULL 10/10** — Ben GO only after **#82** Worker-live + Bulk Phase1) | `member-zone-edge.md` |
-| Brochure Worker CI / Option A matrix (queued — **not drafted**; Member-precondition receipt is the parked Redirect inventory) | `brochure-worker-deploy.md` (until `brochure-worker-ci.md` exists) |
+| Brochure Worker CI / Option A **FULL 10/10** receipt (paper — Direct Upload → **mandatory** purge apex+www → body freshness; **never #81**) | `brochure-worker-ci.md` (upload click-path stays `brochure-worker-deploy.md`) |
 | Temporary `app.` alias cut (plan only; STATUS Next #2 — do **not** execute) | `app-alias-cut.md` |
 | Public MVP cut-vs-keep (draft; not a Ben lock) | `ship-mvp-cut.md` |
 | Brochure Worker Direct Upload (`projectcar-brochure`) | `brochure-worker-deploy.md` |

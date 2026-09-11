@@ -2,7 +2,7 @@
 
 **Status:** Checklist / plan only — **not shipped**. Capacity-blocked by Option A **FULL 10/10**. Do **not** execute until **#82** Worker-live + Bulk Phase1 **and** **Ben GO**.  
 **Updated:** 2026-09-11 (Option A capacity lock on held **#70**)  
-**Related:** `STATUS.md` Next #1, `member-host-cutover.md`, `app-alias-cut.md` (STATUS Next #2; later — do **not** cut `app.` here), `brochure-worker-deploy.md` (Option A matrix / Member-precondition receipt; `brochure-worker-ci.md` **not drafted** — queued), `shop-web-stay-up.md`, `brochure-pages-cutover.md`, `cors-origins.md`, `website-webapp-specification.md` §3, `mcking-shop-host-cutover.md` (later shop origin — **not** this cut)
+**Related:** `STATUS.md` Next #1, `member-host-cutover.md`, `app-alias-cut.md` (STATUS Next #2; later — do **not** cut `app.` here), `brochure-worker-deploy.md` (upload click-path), `brochure-worker-ci.md` (Option A matrix / Member-precondition receipt + **#82** purge/freshness), `shop-web-stay-up.md`, `brochure-pages-cutover.md`, `cors-origins.md`, `website-webapp-specification.md` §3, `mcking-shop-host-cutover.md` (later shop origin — **not** this cut)
 
 This file is the **edge / path-split** slice Zone needs for STATUS **Next #1** (Member UI on **projectcar.ca**). Cookie Domain / Path / Secure / SameSite, CORS allowlist, and Next middleware host allowlist live in `member-host-cutover.md` §2 — **summarize + point**, do not rewrite that essay here.
 
@@ -31,11 +31,11 @@ STATUS Next #1 Member edge is **capacity-blocked** by Option A. The CF Dynamic R
 
 Soft-530 is **CLEAR** / **LIVE**. That does **not** unlock Member edge. **#82** Home canonical/og/sitemap `/index.html` is **not yet Worker-live**. Do **not** execute Garage/Zone from this tip-fold.
 
-**STATUS Reality quarantine:** Until **#82** Worker-live + Zone Direct Upload, held **#70** Option A is brochure live SSOT — do **not** execute from `main` Reality tip (pre-Option-A Worker `/shop` **302** + `styles.css?v=35`). After **#82**, one STATUS tip-fold reconciles `main` Reality (`STATUS.md` Live post-#82 checklist; receipt: `brochure-worker-deploy.md`). Keep `/member*` Worker **404** until Member edge Ben GO after Bulk Phase1 — never **301** into `membership.html`. Soft-530 companion watches are **HOLD / not armed** (Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask).
+**STATUS Reality quarantine:** Until **#82** Worker-live + Zone Direct Upload, held **#70** Option A is brochure live SSOT — do **not** execute from `main` Reality tip (pre-Option-A Worker `/shop` **302** + `styles.css?v=35`). After **#82**, one STATUS tip-fold reconciles `main` Reality (`STATUS.md` Live post-#82 checklist; receipt: `brochure-worker-ci.md` · `brochure-worker-deploy.md`). Keep `/member*` Worker **404** until Member edge Ben GO after Bulk Phase1 — never **301** into `membership.html`. Soft-530 companion watches are **HOLD / not armed** (Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask).
 
 | Hard gate | Meaning |
 |-----------|---------|
-| **Member edge Ben GO only after #82 Worker-live + Bulk Phase1** | Bulk Phase1 frees pretty-URL Dynamic slots. Redirect SSOT pick A is **already parked** (`brochure-worker-deploy.md` Option A matrix — Member-precondition receipt). `brochure-worker-ci.md` is **not drafted**; that matrix is the queue/index receipt until it exists. Bulk stays after the **#82** upload **only** for those slots. |
+| **Member edge Ben GO only after #82 Worker-live + Bulk Phase1** | Bulk Phase1 frees pretty-URL Dynamic slots. Redirect SSOT pick A is **already parked** (`brochure-worker-ci.md` Option A matrix — Member-precondition receipt; upload click-path `brochure-worker-deploy.md`). Bulk stays after the **#82** upload **only** for those slots. |
 | **#83 is not this gate** | **#83** is CI-only thin `_redirects` assert on the **#82** base. Prefer merge after **#82**; **may run in parallel with** Zone Direct Upload. Does **not** need Bulk Phase1. **Never #81.** Do **not** write `#82 → upload → Bulk Phase1 → #83`. |
 | **Keep `root` / `shop` Dynamic** | `root` / `index` / `shop` / `chat` stay Dynamic until Member **needs** those remaining slots. Do **not** migrate them in Bulk Phase1 just to “make room.” |
 | **Rank `/member*` BEFORE the brochure Redirect pack** | Path/tunnel + www→apex `/member*` 301 evaluate **first**. Brochure pretty-URLs (including `membership` → `membership.html`) must not win. |
