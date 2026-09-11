@@ -25,6 +25,7 @@ This file is **not** a runbook. Use the living docs below.
 | Brochure security + cache headers (P2-4; **LIVE** — do **not** re-apply) | `brochure-security-headers.md` |
 | Brochure → Classic Pages git (plan only; blocked on CF ↔ GitHub auth) | `brochure-pages-cutover.md` |
 | Google Calendar OAuth / two-way sync (plan only; STATUS Next #6 — not a GO) | `google-calendar-oauth.md` |
+| Ops demo hardening — stop printing login password + optional Access on `ops` / `app` until OIDC (plan only; **Ben GO** before either flip) | `ops-demo-hardening.md` |
 
 ---
 
