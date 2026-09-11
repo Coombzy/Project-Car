@@ -6,7 +6,7 @@
 
 This file is the **post–Soft-530-CLEAR** brochure CI paper that was queued on held **#70**. It is **not** a Zone upload, **not** a Garage HTML PR, **not** a GitHub Actions workflow, and **not** a license to apply Redirect / Bulk / DNS.
 
-**#82 Ben GO is unchanged.** Soft-530 companion watches stay **HOLD / not armed**. Dual-Nextcloud ownership (`4cde204`) is unchanged. Waitlist-owner-desk stays **parked**. Garage **#79.1** strip-changeme stays **git-only until Doc unfreeze+pull**. This fold does **not** execute Zone or Garage.
+**#82 Ben GO is unchanged.** Soft-530 companion watches stay **HOLD / not armed**. Dual-Nextcloud ownership (`4cde204`) is unchanged. Waitlist-owner-desk stays **parked**. Garage **#79.1** strip-changeme stays **git-only until Doc unfreeze+pull**. Do **not** schedule weekend Zone Direct Upload / Worker work — first Monday plan-improve resumes Soft-530 smoke. This fold does **not** execute Zone or Garage.
 
 Do **not** invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, Matrix, or Apex revival.
 
@@ -21,6 +21,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Never Direct Upload from #81** | **#81** is **draft + superseded** (`cursor/website-option-a-home-index-98cf`). It reintroduces Worker `_redirects` `/` + `/shop` and bumps `styles.css?v=37`. Live upload SHA is **#82** after GO — never the #81 tree. |
 | **Option A FULL 10/10** | No new Dynamic Redirect Rules for brochure pretty-URLs until **#82** Worker-live **and** Bulk Phase1 frees Member-edge slots. |
 | **Soft-530 companions HOLD** | Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask. Api + vault watches continue. |
+| **No weekend Zone / Worker** | plan-improve is **off Sat/Sun**. Do **not** schedule weekend Direct Upload / purge / Worker work. First Monday plan-improve resumes Soft-530 smoke. Weekend control plane is Doc KeepAlive / lid-close — **not** this file, **not** **#82**. |
 | **#79.1 git-only** | Strip-changeme stays git-only until Doc unfreeze+pull (`4cf8924` / **`5swmVz`**). **#79** stays **parallel to #82**. |
 | **Dual-Nextcloud unchanged** | Public `cloud.` stays on **Doc** until Ben GO. McKing NC unpublished. Not this file. |
 | **Waitlist-owner-desk parked** | Owner waitlist desk is **not** this CI paper. Do **not** unpark it from a docs fold. |
@@ -121,6 +122,7 @@ Until **#82** is Worker-live via Zone Direct Upload, **held #70 STATUS Reality t
 | Waitlist-owner-desk | **Parked.** Do not unpark from this fold. |
 | **#79** / **#79.1** | Parallel to **#82**. **#79.1** git-only until Doc unfreeze. `ops-demo-hardening.md`. |
 | Soft-530 companion watches | **HOLD / not armed.** Do not re-ask. |
+| Weekend Zone Direct Upload / Worker | **Do not schedule.** plan-improve off Sat/Sun. First Monday resumes Soft-530 smoke. Not this file. |
 | Dual-Nextcloud / `cloud.*` | Unchanged (`4cde204`). Not a `cloud.*` CF cutover. |
 | Classic Pages git / Apex | Skipped / deferred. |
 | Shop OS CI / Doc unfreeze | `shop-os-ci.md` / `doc-unfreeze.md`. Green CI is **not** Ben GO. |

@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-11  
 **Public URLs:** https://ops.projectcar.ca (LIVE management) · https://app.projectcar.ca (temporary alias)  
-**Related:** `doc-lid-restore.md` (ordered wake — **not** a pull), `doc-unfreeze.md` (Ben GO pull), `api-stay-up.md` (api `/health` is **api-only** — companions live here), `doc-software-baseline.md`, `brochure-worker-deploy.md`, `STATUS.md` host split + Lookout Soft-530 companion watches, `shop-os-ci.md` (green CI ≠ unfreeze), `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `app-alias-cut.md` (later `app.` cut; plan only), `mcking-shop-host-cutover.md` (future McKing host — plan only; **not** a cut), `apps/project-car/web/README.md`
+**Related:** `doc-lid-restore.md` (ordered wake — **not** a pull; weekend `/health` flip = process wake only), `doc-unfreeze.md` (Ben GO pull — **not** weekend), `api-stay-up.md` (api `/health` is **api-only** — weekend flip coverage = this + vault `/alive` only; companions live here and stay **HOLD**), `doc-software-baseline.md`, `brochure-worker-deploy.md` (do **not** schedule weekend Zone Direct Upload), `STATUS.md` host split + Lookout Soft-530 companion watches + weekend Soft-530 coverage, `shop-os-ci.md` (green CI ≠ unfreeze), `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `app-alias-cut.md` (later `app.` cut; plan only), `mcking-shop-host-cutover.md` (future McKing host — plan only; **not** a cut), `apps/project-car/web/README.md`
 
 Keep the Shop OS UI reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -170,12 +170,22 @@ Cadence ≈ the api `/health` watch. Baselines (Lookout-owned): `/workspace/look
 
 ---
 
+## Weekend Soft-530 coverage (plan-improve off Sat/Sun)
+
+plan-improve is **off Sat/Sun**. These companion ops/app watches stay **HOLD**. Weekend flip coverage is **not** this file’s `/login` probes — it is Lookout `api.` `/health` + vault `/alive` **only** (`api-stay-up.md`).
+
+Weekend Soft-530 control plane is still Doc KeepAlive / lid-close: `com.projectcar.cloudflared` + uvicorn `:8000` + this shop-web `next start` `:3000` LaunchAgent. That is **not** Doc unfreeze and **not** **#82**. If `api.` `/health` flips non-200, Chief/Lead run `doc-lid-restore.md` **process wake only** (kickstart-if-down on this KeepAlive; no pull while freeze intact). Vault flips stay on the separate McKing watch. Do **not** schedule weekend Zone Direct Upload / Worker work — first Monday plan-improve resumes Soft-530 smoke.
+
+Anti-goal: Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask. **#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk parked / **#79.1** git-only until Doc unfreeze — **unchanged**.
+
+---
+
 ## Ownership
 
 | Role | Owns | Does not own |
 |------|------|----------------|
-| **Lookout** | Soft-530 companion flip watches on `ops.` / `app.` `/login` (**HOLD / not armed** — Ben skipped ~14:35 America/Edmonton; do **not** re-ask). Optional `cloud.` `/login` for five-row parity. | Process restore on Doc; Cloudflare tunnel / DNS edits; vault `/alive` watch (separate **LIVE/armed**); Doc lid-restore |
-| **Lead** | shop-web process stay-up and recovery on Doc (`com.projectcar.shop-web`, wrapper, `next start`, rebuild / `BUILD_ID`) | Cloudflare tunnel / DNS edits |
+| **Lookout** | Soft-530 companion flip watches on `ops.` / `app.` `/login` (**HOLD / not armed** — Ben skipped ~14:35 America/Edmonton; do **not** re-ask). Optional `cloud.` `/login` for five-row parity. Weekend flip coverage = api `/health` + vault `/alive` **only**. | Process restore on Doc; Cloudflare tunnel / DNS edits; vault `/alive` watch (separate **LIVE/armed**); Doc lid-restore; claiming companions armed; weekend Zone Direct Upload / **#82** |
+| **Lead** | shop-web process stay-up and recovery on Doc (`com.projectcar.shop-web`, wrapper, `next start`, rebuild / `BUILD_ID`). Weekend `/health` non-200 → `doc-lid-restore.md` **process wake only** (with Chief). | Cloudflare tunnel / DNS edits; `git pull` / unfreeze / **#82** while freeze intact |
 | **Zone** | Cloudflare tunnel + DNS for `ops.projectcar.ca` and temporary `app.projectcar.ca` | Restarting shop-web |
 | **Garage** | shop-web PRs under `apps/project-car/web` | Restarting shop-web, tunnel, or DNS |
 
@@ -194,4 +204,4 @@ Alerts can come from anyone who sees a **502**, **530 / error 1033**, a login re
 5. **Zone — edge.** Local `:3000` login OK but public **502** / **530 / 1033** / DNS miss → Zone checks host cloudflared + the `ops.` / `app.` hostname rules. Origin must be **`http://127.0.0.1:3000`**, not bare `localhost`. Lead does not edit Cloudflare. Do not cut the `app.` alias.
 6. **Garage — after.** When public smoke is green, Garage may re-walk ops/app UI. No process restarts.
 
-Host split: `STATUS.md`. Ordered lid-close restore: `doc-lid-restore.md` (process wake only). After **Ben GO**, pull/rebuild: `doc-unfreeze.md`. API stay-up: `api-stay-up.md`. Brochure Worker: `brochure-worker-deploy.md`. Member-on-projectcar.ca: `member-host-cutover.md` (plan only — **Ben GO**, not shipped). Zone path-split: `member-zone-edge.md` (plan only — **Ben GO**). Temporary `app.` cut: `app-alias-cut.md` (plan only — STATUS Next #2; do **not** execute from stay-up). Future McKing host: `mcking-shop-host-cutover.md` (plan only — **not** Next #1, **not** GO; do **not** execute from stay-up). **`ops.` stays** the management host.
+Host split: `STATUS.md`. Ordered lid-close restore: `doc-lid-restore.md` (process wake only — same sequence on weekend `/health` flip). After **Ben GO**, pull/rebuild: `doc-unfreeze.md`. API stay-up: `api-stay-up.md`. Brochure Worker: `brochure-worker-deploy.md` (do **not** schedule weekend Zone Direct Upload). Member-on-projectcar.ca: `member-host-cutover.md` (plan only — **Ben GO**, not shipped). Zone path-split: `member-zone-edge.md` (plan only — **Ben GO**). Temporary `app.` cut: `app-alias-cut.md` (plan only — STATUS Next #2; do **not** execute from stay-up). Future McKing host: `mcking-shop-host-cutover.md` (plan only — **not** Next #1, **not** GO; do **not** execute from stay-up). **`ops.` stays** the management host.

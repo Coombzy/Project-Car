@@ -12,10 +12,11 @@ This file is **not** a runbook. Use the living docs below.
 
 | Need | Doc |
 |------|-----|
-| Doc lid-close / morning 530 restore (ordered Lead sequence — process wake only) | `doc-lid-restore.md` |
-| Doc unfreeze after **Ben GO** (pull / migrate / rebuild / `BUILD_ID` / smoke) | `doc-unfreeze.md` |
-| Shop UI stay-up on Doc (`ops.` / temporary `app.`, `:3000`, **`next start`**) | `shop-web-stay-up.md` |
-| Shop API stay-up on Doc (`api.`, `:8000`, uvicorn) | `api-stay-up.md` |
+| Doc lid-close / morning 530 restore (ordered Lead sequence — process wake only). Weekend `api.` `/health` flip (plan-improve off Sat/Sun) uses this same wake — **not** unfreeze, **not** **#82**. | `doc-lid-restore.md` |
+| Doc unfreeze after **Ben GO** (pull / migrate / rebuild / `BUILD_ID` / smoke). Soft-530 **CLEAR** Friday ≠ this GO. | `doc-unfreeze.md` |
+| Shop UI stay-up on Doc (`ops.` / temporary `app.`, `:3000`, **`next start`**). Companion watches **HOLD**; weekend control plane = KeepAlive / lid-close. | `shop-web-stay-up.md` |
+| Shop API stay-up on Doc (`api.`, `:8000`, uvicorn). Weekend flip coverage = Lookout `api.` `/health` + vault `/alive` **only**. | `api-stay-up.md` |
+| Weekend Soft-530 coverage (plan-improve off Sat/Sun): KeepAlive / lid-close control plane; no weekend Zone Direct Upload / Worker; first Monday plan-improve resumes Soft-530 smoke | `STATUS.md` Live / Locks · `api-stay-up.md` · `shop-web-stay-up.md` · `doc-lid-restore.md` |
 | Shop OS GitHub Actions quality gate (pytest + web typecheck / `next build`; git-only — **not** Doc deploy, **not** unfreeze GO) | `shop-os-ci.md` |
 | Member UI → projectcar.ca (plan only; **Ben GO**) | `member-host-cutover.md` |
 | Member path-split on projectcar.ca / www (Zone; plan only; **capacity-blocked** by Option A **FULL 10/10** — Ben GO only after **#82** Worker-live + Bulk Phase1) | `member-zone-edge.md` |

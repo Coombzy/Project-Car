@@ -2,7 +2,7 @@
 
 **Status:** Living ops (Lead checklist)  
 **Updated:** 2026-09-11  
-**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file), `api-stay-up.md`, `shop-web-stay-up.md`, `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md`, `shop-os-ci.md` (green CI ≠ unfreeze)
+**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file; Soft-530 **CLEAR** Friday ≠ this GO), `api-stay-up.md` (weekend `/health` flip → this file), `shop-web-stay-up.md`, `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md` (weekend Soft-530 coverage), `shop-os-ci.md` (green CI ≠ unfreeze)
 
 Single **ordered** wake/restore after Doc lid-close / sleep (the morning **530 / 1033** pattern). Plan/ops checklist for **Lead**. This file is the sequence. Process essays stay in the Related docs — do not copy them here.
 
@@ -35,6 +35,22 @@ Alerts can come from anyone who sees **502**, **530 / error 1033**, or a failed 
 
 ---
 
+## Weekend Soft-530 coverage (plan-improve off Sat/Sun)
+
+plan-improve is **off Sat/Sun**. Soft-530 companion ops/app watches stay **HOLD / not armed** (do **not** re-ask). Weekend flip coverage = Lookout `api.` `/health` + vault `/alive` **only**.
+
+| Lock | Meaning |
+|------|---------|
+| **Weekend control plane** | This file: Doc KeepAlive / lid-close (`com.projectcar.cloudflared` + uvicorn `:8000` + `next start` `:3000` LaunchAgents). **Not** `doc-unfreeze.md`. **Not** **#82**. |
+| **`api.` `/health` flips non-200** | Chief/Lead run **this** ordered restore — **process wake only**. No pull while freeze `4cf8924` / `5swmVz` is intact. |
+| **Vault flips** | Stay on the **separate** McKing vault watch. Vault is **OUT** of this file (below). |
+| **No weekend Zone / Worker** | Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-improve resumes Soft-530 smoke. |
+| **Anti-goal** | Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask. |
+
+**#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk parked / **#79.1** git-only until Doc unfreeze — **unchanged**. Essays: `api-stay-up.md`, `shop-web-stay-up.md`. STATUS Live / Locks is canonical.
+
+---
+
 ## Ownership (this run)
 
 | Role | Owns | Does not own |
@@ -43,7 +59,7 @@ Alerts can come from anyone who sees **502**, **530 / error 1033**, or a failed 
 | **Zone** | Only if **local origin is healthy** but public is still **1033** (tunnel / DNS) | Restarting uvicorn or shop-web |
 | **Garage** | Brochure waitlist e2e **after** public health is 200 | Restarting processes, tunnel, or DNS |
 
-**Chief / plan-improve** must not treat lid-restore as license to pull tip. Pull/rebuild stays **Ben GO** — checklist: [doc-unfreeze.md](doc-unfreeze.md).
+**Chief / plan-improve** must not treat lid-restore as license to pull tip. Weekend `/health` flip is still this process-wake sequence — plan-improve being **off Sat/Sun** does not invent an unfreeze. Pull/rebuild stays **Ben GO** — checklist: [doc-unfreeze.md](doc-unfreeze.md).
 
 No edge flip. No CF ↔ GitHub re-ask. No Member GO.
 
@@ -113,4 +129,6 @@ Garage may re-run brochure waitlist e2e **after** health is 200. Form only.
 - Treat lid-restore as Chief / plan-improve / Lead license to pull tip
 - Call a `main` pull live without a new `.next/BUILD_ID`
 - Treat green Shop OS CI as unfreeze GO (`doc-unfreeze.md`)
+- Treat Soft-530 **CLEAR** Friday as unfreeze GO or a companion re-ask
+- Schedule weekend Zone Direct Upload / Worker / **#82** work (first Monday plan-improve resumes Soft-530 smoke)
 - Recreate `vault.` ingress on Doc / fold vault into Doc KeepAlive (`vault.projectcar.ca` is McKing-only; vault watch ≠ Soft-530)

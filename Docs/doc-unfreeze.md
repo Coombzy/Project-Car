@@ -19,7 +19,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Ben GO required** | Lead does **not** `git pull` or rebuild until Ben says **GO** to unfreeze — in words, not inferred from CI, a docs merge, lid-restore, or Soft-530 **CLEAR** / public `GET /health` **200**. |
 | **Green Shop OS CI is not unfreeze GO** | A green `shop-os-ci` check on a later SHA is **expected** and means only that GitHub Actions passed pytest / typecheck / `next build`. It does **not** unfreeze Doc. Runbook: `shop-os-ci.md`. |
 | **Lid-restore stays process-only** | Morning **530 / 1033** wake is `doc-lid-restore.md`: cloudflared → shop-api KeepAlive → shop-web **kickstart if down**. Wake must **not** auto-pull or rebuild. |
-| **Soft-530 CLEAR / public GET /health 200 is not unfreeze GO** | Soft-530 **CLEAR** and public `GET /health` **200** mean Doc origin is up. That is **not** Ben GO to unfreeze. Same class as green `shop-os-ci` and lid-restore process-wake. |
+| **Soft-530 CLEAR / public GET /health 200 is not unfreeze GO** | Soft-530 **CLEAR** and public `GET /health` **200** mean Doc origin is up. That is **not** Ben GO to unfreeze. Same class as green `shop-os-ci` and lid-restore process-wake. Soft-530 **CLEAR** Friday ≠ this GO ≠ companion re-ask. Weekend `/health` flip is `doc-lid-restore.md` process wake only. |
 | **This file is not the pull** | Do not execute from a docs PR. Garage / Zone do **not** pull Doc. |
 
 ---
@@ -31,7 +31,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **`doc-lid-restore.md`** | Doc slept / lid-close / public **530 / 1033** | Wake processes. Same frozen checkout. **No** `git pull`. |
 | **`doc-unfreeze.md` (this file)** | Ben said **GO** to unfreeze | Pull tip, migrate if needed, rebuild shop-web, new `BUILD_ID`, smoke **#36** / **#69** / banner honesty. |
 
-Do **not** collapse them. A soft morning 530 is **not** unfreeze GO. Soft-530 **CLEAR** / public `GET /health` **200** is also **not** unfreeze GO.
+Do **not** collapse them. A soft morning 530 is **not** unfreeze GO. Soft-530 **CLEAR** / public `GET /health` **200** is also **not** unfreeze GO. Soft-530 **CLEAR** Friday ≠ this GO ≠ companion re-ask. Weekend coverage stays KeepAlive / lid-close — **not** this file, **not** **#82**.
 
 ---
 
