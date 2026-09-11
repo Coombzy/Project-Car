@@ -1,7 +1,7 @@
 # Deployment guide — living-ops index
 
 **Status:** Index (filename kept so old links resolve)  
-**Updated:** 2026-09-08  
+**Updated:** 2026-09-11  
 **Canonical:** `Coombzy/Project-Car` → `Docs/deployment-guide.md`
 
 This file is **not** a runbook. Use the living docs below.
@@ -25,6 +25,7 @@ This file is **not** a runbook. Use the living docs below.
 | Brochure security + cache headers (P2-4; **LIVE** — do **not** re-apply) | `brochure-security-headers.md` |
 | Brochure → Classic Pages git (plan only; blocked on CF ↔ GitHub auth) | `brochure-pages-cutover.md` |
 | Google Calendar OAuth / two-way sync (plan only; STATUS Next #6 — not a GO) | `google-calendar-oauth.md` |
+| McKing shop-host cutover (plan only — Docker + tunnel hostname reuse; **not** Next #1, **not** GO) | `mcking-shop-host-cutover.md` |
 
 ---
 

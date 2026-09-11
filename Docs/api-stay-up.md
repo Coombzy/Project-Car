@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-11  
 **Public URL:** https://api.projectcar.ca  
-**Related:** `doc-lid-restore.md` (ordered wake), `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `shop-web-stay-up.md`, `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
+**Related:** `doc-lid-restore.md` (ordered wake), `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `shop-web-stay-up.md`, `mcking-shop-host-cutover.md` (future McKing host — plan only; **not** a cut), `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
 
 Keep the Shop API reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -24,6 +24,8 @@ Keep the Shop API reachable. This is operational reality, not a product-lock rew
 | Shop-web (ops / app) | LaunchAgent **`com.projectcar.shop-web`** on Doc runs **`next start`** (not `next dev`) on `:3000`. Not this API process. Stay-up: `shop-web-stay-up.md`. |
 
 The LaunchAgent lives on **Doc**, not in this git repo. Compose still does not start the API. KeepAlive is the primary stay-up for process crashes / logout-style exits. **Lid-close / sleep still kills the Mac** — launchd cannot outrun sleep.
+
+**Future host (plan only):** Shop API later moves to **McKing Docker** with Cloudflare tunnel **hostname reuse** (`api.projectcar.ca` stays the public name). Dual-run Doc KeepAlive, then cut — paper: `mcking-shop-host-cutover.md`. **Not** Next #1. **Not** GO’d. Do **not** execute from this stay-up file. Today’s origin is still Doc.
 
 ---
 

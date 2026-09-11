@@ -1,9 +1,9 @@
 # Shop-web stay-up — `ops.projectcar.ca` / `app.projectcar.ca`
 
 **Status:** Living ops  
-**Updated:** 2026-09-08  
+**Updated:** 2026-09-11  
 **Public URLs:** https://ops.projectcar.ca (LIVE management) · https://app.projectcar.ca (temporary alias)  
-**Related:** `doc-lid-restore.md` (ordered wake — **not** a pull), `doc-unfreeze.md` (Ben GO pull), `api-stay-up.md`, `doc-software-baseline.md`, `brochure-worker-deploy.md`, `STATUS.md` host split, `shop-os-ci.md` (green CI ≠ unfreeze), `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `app-alias-cut.md` (later `app.` cut; plan only), `apps/project-car/web/README.md`
+**Related:** `doc-lid-restore.md` (ordered wake — **not** a pull), `doc-unfreeze.md` (Ben GO pull), `api-stay-up.md`, `doc-software-baseline.md`, `brochure-worker-deploy.md`, `STATUS.md` host split, `shop-os-ci.md` (green CI ≠ unfreeze), `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `app-alias-cut.md` (later `app.` cut; plan only), `mcking-shop-host-cutover.md` (future McKing host — plan only; **not** a cut), `apps/project-car/web/README.md`
 
 Keep the Shop OS UI reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -27,6 +27,8 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, or a 
 | Brochure site | Separate stack. **Live** origin is Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html` from `main` — **not** this Next.js process. Re-deploy: `brochure-worker-deploy.md`. |
 
 The LaunchAgent lives on **Doc**, not in this git repo. Compose still does not start shop-web. KeepAlive is the primary stay-up for process crashes / logout-style exits. **Lid-close / sleep still kills the Mac** — launchd cannot outrun sleep.
+
+**Future host (plan only):** shop-web later moves to **McKing Docker** with Cloudflare tunnel **hostname reuse** (`ops.` + temporary `app.` stay the public names). Dual-run Doc KeepAlive, then cut — paper: `mcking-shop-host-cutover.md`. **Not** Next #1. **Not** GO’d. Do **not** execute from this stay-up file. Today’s origin is still Doc.
 
 ---
 
@@ -173,4 +175,4 @@ Alerts can come from anyone who sees a **502**, **530 / error 1033**, a login re
 5. **Zone — edge.** Local `:3000` login OK but public **502** / **530 / 1033** / DNS miss → Zone checks host cloudflared + the `ops.` / `app.` hostname rules. Origin must be **`http://127.0.0.1:3000`**, not bare `localhost`. Lead does not edit Cloudflare. Do not cut the `app.` alias.
 6. **Garage — after.** When public smoke is green, Garage may re-walk ops/app UI. No process restarts.
 
-Host split: `STATUS.md`. Ordered lid-close restore: `doc-lid-restore.md` (process wake only). After **Ben GO**, pull/rebuild: `doc-unfreeze.md`. API stay-up: `api-stay-up.md`. Brochure Worker: `brochure-worker-deploy.md`. Member-on-projectcar.ca: `member-host-cutover.md` (plan only — **Ben GO**, not shipped). Zone path-split: `member-zone-edge.md` (plan only — **Ben GO**). Temporary `app.` cut: `app-alias-cut.md` (plan only — STATUS Next #2; do **not** execute from stay-up). **`ops.` stays** the management host.
+Host split: `STATUS.md`. Ordered lid-close restore: `doc-lid-restore.md` (process wake only). After **Ben GO**, pull/rebuild: `doc-unfreeze.md`. API stay-up: `api-stay-up.md`. Brochure Worker: `brochure-worker-deploy.md`. Member-on-projectcar.ca: `member-host-cutover.md` (plan only — **Ben GO**, not shipped). Zone path-split: `member-zone-edge.md` (plan only — **Ben GO**). Temporary `app.` cut: `app-alias-cut.md` (plan only — STATUS Next #2; do **not** execute from stay-up). Future McKing host: `mcking-shop-host-cutover.md` (plan only — **not** Next #1, **not** GO; do **not** execute from stay-up). **`ops.` stays** the management host.
