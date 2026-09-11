@@ -9,7 +9,7 @@
 **Site code:** `apps/website/` (git SSOT). **Live origin:** Cloudflare Worker `projectcar-brochure` Direct Upload of `apps/website/html` (not Doc `:8088` tunnel). Classic Pages git skipped for now. Apex is **deferred** (stripped from this tree).  
 **Related:**
 - `website-webapp-specification.md` — domain, tunnel, email, architecture (SSOT; do not dual-author a second plan under `apps/website/`)
-- `brochure-worker-deploy.md` — standing Zone Direct Upload of `apps/website/html` onto Worker `projectcar-brochure`; Option A Dynamic pack **FULL 10/10** lock + parked Bulk Phase1 pointer
+- `brochure-worker-deploy.md` — standing Zone Direct Upload of `apps/website/html` onto Worker `projectcar-brochure`; Option A Dynamic pack **FULL 10/10** lock + parked Bulk Phase1 pointer; **#83** CI-only after **#82** base — **not** Bulk-gated
 - `brochure-security-headers.md` — P2-4 Zone Transform Rules **LIVE** (2026-09-07 smoke PASS; do not re-apply from a docs PR)
 - `brochure-pages-cutover.md` — Classic Pages git plan (blocked on CF ↔ GitHub auth; do not start)
 - `api-stay-up.md` / `cors-origins.md` — public Shop API stay-up + waitlist CORS
@@ -204,7 +204,7 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 - Pixar/Disney McQueen IP in branding assets  
 - Treating **brochure** Chat as shipped product / reviving Apex (Shop OS Chat v1 is LIVE on ops/app; that is not this site)  
 - Cutting the `app.` alias from a docs PR — `ops.` is already LIVE; alias stays until Ben cuts that DNS  
-- Inventing new brochure extensionless pretty-URLs that need another Dynamic Redirect Rule while the Option A pack is **FULL 10/10** (wait for **#82** Worker-live + Bulk Phase1; Redirect A parked)  
+- Inventing new brochure extensionless pretty-URLs that need another Dynamic Redirect Rule while the Option A pack is **FULL 10/10** (wait for **#82** Worker-live + Bulk Phase1; Redirect A parked). **#83** is CI-only after **#82** base — **not** Bulk-gated. **Never #81.**  
 
 ---
 
@@ -212,6 +212,7 @@ curl -sS -o /dev/null -w '%{http_code} %{url_effective}\n' -L https://discord.gg
 
 | Date | Change |
 |------|--------|
+| 2026-09-11 | Decouple **#83** from Bulk Phase1. Hard lock / prefer merge: **#82** Ben GO → Zone Direct Upload + mandatory purge/freshness → **#83** merge after **#82** base (CI-only thin `_redirects` assert; **parallel with upload OK**; **not** Bulk-gated) → Bulk Phase1 after upload **only** to free Dynamic slots for Member edge. **Never #81.** Do **not** write `#82 → upload → Bulk Phase1 → #83`. Soft-530 companions HOLD. Reality quarantine until **#82** unchanged. Paper only. Tip fold on held Docs **#70**. |
 | 2026-09-11 | Option A Dynamic Redirect pack locked **FULL 10/10**. No new Dynamic rules for brochure pretty-URLs. Garage must **not** invent new extensionless pretty-URLs until **#82** Worker-live + Bulk Phase1 frees slots. Redirect plan A parked: Bulk Phase1 pretty-URL pack already drafted (`membership` / `about` / `the-shop` / `contact` / `roadmap` ± slash → `*.html`; `root` / `index` / `shop` / `chat` stay Dynamic until migrate). Soft-530 **CLEAR** live honesty and **#82** not-Worker-live gate unchanged. Paper only — no Zone live apply. Tip fold on held Docs **#70**. |
 | 2026-09-11 | Lookout confirmed `projectcar-api-health-watch` **resumed** (`enabled:true`) ~06:52 America/Edmonton; live `/health` **200**. Lead interim probe ended. Freeze + #82 gates unchanged. Tip fold on held Docs **#70**. |
 | 2026-09-11 | Soft-530 restore **LIVE** (Lead verified ~06:50 America/Edmonton): public GET /health 200; ops/app 307 → /login; waitlist OPTIONS 200 (Chief POST 201 + CORS). Soft-530 fail-soft (#80) still valuable for future lid-close. Lookout `projectcar-api-health-watch` resume GO’d; Lead interim probe ended. Doc checkout still frozen at `4cf8924` / `5swmVz`. Product tip stays `2dd61a2` / #74. Tip fold on held Docs **#70**. |

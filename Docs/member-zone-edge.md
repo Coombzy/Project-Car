@@ -6,7 +6,7 @@
 
 This file is the **edge / path-split** slice Zone needs for STATUS **Next #1** (Member UI on **projectcar.ca**). Cookie Domain / Path / Secure / SameSite, CORS allowlist, and Next middleware host allowlist live in `member-host-cutover.md` §2 — **summarize + point**, do not rewrite that essay here.
 
-This file does **not** implement the migration, change DNS, cut the `app.projectcar.ca` alias, upload shop-web as the apex origin, or start Garage / Zone / Hatch work. A docs merge is not GO. This tip-fold is **not** Member GO, **not** Bulk Phase1 execute, **not** **#82** Worker upload.
+This file does **not** implement the migration, change DNS, cut the `app.projectcar.ca` alias, upload shop-web as the apex origin, or start Garage / Zone / Hatch work. A docs merge is not GO. This tip-fold is **not** Member GO, **not** Bulk Phase1 execute, **not** **#82** Worker upload. **#83** is CI-only on the **#82** base — **not** this Member/Bulk gate. **Never #81.**
 
 Do **not** invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, Matrix, or Apex revival. Demo session cookies stay demo cookies — **not OIDC**.
 
@@ -35,7 +35,8 @@ Soft-530 is **CLEAR** / **LIVE**. That does **not** unlock Member edge. **#82** 
 
 | Hard gate | Meaning |
 |-----------|---------|
-| **Member edge Ben GO only after #82 Worker-live + Bulk Phase1** | Bulk Phase1 frees pretty-URL Dynamic slots. Redirect SSOT pick A is **already parked** (`brochure-worker-deploy.md` Option A matrix — Member-precondition receipt). `brochure-worker-ci.md` is **not drafted**; that matrix is the queue/index receipt until it exists. |
+| **Member edge Ben GO only after #82 Worker-live + Bulk Phase1** | Bulk Phase1 frees pretty-URL Dynamic slots. Redirect SSOT pick A is **already parked** (`brochure-worker-deploy.md` Option A matrix — Member-precondition receipt). `brochure-worker-ci.md` is **not drafted**; that matrix is the queue/index receipt until it exists. Bulk stays after the **#82** upload **only** for those slots. |
+| **#83 is not this gate** | **#83** is CI-only thin `_redirects` assert on the **#82** base. Prefer merge after **#82**; **may run in parallel with** Zone Direct Upload. Does **not** need Bulk Phase1. **Never #81.** Do **not** write `#82 → upload → Bulk Phase1 → #83`. |
 | **Keep `root` / `shop` Dynamic** | `root` / `index` / `shop` / `chat` stay Dynamic until Member **needs** those remaining slots. Do **not** migrate them in Bulk Phase1 just to “make room.” |
 | **Rank `/member*` BEFORE the brochure Redirect pack** | Path/tunnel + www→apex `/member*` 301 evaluate **first**. Brochure pretty-URLs (including `membership` → `membership.html`) must not win. |
 | **Anti-collision** | Apex + www `/member/login` must **NOT** 301 into `membership.html`. Today `/member*` is Worker **404** — preserve that distinction. `/membership*` is brochure; `/member*` is Member (later) / 404 (today). |
@@ -171,7 +172,7 @@ Rollback is **edge path rules**, not “remove the Worker,” not “cut `app.`,
 - **Classic Pages git stays outranked.** `brochure-pages-cutover.md` is still blocked on CF ↔ GitHub auth and is **outranked** by this Member edge work **and** by STATUS Next #1. Direct Upload remains the locked live brochure method. Do not start Pages git from this file.
 - **No Apex.** Brochure stays Worker / Pages — no Apex sidecar, no brochure Chat page.
 - **No Stripe.** The shop is not open. Interest waitlist only.
-- **Capacity-blocked (Option A FULL 10/10).** Member edge Ben GO only after **#82** Worker-live + Bulk Phase1 frees pretty-URL Dynamic slots. Keep `root` / `shop` Dynamic until Member needs those slots. Do **not** add `/member*` Dynamic rules while the pack is full.
+- **Capacity-blocked (Option A FULL 10/10).** Member edge Ben GO only after **#82** Worker-live + Bulk Phase1 frees pretty-URL Dynamic slots. Keep `root` / `shop` Dynamic until Member needs those slots. Do **not** add `/member*` Dynamic rules while the pack is full. **#83** is CI-only after **#82** base — **not** this Bulk gate. **Never #81.**
 - **`/member*` ranks BEFORE the brochure Redirect pack.** www→apex `/member*` 301 must not fight brochure dual-host. `/member/login` must never 301 into `membership.html`.
 - **No Garage / Zone / Hatch fan-out from this PR.** Plan only. **#82** / Bulk Phase1 / Member GO are **not** this tip-fold.
 - **No shop-web apex catch-all.** Path split or nothing.
@@ -200,7 +201,7 @@ Alerts can come from anyone who sees Next HTML on Home, a localhost `Location`, 
 | Order | Gate | Who | Notes |
 |-------|------|-----|-------|
 | 0 | **Both plan docs exist** | Docs PR | You are here. No DNS. No `app.` cut. No path rules. |
-| 0a | **#82 Worker-live + Bulk Phase1** | Garage / Zone after those GOs | **Hard gate.** Frees pretty-URL Dynamic slots (Redirect A parked). Keep `root` / `shop` Dynamic until Member needs those slots. **Not this tip-fold.** |
+| 0a | **#82 Worker-live + Bulk Phase1** | Garage / Zone after those GOs | **Hard gate for Member edge only.** Frees pretty-URL Dynamic slots (Redirect A parked). Keep `root` / `shop` Dynamic until Member needs those slots. **#83** is **not** this row — prefer merge after **#82** base; **parallel with upload OK**. **Never #81.** **Not this tip-fold.** |
 | 1 | **Ben GO** (Member edge) | Ben | Required **after** 0a. Do not start Zone path rules or Garage site work from this file alone. Capacity-blocked until 0a. |
 | 2 | Cookie / CORS / middleware allowlist on Doc | Lead + Garage | `member-host-cutover.md` §2. Code + `.env` only after GO. |
 | 3 | **This file** — edge path split | **Zone** | `/member*` rules ranked **BEFORE** brochure Redirect pack. `/member*` → `http://127.0.0.1:3000`. www→apex `/member*` 301 only. Everything else → Worker. Host + proto forwarding. Anti-collision: `/member/login` ≠ `membership.html`. |

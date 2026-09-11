@@ -2,7 +2,7 @@
 
 **Status:** Standing runbook  
 **Updated:** 2026-09-11  
-**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock, `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 **LIVE** — do not re-apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md` (Next #1 capacity-blocked until #82 + Bulk Phase1), `apps/website/README.md`. **Queued (not drafted):** `brochure-worker-ci.md` — Option A matrix below is the Member-precondition receipt until that file exists. When drafted, that matrix should include the **#82 mandatory purge** (Worker/Cache, apex+www) before body-freshness asserts.
+**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock, `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 **LIVE** — do not re-apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md` (Next #1 capacity-blocked until #82 + Bulk Phase1; **#83** is CI-only after **#82** base — **not** Bulk-gated; **never #81**), `apps/website/README.md`. **Queued (not drafted):** `brochure-worker-ci.md` — Option A matrix below is the Member-precondition receipt until that file exists. When drafted, that matrix should include the **#82 mandatory purge** (Worker/Cache, apex+www) before body-freshness asserts.
 
 Re-deploy the public brochure after Garage merges HTML on `main`. This is the **locked live method**. It is not a one-off for a single hygiene ship.
 
@@ -47,9 +47,24 @@ Redirect plan A is already parked (agent `/workspace` parking is outside this re
 
 **Anti-collision (Member-precondition):** `/membership` / `/membership/` → **301** `/membership.html` is live Option A. `/member*` is **not** that rule. Today `/member*` is Worker **404**. Apex+www `/member/login` must **never** 301 into `membership.html`. `/member` is a prefix of `/membership` — rank + exact path, not `starts_with /member`.
 
-**STATUS Next #1 is capacity-blocked** until **#82** Worker-live + this Bulk Phase1 slot-free. That is **not** Member GO, **not** this upload, **not** this tip-fold.
+**STATUS Next #1 is capacity-blocked** until **#82** Worker-live + this Bulk Phase1 slot-free. That is **not** Member GO, **not** this upload, **not** this tip-fold. **#83** is **not** this gate.
 
 Do **not** create a new Dynamic Redirect Rule for a new pretty path. Do **not** execute Bulk Phase1 or Redirect A from a docs PR or this upload. **#82** Home canonical/og/sitemap `/index.html` is **not yet Worker-live**. Soft-530 **#80** (`waitlist.js?v=3` + `styles.css?v=36`) stays Worker-live. Soft-530 is **CLEAR** / **LIVE** — that does **not** unlock Member edge or Bulk Phase1.
+
+---
+
+## Hard lock / prefer merge (paper)
+
+**Never #81.** Wrong lock was `#82 → Zone Direct Upload → Bulk Phase1 → #83`.
+
+| Order | What | Gate |
+|-------|------|------|
+| **1** | **#82** Ben GO | Unchanged. Not executed from this runbook. |
+| **2** | Zone Direct Upload + mandatory purge/freshness smoke | Ordered gate below. |
+| **3** | **#83** merge after **#82** base | CI-only thin `_redirects` assert. **May run in parallel with the upload.** Does **not** need Bulk Phase1. Prefer merge on the **#82** base — do **not** wait for Bulk. |
+| **4** | Bulk Phase1 | **After** that upload **only** to free Dynamic slots for Member edge. |
+
+Do **not** write `#82 → upload → Bulk Phase1 → #83`. Option A **FULL 10/10** still capacity-blocks new Dynamic pretty-URLs and Member edge until Bulk — that is **not** a **#83** gate. Soft-530 companions **HOLD**. Reality quarantine until **#82** unchanged. Paper only — no Zone/Garage execute.
 
 ---
 
@@ -182,7 +197,7 @@ Worker **`projectcar-brochure` 200s** send the P2-4 security headers (2026-09-07
 
 | Topic | Where / why |
 |-------|-------------|
-| Member host cutover | `member-host-cutover.md` — **Ben GO** only after **#82** Worker-live + Bulk Phase1. Zone path-split: `member-zone-edge.md` §0. Capacity-blocked by Option A **FULL 10/10**. Do not start from a brochure upload. |
+| Member host cutover | `member-host-cutover.md` — **Ben GO** only after **#82** Worker-live + Bulk Phase1. Zone path-split: `member-zone-edge.md` §0. Capacity-blocked by Option A **FULL 10/10**. **#83** is CI-only after **#82** base — **not** this Bulk gate. **Never #81.** Do not start from a brochure upload. |
 | `brochure-worker-ci.md` | **Not drafted.** Queued. Option A matrix above is the Member-precondition receipt until it exists. When drafted, include the **#82 mandatory purge** (Worker/Cache, apex+www) before body-freshness asserts. |
 | Mission Control cockpit | Needs **Ben GO**. Not this Worker. |
 | Stripe / shop-open claims | Locked off. Interest waitlist only. |
