@@ -35,7 +35,7 @@ Ben decides when (if) to execute. This file does **not** ping Ben and is **not**
 
 Soft-530 is **CLEAR** (Doc origin **LIVE** 2026-09-11). Future lid-close can still **530 / 1033**. Lookout `projectcar-api-health-watch` is **`enabled:true`**. **#78 lookout-resume exception:** that watch is already **`enabled:true` while Doc stays frozen** at `4cf8924` / `5swmVz` — freeze does **not** block Lookout re-arm.
 
-**Shop OS/MC hop ~10:32 America/Edmonton** (lightning / Omarchy) opened the McKing path. Do **not** keep the stale hub line “McKing is not on the tailnet / migrate not started.” 2026-08-16 notes in `home-lab-specification.md` / `nextcloud-progress.md` are **stale for that path** — this paper is the shop-host reality stamp. Those hub specs were **not** rewritten in this fold.
+**Shop OS/MC hop ~10:32 America/Edmonton** (lightning / Omarchy) opened the McKing path. Do **not** keep the stale hub line “McKing is not on the tailnet / migrate not started.” [home-lab-specification.md](home-lab-specification.md) host table + anti-goals now match STATUS dual-tunnel + vault LIVE (McKing / `lightning` = `vault.` → `:8222`; Doc tunnel = `cloud.` + `api.` + `app.` + `ops.` only). 2026-08-16 rows in `nextcloud-progress.md` can still be stale for that path — this paper is the shop-host reality stamp.
 
 | Surface | Live origin |
 |---------|-------------|

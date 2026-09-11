@@ -1,7 +1,7 @@
 # Doc lid-close restore — ordered wake sequence
 
 **Status:** Living ops (Lead checklist)  
-**Updated:** 2026-09-08  
+**Updated:** 2026-09-11  
 **Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file), `api-stay-up.md`, `shop-web-stay-up.md`, `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md`, `shop-os-ci.md` (green CI ≠ unfreeze)
 
 Single **ordered** wake/restore after Doc lid-close / sleep (the morning **530 / 1033** pattern). Plan/ops checklist for **Lead**. This file is the sequence. Process essays stay in the Related docs — do not copy them here.
@@ -19,6 +19,8 @@ Doc is a MacBook (M1 Max). Lid close or host sleep stops or stalls origin proces
 Amphetamine + plugged-in no-sleep (`doc-software-baseline.md`) plus LaunchAgent KeepAlive once the host is awake are **mitigation, not a guarantee**. If the lid is closed, public API / ops / app are down until Doc is awake.
 
 The public brochure (Worker `projectcar-brochure`) does **not** go down when Doc sleeps. Waitlist still needs the API.
+
+**Vault is OUT of this file.** `vault.projectcar.ca` is McKing-only LIVE (`cloudflared` → `localhost:8222`). Soft-530 lid-restore / LaunchAgent KeepAlive must **not** recreate `vault.` ingress on Doc. Vault watch ≠ this sequence.
 
 ---
 
@@ -111,3 +113,4 @@ Garage may re-run brochure waitlist e2e **after** health is 200. Form only.
 - Treat lid-restore as Chief / plan-improve / Lead license to pull tip
 - Call a `main` pull live without a new `.next/BUILD_ID`
 - Treat green Shop OS CI as unfreeze GO (`doc-unfreeze.md`)
+- Recreate `vault.` ingress on Doc / fold vault into Doc KeepAlive (`vault.projectcar.ca` is McKing-only; vault watch ≠ Soft-530)
