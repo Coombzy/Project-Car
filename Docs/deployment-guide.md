@@ -26,7 +26,7 @@ This file is **not** a runbook. Use the living docs below.
 | Brochure → Classic Pages git (plan only; blocked on CF ↔ GitHub auth) | `brochure-pages-cutover.md` |
 | Google Calendar OAuth / two-way sync (plan only; STATUS Next #6 — not a GO) | `google-calendar-oauth.md` |
 | McKing shop-host cutover (plan only — Docker + tunnel hostname reuse; Soft-530 dual-run gate before public CF cut; **not** Next #1, **not** GO) | `mcking-shop-host-cutover.md` |
-| Dual-tunnel ownership (**separate** from shop CF cutover — paper only): Doc = `cloud.` + `api.` + `app.` + `ops.` only; McKing-only = `vault.` → `:8222` | `STATUS.md` Locks · `mcking-shop-host-cutover.md` · `api-stay-up.md` |
+| Dual-tunnel ownership (**separate** from shop CF cutover — vault **LIVE verified**): Doc = `cloud.` + `api.` + `app.` + `ops.` only; McKing-only `vault.` → `:8222` (`/api/config` **2026.6.0**, Chief verified). Soft-530 five-row gate = shop hosts only (vault EXCLUDED). | `STATUS.md` Locks · `mcking-shop-host-cutover.md` · `api-stay-up.md` |
 
 ---
 

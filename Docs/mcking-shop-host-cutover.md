@@ -6,7 +6,7 @@
 
 Draft paper for a **later** move of Shop OS origins (`api.` / `ops.` / temporary `app.`) from **Doc LaunchAgents** onto **McKing Docker**, reusing the same Cloudflare tunnel public hostnames. Brochure stays on Worker `projectcar-brochure`.
 
-**Hard gate before any public CF hostname leaves Doc:** the Soft-530 dual-run acceptance table below. Dual-run is **not** “McKing on public `api.` / `ops.` / `app.` while Doc is still up.” Hub dual-run NC+VW healthy does **not** mean shop CF hostname cutover GO.
+**Hard gate before any public shop CF hostname leaves Doc** (`cloud.` / `api.` / `app.` / `ops.` only — **vault EXCLUDED**): the Soft-530 dual-run acceptance table below. Dual-run is **not** “McKing on public `api.` / `ops.` / `app.` while Doc is still up.” Hub dual-run NC+VW healthy does **not** mean shop CF hostname cutover GO. Vault is already **LIVE verified** on McKing — that does **not** pass this shop gate.
 
 This file does **not** unfreeze Doc, does **not** flip DNS or tunnel origin, does **not** compose-down, and does **not** attach McKing to public shop hostnames. Paper only.
 
@@ -22,7 +22,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Hop OPEN ≠ cutover GO ≠ Doc unfreeze** | Path OPEN (sshd / docker / `/opt/mission-control`) is **not** license to leave Doc as public origin, and **not** Ben GO unfreeze. Freeze stays **`4cf8924`** / **`5swmVz`** until **Ben GO**. |
 | **Not Next #1** | STATUS Next #1 is Member UI on projectcar.ca (`member-host-cutover.md` / `member-zone-edge.md`). This McKing host move is a **later** machine plan. Do **not** treat it as GO’d. If McKing later becomes shop origin, Next #1 `/member*` retargets with the Soft-530 flip — **not now**. |
 | **Not Doc unfreeze** | Doc checkout stays frozen at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** until **Ben GO**. Green **shop-os-ci** is **not** that GO. Pull checklist: `doc-unfreeze.md`. This paper must **not** be read as license to pull or rebuild on Doc. |
-| **No public flip until Soft-530 dual-run gate PASS** | Do **not** retarget tunnel origin or public DNS until the **Soft-530 dual-run acceptance gate** (five rows below) PASSes. Private smoke / hub NC+VW dual-run healthy / hop OPEN alone are **not** enough. |
+| **No public shop flip until Soft-530 dual-run gate PASS** | Do **not** retarget **shop** tunnel origin or public DNS (`cloud.` / `api.` / `app.` / `ops.`) until the **Soft-530 dual-run acceptance gate** (five rows below) PASSes. This gate is **Doc shop hosts only** — **vault EXCLUDED** (already LIVE on McKing). Private smoke / hub NC+VW dual-run healthy / hop OPEN / vault LIVE alone are **not** shop cutover GO. |
 | **Brochure stays Worker** | `projectcar.ca` / www stay Cloudflare Worker **`projectcar-brochure`**. Do **not** move the brochure to McKing. |
 | **No Garage / Zone fan-out** | Garage does not upload Worker HTML from this file. Zone does not edit tunnel / DNS from this file. Hatch does not execute. |
 | **CORS / public names unchanged** | Same Origins (`cors-origins.md`). Same public hostnames (`api.` / `ops.` / `app.`). Origin **host** may move later; names do not. |
@@ -45,7 +45,8 @@ Soft-530 is **CLEAR** (Doc origin **LIVE** 2026-09-11). Future lid-close can sti
 | **Doc KeepAlive** | `com.projectcar.cloudflared` + `com.projectcar.shop-api` + `com.projectcar.shop-web`. Doc stays the **public CF origin / KeepAlive backup**. Lid-close still kills the Mac. |
 | **Doc checkout** | **Frozen** at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** (Dashboard **#28**) until **Ben GO** (`doc-unfreeze.md`). **#36** / **#69** stay **git-only**. Hop OPEN ≠ unfreeze. |
 | **Git compose today** | `infra/compose/compose.yaml` is **shop Postgres only**. It does **not** start shop-api, shop-web, or cloudflared. Do not invent those services as already in git. |
-| **McKing path (OPEN)** | **OPEN** 2026-09-11 ~10:32 America/Edmonton: **sshd / docker / `/opt/mission-control`**. Hub dual-run **NC+VW healthy** on **Doc + McKing**. Path OPEN ≠ shop CF hostname cutover GO ≠ Doc unfreeze. Vault public hostname cutover is a **separate Ben GO**. |
+| **McKing path (OPEN)** | **OPEN** 2026-09-11 ~10:32 America/Edmonton: **sshd / docker / `/opt/mission-control`**. Hub dual-run **NC+VW healthy** on **Doc + McKing**. Path OPEN ≠ shop CF hostname cutover GO ≠ Doc unfreeze. Vault is **LIVE verified** on McKing (separate living-ops row) — vault LIVE ≠ shop cutover GO ≠ Doc unfreeze. |
+| **Vault (LIVE verified — not this shop cut)** | **`vault.projectcar.ca` LIVE** on McKing: `cloudflared` → `localhost:8222`. `/api/config` reports **2026.6.0** (Chief verified). Soft-530 five-row gate does **not** apply to vault. Doc lid-restore / KeepAlive must **not** recreate `vault.` ingress on Doc. |
 | **McKing shop role (later)** | Later: Shop API + shop-web via Docker + tunnel hostname reuse — **only after** the Soft-530 dual-run five-row gate PASSes. Do **not** treat hub NC+VW dual-run healthy as that gate. |
 
 `app.` stays the temporary alias until Ben cuts that DNS (`app-alias-cut.md`). This host move does **not** require cutting `app.`.
@@ -54,26 +55,26 @@ Soft-530 is **CLEAR** (Doc origin **LIVE** 2026-09-11). Future lid-close can sti
 
 ## Dual-tunnel ownership (separate from shop CF cutover)
 
-**Living-ops lock. Not this shop-host cutover. Not a Zone live apply.** STATUS keeps this as its **own** row. Vault public hostname cutover stays a **separate Ben GO**.
+**Living-ops lock. Vault is LIVE verified. Not this shop-host cutover. Not a shop Zone live apply.** STATUS keeps this as its **own** row. Hop OPEN ≠ shop cutover GO ≠ Doc unfreeze.
 
 | Tunnel | Hostnames | Origin / role |
 |--------|-----------|----------------|
-| **Doc tunnel** | **`cloud.` + `api.` + `app.` + `ops.` only** | Shop Soft-530 / KeepAlive (plus `cloud.`). Public shop names stay on Doc until the five-row Soft-530 gate PASSes. |
-| **McKing-only tunnel** | **`vault.projectcar.ca`** | **`localhost:8222`** on McKing. Not the Doc mission-control token. Not shop `api.` / `ops.` / `app.`. |
+| **Doc tunnel** | **`cloud.` + `api.` + `app.` + `ops.` only** | Shop Soft-530 / KeepAlive (plus `cloud.`). Public shop names stay on Doc until the five-row Soft-530 gate PASSes. That gate is **shop hosts only** — **vault EXCLUDED**. |
+| **McKing-only tunnel** | **`vault.projectcar.ca` — LIVE verified** | McKing `cloudflared` → **`localhost:8222`**. Public `/api/config` reports **2026.6.0** (Chief verified). Not the Doc mission-control token. Not shop `api.` / `ops.` / `app.`. |
 
 **Anti-goals (do not weaken):**
 
 - Never move the **Doc mission-control token** for `vault.`.
-- Soft-530 lid-restore / LaunchAgent KeepAlive must **not** reattach `vault.` to Doc.
-- Vault cutover ≠ shop hostname leave ≠ Doc unfreeze.
+- Soft-530 lid-restore / LaunchAgent KeepAlive must **not** recreate `vault.` ingress on Doc.
+- Vault LIVE ≠ shop hostname leave ≠ Doc unfreeze.
 
-Hop OPEN ≠ shop CF cutover GO. This matrix is ownership paper — not a live vault flip and not a shop hostname leave.
+Hop OPEN ≠ shop CF cutover GO ≠ Doc unfreeze. Shop CF cutover stays paper. Vault being LIVE is **not** a shop hostname leave.
 
 ---
 
-## Soft-530 dual-run acceptance gate (before any public CF hostname leaves Doc)
+## Soft-530 dual-run acceptance gate (before any public shop CF hostname leaves Doc)
 
-**Hard gate.** Do **not** cut public `api.` / `ops.` / `app.` off Doc until **all five** rows PASS. This paper is **not** that cut. Soft-530 is **CLEAR** today (Doc origin **LIVE** 2026-09-11); this table is for a **later** execution — not a claim the cut started, and not a claim Soft-530 is an active outage.
+**Hard gate for Doc shop hosts only (`cloud.` / `api.` / `app.` / `ops.`).** **Vault is EXCLUDED** — `vault.projectcar.ca` is already **LIVE verified** on McKing. Do **not** cut public `api.` / `ops.` / `app.` (or `cloud.`) off Doc until **all five** rows PASS. This paper is **not** that shop cut. Soft-530 is **CLEAR** today (Doc origin **LIVE** 2026-09-11); this table is for a **later** shop execution — not a claim the shop cut started, and not a claim Soft-530 is an active outage. Vault LIVE does **not** satisfy this gate.
 
 | # | Gate | Pass | Fail |
 |---|------|------|------|
@@ -262,7 +263,7 @@ None of the flip-row checks are a license to run the flip from this PR.
 |--------|-----|
 | Live-cut from this doc | Paper only. |
 | Treat hop OPEN / hub NC+VW dual-run as cutover GO | Path OPEN ≠ Soft-530 five-row PASS ≠ Doc unfreeze. |
-| Move the Doc mission-control token for `vault.` / reattach `vault.` on lid-restore | Dual-tunnel lock: `vault.` is McKing-only (`localhost:8222`). Vault cutover ≠ shop hostname leave ≠ Doc unfreeze. |
+| Recreate `vault.` ingress on Doc / move the Doc mission-control token for `vault.` | Dual-tunnel lock: `vault.` is **LIVE verified** on McKing (`cloudflared` → `localhost:8222`; `/api/config` **2026.6.0**, Chief verified). Lid-restore / KeepAlive must **not** recreate that ingress on Doc. Vault LIVE ≠ shop hostname leave ≠ Doc unfreeze. |
 | Move the brochure to McKing / Doc / Pages from here | Worker `projectcar-brochure` stays. Pages git is a different, blocked plan. |
 | Garage / Zone / Hatch fan-out | No Worker upload, no tunnel/DNS edit, no compose apply. |
 | Unfreeze Doc / rebuild to tip | `doc-unfreeze.md` + Ben GO only. |
@@ -311,8 +312,8 @@ None of the flip-row checks are a license to run the flip from this PR.
 - Doc frozen at `4cf8924` / `5swmVz` until Ben GO (`doc-unfreeze.md`). Hop OPEN ≠ unfreeze.
 - Green shop-os-ci ≠ unfreeze ≠ McKing cut ≠ Soft-530 dual-run gate PASS.
 - McKing path **OPEN** (sshd / docker / `/opt/mission-control`; hub dual-run NC+VW healthy on Doc+McKing). Hop OPEN ≠ cutover GO. Doc KeepAlive still owns public `api.` / `ops.` / `app.`.
-- No public CF hostname leaves Doc until the five-row Soft-530 dual-run gate PASSes. Dual-run = Tailscale / staging only. Gate row 2 artifact when it lands: Doc dual-run evidence card (Tailscale / private only). Still no public McKing attach for shop.
-- Vault public hostname cutover is a **separate Ben GO**. Dual-tunnel ownership is a **separate** living-ops row: Doc tunnel = `cloud.` + `api.` + `app.` + `ops.` only; McKing-only = `vault.projectcar.ca` → `localhost:8222`. Never move the Doc mission-control token for `vault.`; lid-restore / KeepAlive must **not** reattach `vault.` to Doc.
+- No public **shop** CF hostname leaves Doc until the five-row Soft-530 dual-run gate PASSes. Dual-run = Tailscale / staging only. Gate row 2 artifact when it lands: Doc dual-run evidence card (Tailscale / private only). Still no public McKing attach for shop. **Vault EXCLUDED** from this gate (already LIVE).
+- Vault is **LIVE verified** on McKing (`cloudflared` → `localhost:8222`; `/api/config` **2026.6.0**, Chief verified). Dual-tunnel ownership is a **separate** living-ops row: Doc tunnel = `cloud.` + `api.` + `app.` + `ops.` only; McKing-only = `vault.projectcar.ca`. Soft-530 five-row gate = Doc shop hosts only — **vault EXCLUDED**. Never move the Doc mission-control token for `vault.`; lid-restore / KeepAlive must **not** recreate `vault.` ingress on Doc. Vault LIVE ≠ shop hostname leave ≠ Doc unfreeze.
 - Rollback one-liner: re-point cloudflared to Doc LaunchAgents.
 - Soft-530 Discord waitlist fail-soft (**#80** `waitlist.js?v=3`) stays on the Worker during the cut. **#82** unchanged.
 - No live cut, no DNS/origin flip, no compose-down, no Garage/Zone fan-out from this file.
