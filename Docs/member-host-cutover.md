@@ -1,14 +1,29 @@
 # Member UI → projectcar.ca cutover
 
-**Status:** Checklist / plan only — **not shipped**  
-**Updated:** 2026-09-07  
-**Related:** `STATUS.md` Next #1, `member-zone-edge.md` (Zone path-split), `app-alias-cut.md` (STATUS Next #2; plan only — **not** required first), `website-improvements.md` P1-6 (brochure Membership sign-in CTA after cutover GO), `cors-origins.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`, `brochure-pages-cutover.md`, `website-webapp-specification.md` §3
+**Status:** Checklist / plan only — **not shipped**. **Blocked** until Ben GO unfreeze lands **#36** live on Doc.  
+**Updated:** 2026-09-08  
+**Related:** `STATUS.md` Next #1, `member-zone-edge.md` (Zone path-split), `doc-unfreeze.md` (Ben GO pull — **prerequisite**), `doc-lid-restore.md` (process wake only — **not** unfreeze), `shop-web-stay-up.md` (rebuild essay), `shop-os-ci.md` (green CI ≠ unfreeze), `app-alias-cut.md` (STATUS Next #2; plan only — **not** required first), `website-improvements.md` P1-6 (brochure Membership sign-in CTA after cutover GO), `cors-origins.md`, `api-stay-up.md`, `brochure-worker-deploy.md`, `brochure-pages-cutover.md`, `website-webapp-specification.md` §3
 
 Plan the move of Member self-serve from the shop UI `/member` (today on **`ops.`** + temporary **`app.`** alias) onto the customer host **projectcar.ca / www**. This file is a runbook. It does **not** implement the migration, change DNS, or cut the `app.projectcar.ca` alias.
 
-Do **not** invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, Matrix, or Apex revival. Demo session cookies stay demo cookies — **not OIDC**.
+Do **not** invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, Matrix, Apex revival, a Cloudflare ↔ GitHub re-ask, or **#36** live on Doc from git SHA alone. Demo session cookies stay demo cookies — **not OIDC**.
 
-**Ben GO required** before Garage (site) or Zone (Cloudflare DNS / tunnel / CORS edge) start this cutover. Cutover planning outranks new breadth placeholders.
+**Two GOs.** Unfreeze GO ≠ Member GO. **Ben GO unfreeze** first (`doc-unfreeze.md`) so shop-web host allowlist **#36** is live on Doc. **Then** a separate **Ben GO** before Garage (site) or Zone (Cloudflare DNS / tunnel / CORS edge) start this cutover. A docs merge is not either GO. Cutover planning outranks new breadth placeholders.
+
+---
+
+## Prerequisite lock (read first — do not weaken)
+
+Member edge (STATUS **Next #1**) must **not** execute until **Ben GO unfreeze** lands shop-web host allowlist **#36** (`f952cd3`) **live on Doc**.
+
+| Lock | Meaning |
+|------|---------|
+| **Unfreeze first** | Ordered pull: [doc-unfreeze.md](doc-unfreeze.md). New `.next/BUILD_ID` must **not** be `5swmVz-T2CqKEQzTk1ifU` (frozen Dashboard **#28** / checkout `4cf8924`). Rebuild essay: [shop-web-stay-up.md](shop-web-stay-up.md). |
+| **#36 live on Doc** | Host allowlist is **on git** (`f952cd3`). It is **not** live on `ops.` / `app.` / `:3000` until that rebuild. Do not path-split `/member*` onto a frozen #28 origin. |
+| **Lid-restore stays process-only** | Morning **530 / 1033** wake is [doc-lid-restore.md](doc-lid-restore.md). Wake is **not** unfreeze and **not** Member GO. |
+| **Green shop-os-ci ≠ unfreeze** | A green Shop OS CI check is git-only. It does **not** unfreeze Doc and does **not** unlock this cutover ([doc-unfreeze.md](doc-unfreeze.md), [shop-os-ci.md](shop-os-ci.md)). |
+| **Keep `app.`** | Temporary alias stays live. Do **not** cut it here. Do **not** re-ask Cloudflare ↔ GitHub (`brochure-pages-cutover.md`). |
+| **Two GOs** | Unfreeze GO ≠ Member GO. This file still needs its own **Ben GO** before Garage / Zone execute. |
 
 ---
 
@@ -20,6 +35,13 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Member demo** | Shop-UI `/member` on Doc `:3000` (`next start` via LaunchAgent `com.projectcar.shop-web`). Reachable on **`https://ops.projectcar.ca/member`** and **`https://app.projectcar.ca/member`**. |
 | **Ops / staff** | Same Doc `:3000` shop UI on **`ops.`** (LIVE). Temporary **`app.`** alias still live. **Not removed.** |
 | **Shop API** | `api.projectcar.ca` → Doc `:8000`. Lead owns uvicorn. |
+
+| Clock | Pin | Meaning |
+|-------|-----|---------|
+| **Git `main`** | Moves with merges | **#36** host allowlist (`f952cd3`) is **on git**. Customer-host redirect tests are on git. |
+| **Doc working tree** | Frozen at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** (Dashboard **#28**) | Live `ops.` / `app.` / `:3000` stay on that build until [doc-unfreeze.md](doc-unfreeze.md) finishes **after** Ben GO. Rebuild essay: [shop-web-stay-up.md](shop-web-stay-up.md). |
+
+Do **not** call **#36** live on Doc, and do **not** start this cutover, until unfreeze step 5 shows a **new** `BUILD_ID` and step 6 / 7 smoke.
 
 ---
 
@@ -125,7 +147,7 @@ Never `*`. After any `.env` change, **Lead** restarts uvicorn (`cors-origins.md`
 
 `middleware.ts` redirects with `publicUrl` → `publicOrigin` (`lib/request-origin.ts`). Shop-web now allowlists hosts that may drive those redirects: `localhost` / `127.0.0.1`, `ops.projectcar.ca`, `app.projectcar.ca`, `projectcar.ca`, `www.projectcar.ca`. Junk or unknown `X-Forwarded-Host` / `Host` falls back to the listen origin — it cannot mint a login redirect to a random host. `api.projectcar.ca` is **not** on the list. Tests cover ops/app/localhost plus customer-host `/member/login` and `/member`.
 
-This is **prep only**. Member is still **not** reachable on projectcar.ca / www until Zone edge work after Ben GO.
+This is **prep only** — and **on git, not live on Doc**. The allowlist landed in **#36** (`f952cd3`). Doc is frozen at `4cf8924` / `5swmVz-T2CqKEQzTk1ifU` until Ben GO unfreeze ([doc-unfreeze.md](doc-unfreeze.md)). Do **not** treat the checkboxes below as Doc-live. Member is still **not** reachable on projectcar.ca / www until that unfreeze **and** Zone edge work after a separate Ben GO.
 
 Before Member is reachable on the customer host:
 
@@ -195,13 +217,14 @@ Lead sequences this vs more breadth placeholders: **cutover planning outranks ne
 
 | Order | Gate | Who | Notes |
 |-------|------|-----|-------|
-| 0 | **This doc exists** | Docs PR | Done. No DNS. No `app.` cut. |
-| 1 | **Ben GO** | Ben | Required. Do not start Garage site work or Zone edge work from this file alone. |
-| 2 | Cookie / CORS / middleware allowlist on Doc | Lead (process) + Garage (shop-web change) | Shop-web **allowlist + customer-host redirect tests landed** (prep). `SHOP_MEMBER_COOKIE_PATH_SCOPED` exists, default **OFF**. Do **not** flip Doc `.env` / CORS until GO. Lead restarts uvicorn if `CORS_ORIGINS` changes. |
-| 3 | Edge path split on projectcar.ca / www | **Zone** | Checklist: **`member-zone-edge.md`**. Cloudflare path rules / tunnel hostname so `/member*` hits Doc `:3000` (`http://127.0.0.1:3000`) and brochure paths stay Worker. CORS **edge** if Zone owns a WAF/origin check — API allowlist stays Lead `.env`. |
-| 4 | Member UI on customer host | **Garage** (site) | Wire the Member surface; do not replace the Worker brochure. |
-| 5 | Prove success criteria | Garage e2e waitlist; anyone can curl health / ops probes | If ops/app or waitlist breaks → §4 rollback. |
-| 6 | Ben cuts `app.` alias | Ben / Zone | **Later.** `STATUS.md` Next #2. Checklist: **`app-alias-cut.md`**. Not this cutover — Member host does **not** require cutting `app.` first. |
+| 0 | **This doc exists** | Docs PR | Done. No DNS. No `app.` cut. No unfreeze. |
+| 1 | **Prerequisite — Doc unfreeze** | Ben + Lead | [doc-unfreeze.md](doc-unfreeze.md). Shop-web host allowlist **#36** live on Doc. New `BUILD_ID` ≠ `5swmVz-T2CqKEQzTk1ifU`. Lid-restore ([doc-lid-restore.md](doc-lid-restore.md)) and green `shop-os-ci` are **not** this. |
+| 2 | **Ben GO** (Member edge) | Ben | **Separate** from unfreeze GO. Do not start Garage site work or Zone edge work from this file, from an unfreeze alone, or from a docs merge. |
+| 3 | Cookie / CORS / middleware allowlist on Doc | Lead (process) + Garage (shop-web change) | Shop-web **allowlist + customer-host redirect tests landed on git** (**#36**, `f952cd3`) — **not live on Doc** until step 1. `SHOP_MEMBER_COOKIE_PATH_SCOPED` exists, default **OFF**. Do **not** flip Doc `.env` / CORS until Member GO. Lead restarts uvicorn if `CORS_ORIGINS` changes. |
+| 4 | Edge path split on projectcar.ca / www | **Zone** | Checklist: **`member-zone-edge.md`**. Cloudflare path rules / tunnel hostname so `/member*` hits Doc `:3000` (`http://127.0.0.1:3000`) and brochure paths stay Worker. CORS **edge** if Zone owns a WAF/origin check — API allowlist stays Lead `.env`. |
+| 5 | Member UI on customer host | **Garage** (site) | Wire the Member surface; do not replace the Worker brochure. |
+| 6 | Prove success criteria | Garage e2e waitlist; anyone can curl health / ops probes | If ops/app or waitlist breaks → §4 rollback. |
+| 7 | Ben cuts `app.` alias | Ben / Zone | **Later.** `STATUS.md` Next #2. Checklist: **`app-alias-cut.md`**. Not this cutover — Member host does **not** require cutting `app.` first. |
 
 **Ownership (unchanged):** Lead owns Doc `:8000` uvicorn. Zone owns tunnel / DNS / CORS edge. Garage waitlist e2e only (plus site work after GO). Do not hand uvicorn restarts to Chief or Garage.
 
@@ -211,6 +234,9 @@ Lead sequences this vs more breadth placeholders: **cutover planning outranks ne
 
 ## Locks (copy from STATUS — do not weaken)
 
+- **Do not execute** until Ben GO unfreeze lands **#36** live on Doc (`doc-unfreeze.md`). New `BUILD_ID` ≠ `5swmVz-T2CqKEQzTk1ifU`.
+- Lid-restore stays process-only (`doc-lid-restore.md`). Green `shop-os-ci` ≠ unfreeze.
+- Keep the **`app.`** alias. No Cloudflare ↔ GitHub re-ask.
 - Host split: customer = projectcar.ca / www. Management = **ops.projectcar.ca** (LIVE; not Owner-only). `app.` = temporary alias until Ben cuts DNS.
 - This checklist is **not** a ship claim.
 - No Stripe. The shop is not open.

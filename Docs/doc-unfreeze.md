@@ -2,7 +2,7 @@
 
 **Status:** Living ops (Lead checklist)  
 **Updated:** 2026-09-08  
-**Related:** `doc-lid-restore.md` (process wake only — **not** this pull), `shop-web-stay-up.md` (rebuild essay), `api-stay-up.md`, `cors-origins.md`, `shop-os-ci.md` (git-only — **not** this GO), `STATUS.md`, `doc-software-baseline.md`
+**Related:** `doc-lid-restore.md` (process wake only — **not** this pull), `shop-web-stay-up.md` (rebuild essay), `api-stay-up.md`, `cors-origins.md`, `shop-os-ci.md` (git-only — **not** this GO), `member-host-cutover.md` / `member-zone-edge.md` (STATUS Next #1 — **blocked** until this checklist lands **#36**), `STATUS.md`, `doc-software-baseline.md`
 
 Ordered **Ben GO** pull/rebuild on Doc after the freeze at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**). This file is the pull sequence. Lid-close wake stays in `doc-lid-restore.md` — do **not** copy that process essay here.
 
@@ -192,6 +192,7 @@ Garage may re-run brochure waitlist e2e **after** health is 200. Form only. No p
 
 - Doc checkout and `.next/BUILD_ID` match the tip you intended.
 - **#36** and **#69** may be called **LIVE on Doc** only after steps 5–7.
+- Member edge (STATUS Next #1) stays **blocked** until **#36** is live on Doc **and** a separate Ben GO (`member-host-cutover.md` / `member-zone-edge.md`). This unfreeze is **not** that GO.
 - Lid-restore **stays** process-only. A later morning 530 is still wake-only — do **not** pull again unless Ben GOs another unfreeze.
 - Shop OS CI remains git-only. Green CI on a *later* SHA is still **not** a new unfreeze GO.
 
