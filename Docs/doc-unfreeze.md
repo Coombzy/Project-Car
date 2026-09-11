@@ -1,7 +1,7 @@
 # Doc unfreeze — Ben GO pull checklist
 
 **Status:** Living ops (Lead checklist)  
-**Updated:** 2026-09-08  
+**Updated:** 2026-09-11  
 **Related:** `doc-lid-restore.md` (process wake only — **not** this pull), `shop-web-stay-up.md` (rebuild essay), `api-stay-up.md`, `cors-origins.md`, `shop-os-ci.md` (git-only — **not** this GO), `STATUS.md`, `doc-software-baseline.md`
 
 Ordered **Ben GO** pull/rebuild on Doc after the freeze at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**). This file is the pull sequence. Lid-close wake stays in `doc-lid-restore.md` — do **not** copy that process essay here.
@@ -16,9 +16,10 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 
 | Lock | Meaning |
 |------|---------|
-| **Ben GO required** | Lead does **not** `git pull` or rebuild until Ben says **GO** to unfreeze — in words, not inferred from CI, a docs merge, or lid-restore. |
+| **Ben GO required** | Lead does **not** `git pull` or rebuild until Ben says **GO** to unfreeze — in words, not inferred from CI, a docs merge, lid-restore, or Soft-530 **CLEAR** / public `GET /health` **200**. |
 | **Green Shop OS CI is not unfreeze GO** | A green `shop-os-ci` check on a later SHA is **expected** and means only that GitHub Actions passed pytest / typecheck / `next build`. It does **not** unfreeze Doc. Runbook: `shop-os-ci.md`. |
 | **Lid-restore stays process-only** | Morning **530 / 1033** wake is `doc-lid-restore.md`: cloudflared → shop-api KeepAlive → shop-web **kickstart if down**. Wake must **not** auto-pull or rebuild. |
+| **Soft-530 CLEAR / public GET /health 200 is not unfreeze GO** | Soft-530 **CLEAR** and public `GET /health` **200** mean Doc origin is up. That is **not** Ben GO to unfreeze. Same class as green `shop-os-ci` and lid-restore process-wake. |
 | **This file is not the pull** | Do not execute from a docs PR. Garage / Zone do **not** pull Doc. |
 
 ---
@@ -30,7 +31,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **`doc-lid-restore.md`** | Doc slept / lid-close / public **530 / 1033** | Wake processes. Same frozen checkout. **No** `git pull`. |
 | **`doc-unfreeze.md` (this file)** | Ben said **GO** to unfreeze | Pull tip, migrate if needed, rebuild shop-web, new `BUILD_ID`, smoke **#36** / **#69** / banner honesty. |
 
-Do **not** collapse them. A soft morning 530 is **not** unfreeze GO.
+Do **not** collapse them. A soft morning 530 is **not** unfreeze GO. Soft-530 **CLEAR** / public `GET /health` **200** is also **not** unfreeze GO.
 
 ---
 
@@ -72,6 +73,7 @@ Ben must say **GO** to unfreeze Doc (explicit). Record who / when in the heartbe
 **Not GO:**
 
 - Green Shop OS CI on `main` or on a PR
+- Soft-530 **CLEAR** / public `GET /health` **200**
 - Merge of this file, `#73`, `#72`, `#71`, or held `#70`
 - Lid-restore / morning 530 recovery
 - Chief standing GO for tests / CI / this checklist
@@ -194,12 +196,14 @@ Garage may re-run brochure waitlist e2e **after** health is 200. Form only. No p
 - **#36** and **#69** may be called **LIVE on Doc** only after steps 5–7.
 - Lid-restore **stays** process-only. A later morning 530 is still wake-only — do **not** pull again unless Ben GOs another unfreeze.
 - Shop OS CI remains git-only. Green CI on a *later* SHA is still **not** a new unfreeze GO.
+- Soft-530 **CLEAR** / public `GET /health` **200** is still **not** a new unfreeze GO.
 
 ---
 
 ## Do not
 
 - Treat green `shop-os-ci` as Ben GO
+- Treat Soft-530 **CLEAR** / public `GET /health` **200** as Ben GO
 - Auto-`git pull` or rebuild from lid-restore / morning 530
 - Run this checklist without explicit Ben GO
 - Hand Doc pull / alembic / `npm run build` to Garage or Zone
