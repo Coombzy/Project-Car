@@ -79,8 +79,9 @@ McKing (`lightning`) is on the path. It is **not** the public shop CF origin.
 | **Hub dual-run** | **NC+VW healthy** on Doc+McKing | Local hub, not a shop CF leave. |
 | **Public vault** | **`vault.projectcar.ca` LIVE** | McKing `cloudflared` → `localhost:8222`. `/alive` Lead **200** (prefer); `/api/config` **2026.6.0** (Chief verified). |
 | **Shop CF** | **Not** McKing | `api.` / `ops.` / `app.` stay Doc KeepAlive. Paper: [mcking-shop-host-cutover.md](mcking-shop-host-cutover.md). |
+| **Tailnet Frigate + Jellyfin** | Lab on McKing Tailnet (Frigate **0.17.2**) | **Not** Shop OS `/cameras` live. Does **not** flip `pc.cameras`. Later cameras placeholder stays **Later**. No camera wiring from this stand-up. |
 
-Do **not** invent McKing as offline `lil-cachy`. Do **not** invent public shop hostnames on McKing.
+Do **not** invent McKing as offline `lil-cachy`. Do **not** invent public shop hostnames on McKing. Do **not** treat Tailnet Frigate / Jellyfin as Shop OS cameras.
 
 ---
 
@@ -160,6 +161,7 @@ Bring-up order (Doc is already past this) is in that baseline. Do **not** treat 
 | **Treat vault flip watch as Soft-530** | Lookout vault `/alive` watch is **LIVE/armed** and **separate**. Soft-530 / `api.` `/health` can stay green while vault dies. |
 | **Cut the `app.` alias** | `ops.` is already LIVE. Ben cuts DNS. |
 | **n8n, Matrix, Apex sidecar** | Banned / deferred. |
+| **Wire Shop OS `/cameras` from McKing Frigate / Jellyfin** | Tailnet Frigate **0.17.2** + Jellyfin lab ≠ Shop OS `/cameras` live. Does **not** flip `pc.cameras`. Later Frigate / cameras placeholder stays **Later**. No camera wiring from this stand-up. |
 
 ---
 
