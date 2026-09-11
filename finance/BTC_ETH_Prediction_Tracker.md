@@ -11,3 +11,5 @@ One row per `(analysis_date, asset, horizon)`. Update in place. Do not duplicate
 **Hit-rate snapshot:** closed 1d **23/26** (BTC 11/13, ETH 12/13); closed 1w **14/14** (BTC 7/7, ETH 7/7); 1m/3m n=0 closed. Sep 9 1d lows missed fade/outflow stacked-low (v1.14). Sep 10 1d HIT with reused prior_day_pct (Sep 8 −0.8/−0.2 vs true Sep 8→9 Yahoo −0.23/−1.17). Sep 11 Daily prior_day_pct −1.62/−1.97 vs true Sep 9→10 UTC BTC −2.16% / ETH −1.21% (live-to-prior-close, not completed close-to-close). Sep 11 labeled ETH digestion while tape went +7% after a stale as-of $2,500.
 
 **Spot context:** ~15:22Z 11 Sep Yahoo BTC **$78,665** (H $79,503 / L $76,536). ETH **$2,613** (H $2,639 / L $2,437). Path extremes: BTC H $82,300 / L $76,264; ETH H $2,639 / L $2,357. Farside last completed **10 Sep** BTC −$282.7M / ETH −$29.9M. Sep 9 BTC −$120.2M / ETH +$34.7M. Sep 11 session still open (Farside 0.0).
+
+SEE_LOCAL_FULL_FILE
