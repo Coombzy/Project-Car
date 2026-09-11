@@ -26,6 +26,7 @@ This file is **not** a runbook. Use the living docs below.
 | Brochure → Classic Pages git (plan only; blocked on CF ↔ GitHub auth) | `brochure-pages-cutover.md` |
 | Google Calendar OAuth / two-way sync (plan only; STATUS Next #6 — not a GO) | `google-calendar-oauth.md` |
 | McKing shop-host cutover (plan only — Docker + tunnel hostname reuse; Soft-530 dual-run gate before public CF cut; **not** Next #1, **not** GO) | `mcking-shop-host-cutover.md` |
+| Ops demo hardening — Soft-530-CLEAR **Next Ben GO** (**#79**): stop printing login password + optional Access on `ops` / `app` until OIDC (plan only; do **not** execute Garage/Zone from this tip-fold) | `ops-demo-hardening.md` |
 | Dual-tunnel ownership (**separate** from shop CF cutover — vault **LIVE verified**): Doc = `cloud.` + `api.` + `app.` + `ops.` only; McKing-only `vault.` → `:8222` (`/alive` Lead **200** prefer; `/api/config` **2026.6.0**, Chief verified). Soft-530 five-row gate = shop hosts only (vault EXCLUDED). Lookout vault flip watch **LIVE/armed** (`enabled:true`, Lookout confirmed) on `/alive` every **5m** (fallback `/api/config` if `/alive` 404s) — Soft-530 / `api.` `/health` can stay green while vault dies; vault watch ≠ Soft-530 / Doc lid-restore. | `STATUS.md` Live / Locks · `home-lab-specification.md` · `api-stay-up.md` · `mcking-shop-host-cutover.md` |
 
 ---
@@ -36,7 +37,7 @@ This file is **not** a runbook. Use the living docs below.
 |------|-----|
 | What’s live / host split | `STATUS.md` |
 | Stack, host plan, bans | `platform-architecture.md` |
-| Nextcloud / Vaultwarden / cockpit | `mission-control-architecture.md` |
+| Nextcloud / Vaultwarden / cockpit (parked). Dual-tunnel + vault LIVE on McKing (VW not Doc compose host); shop CF cutover paper; Soft-530 five-row = Doc shop hosts only | `mission-control-architecture.md` |
 | Live hub / dual-tunnel machine map (Doc shop hosts + McKing vault LIVE) | `home-lab-specification.md` |
 | Older hub probe on Doc (2026-08-16 rows can be stale) | `nextcloud-progress.md` |
 | Doc apps / LaunchAgents / sleep | `doc-software-baseline.md` |

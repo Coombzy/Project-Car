@@ -81,4 +81,4 @@ This playbook will be refined after every incident or audit finding.
 ---
 **Maintained by:** Porsche + Doc  
 **Canonical:** `Docs/security-playbook.md` on `Coombzy/Project-Car`  
-**Related:** `master-overview-specification.md`, `agent-profiles-specification.md`, `mission-control-architecture.md`
+**Related:** `master-overview-specification.md`, `agent-profiles-specification.md`, `mission-control-architecture.md` (dual-tunnel + vault LIVE on McKing), `ops-demo-hardening.md` (plan only — Soft-530-CLEAR **Next Ben GO**; public login password print + optional Access until OIDC; do **not** execute from the #70 tip-fold)

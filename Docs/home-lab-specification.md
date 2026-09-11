@@ -173,7 +173,7 @@ Bring-up order (Doc is already past this) is in that baseline. Do **not** treat 
 | [nextcloud-progress.md](nextcloud-progress.md) | Older hub probe (no secrets). 2026-08-16 public-site / offline-McKing rows can be stale — brochure + dual-tunnel lock is this file + STATUS |
 | [platform-architecture.md](platform-architecture.md) | Monorepo, stack, runtime vs git |
 | [integration-plan.md](integration-plan.md) | How MC, shop OS, agents, and the lab connect |
-| [mission-control-architecture.md](mission-control-architecture.md) | Ben-only cockpit (parked) |
+| [mission-control-architecture.md](mission-control-architecture.md) | Ben-only cockpit (parked). Tip-fold matches this dual-tunnel + vault LIVE lock (VW not Doc compose host; shop CF paper; Soft-530 five-row = Doc shop hosts only) |
 | [website-webapp-specification.md](website-webapp-specification.md) | Domain + brochure architecture |
 | [brochure-worker-deploy.md](brochure-worker-deploy.md) | Standing Worker upload |
 | [doc-lid-restore.md](doc-lid-restore.md) · [api-stay-up.md](api-stay-up.md) · [shop-web-stay-up.md](shop-web-stay-up.md) | Lid-close 530 / 1033 — **vault OUT** of lid-restore / Doc KeepAlive |

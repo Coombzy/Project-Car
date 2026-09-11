@@ -1,11 +1,11 @@
 # Mission Control Architecture
 
-**Last Updated:** 2026-09-07  
+**Last Updated:** 2026-09-11  
 **Status:** Living spec (v2) — cockpit **parked** until **Ben GO**  
 **Owner:** Ben (decisions) / Doc + Porsche (maintenance)  
 **Canonical location:** `Coombzy/Project-Car` → `Docs/mission-control-architecture.md`
 
-Related: `platform-architecture.md`, `project-car-application-specification.md`, `integration-plan.md`, `home-lab-specification.md`, `security-playbook.md`.
+Related: `platform-architecture.md`, `project-car-application-specification.md`, `integration-plan.md`, `home-lab-specification.md` (dual-tunnel machine map), `security-playbook.md`, `STATUS.md` (Live / Locks), `mcking-shop-host-cutover.md` (shop CF cutover **paper**), `doc-lid-restore.md` (vault OUT), `api-stay-up.md`.
 
 **Park:** Custom Next.js cockpit is **parked** until **Ben GO**. The old “until Owner booking is live” hold is **already satisfied** (Owner + Member booking live on Doc). Do **not** start the cockpit from a docs PR.
 
@@ -14,7 +14,9 @@ Related: `platform-architecture.md`, `project-car-application-specification.md`,
 - Owner + Member booking live on Doc ✓
 - Ben GO ☐
 
-**This document replaces the July 2026 draft** that still planned n8n, Matrix-on-Porsche, a shared Postgres with Nextcloud, and a codebase at `~/Documents/mission-control/` (that tree does not exist).
+**Reality lock (2026-09-11 — do not weaken):** Dual-tunnel + vault **LIVE** match STATUS / home-lab. Public **`vault.projectcar.ca` is McKing-only** (`cloudflared` → `localhost:8222`; `/alive` Lead **200** prefer; `/api/config` **2026.6.0**, Chief verified). VW is **not** the Doc compose public host. Doc tunnel = **`cloud.` + `api.` + `app.` + `ops.` only** (shop Soft-530 / KeepAlive). Shop CF cutover stays **paper**. Doc checkout **frozen** at **`4cf8924`** / BUILD_ID **`5swmVz`** until **Ben GO**. Soft-530 five-row gate = **Doc shop hosts only** (`cloud.` / `api.` / `app.` / `ops.`) — **vault EXCLUDED**. Hop OPEN ≠ shop cutover GO ≠ Doc unfreeze. Vault LIVE ≠ shop hostname leave. Lookout vault flip watch is **LIVE/armed** and **separate** from Soft-530 (`api.` `/health` can stay green while vault dies). Do **not** start the cockpit from this tip-fold. Do **not** execute Garage/Zone / shop CF cutover from this file.
+
+**This document replaces the July 2026 draft** that still planned n8n, Matrix-on-Porsche, a shared Postgres with Nextcloud, and a codebase at `~/Documents/mission-control/` (that tree does not exist). The 2026-08-12 “everything on Doc including public VW” stamp is **superseded**.
 
 ---
 
@@ -33,20 +35,21 @@ Mission Control is Ben’s **private daily cockpit**.
 
 ---
 
-## 2. What exists today (2026-08-12)
+## 2. What exists today (2026-09-11)
 
-Live on **Doc** (M1 Max), path `~/hermes-tools/mission-control` (symlink `~/hermes-tools/nextcloud-hub`):
+**Doc** (M1 Max) still hosts the **temporary NC hub** at `~/hermes-tools/mission-control` (symlink `~/hermes-tools/nextcloud-hub`). Public **vault is McKing**, not that Doc compose. Hub dual-run **NC+VW healthy** on Doc+McKing. McKing path **OPEN** ~10:32 (sshd / docker / `/opt/mission-control`).
 
 | Service | Detail |
 |---------|--------|
-| Nextcloud 30 | `:8080` — Files, Calendar, Talk (`spreed`), Deck, Forms, Photos, Passwords |
-| MariaDB 11.4 | Nextcloud DB only |
-| Redis 7 | Nextcloud cache |
-| Vaultwarden | `:8222` |
-| Cloudflare Tunnel | `api.` / `ops.` / temporary `app.` only — **not** the marketing apex. Live marketing = Worker **`projectcar-brochure`**. NC stays off the naked marketing apex or behind Access |
-| Tailscale | `docs-macbook-pro` / `100.97.10.72` |
-| Backups | `~/Desktop/Mission-Control/backups/nextcloud/` (daily/weekly/monthly) |
-| LaunchAgent | `ai.mission-control.hub` |
+| Nextcloud 30 | Doc `:8080` — Files, Calendar, Talk (`spreed`), Deck, Forms, Photos, Passwords. Temp hub. Dual-run healthy on Doc+McKing |
+| MariaDB 11.4 | Nextcloud DB only (Doc) |
+| Redis 7 | Nextcloud cache (Doc) |
+| Vaultwarden | **Public `vault.projectcar.ca` LIVE on McKing** — `cloudflared` → `localhost:8222`; `/alive` Lead **200** prefer; `/api/config` **2026.6.0** (Chief verified). Doc may keep a **local VW sibling** if compose is up — **not** public `vault.`. VW is **not** the Doc compose public host. 2026-08-16 “compose down / vault DNS missing” is **superseded** |
+| Cloudflare Tunnel | **Dual-tunnel.** Doc = **`cloud.` + `api.` + `app.` + `ops.` only** (shop Soft-530 / KeepAlive). McKing-only = **`vault.`**. Live marketing = Worker **`projectcar-brochure`**. NC stays off the naked marketing apex or behind Access |
+| Tailscale | `docs-macbook-pro` / `100.97.10.72`. McKing (`lightning`) path OPEN |
+| Backups | `~/Desktop/Mission-Control/backups/nextcloud/` (daily/weekly/monthly) on Doc. McKing off-box still later |
+| LaunchAgent | Hub: `ai.mission-control.hub`. Shop KeepAlive is **separate** (`cloudflared` + shop-api + shop-web). **Vault is OUT** of Doc KeepAlive / lid-restore — must **not** recreate `vault.` ingress on Doc |
+| Doc shop checkout | **Frozen** at **`4cf8924`** / BUILD_ID **`5swmVz`** until **Ben GO**. Soft-530 five-row = **Doc shop hosts only** — **vault EXCLUDED**. Shop CF cutover stays **paper** |
 
 **Does not exist and is not Phase 0 work:**
 
@@ -66,8 +69,8 @@ Live on **Doc** (M1 Max), path `~/hermes-tools/mission-control` (symlink `~/herm
 2. **Do not reimplement Nextcloud.** Calendar, files, Deck, Talk stay in NC. The cockpit reads them and links out.
 3. **Server-side integrations.** The browser talks to the MC app. The MC app talks to Nextcloud. No admin tokens in the client.
 4. **Hub-and-spoke.** Nextcloud is the system of record for personal ops. Project Car shop data lives in its own Postgres.
-5. **Doc now, McKing later.** Porsche is a travel **client**, not the Nextcloud server.
-6. **Degrade gracefully.** If the cockpit is down, Nextcloud web UI still works. If Doc is asleep, phone + local notes still work.
+5. **Doc now (temp NC + shop CF), McKing already public vault.** Porsche is a travel **client**, not the Nextcloud server. Public VW is **already McKing**. Permanent NC hub move + shop CF hostname leave are **later** and **separate** — shop cutover stays paper until the Soft-530 five-row **shop** gate PASSes.
+6. **Degrade gracefully.** If the cockpit is down, Nextcloud web UI still works. If Doc is asleep, phone + local notes still work; **vault does not go down** (McKing-only). Soft-530 / `api.` `/health` can stay green while vault dies.
 7. **Least privilege** for agent service accounts.
 
 ---
@@ -97,8 +100,8 @@ Live on **Doc** (M1 Max), path `~/hermes-tools/mission-control` (symlink `~/herm
      +------------------------+
 ```
 
-Hosting now: everything above on **Doc**.  
-Hosting later: Nextcloud + Vaultwarden + MC app migrate to **McKing**. Porsche keeps using them over the mesh.
+Hosting now: **temp NC hub on Doc**; public **VW on McKing**; shop OS (`api.` / `ops.` / `app.`) on **Doc** KeepAlive.  
+Hosting later: permanent **NC hub** on McKing (still later). Shop CF hostname leave is a **separate paper** (`mcking-shop-host-cutover.md`) — Soft-530 five-row = **Doc shop hosts only** (`cloud.` / `api.` / `app.` / `ops.`) — **vault EXCLUDED**. Cockpit stays **parked** until **Ben GO**. Porsche keeps using the hub over the mesh.
 
 ---
 
@@ -212,10 +215,10 @@ Do not migrate Nextcloud onto Postgres “for cleanliness.” Do not share NC’
 
 | Phase | Where |
 |-------|--------|
-| **Now** | Doc hosts NC + Vaultwarden + (future) cockpit |
-| **Next** | Nightly backups already land on Doc Desktop; add McKing as off-box target |
-| **Later** | Move the hub to McKing (always-on Linux). Porsche is laptop client |
-| **Travel** | Ben reaches Doc/McKing over Tailscale. If the hub is down, use phone notes and catch up later |
+| **Now** | Doc hosts the **temp NC hub** + shop OS. Public **VW is McKing-only LIVE** (`vault.` → `:8222`). Local Doc VW sibling if compose is up — not the public host. Cockpit still parked. Doc shop checkout **frozen** at `4cf8924` / `5swmVz` until **Ben GO** |
+| **Next** | Nightly backups already land on Doc Desktop; add McKing as off-box NC target. Vault flip watch is already **LIVE/armed** (Lookout; ≠ Soft-530) |
+| **Later** | Move the **NC hub** to McKing (always-on Linux). Shop CF cutover stays **paper** until Soft-530 five-row **shop** gate PASS (`cloud.` / `api.` / `app.` / `ops.` only — vault EXCLUDED). Porsche is laptop client |
+| **Travel** | Ben reaches Doc/McKing over Tailscale. If the hub is down, use phone notes and catch up later. Vault does **not** go down when Doc sleeps |
 
 Porsche must not become the 24/7 Nextcloud host. Battery and sleep policies on a travel Mac make that the wrong default.
 
@@ -230,6 +233,8 @@ See `security-playbook.md`. MC-specific:
 3. Rotate Nextcloud app passwords after suspected compromise.
 4. Backup encryption for any copy that leaves Doc.
 5. No shop-member data in this stack.
+6. Public VW is **`vault.projectcar.ca` on McKing**. Never move the Doc mission-control token for `vault.`. Soft-530 lid-restore / LaunchAgent KeepAlive must **not** recreate `vault.` ingress on Doc.
+7. Shop public hosts (`api.` / `ops.` / `app.`) are **not** Mission Control. Soft-530 five-row honesty is **Doc shop hosts only**.
 
 ---
 
@@ -237,12 +242,14 @@ See `security-playbook.md`. MC-specific:
 
 ### Phase A — Hub (mostly done)
 
-- [x] Nextcloud 30 + apps on Doc
-- [x] Vaultwarden
-- [x] Tailscale access
+- [x] Nextcloud 30 + apps on Doc (temp hub; dual-run NC+VW healthy on Doc+McKing)
+- [x] Vaultwarden **public LIVE on McKing** (`vault.` → `:8222`; `/alive` **200**; `/api/config` **2026.6.0**)
+- [x] Dual-tunnel lock (Doc shop hosts / McKing vault). Vault OUT of Doc KeepAlive / lid-restore
+- [x] Tailscale access (McKing path OPEN ~10:32)
 - [x] Local backup script + Desktop archive
 - [ ] Backup restore drill documented
-- [ ] McKing off-box backup
+- [ ] McKing off-box NC backup
+- [ ] Permanent NC hub migrate Doc → McKing (public VW already McKing; **not** the shop CF cutover)
 
 ### Phase B — Cockpit (parked until Ben GO)
 
@@ -266,7 +273,7 @@ After GO (not started):
 
 - [ ] Agent service accounts as above
 - [ ] Structured audit of privileged writes
-- [ ] Migrate hub Doc → McKing
+- [ ] Migrate **NC hub** Doc → McKing (public VW already McKing; shop CF cutover is a **separate paper** — Soft-530 five-row Doc shop hosts only)
 - [ ] Optional fitness widget
 
 ### Deferred
