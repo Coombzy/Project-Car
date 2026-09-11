@@ -25,7 +25,7 @@ This file is **not** a runbook. Use the living docs below.
 | Brochure security + cache headers (P2-4; **LIVE** — do **not** re-apply) | `brochure-security-headers.md` |
 | Brochure → Classic Pages git (plan only; blocked on CF ↔ GitHub auth) | `brochure-pages-cutover.md` |
 | Google Calendar OAuth / two-way sync (plan only; STATUS Next #6 — not a GO) | `google-calendar-oauth.md` |
-| McKing shop-host cutover (plan only — Docker + tunnel hostname reuse; **not** Next #1, **not** GO) | `mcking-shop-host-cutover.md` |
+| McKing shop-host cutover (plan only — Docker + tunnel hostname reuse; Soft-530 dual-run gate before public CF cut; **not** Next #1, **not** GO) | `mcking-shop-host-cutover.md` |
 
 ---
 
