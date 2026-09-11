@@ -16,6 +16,7 @@ This file is **not** a runbook. Use the living docs below.
 | Doc unfreeze after **Ben GO** (pull / migrate / rebuild / `BUILD_ID` / smoke) | `doc-unfreeze.md` |
 | Shop UI stay-up on Doc (`ops.` / temporary `app.`, `:3000`, **`next start`**) | `shop-web-stay-up.md` |
 | Shop API stay-up on Doc (`api.`, `:8000`, uvicorn) | `api-stay-up.md` |
+| Lookout `projectcar-api-health-watch` **paused** (`enabled:false`); Lead owns interim morning/public probe until re-armed | `api-stay-up.md` (Health / Ownership) · `STATUS.md` Live Shop API / Ops |
 | Shop OS GitHub Actions quality gate (pytest + web typecheck / `next build`; git-only — **not** Doc deploy, **not** unfreeze GO) | `shop-os-ci.md` |
 | Member UI → projectcar.ca (plan only; **Ben GO**) | `member-host-cutover.md` |
 | Member path-split on projectcar.ca / www (Zone; plan only; **Ben GO**) | `member-zone-edge.md` |
