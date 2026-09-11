@@ -152,11 +152,11 @@ Still the Doc demo. Not a shop opening.
 
 ---
 
-## Lookout Soft-530 companion watches (pending Ben GO)
+## Lookout Soft-530 companion watches (HOLD / not armed)
 
 **Blind spot:** Soft-530 five-row is Doc shop hosts `cloud.` / `api.` / `app.` / `ops.`, but Lookout Soft-530 coverage was **api-only** (`GET https://api.projectcar.ca/health`). `ops.` / `app.` (and `cloud.`) can **530 while `api.` stays 200** — same class as pre-vault-watch.
 
-Companion flip watches stay **pending Ben GO**. Do **not** claim armed / `enabled:true`. Paper spec (2026-09-11):
+Companion flip watches are **HOLD / not armed**. Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask. Do **not** claim `enabled:true`. Api + vault watches continue. Paper spec (2026-09-11):
 
 | Watch URL | Ok | Down |
 |-----------|----|------|
@@ -166,7 +166,7 @@ Companion flip watches stay **pending Ben GO**. Do **not** claim armed / `enable
 
 Cadence ≈ the api `/health` watch. Baselines (Lookout-owned): `/workspace/lookout/projectcar-ops-health-baseline.json` + `projectcar-app-health-baseline.json` (+ cloud if armed). Flip-only alerts: **Chief + Lead only**; **never Ben**; never restart / mutate.
 
-**Pending Ben GO.** Do **not** claim companion watches armed / `enabled:true` / LIVE. Soft-530 companion watches ≠ vault `/alive` watch ≠ Doc lid-restore. Soft-530 **CLEAR** live. Vault flip watch stays **LIVE/armed**. Api `/health` stay-up: `api-stay-up.md`. STATUS Live is canonical.
+**HOLD / not armed.** Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask. Do **not** claim companion watches armed / `enabled:true` / LIVE. Api + vault watches continue. Soft-530 companion watches ≠ vault `/alive` watch ≠ Doc lid-restore. Soft-530 **CLEAR** live. Vault flip watch stays **LIVE/armed**. Api `/health` stay-up: `api-stay-up.md`. STATUS Live is canonical.
 
 ---
 
@@ -174,7 +174,7 @@ Cadence ≈ the api `/health` watch. Baselines (Lookout-owned): `/workspace/look
 
 | Role | Owns | Does not own |
 |------|------|----------------|
-| **Lookout** | Soft-530 companion flip watches on `ops.` / `app.` `/login` (**pending Ben GO** — do **not** claim armed). Optional `cloud.` `/login` for five-row parity. | Process restore on Doc; Cloudflare tunnel / DNS edits; vault `/alive` watch (separate **LIVE/armed**); Doc lid-restore |
+| **Lookout** | Soft-530 companion flip watches on `ops.` / `app.` `/login` (**HOLD / not armed** — Ben skipped ~14:35 America/Edmonton; do **not** re-ask). Optional `cloud.` `/login` for five-row parity. | Process restore on Doc; Cloudflare tunnel / DNS edits; vault `/alive` watch (separate **LIVE/armed**); Doc lid-restore |
 | **Lead** | shop-web process stay-up and recovery on Doc (`com.projectcar.shop-web`, wrapper, `next start`, rebuild / `BUILD_ID`) | Cloudflare tunnel / DNS edits |
 | **Zone** | Cloudflare tunnel + DNS for `ops.projectcar.ca` and temporary `app.projectcar.ca` | Restarting shop-web |
 | **Garage** | shop-web PRs under `apps/project-car/web` | Restarting shop-web, tunnel, or DNS |

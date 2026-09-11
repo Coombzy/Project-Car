@@ -31,7 +31,7 @@ STATUS Next #1 Member edge is **capacity-blocked** by Option A. The CF Dynamic R
 
 Soft-530 is **CLEAR** / **LIVE**. That does **not** unlock Member edge. **#82** Home canonical/og/sitemap `/index.html` is **not yet Worker-live**. Do **not** execute Garage/Zone from this tip-fold.
 
-**STATUS Reality quarantine:** Until **#82** Worker-live + Zone Direct Upload, held **#70** Option A is brochure live SSOT — do **not** execute from `main` Reality tip (pre-Option-A Worker `/shop` **302** + `styles.css?v=35`). After **#82**, one STATUS tip-fold reconciles `main` Reality (`STATUS.md` Live post-#82 checklist; receipt: `brochure-worker-deploy.md`). Keep `/member*` Worker **404** until Member edge Ben GO after Bulk Phase1 — never **301** into `membership.html`. Soft-530 companion watches stay **pending Ben GO** — do **not** claim armed.
+**STATUS Reality quarantine:** Until **#82** Worker-live + Zone Direct Upload, held **#70** Option A is brochure live SSOT — do **not** execute from `main` Reality tip (pre-Option-A Worker `/shop` **302** + `styles.css?v=35`). After **#82**, one STATUS tip-fold reconciles `main` Reality (`STATUS.md` Live post-#82 checklist; receipt: `brochure-worker-deploy.md`). Keep `/member*` Worker **404** until Member edge Ben GO after Bulk Phase1 — never **301** into `membership.html`. Soft-530 companion watches are **HOLD / not armed** (Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask).
 
 | Hard gate | Meaning |
 |-----------|---------|
