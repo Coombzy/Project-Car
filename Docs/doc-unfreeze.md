@@ -39,7 +39,7 @@ Do **not** collapse them. A soft morning 530 is **not** unfreeze GO. Soft-530 **
 
 | Clock | Pin | Meaning |
 |-------|-----|---------|
-| **Git `main`** | Moves with merges (this repo) | **#36** host allowlist (`f952cd3`) and **#69** ops layout (`b9f9019`) are **on git**. Shop OS CI (`#73`) is git-only. |
+| **Git `main`** | Moves with merges (this repo) | **#36** host allowlist (`f952cd3`) and **#69** ops layout (`b9f9019`) are **on git**. Shop OS CI (`#73`) is git-only. Garage **#79.1** strip-changeme is the same **git-only** bucket — merge will **not** clear public `/login` until this pull + rebuild. |
 | **Doc working tree** | Frozen at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** (Dashboard **#28**) | Live `ops.` / `app.` / `:3000` stay on that build until this checklist finishes **after** Ben GO. |
 | **Held #70** | Open docs / honesty PR | Optional tip fold + OwnerDemoBanner honesty copy. **Do not amend #70 from this file.** Merge of #70 is a separate lane — not this checklist. |
 
@@ -55,7 +55,7 @@ Do **not** call **#36** or **#69** live on Doc until step 5 shows a **new** `BUI
 | **Lead** | After GO: pull, alembic if needed, shop-web rebuild, `BUILD_ID` check, smoke | Cloudflare tunnel / DNS, Worker upload, Member cutover, `app.` cut |
 | **Garage** | Brochure / waitlist e2e **after** public health is 200 | Doc `git pull`, alembic, shop-web rebuild |
 | **Zone** | Tunnel / DNS only if local origin is healthy but public is still **1033** | Doc checkout |
-| **Lookout** | Live probes (when enabled) | Doc pull. Morning probe is **Lead** while `projectcar-api-health-watch` is paused. |
+| **Lookout** | Live probes. **#78 lookout-resume** is **LIVE-SUPERSEDED** — `projectcar-api-health-watch` is already **`enabled:true`**. Soft-530 companions stay **HOLD**. | Doc pull. Do **not** re-ask companion-watch approval. |
 | **Chief** | Standing GO for this **checklist**. Plan-improve. | Substituting for Ben’s unfreeze GO. uvicorn / shop-web restarts. |
 
 No edge flip. No CF ↔ GitHub re-ask. No Member GO. No `app.` cut. No OAuth implementation. No tip-only finance stamps.
@@ -74,7 +74,7 @@ Ben must say **GO** to unfreeze Doc (explicit). Record who / when in the heartbe
 
 - Green Shop OS CI on `main` or on a PR
 - Soft-530 **CLEAR** / public `GET /health` **200**
-- Merge of this file, `#73`, `#72`, `#71`, or held `#70`
+- Merge of this file, `#73`, `#72`, `#71`, held `#70`, or Garage **#79.1** strip-changeme (git-only until this pull)
 - Lid-restore / morning 530 recovery
 - Chief standing GO for tests / CI / this checklist
 

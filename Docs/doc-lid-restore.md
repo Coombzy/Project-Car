@@ -31,7 +31,7 @@ The public brochure (Worker `projectcar-brochure`) does **not** go down when Doc
 | Soft morning **530 / 1033** on `api.` / `ops.` / `app.` | **Expected lid-close.** Stay quiet. Restore when Doc is reachable. Do not page Ben. |
 | Doc will not wake, **Grok Bot desktop offline**, or a **prolonged** outage after a normal wake window | Ping **Ben**. Lead still owns process restore once the Mac is up. |
 
-Alerts can come from anyone who sees **502**, **530 / error 1033**, or a failed waitlist submit. **Recovery of the processes is Lead only.** Lookout `projectcar-api-health-watch` is **paused**; Lead owns the morning probe.
+Alerts can come from anyone who sees **502**, **530 / error 1033**, or a failed waitlist submit. **Recovery of the processes is Lead only.** Lookout `projectcar-api-health-watch` is **resumed** (`enabled:true`). **#78 lookout-resume** is **LIVE-SUPERSEDED**. Soft-530 companion watches stay **HOLD**.
 
 ---
 
