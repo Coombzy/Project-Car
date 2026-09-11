@@ -2,7 +2,7 @@
 
 **Status:** Standing runbook  
 **Updated:** 2026-09-11  
-**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock, `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 **LIVE** — do not re-apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md` (Next #1 capacity-blocked until #82 + Bulk Phase1), `apps/website/README.md`. **Queued (not drafted):** `brochure-worker-ci.md` — Option A matrix below is the Member-precondition receipt until that file exists.
+**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock, `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 **LIVE** — do not re-apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md` (Next #1 capacity-blocked until #82 + Bulk Phase1), `apps/website/README.md`. **Queued (not drafted):** `brochure-worker-ci.md` — Option A matrix below is the Member-precondition receipt until that file exists. When drafted, that matrix should include the **#82 mandatory purge** (Worker/Cache, apex+www) before body-freshness asserts.
 
 Re-deploy the public brochure after Garage merges HTML on `main`. This is the **locked live method**. It is not a one-off for a single hygiene ship.
 
@@ -37,7 +37,7 @@ Cloudflare Dynamic Redirect Rules for Option A are **FULL 10/10** Active **301**
 
 **Garage must not** invent new brochure extensionless pretty-URLs that need another Dynamic Redirect Rule until after **#82** is Worker-live **and** Bulk Phase1 frees Dynamic slots.
 
-Redirect plan A is already parked (agent `/workspace` parking is outside this repo). In-repo pointer to that parked Bulk Phase1 pretty-URL pack — this table is the **Member-precondition receipt** (Option A matrix). Fold into `brochure-worker-ci.md` when that file is drafted; until then this runbook + STATUS Next #1 + `member-zone-edge.md` §0 are the queue/index.
+Redirect plan A is already parked (agent `/workspace` parking is outside this repo). In-repo pointer to that parked Bulk Phase1 pretty-URL pack — this table is the **Member-precondition receipt** (Option A matrix). Fold into `brochure-worker-ci.md` when that file is drafted (include the **#82 mandatory purge** Worker/Cache apex+www before body-freshness asserts); until then this runbook + STATUS Next #1 + `member-zone-edge.md` §0 are the queue/index.
 
 | Stay on Dynamic until migrate | Move to Bulk Phase1 (drafted, not live) |
 |-------------------------------|-----------------------------------------|
@@ -55,7 +55,33 @@ Do **not** create a new Dynamic Redirect Rule for a new pretty path. Do **not** 
 
 ## STATUS Reality quarantine (held #70)
 
-Until **#82** is Worker-live via Zone Direct Upload, **held #70 STATUS Reality tip / Option A** is brochure live SSOT. Do **not** execute Zone or Garage from **`main` STATUS Reality tip** — `main` still documents the pre-Option-A Worker (`_redirects` `/shop` **302** + `styles.css?v=35`). After **#82** upload, **one** STATUS tip-fold reconciles `main` Reality to live: Home canonical/og/sitemap `/index.html`; nav/logo not `href="/"`; Zone Redirect pack SSOT (**FULL 10/10** / Bulk Phase1 path); assets `styles.css?v=36` + `waitlist.js?v=3`; `/shop.html` → `/the-shop.html` **301 via Zone** (never reintroduce Worker `/shop` **302**). Keep `/member*` Worker **404** until Member edge Ben GO after Bulk Phase1 — never **301** into `membership.html` (`member-zone-edge.md`). Soft-530 companion watches are **HOLD / not armed** (Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask). This runbook does **not** execute that reconcile, Bulk Phase1, or Member edge. Canonical banner + checklist: `STATUS.md`.
+Until **#82** is Worker-live via Zone Direct Upload, **held #70 STATUS Reality tip / Option A** is brochure live SSOT. Do **not** execute Zone or Garage from **`main` STATUS Reality tip** — `main` still documents the pre-Option-A Worker (`_redirects` `/shop` **302** + `styles.css?v=35`). After **#82** upload, smoke is **ordered** (Direct Upload → **mandatory purge** → body freshness — gate below). **Then** **one** STATUS tip-fold reconciles `main` Reality to live: Home canonical/og/sitemap `https://projectcar.ca/index.html`; nav/logo not `href="/"`; Zone Redirect pack SSOT (**FULL 10/10** / Bulk Phase1 path); assets `waitlist.js?v=3` + `styles.css?v=36`; `/shop.html` → `/the-shop.html` **301 via Zone** (never reintroduce Worker `/shop` **302**); Worker `_redirects` **thin** (chat → contact only). Keep `/member*` Worker **404** until Member edge Ben GO after Bulk Phase1 — never **301** into `membership.html` (`member-zone-edge.md`). Soft-530 companion watches are **HOLD / not armed** (Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask). **#82** Ben GO unchanged. This runbook does **not** execute that upload, purge, reconcile, Bulk Phase1, or Member edge. Canonical banner + checklist: `STATUS.md`.
+
+---
+
+## #82 Worker Direct Upload smoke gate (paper — not executed)
+
+**#82 Ben GO unchanged.** Soft-530 companion watches stay **HOLD / not armed**. This section does **not** execute Zone or Garage.
+
+After **#82** is GO'd, Zone smoke is **ordered**. Do **not** skip purge. Do **not** treat `Cache-Control: no-cache, must-revalidate` as proof the new HTML is live — Worker HTML steady-state is `cf-cache-status: HIT` **plus** no-cache. Stale HIT HTML fails body freshness.
+
+| Order | Gate | Pass |
+|-------|------|------|
+| **1** | **Direct Upload** `apps/website/html` onto Worker **`projectcar-brochure`** from the **#82** `main` tip | Worker version committed. Apex + www still attach. |
+| **2** | **Mandatory purge** Worker / Cache for **`projectcar-brochure`** (**apex + www**) | Purge complete **before** any body curl. |
+| **3** | **Then** assert body freshness (apex + www) | All rows below. |
+
+**Body freshness (step 3 — after purge only):**
+
+| Assert | Expect |
+|--------|--------|
+| Home canonical / og / sitemap | `https://projectcar.ca/index.html` (not `/`) |
+| Nav / logo | **not** `href="/"` |
+| `/shop.html` → `/the-shop.html` | **301 via Zone** (never Worker `/shop` **302**) |
+| Worker `_redirects` | **thin**: chat → contact only (no `/` or `/shop`) |
+| Soft-530 assets | `waitlist.js?v=3` + `styles.css?v=36` |
+
+Generic post-deploy smoke below still applies for non-#82 uploads. **#82** must not treat that list as a substitute for this ordered gate.
 
 ---
 
@@ -95,10 +121,10 @@ Use whatever machine already has Cloudflare access for this Worker. Checkout `ma
    ```
    Expect at least: `index.html`, `about.html`, `the-shop.html`, `membership.html`, `roadmap.html`, `contact.html`, `waitlist.js`, `shop-config.js`, `styles.css`, `robots.txt`, `sitemap.xml`, `404.html`, `favicon.ico`, `_redirects`, `_headers`, `assets/`. Chat page stays **absent** (`_redirects` is Chat → Contact 301 only).
 3. **Open the existing Worker.** Cloudflare dashboard → Workers & Pages → Workers → **`projectcar-brochure`**. Do **not** create a new Worker or a Pages project.
-4. **Direct Upload** the **`apps/website/html` directory** (that folder is the site root). Confirm the Worker name is still **`projectcar-brochure`** before you commit the deploy.
+4. **Direct Upload** the **`apps/website/html` directory** (that folder is the site root). Confirm the Worker name is still **`projectcar-brochure`** before you commit the deploy. **#82:** after this upload, **mandatory purge** Worker/Cache for **`projectcar-brochure`** (**apex + www**) **before** smoke. Do **not** skip. See the #82 smoke gate above.
 5. **Confirm hosts.** Apex `projectcar.ca` and `www.projectcar.ca` still attach to this Worker. Do **not** edit DNS, retarget `ops.` / `app.` / `api.`, or connect Classic Pages git.
 6. **Optional Zone setting** (already noted in `apps/website/README.md`): static `not_found_handling = "404-page"` so branded `404.html` is used. Do not add an SPA `/* → /index.html` fallback.
-7. **Smoke** the list below. Then Garage runs waitlist e2e once public `GET /health` is **200**.
+7. **Smoke** the list below. **#82** uses the ordered gate above (Direct Upload → **mandatory purge** → body freshness) — not this generic list alone. Then Garage runs waitlist e2e once public `GET /health` is **200**.
 
 Do not upload shop-web (`apps/project-car/web`). Do not point the Worker at Doc `:8088`.
 
@@ -107,6 +133,8 @@ Do not upload shop-web (`apps/project-car/web`). Do not point the Worker at Doc 
 ## Smoke after deploy
 
 HTML from some networks hits a Cloudflare challenge (**403**). That is WAF, not a failed upload — check from a normal browser if `curl` is challenged (`website-improvements.md`).
+
+**#82** is the ordered gate above: Direct Upload → **mandatory purge** `projectcar-brochure` Worker/Cache (apex+www) → **then** body freshness. Do **not** treat `Cache-Control: no-cache, must-revalidate` as sufficient — live HTML steady-state is `cf-cache-status: HIT` + no-cache.
 
 | Check | Expect |
 |-------|--------|
@@ -146,7 +174,7 @@ A bad Direct Upload is a **Worker version** problem. Do **not** cut DNS. Do **no
 
 ## Security + cache headers (P2-4 — LIVE)
 
-Worker **`projectcar-brochure` 200s** send the P2-4 security headers (2026-09-07 smoke PASS). Cache is split: HTML `no-cache, must-revalidate` vs `?v=` `.css`/`.js`/`.png` `public, max-age=31536000, immutable`. Unversioned `robots.txt` stays `max-age=0`. Record: **`brochure-security-headers.md`**. Zone Transform Rules: `brochure-security-headers`, `brochure-html-no-cache`, `brochure-asset-immutable` (apex+www). Do **not** re-apply headers, Transform Rules, or `_headers` from this runbook or a docs PR. P2-3 `?v=` is **LIVE** on Worker (`be60a01` / **#57**; Zone Direct Upload ~2026-09-07 16:01 America/Regina).
+Worker **`projectcar-brochure` 200s** send the P2-4 security headers (2026-09-07 smoke PASS). Cache is split: HTML `no-cache, must-revalidate` vs `?v=` `.css`/`.js`/`.png` `public, max-age=31536000, immutable`. Unversioned `robots.txt` stays `max-age=0`. Record: **`brochure-security-headers.md`**. Zone Transform Rules: `brochure-security-headers`, `brochure-html-no-cache`, `brochure-asset-immutable` (apex+www). Do **not** re-apply headers, Transform Rules, or `_headers` from this runbook or a docs PR. P2-3 `?v=` is **LIVE** on Worker (`be60a01` / **#57**; Zone Direct Upload ~2026-09-07 16:01 America/Regina). Do **not** treat HTML `Cache-Control: no-cache, must-revalidate` as proof a new upload is live — Worker HTML steady-state is `cf-cache-status: HIT` **plus** no-cache. **#82** body-freshness asserts require the **mandatory purge** first.
 
 ---
 
@@ -155,7 +183,7 @@ Worker **`projectcar-brochure` 200s** send the P2-4 security headers (2026-09-07
 | Topic | Where / why |
 |-------|-------------|
 | Member host cutover | `member-host-cutover.md` — **Ben GO** only after **#82** Worker-live + Bulk Phase1. Zone path-split: `member-zone-edge.md` §0. Capacity-blocked by Option A **FULL 10/10**. Do not start from a brochure upload. |
-| `brochure-worker-ci.md` | **Not drafted.** Queued. Option A matrix above is the Member-precondition receipt until it exists. |
+| `brochure-worker-ci.md` | **Not drafted.** Queued. Option A matrix above is the Member-precondition receipt until it exists. When drafted, include the **#82 mandatory purge** (Worker/Cache, apex+www) before body-freshness asserts. |
 | Mission Control cockpit | Needs **Ben GO**. Not this Worker. |
 | Stripe / shop-open claims | Locked off. Interest waitlist only. |
 | P2-4 security / cache headers | **LIVE** (2026-09-07). Record: `brochure-security-headers.md`. Do not re-apply from this upload. |
