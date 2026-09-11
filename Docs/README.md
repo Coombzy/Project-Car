@@ -38,9 +38,10 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 | [home-lab-specification.md](home-lab-specification.md) | Host lock: Doc = temp MC hub + Shop API `:8000` + shop-web `:3000`; McKing later; Porsche travel client. Brochure is Worker `projectcar-brochure`, not Doc. |
 | [doc-lid-restore.md](doc-lid-restore.md) | Ordered Lead wake/restore after lid-close / morning **530 / 1033**. Sequence only — process wake, **not** a `git pull`. Essays stay in api-stay-up / shop-web-stay-up / doc-software-baseline. After Ben GO, pull is [doc-unfreeze.md](doc-unfreeze.md). |
 | [doc-unfreeze.md](doc-unfreeze.md) | Ordered **Ben GO** pull on Doc (`~/src/Project-Car`): confirm GO → `git pull` → alembic if needed → shop-web rebuild (`next start`) → new `BUILD_ID` ≠ `5swmVz` → #36 / #69 / OwnerDemoBanner smoke → public health + waitlist CORS. Green Shop OS CI is **not** this GO. Lid-restore stays process-only. |
+| [lookout-resume.md](lookout-resume.md) | Ordered Lookout `projectcar-api-health-watch` re-arm after Doc unfreeze or an explicit Ben resume GO: baseline while public `GET /health` is **200** → `enabled:true` → short first-window quiet → hand probe back from Lead interim (held **#75**). Merging the file is **not** the flip. |
 | [api-stay-up.md](api-stay-up.md) | Keep https://api.projectcar.ca up (uvicorn on Doc; Zone owns tunnel). Brochure is Worker `projectcar-brochure`, not Doc `:8088`. |
 | [shop-web-stay-up.md](shop-web-stay-up.md) | Keep https://ops.projectcar.ca (and temporary `app.`) up — LaunchAgent `com.projectcar.shop-web` runs **`next start`** on Doc `:3000`. Zone owns tunnel/DNS. |
-| [deployment-guide.md](deployment-guide.md) | Index of stay-up / deploy runbooks (lid-close restore, Doc unfreeze after Ben GO, shop-web, API, Shop OS CI, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, ship-MVP cut draft, Google Calendar OAuth plan). |
+| [deployment-guide.md](deployment-guide.md) | Index of stay-up / deploy runbooks (lid-close restore, Doc unfreeze after Ben GO, Lookout re-arm after unfreeze or Ben resume GO, shop-web, API, Shop OS CI, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, ship-MVP cut draft, Google Calendar OAuth plan). |
 | [shop-os-ci.md](shop-os-ci.md) | Shop OS GitHub Actions quality gate (shop-api pytest + shop-web lint / typecheck / `next build`). Git-only — no Doc deploy, no tunnel secrets, no Worker upload. Green CI is **not** Doc unfreeze GO ([doc-unfreeze.md](doc-unfreeze.md)). Doc checkout stays frozen at `4cf8924` / `5swmVz`. |
 | [brochure-worker-deploy.md](brochure-worker-deploy.md) | Standing brochure re-deploy: Zone Direct Upload of `apps/website/html` onto Worker `projectcar-brochure`. Classic Pages git skipped until auth — plan: `brochure-pages-cutover.md`. |
 | [brochure-security-headers.md](brochure-security-headers.md) | P2-4 Zone Transform Rules **LIVE** (2026-09-07 smoke PASS): Worker `projectcar-brochure` security headers + HTML vs `?v=` cache split. Do **not** re-apply from a docs PR. |
@@ -80,7 +81,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 
 | Doc | Go here instead |
 |-----|-----------------|
-| [deployment-guide.md](deployment-guide.md) | Now a living-ops index — lid-close restore, Doc unfreeze (Ben GO), shop-web / API stay-up, Shop OS CI, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, Google Calendar OAuth plan |
+| [deployment-guide.md](deployment-guide.md) | Now a living-ops index — lid-close restore, Doc unfreeze (Ben GO), Lookout re-arm (after unfreeze or Ben resume GO), shop-web / API stay-up, Shop OS CI, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, Google Calendar OAuth plan |
 | [phase-0-nextcloud-roadmap.md](phase-0-nextcloud-roadmap.md) | MC Phase A + nextcloud-progress |
 | [doc-nextcloud-headscale-setup-guide.md](doc-nextcloud-headscale-setup-guide.md) | Tailscale + MariaDB — not Headscale/Postgres |
 
