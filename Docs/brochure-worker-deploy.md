@@ -1,8 +1,8 @@
 # Brochure Worker deploy — `projectcar-brochure`
 
 **Status:** Standing runbook  
-**Updated:** 2026-09-07  
-**Related:** `STATUS.md` Live brochure, `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 **LIVE** — do not re-apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md`, `apps/website/README.md`
+**Updated:** 2026-09-11  
+**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock, `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 **LIVE** — do not re-apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md`, `apps/website/README.md`
 
 Re-deploy the public brochure after Garage merges HTML on `main`. This is the **locked live method**. It is not a one-off for a single hygiene ship.
 
@@ -23,8 +23,27 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Not the origin** | Doc `:8088`, `~/hermes-tools/project-car-website`, optional local nginx preview |
 | **Classic Pages git** | **Skipped** pending CF ↔ GitHub auth. Plan only: `brochure-pages-cutover.md`. Do not invent a live cutover from this runbook. |
 | **Apex sidecar** | **Deferred.** Do not revive. |
+| **Option A Dynamic pack** | **FULL 10/10** Active Dynamic **301**s (apex+www) — capacity lock. No new Dynamic rules for brochure pretty-URLs. See lock below. |
 
 Waitlist on Membership / Contact is a **browser POST** to the Shop API (`https://api.projectcar.ca/waitlist`). The Worker only serves static HTML/JS. API health and CORS live in `api-stay-up.md` and `cors-origins.md` — a green upload does not prove waitlist.
+
+---
+
+## Option A URL SSOT — Dynamic capacity lock (FULL 10/10)
+
+**Paper lock — do not apply Zone Redirect / Bulk changes from this runbook.**
+
+Cloudflare Dynamic Redirect Rules for Option A are **FULL 10/10** Active **301**s (apex+www). That pack owns live pretty URLs: brochure-root-to-index (`/`→`/index.html`), brochure-shop-to-the-shop, brochure-shop-html-to-the-shop (`/shop.html`→`/the-shop.html`), membership/about/the-shop/contact/roadmap-to-html (+ trailing-slash), brochure-chat-to-contact, brochure-chat-slash-to-contact. Worker Assets **`html_handling: none`** — `*.html` is canonical. Worker `_redirects` stays **thin**: chat → contact.html only (no `/` or `/shop`).
+
+**Garage must not** invent new brochure extensionless pretty-URLs that need another Dynamic Redirect Rule until after **#82** is Worker-live **and** Bulk Phase1 frees Dynamic slots.
+
+Redirect plan A is already parked (agent `/workspace` parking is outside this repo). In-repo pointer to that parked Bulk Phase1 pretty-URL pack:
+
+| Stay on Dynamic until migrate | Move to Bulk Phase1 (drafted, not live) |
+|-------------------------------|-----------------------------------------|
+| `root` / `index` / `shop` / `chat` (the live Dynamic rules that own them) | `membership` / `about` / `the-shop` / `contact` / `roadmap` ± slash → `*.html` |
+
+Do **not** create a new Dynamic Redirect Rule for a new pretty path. Do **not** execute Bulk Phase1 or Redirect A from a docs PR or this upload. **#82** Home canonical/og/sitemap `/index.html` is **not yet Worker-live**. Soft-530 **#80** (`waitlist.js?v=3` + `styles.css?v=36`) stays Worker-live.
 
 ---
 
@@ -129,6 +148,8 @@ Worker **`projectcar-brochure` 200s** send the P2-4 security headers (2026-09-07
 | P2-4 security / cache headers | **LIVE** (2026-09-07). Record: `brochure-security-headers.md`. Do not re-apply from this upload. |
 | Classic Pages git | Skipped. Plan: `brochure-pages-cutover.md`. Do not invent a git-connected Pages cutover here. |
 | Apex sidecar | Deferred. Do not revive. |
+| New brochure pretty-URLs / new Dynamic Redirect Rules | **FULL 10/10** lock. Wait for **#82** Worker-live + Bulk Phase1. Redirect A parked. |
+| Bulk Phase1 / Redirect A apply | Parked paper. Do not execute from this runbook. |
 | DNS / `app.` alias | Do not cut or retarget. |
 | Shop API / shop-web process | Lead (`:8000`) / `com.projectcar.shop-web` (`next start` on `:3000`). See `api-stay-up.md` / `shop-web-stay-up.md`. |
 
