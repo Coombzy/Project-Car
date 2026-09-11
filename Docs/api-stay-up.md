@@ -58,12 +58,12 @@ curl -sS http://127.0.0.1:8000/health
 
 | Role | Owns | Does not own |
 |------|------|----------------|
-| **Lookout** | `projectcar-api-health-watch` (resume GO’d 2026-09-11; re-arm in progress — do **not** claim `enabled:true` until Lookout confirms). Lead interim probe ended. | Process restore on Doc; Cloudflare tunnel / DNS edits |
+| **Lookout** | `projectcar-api-health-watch` **resumed** (`enabled:true`) 2026-09-11 ~06:52 America/Edmonton (Lookout confirmed; live `/health` **200**). Lead interim probe ended. | Process restore on Doc; Cloudflare tunnel / DNS edits |
 | **Lead** | uvicorn / process stay-up and recovery on Doc | Cloudflare tunnel / DNS edits; interim morning probe (ended 2026-09-11) |
 | **Zone** | Cloudflare tunnel + DNS for `api.projectcar.ca` | Restarting uvicorn |
 | **Garage** | Browser e2e of the brochure waitlist only | Restarting uvicorn, tunnel, or DNS |
 
-Alerts can come from anyone who sees a **502**, **530 / error 1033**, or a failed waitlist submit. **Recovery of the process is Lead only.** Lookout owns the live watch when re-armed. Do not instruct Garage (or anyone else) to restart uvicorn.
+Alerts can come from anyone who sees a **502**, **530 / error 1033**, or a failed waitlist submit. **Recovery of the process is Lead only.** Lookout owns the live watch (`enabled:true`). Do not instruct Garage (or anyone else) to restart uvicorn.
 
 ---
 
