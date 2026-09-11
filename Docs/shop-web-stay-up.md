@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-11  
 **Public URLs:** https://ops.projectcar.ca (LIVE management) · https://app.projectcar.ca (temporary alias)  
-**Related:** `doc-lid-restore.md` (ordered wake — **not** a pull), `doc-unfreeze.md` (Ben GO pull), `api-stay-up.md`, `doc-software-baseline.md`, `brochure-worker-deploy.md`, `STATUS.md` host split, `shop-os-ci.md` (green CI ≠ unfreeze), `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `app-alias-cut.md` (later `app.` cut; plan only), `mcking-shop-host-cutover.md` (future McKing host — plan only; **not** a cut), `apps/project-car/web/README.md`
+**Related:** `doc-lid-restore.md` (ordered wake — **not** a pull), `doc-unfreeze.md` (Ben GO pull), `api-stay-up.md` (api `/health` is **api-only** — companions live here), `doc-software-baseline.md`, `brochure-worker-deploy.md`, `STATUS.md` host split + Lookout Soft-530 companion watches, `shop-os-ci.md` (green CI ≠ unfreeze), `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `app-alias-cut.md` (later `app.` cut; plan only), `mcking-shop-host-cutover.md` (future McKing host — plan only; **not** a cut), `apps/project-car/web/README.md`
 
 Keep the Shop OS UI reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -152,15 +152,34 @@ Still the Doc demo. Not a shop opening.
 
 ---
 
+## Lookout Soft-530 companion watches (GO'd to arm)
+
+**Blind spot:** Soft-530 five-row is Doc shop hosts `cloud.` / `api.` / `app.` / `ops.`, but Lookout Soft-530 coverage was **api-only** (`GET https://api.projectcar.ca/health`). `ops.` / `app.` (and `cloud.`) can **530 while `api.` stays 200** — same class as pre-vault-watch.
+
+Lookout **GO'd to arm** companion flip watches 2026-09-11:
+
+| Watch URL | Ok | Down |
+|-----------|----|------|
+| `https://ops.projectcar.ca/login` | **200** (or **307** → `/login` then **200**) | **502 / 530 / 1033 / timeout** |
+| `https://app.projectcar.ca/login` | same | same |
+| Optional `https://cloud.projectcar.ca/login` (five-row parity; Lead probed **200**) | same | same |
+
+Cadence ≈ the api `/health` watch. Baselines (Lookout-owned): `/workspace/lookout/projectcar-ops-health-baseline.json` + `projectcar-app-health-baseline.json` (+ cloud if armed). Flip-only alerts: **Chief + Lead only**; **never Ben**; never restart / mutate.
+
+**GO'd / arming** until Lookout confirms `enabled`. Do **not** claim companion watches `enabled:true` / LIVE/armed until that confirm. Soft-530 companion watches ≠ vault `/alive` watch ≠ Doc lid-restore. Soft-530 **CLEAR** live. Vault flip watch stays **LIVE/armed**. Api `/health` stay-up: `api-stay-up.md`. STATUS Live is canonical.
+
+---
+
 ## Ownership
 
 | Role | Owns | Does not own |
 |------|------|----------------|
+| **Lookout** | Soft-530 companion flip watches on `ops.` / `app.` `/login` (**GO'd to arm** 2026-09-11 — **GO'd / arming** until Lookout confirms `enabled`). Optional `cloud.` `/login` for five-row parity. | Process restore on Doc; Cloudflare tunnel / DNS edits; vault `/alive` watch (separate **LIVE/armed**); Doc lid-restore |
 | **Lead** | shop-web process stay-up and recovery on Doc (`com.projectcar.shop-web`, wrapper, `next start`, rebuild / `BUILD_ID`) | Cloudflare tunnel / DNS edits |
 | **Zone** | Cloudflare tunnel + DNS for `ops.projectcar.ca` and temporary `app.projectcar.ca` | Restarting shop-web |
 | **Garage** | shop-web PRs under `apps/project-car/web` | Restarting shop-web, tunnel, or DNS |
 
-Alerts can come from anyone who sees a **502**, **530 / error 1033**, a login redirect to localhost, or a flapping UI. **Recovery of the process is Lead only.** Do not instruct Garage (or anyone else) to restart shop-web.
+Alerts can come from anyone who sees a **502**, **530 / error 1033**, a login redirect to localhost, or a flapping UI. **Recovery of the process is Lead only.** Do not instruct Garage (or anyone else) to restart shop-web. Companion flip alerts: **Chief + Lead only**; **never Ben**; never restart / mutate.
 
 ---
 
