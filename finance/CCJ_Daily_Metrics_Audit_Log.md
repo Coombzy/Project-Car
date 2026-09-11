@@ -42,7 +42,33 @@ Key takeaway: Second session under $100 held the 50-DMA on Rel 0.79x while URA d
 - Prior scenarios vs actual: Sep 10 1d $91.00–$104.00 → L96.37 H98.27 C96.68 hit (C inside bias $94.00–$99.00; auditor to close). Sep 10 1w $86.00–$112.00 day 1 of 5 on-track (path L96.37 H98.27 C96.68). Sep 9 1w $89.50–$116.00 day 2 of 5 on-track. Sep 8 1w $90.50–$117.00 day 3 of 5 on-track. Sep 4 1w $91–$116 day 4 of 5 on-track. Sep 3 1w $91–$116.50 day 5 prints inside (path L96.37 H104.12 C96.68) — auditor to close. Self-check: Today's 1d width $12.00 vs ATR-proxy $2.96; last closed 1d was hit; 1d high $102.00 vs last session high $98.27; Rel Vol 0.79x from 16:00 print; wick (H−C) $1.59 = 0.54x ATR — adjustment: rule 2 OFF; rule 7 OFF; magnet-clear $100 to $102.00; trend-down after lost $100; 50-DMA $95.18 held; floor kept wide after light-vol breakdown + CCJ vs URA +2.51pp flag.
 
 #### Audit / Reviewer Notes
-(To be completed by subsequent audit process)
+**Independent Process Quality Audit** (2026-09-11 16:35 ET)
+
+### Process Quality Audit
+- Quality: [x] 8 metrics sourced [x] Historical deltas [x] QE 8.5 [x] Conf 86 [x] Narrative vs history [x] No contradiction [x] Anomalies discussed [x] 1d/1w/1m/3m + invalidation + prior-scenario [x] Decision map [x] 1d width $12.00 = 4.05×ATR $2.96 (>=2.0×)
+- Operational: [x] Prompt v1.13 matches last rec [x] Newest notes only [x] Health row this run [x] Grades closed after RTH [x] Polygon primary [x] Feature cols on graded/new rows [x] Calibration refreshed (Sep 10 1d + Sep 3 1w closed)
+- Deduction arithmetic: 10 − 0 = **Score 10/10**
+- Recurring: log-restore from stub still open (SEE_LOCAL_FILE after today's body). Tracker/Health prepend missed by Analysis (v1.13 steps 7–8 already require both). Rule 2 still OFF.
+- Overall: Official EOD is complete and internally consistent. Polygon C $96.68 / L $96.37 / H $98.27 / V 2.081M matches Yahoo 16:00:02 cluster. Regime trend-down after lost $100 is correctly applied (Rel 0.79x, bottom-16% close, URA −3.27%). 50-DMA $95.18 held. Public URA prints ~$43.57–$43.66 vs Polygon $43.53 — same direction; +2.51pp flag still fires. No prompt-file edit (execution misses, not language gap).
+
+### Prediction Accuracy
+- Closed this run (RTH complete): Sep 10 1d HIT; Sep 3 1w HIT.
+- Pointer: see `CCJ_Prediction_Tracker.md` (do not paste full table).
+  - Sep 10 1d $91–$104 → L96.37 H98.27 C96.68 HIT; C inside bias $94–$99; mid $96.50; pct_error 0.2%; fade / close inside bias
+  - Sep 3 1w $91–$116.50 (Sep 4/8/9/10/11) → path L96.37 H104.12 C96.68 HIT; C inside bias $96–$108; mid $102.00; pct_error 5.2%
+  - Sep 10 1w Day 1/5 on-track; Sep 9 1w Day 2/5; Sep 8 Day 3/5; Sep 4 Day 4/5
+  - Sep 11 open rows appended: 1d $90–$102 / 1w $85–$111 / 1m $78–$120 / 3m $80–$148 (trend-down, Rel 0.79, prior −0.76)
+- Calibration: refreshed yes. 1d 12/16 (75%) last-10 **10/10**; 1w 5/12 (42%). Rule 2 OFF; rule 7 OFF (wick 0.54×ATR).
+- Root cause of prior misses unchanged (magnet-as-wall / narrow 1w). Today's closes were clean range hits on a light-vol digest under $100; URA dump did not push CCJ through the 50-DMA.
+
+### Improvement Recommendations
+- Next Analysis: restore Sep 10/9/8 bodies from blob f39dd494 (or last good full-log commit) before prepending — do not leave SEE_LOCAL_FILE stubs.
+- Next Analysis: append the four tracker rows and prepend Health in the same run (v1.13 steps 7–8); Audit should not be the first writer of today's open rows.
+- Keep 1d conf at 50–55% while 1w full-hit is 42% despite 1d last-10 at 100%.
+- Continue clearing $100 by ≥$1 on 1d highs; do not treat $98.27 as a launch without Rel >=1.0x and URA not down.
+- No prompt-file change this run (N/A).
+
+**Final Action** Audit Notes + Tracker + Calibration + Health committed by team lead. Health confirmation after re-read.
 
 ---
 
