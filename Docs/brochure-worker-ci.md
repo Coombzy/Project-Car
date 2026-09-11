@@ -6,7 +6,7 @@
 
 This file is the **post–Soft-530-CLEAR** brochure CI paper that was queued on held **#70**. It is **not** a Zone upload, **not** a Garage HTML PR, **not** a GitHub Actions workflow, and **not** a license to apply Redirect / Bulk / DNS.
 
-**#82 Ben GO is unchanged.** Soft-530 companion watches stay **HOLD / not armed**. Dual-Nextcloud ownership (`4cde204`) is unchanged. Waitlist-owner-desk stays **parked**. Garage **#79.1** strip-changeme stays **git-only until Doc unfreeze+pull**. Do **not** schedule weekend Zone Direct Upload / Worker work — first Monday plan-improve resumes Soft-530 smoke. This fold does **not** execute Zone or Garage.
+**#82 Ben GO is unchanged.** Soft-530 companion watches stay **HOLD / not armed**. Dual-Nextcloud ownership (`4cde204`) is unchanged. Waitlist-owner-desk is **retired** (Owner desk **LIVE** when origin is up — STATUS Waitlist Live; optional CSV Later). Do **not** draft `waitlist-owner-desk.md`. Garage **#79.1** strip-changeme stays **git-only until Doc unfreeze+pull**. Do **not** schedule weekend Zone Direct Upload / Worker work — first Monday plan-improve resumes Soft-530 smoke. This fold does **not** execute Zone or Garage. Soft-530 **CLEAR** or desk existence ≠ Doc unfreeze ≠ **#79.1** rebuild GO.
 
 Do **not** invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, Matrix, or Apex revival.
 
@@ -24,7 +24,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **No weekend Zone / Worker** | plan-improve is **off Sat/Sun**. Do **not** schedule weekend Direct Upload / purge / Worker work. First Monday plan-improve resumes Soft-530 smoke. Weekend control plane is Doc KeepAlive / lid-close — **not** this file, **not** **#82**. |
 | **#79.1 git-only** | Strip-changeme stays git-only until Doc unfreeze+pull (`4cf8924` / **`5swmVz`**). **#79** stays **parallel to #82**. |
 | **Dual-Nextcloud unchanged** | Public `cloud.` stays on **Doc** until Ben GO. McKing NC unpublished. Not this file. |
-| **Waitlist-owner-desk parked** | Owner waitlist desk is **not** this CI paper. Do **not** unpark it from a docs fold. |
+| **Waitlist-owner-desk retired** | Owner desk is **LIVE** when origin is up (STATUS Waitlist Live). Do **not** draft `waitlist-owner-desk.md`. Optional CSV Later. Soft-530 **CLEAR** / desk existence ≠ Doc unfreeze / **#79.1** rebuild GO. |
 | **#83 is CI-only** | Thin `_redirects` assert on the **#82** base. Prefer merge after **#82**; **parallel with upload OK**. **Not** Bulk-gated. **Never #81.** |
 
 ---
@@ -119,7 +119,7 @@ Until **#82** is Worker-live via Zone Direct Upload, **held #70 STATUS Reality t
 | Member host / edge | `member-host-cutover.md` / `member-zone-edge.md` — Ben GO only after **#82** + Bulk Phase1 |
 | Bulk Phase1 / Redirect A apply | Parked until **#82** is Worker-live. Brochure pretty-URL migrate table above. |
 | **#81** merge / upload | Draft + superseded. Close or leave draft. Never upload. |
-| Waitlist-owner-desk | **Parked.** Do not unpark from this fold. |
+| Waitlist-owner-desk | **Retired.** Already shipped (STATUS Waitlist Live). Do **not** draft `waitlist-owner-desk.md`. Optional CSV Later. Soft-530 **CLEAR** / desk existence ≠ Doc unfreeze / **#79.1** rebuild GO. |
 | **#79** / **#79.1** | Parallel to **#82**. **#79.1** git-only until Doc unfreeze. `ops-demo-hardening.md`. |
 | Soft-530 companion watches | **HOLD / not armed.** Do not re-ask. |
 | Weekend Zone Direct Upload / Worker | **Do not schedule.** plan-improve off Sat/Sun. First Monday resumes Soft-530 smoke. Not this file. |

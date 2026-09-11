@@ -176,7 +176,7 @@ plan-improve is **off Sat/Sun**. These companion ops/app watches stay **HOLD**. 
 
 Weekend Soft-530 control plane is still Doc KeepAlive / lid-close: `com.projectcar.cloudflared` + uvicorn `:8000` + this shop-web `next start` `:3000` LaunchAgent. That is **not** Doc unfreeze and **not** **#82**. If `api.` `/health` flips non-200, Chief/Lead run `doc-lid-restore.md` **process wake only** (kickstart-if-down on this KeepAlive; no pull while freeze intact). Vault flips stay on the separate McKing watch. Do **not** schedule weekend Zone Direct Upload / Worker work — first Monday plan-improve resumes Soft-530 smoke.
 
-Anti-goal: Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask. **#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk parked / **#79.1** git-only until Doc unfreeze — **unchanged**.
+Anti-goal: Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask. **#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk **retired** (Owner desk LIVE; optional CSV Later) / **#79.1** git-only until Doc unfreeze — **unchanged**.
 
 ---
 

@@ -47,7 +47,7 @@ plan-improve is **off Sat/Sun**. Soft-530 companion ops/app watches stay **HOLD 
 | **No weekend Zone / Worker** | Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-improve resumes Soft-530 smoke. |
 | **Anti-goal** | Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask. |
 
-**#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk parked / **#79.1** git-only until Doc unfreeze — **unchanged**. Essays: `api-stay-up.md`, `shop-web-stay-up.md`. STATUS Live / Locks is canonical.
+**#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk **retired** (Owner desk LIVE; optional CSV Later) / **#79.1** git-only until Doc unfreeze — **unchanged**. Essays: `api-stay-up.md`, `shop-web-stay-up.md`. STATUS Live / Locks is canonical.
 
 ---
 
