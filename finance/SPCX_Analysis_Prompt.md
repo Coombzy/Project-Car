@@ -1,7 +1,7 @@
 # SPCX Daily Analysis Prompt
 
-**Version:** 1.12  
-**Last edited:** 2026-09-10T16:20:00Z  
+**Version:** 1.13  
+**Last edited:** 2026-09-11T16:20:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** SPCX Daily Stock Analysis automation
 
@@ -28,10 +28,10 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
    - 1-week width >= **3.0 × ATR-proxy**; >= **4.0 ×** if last 5 include a **>= +5%** RTH.
    - Printed-high clearance: `range_high` >= max(last completed close, printed session high) + **0.5 × ATR**. Never park 1d/1w high on $149 / $150 / $155.
    - Coil-spring: Rel Vol < 0.5x → 0.75× high clearance; last 3 each < 0.6x → 1.0×. **2026-09-02** 1d high $149; 9/03 H $152.30 miss.
-   - Known-event extra HIGH and LOW (v1.11): dated lock-up/unlock in next 10 RTH → +0.5×ATR to 1d/1w high AND −0.5×ATR from 1d/1w low. **2026-09-08** 1d low $144 held vs official 9/09 L $145.55.
+   - Known-event extra HIGH and LOW (v1.11): dated lock-up/unlock in next 10 RTH → +0.5×ATR to 1d/1w high AND −0.5×ATR from 1d/1w low. Next dated unlock **2026-09-24**. **2026-09-08** 1d low $144 held vs official 9/09 L $145.55.
    - Live-impulse extra is directional. Post-impulse high: last completed >= +5% or Rel Vol >= 1.0x + close in top third → 1.0× high clearance.
 4. **Volume / confidence**
-   - Buckets vs 20d: `<0.80x` below-avg; `0.80–1.19x` normal; `>=1.20x` elevated. Same value on all four rows. **2026-09-09** Vol ~120.59M / ~$83.9M ≈ 1.44x = elevated.
+   - Buckets vs 20d: `<0.80x` below-avg; `0.80–1.19x` normal; `>=1.20x` elevated. Same value on all four rows. **2026-09-10** Vol ~118.60M / ~$82.0M ≈ 1.45x = elevated.
    - `prior_day_pct` = last completed official RTH % change. Rel Vol < 0.5x: cut 1d upside conf 10 pts.
 5. Mid-session labels use **Last** (not Close). Confidence <= 80 until a completed close is the as-of.
 6. Include prior-scenario vs actual from closed tracker rows.
@@ -39,16 +39,19 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
 8. **Parseable table first.** No table = unrecoverable (**2026-09-01**).
 9. Self-check must include payload-compact used yes/no and TRACKER_SHA present yes/no.
 10. Non-session days: no new rows; still refresh path + Day N/5. Weekend SHA-reuse does not clear write-streak.
-11. Close clocks: 1d = next RTH; 1w = 5th RTH after analysis_date; 1m = 21st; 3m = 63rd. **Day N/5 after 2026-09-10 begin:** 9/02=5/5 (open until 9/10 official close); 9/03=4/5; 9/04=3/5; 9/08=2/5; 9/09=1/5; 9/10=0/5.
+11. Close clocks: 1d = next RTH; 1w = 5th RTH after analysis_date; 1m = 21st; 3m = 63rd. **Day N/5 after 2026-09-11 begin:** 9/03=5/5 (open until 9/11 official close); 9/04=4/5; 9/08=3/5; 9/09=2/5; 9/10=1/5; 9/11=0/5.
 12. pct_error format `X.X%`.
 13. Official RTH source order: SpaceX IR if widget date matches, else Yahoo, else StockAnalysis / MarketWatch / Barchart. Stale-IR skip stands.
 14. Session-day path maintenance + official-EOD replace. **Frozen closed notes (v1.12):** after a row is closed, do not grow that row's notes.
-15. **Write-first / TRACKER_SHA gate.** Never emit `write pending`. Failed runs include **2026-09-10** 145s table + WRITE FAILED after dual-write (payload/schema size).
-    - Dual-write: create_or_update_file then push_files.
-    - **Payload-compact (v1.12):** on size/schema reject, compact already-closed notes, retry both tools once, then WRITE FAILED + today's 4 rows only.
-    - SHA-delta on session days.
+15. **Write-first / TRACKER_SHA gate.** Never emit `write pending`. Failed runs include **2026-09-10** WRITE FAILED after dual-write and **2026-09-11** SHA-reuse (emitted pre-write `6e4d34f3`).
+   - Dual-write: create_or_update_file then push_files.
+   - **Payload-compact (v1.12):** on size/schema reject, compact already-closed notes, retry both tools once, then WRITE FAILED + today's 4 rows only.
+   - SHA-delta on session days. **v1.13:** if emitted TRACKER_SHA equals the pre-write blob SHA, that is WRITE FAILED — do not treat email as a write.
 16. Price-quote cap before write.
-17. **Write-streak emergency.** Current streak: **2** (9/09 + 9/10). Emergency OFF until >=3 consecutive session-day misses.
+17. **Write-streak emergency ON (v1.13).** Current streak: **3** (9/09 + 9/10 + 9/11). Emergency ON at >=3 consecutive session-day misses.
+   - After two GitHub reads + one quote batch, use **only write tools** until a new 40-char blob SHA exists.
+   - Compact already-closed notes **before** the first write attempt.
+   - Confirm today's four `(analysis_date, horizon)` rows exist on a post-write get_file_contents before emitting TRACKER_SHA.
 
 ## Report structure
 
@@ -66,6 +69,6 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
 
 Get SHA immediately before write; retry once on conflict.
 Session day: append four rows; path-refresh; Day N/5; official-EOD replace; freeze closed notes.
-Never print `write pending`. Write-streak emergency is OFF. Streak = 2. Dual-write + SHA-delta + payload-compact remain.
+Never print `write pending`. Write-streak emergency is ON. Streak = 3. Dual-write + SHA-delta + payload-compact remain. Pre-write SHA emission = WRITE FAILED.
 
 Cite sources. Be objective and data-driven.
