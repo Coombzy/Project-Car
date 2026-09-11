@@ -1,8 +1,8 @@
 # Member zone edge — path split on projectcar.ca / www
 
 **Status:** Checklist / plan only — **not shipped**. Do **not** execute until **Ben GO**.  
-**Updated:** 2026-09-07  
-**Related:** `STATUS.md` Next #1, `member-host-cutover.md`, `app-alias-cut.md` (STATUS Next #2; later — do **not** cut `app.` here), `brochure-worker-deploy.md`, `shop-web-stay-up.md`, `brochure-pages-cutover.md`, `cors-origins.md`, `website-webapp-specification.md` §3
+**Updated:** 2026-09-11  
+**Related:** `STATUS.md` Next #1, `member-host-cutover.md`, `app-alias-cut.md` (STATUS Next #2; later — do **not** cut `app.` here), `brochure-worker-deploy.md`, `shop-web-stay-up.md`, `brochure-pages-cutover.md`, `cors-origins.md`, `website-webapp-specification.md` §3, `mcking-shop-host-cutover.md` (later shop origin — **not** this cut)
 
 This file is the **edge / path-split** slice Zone needs for STATUS **Next #1** (Member UI on **projectcar.ca**). Cookie Domain / Path / Secure / SameSite, CORS allowlist, and Next middleware host allowlist live in `member-host-cutover.md` §2 — **summarize + point**, do not rewrite that essay here.
 
@@ -148,6 +148,7 @@ Rollback is **edge path rules**, not “remove the Worker,” not “cut `app.`,
 - Host split: customer = `projectcar.ca` / www. Management = **`ops.projectcar.ca`**. `app.` = temporary alias.
 - Shop-web KeepAlive is **`next start`**, not `next dev`.
 - Lead owns Doc processes (`:8000` / `:3000`). Zone owns Cloudflare path rules / tunnel hostname for the Member path.
+- **Next #1 origin stays Doc.** STATUS Next #1 still says `/member*` → Doc `:3000`. If McKing later becomes the shop origin, that path-split retargets with the Soft-530 flip — **not now**.
 
 ---
 

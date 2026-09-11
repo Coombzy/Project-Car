@@ -1,14 +1,14 @@
 # McKing shop-host cutover
 
-**Status:** Checklist / plan only — **not executed**  
-**Updated:** 2026-09-11  
-**Related:** `STATUS.md` (pointer only — **not** Next #1, **not** a GO), `deployment-guide.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `doc-unfreeze.md` (Ben GO pull — **not** this cut), `doc-lid-restore.md` (Doc process wake only), `cors-origins.md`, `shop-os-ci.md` (green CI ≠ unfreeze, ≠ this cut), `home-lab-specification.md`, `brochure-worker-deploy.md`, `member-host-cutover.md` (different cut — customer `/member` host)
+**Status:** Checklist / plan only — **not executed**. McKing path **OPEN**; shop CF cutover **not** GO.  
+**Updated:** 2026-09-11 (~10:32 America/Edmonton hop fold)  
+**Related:** `STATUS.md` (pointer only — **not** Next #1, **not** a GO), `deployment-guide.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `doc-unfreeze.md` (Ben GO pull — **not** this cut), `doc-lid-restore.md` (Doc process wake only), `cors-origins.md`, `shop-os-ci.md` (green CI ≠ unfreeze, ≠ this cut), `home-lab-specification.md`, `brochure-worker-deploy.md`, `member-host-cutover.md` (different cut — customer `/member` host), `member-zone-edge.md` (Next #1 still `/member*` → Doc `:3000`)
 
 Draft paper for a **later** move of Shop OS origins (`api.` / `ops.` / temporary `app.`) from **Doc LaunchAgents** onto **McKing Docker**, reusing the same Cloudflare tunnel public hostnames. Brochure stays on Worker `projectcar-brochure`.
 
-**Hard gate before any public CF hostname leaves Doc:** the Soft-530 dual-run acceptance table below. Dual-run is **not** “McKing on public `api.` / `ops.` / `app.` while Doc is still up.”
+**Hard gate before any public CF hostname leaves Doc:** the Soft-530 dual-run acceptance table below. Dual-run is **not** “McKing on public `api.` / `ops.` / `app.` while Doc is still up.” Hub dual-run NC+VW healthy does **not** mean shop CF hostname cutover GO.
 
-This file does **not** unfreeze Doc, does **not** flip DNS or tunnel origin, and does **not** start Docker on McKing.
+This file does **not** unfreeze Doc, does **not** flip DNS or tunnel origin, does **not** compose-down, and does **not** attach McKing to public shop hostnames. Paper only.
 
 Do **not** invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, McKing IPs, a McKing compose file path, or tunnel / API token values.
 
@@ -18,10 +18,11 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 
 | Lock | Meaning |
 |------|---------|
-| **Paper only** | Merging this file is **not** a cut. No live Cloudflare / DNS / Docker / LaunchAgent changes from this PR. |
-| **Not Next #1** | STATUS Next #1 is Member UI on projectcar.ca (`member-host-cutover.md`). This McKing host move is a **later** machine plan. Do **not** treat it as GO’d. |
+| **Paper only** | Merging this file is **not** a cut. No live Cloudflare / DNS / tunnel flip / compose-down / LaunchAgent changes from this PR. |
+| **Hop OPEN ≠ cutover GO ≠ Doc unfreeze** | Path OPEN (sshd / docker / `/opt/mission-control`) is **not** license to leave Doc as public origin, and **not** Ben GO unfreeze. Freeze stays **`4cf8924`** / **`5swmVz`** until **Ben GO**. |
+| **Not Next #1** | STATUS Next #1 is Member UI on projectcar.ca (`member-host-cutover.md` / `member-zone-edge.md`). This McKing host move is a **later** machine plan. Do **not** treat it as GO’d. If McKing later becomes shop origin, Next #1 `/member*` retargets with the Soft-530 flip — **not now**. |
 | **Not Doc unfreeze** | Doc checkout stays frozen at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** until **Ben GO**. Green **shop-os-ci** is **not** that GO. Pull checklist: `doc-unfreeze.md`. This paper must **not** be read as license to pull or rebuild on Doc. |
-| **No public flip until Soft-530 dual-run gate PASS** | Do **not** retarget tunnel origin or public DNS until the **Soft-530 dual-run acceptance gate** (five rows below) PASSes. Private smoke alone is **not** enough. |
+| **No public flip until Soft-530 dual-run gate PASS** | Do **not** retarget tunnel origin or public DNS until the **Soft-530 dual-run acceptance gate** (five rows below) PASSes. Private smoke / hub NC+VW dual-run healthy / hop OPEN alone are **not** enough. |
 | **Brochure stays Worker** | `projectcar.ca` / www stay Cloudflare Worker **`projectcar-brochure`**. Do **not** move the brochure to McKing. |
 | **No Garage / Zone fan-out** | Garage does not upload Worker HTML from this file. Zone does not edit tunnel / DNS from this file. Hatch does not execute. |
 | **CORS / public names unchanged** | Same Origins (`cors-origins.md`). Same public hostnames (`api.` / `ops.` / `app.`). Origin **host** may move later; names do not. |
@@ -34,15 +35,18 @@ Ben decides when (if) to execute. This file does **not** ping Ben and is **not**
 
 Soft-530 is **CLEAR** (Doc origin **LIVE** 2026-09-11). Future lid-close can still **530 / 1033**. Lookout `projectcar-api-health-watch` is **`enabled:true`**.
 
+**Shop OS/MC hop ~10:32 America/Edmonton** (lightning / Omarchy) opened the McKing path. Do **not** keep the stale hub line “McKing is not on the tailnet / migrate not started.” 2026-08-16 notes in `home-lab-specification.md` / `nextcloud-progress.md` are **stale for that path** — this paper is the shop-host reality stamp. Those hub specs were **not** rewritten in this fold.
+
 | Surface | Live origin |
 |---------|-------------|
 | **Brochure** | Cloudflare Worker **`projectcar-brochure`** Direct Upload of `apps/website/html`. **Stays.** Not Doc. Not McKing. |
-| **Shop API** | Host **cloudflared** on Doc → LaunchAgent **`com.projectcar.shop-api`** → uvicorn **`:8000`**. Public `https://api.projectcar.ca`. |
-| **Ops / app shop-web** | Same Doc cloudflared → LaunchAgent **`com.projectcar.shop-web`** → **`next start`** **`:3000`**. Public `https://ops.projectcar.ca` (LIVE management) + temporary `https://app.projectcar.ca`. |
-| **Doc KeepAlive** | `com.projectcar.cloudflared` + `com.projectcar.shop-api` + `com.projectcar.shop-web`. Lid-close still kills the Mac. |
-| **Doc checkout** | **Frozen** at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** (Dashboard **#28**) until **Ben GO** (`doc-unfreeze.md`). **#36** / **#69** stay **git-only**. |
+| **Shop API** | Host **cloudflared** on Doc → LaunchAgent **`com.projectcar.shop-api`** → uvicorn **`:8000`**. Public `https://api.projectcar.ca`. **Doc still owns** the public name. |
+| **Ops / app shop-web** | Same Doc cloudflared → LaunchAgent **`com.projectcar.shop-web`** → **`next start`** **`:3000`**. Public `https://ops.projectcar.ca` (LIVE management) + temporary `https://app.projectcar.ca`. **Doc still owns** the public names. |
+| **Doc KeepAlive** | `com.projectcar.cloudflared` + `com.projectcar.shop-api` + `com.projectcar.shop-web`. Doc stays the **public CF origin / KeepAlive backup**. Lid-close still kills the Mac. |
+| **Doc checkout** | **Frozen** at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** (Dashboard **#28**) until **Ben GO** (`doc-unfreeze.md`). **#36** / **#69** stay **git-only**. Hop OPEN ≠ unfreeze. |
 | **Git compose today** | `infra/compose/compose.yaml` is **shop Postgres only**. It does **not** start shop-api, shop-web, or cloudflared. Do not invent those services as already in git. |
-| **McKing role (Ben lock — intent)** | Later: Docker + Nextcloud **home**, then Shop API + shop-web via Docker + tunnel hostname reuse. This paper does **not** claim McKing is on the tailnet or that the migrate has started. Last recorded hub note still treated McKing as later (`home-lab-specification.md`, `nextcloud-progress.md`). |
+| **McKing path (OPEN)** | **OPEN** 2026-09-11 ~10:32 America/Edmonton: **sshd / docker / `/opt/mission-control`**. Hub dual-run **NC+VW healthy** on **Doc + McKing**. Path OPEN ≠ shop CF hostname cutover GO ≠ Doc unfreeze. Vault public hostname cutover is a **separate Ben GO**. |
+| **McKing shop role (later)** | Later: Shop API + shop-web via Docker + tunnel hostname reuse — **only after** the Soft-530 dual-run five-row gate PASSes. Do **not** treat hub NC+VW dual-run healthy as that gate. |
 
 `app.` stays the temporary alias until Ben cuts that DNS (`app-alias-cut.md`). This host move does **not** require cutting `app.`.
 
@@ -55,7 +59,7 @@ Soft-530 is **CLEAR** (Doc origin **LIVE** 2026-09-11). Future lid-close can sti
 | # | Gate | Pass | Fail |
 |---|------|------|------|
 | 1 | **Compose = freeze pin** | McKing shop compose **image digests** + shop-web **BUILD_ID** match Doc frozen checkout **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** until **Ben GO** unfreeze. After a real unfreeze, match the **new** Doc pin — not tip-of-`main` by accident. Green **shop-os-ci** ≠ Ben GO ≠ this gate. | Do not cut. Do not treat green CI as parity. |
-| 2 | **Dual-run window** | Doc KeepAlive **still owns** public `api.` / `ops.` / temporary `app.`. McKing proves health on **Tailscale-only** (or a **staging** hostname) — **not** public Cloudflare yet. | Do not attach McKing to public CF hostnames “to prove it.” |
+| 2 | **Dual-run window** | Doc KeepAlive **still owns** public `api.` / `ops.` / temporary `app.`. McKing proves shop health on **Tailscale-only** (or a **staging** hostname) — **not** public Cloudflare yet. Acceptance artifact **when it lands:** the in-flight **Doc dual-run evidence card** (Tailscale / private only). Until that card lands, this row is **not** PASS. Hub dual-run NC+VW healthy on Doc+McKing is **not** that card and is **not** shop CF hostname cutover GO. Still **no** public McKing attach for shop. | Do not attach McKing to public CF hostnames “to prove it.” |
 | 3 | **Lookout streak** | Lookout **`projectcar-api-health-watch`**: **N = 15** consecutive public `GET https://api.projectcar.ca/health` **200** (same JSON body) over **~15 minutes** (~one probe/minute), **zero** CF **1033** / **530** / **502** in that window. Ben may tune **N** in **10–20** and the window; do not cut on a single 200. | Any 1033 / 530 / 502 in the window **resets** the streak. Restore Doc (`doc-lid-restore.md`) if this is lid-close. |
 | 4 | **Rollback one-liner** | Re-point **cloudflared** to **Doc LaunchAgents**. Keep `com.projectcar.cloudflared` + shop-api + shop-web **available** until McKing **public** smoke **PASS**. | Do not retire Doc agents before PASS. |
 | 5 | **Brochure fail-soft stays** | Soft-530 Discord waitlist fail-soft (**#80** `waitlist.js?v=3`) **stays live** on Worker `projectcar-brochure` **during** the cut. Do **not** upload a Worker that drops Discord fail-soft. | Do not touch brochure HTML / Worker as part of this host move. **#82** Home canonical/og/sitemap stays **not** Worker-live — unchanged. |
@@ -111,7 +115,7 @@ Never flip public origin to prove McKing. Never stop Doc LaunchAgents before the
 |-------|------|-----|----|--------|
 | 0 | **This paper exists** | Docs | Done when this file merges. | Treat merge as GO. Flip anything. |
 | 1 | **Separate GOs (later)** | Ben | Unfreeze Doc only via `doc-unfreeze.md` if the live build must move past `5swmVz`. Cutover GO is **another** explicit Ben sentence — not this file, not green CI, not lid-restore. | Infer cutover from unfreeze, or unfreeze from this plan. |
-| 2 | **Dual-run window** | Lead (McKing boxes) | Stand up McKing **shop-api** / **shop-web** on **Tailscale-only** (or a **staging** hostname). Doc KeepAlive **stays** the public CF origin (`com.projectcar.cloudflared` + shop-api + shop-web). | Point public `api.` / `ops.` / `app.` at McKing. Start McKing cloudflared against those public names. Disable Doc LaunchAgents. |
+| 2 | **Dual-run window** | Lead (McKing boxes) | Stand up McKing **shop-api** / **shop-web** on **Tailscale-only** (or a **staging** hostname). Doc KeepAlive **stays** the public CF origin (`com.projectcar.cloudflared` + shop-api + shop-web). Gate row 2 PASSes on the in-flight **Doc dual-run evidence card** (Tailscale / private only) **when it lands** — not on hub NC+VW dual-run healthy, not on hop OPEN. | Point public `api.` / `ops.` / `app.` at McKing. Start McKing cloudflared against those public names. Disable Doc LaunchAgents. |
 | 3 | **Private McKing smoke** | Lead | Tailscale / staging / on-box only: API health body, shop-web login **200**, `next start` (not `next dev`), CORS OPTIONS shape. | Public DNS / tunnel ingress edit. Invent an IP in this doc. |
 | 4 | **Soft-530 dual-run gate** | Lead + Lookout | All five rows in the gate table: compose **BUILD_ID** + **image digests** = freeze pin; Doc still owns public names; Lookout **N = 15** consecutive public `/health` **200** with **zero** CF **1033**; rollback one-liner ready; **#80** `waitlist.js?v=3` still on the Worker. | Flip on a single 200, on green **shop-os-ci**, or while Doc agents are already stopped. |
 | 5 | **Origin flip** | **Zone** (after Ben cutover GO **and** Soft-530 dual-run gate PASS) | Retarget the **existing** `api` / `ops` / `app` tunnel hostnames to McKing shop-api / shop-web. | New public names. Touch apex / www Worker. Flip before the five-row gate PASSes. |
@@ -238,6 +242,7 @@ None of the flip-row checks are a license to run the flip from this PR.
 | Do not | Why |
 |--------|-----|
 | Live-cut from this doc | Paper only. |
+| Treat hop OPEN / hub NC+VW dual-run as cutover GO | Path OPEN ≠ Soft-530 five-row PASS ≠ Doc unfreeze. |
 | Move the brochure to McKing / Doc / Pages from here | Worker `projectcar-brochure` stays. Pages git is a different, blocked plan. |
 | Garage / Zone / Hatch fan-out | No Worker upload, no tunnel/DNS edit, no compose apply. |
 | Unfreeze Doc / rebuild to tip | `doc-unfreeze.md` + Ben GO only. |
@@ -276,18 +281,20 @@ None of the flip-row checks are a license to run the flip from this PR.
 | 6 | Rollback path known | One-liner: re-point cloudflared to Doc LaunchAgents — agents still available until McKing public PASS |
 | 7 | Brochure fail-soft | **#80** `waitlist.js?v=3` still live on Worker during the cut |
 
-**None of these are true today.** Today is Doc KeepAlive + Worker brochure + freeze + Soft-530 **LIVE**.
+**None of these public-cutover checks are true today.** McKing path is **OPEN**; Doc KeepAlive still owns public `api.` / `ops.` / `app.`; Worker brochure + freeze + Soft-530 **LIVE**. Hop OPEN ≠ these rows.
 
 ---
 
 ## Locks (copy — do not weaken)
 
 - Host split stays: customer = projectcar.ca / www (Worker). Management = **ops.** (temporary `app.` alias still live). API = `api.`.
-- Doc frozen at `4cf8924` / `5swmVz` until Ben GO (`doc-unfreeze.md`).
+- Doc frozen at `4cf8924` / `5swmVz` until Ben GO (`doc-unfreeze.md`). Hop OPEN ≠ unfreeze.
 - Green shop-os-ci ≠ unfreeze ≠ McKing cut ≠ Soft-530 dual-run gate PASS.
-- No public CF hostname leaves Doc until the five-row Soft-530 dual-run gate PASSes. Dual-run = Tailscale / staging only.
+- McKing path **OPEN** (sshd / docker / `/opt/mission-control`; hub dual-run NC+VW healthy on Doc+McKing). Hop OPEN ≠ cutover GO. Doc KeepAlive still owns public `api.` / `ops.` / `app.`.
+- No public CF hostname leaves Doc until the five-row Soft-530 dual-run gate PASSes. Dual-run = Tailscale / staging only. Gate row 2 artifact when it lands: Doc dual-run evidence card (Tailscale / private only). Still no public McKing attach for shop.
+- Vault public hostname cutover is a **separate Ben GO**.
 - Rollback one-liner: re-point cloudflared to Doc LaunchAgents.
 - Soft-530 Discord waitlist fail-soft (**#80** `waitlist.js?v=3`) stays on the Worker during the cut. **#82** unchanged.
-- No live cut, no DNS/origin flip, no Garage/Zone fan-out from this file.
+- No live cut, no DNS/origin flip, no compose-down, no Garage/Zone fan-out from this file.
 - Brochure Worker stays. No McKing-as-brochure.
 - No Stripe. The shop is not open.
