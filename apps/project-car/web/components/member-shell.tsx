@@ -51,13 +51,13 @@ export function MemberShell({
         </nav>
       </header>
       <div className="demo-banner">
-        Temporary Member demo on this management alias — customer bays 1–5.
+        Temporary Member demo on this management host — customer bays 1–5.
         Home shows your to-dos and only bays you booked in the next 24 hours.
-        Customer app is projectcar.ca. Intended management host is
-        ops.projectcar.ca. Parts is a request desk (PT / TC SKUs), not
-        checkout. Job board (token bounties) and the primary shop camera are
-        labeled placeholders. Bay 6 is Owner-only. The shop is not
-        open. This is not live pricing or Stripe.
+        Customer app is projectcar.ca. Management host is ops.projectcar.ca
+        (LIVE); app. is the temporary alias. Parts is a request desk (PT /
+        TC SKUs), not checkout. Job board (token bounties) and the primary
+        shop camera are labeled placeholders. Bay 6 is Owner-only. The shop
+        is not open. This is not live pricing or Stripe.
       </div>
       <main className={wide ? "wide" : undefined}>{children}</main>
     </div>

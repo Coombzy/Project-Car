@@ -1,9 +1,9 @@
 # Shop-web stay-up — `ops.projectcar.ca` / `app.projectcar.ca`
 
 **Status:** Living ops  
-**Updated:** 2026-09-08  
+**Updated:** 2026-09-11  
 **Public URLs:** https://ops.projectcar.ca (LIVE management) · https://app.projectcar.ca (temporary alias)  
-**Related:** `doc-lid-restore.md` (ordered wake — **not** a pull), `doc-unfreeze.md` (Ben GO pull), `api-stay-up.md`, `doc-software-baseline.md`, `brochure-worker-deploy.md`, `STATUS.md` host split, `shop-os-ci.md` (green CI ≠ unfreeze), `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `app-alias-cut.md` (later `app.` cut; plan only), `apps/project-car/web/README.md`
+**Related:** `doc-lid-restore.md` (ordered wake — **not** a pull; weekend `/health` flip = process wake only), `doc-unfreeze.md` (Ben GO pull — **not** weekend), `api-stay-up.md` (api `/health` is **api-only** — weekend flip coverage = this + vault `/alive` only; companions live here and stay **HOLD**), `doc-software-baseline.md`, `brochure-worker-deploy.md` (do **not** schedule weekend Zone Direct Upload), `STATUS.md` host split + Lookout Soft-530 companion watches + weekend Soft-530 coverage, `shop-os-ci.md` (green CI ≠ unfreeze), `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `app-alias-cut.md` (later `app.` cut; plan only), `mcking-shop-host-cutover.md` (future McKing host — plan only; **not** a cut), `apps/project-car/web/README.md`
 
 Keep the Shop OS UI reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -28,6 +28,8 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, or a 
 
 The LaunchAgent lives on **Doc**, not in this git repo. Compose still does not start shop-web. KeepAlive is the primary stay-up for process crashes / logout-style exits. **Lid-close / sleep still kills the Mac** — launchd cannot outrun sleep.
 
+**Future host (plan only):** shop-web later moves to **McKing Docker** with Cloudflare tunnel **hostname reuse** (`ops.` + temporary `app.` stay the public names). Dual-run Doc KeepAlive, then cut — paper: `mcking-shop-host-cutover.md`. **Not** Next #1. **Not** GO’d. Do **not** execute from this stay-up file. Today’s origin is still Doc.
+
 ---
 
 ## LOCKED: `next start`, not `next dev`
@@ -42,11 +44,13 @@ If you see `next dev` in `ps`, repeated LaunchAgent exits, or a missing `.next/B
 
 ## Rebuild after web merges on Doc
 
-A `git pull` on `main` does **not** update the running UI. `next start` serves the last **`npm run build`**. Do not leave a stale `.next` behind a new `main` pull.
+**Frozen until Ben GO.** Doc checkout / shop-web BUILD stay at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** (Dashboard **#28**). **#36** and **#69** are **git-only**. Lid-restore / morning wake is **kickstart-if-down only** — do **not** `git pull` or `npm run build` to tip (`doc-lid-restore.md` **#72**). plan-improve / Chief / Lead must **not** treat a merge on `main` as license to pull.
+
+A `git pull` on `main` does **not** update the running UI. `next start` serves the last **`npm run build`**. Do not leave a stale `.next` behind a new `main` pull — and do not pull while frozen.
 
 **While Doc checkout is frozen** (`4cf8924` / `5swmVz-T2CqKEQzTk1ifU`), do **not** run this rebuild from lid-restore or from a green Shop OS CI check. **Ben GO** first; ordered pull + migrate + rebuild + smoke: [doc-unfreeze.md](doc-unfreeze.md). This section is the rebuild essay that unfreeze step 4 calls.
 
-After **Ben GO** and Lead `git pull` (or, later, after Garage merges further shop-web onto `main` and Ben GOs again), **Lead** on Doc:
+**After Ben GO** (only), Lead on Doc may pull + rebuild:
 
 1. **Note the tip** you intend (`git rev-parse HEAD` in `~/src/Project-Car` after `git pull origin main`).
 2. **Boot out** LaunchAgent `com.projectcar.shop-web` so nothing is bound to `:3000`.
@@ -55,7 +59,7 @@ After **Ben GO** and Lead `git pull` (or, later, after Garage merges further sho
 5. **Verify `.next/BUILD_ID`** matches the tip you intended. If `BUILD_ID` is missing or stale, you are still on the old build — do not call the merge live.
 
 ```bash
-# on Doc, after pulling the intended main tip into ~/src/Project-Car
+# ONLY after Ben GO — not on lid-restore, not while checkout is frozen
 launchctl bootout gui/$(id -u)/com.projectcar.shop-web
 cd ~/src/Project-Car/apps/project-car/web
 npm run build
@@ -64,7 +68,7 @@ launchctl kickstart -k gui/$(id -u)/com.projectcar.shop-web
 # confirm next start (not next dev) and BUILD_ID still present
 ```
 
-Last recorded shop-web **BUILD** on Doc (STATUS): after Dashboard **#28** (`main` `afb37f9`, `BUILD_ID` `5swmVz-T2CqKEQzTk1ifU`). **#36** / **#69** stay **on git** until **Ben GO** + this rebuild ([doc-unfreeze.md](doc-unfreeze.md)). The new `BUILD_ID` must **not** be `5swmVz-T2CqKEQzTk1ifU`. Do not call #36 live on Doc until that build. Update STATUS when Lead ships it.
+Last recorded shop-web **BUILD** on Doc (STATUS): Dashboard **#28** — checkout **frozen** at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`**. `main` tip is **`2dd61a2` / #74** (doc-unfreeze checklist on `main` — **not** a Doc unfreeze). Green **shop-os-ci** / lid-restore process-wake are **not** Ben GO. **#36** (`f952cd3`) and **#69** (`b9f9019`) stay **git-only**. Do **not** call them live on Doc. After **Ben GO**, ordered pull: [doc-unfreeze.md](doc-unfreeze.md). Update STATUS only after **Ben GO** + a new BUILD_ID ≠ `5swmVz`.
 
 ---
 
@@ -148,15 +152,44 @@ Still the Doc demo. Not a shop opening.
 
 ---
 
+## Lookout Soft-530 companion watches (HOLD / not armed)
+
+**Blind spot:** Soft-530 five-row is Doc shop hosts `cloud.` / `api.` / `app.` / `ops.`, but Lookout Soft-530 coverage was **api-only** (`GET https://api.projectcar.ca/health`). `ops.` / `app.` (and `cloud.`) can **530 while `api.` stays 200** — same class as pre-vault-watch.
+
+Companion flip watches are **HOLD / not armed**. Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask. Do **not** claim `enabled:true`. Api + vault watches continue. Paper spec (2026-09-11):
+
+| Watch URL | Ok | Down |
+|-----------|----|------|
+| `https://ops.projectcar.ca/login` | **200** (or **307** → `/login` then **200**) | **502 / 530 / 1033 / timeout** |
+| `https://app.projectcar.ca/login` | same | same |
+| Optional `https://cloud.projectcar.ca/login` (five-row parity; Lead probed **200**) | same | same |
+
+Cadence ≈ the api `/health` watch. Baselines (Lookout-owned): `/workspace/lookout/projectcar-ops-health-baseline.json` + `projectcar-app-health-baseline.json` (+ cloud if armed). Flip-only alerts: **Chief + Lead only**; **never Ben**; never restart / mutate.
+
+**HOLD / not armed.** Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask. Do **not** claim companion watches armed / `enabled:true` / LIVE. Api + vault watches continue. Soft-530 companion watches ≠ vault `/alive` watch ≠ Doc lid-restore. Soft-530 **CLEAR** live. Vault flip watch stays **LIVE/armed**. Api `/health` stay-up: `api-stay-up.md`. STATUS Live is canonical.
+
+---
+
+## Weekend Soft-530 coverage (plan-improve off Sat/Sun)
+
+plan-improve is **off Sat/Sun**. These companion ops/app watches stay **HOLD**. Weekend flip coverage is **not** this file’s `/login` probes — it is Lookout `api.` `/health` + vault `/alive` **only** (`api-stay-up.md`).
+
+Weekend Soft-530 control plane is still Doc KeepAlive / lid-close: `com.projectcar.cloudflared` + uvicorn `:8000` + this shop-web `next start` `:3000` LaunchAgent. That is **not** Doc unfreeze and **not** **#82**. If `api.` `/health` flips non-200, Chief/Lead run `doc-lid-restore.md` **process wake only** (kickstart-if-down on this KeepAlive; no pull while freeze intact). Vault flips stay on the separate McKing watch. Do **not** schedule weekend Zone Direct Upload / Worker work — first Monday plan-improve resumes Soft-530 smoke.
+
+Anti-goal: Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask. **#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk **retired** (Owner desk LIVE; optional CSV Later) / **#79.1** git-only until Doc unfreeze — **unchanged**.
+
+---
+
 ## Ownership
 
 | Role | Owns | Does not own |
 |------|------|----------------|
-| **Lead** | shop-web process stay-up and recovery on Doc (`com.projectcar.shop-web`, wrapper, `next start`, rebuild / `BUILD_ID`) | Cloudflare tunnel / DNS edits |
+| **Lookout** | Soft-530 companion flip watches on `ops.` / `app.` `/login` (**HOLD / not armed** — Ben skipped ~14:35 America/Edmonton; do **not** re-ask). Optional `cloud.` `/login` for five-row parity. Weekend flip coverage = api `/health` + vault `/alive` **only**. | Process restore on Doc; Cloudflare tunnel / DNS edits; vault `/alive` watch (separate **LIVE/armed**); Doc lid-restore; claiming companions armed; weekend Zone Direct Upload / **#82** |
+| **Lead** | shop-web process stay-up and recovery on Doc (`com.projectcar.shop-web`, wrapper, `next start`, rebuild / `BUILD_ID`). Weekend `/health` non-200 → `doc-lid-restore.md` **process wake only** (with Chief). | Cloudflare tunnel / DNS edits; `git pull` / unfreeze / **#82** while freeze intact |
 | **Zone** | Cloudflare tunnel + DNS for `ops.projectcar.ca` and temporary `app.projectcar.ca` | Restarting shop-web |
 | **Garage** | shop-web PRs under `apps/project-car/web` | Restarting shop-web, tunnel, or DNS |
 
-Alerts can come from anyone who sees a **502**, **530 / error 1033**, a login redirect to localhost, or a flapping UI. **Recovery of the process is Lead only.** Do not instruct Garage (or anyone else) to restart shop-web.
+Alerts can come from anyone who sees a **502**, **530 / error 1033**, a login redirect to localhost, or a flapping UI. **Recovery of the process is Lead only.** Do not instruct Garage (or anyone else) to restart shop-web. Companion flip alerts: **Chief + Lead only**; **never Ben**; never restart / mutate.
 
 ---
 
@@ -167,8 +200,8 @@ Alerts can come from anyone who sees a **502**, **530 / error 1033**, a login re
    - **1033 / 530 / 502** and Doc asleep or cloudflared dead → lid-close / tunnel / Mac sleep (`api-stay-up.md` same class). Wake Doc (Amphetamine session if it should stay up).
    - **Process flap** (`next dev`, EADDRINUSE, repeated restart, `BUILD_ID` missing) → skip to step 4.
 3. **Doc awake?** Local `GET http://127.0.0.1:3000/login` after wake. If it fails, Lead checks LaunchAgent `com.projectcar.shop-web` (KeepAlive) and `~/hermes-tools/mission-control/shop-web/run-shop-web.sh`. Confirm the process is **`next start`**.
-4. **Lead — flap / stale build.** Boot out KeepAlive → `npm run build` in `apps/project-car/web` → kickstart → verify `.next/BUILD_ID`. Do not leave `next dev` in the LaunchAgent. While checkout is frozen, this is **rebuild of the current tree** — not `git pull` / unfreeze (`doc-unfreeze.md`).
+4. **Lead — flap / down process.** While checkout is **frozen**: **kickstart-if-down only** (keep `next start` on the existing BUILD_ID). Do **not** `git pull` or rebuild to tip. After **Ben GO**, flap / stale-build recovery is bootout → `npm run build` → kickstart → verify `.next/BUILD_ID` ([doc-unfreeze.md](doc-unfreeze.md)). Do not leave `next dev` in the LaunchAgent.
 5. **Zone — edge.** Local `:3000` login OK but public **502** / **530 / 1033** / DNS miss → Zone checks host cloudflared + the `ops.` / `app.` hostname rules. Origin must be **`http://127.0.0.1:3000`**, not bare `localhost`. Lead does not edit Cloudflare. Do not cut the `app.` alias.
 6. **Garage — after.** When public smoke is green, Garage may re-walk ops/app UI. No process restarts.
 
-Host split: `STATUS.md`. Ordered lid-close restore: `doc-lid-restore.md` (process wake only). After **Ben GO**, pull/rebuild: `doc-unfreeze.md`. API stay-up: `api-stay-up.md`. Brochure Worker: `brochure-worker-deploy.md`. Member-on-projectcar.ca: `member-host-cutover.md` (plan only — **Ben GO**, not shipped). Zone path-split: `member-zone-edge.md` (plan only — **Ben GO**). Temporary `app.` cut: `app-alias-cut.md` (plan only — STATUS Next #2; do **not** execute from stay-up). **`ops.` stays** the management host.
+Host split: `STATUS.md`. Ordered lid-close restore: `doc-lid-restore.md` (process wake only — same sequence on weekend `/health` flip). After **Ben GO**, pull/rebuild: `doc-unfreeze.md`. API stay-up: `api-stay-up.md`. Brochure Worker: `brochure-worker-deploy.md` (do **not** schedule weekend Zone Direct Upload). Member-on-projectcar.ca: `member-host-cutover.md` (plan only — **Ben GO**, not shipped). Zone path-split: `member-zone-edge.md` (plan only — **Ben GO**). Temporary `app.` cut: `app-alias-cut.md` (plan only — STATUS Next #2; do **not** execute from stay-up). Future McKing host: `mcking-shop-host-cutover.md` (plan only — **not** Next #1, **not** GO; do **not** execute from stay-up). **`ops.` stays** the management host.

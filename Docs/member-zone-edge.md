@@ -1,12 +1,12 @@
 # Member zone edge — path split on projectcar.ca / www
 
-**Status:** Checklist / plan only — **not shipped**. Do **not** execute until **Ben GO**.  
-**Updated:** 2026-09-07  
-**Related:** `STATUS.md` Next #1, `member-host-cutover.md`, `app-alias-cut.md` (STATUS Next #2; later — do **not** cut `app.` here), `brochure-worker-deploy.md`, `shop-web-stay-up.md`, `brochure-pages-cutover.md`, `cors-origins.md`, `website-webapp-specification.md` §3
+**Status:** Checklist / plan only — **not shipped**. Capacity-blocked by Option A **FULL 10/10**. Do **not** execute until **#82** Worker-live + Bulk Phase1 **and** **Ben GO**.  
+**Updated:** 2026-09-11 (Option A capacity lock on held **#70**)  
+**Related:** `STATUS.md` Next #1, `member-host-cutover.md`, `app-alias-cut.md` (STATUS Next #2; later — do **not** cut `app.` here), `brochure-worker-deploy.md` (upload click-path), `brochure-worker-ci.md` (Option A matrix / Member-precondition receipt + **#82** purge/freshness), `shop-web-stay-up.md`, `brochure-pages-cutover.md`, `cors-origins.md`, `website-webapp-specification.md` §3, `mcking-shop-host-cutover.md` (later shop origin — **not** this cut)
 
 This file is the **edge / path-split** slice Zone needs for STATUS **Next #1** (Member UI on **projectcar.ca**). Cookie Domain / Path / Secure / SameSite, CORS allowlist, and Next middleware host allowlist live in `member-host-cutover.md` §2 — **summarize + point**, do not rewrite that essay here.
 
-This file does **not** implement the migration, change DNS, cut the `app.projectcar.ca` alias, upload shop-web as the apex origin, or start Garage / Zone / Hatch work. A docs merge is not GO.
+This file does **not** implement the migration, change DNS, cut the `app.projectcar.ca` alias, upload shop-web as the apex origin, or start Garage / Zone / Hatch work. A docs merge is not GO. This tip-fold is **not** Member GO, **not** Bulk Phase1 execute, **not** **#82** Worker upload. **#83** is CI-only on the **#82** base — **not** this Member/Bulk gate. **Never #81.**
 
 Do **not** invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, Matrix, or Apex revival. Demo session cookies stay demo cookies — **not OIDC**.
 
@@ -22,6 +22,28 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Shop API** | `api.projectcar.ca` → Doc `:8000`. Lead owns uvicorn. |
 
 Exact Cloudflare product (tunnel public hostname vs Worker route vs Transform) is **Zone’s** after GO. This file locks the **traffic map**, not a dashboard click-path.
+
+---
+
+## 0. Option A capacity lock — Member edge is blocked
+
+STATUS Next #1 Member edge is **capacity-blocked** by Option A. The CF Dynamic Redirect pack is **FULL 10/10**. Member cutover needs Dynamic (or equivalent) for `/member*` path/tunnel ranking **BEFORE** brochure Redirect Rules, plus www→apex `/member*` **301** that does **not** fight brochure dual-host.
+
+Soft-530 is **CLEAR** / **LIVE**. That does **not** unlock Member edge. **#82** Home canonical/og/sitemap `/index.html` is **not yet Worker-live**. Do **not** execute Garage/Zone from this tip-fold.
+
+**STATUS Reality quarantine:** Until **#82** Worker-live + Zone Direct Upload, held **#70** Option A is brochure live SSOT — do **not** execute from `main` Reality tip (pre-Option-A Worker `/shop` **302** + `styles.css?v=35`). After **#82**, one STATUS tip-fold reconciles `main` Reality (`STATUS.md` Live post-#82 checklist; receipt: `brochure-worker-ci.md` · `brochure-worker-deploy.md`). Keep `/member*` Worker **404** until Member edge Ben GO after Bulk Phase1 — never **301** into `membership.html`. Soft-530 companion watches are **HOLD / not armed** (Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask).
+
+| Hard gate | Meaning |
+|-----------|---------|
+| **Member edge Ben GO only after #82 Worker-live + Bulk Phase1** | Bulk Phase1 frees pretty-URL Dynamic slots. Redirect SSOT pick A is **already parked** (`brochure-worker-ci.md` Option A matrix — Member-precondition receipt; upload click-path `brochure-worker-deploy.md`). Bulk stays after the **#82** upload **only** for those slots. |
+| **#83 is not this gate** | **#83** is CI-only thin `_redirects` assert on the **#82** base. Prefer merge after **#82**; **may run in parallel with** Zone Direct Upload. Does **not** need Bulk Phase1. **Never #81.** Do **not** write `#82 → upload → Bulk Phase1 → #83`. |
+| **Keep `root` / `shop` Dynamic** | `root` / `index` / `shop` / `chat` stay Dynamic until Member **needs** those remaining slots. Do **not** migrate them in Bulk Phase1 just to “make room.” |
+| **Rank `/member*` BEFORE the brochure Redirect pack** | Path/tunnel + www→apex `/member*` 301 evaluate **first**. Brochure pretty-URLs (including `membership` → `membership.html`) must not win. |
+| **Anti-collision** | Apex + www `/member/login` must **NOT** 301 into `membership.html`. Today `/member*` is Worker **404** — preserve that distinction. `/membership*` is brochure; `/member*` is Member (later) / 404 (today). |
+
+`/member` is a prefix of `/membership`. A `starts_with /member` brochure rule, or a `/member*` rule ranked **after** `membership` → `membership.html`, collides. Ranking + exact `/member` / `/member/*` (not `/membership`) is the lock.
+
+www→apex **301** applies to **`/member*` only**. Brochure static stays **dual-host**. Do **not** 301 all of www to free a slot or “simplify” cookies.
 
 ---
 
@@ -93,14 +115,21 @@ Lid-close / sleep on Doc can still take shop-web and the API (Cloudflare **502**
 
 | # | Check | Expect |
 |---|--------|--------|
-| 1 | Member login on customer host | **Apex only:** `https://projectcar.ca/member/login` serves the demo form. Seed `ada.reyes@example.com` + demo password sets `pc_member_session` (Secure, Lax, host-only, Path as decided — prefer `/member` when `SHOP_MEMBER_COOKIE_PATH_SCOPED` is on). Redirect stays on **`projectcar.ca`** — **no localhost hop**, **no www hop**. Do **not** smoke `https://www.projectcar.ca/member…` as a success path. After GO, Zone **301** `www…/member*` → `https://projectcar.ca/member*` (plan only — not live). |
+| 0 | **Anti-collision (today — preserve)** | Apex + www `https://projectcar.ca/member/login` and `https://www.projectcar.ca/member/login` must **NOT** **301** into `/membership.html`. Today `/member*` is Worker **404** (branded `404.html` ok). Distinct from live Option A `/membership` / `/membership/` → **301** `/membership.html`. A 301 `/member/login` → `/membership.html` is a **failed** rank / prefix collision — rollback, not “pretty URL working.” |
+| 1 | Member login on customer host | **After GO only.** **Apex only:** `https://projectcar.ca/member/login` serves the demo form. Seed `ada.reyes@example.com` + demo password sets `pc_member_session` (Secure, Lax, host-only, Path as decided — prefer `/member` when `SHOP_MEMBER_COOKIE_PATH_SCOPED` is on). Redirect stays on **`projectcar.ca`** — **no localhost hop**, **no www hop**. Do **not** smoke `https://www.projectcar.ca/member…` as a success path. After GO, Zone **301** `www…/member*` → `https://projectcar.ca/member*` (plan only — not live). `/member*` rules ranked **BEFORE** the brochure Redirect pack. |
 | 2 | Brochure still Worker | Home / About / The Shop / Membership / Roadmap / Contact **200** Worker HTML. Chat page stays gone. Not Next HTML. |
 | 3 | Waitlist still works | Membership / Contact `POST` → `api.projectcar.ca/waitlist` still **PASS** when API health is 200. OPTIONS still returns `Access-Control-Allow-Origin` for brochure origins (`cors-origins.md`). |
 | 4 | Ops / app still healthy | `https://ops.projectcar.ca/` → `Location: https://ops.projectcar.ca/login` (no localhost). `/login` **200 when Doc origin is up**. Temporary `https://app.projectcar.ca` still the same Doc `:3000` origin. |
 | 5 | No localhost `Location` | Member, ops, and app redirects stay on their public hosts. |
 
 ```bash
-# Member path — apex only (canonical cookie host). Do not treat www as a Member host.
+# Anti-collision (today + after GO): /member/login must NOT 301 → /membership.html
+curl -sS -D - -o /dev/null https://projectcar.ca/member/login | grep -iE 'HTTP/|location:'
+curl -sS -D - -o /dev/null https://www.projectcar.ca/member/login | grep -iE 'HTTP/|location:'
+# Today expect Worker 404 (or WAF 403) — not Location: /membership.html
+# Live brochure pretty-URL (distinct):
+curl -sS -D - -o /dev/null https://projectcar.ca/membership | grep -iE 'HTTP/|location:'
+# Member path — apex only after GO (canonical cookie host). Do not treat www as a Member host.
 curl -sS -D - -o /dev/null https://projectcar.ca/member/login | grep -iE 'HTTP/|location:'
 # Brochure paths must stay Worker (dual-host; www brochure is fine)
 curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/
@@ -143,11 +172,14 @@ Rollback is **edge path rules**, not “remove the Worker,” not “cut `app.`,
 - **Classic Pages git stays outranked.** `brochure-pages-cutover.md` is still blocked on CF ↔ GitHub auth and is **outranked** by this Member edge work **and** by STATUS Next #1. Direct Upload remains the locked live brochure method. Do not start Pages git from this file.
 - **No Apex.** Brochure stays Worker / Pages — no Apex sidecar, no brochure Chat page.
 - **No Stripe.** The shop is not open. Interest waitlist only.
-- **No Garage / Zone / Hatch fan-out from this PR.** Plan only. Ben GO gates execution.
+- **Capacity-blocked (Option A FULL 10/10).** Member edge Ben GO only after **#82** Worker-live + Bulk Phase1 frees pretty-URL Dynamic slots. Keep `root` / `shop` Dynamic until Member needs those slots. Do **not** add `/member*` Dynamic rules while the pack is full. **#83** is CI-only after **#82** base — **not** this Bulk gate. **Never #81.**
+- **`/member*` ranks BEFORE the brochure Redirect pack.** www→apex `/member*` 301 must not fight brochure dual-host. `/member/login` must never 301 into `membership.html`.
+- **No Garage / Zone / Hatch fan-out from this PR.** Plan only. **#82** / Bulk Phase1 / Member GO are **not** this tip-fold.
 - **No shop-web apex catch-all.** Path split or nothing.
 - Host split: customer = `projectcar.ca` / www. Management = **`ops.projectcar.ca`**. `app.` = temporary alias.
 - Shop-web KeepAlive is **`next start`**, not `next dev`.
 - Lead owns Doc processes (`:8000` / `:3000`). Zone owns Cloudflare path rules / tunnel hostname for the Member path.
+- **Next #1 origin stays Doc.** STATUS Next #1 still says `/member*` → Doc `:3000`. If McKing later becomes the shop origin, that path-split retargets with the Soft-530 flip — **not now**.
 
 ---
 
@@ -169,9 +201,10 @@ Alerts can come from anyone who sees Next HTML on Home, a localhost `Location`, 
 | Order | Gate | Who | Notes |
 |-------|------|-----|-------|
 | 0 | **Both plan docs exist** | Docs PR | You are here. No DNS. No `app.` cut. No path rules. |
-| 1 | **Ben GO** | Ben | Required. Do not start Zone path rules or Garage site work from this file alone. |
+| 0a | **#82 Worker-live + Bulk Phase1** | Garage / Zone after those GOs | **Hard gate for Member edge only.** Frees pretty-URL Dynamic slots (Redirect A parked). Keep `root` / `shop` Dynamic until Member needs those slots. **#83** is **not** this row — prefer merge after **#82** base; **parallel with upload OK**. **Never #81.** **Not this tip-fold.** |
+| 1 | **Ben GO** (Member edge) | Ben | Required **after** 0a. Do not start Zone path rules or Garage site work from this file alone. Capacity-blocked until 0a. |
 | 2 | Cookie / CORS / middleware allowlist on Doc | Lead + Garage | `member-host-cutover.md` §2. Code + `.env` only after GO. |
-| 3 | **This file** — edge path split | **Zone** | `/member*` → `http://127.0.0.1:3000`. Everything else → Worker. Host + proto forwarding. |
+| 3 | **This file** — edge path split | **Zone** | `/member*` rules ranked **BEFORE** brochure Redirect pack. `/member*` → `http://127.0.0.1:3000`. www→apex `/member*` 301 only. Everything else → Worker. Host + proto forwarding. Anti-collision: `/member/login` ≠ `membership.html`. |
 | 4 | Member UI on customer host | **Garage** | Wire the surface; do not replace the Worker brochure. |
 | 5 | Prove smoke (§4) + `member-host-cutover.md` §5 | Garage e2e; anyone can curl | If brochure / waitlist / ops/app break → §5 rollback. |
 | 6 | Ben cuts `app.` alias | Ben / Zone | **Later.** STATUS Next #2. Checklist: **`app-alias-cut.md`**. Not this edge add — Member path-split does **not** require cutting `app.` first. |

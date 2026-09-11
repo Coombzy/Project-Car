@@ -34,14 +34,15 @@ export function OwnerDemoBanner() {
         <strong>Demo</strong>
         <span>
           {" "}
-          · app.projectcar.ca alias · shop not open · not live pricing, Stripe, or camera feeds
+          · ops.projectcar.ca LIVE · app. alias · shop not open · not live pricing, Stripe, or
+          camera feeds
         </span>
       </p>
       <details className="demo-banner-more">
         <summary>Details</summary>
         <p>
-          Management demo on the current app.projectcar.ca alias (Doc). Intended host is
-          ops.projectcar.ca — naming only, no DNS yet. Calendar is the month heat-map + weekly
+          Management demo on ops.projectcar.ca (LIVE at the edge when Doc is up). app.projectcar.ca
+          is the temporary alias for the same Doc shop UI. Calendar is the month heat-map + weekly
           per-hoist grids. Dashboard is Bays 1–6 next 24h, personal to-dos, and current parts POs.
           Parts (PT) and Tools (B1–B6 bay kits + TC crib) use locked SKU prefixes — labeled
           placeholders, not live purchasing, checkout, or camera feeds. The shop is not open. This
