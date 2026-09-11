@@ -33,7 +33,7 @@ Ben decides when (if) to execute. This file does **not** ping Ben and is **not**
 
 ## Reality today (do not claim this is done)
 
-Soft-530 is **CLEAR** (Doc origin **LIVE** 2026-09-11). Future lid-close can still **530 / 1033**. Lookout `projectcar-api-health-watch` is **`enabled:true`**.
+Soft-530 is **CLEAR** (Doc origin **LIVE** 2026-09-11). Future lid-close can still **530 / 1033**. Lookout `projectcar-api-health-watch` is **`enabled:true`**. **#78 lookout-resume exception:** that watch is already **`enabled:true` while Doc stays frozen** at `4cf8924` / `5swmVz` — freeze does **not** block Lookout re-arm.
 
 **Shop OS/MC hop ~10:32 America/Edmonton** (lightning / Omarchy) opened the McKing path. Do **not** keep the stale hub line “McKing is not on the tailnet / migrate not started.” 2026-08-16 notes in `home-lab-specification.md` / `nextcloud-progress.md` are **stale for that path** — this paper is the shop-host reality stamp. Those hub specs were **not** rewritten in this fold.
 
@@ -49,6 +49,25 @@ Soft-530 is **CLEAR** (Doc origin **LIVE** 2026-09-11). Future lid-close can sti
 | **McKing shop role (later)** | Later: Shop API + shop-web via Docker + tunnel hostname reuse — **only after** the Soft-530 dual-run five-row gate PASSes. Do **not** treat hub NC+VW dual-run healthy as that gate. |
 
 `app.` stays the temporary alias until Ben cuts that DNS (`app-alias-cut.md`). This host move does **not** require cutting `app.`.
+
+---
+
+## Dual-tunnel ownership (separate from shop CF cutover)
+
+**Living-ops lock. Not this shop-host cutover. Not a Zone live apply.** STATUS keeps this as its **own** row. Vault public hostname cutover stays a **separate Ben GO**.
+
+| Tunnel | Hostnames | Origin / role |
+|--------|-----------|----------------|
+| **Doc tunnel** | **`cloud.` + `api.` + `app.` + `ops.` only** | Shop Soft-530 / KeepAlive (plus `cloud.`). Public shop names stay on Doc until the five-row Soft-530 gate PASSes. |
+| **McKing-only tunnel** | **`vault.projectcar.ca`** | **`localhost:8222`** on McKing. Not the Doc mission-control token. Not shop `api.` / `ops.` / `app.`. |
+
+**Anti-goals (do not weaken):**
+
+- Never move the **Doc mission-control token** for `vault.`.
+- Soft-530 lid-restore / LaunchAgent KeepAlive must **not** reattach `vault.` to Doc.
+- Vault cutover ≠ shop hostname leave ≠ Doc unfreeze.
+
+Hop OPEN ≠ shop CF cutover GO. This matrix is ownership paper — not a live vault flip and not a shop hostname leave.
 
 ---
 
@@ -170,7 +189,7 @@ Shop-web host allowlist (`ops.` / `app.` / customer hosts / localhost — never 
 
 ## 6. Lookout `/health` gates (before DNS / origin flip)
 
-Soft-530 dual-run gate **row 3**. Watch: Lookout **`projectcar-api-health-watch`** (today **`enabled:true`**, live `/health` **200** as of 2026-09-11 restore). Soft-530 **CLEAR** live honesty is unchanged — this streak is a **later** cut gate, not a claim the edge is down now.
+Soft-530 dual-run gate **row 3**. Watch: Lookout **`projectcar-api-health-watch`** (today **`enabled:true`**, live `/health` **200** as of 2026-09-11 restore). **#78 lookout-resume exception:** freeze at `4cf8924` / `5swmVz` does **not** block that re-arm. Soft-530 **CLEAR** live honesty is unchanged — this streak is a **later** cut gate, not a claim the edge is down now.
 
 **Default streak:** **N = 15** consecutive public `GET /health` **200** over **~15 minutes** (~one probe/minute), **zero** CF **1033** / **530** / **502**. Ben may tune **N** in **10–20** and the window. A single 200 is **not** the gate.
 
@@ -243,6 +262,7 @@ None of the flip-row checks are a license to run the flip from this PR.
 |--------|-----|
 | Live-cut from this doc | Paper only. |
 | Treat hop OPEN / hub NC+VW dual-run as cutover GO | Path OPEN ≠ Soft-530 five-row PASS ≠ Doc unfreeze. |
+| Move the Doc mission-control token for `vault.` / reattach `vault.` on lid-restore | Dual-tunnel lock: `vault.` is McKing-only (`localhost:8222`). Vault cutover ≠ shop hostname leave ≠ Doc unfreeze. |
 | Move the brochure to McKing / Doc / Pages from here | Worker `projectcar-brochure` stays. Pages git is a different, blocked plan. |
 | Garage / Zone / Hatch fan-out | No Worker upload, no tunnel/DNS edit, no compose apply. |
 | Unfreeze Doc / rebuild to tip | `doc-unfreeze.md` + Ben GO only. |
@@ -292,7 +312,7 @@ None of the flip-row checks are a license to run the flip from this PR.
 - Green shop-os-ci ≠ unfreeze ≠ McKing cut ≠ Soft-530 dual-run gate PASS.
 - McKing path **OPEN** (sshd / docker / `/opt/mission-control`; hub dual-run NC+VW healthy on Doc+McKing). Hop OPEN ≠ cutover GO. Doc KeepAlive still owns public `api.` / `ops.` / `app.`.
 - No public CF hostname leaves Doc until the five-row Soft-530 dual-run gate PASSes. Dual-run = Tailscale / staging only. Gate row 2 artifact when it lands: Doc dual-run evidence card (Tailscale / private only). Still no public McKing attach for shop.
-- Vault public hostname cutover is a **separate Ben GO**.
+- Vault public hostname cutover is a **separate Ben GO**. Dual-tunnel ownership is a **separate** living-ops row: Doc tunnel = `cloud.` + `api.` + `app.` + `ops.` only; McKing-only = `vault.projectcar.ca` → `localhost:8222`. Never move the Doc mission-control token for `vault.`; lid-restore / KeepAlive must **not** reattach `vault.` to Doc.
 - Rollback one-liner: re-point cloudflared to Doc LaunchAgents.
 - Soft-530 Discord waitlist fail-soft (**#80** `waitlist.js?v=3`) stays on the Worker during the cut. **#82** unchanged.
 - No live cut, no DNS/origin flip, no compose-down, no Garage/Zone fan-out from this file.

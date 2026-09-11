@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-11  
 **Public URL:** https://api.projectcar.ca  
-**Related:** `doc-lid-restore.md` (ordered wake), `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `shop-web-stay-up.md`, `mcking-shop-host-cutover.md` (future McKing host — plan only; **not** a cut), `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
+**Related:** `doc-lid-restore.md` (ordered wake), `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `shop-web-stay-up.md`, `mcking-shop-host-cutover.md` (future McKing host — plan only; **not** a cut; dual-tunnel ownership is a **separate** living-ops row), `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
 
 Keep the Shop API reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -26,6 +26,8 @@ Keep the Shop API reachable. This is operational reality, not a product-lock rew
 The LaunchAgent lives on **Doc**, not in this git repo. Compose still does not start the API. KeepAlive is the primary stay-up for process crashes / logout-style exits. **Lid-close / sleep still kills the Mac** — launchd cannot outrun sleep.
 
 **Future host (plan only):** Shop API later moves to **McKing Docker** with Cloudflare tunnel **hostname reuse** (`api.projectcar.ca` stays the public name). Dual-run Doc KeepAlive, then cut — paper: `mcking-shop-host-cutover.md`. **Not** Next #1. **Not** GO’d. Do **not** execute from this stay-up file. Today’s origin is still Doc.
+
+**Dual-tunnel ownership (separate from shop CF cutover — paper only):** Doc tunnel = **`cloud.` + `api.` + `app.` + `ops.` only** (this API hostname stays on that Doc tunnel / Soft-530 KeepAlive). McKing-only tunnel = **`vault.projectcar.ca` → `localhost:8222`**. Never move the Doc mission-control token for `vault.`. Soft-530 lid-restore / LaunchAgent KeepAlive must **not** reattach `vault.` to Doc. Vault cutover ≠ shop hostname leave ≠ Doc unfreeze. STATUS Locks row is canonical; essay: `mcking-shop-host-cutover.md`.
 
 ---
 
@@ -60,7 +62,7 @@ curl -sS http://127.0.0.1:8000/health
 
 | Role | Owns | Does not own |
 |------|------|----------------|
-| **Lookout** | `projectcar-api-health-watch` **resumed** (`enabled:true`) 2026-09-11 ~06:52 America/Edmonton (Lookout confirmed; live `/health` **200**). Lead interim probe ended. | Process restore on Doc; Cloudflare tunnel / DNS edits |
+| **Lookout** | `projectcar-api-health-watch` **resumed** (`enabled:true`) 2026-09-11 ~06:52 America/Edmonton (Lookout confirmed; live `/health` **200**). Lead interim probe ended. **#78:** freeze does **not** block this re-arm — watch is already **`enabled:true`** while Doc stays frozen at `4cf8924` / `5swmVz`. | Process restore on Doc; Cloudflare tunnel / DNS edits |
 | **Lead** | uvicorn / process stay-up and recovery on Doc | Cloudflare tunnel / DNS edits; interim morning probe (ended 2026-09-11) |
 | **Zone** | Cloudflare tunnel + DNS for `api.projectcar.ca` | Restarting uvicorn |
 | **Garage** | Browser e2e of the brochure waitlist only | Restarting uvicorn, tunnel, or DNS |
