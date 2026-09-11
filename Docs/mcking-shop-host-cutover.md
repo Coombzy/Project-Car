@@ -45,8 +45,9 @@ Soft-530 is **CLEAR** (Doc origin **LIVE** 2026-09-11). Future lid-close can sti
 | **Doc KeepAlive** | `com.projectcar.cloudflared` + `com.projectcar.shop-api` + `com.projectcar.shop-web`. Doc stays the **public CF origin / KeepAlive backup**. Lid-close still kills the Mac. |
 | **Doc checkout** | **Frozen** at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** (Dashboard **#28**) until **Ben GO** (`doc-unfreeze.md`). **#36** / **#69** stay **git-only**. Hop OPEN ≠ unfreeze. |
 | **Git compose today** | `infra/compose/compose.yaml` is **shop Postgres only**. It does **not** start shop-api, shop-web, or cloudflared. Do not invent those services as already in git. |
-| **McKing path (OPEN)** | **OPEN** 2026-09-11 ~10:32 America/Edmonton: **sshd / docker / `/opt/mission-control`**. Hub dual-run **NC+VW healthy** on **Doc + McKing**. Path OPEN ≠ shop CF hostname cutover GO ≠ Doc unfreeze. Vault is **LIVE verified** on McKing (separate living-ops row) — vault LIVE ≠ shop cutover GO ≠ Doc unfreeze. |
+| **McKing path (OPEN)** | **OPEN** 2026-09-11 ~10:32 America/Edmonton: **sshd / docker / `/opt/mission-control`**. Hub dual-run **NC+VW healthy** on **Doc + McKing**. Path OPEN ≠ shop CF hostname cutover GO ≠ Doc unfreeze ≠ `cloud.*` leave. Vault is **LIVE verified** on McKing (separate living-ops row) — vault LIVE ≠ shop cutover GO ≠ Doc unfreeze. |
 | **Vault (LIVE verified — not this shop cut)** | **`vault.projectcar.ca` LIVE** on McKing: `cloudflared` → `localhost:8222`. `/api/config` reports **2026.6.0** (Chief verified). Soft-530 five-row gate does **not** apply to vault. Doc lid-restore / KeepAlive must **not** recreate `vault.` ingress on Doc. |
+| **Hub NC (McKing)** | **lab/hub loopback-only — unpublished.** `/opt/mission-control` NC is **not** on the McKing CF tunnel. Public `cloud.projectcar.ca` stays on **Doc** until explicit **Ben GO**. Paper path: Tailscale Serve HTTPS mirroring VW Serve at `lightning.tailbe8f55.ts.net` + `NEXTCLOUD_TRUSTED_DOMAINS` MagicDNS — **not** a Cloudflare cutover of `cloud.*`. |
 | **McKing shop role (later)** | Later: Shop API + shop-web via Docker + tunnel hostname reuse — **only after** the Soft-530 dual-run five-row gate PASSes. Do **not** treat hub NC+VW dual-run healthy as that gate. |
 
 `app.` stays the temporary alias until Ben cuts that DNS (`app-alias-cut.md`). This host move does **not** require cutting `app.`.
@@ -59,16 +60,53 @@ Soft-530 is **CLEAR** (Doc origin **LIVE** 2026-09-11). Future lid-close can sti
 
 | Tunnel | Hostnames | Origin / role |
 |--------|-----------|----------------|
-| **Doc tunnel** | **`cloud.` + `api.` + `app.` + `ops.` only** | Shop Soft-530 / KeepAlive (plus `cloud.`). Public shop names stay on Doc until the five-row Soft-530 gate PASSes. That gate is **shop hosts only** — **vault EXCLUDED**. |
-| **McKing-only tunnel** | **`vault.projectcar.ca` — LIVE verified** | McKing `cloudflared` → **`localhost:8222`**. Public `/api/config` reports **2026.6.0** (Chief verified). Not the Doc mission-control token. Not shop `api.` / `ops.` / `app.`. |
+| **Doc tunnel** | **`cloud.` + `api.` + `app.` + `ops.` only** | Shop Soft-530 / KeepAlive (plus `cloud.`). Public **`cloud.projectcar.ca` stays on Doc** until explicit **Ben GO**. Public shop names stay on Doc until the five-row Soft-530 gate PASSes. That gate is **shop hosts only** — **vault EXCLUDED**. |
+| **McKing-only tunnel** | **`vault.projectcar.ca` — LIVE verified** (+ **unpublished** NC, not a tunnel hostname) | McKing `cloudflared` → **`localhost:8222`**. Public `/api/config` reports **2026.6.0** (Chief verified). Not the Doc mission-control token. Not shop `api.` / `ops.` / `app.`. McKing `/opt/mission-control` NC is **lab/hub loopback-only** — **not** on this tunnel. |
 
 **Anti-goals (do not weaken):**
 
 - Never move the **Doc mission-control token** for `vault.`.
 - Soft-530 lid-restore / LaunchAgent KeepAlive must **not** recreate `vault.` ingress on Doc.
-- Vault LIVE ≠ shop hostname leave ≠ Doc unfreeze.
+- Vault LIVE ≠ shop hostname leave ≠ Doc unfreeze ≠ McKing NC publish.
+- Do **not** point the `cloud.*` tunnel or CNAME at McKing until a dual-run acceptance gate PASSes (McKing `status.php` parity vs Doc `status.php`) **and** explicit **Ben GO**.
 
-Hop OPEN ≠ shop CF cutover GO ≠ Doc unfreeze. Shop CF cutover stays paper. Vault being LIVE is **not** a shop hostname leave.
+Hop OPEN ≠ shop CF cutover GO ≠ Doc unfreeze ≠ `cloud.*` leave. Shop CF cutover stays paper. Vault being LIVE is **not** a shop hostname leave. Dual-tunnel matrix stays Doc = `cloud.` / `api.` / `app.` / `ops.`; McKing = `vault.` (+ unpublished NC).
+
+---
+
+## Dual-Nextcloud ownership (paper — not a `cloud.*` CF cutover)
+
+**Living-ops lock. Separate from shop CF cutover. Separate from vault LIVE.** Public `cloud.projectcar.ca` stays on **Doc** until explicit **Ben GO**. McKing `/opt/mission-control` Nextcloud stays **lab/hub loopback-only** (unpublished). Dual-tunnel matrix does **not** change: Doc = `cloud.` / `api.` / `app.` / `ops.`; McKing = `vault.` (+ unpublished NC). #82 gate unchanged. Soft-530 companions **HOLD**. Vault LIVE unchanged.
+
+This section is **not** a Cloudflare cutover of `cloud.*`. Merging this paper is **not** Ben GO. Hub dual-run NC+VW healthy / hop OPEN / vault LIVE do **not** move `cloud.*`.
+
+### Paper path (later execute — not this PR)
+
+Mirror Vaultwarden Tailscale Serve on McKing (`lightning.tailbe8f55.ts.net`) — **HTTPS Serve for McKing NC**, plus `NEXTCLOUD_TRUSTED_DOMAINS` MagicDNS hostnames.
+
+| Step | Do | Do not |
+|------|----|--------|
+| 1. Serve | Tailscale Serve HTTPS on McKing NC (loopback origin), same class as VW Serve at `lightning.tailbe8f55.ts.net` | Point `cloud.*` tunnel / CNAME at McKing. Add NC to the McKing CF tunnel. |
+| 2. Trusted domains | Add MagicDNS hostnames to `NEXTCLOUD_TRUSTED_DOMAINS` (and matching overwrite URL if needed) | Publish McKing NC on Cloudflare / `cloud.projectcar.ca` |
+| 3. Dual-run gate (before any later `cloud.*` leave) | Parity check McKing NC `status.php` vs **Doc** `status.php` (installed, not maintenance, version) **and** explicit **Ben GO** | Treat hub “NC+VW healthy” / hop OPEN / vault LIVE / Serve stand-up as that gate |
+
+### `cloud.*` dual-run acceptance gate (before any `cloud.*` tunnel / CNAME leave)
+
+**Hard gate for public `cloud.projectcar.ca` only.** Separate from the Soft-530 five-row **shop** gate. Soft-530 five-row still blocks shop hostname leave (`cloud.` / `api.` / `app.` / `ops.`). This table is the **extra** lock so hub dual-run is not misread as “move `cloud.*` to McKing.”
+
+| # | Gate | Pass | Fail |
+|---|------|------|------|
+| 1 | **Doc still owns public `cloud.`** | `cloud.projectcar.ca` remains the Doc tunnel hostname until **Ben GO** | Do not retarget tunnel / CNAME |
+| 2 | **McKing NC unpublished** | `/opt/mission-control` NC is loopback / Tailscale Serve only — **not** a McKing CF hostname | Do not attach McKing NC to `cloud.*` “to prove it” |
+| 3 | **`status.php` parity** | McKing `status.php` matches Doc `status.php` (installed, not maintenance, version) | Version / maintenance / installed mismatch — do not cut |
+| 4 | **Explicit Ben GO** | A Ben sentence that public `cloud.*` may leave Doc | Infer GO from hop OPEN, vault LIVE, Serve stand-up, or this paper |
+
+**Anti-goals (do not weaken):**
+
+- Do **not** point the `cloud.*` tunnel or CNAME at McKing until this gate PASSes.
+- Do **not** treat Tailscale Serve as a Cloudflare cutover of `cloud.*`.
+- McKing NC stays **unpublished** (lab/hub loopback-only) until that GO. Not on the McKing CF tunnel (that tunnel stays **`vault.` only**).
+- Public `cloud.projectcar.ca` stays on **Doc** until that GO.
 
 ---
 
@@ -100,7 +138,7 @@ Later McKing shop-host is **Docker**. Name the three shop-edge services. Do **no
 
 Shop data stays **dedicated shop Postgres** — never Nextcloud MariaDB (`infra/compose` today; Mission Control hub is a separate stack). This paper does **not** invent where McKing mounts that DB or a second compose path.
 
-Nextcloud / Vaultwarden on McKing is the **hub** move (Docker + Nextcloud home). It is **not** the brochure origin and **not** a shop-member IdP. Shop members never get Nextcloud accounts.
+Nextcloud / Vaultwarden on McKing is the **hub** move (Docker + Nextcloud home). McKing NC stays **lab/hub loopback-only** (unpublished) until explicit **Ben GO** + `status.php` parity vs Doc — paper path is Tailscale Serve + MagicDNS trusted domains, **not** a `cloud.*` CF cutover. It is **not** the brochure origin and **not** a shop-member IdP. Shop members never get Nextcloud accounts.
 
 Do **not** write secrets into git. Copy env **shape** from existing Doc `.env.example` / stay-up docs when someone later authors the real compose — not in this PR.
 
@@ -262,7 +300,9 @@ None of the flip-row checks are a license to run the flip from this PR.
 | Do not | Why |
 |--------|-----|
 | Live-cut from this doc | Paper only. |
-| Treat hop OPEN / hub NC+VW dual-run as cutover GO | Path OPEN ≠ Soft-530 five-row PASS ≠ Doc unfreeze. |
+| Treat hop OPEN / hub NC+VW dual-run as cutover GO | Path OPEN ≠ Soft-530 five-row PASS ≠ Doc unfreeze ≠ `cloud.*` leave. |
+| Point `cloud.*` tunnel / CNAME at McKing | Public `cloud.` stays on **Doc** until **Ben GO** + `status.php` parity vs Doc. Paper path is Tailscale Serve + `NEXTCLOUD_TRUSTED_DOMAINS` MagicDNS — **not** a CF cutover of `cloud.*`. |
+| Publish McKing `/opt/mission-control` NC on Cloudflare | Lab/hub loopback-only (unpublished). McKing CF tunnel stays **`vault.` only**. |
 | Recreate `vault.` ingress on Doc / move the Doc mission-control token for `vault.` | Dual-tunnel lock: `vault.` is **LIVE verified** on McKing (`cloudflared` → `localhost:8222`; `/api/config` **2026.6.0**, Chief verified). Lid-restore / KeepAlive must **not** recreate that ingress on Doc. Vault LIVE ≠ shop hostname leave ≠ Doc unfreeze. |
 | Move the brochure to McKing / Doc / Pages from here | Worker `projectcar-brochure` stays. Pages git is a different, blocked plan. |
 | Garage / Zone / Hatch fan-out | No Worker upload, no tunnel/DNS edit, no compose apply. |
@@ -313,7 +353,8 @@ None of the flip-row checks are a license to run the flip from this PR.
 - Green shop-os-ci ≠ unfreeze ≠ McKing cut ≠ Soft-530 dual-run gate PASS.
 - McKing path **OPEN** (sshd / docker / `/opt/mission-control`; hub dual-run NC+VW healthy on Doc+McKing). Hop OPEN ≠ cutover GO. Doc KeepAlive still owns public `api.` / `ops.` / `app.`.
 - No public **shop** CF hostname leaves Doc until the five-row Soft-530 dual-run gate PASSes. Dual-run = Tailscale / staging only. Gate row 2 artifact when it lands: Doc dual-run evidence card (Tailscale / private only). Still no public McKing attach for shop. **Vault EXCLUDED** from this gate (already LIVE).
-- Vault is **LIVE verified** on McKing (`cloudflared` → `localhost:8222`; `/api/config` **2026.6.0**, Chief verified). Dual-tunnel ownership is a **separate** living-ops row: Doc tunnel = `cloud.` + `api.` + `app.` + `ops.` only; McKing-only = `vault.projectcar.ca`. Soft-530 five-row gate = Doc shop hosts only — **vault EXCLUDED**. Never move the Doc mission-control token for `vault.`; lid-restore / KeepAlive must **not** recreate `vault.` ingress on Doc. Vault LIVE ≠ shop hostname leave ≠ Doc unfreeze.
+- Vault is **LIVE verified** on McKing (`cloudflared` → `localhost:8222`; `/api/config` **2026.6.0**, Chief verified). Dual-tunnel ownership is a **separate** living-ops row: Doc tunnel = `cloud.` + `api.` + `app.` + `ops.` only; McKing-only = `vault.projectcar.ca` (+ **unpublished** NC). Soft-530 five-row gate = Doc shop hosts only — **vault EXCLUDED**. Never move the Doc mission-control token for `vault.`; lid-restore / KeepAlive must **not** recreate `vault.` ingress on Doc. Vault LIVE ≠ shop hostname leave ≠ Doc unfreeze.
+- **Dual-Nextcloud (paper):** public `cloud.projectcar.ca` stays on **Doc** until explicit **Ben GO**. McKing `/opt/mission-control` NC remains **lab/hub loopback-only** (unpublished). Paper path = Tailscale Serve HTTPS mirroring VW Serve at `lightning.tailbe8f55.ts.net` + `NEXTCLOUD_TRUSTED_DOMAINS` MagicDNS — **not** a Cloudflare cutover of `cloud.*`. Do **not** point `cloud.*` tunnel/CNAME at McKing until `status.php` parity vs Doc **and** Ben GO. #82 unchanged. Soft-530 companions **HOLD**. Vault LIVE unchanged.
 - Rollback one-liner: re-point cloudflared to Doc LaunchAgents.
 - Soft-530 Discord waitlist fail-soft (**#80** `waitlist.js?v=3`) stays on the Worker during the cut. **#82** unchanged.
 - No live cut, no DNS/origin flip, no compose-down, no Garage/Zone fan-out from this file.
