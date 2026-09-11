@@ -1,14 +1,14 @@
 # Member UI → projectcar.ca cutover
 
 **Status:** Checklist / plan only — **not shipped**  
-**Updated:** 2026-09-07  
-**Related:** `STATUS.md` Next #1, `member-zone-edge.md` (Zone path-split), `app-alias-cut.md` (STATUS Next #2; plan only — **not** required first), `website-improvements.md` P1-6 (brochure Membership sign-in CTA after cutover GO), `cors-origins.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`, `brochure-pages-cutover.md`, `website-webapp-specification.md` §3
+**Updated:** 2026-09-11  
+**Related:** `STATUS.md` Next #1, `member-zone-edge.md` (Zone path-split — **capacity-blocked** by Option A **FULL 10/10**; Ben GO only after **#82** Worker-live + Bulk Phase1), `app-alias-cut.md` (STATUS Next #2; plan only — **not** required first), `website-improvements.md` P1-6 (brochure Membership sign-in CTA after cutover GO), `cors-origins.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md` (Option A matrix / Member-precondition receipt), `brochure-pages-cutover.md`, `website-webapp-specification.md` §3
 
 Plan the move of Member self-serve from the shop UI `/member` (today on **`ops.`** + temporary **`app.`** alias) onto the customer host **projectcar.ca / www**. This file is a runbook. It does **not** implement the migration, change DNS, or cut the `app.projectcar.ca` alias.
 
 Do **not** invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, Matrix, or Apex revival. Demo session cookies stay demo cookies — **not OIDC**.
 
-**Ben GO required** before Garage (site) or Zone (Cloudflare DNS / tunnel / CORS edge) start this cutover. Cutover planning outranks new breadth placeholders.
+**Ben GO required** before Garage (site) or Zone (Cloudflare DNS / tunnel / CORS edge) start this cutover — **and** only after **#82** Worker-live + Bulk Phase1 frees pretty-URL Dynamic slots (`member-zone-edge.md` §0). Option A **FULL 10/10** capacity-blocks `/member*` ranking + www→apex `/member*` 301. Cutover planning outranks new breadth placeholders. Do **not** execute from this file.
 
 ---
 
