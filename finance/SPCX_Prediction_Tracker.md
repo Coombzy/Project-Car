@@ -10,7 +10,7 @@ One row per `(analysis_date, horizon)`. Update in place. Do not duplicate.
 
 Status: `open` · `preliminary` · `closed` · `expired`
 
-Last price: **2026-09-11 official RTH** (MarketWatch/YCharts) O **$150.01** H **$151.85** L **$145.92** C **$151.21** (+2.04%) Vol **~79.27M** (~0.99× vs ~20d $80.0M = normal). Path high **$155.00**. Last-5 median TR **$7.45**; 14d ATR ~$7.6 (use $7.6). Closed 1d **9/10**; Closed 1w **9/03**. **Write-streak: 3** emergency ON (9/09–11 misses). Weekend SHA-reuse does not clear streak.
+Last price: **2026-09-11 official RTH** (MarketWatch/YCharts) O **$150.01** H **$151.85** L **$145.92** C **$151.21** (+2.04%) Vol **~79.27M** (~0.99× vs Barchart 20d $79.97M = normal). Path high **$155.00**. Last-5 median TR **$7.92** (TRs 5.93/9.81/7.92/9.86/3.53); 14d ATR Barchart **$7.80** (Finviz $7.82); gap <20% use **$7.92**. Closed 1d **9/10**; Closed 1w **9/03**. **Write-streak: 3** emergency ON (9/09–11 session-day misses). 9/12 weekend path-refresh 572a064 does not clear streak.
 
 | analysis_date | horizon | range_low | range_high | bias_low | bias_high | conf | pred_regime | pred_rel_vol | prior_day_pct | actual_low | actual_high | actual_close | hit | directional | pct_error | status | notes |
 |---------------|---------|-----------|------------|----------|-----------|------|-------------|--------------|---------------|------------|-------------|--------------|-----|-------------|-----------|--------|-------|
@@ -54,7 +54,7 @@ Last price: **2026-09-11 official RTH** (MarketWatch/YCharts) O **$150.01** H **
 | 2026-09-09 | 1w | 130 | 175 | 140 | 165 | 40 | digestion | normal | 3.73 | 144.89 | 154.70 | 151.21 |  |  |  | open | Day 2/5; closes after 9/16 RTH; path thru 9/11 official L144.89 H154.70 C151.21 |
 | 2026-09-09 | 1m | 115 | 195 | 130 | 180 | 30 | digestion | normal | 3.73 | 144.89 | 154.70 | 151.21 |  |  |  | open | path thru 9/11 official L144.89 H154.70 C151.21 |
 | 2026-09-09 | 3m | 95 | 240 | 120 | 210 | 25 | digestion | normal | 3.73 | 144.89 | 154.70 | 151.21 |  |  |  | open | path thru 9/11 official L144.89 H154.70 C151.21 |
-| 2026-09-10 | 1d | 136 | 162 | 145 | 155 | 45 | digestion | elevated | -3.86 | 145.92 | 151.85 | 151.21 | yes | yes | 2.0% | closed | next-session 9/11 official O150.01 H151.85 L145.92 C151.21 Vol~79.27M; H/L/C inside 136-162 |
+| 2026-09-10 | 1d | 136 | 162 | 145 | 155 | 45 | digestion | elevated | -3.86 | 145.92 | 151.85 | 151.21 | yes | yes | 0.8% | closed | next-session 9/11 official O150.01 H151.85 L145.92 C151.21 Vol~79.27M; H/L/C inside 136-162 |
 | 2026-09-10 | 1w | 128 | 180 | 140 | 165 | 40 | digestion | elevated | -3.86 | 144.89 | 154.70 | 151.21 |  |  |  | open | Day 1/5; closes after 9/17 RTH; path thru 9/11 official L144.89 H154.70 C151.21 |
 | 2026-09-10 | 1m | 115 | 200 | 130 | 180 | 30 | digestion | elevated | -3.86 | 144.89 | 154.70 | 151.21 |  |  |  | open | path thru 9/11 official L144.89 H154.70 C151.21 |
 | 2026-09-10 | 3m | 95 | 245 | 120 | 210 | 25 | digestion | elevated | -3.86 | 144.89 | 154.70 | 151.21 |  |  |  | open | path thru 9/11 official L144.89 H154.70 C151.21 |
