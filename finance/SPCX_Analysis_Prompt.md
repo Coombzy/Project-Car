@@ -1,7 +1,7 @@
 # SPCX Daily Analysis Prompt
 
-**Version:** 1.14  
-**Last edited:** 2026-09-12T16:30:00Z  
+**Version:** 1.15  
+**Last edited:** 2026-09-13T16:10:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** SPCX Daily Stock Analysis automation
 
@@ -38,7 +38,7 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
 7. Decision map: 3 bullets.
 8. **Parseable table first.** No table = unrecoverable (**2026-09-01**).
 9. Self-check must include payload-compact used yes/no and TRACKER_SHA present yes/no.
-10. Non-session days: no new rows; still refresh path + Day N/5. Weekend SHA-reuse does not clear write-streak.
+10. Non-session days: no new rows; still refresh path + Day N/5. Weekend SHA-reuse does not clear write-streak. Auditor must not pre-insert the next session day's four rows.
 11. Close clocks: 1d = next RTH; 1w = 5th RTH after analysis_date; 1m = 21st; 3m = 63rd. **Day N/5 after 2026-09-11 begin:** 9/03=5/5 (open until 9/11 official close); 9/04=4/5; 9/08=3/5; 9/09=2/5; 9/10=1/5; 9/11=0/5. Weekend 9/12–13 no increment.
 12. pct_error format `X.X%` = |close − bias midpoint| / bias midpoint. Do not store the session % change. **2026-09-10** 1d was 2.0% (session +2.04) vs formula 0.8%.
 13. Official RTH source order: SpaceX IR if widget date matches, else Yahoo, else StockAnalysis / MarketWatch / Barchart. Stale-IR skip stands.
@@ -48,10 +48,11 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
    - **Payload-compact (v1.12):** on size/schema reject, compact already-closed notes, retry both tools once, then WRITE FAILED + today's 4 rows only.
    - SHA-delta on session days. **v1.13:** if emitted TRACKER_SHA equals the pre-write blob SHA, that is WRITE FAILED — do not treat email as a write.
 16. Price-quote cap before write.
-17. **Write-streak emergency ON (v1.13/v1.14).** Current streak: **3** (9/09 + 9/10 + 9/11 session-day misses). 9/12 weekend path-refresh commit 572a064 does not clear streak.
+17. **Write-streak emergency ON (v1.15).** Current streak: **3** (9/09 + 9/10 + 9/11 session-day misses). **Streak-clear = session-day 4-row INSERT + post-write SHA-delta only.** Weekend path-refresh / SHA-reuse does not clear or increment: 9/12 commit 572a064 / audit 5ffa6f02; 9/13 Daily “path-refresh complete” reused blob 536ccee1 / tree 58aafc61. Streak remains 3 until next session day (**2026-09-14**) lands a new 40-char blob SHA with that day's four rows verified on post-write get_file_contents.
    - After two GitHub reads + one quote batch, use **only write tools** until a new 40-char blob SHA exists.
    - Compact already-closed notes **before** the first write attempt.
    - Confirm today's four `(analysis_date, horizon)` rows exist on a post-write get_file_contents before emitting TRACKER_SHA.
+   - Do not pre-insert 2026-09-14 four rows from an Auditor or weekend run. Daily inserts session-day rows.
 
 ## Report structure
 
@@ -69,6 +70,6 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
 
 Get SHA immediately before write; retry once on conflict.
 Session day: append four rows; path-refresh; Day N/5; official-EOD replace; freeze closed notes.
-Never print `write pending`. Write-streak emergency is ON. Streak = 3. Dual-write + SHA-delta + payload-compact remain. Pre-write SHA emission = WRITE FAILED.
+Never print `write pending`. Write-streak emergency is ON. Streak = 3 until a 9/14 session-day 4-row INSERT produces a new blob SHA. Dual-write + SHA-delta + payload-compact remain. Pre-write SHA emission = WRITE FAILED.
 
 Cite sources. Be objective and data-driven.
