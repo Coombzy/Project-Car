@@ -10,7 +10,7 @@ One row per `(analysis_date, horizon)`. Update in place. Do not duplicate.
 
 Status: `open` · `preliminary` · `closed` · `expired`
 
-Last price: **2026-09-11 official RTH** O **$150.01** H **$151.85** L **$145.92** C **$151.21** (+2.04%) Vol **~79.27M** (~0.99× vs Barchart 20d $79.97M = normal). Path high **$155.00**. Last-5 median TR **$7.92** (TRs 5.93/9.81/7.92/9.86/3.53); 14d ATR Barchart **$7.80**; gap <20% use **$7.92**. Closed 1d **9/10**; Closed 1w **9/03**. **Write-streak: 3** emergency ON (9/09–11 session-day misses). 9/13 weekend path-refresh does not clear streak.
+Last price: **2026-09-11 official RTH** O **$150.01** H **$151.85** L **$145.92** C **$151.21** (+2.04%) Vol **~79.27M** (~0.99× vs Barchart 20d $79.97M = normal). Path high **$155.00**. Last-5 median TR **$7.92** (TRs 5.93/9.81/7.92/9.86/3.53); 14d ATR Barchart **$7.80**; gap <20% use **$7.92**. Closed 1d **9/10**; Closed 1w **9/03**. **Write-streak: 3** emergency ON (9/09–11 session-day misses). 9/13 weekend path-refresh (blob 536ccee1 / tree 58aafc61) does not clear streak. 9/13 audit: 1d 10/11 · 1w 7/7 · last-3 1w no upper-exceed; next closes 9/14 (9/11 1d + 9/04 1w). Streak-clear = session-day 4-row insert + SHA-delta only.
 
 | analysis_date | horizon | range_low | range_high | bias_low | bias_high | conf | pred_regime | pred_rel_vol | prior_day_pct | actual_low | actual_high | actual_close | hit | directional | pct_error | status | notes |
 |---------------|---------|-----------|------------|----------|-----------|------|-------------|--------------|---------------|------------|-------------|--------------|-----|-------------|-----------|--------|-------|
