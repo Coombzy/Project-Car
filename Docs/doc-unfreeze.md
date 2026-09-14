@@ -2,7 +2,7 @@
 
 **Status:** Living ops (Lead checklist)  
 **Updated:** 2026-09-14  
-**Related:** `doc-lid-restore.md` (process wake only — **not** this pull), `shop-web-stay-up.md` (rebuild essay), `api-stay-up.md`, `cors-origins.md`, `shop-os-ci.md` (git-only — **not** this GO), `STATUS.md` (living-ops / Next **#79**), `doc-software-baseline.md`, [post-dual-clear-go.md](post-dual-clear-go.md) (this file is **Shop OS parallel** on the post-dual-CLEAR menu — not “next after **#82**” in place of Bulk / **#83**; Soft-530 CLEAR alone ≠ this GO; **unfreeze + #79.1 acceptance smoke** is that file’s Shop OS card), `ops-demo-hardening.md` (Garage **#79.1** strip-changeme lands only after this pull)
+**Related:** `doc-lid-restore.md` (process wake only — **not** this pull), `shop-web-stay-up.md` (rebuild essay), `api-stay-up.md`, `cors-origins.md`, `shop-os-ci.md` (git-only — **not** this GO), `STATUS.md` (living-ops / Next **#79**), `doc-software-baseline.md`, [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (after extended-OPEN Soft-530 CLEAR — **before** this unfreeze talk), [post-dual-clear-go.md](post-dual-clear-go.md) (this file is **Shop OS parallel** on the post-dual-CLEAR menu — not “next after **#82**” in place of Bulk / **#83**; Soft-530 CLEAR alone ≠ this GO; **unfreeze + #79.1 acceptance smoke** is that file’s Shop OS card), `ops-demo-hardening.md` (Garage **#79.1** strip-changeme lands only after this pull)
 
 Ordered **Ben GO** pull/rebuild on Doc after the freeze at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**). This file is the pull sequence. Lid-close wake stays in `doc-lid-restore.md` — do **not** copy that process essay here.
 

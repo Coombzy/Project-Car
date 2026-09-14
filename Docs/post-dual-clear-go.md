@@ -2,7 +2,7 @@
 
 **Status:** Paper — **never auto-fire** on CLEAR  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (living-ops / Locks · Option A **FULL 10/10** · Member-edge capacity · **#79** Next · living dual-OPEN), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops while OPEN **~24h+** — this file stays the **CLEAR path**; duration ≠ auto-fire), [dual-host-outage.md](dual-host-outage.md) (wake order), [doc-lid-restore.md](doc-lid-restore.md) (Soft-530 CLEAR + Doc forensics `@55e10d0`), [vault-stay-up.md](vault-stay-up.md) (vault CLEAR + McKing forensics `@d88cacb`), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [brochure-worker-ci.md](brochure-worker-ci.md) (**#82** gates + Option A receipt — never **#81**), [brochure-worker-deploy.md](brochure-worker-deploy.md) (upload click-path), [member-zone-edge.md](member-zone-edge.md) (Next #1 — capacity-blocked until Bulk), [doc-unfreeze.md](doc-unfreeze.md) (Shop OS parallel unfreeze pull), [ops-demo-hardening.md](ops-demo-hardening.md) (**#79** / Garage **#79.1** strip plan), [cors-origins.md](cors-origins.md) (waitlist OPTIONS Origin)
+**Related:** `STATUS.md` (living-ops / Locks · Option A **FULL 10/10** · Member-edge capacity · **#79** Next · living dual-OPEN), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops while OPEN **~24h+** — this file stays the **CLEAR path**; duration ≠ auto-fire), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** this menu / desk / **#79.1** / unfreeze), [dual-host-outage.md](dual-host-outage.md) (wake order), [doc-lid-restore.md](doc-lid-restore.md) (Soft-530 CLEAR + Doc forensics `@55e10d0`), [vault-stay-up.md](vault-stay-up.md) (vault CLEAR + McKing forensics `@d88cacb`), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [brochure-worker-ci.md](brochure-worker-ci.md) (**#82** gates + Option A receipt — never **#81**), [brochure-worker-deploy.md](brochure-worker-deploy.md) (upload click-path), [member-zone-edge.md](member-zone-edge.md) (Next #1 — capacity-blocked until Bulk), [doc-unfreeze.md](doc-unfreeze.md) (Shop OS parallel unfreeze pull), [ops-demo-hardening.md](ops-demo-hardening.md) (**#79** / Garage **#79.1** strip plan), [cors-origins.md](cors-origins.md) (waitlist OPTIONS Origin)
 
 After **both** planes CLEAR **and** both forensic papers are already ack’d, lock an **ordered Ben GO menu**. CLEAR is restore proof. It is **not** a GO. This file executes **none** of the menu.
 
@@ -16,7 +16,7 @@ The menu is **offered** only when every row is true. Living this fold: the two l
 
 | Gate | Meaning | Ack / essay |
 |------|---------|-------------|
-| **Soft-530 CLEAR** | Doc lid-restore smoke: `api.` `/health` **200** + `ops.`/`app.` → `/login` + waitlist OPTIONS **200** + `cloud.` `status.php` | [doc-lid-restore.md](doc-lid-restore.md) · [dual-host-outage.md](dual-host-outage.md) Independent CLEAR |
+| **Soft-530 CLEAR** | After **extended OPEN**, first card is [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**before** desk / **#79.1** / unfreeze): `api.` `/health` **200** + waitlist OPTIONS CORS (apex **and** www) + waitlist POST **422** or **201** + note `app.`/`ops.` may still print `` `changeme` `` (freeze, **not** Soft-530) + `cloud.` `status.php` **200** when Doc public is up. Shorter OPEN still uses lid-restore / dual-host five-row. | [soft-530-clear-smoke.md](soft-530-clear-smoke.md) · [doc-lid-restore.md](doc-lid-restore.md) · [dual-host-outage.md](dual-host-outage.md) Independent CLEAR |
 | **Vault CLEAR** | McKing public `/alive` **200** (+ VW `/api/config` stamp) | [vault-stay-up.md](vault-stay-up.md) |
 | **Soft-530 post-CLEAR forensics ack’d** | Doc stamp paper already on held **#70**: lastExit / KeepAlive / caffeinate·CDM / Tailscale | **`55e10d0`** — [doc-lid-restore.md](doc-lid-restore.md) Post-CLEAR stay-up evidence |
 | **Vault post-CLEAR forensics ack’d** | McKing stamp paper already on held **#70**: cloudflared.service / VW+DOMAIN / Tailscale / **1033→200** vs **502→200** | **`d88cacb`** — [vault-stay-up.md](vault-stay-up.md) Post-CLEAR stay-up evidence |
@@ -58,7 +58,7 @@ Unfreeze + **#79.1** is **Shop OS parallel** ([doc-unfreeze.md](doc-unfreeze.md)
 
 **Paper card — not a GO.** After Ben GO Doc unfreeze + pull ([doc-unfreeze.md](doc-unfreeze.md)) **and** Garage **#79.1** rebuild ([ops-demo-hardening.md](ops-demo-hardening.md)), assert the four rows **before** calling this Shop OS lane done. STATUS living-ops / Next **#79** stays **parallel to #82**. This file executes **none** of the curls.
 
-Lid-close **530 / 1033** aborts the public checks — wake first ([doc-lid-restore.md](doc-lid-restore.md)), then re-run. Soft-530 **CLEAR** alone ≠ this card.
+Lid-close **530 / 1033** aborts the public checks — wake first ([doc-lid-restore.md](doc-lid-restore.md)), then re-run. After **extended OPEN**, the **first** public card is [soft-530-clear-smoke.md](soft-530-clear-smoke.md) — **before** this Shop OS talk. Soft-530 **CLEAR** alone ≠ this card. `changeme` on `/login` during that first smoke is **freeze**, not a failed CLEAR.
 
 | # | Assert | Expect |
 |---|--------|--------|
@@ -109,7 +109,7 @@ Living dual-OPEN honesty (`5f2fd1c`) is **unchanged** — see **Living this fold
 
 Brochure Option A **LIVE**: Zone Redirect **FULL 10/10**; `waitlist.js?v=3`; `styles.css?v=36`; Soft-530 Discord honesty; Home still bare `href="/"` + canonical/og apex until **#82**. Freeze intact **`4cf8924`** / BUILD_ID **`5swmVz`**. **#82** still Ben GO. Apex deferred. Soft-530 OPEN has crossed **~24h** + vault OPEN + **Mac.lan only** → quiet-ops ([soft-530-extended-open.md](soft-530-extended-open.md)). Duration of this OPEN does **not** auto-fire this menu. This paper does **not** invent a CLEAR, a live restore, or a Ben GO.
 
-**Later (note only — not this bounce):** After an **extended** Soft-530 OPEN, the **next** Soft-530 **CLEAR** smoke should include waitlist **OPTIONS CORS** + **POST** before Owner desk / **#79** gates (in addition to the existing five-row). Do **not** execute that smoke from this fold. Pointer: [soft-530-extended-open.md](soft-530-extended-open.md) Later · [cors-origins.md](cors-origins.md).
+**After extended OPEN:** the **next** Soft-530 **CLEAR** runs [soft-530-clear-smoke.md](soft-530-clear-smoke.md) **first** (OPTIONS CORS + POST **422**/**201**) **before** Owner desk / **#79.1** / this menu. Do **not** execute that smoke from this fold. Pointer: [soft-530-extended-open.md](soft-530-extended-open.md) · [cors-origins.md](cors-origins.md).
 
 ---
 
@@ -146,5 +146,5 @@ Wake order stays [dual-host-outage.md](dual-host-outage.md). Doc forensics stay 
 - Execute Zone Direct Upload / Bulk / Member edge / Garage / Doc pull from this paper
 - Invent a CLEAR while Soft-530 is still **OPEN** (CF **1033**) or vault is still **OPEN** (**502**)
 - Treat ~24h OPEN as this menu auto-firing ([soft-530-extended-open.md](soft-530-extended-open.md))
-- Execute the later waitlist OPTIONS CORS + POST smoke, desk, or **#79** from this bounce
+- Execute [soft-530-clear-smoke.md](soft-530-clear-smoke.md), desk, or **#79** from this bounce
 - Shell `Mac.lan` as Doc or McKing

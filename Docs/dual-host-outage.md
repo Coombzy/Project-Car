@@ -2,7 +2,7 @@
 
 **Status:** Living ops  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (weekend Soft-530 + vault Live / Locks + living dual-OPEN), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — this file stays **wake order**), [api-stay-up.md](api-stay-up.md), [vault-stay-up.md](vault-stay-up.md) (McKing half + **vault post-CLEAR stay-up evidence**), [doc-lid-restore.md](doc-lid-restore.md) (Doc half + Soft-530 **post-CLEAR stay-up evidence** — lastExit / KeepAlive / caffeinate·CDM / Tailscale), [post-dual-clear-go.md](post-dual-clear-go.md) (post-dual-CLEAR **Ben GO sequencer** — **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [shop-web-stay-up.md](shop-web-stay-up.md), `deployment-guide.md`, `home-lab-specification.md` (machine map)
+**Related:** `STATUS.md` (weekend Soft-530 + vault Live / Locks + living dual-OPEN), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — this file stays **wake order**), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** desk / **#79.1** / unfreeze), [api-stay-up.md](api-stay-up.md), [vault-stay-up.md](vault-stay-up.md) (McKing half + **vault post-CLEAR stay-up evidence**), [doc-lid-restore.md](doc-lid-restore.md) (Doc half + Soft-530 **post-CLEAR stay-up evidence** — lastExit / KeepAlive / caffeinate·CDM / Tailscale), [post-dual-clear-go.md](post-dual-clear-go.md) (post-dual-CLEAR **Ben GO sequencer** — **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [shop-web-stay-up.md](shop-web-stay-up.md), `deployment-guide.md`, `home-lab-specification.md` (machine map)
 
 Weekend dual-OPEN glue. `vault-stay-up.md` named the two planes. This file names **wake order**, **independent CLEAR**, and the **ListMachines identity lock** when both Soft-530 and vault are **OPEN** at once. After Soft-530 CLEAR, stamp **Doc forensics** on [doc-lid-restore.md](doc-lid-restore.md). After vault CLEAR, stamp **McKing forensics** on [vault-stay-up.md](vault-stay-up.md). After **both** CLEARs + both forensic papers (`55e10d0` / `d88cacb`), Ben’s GO menu is [post-dual-clear-go.md](post-dual-clear-go.md) — **never auto-fire**. This file is **wake order** — not either forensic, not the GO menu.
 
@@ -60,16 +60,16 @@ Green on one plane proves **nothing** on the other. Claim each CLEAR only from *
 
 ### Soft-530 CLEAR (Doc)
 
-All of these — not `/health` alone:
+All of these — not `/health` alone. After **extended OPEN** (**>~24h**), the **first** public card is [soft-530-clear-smoke.md](soft-530-clear-smoke.md) — **before** Owner desk / **#79.1** / unfreeze talk.
 
 | Check | Expect |
 |-------|--------|
 | `GET https://api.projectcar.ca/health` | **200** |
-| `ops.` / `app.` → `/login` | **307** → `/login` then **200** (or `/login` **200**) — [shop-web-stay-up.md](shop-web-stay-up.md) |
-| Brochure waitlist **OPTIONS** | **200** — [api-stay-up.md](api-stay-up.md), `cors-origins.md` |
-| `cloud.` `status.php` | Doc NC reachable (five-row shop host). **Not** a McKing `cloud.*` leave |
+| `ops.` / `app.` → `/login` | **307** → `/login` then **200** (or `/login` **200**) — [shop-web-stay-up.md](shop-web-stay-up.md). After extended OPEN, print `` `changeme` `` is **freeze**, **not** Soft-530. |
+| Brochure waitlist **OPTIONS** | **200** + CORS Origin `https://projectcar.ca` **and** `https://www.projectcar.ca` — [api-stay-up.md](api-stay-up.md), `cors-origins.md`. After extended OPEN also POST **422** or **201** (route alive). |
+| `cloud.` `status.php` | Doc NC reachable when Doc public is up (five-row shop host). **Not** a McKing `cloud.*` leave |
 
-Lookout Soft-530 coverage is still **api-only**. Companions stay **HOLD**. Manual five-row smoke is how this CLEAR is claimed. Essay: [doc-lid-restore.md](doc-lid-restore.md) smoke + [api-stay-up.md](api-stay-up.md). After that CLEAR, stamp **post-CLEAR stay-up evidence** (lastExit / KeepAlive / caffeinate·CDM / Tailscale) on [doc-lid-restore.md](doc-lid-restore.md) before walking away.
+Lookout Soft-530 coverage is still **api-only**. Companions stay **HOLD**. After extended OPEN, claim CLEAR from [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (not `/health` alone). Essay: [doc-lid-restore.md](doc-lid-restore.md) smoke + [api-stay-up.md](api-stay-up.md). After that CLEAR, stamp **post-CLEAR stay-up evidence** (lastExit / KeepAlive / caffeinate·CDM / Tailscale) on [doc-lid-restore.md](doc-lid-restore.md) before walking away.
 
 ### Vault CLEAR (McKing)
 
@@ -86,7 +86,7 @@ Living this fold — OPEN class honesty (do **not** invent CLEAR): Soft-530 stil
 
 ## After both CLEARs — Ben GO menu (never auto-fire)
 
-Forensic papers already ack’d on held **#70**: Soft-530 post-CLEAR **`55e10d0`** · vault post-CLEAR **`d88cacb`**. After a **live** Soft-530 CLEAR **and** a **live** vault CLEAR, do **not** auto-fire **#82**, unfreeze, or Garage **#79.1**.
+Forensic papers already ack’d on held **#70**: Soft-530 post-CLEAR **`55e10d0`** · vault post-CLEAR **`d88cacb`**. After **extended OPEN**, a **live** Soft-530 CLEAR first runs [soft-530-clear-smoke.md](soft-530-clear-smoke.md) — **before** desk / **#79.1** / unfreeze. After a **live** Soft-530 CLEAR **and** a **live** vault CLEAR, do **not** auto-fire **#82**, unfreeze, or Garage **#79.1**.
 
 Ordered Ben GO menu — [post-dual-clear-go.md](post-dual-clear-go.md):
 
@@ -121,7 +121,7 @@ Anti-goals that stay on this file: CLEAR ≠ companion re-ask; CLEAR ≠ Bitward
 - Treat dual-OPEN as one restore or fold vault into Doc KeepAlive
 - Shell `Mac.lan` as Doc (`Docs-MacBook-Pro`) or McKing (`lightning`)
 - Wake McKing first, or wake in parallel when only `Mac.lan` is online
-- Claim Soft-530 CLEAR from `api.` `/health` **200** alone (need ops/app login + waitlist OPTIONS + `cloud.` `status.php`)
+- Claim Soft-530 CLEAR from `api.` `/health` **200** alone (after extended OPEN: [soft-530-clear-smoke.md](soft-530-clear-smoke.md) — OPTIONS CORS + POST **422**/**201** + `cloud.` `status.php`; `changeme` on `/login` is freeze)
 - Claim vault CLEAR from Soft-530 green
 - Bitwarden import/rotate until vault `/alive` is **CLEAR**
 - Unfreeze Doc / pull tip / rebuild (`5swmVz`)

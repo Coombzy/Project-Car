@@ -2,7 +2,7 @@
 
 **Status:** Living ops (Lead checklist)  
 **Updated:** 2026-09-14  
-**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file; Soft-530 **CLEAR** Friday ≠ this GO), `api-stay-up.md` (weekend `/health` flip → this file; post-CLEAR stay-up evidence pointer), `shop-web-stay-up.md`, `vault-stay-up.md` (McKing vault — **OUT** of this sequence; weekend dual-outage proved Soft-530 ≠ vault; **vault post-CLEAR stay-up evidence** is McKing forensics — twin of this file’s Doc stamp), [dual-host-outage.md](dual-host-outage.md) (dual-OPEN **wake order** — Doc first, then McKing; this file is the Doc half + **post-CLEAR stay-up evidence**), [post-dual-clear-go.md](post-dual-clear-go.md) (after **both** CLEARs + forensics `@55e10d0` / `@d88cacb` — Ben GO menu, **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Option A Lookout **to arm** — not this restore; `main` still stamps this file’s api-health **paused**), `doc-software-baseline.md` (Amphetamine / Tailscale), `cors-origins.md`, `STATUS.md` (weekend Soft-530 coverage), `shop-os-ci.md` (green CI ≠ unfreeze)
+**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file; Soft-530 **CLEAR** Friday ≠ this GO), `api-stay-up.md` (weekend `/health` flip → this file; post-CLEAR stay-up evidence pointer), `shop-web-stay-up.md`, `vault-stay-up.md` (McKing vault — **OUT** of this sequence; weekend dual-outage proved Soft-530 ≠ vault; **vault post-CLEAR stay-up evidence** is McKing forensics — twin of this file’s Doc stamp), [dual-host-outage.md](dual-host-outage.md) (dual-OPEN **wake order** — Doc first, then McKing; this file is the Doc half + **post-CLEAR stay-up evidence**), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops while OPEN **~24h+**), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** desk / **#79.1** / unfreeze), [post-dual-clear-go.md](post-dual-clear-go.md) (after **both** CLEARs + forensics `@55e10d0` / `@d88cacb` — Ben GO menu, **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Option A Lookout **to arm** — not this restore; `main` still stamps this file’s api-health **paused**), `doc-software-baseline.md` (Amphetamine / Tailscale), `cors-origins.md`, `STATUS.md` (weekend Soft-530 coverage), `shop-os-ci.md` (green CI ≠ unfreeze)
 
 Single **ordered** wake/restore after Doc lid-close / sleep (the morning **530 / 1033** pattern). Plan/ops checklist for **Lead**. This file is the sequence. Process essays stay in the Related docs — do not copy them here.
 
@@ -101,13 +101,13 @@ Must be **`next start`**, not `next dev`.
 
 ### 4. Smoke
 
-When steps 1–3 are up:
+When steps 1–3 are up. After **extended OPEN** (**>~24h**), the **first** public card is [soft-530-clear-smoke.md](soft-530-clear-smoke.md) — **before** Owner desk / **#79.1** / unfreeze talk. Shorter OPEN still uses the rows below.
 
 | Check | Expect |
 |-------|--------|
 | `GET https://api.projectcar.ca/health` | **200** |
-| ops/app `/login` | **200** — `https://ops.projectcar.ca/login`, or `https://app.projectcar.ca/login` if `ops.` DNS is flaky |
-| Waitlist OPTIONS CORS | Only when health is **200** — `cors-origins.md` |
+| ops/app `/login` | **200** — `https://ops.projectcar.ca/login`, or `https://app.projectcar.ca/login` if `ops.` DNS is flaky. After extended OPEN, **307**→`/login` + print `` `changeme` `` is **freeze** (`4cf8924` / **`5swmVz`**), **not** Soft-530 — [soft-530-clear-smoke.md](soft-530-clear-smoke.md) row 4. |
+| Waitlist OPTIONS CORS | Only when health is **200** — `cors-origins.md`. After extended OPEN also POST **422** or **201** (route alive). |
 
 ```bash
 curl -sS -o /dev/null -w '%{http_code}\n' https://api.projectcar.ca/health
@@ -163,6 +163,7 @@ tailscale status
 - Treat green Shop OS CI as unfreeze GO (`doc-unfreeze.md`)
 - Treat Soft-530 **CLEAR** Friday as unfreeze GO or a companion re-ask
 - Auto-fire **#82**, Doc unfreeze, or Garage **#79.1** from Soft-530 CLEAR ([post-dual-clear-go.md](post-dual-clear-go.md))
+- Jump to Owner desk / **#79.1** / unfreeze talk after extended-OPEN CLEAR without [soft-530-clear-smoke.md](soft-530-clear-smoke.md)
 - Walk away from a Soft-530 CLEAR without the stay-up evidence stamp (lastExit / KeepAlive / caffeinate·CDM / Tailscale)
 - Invent a CLEAR or a live restore from this paper while Soft-530 is still **OPEN**
 - Capture the stamp on `Mac.lan` (not Doc)

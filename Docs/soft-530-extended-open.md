@@ -2,7 +2,7 @@
 
 **Status:** Living ops — paper lock  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (living dual-OPEN + this pointer), [dual-host-outage.md](dual-host-outage.md) (wake order — **not** this lock), [vault-stay-up.md](vault-stay-up.md) (McKing half), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Option A Lookout **to arm** — continues), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — **never auto-fire**), [doc-lid-restore.md](doc-lid-restore.md) (Lead process wake when `Docs-MacBook-Pro` reappears)
+**Related:** `STATUS.md` (living dual-OPEN + this pointer), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** desk / **#79.1** / unfreeze), [dual-host-outage.md](dual-host-outage.md) (wake order — **not** this lock), [vault-stay-up.md](vault-stay-up.md) (McKing half), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Option A Lookout **to arm** — continues), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — **never auto-fire**), [doc-lid-restore.md](doc-lid-restore.md) (Lead process wake when `Docs-MacBook-Pro` reappears)
 
 When Soft-530 **OPEN** crosses **~24h** **and** vault is **OPEN** **and** ListMachines is **only `Mac.lan`**, lock **quiet-ops**. This file names that lock. It is **not** wake order ([dual-host-outage.md](dual-host-outage.md)), **not** the CLEAR menu ([post-dual-clear-go.md](post-dual-clear-go.md)), and **not** a Ben re-nag.
 
@@ -46,9 +46,9 @@ After a **live** Soft-530 CLEAR **and** a **live** vault CLEAR **and** both fore
 
 ---
 
-## Later (note only — not this bounce)
+## Next Soft-530 CLEAR after this lock
 
-**Not this fold. Do not execute.** After an **extended** Soft-530 OPEN, the **next** Soft-530 **CLEAR** smoke should include waitlist **OPTIONS CORS** + **POST** before Owner desk / **#79** gates (in addition to the existing five-row: `api.` `/health` **200** + `ops.`/`app.` → `/login` + waitlist OPTIONS **200** + `cloud.` `status.php`). Essay when that bounce lands: [post-dual-clear-go.md](post-dual-clear-go.md) / [cors-origins.md](cors-origins.md). This paper does **not** add that card and does **not** invent CLEAR.
+After an **extended** Soft-530 OPEN, the **next** Soft-530 **CLEAR** runs [soft-530-clear-smoke.md](soft-530-clear-smoke.md) **first** — **before** Owner desk / **#79.1** / unfreeze talk: `api.` `/health` **200** + waitlist OPTIONS CORS (apex **and** www) + waitlist POST **422** or **201** (route alive, not just tunnel-up) + note `app.`/`ops.` may still **307**→`/login` with print `` `changeme` `` (freeze, **not** Soft-530) + `cloud.` `status.php` **200** when Doc public is up. CLEAR path still [post-dual-clear-go.md](post-dual-clear-go.md) (**never auto-fire**). This paper does **not** execute that smoke and does **not** invent CLEAR.
 
 ---
 
@@ -77,5 +77,5 @@ After a **live** Soft-530 CLEAR **and** a **live** vault CLEAR **and** both fore
 - Arm Soft-530 companions from this paper, or treat HOLD as weekend-only
 - Shell `Mac.lan` as Doc or McKing
 - Invent a CLEAR while Soft-530 is still **OPEN** (CF **1033**) or vault is still **OPEN** (**502**)
-- Execute waitlist OPTIONS CORS + POST smoke, desk, or **#79** from this bounce
+- Execute the [soft-530-clear-smoke.md](soft-530-clear-smoke.md) curls, desk, **#79.1**, or unfreeze from this bounce
 - Execute Zone / Garage / Lookout arm from this paper
