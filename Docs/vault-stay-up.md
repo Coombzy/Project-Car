@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-14  
 **Public URL:** https://vault.projectcar.ca  
-**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks + **vault post-CLEAR stay-up evidence** pointer), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**; Soft-530 **post-CLEAR stay-up evidence** is **Doc forensics**), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN **wake order** — Doc first, then McKing; this file is **McKing forensics** after vault CLEAR), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
+**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks + **vault post-CLEAR stay-up evidence** pointer), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**; Soft-530 **post-CLEAR stay-up evidence** is **Doc forensics**), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN **wake order** — Doc first, then McKing; this file is **McKing forensics** after vault CLEAR), [post-dual-clear-go.md](post-dual-clear-go.md) (after **both** CLEARs + forensics `@55e10d0` / `@d88cacb` — Ben GO menu, **never auto-fire**), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
 
 Keep public Vaultwarden reachable on McKing. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md`.
 
@@ -192,7 +192,7 @@ On **every** vault CLEAR after McKing wake, Lead records:
 | **Tailscale** | `tailscale status` — `lightning` **up** | Next flip: was McKing off-mesh? `Mac.lan` ≠ this host |
 | **Recovery class** | Whether this CLEAR was **1033→200** (tunnel) vs **502→200** (origin) | Living OPEN this fold is **502**, not 1033 — do not collapse the classes |
 
-Stamp: America/Edmonton timestamp + the four lines. Do **not** treat the stamp as unfreeze GO, **#82**, Zone/Garage execute, or a companion re-ask.
+Stamp: America/Edmonton timestamp + the four lines. Do **not** treat the stamp as unfreeze GO, **#82**, Zone/Garage execute, or a companion re-ask. Vault CLEAR ≠ Soft-530 work and ≠ Bitwarden import/rotate auto-start. After **this** stamp **and** Soft-530 CLEAR + Doc forensics (`55e10d0`), Ben’s GO menu is [post-dual-clear-go.md](post-dual-clear-go.md) — **never auto-fire**. Forensic paper for this stamp is already ack’d on held **#70** (`d88cacb`).
 
 ```bash
 # ONLY on lightning after vault CLEAR — paper capture, not a restore
@@ -235,6 +235,7 @@ Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-
 - Publish McKing NC on this tunnel / point `cloud.*` at McKing
 - Treat vault LIVE as shop CF cutover GO or Doc unfreeze
 - Bitwarden import/rotate until public `/alive` is **CLEAR**
+- Treat vault CLEAR as Bitwarden import/rotate GO or as Soft-530 / **#82** / unfreeze work ([post-dual-clear-go.md](post-dual-clear-go.md))
 - Use Soft-530 `/health` **200** as vault CLEAR
 - Collapse vault **502** origin-down into Soft-530 CF **1033** tunnel-down (different first checks when `lightning` returns)
 - Walk away from a vault CLEAR without the stay-up evidence stamp (cloudflared.service ActiveState/Result/ExecMainStatus · VW healthy + DOMAIN · Tailscale · 1033→200 vs 502→200)

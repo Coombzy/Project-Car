@@ -1,8 +1,8 @@
 # Brochure Worker CI — purge / freshness / Option A receipt
 
 **Status:** Paper CI + Member-precondition receipt — **not executed**  
-**Updated:** 2026-09-11  
-**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock + **#82** smoke gate, `brochure-worker-deploy.md` (standing Zone Direct Upload runbook), `brochure-security-headers.md` (P2-4 **LIVE**), `member-zone-edge.md` (Next #1 capacity-blocked), `member-host-cutover.md`, `website-improvements.md`, `brochure-pages-cutover.md`, `ops-demo-hardening.md` (**#79** / **#79.1**), `apps/website/README.md`
+**Updated:** 2026-09-14  
+**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock + **#82** smoke gate, `brochure-worker-deploy.md` (standing Zone Direct Upload runbook), `brochure-security-headers.md` (P2-4 **LIVE**), `member-zone-edge.md` (Next #1 capacity-blocked), `member-host-cutover.md`, `website-improvements.md`, `brochure-pages-cutover.md`, `ops-demo-hardening.md` (**#79** / **#79.1**), [post-dual-clear-go.md](post-dual-clear-go.md) (dual CLEAR ≠ **#82** auto-go — **#82** is step 2 of the Ben GO menu), `apps/website/README.md`
 
 This file is the **post–Soft-530-CLEAR** brochure CI paper that was queued on held **#70**. It is **not** a Zone upload, **not** a Garage HTML PR, **not** a GitHub Actions workflow, and **not** a license to apply Redirect / Bulk / DNS.
 
@@ -17,7 +17,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | Lock | Meaning |
 |------|---------|
 | **Paper only** | Merging this file on held **#70** is **not** an upload, purge, Bulk apply, or Member GO. No Zone / Garage execute. |
-| **#82 Ben GO unchanged** | Home canonical / og / sitemap `/index.html` is **not yet Worker-live**. Do **not** upload from this paper. |
+| **#82 Ben GO unchanged** | Home canonical / og / sitemap `/index.html` is **not yet Worker-live**. Do **not** upload from this paper. Dual CLEAR ≠ **#82** auto-go — [post-dual-clear-go.md](post-dual-clear-go.md) step 2 still needs Ben GO. |
 | **Never Direct Upload from #81** | **#81** is **draft + superseded** (`cursor/website-option-a-home-index-98cf`). It reintroduces Worker `_redirects` `/` + `/shop` and bumps `styles.css?v=37`. Live upload SHA is **#82** after GO — never the #81 tree. |
 | **Option A FULL 10/10** | No new Dynamic Redirect Rules for brochure pretty-URLs until **#82** Worker-live **and** Bulk Phase1 frees Member-edge slots. |
 | **Soft-530 companions HOLD** | Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask. Api + vault watches continue. |
@@ -123,6 +123,7 @@ Until **#82** is Worker-live via Zone Direct Upload, **held #70 STATUS Reality t
 | **#79** / **#79.1** | Parallel to **#82**. **#79.1** git-only until Doc unfreeze. `ops-demo-hardening.md`. |
 | Soft-530 companion watches | **HOLD / not armed.** Do not re-ask. |
 | Weekend Zone Direct Upload / Worker | **Do not schedule.** plan-improve off Sat/Sun. First Monday resumes Soft-530 smoke. Not this file. |
+| Dual CLEAR / post-CLEAR forensics | Does **not** auto-GO **#82**. Menu: [post-dual-clear-go.md](post-dual-clear-go.md). |
 | Dual-Nextcloud / `cloud.*` | Unchanged (`4cde204`). Not a `cloud.*` CF cutover. |
 | Classic Pages git / Apex | Skipped / deferred. |
 | Shop OS CI / Doc unfreeze | `shop-os-ci.md` / `doc-unfreeze.md`. Green CI is **not** Ben GO. |

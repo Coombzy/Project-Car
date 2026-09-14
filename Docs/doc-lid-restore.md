@@ -2,7 +2,7 @@
 
 **Status:** Living ops (Lead checklist)  
 **Updated:** 2026-09-14  
-**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file; Soft-530 **CLEAR** Friday ≠ this GO), `api-stay-up.md` (weekend `/health` flip → this file; post-CLEAR stay-up evidence pointer), `shop-web-stay-up.md`, `vault-stay-up.md` (McKing vault — **OUT** of this sequence; weekend dual-outage proved Soft-530 ≠ vault; **vault post-CLEAR stay-up evidence** is McKing forensics — twin of this file’s Doc stamp), [dual-host-outage.md](dual-host-outage.md) (dual-OPEN **wake order** — Doc first, then McKing; this file is the Doc half + **post-CLEAR stay-up evidence**), `doc-software-baseline.md` (Amphetamine / Tailscale), `cors-origins.md`, `STATUS.md` (weekend Soft-530 coverage), `shop-os-ci.md` (green CI ≠ unfreeze)
+**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file; Soft-530 **CLEAR** Friday ≠ this GO), `api-stay-up.md` (weekend `/health` flip → this file; post-CLEAR stay-up evidence pointer), `shop-web-stay-up.md`, `vault-stay-up.md` (McKing vault — **OUT** of this sequence; weekend dual-outage proved Soft-530 ≠ vault; **vault post-CLEAR stay-up evidence** is McKing forensics — twin of this file’s Doc stamp), [dual-host-outage.md](dual-host-outage.md) (dual-OPEN **wake order** — Doc first, then McKing; this file is the Doc half + **post-CLEAR stay-up evidence**), [post-dual-clear-go.md](post-dual-clear-go.md) (after **both** CLEARs + forensics `@55e10d0` / `@d88cacb` — Ben GO menu, **never auto-fire**), `doc-software-baseline.md` (Amphetamine / Tailscale), `cors-origins.md`, `STATUS.md` (weekend Soft-530 coverage), `shop-os-ci.md` (green CI ≠ unfreeze)
 
 Single **ordered** wake/restore after Doc lid-close / sleep (the morning **530 / 1033** pattern). Plan/ops checklist for **Lead**. This file is the sequence. Process essays stay in the Related docs — do not copy them here.
 
@@ -133,7 +133,7 @@ On **every** Soft-530 CLEAR after this file’s smoke, Lead records:
 | **caffeinate / CDM** | `pgrep -lf caffeinate`; Amphetamine session **started**; Closed Display Mode (lid + AC + external) vs lid-close sleep | Fri→Sun flip-flops after “CLEAR” were sleep / CDM, not a product break |
 | **Tailscale** | `tailscale status` — `docs-macbook-pro` `100.97.10.72` **up** | Next 1033: was Doc off-mesh? `Mac.lan` ≠ this host |
 
-Stamp: America/Edmonton timestamp + the four lines. Do **not** treat the stamp as unfreeze GO, **#82**, Zone/Garage execute, or a companion re-ask.
+Stamp: America/Edmonton timestamp + the four lines. Do **not** treat the stamp as unfreeze GO, **#82**, Zone/Garage execute, or a companion re-ask. Soft-530 CLEAR **alone** ≠ Doc unfreeze. After **this** stamp **and** vault CLEAR + vault forensics (`d88cacb`), Ben’s GO menu is [post-dual-clear-go.md](post-dual-clear-go.md) — **never auto-fire**. Forensic paper for this stamp is already ack’d on held **#70** (`55e10d0`).
 
 ```bash
 # ONLY on Docs-MacBook-Pro after Soft-530 CLEAR — paper capture, not a restore
@@ -160,6 +160,7 @@ tailscale status
 - Call a `main` pull live without a new `.next/BUILD_ID`
 - Treat green Shop OS CI as unfreeze GO (`doc-unfreeze.md`)
 - Treat Soft-530 **CLEAR** Friday as unfreeze GO or a companion re-ask
+- Auto-fire **#82**, Doc unfreeze, or Garage **#79.1** from Soft-530 CLEAR ([post-dual-clear-go.md](post-dual-clear-go.md))
 - Walk away from a Soft-530 CLEAR without the stay-up evidence stamp (lastExit / KeepAlive / caffeinate·CDM / Tailscale)
 - Invent a CLEAR or a live restore from this paper while Soft-530 is still **OPEN**
 - Capture the stamp on `Mac.lan` (not Doc)
