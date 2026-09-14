@@ -2,7 +2,7 @@
 
 **Status:** Paper — first recovery smoke, **not** a GO  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (living dual-OPEN + this pointer), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops while OPEN **~24h+** — this file is the **next** Soft-530 CLEAR card), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — ordered Ben GO menu, **never auto-fire**; **#79.1** acceptance is **later**), [doc-lid-restore.md](doc-lid-restore.md) (process wake + Doc forensics `@55e10d0`), [dual-host-outage.md](dual-host-outage.md) (wake order — Doc first, then McKing), [cors-origins.md](cors-origins.md) (waitlist OPTIONS Origin), [ops-demo-hardening.md](ops-demo-hardening.md) (**#79** / **#79.1** — **after** this smoke), [doc-unfreeze.md](doc-unfreeze.md) (Ben GO pull — **after** this smoke), [vault-stay-up.md](vault-stay-up.md) (vault wake + McKing forensics `@d88cacb`), [vault-clear-smoke.md](vault-clear-smoke.md) (vault CLEAR recovery smoke — **separate** McKing lane; **not** this file)
+**Related:** `STATUS.md` (living dual-OPEN + Waitlist Live + this pointer), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops while OPEN **~24h+** — this file is the **next** Soft-530 CLEAR card), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — ordered Ben GO menu, **never auto-fire**; **#79.1** acceptance is **later**), [doc-lid-restore.md](doc-lid-restore.md) (process wake + Doc forensics `@55e10d0`), [dual-host-outage.md](dual-host-outage.md) (wake order — Doc first, then McKing), [cors-origins.md](cors-origins.md) (waitlist OPTIONS Origin), [ops-demo-hardening.md](ops-demo-hardening.md) (**#79** / **#79.1** — **after** this smoke), [doc-unfreeze.md](doc-unfreeze.md) (Ben GO pull — **after** this smoke), [vault-stay-up.md](vault-stay-up.md) (vault wake + McKing forensics `@d88cacb`), [vault-clear-smoke.md](vault-clear-smoke.md) (vault CLEAR recovery smoke — **separate** McKing lane; **not** this file), [brochure-worker-ci.md](brochure-worker-ci.md) (Soft-530 Discord fail-soft **#80** — **permanent**; this smoke ≠ Garage GO to strip it), [website-improvements.md](website-improvements.md) (P1-5 waitlist + Discord honesty)
 
 After Soft-530 **CLEAR** following **extended OPEN** (**>~24h**), run this **first recovery smoke BEFORE** any Owner desk / **#79.1** / unfreeze talk. Quiet-ops named the lock ([soft-530-extended-open.md](soft-530-extended-open.md)). This file names the first public proof that the **route** is back — not only that the tunnel answered.
 
@@ -87,6 +87,21 @@ Soft-530 **CLEAR** alone ≠ the **#79.1** card. This smoke **before** that talk
 
 ---
 
+## CLEAR ≠ honesty-off (permanent #80)
+
+This smoke (`/health` **200** + waitlist OPTIONS CORS + POST **422**/**201**) is **route-alive** proof. It is **not** a Garage GO to strip Soft-530 Discord honesty.
+
+| Keep (permanent **#80**) | Why |
+|--------------------------|-----|
+| Membership / Contact Soft-530 Discord honesty intro | Overnight sleep / tunnel flaps still happen after CLEAR. Copy is **product behavior**, not a temporary outage banner. |
+| `waitlist.js?v=3` fail-soft | **502 / 530 / 1033** → Discord (`discord.gg/projectcar`) + mailto — not “try again.” Lid-close will recur. |
+
+**CLEAR ≠ honesty-off.** Tone tweak only with **Ben GO**. Do **not** treat Fri CLEAR / the next CLEAR / this smoke as a reason to revert Membership/Contact to “try again” or drop the honesty intro.
+
+Cross-links: [brochure-worker-ci.md](brochure-worker-ci.md) Soft-530 Discord · STATUS Waitlist Live · [website-improvements.md](website-improvements.md) P1-5.
+
+---
+
 ## Anti-goals
 
 | Anti-goal | Why |
@@ -97,6 +112,7 @@ Soft-530 **CLEAR** alone ≠ the **#79.1** card. This smoke **before** that talk
 | **Soft-530 CLEAR alone ≠ unfreeze** | Freeze `4cf8924` / **`5swmVz`** until **Ben GO**. `changeme` on `/login` is freeze, not a 1033. |
 | **Vault CLEAR still separate** | McKing first card is [vault-clear-smoke.md](vault-clear-smoke.md) (`/alive` **200** + `/api/config` McKing **2026.6.0** class + **502→200**). Forensics stay [vault-stay-up.md](vault-stay-up.md). This file is Doc Soft-530 only. Green `/health` ≠ vault CLEAR. |
 | **`/health` 200 ≠ route alive** | Tunnel-up without OPTIONS CORS + POST 422/201 is **not** this card. |
+| **CLEAR smoke ≠ honesty-off** | **#80** Membership/Contact Discord honesty intro + `waitlist.js?v=3` fail-soft (502/530/1033→Discord+mailto) stay. **Permanent** product behavior for overnight sleep / tunnel flaps — **not** temporary outage banners. Tone tweak only with Ben GO. Not a Garage GO to strip. |
 | **Invent CLEAR** | Soft-530 still **OPEN** (CF **1033**). Vault still **OPEN** (**502**). Only `Mac.lan`. |
 
 **#82** Ben GO / Soft-530 companions **HOLD** / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / weekend Soft-530 coverage (`84107e7`) / waitlist-owner-desk **retired** / **#79.1** git-only until Doc unfreeze / vault stay-up (`017f778`) / dual-host-outage (`7bf894b`) / Soft-530 post-CLEAR (`55e10d0`) / vault post-CLEAR (`d88cacb`) / living dual-OPEN honesty (`5f2fd1c`) / sequencer (`0c4e0ef`) / **#79.1** acceptance (`1cd73c7`) / quiet-ops (`1e6a0b1`) — **unchanged**. This file executes **none** of those.
@@ -110,6 +126,7 @@ Soft-530 **CLEAR** alone ≠ the **#79.1** card. This smoke **before** that talk
 - Treat `app.`/`ops.` **307**→`/login` + print `` `changeme` `` as Soft-530 still down — that is freeze
 - Start Owner desk / **#79.1** / unfreeze talk from this smoke
 - Treat this smoke as **#82** GO, companion re-ask, or Bitwarden
+- Treat this smoke as a Garage GO to strip Membership/Contact Soft-530 Discord honesty or `waitlist.js?v=3` fail-soft — **CLEAR ≠ honesty-off**
 - Treat Soft-530 CLEAR alone as unfreeze
 - Fold vault CLEAR into this Doc smoke — vault first card is [vault-clear-smoke.md](vault-clear-smoke.md)
 - Auto-fire [post-dual-clear-go.md](post-dual-clear-go.md)
