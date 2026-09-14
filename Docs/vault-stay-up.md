@@ -66,7 +66,7 @@ Baseline (Lookout-owned): `/workspace/lookout/projectcar-vault-health-baseline.j
 
 **Flip-only alerts:** **Chief + Lead only** on **200↔non-200**. **Never Ben.** Never restart / mutate from the watch.
 
-Weekend flip coverage (plan-improve off Sat/Sun) = Lookout `api.` `/health` **+** this vault `/alive` **only**. Companions stay **HOLD until Ben reopens** — **not** weekend-only ([soft-530-extended-open.md](soft-530-extended-open.md)). Vault flips stay here. Lookout api+vault+brochure-redirect **continue** during quiet-ops.
+Weekend flip coverage (plan-improve off Sat/Sun) = Lookout `api.` `/health` **+** this vault `/alive` **only**. Companions stay **HOLD until Ben reopens** — **not** weekend-only ([soft-530-extended-open.md](soft-530-extended-open.md)). Vault flips stay here. Lookout api+vault **continue** during quiet-ops. Brochure-redirect **paper** continues; living Option A watch is **GONE** — **HOLD** recreate, interim Chief `*/20` ([lookout-rearm-sop.md](lookout-rearm-sop.md)). **Never delete** api/vault watches to fix stalled cron.
 
 ---
 

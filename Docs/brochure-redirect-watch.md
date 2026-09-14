@@ -1,14 +1,16 @@
-# Brochure redirect watch — Option A Lookout (to arm)
+# Brochure redirect watch — Option A Lookout (GONE — HOLD recreate)
 
-**Status:** Paper watch spec — Lookout **to arm** (this fold does **not** claim `enabled:true`)  
+**Status:** Paper watch spec — living watch **GONE** (deleted to fix stalled cron; Auto-review blocked recreate). **HOLD** after one Ben ask. SOP: [lookout-rearm-sop.md](lookout-rearm-sop.md)  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` Live Option A + Reality quarantine + Lookout rows + living dual-OPEN, [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops — this watch paper **continues**; Option A public SSOT during extended OPEN), [dual-host-outage.md](dual-host-outage.md) (wake order), [vault-stay-up.md](vault-stay-up.md), `brochure-worker-ci.md` (Option A **FULL 10/10** receipt — **not** this watch), `brochure-worker-deploy.md` (upload click-path — **not** this watch), `doc-lid-restore.md` (`main` still stamps api-health **paused**), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate**), `website-improvements.md` P4-5, [post-dual-clear-go.md](post-dual-clear-go.md)
+**Related:** `STATUS.md` Live Option A + Reality quarantine + Lookout rows + living dual-OPEN + [lookout-rearm-sop.md](lookout-rearm-sop.md), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops — this watch **paper** continues; continuous watch is **GONE**; interim Chief `*/20`; Option A public SSOT), [dual-host-outage.md](dual-host-outage.md) (wake order), [vault-stay-up.md](vault-stay-up.md), `brochure-worker-ci.md` (Option A **FULL 10/10** receipt — **not** this watch), `brochure-worker-deploy.md` (upload click-path — **not** this watch), `doc-lid-restore.md` (`main` still stamps api-health **paused** — **#78 LIVE-SUPERSEDED**), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate**, already `enabled:true`), `website-improvements.md` P4-5, [post-dual-clear-go.md](post-dual-clear-go.md)
 
-While Soft-530 is **OPEN**, brochure **Option A** is the only public **LIVE** surface. It has **no** continuous watch — only `*/20` smokes. This file is the Lookout watch **to arm**. Flip **Chief + Lead only**. **Not** the Soft-530 ops/app companion watches Ben skipped.
+While Soft-530 is **OPEN**, brochure **Option A** is the only public **LIVE** surface. The continuous Lookout watch is **GONE**. Interim coverage is Chief plan-improve **`*/20` redirect smoke** until Ben enables recreate ([lookout-rearm-sop.md](lookout-rearm-sop.md)). This file stays the watch **spec**. Flip **Chief + Lead only** when armed. **Not** the Soft-530 ops/app companion watches Ben skipped.
 
-This file is **not** a Zone apply, **not** a Garage HTML PR, **not** **#82** upload, **not** a Doc unfreeze, **not** a companion re-ask, and **not** Bitwarden.
+**Living:** `brochure-option-a-redirect-watch` was **deleted** to fix stalled cron. Recreate needed Auto-review; Auto-review **blocked** it. Do **not** claim `enabled:true`. **Never delete** an armed watch to fix cron — prefer in-place update / pause-resume / re-save ([lookout-rearm-sop.md](lookout-rearm-sop.md) rows 1–2). **HOLD** after one Ben ask (row 3). Soft-530 companions stay **HOLD**.
 
-**Living dual-OPEN (`5f2fd1c`) is unchanged.** Soft-530 **OPEN** CF **1033** since 2026-09-13 ~11:57 America/Edmonton (**~24h+**). Vault independently **OPEN** **502** since ~19:45 MT Sep 13. ListMachines **Mac.lan only**. Quiet-ops: [soft-530-extended-open.md](soft-530-extended-open.md) — this watch paper **continues**; Option A is public SSOT during extended OPEN; this fold still does **not** arm the watch. Freeze intact **`4cf8924`** / **`5swmVz`**. **#82** still Ben GO.
+This file is **not** a Zone apply, **not** a Garage HTML PR, **not** **#82** upload, **not** a Doc unfreeze, **not** a companion re-ask, **not** Bitwarden, and **not** **#78** lookout-resume (**LIVE-SUPERSEDED** — api-health already `enabled:true`).
+
+**Living dual-OPEN (`5f2fd1c`) is unchanged.** Soft-530 **OPEN** CF **1033** since 2026-09-13 ~11:57 America/Edmonton (**~24h+**). Vault independently **OPEN** **502** since ~19:45 MT Sep 13. ListMachines **Mac.lan only**. Quiet-ops: [soft-530-extended-open.md](soft-530-extended-open.md) — this watch **paper** continues; the continuous watch is **GONE**; Option A is public SSOT during extended OPEN; this fold still does **not** arm or recreate the watch. Freeze intact **`4cf8924`** / **`5swmVz`**. **#82** still Ben GO.
 
 ---
 
@@ -19,7 +21,7 @@ This file is **not** a Zone apply, **not** a Garage HTML PR, **not** **#82** upl
 | Soft-530 `api.` `/health` | **OPEN** CF **1033** | Lookout `projectcar-api-health-watch` **`enabled:true`** (resume 2026-09-11 ~06:52; **#78 LIVE-SUPERSEDED**) |
 | Soft-530 `ops.` / `app.` `/login` | **OPEN** CF **1033** | **HOLD / not armed** (Ben skipped ~14:35 America/Edmonton — do **not** re-ask) |
 | Vault `/alive` | **OPEN** **502** | Lookout vault watch **LIVE/armed** (`enabled:true`) |
-| Brochure Option A (apex+www) | **LIVE** Zone Redirect **FULL 10/10** + Soft-530 **#80** assets | **None.** Only `*/20` smokes |
+| Brochure Option A (apex+www) | **LIVE** Zone Redirect **FULL 10/10** + Soft-530 **#80** assets | **GONE** (deleted; Auto-review blocked recreate). Interim Chief `*/20` only. SOP: [lookout-rearm-sop.md](lookout-rearm-sop.md) |
 
 Option A stays up when Doc sleeps. A Redirect-pack or asset-`?v=` break is invisible to api/vault watches. `*/20` smokes are not a flip watch.
 
@@ -29,20 +31,23 @@ Option A stays up when Doc sleeps. A Redirect-pack or asset-`?v=` break is invis
 
 | Lock | Meaning |
 |------|---------|
-| **Paper only** | Merging this file on held **#70** is **not** Lookout execute, Zone apply, Garage upload, or an `enabled:true` claim. |
-| **To arm — Chief + Lead only** | Flip alerts: **Chief + Lead only**. **Never Ben.** Never restart / mutate / Zone-edit from the watch. |
+| **Paper only** | Merging this file on held **#70** is **not** Lookout execute, Zone apply, Garage upload, or an `enabled:true` claim. Living watch is **GONE**. |
+| **GONE — HOLD recreate** | Delete-to-fix-cron already happened. Auto-review blocked recreate. **HOLD** after one Ben ask. SOP: [lookout-rearm-sop.md](lookout-rearm-sop.md). Do **not** invent `enabled:true`. |
+| **To arm — Chief + Lead only** | When Ben enables recreate: flip alerts **Chief + Lead only**. **Never Ben.** Never restart / mutate / Zone-edit from the watch. After approve: routine enabled + first fire ≤ **10m** + baseline **LIVE 10/10**. |
 | **Not companion re-ask** | Soft-530 ops/app (optional `cloud.`) companion watches stay **HOLD / not armed**. This watch ≠ those watches. Do **not** re-ask Ben. |
 | **#82 Ben GO unchanged** | Home canonical / og / sitemap `/index.html` is **not yet Worker-live**. Do **not** upload from this paper. |
 | **Option A FULL 10/10** | No new Dynamic pretty-URLs. Watch the **live** pack — do **not** invent rules. |
 | **Living dual-OPEN unchanged** | `5f2fd1c` stamp stands. This paper does **not** invent CLEAR, unfreeze, or Bitwarden. |
-| **Quiet-ops continue** | Soft-530 OPEN **~24h+** + vault OPEN + **Mac.lan only** → [soft-530-extended-open.md](soft-530-extended-open.md). This watch paper **continues**. Option A is public SSOT. Do **not** drop this paper because quiet-ops is on. This fold still does **not** arm. |
+| **Quiet-ops continue** | Soft-530 OPEN **~24h+** + vault OPEN + **Mac.lan only** → [soft-530-extended-open.md](soft-530-extended-open.md). This watch **paper** continues. Continuous watch is **GONE**. Interim Chief `*/20`. Option A is public SSOT. Do **not** drop this paper because quiet-ops is on. This fold still does **not** arm or recreate. |
+| **Not #78** | **#78 lookout-resume** is **LIVE-SUPERSEDED** — api-health already `enabled:true`. Recreate ≠ resume. Do **not** delete api-health or vault to fix cron. |
 | **Never #81** | Do **not** watch or upload `#81` `?v=37` / Worker `/` + `/shop` `_redirects`. |
 
 ---
 
-## Watch to arm (Lookout)
+## Watch to arm (Lookout) — living name **GONE**
 
-**Name (Lookout-owned):** `projectcar-brochure-redirect-watch`  
+**Living name (deleted):** `brochure-option-a-redirect-watch` — **GONE**. Recreate **HOLD** ([lookout-rearm-sop.md](lookout-rearm-sop.md)).  
+**Name (Lookout-owned paper):** `projectcar-brochure-redirect-watch`  
 **Hosts:** `https://projectcar.ca` **and** `https://www.projectcar.ca`  
 **Cadence:** Lookout flip cadence (not `*/20` plan-improve smokes)  
 **Baseline (Lookout-owned):** `/workspace/lookout/brochure-routing-baseline.json`
@@ -123,7 +128,7 @@ After **#82** upload + **mandatory** purge/freshness, **one** tip-fold reconcile
 
 | Role | Owns | Does not own |
 |------|------|----------------|
-| **Lookout** | Arm this watch; refresh Sep 9 baseline **IN FLIGHT → LIVE 10/10**; flip Chief+Lead | Zone Redirect edits; Worker upload; companion watches; claiming companions `enabled:true` |
+| **Lookout** | After Ben enables recreate: arm this watch; first fire ≤ **10m**; refresh Sep 9 baseline **IN FLIGHT → LIVE 10/10**; flip Chief+Lead. Until then: **HOLD**. Never delete to fix cron. | Zone Redirect edits; Worker upload; companion watches; claiming this watch `enabled:true` while **GONE**; claiming companions `enabled:true`; re-opening **#78** |
 | **Chief + Lead** | Receive flips; triage Redirect vs WAF 403 vs Soft-530 | Page Ben; re-ask companions; lid-restore from a brochure 301 fail |
 | **Zone** | Live Redirect pack + Worker (only after standing GO) | Arming this watch from a docs PR |
 | **Garage** | HTML / `?v=` SSOT after **#82** | Zone apply; Lookout execute |
@@ -142,4 +147,4 @@ After **#82** upload + **mandatory** purge/freshness, **one** tip-fold reconcile
 | Doc unfreeze / **#79.1** / Bitwarden | Anti-goals. |
 | Homepage-only **200** as “brochure up” | Insufficient. Pretty-URL **301**s + live `?v=` are the watch. |
 
-**Anti-goals:** not Zone change, not **#82** upload, not unfreeze, not companion re-ask, not Bitwarden. Quiet-ops: [soft-530-extended-open.md](soft-530-extended-open.md) — this paper **continues**; duration ≠ arm-from-docs.
+**Anti-goals:** not Zone change, not **#82** upload, not unfreeze, not companion re-ask, not Bitwarden, not **#78** re-open, not invent `enabled:true` while **GONE**. Quiet-ops: [soft-530-extended-open.md](soft-530-extended-open.md) — this **paper** continues; continuous watch **GONE**; duration ≠ arm-from-docs. SOP: [lookout-rearm-sop.md](lookout-rearm-sop.md).
