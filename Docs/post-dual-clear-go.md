@@ -35,22 +35,22 @@ After a **live** Soft-530 CLEAR, still stamp Doc forensics on [doc-lid-restore.m
 | **2** | **#82** Worker-live | Bare Home `href` / canonical / og / sitemap → `https://projectcar.ca/index.html`. Ordered smoke: Direct Upload → **mandatory** purge apex+www → body freshness. [brochure-worker-ci.md](brochure-worker-ci.md). **Never #81.** **#82 is not only Direct Upload** — after Worker-live, the **brochure lane** below is the next brochure work. | Auto-GO from dual CLEAR. Weekend Zone. Treating upload as the end of brochure. Substituting unfreeze for Bulk / **#83**. |
 | **3** | Doc **unfreeze** + pull + Garage **#79.1** strip-changeme | **Shop OS parallel** — not “next after **#82**” in place of Bulk / **#83**. Explicit Ben GO to unfreeze → [doc-unfreeze.md](doc-unfreeze.md) pull/rebuild → Garage **#79.1** strip lands. **Acceptance smoke** (this file, below) before calling the lane done. [ops-demo-hardening.md](ops-demo-hardening.md). **#79.1** merge alone will **not** clear public login while freeze holds (`4cf8924` / **`5swmVz`**). | Soft-530 CLEAR alone. Lid-restore. Green `shop-os-ci`. Occupying the brochure-lane slot after **#82**. **#82** / Zone Direct Upload. Companions re-ask. Bitwarden. |
 
-**#79 paper stays parallel to #82** (not blocked on Worker SEO / Option A / Bulk). After dual CLEAR, KeepAlive is first, then **#82**. The **brochure lane after #82 Worker-live** is Bulk / **#83** / Member — **not** unfreeze + **#79.1** in that slot. Unfreeze + **#79.1** is **Shop OS parallel**. Garage may merge **#79.1** git-only anytime; public strip waits on the unfreeze GO. Do **not** call that parallel lane done until the **acceptance smoke** below.
+**#79 paper stays parallel to #82** (not blocked on Worker SEO / Option A / Bulk). After dual CLEAR, KeepAlive is first, then **#82**. The **brochure lane after #82 Worker-live** is **#83** ∥ **Bulk Phase1** (not Bulk→#83); Member after Bulk — **not** unfreeze + **#79.1** in that slot. Unfreeze + **#79.1** is **Shop OS parallel**. Garage may merge **#79.1** git-only anytime; public strip waits on the unfreeze GO. Do **not** call that parallel lane done until the **acceptance smoke** below.
 
 ---
 
 ## Brochure lane after #82 Worker-live (not only Direct Upload)
 
-**#82** Worker-live = Direct Upload + **mandatory** purge/freshness smoke ([brochure-worker-ci.md](brochure-worker-ci.md)). That smoke is **not** the end of brochure. After it passes:
+**#82** Worker-live = Direct Upload + **mandatory** purge/freshness smoke ([brochure-worker-ci.md](brochure-worker-ci.md)). That smoke is **not** the end of brochure. After it passes, **#83** and **Bulk Phase1** are **parallel** (not Bulk→#83):
 
 | After #82 | What | Gate / not |
 |-----------|------|------------|
-| **Bulk Phase1** | Free Option A Dynamic slots. Pack is **FULL 10/10** Active **301**s (apex+www). Move parked pretty-URLs (`membership` / `about` / `the-shop` / `contact` / `roadmap` ± slash → `*.html`). Keep `root` / `index` / `shop` / `chat` Dynamic until Member **needs** those slots. | After **#82** upload + purge/freshness. Paper: [brochure-worker-ci.md](brochure-worker-ci.md) Option A receipt · STATUS Live URL SSOT. **Not** this paper’s execute. |
-| **#83** | CI thin `_redirects` assert on the **#82** base (chat → contact only; no `/` or `/shop`). | After **#82** base. **Not** Bulk-gated. Parallel with upload OK. Prefer merge on **#82** — do **not** wait for Bulk. Do **not** write `#82 → upload → Bulk Phase1 → #83`. |
+| **(A) #83** | CI thin `_redirects` merge anytime on the **#82** base (chat → contact only; no `/` or `/shop`). | **Not** Bulk-gated. Parallel with upload OK. Prefer merge on **#82** — do **not** wait for Bulk. Do **not** write `#82 → upload → Bulk Phase1 → #83`. |
+| **(B) Bulk Phase1** | Free Option A Dynamic slots when Member needs capacity. Pack is **FULL 10/10** Active **301**s (apex+www). Move parked pretty-URLs (`membership` / `about` / `the-shop` / `contact` / `roadmap` ± slash → `*.html`). Keep `root` / `index` / `shop` / `chat` Dynamic until Member **needs** those slots. | Parallel with **#83**. After **#82** upload + purge/freshness. Paper: [brochure-worker-ci.md](brochure-worker-ci.md) Option A receipt · STATUS Live URL SSOT. **Does not gate #83.** **Not** this paper’s execute. |
 | **Member edge** | Next #1 path-split (`/member*` ranked **BEFORE** brochure Redirect pack; www→apex `/member*` **301**). | **Only after Bulk frees capacity.** Today `/member*` is Worker **404** — never **301** into `membership.html`. [member-zone-edge.md](member-zone-edge.md). |
 | **Never #81** | Draft + superseded. Reintroduces Worker `_redirects` `/` + `/shop` and `styles.css?v=37`. | Never Direct Upload from **#81**. |
 
-Unfreeze + **#79.1** is **Shop OS parallel** ([doc-unfreeze.md](doc-unfreeze.md) · [ops-demo-hardening.md](ops-demo-hardening.md)). It does **not** replace Bulk / **#83** as “next after **#82**.” Acceptance before calling that lane done is the card below.
+Unfreeze + **#79.1** is **Shop OS parallel** ([doc-unfreeze.md](doc-unfreeze.md) · [ops-demo-hardening.md](ops-demo-hardening.md)). It does **not** replace **#83** ∥ Bulk as “next after **#82**.” Acceptance before calling that lane done is the card below.
 
 ---
 
@@ -120,7 +120,7 @@ Brochure Option A **LIVE**: Zone Redirect **FULL 10/10**; `waitlist.js?v=3`; `st
 | **Soft-530 CLEAR alone ≠ Doc unfreeze** | Lid-restore is process wake only. Freeze `4cf8924` / `5swmVz` until **Ben GO**. Unfreeze is a **separate** Shop OS GO — **parallel**, not “next after **#82**” in place of Bulk / **#83**. Soft-530 CLEAR alone ≠ the **#79.1** acceptance card. |
 | **Vault CLEAR ≠ Soft-530 work** | Vault is McKing. Soft-530 is Doc. Green `/alive` does **not** wake KeepAlive, unfreeze Doc, or GO **#82**. |
 | **Dual CLEAR ≠ #82 auto-go** | Both CLEARs + both forensic papers ack’d **offer** step 2. Ben still GOs **#82**. Do **not** Zone Direct Upload from CLEAR. |
-| **#82 ≠ end of brochure** | After Worker-live (upload + purge/freshness), brochure continues: **Bulk Phase1** → **#83** (CI, not Bulk-gated) → Member edge **only after Bulk**. **Never #81.** Unfreeze + **#79.1** is Shop OS parallel — acceptance smoke is this file’s Shop OS card, not **#82**. |
+| **#82 ≠ end of brochure** | After Worker-live (upload + purge/freshness), brochure continues **in parallel**: (A) **#83** CI thin `_redirects` anytime on the **#82** base (not Bulk-gated; parallel with upload OK); (B) **Bulk Phase1** when Member needs capacity (keep `root`/`shop`/`chat` Dynamic until then). **Member edge only after Bulk.** **Never #81.** Never Bulk→#83. Unfreeze + **#79.1** is Shop OS parallel — acceptance smoke is this file’s Shop OS card, not **#82**. |
 
 Wake order stays [dual-host-outage.md](dual-host-outage.md). Doc forensics stay [doc-lid-restore.md](doc-lid-restore.md). McKing forensics stay [vault-stay-up.md](vault-stay-up.md). This file is the **menu after** those.
 
@@ -136,7 +136,7 @@ Wake order stays [dual-host-outage.md](dual-host-outage.md). Doc forensics stay 
 - Treat Soft-530 CLEAR alone as unfreeze GO
 - Fold vault CLEAR into Soft-530 KeepAlive / lid-restore / **#82**
 - Skip step 1 (keep Soft-530 healthy) and jump to **#82** or unfreeze
-- Treat **#82** as Direct Upload only — skip Bulk / **#83** / Member-after-Bulk
+- Treat **#82** as Direct Upload only — skip **#83** ∥ Bulk / Member-after-Bulk
 - Put unfreeze + **#79.1** “next after **#82**” in place of the brochure lane
 - Call the Shop OS lane done without the four-row **#79.1** acceptance smoke (or from **#79.1** merge-alone)
 - Treat Soft-530 CLEAR / `#82` / Zone Direct Upload / companions re-ask / Bitwarden as this Shop OS card

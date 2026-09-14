@@ -2,7 +2,7 @@
 
 **Status:** Standing runbook  
 **Updated:** 2026-09-11  
-**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock, `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 **LIVE** — do not re-apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md` (Next #1 capacity-blocked until #82 + Bulk Phase1; **#83** is CI-only after **#82** base — **not** Bulk-gated; **never #81**), `apps/website/README.md`, `brochure-worker-ci.md` (paper CI + Option A Member-precondition receipt — **#82** mandatory purge Worker/Cache apex+www before body-freshness asserts; **never** Direct Upload from **#81**), [post-dual-clear-go.md](post-dual-clear-go.md) (after **#82** Worker-live the **brochure lane** is Bulk Phase1 → **#83** → Member after Bulk — **never #81**; unfreeze+#79.1 is Shop OS parallel).
+**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock, `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 **LIVE** — do not re-apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md` (Next #1 capacity-blocked until #82 + Bulk Phase1; **#83** is CI-only after **#82** base — **not** Bulk-gated; **never #81**), `apps/website/README.md`, `brochure-worker-ci.md` (paper CI + Option A Member-precondition receipt — **#82** mandatory purge Worker/Cache apex+www before body-freshness asserts; **never** Direct Upload from **#81**), [post-dual-clear-go.md](post-dual-clear-go.md) (after **#82** Worker-live the **brochure lane** is **#83** ∥ **Bulk Phase1**, not Bulk→#83; Member after Bulk — **never #81**; unfreeze+#79.1 is Shop OS parallel).
 
 Re-deploy the public brochure after Garage merges HTML on `main`. This is the **locked live method**. It is not a one-off for a single hygiene ship.
 
@@ -55,14 +55,13 @@ Do **not** create a new Dynamic Redirect Rule for a new pretty path. Do **not** 
 
 ## Hard lock / prefer merge (paper)
 
-**Never #81.** Wrong lock was `#82 → Zone Direct Upload → Bulk Phase1 → #83`.
+**Never #81.** Wrong lock was `#82 → Zone Direct Upload → Bulk Phase1 → #83`. After **#82** Ben GO + this ordered upload + purge + freshness, **#83** and **Bulk Phase1** are **parallel** (not Bulk→#83):
 
-| Order | What | Gate |
+| Track | What | Gate |
 |-------|------|------|
-| **1** | **#82** Ben GO | Unchanged. Not executed from this runbook. |
-| **2** | Zone Direct Upload + mandatory purge/freshness smoke | Ordered gate below. |
-| **3** | **#83** merge after **#82** base | CI-only thin `_redirects` assert. **May run in parallel with the upload.** Does **not** need Bulk Phase1. Prefer merge on the **#82** base — do **not** wait for Bulk. |
-| **4** | Bulk Phase1 | **After** that upload **only** to free Dynamic slots for Member edge. |
+| **#82** | Ben GO + Zone Direct Upload + mandatory purge/freshness | Unchanged. Ordered gate below. Not executed from this runbook. |
+| **(A) #83** | CI thin `_redirects` merge anytime on the **#82** base | **Not** Bulk-gated. **May run in parallel with the upload.** Prefer merge on the **#82** base — do **not** wait for Bulk. |
+| **(B) Bulk Phase1** | Free Dynamic slots when Member needs capacity (keep `root`/`shop`/`chat` Dynamic until then) | Parallel with **#83**. **Does not gate #83.** **Member edge only after Bulk.** |
 
 Do **not** write `#82 → upload → Bulk Phase1 → #83`. Option A **FULL 10/10** still capacity-blocks new Dynamic pretty-URLs and Member edge until Bulk — that is **not** a **#83** gate. Soft-530 companions **HOLD**. Reality quarantine until **#82** unchanged. Paper only — no Zone/Garage execute.
 

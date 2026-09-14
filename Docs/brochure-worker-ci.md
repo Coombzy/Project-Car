@@ -2,7 +2,7 @@
 
 **Status:** Paper CI + Member-precondition receipt — **not executed**  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock + **#82** smoke gate, `brochure-worker-deploy.md` (standing Zone Direct Upload runbook), `brochure-security-headers.md` (P2-4 **LIVE**), `member-zone-edge.md` (Next #1 capacity-blocked), `member-host-cutover.md`, `website-improvements.md`, `brochure-pages-cutover.md`, `ops-demo-hardening.md` (**#79** / **#79.1**), [post-dual-clear-go.md](post-dual-clear-go.md) (dual CLEAR ≠ **#82** auto-go — **#82** is step 2; after Worker-live the **brochure lane** is Bulk Phase1 → **#83** → Member after Bulk — **never #81**; unfreeze+#79.1 is Shop OS parallel), `apps/website/README.md`
+**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock + **#82** smoke gate, `brochure-worker-deploy.md` (standing Zone Direct Upload runbook), `brochure-security-headers.md` (P2-4 **LIVE**), `member-zone-edge.md` (Next #1 capacity-blocked), `member-host-cutover.md`, `website-improvements.md`, `brochure-pages-cutover.md`, `ops-demo-hardening.md` (**#79** / **#79.1**), [post-dual-clear-go.md](post-dual-clear-go.md) (dual CLEAR ≠ **#82** auto-go — **#82** is step 2; after Worker-live the **brochure lane** is **#83** ∥ **Bulk Phase1**, not Bulk→#83; Member after Bulk — **never #81**; unfreeze+#79.1 is Shop OS parallel), `apps/website/README.md`
 
 This file is the **post–Soft-530-CLEAR** brochure CI paper that was queued on held **#70**. It is **not** a Zone upload, **not** a Garage HTML PR, **not** a GitHub Actions workflow, and **not** a license to apply Redirect / Bulk / DNS.
 
@@ -77,7 +77,7 @@ Generic page **200**s in `brochure-worker-deploy.md` still apply for non-#82 upl
 | **#82** | Upload SHA after **Ben GO** | Thin `_redirects` (chat → contact only). Home canonical / og / sitemap `/index.html`. Soft-530 `waitlist.js?v=3` + `styles.css?v=36` unchanged (HTML-only). |
 | **#83** | CI-only after **#82** base | Asserts thin `_redirects`. **Parallel with upload OK.** Does **not** need Bulk Phase1. |
 
-**Never #81.** Wrong lock was `#82 → Zone Direct Upload → Bulk Phase1 → #83`. Correct: (1) **#82** Ben GO; (2) this ordered upload + purge + freshness; (3) **#83** merge after **#82** base; (4) Bulk Phase1 **after** that upload **only** to free Dynamic slots for Member edge. Do **not** write `#82 → upload → Bulk Phase1 → #83`. Post-dual-CLEAR menu ([post-dual-clear-go.md](post-dual-clear-go.md)): after **#82** Worker-live the **brochure lane** is Bulk Phase1 (capacity) + **#83** (CI, not Bulk-gated) + Member edge only after Bulk — unfreeze+#79.1 is **Shop OS parallel**, not “next after **#82**” in that slot.
+**Never #81.** Wrong lock was `#82 → Zone Direct Upload → Bulk Phase1 → #83`. Correct after this ordered upload + purge + freshness: **#83** and **Bulk Phase1** are **parallel** (not Bulk→#83). (A) **#83** merge anytime on the **#82** base (CI-only thin `_redirects`; **not** Bulk-gated; parallel with upload OK). (B) Bulk Phase1 **only** to free Dynamic slots when Member needs capacity (keep `root`/`shop`/`chat` Dynamic until then). **Member edge only after Bulk.** Do **not** write `#82 → upload → Bulk Phase1 → #83`. Post-dual-CLEAR menu ([post-dual-clear-go.md](post-dual-clear-go.md)): after **#82** Worker-live the **brochure lane** is **#83** ∥ **Bulk Phase1** (not Bulk→#83); Member after Bulk — unfreeze+#79.1 is **Shop OS parallel**, not “next after **#82**” in that slot.
 
 ---
 
@@ -99,7 +99,7 @@ Parked Bulk Phase1 (brochure redirects **after #82 live** — drafted, not appli
 
 **Anti-collision:** `/membership` / `/membership/` → **301** `/membership.html` is live Option A. `/member*` is **not** that rule. Today `/member*` is Worker **404**. Apex+www `/member/login` must **never** 301 into `membership.html`. `/member` is a prefix of `/membership` — rank + exact path, not `starts_with /member`.
 
-STATUS Next #1 is **capacity-blocked** until **#82** Worker-live + this Bulk Phase1 slot-free. That is **not** Member GO, **not** this upload, **not** this tip-fold. **#83** is **not** this gate. Soft-530 living is **OPEN** (CF **1033** since 2026-09-13 ~11:57 America/Edmonton) — Fri **CLEAR** / **LIVE** is historical and does **not** unlock Member edge or Bulk Phase1. Post-dual-CLEAR **brochure lane** after **#82** Worker-live: [post-dual-clear-go.md](post-dual-clear-go.md) (Bulk Phase1 → **#83** → Member after Bulk; unfreeze+#79.1 is Shop OS parallel).
+STATUS Next #1 is **capacity-blocked** until **#82** Worker-live + this Bulk Phase1 slot-free. That is **not** Member GO, **not** this upload, **not** this tip-fold. **#83** is **not** this gate. Soft-530 living is **OPEN** (CF **1033** since 2026-09-13 ~11:57 America/Edmonton) — Fri **CLEAR** / **LIVE** is historical and does **not** unlock Member edge or Bulk Phase1. Post-dual-CLEAR **brochure lane** after **#82** Worker-live: [post-dual-clear-go.md](post-dual-clear-go.md) (**#83** ∥ **Bulk Phase1**, not Bulk→#83; Member after Bulk; unfreeze+#79.1 is Shop OS parallel).
 
 ---
 
@@ -123,7 +123,7 @@ Until **#82** is Worker-live via Zone Direct Upload, **held #70 STATUS Reality t
 | **#79** / **#79.1** | Parallel to **#82**. **#79.1** git-only until Doc unfreeze. `ops-demo-hardening.md`. |
 | Soft-530 companion watches | **HOLD / not armed.** Do not re-ask. |
 | Weekend Zone Direct Upload / Worker | **Do not schedule.** plan-improve off Sat/Sun. First Monday resumes Soft-530 smoke. Not this file. |
-| Dual CLEAR / post-CLEAR forensics | Does **not** auto-GO **#82**. Menu: [post-dual-clear-go.md](post-dual-clear-go.md) — after **#82** Worker-live the **brochure lane** is Bulk / **#83** / Member-after-Bulk; unfreeze+#79.1 is Shop OS parallel. |
+| Dual CLEAR / post-CLEAR forensics | Does **not** auto-GO **#82**. Menu: [post-dual-clear-go.md](post-dual-clear-go.md) — after **#82** Worker-live the **brochure lane** is **#83** ∥ **Bulk Phase1** (not Bulk→#83); Member-after-Bulk; unfreeze+#79.1 is Shop OS parallel. |
 | Dual-Nextcloud / `cloud.*` | Unchanged (`4cde204`). Not a `cloud.*` CF cutover. |
 | Classic Pages git / Apex | Skipped / deferred. |
 | Shop OS CI / Doc unfreeze | `shop-os-ci.md` / `doc-unfreeze.md`. Green CI is **not** Ben GO. |
