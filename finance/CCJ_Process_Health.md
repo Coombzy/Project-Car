@@ -3,12 +3,12 @@
 Lightweight tracker for long-term quality of the Analysis Automater and Audit Process.  
 One short line per day. Does **not** replace the main living analysis log.
 
-**Current prompt versions (as of 2026-09-11 audit):** Analysis **v1.13** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
+**Current prompt versions (as of 2026-09-14 audit):** Analysis **v1.13** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
 See `finance/CCJ_README.md`. Official cadence: Analysis **16:10 ET** weekdays · Audit 16:30 ET weekdays.
 
 | Date       | Analysis Confidence | Audit Score | Top Issue / Note                          | Data Sources OK? |
 |------------|---------------------|-------------|-------------------------------------------|------------------|
-| 2026-09-14 | 86                  | (pending)   | Official EOD C$93.26 Rel 1.26x trend-down; vol 50-DMA break; U3O8 +0.17% −3.71pp flag; Sep 11 1d HIT pending auditor; stub still after Sep 11; prompt v1.13 | Yes |
+| 2026-09-14 | 86                  | 10          | Official EOD C$93.26 Rel 1.26x trend-down; vol 50-DMA break; U3O8 +0.17% −3.71pp flag; Sep 11 1d CLOSED hit; Sep 4 1w CLOSED hit; Cal refreshed; Analysis missed tracker+log-restore; prompt v1.13 | Yes |
 | 2026-09-11 | 86                  | 10          | Official EOD C$96.68 Rel 0.79x trend-down; 50-DMA held; URA -3.27% +2.51pp flag; Sep 10 1d CLOSED hit; Sep 3 1w CLOSED hit; Cal refreshed; Analysis missed tracker+Health+log-restore; prompt v1.13 | Yes |
 | 2026-09-10 | 86                  | 10          | Official EOD C$97.42 Rel 0.76x trend-down; lost $100 L97.26; Sep 9 1d CLOSED hit; Sep 2 1w CLOSED hit; Cal refreshed; prompt v1.13 | Yes |
 | 2026-09-08 | 86                  | 10          | Official EOD C$101.97 Rel 0.82x digestion; gap-fade H104.12; CCJ vs URA -1.91pp; Sep 4 1d CLOSED hit; Aug 31 1w CLOSED hit; prompt v1.13 | Yes |
