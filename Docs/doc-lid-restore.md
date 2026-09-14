@@ -1,8 +1,8 @@
 # Doc lid-close restore — ordered wake sequence
 
 **Status:** Living ops (Lead checklist)  
-**Updated:** 2026-09-11  
-**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file; Soft-530 **CLEAR** Friday ≠ this GO), `api-stay-up.md` (weekend `/health` flip → this file), `shop-web-stay-up.md`, `vault-stay-up.md` (McKing vault — **OUT** of this sequence; weekend dual-outage proved Soft-530 ≠ vault), [dual-host-outage.md](dual-host-outage.md) (dual-OPEN glue — Doc first, then McKing; this file is the Doc half), `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md` (weekend Soft-530 coverage), `shop-os-ci.md` (green CI ≠ unfreeze)
+**Updated:** 2026-09-14  
+**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file; Soft-530 **CLEAR** Friday ≠ this GO), `api-stay-up.md` (weekend `/health` flip → this file; post-CLEAR stay-up evidence pointer), `shop-web-stay-up.md`, `vault-stay-up.md` (McKing vault — **OUT** of this sequence; weekend dual-outage proved Soft-530 ≠ vault), [dual-host-outage.md](dual-host-outage.md) (dual-OPEN **wake order** — Doc first, then McKing; this file is the Doc half + **post-CLEAR stay-up evidence**), `doc-software-baseline.md` (Amphetamine / Tailscale), `cors-origins.md`, `STATUS.md` (weekend Soft-530 coverage), `shop-os-ci.md` (green CI ≠ unfreeze)
 
 Single **ordered** wake/restore after Doc lid-close / sleep (the morning **530 / 1033** pattern). Plan/ops checklist for **Lead**. This file is the sequence. Process essays stay in the Related docs — do not copy them here.
 
@@ -46,8 +46,9 @@ plan-improve is **off Sat/Sun**. Soft-530 companion ops/app watches stay **HOLD 
 | **Vault flips** | Stay on the **separate** McKing vault watch — [vault-stay-up.md](vault-stay-up.md). Vault is **OUT** of this file (below). Vault flip ≠ this restore. Dual-OPEN (both OPEN): [dual-host-outage.md](dual-host-outage.md) — this file is the **Doc** half; wake Doc first. |
 | **No weekend Zone / Worker** | Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-improve resumes Soft-530 smoke. |
 | **Anti-goal** | Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask. |
+| **Post-CLEAR stay-up evidence** | After this file’s smoke CLEAR, stamp lastExit / KeepAlive / caffeinate·CDM / Tailscale (below). Dual-host-outage is **wake order**. Soft-530 still **OPEN** this fold — paper does **not** invent CLEAR. |
 
-**#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk **retired** (Owner desk LIVE; optional CSV Later) / **#79.1** git-only until Doc unfreeze — **unchanged**. Essays: `api-stay-up.md`, `shop-web-stay-up.md`, `vault-stay-up.md`. STATUS Live / Locks is canonical.
+**#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk **retired** (Owner desk LIVE; optional CSV Later) / **#79.1** git-only until Doc unfreeze / vault stay-up (`017f778`) / dual-host-outage (`7bf894b`) — **unchanged**. Essays: `api-stay-up.md`, `shop-web-stay-up.md`, `vault-stay-up.md`. STATUS Live / Locks is canonical.
 
 ---
 
@@ -117,6 +118,35 @@ Garage may re-run brochure waitlist e2e **after** health is 200. Form only.
 
 ---
 
+## Post-CLEAR stay-up evidence (next CF 1033)
+
+**One-liner:** After Soft-530 **CLEAR** (smoke above), stamp stay-up evidence **before walking away** — so the next CF **1033** has a Fri→Sun baseline. [dual-host-outage.md](dual-host-outage.md) is **wake order**. This is **why it died after the flip**.
+
+Living this fold: Soft-530 is still **OPEN** (`api.` / `ops.` / `app.` / `cloud.` **530** / CF **1033**; waitlist OPTIONS **530**). Vault is independently **OPEN** (`/alive` **502**). ListMachines shows only `Mac.lan` (Ben Laptop, LocalHostName Laptop; `:8000`/`:8080` down) — `Docs-MacBook-Pro` + `lightning` absent. Brochure Option A + Soft-530 Discord assets stay **LIVE**. **#82** unchanged (**never #81**). This paper does **not** invent a CLEAR or a live restore. Capture on **Doc** (`Docs-MacBook-Pro`) after the **next** lid-restore CLEAR — **not** on `Mac.lan`.
+
+On **every** Soft-530 CLEAR after this file’s smoke, Lead records:
+
+| Capture | On Doc (`Docs-MacBook-Pro`) | Why |
+|---------|------------------------------|-----|
+| **cloudflared lastExit** | `launchctl print gui/$(id -u)/com.projectcar.cloudflared` → last exit code / reason | Next 1033: did launchd already lose the tunnel? |
+| **KeepAlive loaded** | `launchctl print` / `list` for `com.projectcar.cloudflared` + `com.projectcar.shop-api` + `com.projectcar.shop-web` — state running, KeepAlive true | CLEAR without loaded KeepAlive is a walk-away hole |
+| **caffeinate / CDM** | `pgrep -lf caffeinate`; Amphetamine session **started**; Closed Display Mode (lid + AC + external) vs lid-close sleep | Fri→Sun flip-flops after “CLEAR” were sleep / CDM, not a product break |
+| **Tailscale** | `tailscale status` — `docs-macbook-pro` `100.97.10.72` **up** | Next 1033: was Doc off-mesh? `Mac.lan` ≠ this host |
+
+Stamp: America/Edmonton timestamp + the four lines. Do **not** treat the stamp as unfreeze GO, **#82**, Zone/Garage execute, or a companion re-ask.
+
+```bash
+# ONLY on Docs-MacBook-Pro after Soft-530 CLEAR — paper capture, not a restore
+launchctl print gui/$(id -u)/com.projectcar.cloudflared | grep -iE 'state =|pid =|last exit|KeepAlive'
+launchctl print gui/$(id -u)/com.projectcar.shop-api | grep -iE 'state =|pid =|last exit|KeepAlive'
+launchctl print gui/$(id -u)/com.projectcar.shop-web | grep -iE 'state =|pid =|last exit|KeepAlive'
+pgrep -lf caffeinate || true
+pmset -g assertions | grep -iE 'PreventUserIdleSystemSleep|Amphetamine|caffeinate' || true
+tailscale status
+```
+
+---
+
 ## Do not
 
 - Treat a soft morning 530 as a product break or a reason to ping Ben
@@ -130,5 +160,8 @@ Garage may re-run brochure waitlist e2e **after** health is 200. Form only.
 - Call a `main` pull live without a new `.next/BUILD_ID`
 - Treat green Shop OS CI as unfreeze GO (`doc-unfreeze.md`)
 - Treat Soft-530 **CLEAR** Friday as unfreeze GO or a companion re-ask
+- Walk away from a Soft-530 CLEAR without the stay-up evidence stamp (lastExit / KeepAlive / caffeinate·CDM / Tailscale)
+- Invent a CLEAR or a live restore from this paper while Soft-530 is still **OPEN**
+- Capture the stamp on `Mac.lan` (not Doc)
 - Schedule weekend Zone Direct Upload / Worker / **#82** work (first Monday plan-improve resumes Soft-530 smoke)
 - Recreate `vault.` ingress on Doc / fold vault into Doc KeepAlive (`vault.projectcar.ca` is McKing-only; vault watch ≠ Soft-530)

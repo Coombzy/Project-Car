@@ -1,9 +1,9 @@
 # API stay-up — `api.projectcar.ca`
 
 **Status:** Living ops  
-**Updated:** 2026-09-11  
+**Updated:** 2026-09-14  
 **Public URL:** https://api.projectcar.ca  
-**Related:** `doc-lid-restore.md` (ordered wake — weekend `/health` flip = process wake only), `vault-stay-up.md` (McKing vault — **separate** plane; weekend dual-outage proved Soft-530 ≠ vault), [dual-host-outage.md](dual-host-outage.md) (dual-OPEN glue — Doc first, then McKing), `cors-origins.md`, `brochure-worker-deploy.md` (do **not** schedule weekend Zone Direct Upload), `member-host-cutover.md`, `shop-web-stay-up.md`, `mcking-shop-host-cutover.md` (future McKing **shop** host — plan only; **not** a cut; dual-tunnel vault is a **separate** living-ops row — **LIVE verified**), `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
+**Related:** `doc-lid-restore.md` (ordered wake — weekend `/health` flip = process wake only; **post-CLEAR stay-up evidence** for the next CF 1033), `vault-stay-up.md` (McKing vault — **separate** plane; weekend dual-outage proved Soft-530 ≠ vault), [dual-host-outage.md](dual-host-outage.md) (dual-OPEN **wake order** — Doc first, then McKing; stay-up evidence is lid-restore), `cors-origins.md`, `brochure-worker-deploy.md` (do **not** schedule weekend Zone Direct Upload), `member-host-cutover.md`, `shop-web-stay-up.md`, `mcking-shop-host-cutover.md` (future McKing **shop** host — plan only; **not** a cut; dual-tunnel vault is a **separate** living-ops row — **LIVE verified**), `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
 
 Keep the Shop API reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -54,8 +54,9 @@ plan-improve is **off Sat/Sun**. Soft-530 companion ops/app watches stay **HOLD 
 | **Vault flips** | Stay on the **separate** McKing vault watch — [vault-stay-up.md](vault-stay-up.md). Do **not** fold vault into this API KeepAlive / lid-restore. Vault flip ≠ Doc lid-restore; Doc Soft-530 ≠ McKing vault wake. Dual-OPEN glue: [dual-host-outage.md](dual-host-outage.md). |
 | **No weekend Zone / Worker** | Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-improve resumes Soft-530 smoke. |
 | **Anti-goal** | Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask. |
+| **Post-CLEAR stay-up evidence** | After lid-restore CLEAR, stamp lastExit / KeepAlive / caffeinate·CDM / Tailscale — [doc-lid-restore.md](doc-lid-restore.md). Dual-host-outage is **wake order**. Soft-530 still **OPEN** this fold — paper does **not** invent CLEAR. |
 
-**#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk **retired** (Owner desk LIVE; optional CSV Later) / **#79.1** git-only until Doc unfreeze — **unchanged**. STATUS Live / Locks is canonical.
+**#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk **retired** (Owner desk LIVE; optional CSV Later) / **#79.1** git-only until Doc unfreeze / vault stay-up (`017f778`) / dual-host-outage (`7bf894b`) — **unchanged**. STATUS Live / Locks is canonical.
 
 ---
 
@@ -103,3 +104,13 @@ Morning lid-close / **530 / 1033** (ordered sequence): `doc-lid-restore.md`. Wee
 CORS / waitlist preflight after an `.env` change: `cors-origins.md`.
 
 Public HTTPS session cookies: shop-web KeepAlive **`com.projectcar.shop-web`** runs **`next start`** (`NODE_ENV=production`), not `next dev`. Doc already uses `COOKIE_SECURE=true` (API) and `SHOP_COOKIE_SECURE=true` (shop UI) so Firefox will store cookies on `app.` / `ops.`. Local `http://127.0.0.1:3000` should leave those unset or false. See `shop-web-stay-up.md` and `apps/project-car/web/README.md`. Member-on-projectcar.ca cookie / CORS plan: `member-host-cutover.md` (not shipped).
+
+---
+
+## Post-CLEAR stay-up evidence (next CF 1033)
+
+**One-liner:** After Soft-530 **CLEAR** (this file’s health + `doc-lid-restore.md` smoke), stamp stay-up evidence **before walking away** — cloudflared LaunchAgent lastExit, KeepAlive loaded, caffeinate / CDM, Tailscale — so the next CF **1033** has a Fri→Sun baseline.
+
+[dual-host-outage.md](dual-host-outage.md) is **wake order**. Checklist + commands: [doc-lid-restore.md](doc-lid-restore.md) **Post-CLEAR stay-up evidence**.
+
+Living this fold: Soft-530 is still **OPEN** (`api.` / `ops.` / `app.` / `cloud.` **530** / CF **1033**; waitlist OPTIONS **530**). Vault independently **OPEN** (`/alive` **502**). ListMachines only `Mac.lan` — Docs + lightning absent. This paper does **not** invent a CLEAR. Capture on **Doc** after the **next** lid-restore CLEAR. Anti-goals: not Doc unfreeze, not **#82**, not Zone/Garage execute, not companion re-ask.

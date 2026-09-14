@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-14  
 **Public URL:** https://vault.projectcar.ca  
-**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN glue — Doc first, then McKing), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
+**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**; Soft-530 **post-CLEAR stay-up evidence** is Doc-only), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN **wake order** — Doc first, then McKing), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
 
 Keep public Vaultwarden reachable on McKing. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md`.
 
