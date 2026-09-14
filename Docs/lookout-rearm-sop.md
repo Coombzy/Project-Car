@@ -31,7 +31,7 @@ Quiet-ops ([soft-530-extended-open.md](soft-530-extended-open.md)) still holds: 
 | **1** | **Never delete** an armed Project Car Lookout watch to fix stalled cron | Delete is not a cron repair. A stalled schedule is **not** a missing watch. Deleting an armed watch (Option A, `api.` `/health`, or vault `/alive`) to “unstick” cron is forbidden. |
 | **2** | Prefer **in-place update / pause-resume / re-save schedule** | Keep the routine. Edit the existing watch. Pause then resume. Re-save the schedule. Do **not** delete-and-recreate as first aid. |
 | **3** | If delete **already happened** and recreate needs Auto-review: **HOLD** after **one** Ben ask | Living this fold: delete happened; Auto-review blocked recreate; watch **GONE**. **One** Ben ask to enable recreate. Then **HOLD**. Do **not** re-ask from this paper. Do **not** open a second Ben channel. Do **not** treat Auto-review as a companion re-ask. |
-| **4** | Interim Option A coverage = Chief plan-improve **`*/20` redirect smoke + Soft-530 UX** until recreate is enabled | Continuous watch is **GONE**. Until Ben enables recreate, Chief keeps the existing `*/20` Option A redirect smoke **and** Soft-530 UX acceptance ([brochure-redirect-watch.md](brochure-redirect-watch.md)). Redirect **301**s + `?v=` **200**s are **Redirect-only**. **Redirect-only PASS ≠ Soft-530 UX PASS.** UX rows: `membership.html` + `contact.html` still show Soft-530 Discord honesty; `waitlist.js?v=3` still fail-softs **502 / 530 / 1033** → Discord+mailto (`0705b37`). Homepage-only **200** is still insufficient. Not honesty-off. Not companions rearm. |
+| **4** | Interim Option A coverage = Chief plan-improve **`*/20` redirect smoke + Soft-530 UX** until recreate is enabled | Continuous watch is **GONE**. Until Ben enables recreate, Chief keeps the existing `*/20` Option A redirect smoke **and** Soft-530 UX acceptance ([brochure-redirect-watch.md](brochure-redirect-watch.md)). Redirect **301**s + **root** `?v=` **200**s are **Redirect-only**. **Redirect-only PASS ≠ Soft-530 UX PASS.** UX rows: `membership.html` + `contact.html` still show Soft-530 Discord honesty; **root** `/waitlist.js?v=3` still fail-softs **502 / 530 / 1033** → Discord+mailto (`0705b37`); **root** `/styles.css?v=36` **200**. Probe those **root** paths — **not** `/assets/`. `/assets/styles.css?v=36` or `/assets/waitlist.js?v=3` **404** is **NOT** a regression. Homepage-only **200** is still insufficient. Not honesty-off. Not companions rearm. |
 | **5** | After Ben approves recreate: assert **routine enabled** + **first fire within 10m** + baseline still **LIVE 10/10** | Lookout-owned. Flip **Chief + Lead only**; **never Ben** on pass↔fail. Stamp `enabled:true`. First fire ≤ **10 minutes**. Refresh / keep [brochure-redirect-watch.md](brochure-redirect-watch.md) baseline **LIVE 10/10** (Sep 9 `brochure-routing-baseline.json` still says extensionless **IN FLIGHT** — living pack is **LIVE 10/10**). This paper does **not** run that assert. |
 | **6** | Soft-530 companions stay **HOLD** | `ops.` / `app.` `/login` (optional `cloud.`) stay **HOLD / not armed**. Ben skipped ~14:35 America/Edmonton. Do **not** re-ask. Option A recreate ≠ companion GO. |
 
@@ -72,7 +72,7 @@ Paper asserts only. Do **not** run them from a docs PR.
 1. Routine **exists** (prefer the [brochure-redirect-watch.md](brochure-redirect-watch.md) name `projectcar-brochure-redirect-watch` unless Lookout already owns `brochure-option-a-redirect-watch` as the recreate).
 2. Routine **`enabled:true`**.
 3. **First fire within 10 minutes.**
-4. Baseline still **LIVE 10/10** (apex+www `/` **301** → `/index.html`; `/shop` + `/shop.html` **301** → `/the-shop.html`; extensionless pretty pack **301** → matching `*.html`; `styles.css?v=36` + `waitlist.js?v=3` **200`).
+4. Baseline still **LIVE 10/10** (apex+www `/` **301** → `/index.html`; `/shop` + `/shop.html` **301** → `/the-shop.html`; extensionless pretty pack **301** → matching `*.html`; **root** `/styles.css?v=36` + `/waitlist.js?v=3` **200** — **not** `/assets/`; those **404**s are **not** a regression).
 5. Flip alerts **Chief + Lead only**. **Never Ben.** Never restart / mutate / Zone-edit from the watch.
 6. Soft-530 companions still **HOLD**.
 
@@ -91,7 +91,7 @@ A Cloudflare **403** HTML challenge is WAF, not a Redirect-pack fail. Zone owns 
 | **Not companion re-ask / rearm** | Companions stay **HOLD / not armed**. Do **not** re-ask. Do **not** rearm. |
 | **Not #82 / not unfreeze / not Zone execute** | Recreate ≠ Worker-live ≠ Doc pull ≠ Redirect-pack edit. |
 | **Interim ≠ armed** | Chief `*/20` is smoke coverage, not `enabled:true`. |
-| **Redirect-only PASS ≠ Soft-530 UX PASS** | `*/20` must also assert Membership/Contact Discord honesty + `waitlist.js` 502/530/1033 fail-soft. Pretty-URL **301**s alone are **not** UX PASS. **CLEAR ≠ honesty-off** (`0705b37`). |
+| **Redirect-only PASS ≠ Soft-530 UX PASS** | `*/20` must also assert Membership/Contact Discord honesty + **root** `/waitlist.js?v=3` 502/530/1033 fail-soft + **root** `/styles.css?v=36` **200**. Pretty-URL **301**s alone are **not** UX PASS. **CLEAR ≠ honesty-off** (`0705b37`). `/assets/` CSS/JS **404** is **not** a fail. |
 | **Quiet-ops continue** | [soft-530-extended-open.md](soft-530-extended-open.md). Api+vault stay armed. Brochure paper continues. Watch **GONE**. |
 
 ---
@@ -124,6 +124,7 @@ A Cloudflare **403** HTML challenge is WAF, not a Redirect-pack fail. Zone owns 
 - Claim Option A continuous watch `enabled:true` while it is **GONE**
 - Treat Chief `*/20` smoke as an armed flip watch
 - Treat Redirect-only `*/20` PASS as Soft-530 UX PASS
+- Treat `/assets/styles.css?v=36` or `/assets/waitlist.js?v=3` **404** as a regression (live HTML is **root** `/styles.css?v=36` + `/waitlist.js?v=3`)
 - Strip Soft-530 Discord honesty / `waitlist.js` fail-soft (honesty-off)
 - Rearm Soft-530 companions
 - Wipe Option A Dynamic **10/10** or nag **#82**

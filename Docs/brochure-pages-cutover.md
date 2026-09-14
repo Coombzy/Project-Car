@@ -120,7 +120,7 @@ Verified against `website-webapp-specification.md` §3 and the live Worker uploa
 | **Product** | **Classic Cloudflare Pages** (git-connected). Not Workers Assets as a new name for the same upload. Not Wrangler from CI in this plan. | Spec target is Pages. Worker Direct Upload is the interim. |
 | **Repo** | `Coombzy/Project-Car` | Git SSOT. |
 | **Production branch** | `main` | Same tip Garage merges HTML to. |
-| **Pages root / output directory** | **`apps/website/html`** | This folder is the **site root** today (Worker Direct Upload). It holds `index.html`, the six pages, `waitlist.js`, `shop-config.js`, `styles.css`, `robots.txt`, `sitemap.xml`, `404.html`, favicons, `_redirects`, `_headers`, `assets/`. |
+| **Pages root / output directory** | **`apps/website/html`** | This folder is the **site root** today (Worker Direct Upload). It holds `index.html`, the six pages, **root** `waitlist.js` / `shop-config.js` / `styles.css`, `robots.txt`, `sitemap.xml`, `404.html`, favicons, `_redirects`, `_headers`, and `assets/` (**images/favicons only** — not CSS/JS). Live HTML uses root-relative `styles.css?v=36` + `waitlist.js?v=3`. |
 | **Git tree (SSOT)** | `apps/website/` | Spec §3. Docker / nginx in that folder are **local preview only** — do **not** set the Pages root to `apps/website` (no `index.html` at that path). |
 | **Build command** | **None.** Framework preset None / static. | Static HTML. Do not add a Next.js or Vite build. |
 | **Custom domains** | Bind **`projectcar.ca`** and **`www.projectcar.ca`** to the Pages project | Same public hosts as today. |
@@ -163,6 +163,7 @@ HTML from some networks hits a Cloudflare challenge (**403**). That is WAF, not 
 | Pages | Home, About, The Shop, Membership, Roadmap, Contact all **200** from Pages HTML on **apex and www**. |
 | Waitlist API first | `GET https://api.projectcar.ca/health` → **200** `{"status":"ok","service":"project-car-api"}` **when Doc origin is up**. If **502** or **530 / error 1033**, Doc lid-close / tunnel — `api-stay-up.md`. Do not treat that as a bad Pages deploy. |
 | Waitlist e2e | **Garage** after health is 200: Membership / Contact `POST` JSON to `https://api.projectcar.ca/waitlist` → **PASS**. CORS allowlist: `cors-origins.md`. |
+| Soft-530 UX smoke URL SSOT | Live HTML uses **root-relative** `styles.css?v=36` + `waitlist.js?v=3` (**200** apex+www). Probe **`/styles.css?v=36`** + **`/waitlist.js?v=3`**. `/assets/styles.css?v=36` or `/assets/waitlist.js?v=3` **404s** and is **NOT** a regression (`assets/` is favicons/images). **Redirect-only PASS ≠ Soft-530 UX PASS** — also assert `membership.html` + `contact.html` Discord honesty + `waitlist.js` 502/530/1033 fail-soft. |
 
 ```bash
 curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/
@@ -178,6 +179,12 @@ curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/contact.html
 # Chat must not be a live page:
 curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/chat.html
 curl -sS -o /dev/null -w '%{http_code}\n' https://api.projectcar.ca/health
+# Soft-530 UX smoke URL SSOT — root paths (200). /assets/ CSS/JS 404 is expected, not a Pages fail.
+curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/styles.css?v=36
+curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/waitlist.js?v=3
+curl -sS https://projectcar.ca/membership.html | grep -E 'discord\.gg/projectcar|waitlist\.js\?v=3'
+curl -sS https://projectcar.ca/contact.html | grep -E 'discord\.gg/projectcar|waitlist\.js\?v=3'
+curl -sS https://projectcar.ca/waitlist.js?v=3 | grep -E '502|530|1033'
 ```
 
 Home HTML must not contain `Website progress` or a `10%` progress bar. Chat must stay gone (404 / redirect to Contact is fine; a Chat page is not).

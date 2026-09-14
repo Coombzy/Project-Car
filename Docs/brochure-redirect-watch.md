@@ -65,8 +65,10 @@ A Cloudflare **403** HTML challenge (`cf-mitigated: challenge`) is WAF, not a Re
 | `GET /shop` | **301** `Location: /the-shop.html` |
 | `GET /shop.html` | **301** `Location: /the-shop.html` |
 | Extensionless pretty pack | **301** → matching `*.html` (see pack below) |
-| `GET /styles.css?v=36` | **200** |
-| `GET /waitlist.js?v=3` | **200** |
+| `GET /styles.css?v=36` | **200** — **root** path. Live HTML uses root-relative `styles.css?v=36`. |
+| `GET /waitlist.js?v=3` | **200** — **root** path. Live HTML uses root-relative `waitlist.js?v=3`. |
+
+**URL SSOT (root, not `/assets/`):** Probe **`/styles.css?v=36`** and **`/waitlist.js?v=3`**. A probe of `/assets/styles.css?v=36` or `/assets/waitlist.js?v=3` **404s** and is **NOT** a regression — `assets/` is favicons/images only. Lookout `brochure-routing-baseline.json` must lock the same **root** URLs when refreshed to **LIVE 10/10**.
 
 **Extensionless pretty pack** (live Option A Dynamic **301**s — matching `*.html`):
 
@@ -93,12 +95,13 @@ for h in https://projectcar.ca https://www.projectcar.ca; do
   curl -sSI "$h/the-shop"    # 301 Location: /the-shop.html
   curl -sSI "$h/contact"     # 301 Location: /contact.html
   curl -sSI "$h/roadmap"     # 301 Location: /roadmap.html
-  curl -sS -o /dev/null -w '%{http_code}\n' "$h/styles.css?v=36"   # 200
-  curl -sS -o /dev/null -w '%{http_code}\n' "$h/waitlist.js?v=3"   # 200
+  curl -sS -o /dev/null -w '%{http_code}\n' "$h/styles.css?v=36"   # 200 root
+  curl -sS -o /dev/null -w '%{http_code}\n' "$h/waitlist.js?v=3"   # 200 root
+  # Do not probe /assets/styles.css?v=36 or /assets/waitlist.js?v=3 — those 404 and are not a regression
 done
 ```
 
-Fail class: **200** on a pretty URL that should **301**, Worker `/shop` **302**, missing `?v=36` / `?v=3`, or a 404 where the pack should land. That is Zone/Garage **after** Ben GO — **not** Doc lid-restore, **not** vault wake.
+Fail class: **200** on a pretty URL that should **301**, Worker `/shop` **302**, missing **root** `?v=36` / `?v=3`, or a 404 where the pack should land. That is Zone/Garage **after** Ben GO — **not** Doc lid-restore, **not** vault wake. **Do not** treat `/assets/styles.css?v=36` or `/assets/waitlist.js?v=3` **404** as this fail class.
 
 **Those rows are Redirect-only.** They do **not** prove Soft-530 UX. See interim Chief `*/20` Soft-530 UX below.
 
@@ -116,7 +119,8 @@ Permanent **#80** (`0705b37`) — overnight sleep / tunnel flaps, **not** tempor
 |---------------------|--------|
 | `GET /membership.html` | Soft-530 Discord honesty still present (`discord.gg/projectcar` + honesty intro). **#80** stays. |
 | `GET /contact.html` | Same Soft-530 Discord honesty. **#80** stays. |
-| `GET /waitlist.js?v=3` | **200** **and** body still fail-softs **502 / 530 / 1033** → Discord + mailto — not “try again.” Headers-only / asset-**200** alone **fails** this row. |
+| `GET /waitlist.js?v=3` | **Root** path **200** **and** body still fail-softs **502 / 530 / 1033** → Discord + mailto — not “try again.” Headers-only / asset-**200** alone **fails** this row. **Not** `/assets/waitlist.js?v=3` (that **404** is expected). |
+| `GET /styles.css?v=36` | **Root** path **200** apex+www. **Not** `/assets/styles.css?v=36` (that **404** is expected). |
 
 ```bash
 # Paper probes — interim Chief */20 Soft-530 UX. Challenge 403 is WAF.
@@ -139,7 +143,7 @@ Sep 9 Lookout `brochure-routing-baseline.json` still stamps extensionless pretty
 
 **Living stamp (this paper):** Option A Redirect pack is **LIVE 10/10** Active Dynamic **301**s (apex+www). Extensionless is **not** in flight.
 
-Lookout should refresh that baseline to **LIVE 10/10** when the watch is armed. This fold does **not** edit Lookout files and does **not** apply Zone.
+Lookout should refresh that baseline to **LIVE 10/10** when the watch is armed. CSS/JS probes in that baseline must stay **root** `/styles.css?v=36` + `/waitlist.js?v=3` — **not** `/assets/`. This fold does **not** edit Lookout files and does **not** apply Zone.
 
 ---
 
@@ -177,7 +181,8 @@ After **#82** upload + **mandatory** purge/freshness, **one** tip-fold reconcile
 | **#82** upload / purge / freshness | `brochure-worker-ci.md` · `brochure-worker-deploy.md`. Not this watch. |
 | Bulk Phase1 / Member edge / **#83** | Unchanged. Not this file. |
 | Doc unfreeze / **#79.1** / Bitwarden | Anti-goals. |
-| Homepage-only **200** as “brochure up” | Insufficient. Pretty-URL **301**s + live `?v=` + Soft-530 UX. |
-| Redirect-only `*/20` as Soft-530 UX | **Redirect-only PASS ≠ Soft-530 UX PASS.** Membership/Contact honesty + `waitlist.js` 502/530/1033 fail-soft required. |
+| Homepage-only **200** as “brochure up” | Insufficient. Pretty-URL **301**s + live **root** `?v=` + Soft-530 UX. |
+| Redirect-only `*/20` as Soft-530 UX | **Redirect-only PASS ≠ Soft-530 UX PASS.** Membership/Contact honesty + **root** `waitlist.js?v=3` 502/530/1033 fail-soft required. |
+| `/assets/styles.css?v=36` or `/assets/waitlist.js?v=3` **404** as regression | **Not** a fail. Live HTML is root-relative. `assets/` is favicons/images. |
 
 **Anti-goals:** not Zone change, not **#82** merge nag / upload, not Dynamic wipe, not honesty-off, not companion re-ask / rearm, not Bitwarden, not **#78** re-open, not invent `enabled:true` while **GONE**. Quiet-ops: [soft-530-extended-open.md](soft-530-extended-open.md) — this **paper** continues; continuous watch **GONE**; duration ≠ arm-from-docs. SOP: [lookout-rearm-sop.md](lookout-rearm-sop.md). Honesty permanence: [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (`0705b37`).

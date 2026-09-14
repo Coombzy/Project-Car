@@ -4,6 +4,8 @@
 **Updated:** 2026-09-14  
 **Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock + **#82** smoke gate + Waitlist Live, `brochure-worker-deploy.md` (standing Zone Direct Upload runbook), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A watch **spec** — living watch **GONE**; flip Chief+Lead only when armed; interim Chief `*/20` **+ Soft-530 UX**; **Redirect-only PASS ≠ Soft-530 UX PASS**; **not** this CI paper, **not** companion re-ask), [lookout-rearm-sop.md](lookout-rearm-sop.md) (**HOLD** recreate; **#78 LIVE-SUPERSEDED**; interim `*/20` Soft-530 UX), `brochure-security-headers.md` (P2-4 **LIVE**), `member-zone-edge.md` (Next #1 capacity-blocked), `member-host-cutover.md`, `website-improvements.md` (P1-5 + Soft-530 Discord honesty), [brochure-pages-cutover.md](brochure-pages-cutover.md) (frozen Redirect inventory = **hard cutover gate**), `ops-demo-hardening.md` (**#79** / **#79.1**), [post-dual-clear-go.md](post-dual-clear-go.md) (KeepAlive→**#82** default after dual CLEAR; Soft-530 **OPEN ≠ #82 blocked**; dual CLEAR ≠ **#82** auto-go; after Worker-live the **brochure lane** is **#83** ∥ **Bulk Phase1**, not Bulk→#83; **#82** PASS ≠ retire Option A Dynamic **10/10** (`49ccf90`); Member after Bulk — **never #81**; unfreeze+#79.1 is Shop OS parallel), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (CLEAR recovery smoke ≠ Garage GO to strip Soft-530 Discord honesty — **CLEAR ≠ honesty-off** (`0705b37`)), `apps/website/README.md`
 
+**Soft-530 UX smoke URL SSOT (root, not `/assets/`):** Live HTML uses **root-relative** `styles.css?v=36` and `waitlist.js?v=3` (**200** apex+www). Interim Chief `*/20` + this CI + Pages cutover + Lookout Option A baselines probe **`/styles.css?v=36`** and **`/waitlist.js?v=3`** — **not** `/assets/`. A probe of `/assets/styles.css?v=36` or `/assets/waitlist.js?v=3` **404s** and is **NOT** a regression (`assets/` is favicons/images). **Redirect-only PASS ≠ Soft-530 UX PASS.**
+
 This file is the **after #82 Ben GO** brochure CI paper (Soft-530-independent) on held **#70**. It is **not** a Zone upload, **not** a Garage HTML PR, **not** a GitHub Actions workflow, and **not** a license to apply Redirect / Bulk / DNS.
 
 **Soft-530 OPEN ≠ #82 blocked.** Ben may GO **#82** Worker-live (Direct Upload + **mandatory** purge + freshness) while Soft-530 and/or vault are still **OPEN** — brochure is CF Worker/Zone, not Doc tunnel. Soft-530 **CLEAR** is **not** a **#82** gate. Quiet-ops duration still ≠ auto-GO. Dual CLEAR ≠ auto-GO. **Never #81.** Keep Option A Dynamic **10/10** until Bulk Phase1 is **LIVE**.
@@ -30,6 +32,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Dual-Nextcloud unchanged** | Public `cloud.` stays on **Doc** until Ben GO. McKing NC unpublished. Not this file. |
 | **Waitlist-owner-desk retired** | Owner desk is **LIVE** when origin is up (STATUS Waitlist Live). Do **not** draft `waitlist-owner-desk.md`. Optional CSV Later. Soft-530 **CLEAR** / desk existence ≠ Doc unfreeze / **#79.1** rebuild GO. |
 | **Soft-530 Discord honesty permanent (#80) (`0705b37`)** | Membership/Contact honesty intro + `waitlist.js?v=3` fail-soft (502/530/1033→Discord+mailto) stay after CLEAR. Overnight sleep / tunnel flaps — **not** temporary banners. **CLEAR ≠ honesty-off.** Tone tweak only with Ben GO. Soft-530 CLEAR smoke ≠ Garage GO to strip. Interim Chief `*/20`: **Redirect-only PASS ≠ Soft-530 UX PASS** ([brochure-redirect-watch.md](brochure-redirect-watch.md)). [soft-530-clear-smoke.md](soft-530-clear-smoke.md) · STATUS Waitlist Live · [website-improvements.md](website-improvements.md) P1-5. |
+| **Soft-530 UX smoke URL SSOT (root, not `/assets/`)** | Live HTML uses **root-relative** `styles.css?v=36` + `waitlist.js?v=3` (**200** apex+www). Probe **`/styles.css?v=36`** + **`/waitlist.js?v=3`**. `/assets/styles.css?v=36` or `/assets/waitlist.js?v=3` **404s** and is **NOT** a regression. Same lock for interim `*/20`, Pages cutover, Lookout Option A baseline. **Redirect-only PASS ≠ Soft-530 UX PASS.** |
 | **#83 is CI-only** | Thin `_redirects` assert on the **#82** base. Prefer merge after **#82**; **parallel with upload OK**. **Not** Bulk-gated. **Never #81.** |
 
 ---
@@ -56,8 +59,8 @@ Standing how-to (when GO already exists for a later HTML merge): `brochure-worke
 | Nav / logo | **not** `href="/"` |
 | `/shop.html` → `/the-shop.html` | **301 via Zone** (never Worker `/shop` **302**) |
 | Worker `_redirects` | **thin**: chat → contact only (no `/` or `/shop`) |
-| Soft-530 assets | `waitlist.js?v=` + `styles.css?v=` present on public HTML (**#80** live: `waitlist.js?v=3` + `styles.css?v=36`; do **not** upload #81 `?v=37`) |
-| Soft-530 Discord fail-soft | Membership / Contact fail-soft to Discord (`discord.gg/projectcar`) + mailto on **502 / 530 / 1033** — not “try again.” **#80** stays live — **permanent** product behavior (overnight sleep / tunnel flaps), not a temporary outage banner. Soft-530 **CLEAR** smoke ≠ Garage GO to strip this or the Membership/Contact honesty intro. **CLEAR ≠ honesty-off.** Tone tweak only with Ben GO. |
+| Soft-530 assets | **Root** `waitlist.js?v=` + `styles.css?v=` on public HTML (**#80** live: **`/waitlist.js?v=3`** + **`/styles.css?v=36`**; do **not** upload #81 `?v=37`). **Not** `/assets/waitlist.js` / `/assets/styles.css` — those **404** and are **not** a regression. |
+| Soft-530 Discord fail-soft | Membership / Contact fail-soft to Discord (`discord.gg/projectcar`) + mailto on **502 / 530 / 1033** — not “try again.” **#80** stays live — **permanent** product behavior (overnight sleep / tunnel flaps), not a temporary outage banner. Soft-530 **CLEAR** smoke ≠ Garage GO to strip this or the Membership/Contact honesty intro. **CLEAR ≠ honesty-off.** Tone tweak only with Ben GO. **Redirect-only PASS ≠ Soft-530 UX PASS.** |
 
 ```bash
 # After mandatory apex+www purge only. Challenge 403 is WAF, not a failed upload.
@@ -68,6 +71,11 @@ curl -sS https://www.projectcar.ca/index.html | grep -E 'rel="canonical"|og:url|
 curl -sSI https://projectcar.ca/shop.html   # expect 301 Location: /the-shop.html (Zone)
 curl -sS https://projectcar.ca/membership.html | grep -E 'waitlist\.js\?v=|discord\.gg/projectcar'
 curl -sS https://projectcar.ca/contact.html | grep -E 'waitlist\.js\?v=|discord\.gg/projectcar'
+# Soft-530 UX smoke URL SSOT — root paths (200 apex+www). /assets/ CSS/JS 404 is expected.
+curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/styles.css?v=36
+curl -sS -o /dev/null -w '%{http_code}\n' https://projectcar.ca/waitlist.js?v=3
+curl -sS -o /dev/null -w '%{http_code}\n' https://www.projectcar.ca/styles.css?v=36
+curl -sS -o /dev/null -w '%{http_code}\n' https://www.projectcar.ca/waitlist.js?v=3
 ```
 
 Generic page **200**s in `brochure-worker-deploy.md` still apply for non-#82 uploads. **#82** must not treat that list as a substitute for this ordered gate.
