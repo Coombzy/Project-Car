@@ -80,7 +80,7 @@ Green `/health` ≠ vault CLEAR. Green `/alive` ≠ this hop. Chief stays armed 
 | **Not Lookout companion re-ask** | Soft-530 companions stay **HOLD / not armed**. Ben skipped ~14:35 America/Edmonton. Do **not** re-ask. |
 | **Name-only ≠ identity** | `Docs-MacBook-Pro` without machineId **`95a229f5-9296-4a18-aa98-70fd300dabdf`** is **not** hop **1**. |
 | **Reappear ≠ CLEAR** | Host online is not `/health` **200** + OPTIONS CORS + POST **422**/**201**. |
-| **CLEAR ≠ auto-fire** | [post-dual-clear-go.md](post-dual-clear-go.md) is a **menu**. Never auto-fire **#82** / unfreeze / **#79.1** / companions / Zone upload / Bitwarden. |
+| **CLEAR ≠ auto-fire** | [post-dual-clear-go.md](post-dual-clear-go.md) is a **menu**. Never auto-fire **#82** / unfreeze / **#79.1** / companions / Zone upload / Bitwarden. Soft-530 **OPEN ≠ #82 blocked** — Ben may GO Worker-live independently (brochure is CF Worker/Zone). KeepAlive→**#82** stays the default *after* dual CLEAR. |
 | **Chief-to-doc hop before CLEAR smoke** | Hop **5** waits on hop **2**. Not a pre-CLEAR hop. Not a vault hop. |
 | **Vault folded into this hop** | McKing stays Chief `lightning`. [vault-clear-smoke.md](vault-clear-smoke.md). |
 | **Invent CLEAR / invent reappear** | Soft-530 still **OPEN** (CF **1033**). Vault still **OPEN** (**502**). Only `Mac.lan`. |

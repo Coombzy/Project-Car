@@ -22,7 +22,7 @@ All three — then this smoke, **not** the GO menu.
 
 Living this fold: Soft-530 is still **OPEN** (CF **1033** since 2026-09-13 ~11:57). Vault is independently **OPEN** (**502** since ~19:45 MT Sep 13 — **not** 1033). ListMachines **Mac.lan only**. This paper does **not** invent CLEAR.
 
-**CLEAR path is still** [post-dual-clear-go.md](post-dual-clear-go.md). After a **live** Soft-530 CLEAR **and** a **live** vault CLEAR **and** both forensic papers (`55e10d0` / `d88cacb`), Ben’s GO menu is **ordered** and **never auto-fire**. This smoke does **not** skip KeepAlive, does **not** auto-GO **#82**, and does **not** unfreeze.
+**CLEAR path is still** [post-dual-clear-go.md](post-dual-clear-go.md). After a **live** Soft-530 CLEAR **and** a **live** vault CLEAR **and** both forensic papers (`55e10d0` / `d88cacb`), Ben’s GO menu is **ordered** and **never auto-fire**. This smoke does **not** skip KeepAlive, does **not** auto-GO **#82**, and does **not** unfreeze. Soft-530 **OPEN ≠ #82 blocked** — Ben may GO **#82** Worker-live while Soft-530/vault still **OPEN** (brochure is CF Worker/Zone, not Doc tunnel). KeepAlive→**#82** stays the *default ordered menu after dual CLEAR*.
 
 ---
 
@@ -108,7 +108,7 @@ While Lookout redirect watch is **GONE**, interim Chief `*/20` must keep this sa
 
 | Anti-goal | Why |
 |-----------|-----|
-| **CLEAR smoke ≠ #82 GO** | **#82** is still Ben GO after dual CLEAR ([post-dual-clear-go.md](post-dual-clear-go.md)). This smoke does **not** upload, purge, or reconcile Reality. |
+| **CLEAR smoke ≠ #82 GO** | This smoke does **not** upload, purge, or reconcile Reality. Soft-530 **OPEN ≠ #82 blocked** — Ben may GO **#82** Worker-live independently (brochure is CF Worker/Zone). Dual CLEAR ≠ auto-GO. KeepAlive→**#82** stays the default menu *after* dual CLEAR ([post-dual-clear-go.md](post-dual-clear-go.md)). |
 | **CLEAR smoke ≠ companion re-ask** | Soft-530 companions stay **HOLD / not armed**. Ben skipped ~14:35 America/Edmonton. Do **not** re-ask. |
 | **CLEAR smoke ≠ Bitwarden** | Import/rotate is vault. Vault CLEAR is still the **separate** McKing lane ([vault-stay-up.md](vault-stay-up.md)). Soft-530 green does **not** lift Bitwarden. |
 | **Soft-530 CLEAR alone ≠ unfreeze** | Freeze `4cf8924` / **`5swmVz`** until **Ben GO**. `changeme` on `/login` is freeze, not a 1033. |

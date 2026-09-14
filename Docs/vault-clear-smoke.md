@@ -71,8 +71,8 @@ Vault **CLEAR** alone ≠ the Soft-530 card. Green `/alive` ≠ `/health` **200*
 
 | Anti-goal | Why |
 |-----------|-----|
-| **Not Zone Direct Upload** | **#82** / Worker upload is still Ben GO after dual CLEAR ([post-dual-clear-go.md](post-dual-clear-go.md)). This smoke does **not** upload, purge, or reconcile Reality. |
-| **Not #82** | Dual CLEAR ≠ **#82** auto-go. Vault green does **not** offer Worker-live. |
+| **Not Zone Direct Upload** | **#82** / Worker upload is still Ben GO. Soft-530 **OPEN ≠ #82 blocked**. This smoke does **not** upload, purge, or reconcile Reality. KeepAlive→**#82** stays the default menu *after* dual CLEAR ([post-dual-clear-go.md](post-dual-clear-go.md)). |
+| **Not #82** | Dual CLEAR ≠ **#82** auto-go. Soft-530 **OPEN ≠ #82 blocked**. Vault green does **not** offer Worker-live. |
 | **Not Doc unfreeze / #79.1 execute** | Freeze `4cf8924` / **`5swmVz`** until **Ben GO**. Vault CLEAR ≠ Shop OS parallel. |
 | **Not companion re-ask** | Soft-530 companions stay **HOLD / not armed**. Ben skipped ~14:35 America/Edmonton. Do **not** re-ask. |
 | **Not Soft-530 CLEAR smoke** | That card is already `502ab2e`. This file is McKing vault only. Do **not** fold Doc OPTIONS/POST into this smoke. |

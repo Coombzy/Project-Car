@@ -95,7 +95,7 @@ Ordered Ben GO menu — [post-dual-clear-go.md](post-dual-clear-go.md):
 2. **#82** Worker-live (Direct Upload + **mandatory** purge/freshness). After Worker-live the **brochure lane** is **parallel**: (A) **#83** CI thin `_redirects` anytime on the **#82** base (not Bulk-gated; parallel with upload OK); (B) **Bulk Phase1** frees Option A **FULL 10/10** slots when Member needs capacity (keep `root`/`shop`/`chat` Dynamic until then). Member edge **only after Bulk.** **Never #81.** Never Bulk→#83.
 3. Doc unfreeze + pull + Garage **#79.1** strip-changeme is **Shop OS parallel** — not “next after **#82**” in place of Bulk / **#83**. Lane-done = [post-dual-clear-go.md](post-dual-clear-go.md) **unfreeze + #79.1 acceptance smoke** (not Soft-530 CLEAR alone; not **#82** / Zone Direct Upload / companions re-ask / Bitwarden).
 
-Anti-goals that stay on this file: CLEAR ≠ companion re-ask; CLEAR ≠ Bitwarden import/rotate; Soft-530 CLEAR alone ≠ Doc unfreeze; vault CLEAR ≠ Soft-530 work; dual CLEAR ≠ **#82** auto-go.
+Anti-goals that stay on this file: CLEAR ≠ companion re-ask; CLEAR ≠ Bitwarden import/rotate; Soft-530 CLEAR alone ≠ Doc unfreeze; vault CLEAR ≠ Soft-530 work; dual CLEAR ≠ **#82** auto-go; Soft-530 **OPEN ≠ #82 blocked**.
 
 ---
 
@@ -104,7 +104,7 @@ Anti-goals that stay on this file: CLEAR ≠ companion re-ask; CLEAR ≠ Bitward
 | Anti-goal | Why |
 |-----------|-----|
 | **Doc unfreeze** | Lid-restore / this glue is **process wake only**. Freeze `4cf8924` / `5swmVz` until **Ben GO**. Soft-530 **CLEAR** ≠ unfreeze GO. |
-| **#82** | Ben GO unchanged. Dual-OPEN ≠ Worker-live. Dual CLEAR ≠ **#82** auto-go ([post-dual-clear-go.md](post-dual-clear-go.md)). |
+| **#82** | Ben GO unchanged. Dual-OPEN ≠ auto-GO. Dual CLEAR ≠ **#82** auto-go. Soft-530 **OPEN ≠ #82 blocked** — Ben may GO Worker-live while Soft-530/vault still **OPEN** (brochure is CF Worker/Zone, not Doc tunnel). KeepAlive→**#82** stays the *default ordered menu after dual CLEAR* ([post-dual-clear-go.md](post-dual-clear-go.md)). |
 | **Zone Direct Upload** | Do **not** schedule weekend Zone / Worker. First Monday plan-improve resumes Soft-530 smoke. |
 | **Arm Soft-530 companions** | **HOLD / not armed** until **Ben reopens** — **not** weekend-only. Ben skipped ~14:35 America/Edmonton — do **not** re-ask. Quiet-ops: [soft-530-extended-open.md](soft-530-extended-open.md). |
 | **Ben re-nag / duration = GO** | Doc-wake + McKing wake already asked. ~24h OPEN ≠ **#82** / unfreeze / Zone / Bitwarden. |

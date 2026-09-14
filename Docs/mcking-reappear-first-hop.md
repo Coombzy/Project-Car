@@ -19,7 +19,7 @@ All four — then this hop, **not** the GO menu.
 | **Prior lock was quiet-ops / extended vault OPEN** | Vault **OPEN** — **502** since 2026-09-13 **~19:45** America/Edmonton on `/alive` + `/api/config` (**not** 1033), during Soft-530 **OPEN ~24h+** (CF **1033** since 2026-09-13 **~11:57** MT). ListMachines was **Mac.lan only**. [soft-530-extended-open.md](soft-530-extended-open.md). |
 | **`lightning` just reappeared** | Name / label **`lightning`** is back on ListMachines after that lock. Wake order stays [dual-host-outage.md](dual-host-outage.md) — **McKing second** (Doc first if both names appear). This hop still runs if only `lightning` returned. |
 | **Identity is not assumed from the name** | Assert machineId **before** any McKing Shell or smoke. `Mac.lan` is **not** McKing. |
-| **Before Bitwarden / desk / Soft-530 CLEAR / unfreeze / #82** | Those wait. This hop is **first**. Soft-530 CLEAR is a **separate** plane ([doc-reappear-first-hop.md](doc-reappear-first-hop.md) / [soft-530-clear-smoke.md](soft-530-clear-smoke.md)). The Ben GO menu is [post-dual-clear-go.md](post-dual-clear-go.md) — **later**, after **both** CLEARs, **never auto-fire**. |
+| **Before Bitwarden / desk / Soft-530 CLEAR / unfreeze / #82** | This hop is **first** on McKing reappear. Soft-530 CLEAR is a **separate** plane ([doc-reappear-first-hop.md](doc-reappear-first-hop.md) / [soft-530-clear-smoke.md](soft-530-clear-smoke.md)). The Ben GO menu is [post-dual-clear-go.md](post-dual-clear-go.md) — *default ordered menu after dual CLEAR*, **never auto-fire**. Soft-530 **OPEN ≠ #82 blocked** — Ben may GO **#82** independently (brochure is CF Worker/Zone). |
 
 Living this fold: Soft-530 **OPEN** — `api.` / `app.` / `ops.` / `cloud.` **530** CF **1033**; waitlist OPTIONS **530**; vault `/alive` **502**; ListMachines **Mac.lan only**; freeze intact **`4cf8924`** / **`5swmVz`**; **#82** still Ben GO. This paper does **not** invent a reappear or a CLEAR.
 
@@ -68,7 +68,7 @@ This hop is **McKing vault only**. Soft-530 stays a **separate** plane.
 |-------------------|---------|
 | **Bitwarden gate is vault CLEAR + Ben GO** | After [vault-clear-smoke.md](vault-clear-smoke.md) (`/alive` **200** + VW **2026.6.0**), import/rotate is **Ben GO** — **not** blocked on Soft-530 CLEAR. Soft-530 **OPEN** can coexist with vault CLEAR + Bitwarden work. **Never auto Bitwarden.** Not on [post-dual-clear-go.md](post-dual-clear-go.md). |
 | **Vault CLEAR ≠ Soft-530 CLEAR** | Soft-530 may still be **OPEN** (`api.` / `app.` / `ops.` / `cloud.` **530** CF **1033**; waitlist OPTIONS **530**). Green `/alive` ≠ `/health` **200**. |
-| **Vault CLEAR ≠ unfreeze / #82 GO** | Freeze `4cf8924` / **`5swmVz`** intact. **#82** still Ben GO. Dual CLEAR ≠ **#82** auto-go. Vault green does **not** offer Worker-live, Doc pull, or Garage **#79.1**. |
+| **Vault CLEAR ≠ unfreeze / #82 GO** | Freeze `4cf8924` / **`5swmVz`** intact. **#82** still Ben GO. Dual CLEAR ≠ **#82** auto-go. Soft-530 **OPEN ≠ #82 blocked**. Vault green does **not** offer Worker-live, Doc pull, or Garage **#79.1**. |
 | **Green `/alive` ≠ this hop done without hop 4** | Smoke + forensics do **not** collapse the planes. Stay on independence. |
 
 Lead stays armed for `Docs-MacBook-Pro` on the Doc lane ([soft-530-extended-open.md](soft-530-extended-open.md) lock **2**). Do **not** fold Soft-530 wake into this hop.

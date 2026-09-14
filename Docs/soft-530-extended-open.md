@@ -42,7 +42,7 @@ Wake order when a host **does** reappear stays [dual-host-outage.md](dual-host-o
 
 **CLEAR path is still** [post-dual-clear-go.md](post-dual-clear-go.md). Quiet-ops does **not** rewrite the menu.
 
-After a **live** Soft-530 CLEAR **and** a **live** vault CLEAR **and** both forensic papers (`55e10d0` / `d88cacb`), Ben’s GO menu is **ordered** and **never auto-fire**. Duration of this OPEN does **not** skip KeepAlive, does **not** auto-GO **#82**, and does **not** unfreeze.
+After a **live** Soft-530 CLEAR **and** a **live** vault CLEAR **and** both forensic papers (`55e10d0` / `d88cacb`), Ben’s GO menu is **ordered** and **never auto-fire**. Duration of this OPEN does **not** skip KeepAlive, does **not** auto-GO **#82**, and does **not** unfreeze. Soft-530 **OPEN ≠ #82 blocked** — Ben may GO **#82** Worker-live while Soft-530/vault still **OPEN** (brochure is CF Worker/Zone, not Doc tunnel). KeepAlive→**#82** stays the *default ordered menu after dual CLEAR*.
 
 ---
 
@@ -63,7 +63,7 @@ When `lightning` **first reappears**, the hop is [mcking-reappear-first-hop.md](
 | Anti-goal | Why |
 |-----------|-----|
 | **Ben re-nag** | Doc-wake + McKing wake already asked. Clock ≠ new Ben ask. |
-| **Duration = #82 GO** | **#82** is still Ben GO after dual CLEAR ([post-dual-clear-go.md](post-dual-clear-go.md)). |
+| **Duration = #82 GO** | Quiet-ops duration still ≠ auto-GO. Soft-530 **OPEN ≠ #82 blocked** — Ben may GO **#82** Worker-live while Soft-530/vault still **OPEN** (brochure is CF Worker/Zone). Dual CLEAR ≠ auto-GO. KeepAlive→**#82** stays the default menu *after* dual CLEAR ([post-dual-clear-go.md](post-dual-clear-go.md)). |
 | **Duration = unfreeze** | Freeze `4cf8924` / **`5swmVz`** until **Ben GO**. |
 | **Duration = Zone Direct Upload** | No Worker upload / purge from extended OPEN. |
 | **Duration = Bitwarden** | Import/rotate **blocked** until vault **CLEAR**. |

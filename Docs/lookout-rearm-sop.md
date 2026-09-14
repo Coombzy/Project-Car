@@ -100,7 +100,7 @@ A Cloudflare **403** HTML challenge is WAF, not a Redirect-pack fail. Zone owns 
 
 | Anti-goal | Why |
 |-----------|-----|
-| **Not #82 merge nag** | Worker-live / Direct Upload is still Ben GO after dual CLEAR. Recreate ≠ upload. This paper does **not** nag **#82**. |
+| **Not #82 merge nag** | Worker-live / Direct Upload is still Ben GO. Soft-530 **OPEN ≠ #82 blocked**. Dual CLEAR ≠ auto-GO. Recreate ≠ upload. This paper does **not** nag **#82**. |
 | **Not Dynamic wipe** | **#82 Worker-live ≠ retire Dynamic** (`49ccf90`). Interim smoke does **not** authorize deleting the **10/10** pack. |
 | **Not honesty-off** | **#80** Membership/Contact Discord honesty + `waitlist.js?v=3` fail-soft stay (`0705b37`). **CLEAR ≠ honesty-off.** |
 | **Not unfreeze** | Freeze `4cf8924` / **`5swmVz`** until **Ben GO**. Watch recreate ≠ Doc pull. |
