@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-11  
 **Public URL:** https://api.projectcar.ca  
-**Related:** `doc-lid-restore.md` (ordered wake — weekend `/health` flip = process wake only), `vault-stay-up.md` (McKing vault — **separate** plane; weekend dual-outage proved Soft-530 ≠ vault), `cors-origins.md`, `brochure-worker-deploy.md` (do **not** schedule weekend Zone Direct Upload), `member-host-cutover.md`, `shop-web-stay-up.md`, `mcking-shop-host-cutover.md` (future McKing **shop** host — plan only; **not** a cut; dual-tunnel vault is a **separate** living-ops row — **LIVE verified**), `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
+**Related:** `doc-lid-restore.md` (ordered wake — weekend `/health` flip = process wake only), `vault-stay-up.md` (McKing vault — **separate** plane; weekend dual-outage proved Soft-530 ≠ vault), [dual-host-outage.md](dual-host-outage.md) (dual-OPEN glue — Doc first, then McKing), `cors-origins.md`, `brochure-worker-deploy.md` (do **not** schedule weekend Zone Direct Upload), `member-host-cutover.md`, `shop-web-stay-up.md`, `mcking-shop-host-cutover.md` (future McKing **shop** host — plan only; **not** a cut; dual-tunnel vault is a **separate** living-ops row — **LIVE verified**), `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
 
 Keep the Shop API reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -51,7 +51,7 @@ plan-improve is **off Sat/Sun**. Soft-530 companion ops/app watches stay **HOLD 
 |------|---------|
 | **Weekend control plane** | Doc KeepAlive / lid-close: `com.projectcar.cloudflared` + uvicorn `:8000` (`com.projectcar.shop-api`) + `next start` `:3000` (`com.projectcar.shop-web`). **Not** Doc unfreeze. **Not** **#82**. |
 | **`/health` flips non-200** | Chief/Lead run `doc-lid-restore.md` **process wake only**. No `git pull` / rebuild while freeze `4cf8924` / `5swmVz` is intact. |
-| **Vault flips** | Stay on the **separate** McKing vault watch — [vault-stay-up.md](vault-stay-up.md). Do **not** fold vault into this API KeepAlive / lid-restore. Vault flip ≠ Doc lid-restore; Doc Soft-530 ≠ McKing vault wake. |
+| **Vault flips** | Stay on the **separate** McKing vault watch — [vault-stay-up.md](vault-stay-up.md). Do **not** fold vault into this API KeepAlive / lid-restore. Vault flip ≠ Doc lid-restore; Doc Soft-530 ≠ McKing vault wake. Dual-OPEN glue: [dual-host-outage.md](dual-host-outage.md). |
 | **No weekend Zone / Worker** | Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-improve resumes Soft-530 smoke. |
 | **Anti-goal** | Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask. |
 

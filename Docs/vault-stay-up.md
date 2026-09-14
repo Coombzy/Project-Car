@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-14  
 **Public URL:** https://vault.projectcar.ca  
-**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
+**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN glue — Doc first, then McKing), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
 
 Keep public Vaultwarden reachable on McKing. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md`.
 
@@ -47,7 +47,7 @@ Weekend dual-outage proved the two planes die on **different machines**.
 | **Doc Soft-530 ≠ McKing vault wake** | An `api.` `/health` flip does **not** wake Vaultwarden or McKing `cloudflared`. Do **not** fold vault into Doc KeepAlive. |
 | **Green on one plane proves nothing on the other** | Soft-530 / `api.` `/health` can stay **green while vault dies**. Vault `/alive` can stay **200 while Doc is 530**. |
 
-Do **not** treat a weekend dual-outage as one restore. Two hosts, two tunnels, two watches, two wake paths.
+Do **not** treat a weekend dual-outage as one restore. Two hosts, two tunnels, two watches, two wake paths. Dual-OPEN glue (wake order + ListMachines identity + independent CLEAR): [dual-host-outage.md](dual-host-outage.md).
 
 ---
 
@@ -175,6 +175,7 @@ plan-improve is **off Sat/Sun**. Soft-530 companion ops/app watches stay **HOLD 
 |------|------|
 | `api.` `/health` non-200 | `doc-lid-restore.md` **process wake only** (Doc). **Not** this file. |
 | `vault.` `/alive` non-200 | **This file** (McKing). **Not** lid-restore. |
+| Both OPEN | [dual-host-outage.md](dual-host-outage.md) — **Doc first, then McKing**. Parallel only if both hosts on ListMachines. |
 
 Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-improve resumes Soft-530 smoke. Anti-goal: Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask ≠ vault import/rotate while vault is down.
 

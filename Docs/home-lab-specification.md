@@ -151,6 +151,7 @@ Doc is a MacBook. Lid close or host sleep stops or stalls origin processes and c
 | Soft-530 five-row **shop** gate (before any public shop CF hostname leaves Doc) | [mcking-shop-host-cutover.md](mcking-shop-host-cutover.md) — **`cloud.` / `api.` / `app.` / `ops.` only; vault EXCLUDED** |
 | Lookout Soft-530 watch (`api.` `/health`) | STATUS Live — **resumed** (`enabled:true`). Shop hosts only |
 | McKing Vaultwarden + `cloudflared` stay-up (`vault.` → `:8222`) | [vault-stay-up.md](vault-stay-up.md) — weekend dual-outage proved Soft-530 ≠ vault. Vault flip ≠ Doc lid-restore; Doc Soft-530 ≠ McKing vault wake. Bitwarden import/rotate **blocked** until vault CLEAR |
+| Weekend dual-OPEN recovery glue | [dual-host-outage.md](dual-host-outage.md) — Soft-530 OPEN + vault OPEN: **Doc first, then McKing**. ListMachines lock: `Mac.lan` ≠ `Docs-MacBook-Pro` ≠ `lightning` |
 | Lookout vault flip watch (`/alive` every **5m**) | [vault-stay-up.md](vault-stay-up.md) + STATUS Live — **LIVE/armed** (`enabled:true`, Lookout confirmed). Fallback `/api/config` if `/alive` 404s. Flip-only alerts: **Chief + Lead only** on **200↔non-200**; **never Ben**; never mutate. **Vault watch ≠ Soft-530 / Doc lid-restore** |
 
 Do not treat a morning 1033 as a product break, an edge flip, a shop CF cutover GO, or a reason to start Pages git / Member GO.
@@ -196,7 +197,7 @@ Bring-up order (Doc is already past this) is in that baseline. Do **not** treat 
 | [mission-control-architecture.md](mission-control-architecture.md) | Ben-only cockpit (parked). Tip-fold matches this dual-tunnel + vault LIVE lock (VW not Doc compose host; shop CF paper; Soft-530 five-row = Doc shop hosts only) |
 | [website-webapp-specification.md](website-webapp-specification.md) | Domain + brochure architecture |
 | [brochure-worker-deploy.md](brochure-worker-deploy.md) | Standing Worker upload |
-| [doc-lid-restore.md](doc-lid-restore.md) · [api-stay-up.md](api-stay-up.md) · [shop-web-stay-up.md](shop-web-stay-up.md) · [vault-stay-up.md](vault-stay-up.md) | Lid-close 530 / 1033 — **vault OUT** of lid-restore / Doc KeepAlive. Vault stay-up is McKing-only |
+| [doc-lid-restore.md](doc-lid-restore.md) · [api-stay-up.md](api-stay-up.md) · [shop-web-stay-up.md](shop-web-stay-up.md) · [vault-stay-up.md](vault-stay-up.md) · [dual-host-outage.md](dual-host-outage.md) | Lid-close 530 / 1033 — **vault OUT** of lid-restore / Doc KeepAlive. Vault stay-up is McKing-only. Dual-OPEN glue: Doc first, then McKing |
 | [agent-profiles-specification.md](agent-profiles-specification.md) | Hardware + jobs (coordinator ≠ hub host) |
 | [deployment-guide.md](deployment-guide.md) | Index of stay-up / deploy runbooks |
 

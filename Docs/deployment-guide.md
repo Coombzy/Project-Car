@@ -17,7 +17,8 @@ This file is **not** a runbook. Use the living docs below.
 | Shop UI stay-up on Doc (`ops.` / temporary `app.`, `:3000`, **`next start`**). Companion watches **HOLD**; weekend control plane = KeepAlive / lid-close. | `shop-web-stay-up.md` |
 | Shop API stay-up on Doc (`api.`, `:8000`, uvicorn). Weekend flip coverage = Lookout `api.` `/health` + vault `/alive` **only**. | `api-stay-up.md` |
 | McKing Vaultwarden + `cloudflared` stay-up (`vault.projectcar.ca` → `:8222`). Lookout `/alive` **separate** from Soft-530 `api.` `/health`. Weekend dual-outage proved Soft-530 (Doc) and vault (McKing) fail independently. Vault flip ≠ Doc lid-restore; Doc Soft-530 ≠ McKing vault wake. Bitwarden import/rotate **blocked** until vault CLEAR. | `vault-stay-up.md` |
-| Weekend Soft-530 coverage (plan-improve off Sat/Sun): KeepAlive / lid-close control plane; no weekend Zone Direct Upload / Worker; first Monday plan-improve resumes Soft-530 smoke. Vault flips stay on `vault-stay-up.md`. | `STATUS.md` Live / Locks · `api-stay-up.md` · `shop-web-stay-up.md` · `doc-lid-restore.md` · `vault-stay-up.md` |
+| Weekend dual-OPEN recovery glue (Soft-530 OPEN + vault OPEN): wake **Doc first, then McKing**; parallel only if both hosts appear on ListMachines. Identity lock: `Mac.lan` ≠ `Docs-MacBook-Pro` ≠ `lightning` — no wrong-host Shell (`Mac.lan` is not Doc shop host). Independent CLEAR: Soft-530 = `api.` `/health` **200** + `ops.`/`app.` → `/login` + waitlist OPTIONS **200** + `cloud.` `status.php`; vault = `/alive` **200** + VW `/api/config`. Not Doc unfreeze, not **#82**, not Zone Direct Upload. Companions **HOLD**. Bitwarden import/rotate **blocked** until vault CLEAR. | `dual-host-outage.md` |
+| Weekend Soft-530 coverage (plan-improve off Sat/Sun): KeepAlive / lid-close control plane; no weekend Zone Direct Upload / Worker; first Monday plan-improve resumes Soft-530 smoke. Vault flips stay on `vault-stay-up.md`. Dual-OPEN glue: `dual-host-outage.md`. | `STATUS.md` Live / Locks · `api-stay-up.md` · `shop-web-stay-up.md` · `doc-lid-restore.md` · `vault-stay-up.md` · `dual-host-outage.md` |
 | Shop OS GitHub Actions quality gate (pytest + web typecheck / `next build`; git-only — **not** Doc deploy, **not** unfreeze GO) | `shop-os-ci.md` |
 | Member UI → projectcar.ca (plan only; **Ben GO**) | `member-host-cutover.md` |
 | Member path-split on projectcar.ca / www (Zone; plan only; **capacity-blocked** by Option A **FULL 10/10** — Ben GO only after **#82** Worker-live + Bulk Phase1) | `member-zone-edge.md` |
@@ -41,7 +42,7 @@ This file is **not** a runbook. Use the living docs below.
 | What’s live / host split | `STATUS.md` |
 | Stack, host plan, bans | `platform-architecture.md` |
 | Nextcloud / Vaultwarden / cockpit (parked). Dual-tunnel + vault LIVE on McKing (VW not Doc compose host); shop CF cutover paper; Soft-530 five-row = Doc shop hosts only | `mission-control-architecture.md` |
-| Live hub / dual-tunnel machine map (Doc shop hosts + McKing vault LIVE). Vault stay-up essay: `vault-stay-up.md` | `home-lab-specification.md` |
+| Live hub / dual-tunnel machine map (Doc shop hosts + McKing vault LIVE). Vault stay-up essay: `vault-stay-up.md`. Dual-OPEN glue: `dual-host-outage.md` | `home-lab-specification.md` |
 | Older hub probe on Doc (2026-08-16 rows can be stale) | `nextcloud-progress.md` |
 | Doc apps / LaunchAgents / sleep | `doc-software-baseline.md` |
 | Public site origin + tunnel | `website-webapp-specification.md` |

@@ -2,7 +2,7 @@
 
 **Status:** Living ops (Lead checklist)  
 **Updated:** 2026-09-11  
-**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file; Soft-530 **CLEAR** Friday ≠ this GO), `api-stay-up.md` (weekend `/health` flip → this file), `shop-web-stay-up.md`, `vault-stay-up.md` (McKing vault — **OUT** of this sequence; weekend dual-outage proved Soft-530 ≠ vault), `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md` (weekend Soft-530 coverage), `shop-os-ci.md` (green CI ≠ unfreeze)
+**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file; Soft-530 **CLEAR** Friday ≠ this GO), `api-stay-up.md` (weekend `/health` flip → this file), `shop-web-stay-up.md`, `vault-stay-up.md` (McKing vault — **OUT** of this sequence; weekend dual-outage proved Soft-530 ≠ vault), [dual-host-outage.md](dual-host-outage.md) (dual-OPEN glue — Doc first, then McKing; this file is the Doc half), `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md` (weekend Soft-530 coverage), `shop-os-ci.md` (green CI ≠ unfreeze)
 
 Single **ordered** wake/restore after Doc lid-close / sleep (the morning **530 / 1033** pattern). Plan/ops checklist for **Lead**. This file is the sequence. Process essays stay in the Related docs — do not copy them here.
 
@@ -43,7 +43,7 @@ plan-improve is **off Sat/Sun**. Soft-530 companion ops/app watches stay **HOLD 
 |------|---------|
 | **Weekend control plane** | This file: Doc KeepAlive / lid-close (`com.projectcar.cloudflared` + uvicorn `:8000` + `next start` `:3000` LaunchAgents). **Not** `doc-unfreeze.md`. **Not** **#82**. |
 | **`api.` `/health` flips non-200** | Chief/Lead run **this** ordered restore — **process wake only**. No pull while freeze `4cf8924` / `5swmVz` is intact. |
-| **Vault flips** | Stay on the **separate** McKing vault watch — [vault-stay-up.md](vault-stay-up.md). Vault is **OUT** of this file (below). Vault flip ≠ this restore. |
+| **Vault flips** | Stay on the **separate** McKing vault watch — [vault-stay-up.md](vault-stay-up.md). Vault is **OUT** of this file (below). Vault flip ≠ this restore. Dual-OPEN (both OPEN): [dual-host-outage.md](dual-host-outage.md) — this file is the **Doc** half; wake Doc first. |
 | **No weekend Zone / Worker** | Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-improve resumes Soft-530 smoke. |
 | **Anti-goal** | Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask. |
 
