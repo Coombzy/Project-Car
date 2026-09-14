@@ -1,14 +1,14 @@
 # Brochure → Classic Pages git cutover
 
-**Status:** Checklist / plan only — **not shipped**  
-**Updated:** 2026-09-11  
-**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock, `website-webapp-specification.md` §3 / §9, `brochure-worker-deploy.md` (Option A matrix), `member-host-cutover.md`, `member-zone-edge.md`, `ship-mvp-cut.md`, `api-stay-up.md`, `cors-origins.md`, `apps/website/README.md`
+**Status:** Checklist / plan only — **not shipped**. Frozen Option A Redirect inventory is a **hard cutover gate**.  
+**Updated:** 2026-09-14  
+**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock + **#82 Worker-live ≠ retire Dynamic** (`49ccf90`), `website-webapp-specification.md` §3 / §9, `brochure-worker-deploy.md` (upload click-path), [brochure-worker-ci.md](brochure-worker-ci.md) (Option A matrix — same frozen inventory SSOT), `member-host-cutover.md`, `member-zone-edge.md`, `ship-mvp-cut.md`, `api-stay-up.md`, `cors-origins.md`, `apps/website/README.md`
 
 Plan the future cut from live Worker **`projectcar-brochure`** (Direct Upload of `apps/website/html`) to **Classic Cloudflare Pages git** connected to this repo. This file is a runbook. It does **not** change DNS, invent a live cutover, or start Zone / Garage work.
 
 Do **not** invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, Matrix, Apex revival, or Google Calendar OAuth.
 
-Until Ben finishes Cloudflare ↔ GitHub auth, **Direct Upload remains the locked live method** (`brochure-worker-deploy.md`). This file does **not** execute **#82**, Bulk Phase1, or Zone/Garage. **#82** Home canonical/og/sitemap `/index.html` is **not yet Worker-live** — that gate is **unchanged**.
+Until Ben finishes Cloudflare ↔ GitHub auth, **Direct Upload remains the locked live method** (`brochure-worker-deploy.md`). This file does **not** execute **#82**, Bulk Phase1, or Zone/Garage. **#82** Home canonical/og/sitemap `/index.html` is **not yet Worker-live** — that gate is **unchanged**. **#82 Worker-live ≠ retire Dynamic** (`49ccf90`) — a Pages cut must **keep** the frozen **10/10** pack **or Bulk-import** it; do **not** wipe Dynamic because Worker or Pages is live.
 
 ---
 
@@ -20,7 +20,7 @@ Until Ben finishes Cloudflare ↔ GitHub auth, **Direct Upload remains the locke
 | **Live origin** | Cloudflare Worker **`projectcar-brochure`** |
 | **Deploy method** | **Direct Upload** of `apps/website/html` from `main` (`brochure-worker-deploy.md`). **Locked** until CF ↔ GitHub auth. |
 | **Public hosts** | https://projectcar.ca and https://www.projectcar.ca |
-| **Option A Dynamic pack** | **FULL 10/10** Active Dynamic **301**s (apex+www) — **LIVE**. Owns pretty-URL 301s: brochure-root-to-index (`/`→`/index.html`), brochure-shop-to-the-shop, brochure-shop-html-to-the-shop (`/shop.html`→`/the-shop.html`), membership/about/the-shop/contact/roadmap-to-html (+ trailing-slash). Receipt: `brochure-worker-deploy.md`. |
+| **Option A Dynamic pack** | **FULL 10/10** Active Dynamic **301**s (apex+www) — **LIVE**. Frozen inventory below is Docs SSOT (**hard cutover gate**). Do **not** invent rules. Same YAML: [brochure-worker-ci.md](brochure-worker-ci.md). |
 | **Worker `_redirects`** | **Thin** — **chat → contact only** (no `/` or `/shop`). Stays thin **after #82**. Do **not** fatten `_redirects` to replace the Zone pack. |
 | **Pages `_redirects` ≠ pack** | Classic Pages `_redirects` is the same thin chat → contact file. It does **not** replace the Option A pack. Cutover must **keep** those Zone rules **or Bulk-import** them. |
 | **Classic Pages git** | **Skipped.** Blocked on Cloudflare ↔ GitHub OAuth / auth. Not connected. Direct Upload stays the locked live method. |
@@ -29,6 +29,71 @@ Until Ben finishes Cloudflare ↔ GitHub auth, **Direct Upload remains the locke
 | **Member UI** | Still shop-UI `/member` on **`ops.`** + temporary **`app.`**. Separate plan: `member-host-cutover.md`. |
 
 Waitlist on Membership / Contact is a **browser POST** to `https://api.projectcar.ca/waitlist`. Pages (like the Worker) only serve static HTML/JS. A green Pages deploy does not prove waitlist — Garage e2e after public `GET /health` is **200 when Doc origin is up** (`api-stay-up.md`). Lid-close mornings can be **530 / 1033**.
+
+---
+
+## Hard cutover gate — frozen Option A Redirect inventory
+
+**This is a hard gate.** Classic Pages git must **not** bind apex/www, detach Worker **`projectcar-brochure`**, or drop/replace the live pack unless the Zone Dynamic Redirect Rules still match this frozen **10/10** inventory **or** a Bulk import is **LIVE and smoke-equal** to it.
+
+Do **not** invent, rename, or drop rows. `html_handling: none` is Worker Assets — **not** a Redirect Rule. Pages `_redirects` stays **thin** (chat → contact only) and does **not** replace this pack.
+
+**#82 Worker-live ≠ retire Dynamic (`49ccf90`).** Worker-live / Pages-live is **not** a license to wipe the **10/10** pack. Keep **full** Option A Dynamic (`root` / `shop` + pretty-URL + `chat`) until **Bulk Phase1 is LIVE and smoke-equal**. Then drop pretty-URL Dynamic per parked Redirect A; keep `root` / `shop` unless Bulk covers them too. Do **not** migrate Dynamic on upload day or Pages-bind day.
+
+Box parking, pasted as-is. Zone refresh **2026-09-10** (10-rule Option A SSOT). Source: Sep 9 dashboard export (9) + Sep 10 live `brochure-shop-html-to-the-shop` (10th). Same YAML lives on [brochure-worker-ci.md](brochure-worker-ci.md).
+
+```yaml
+# Frozen live Redirect Rules inventory — Zone refresh Sep 10 2026 (10-rule Option A SSOT)
+# Source: Sep 9 dashboard export (9) + Sep 10 live brochure-shop-html-to-the-shop (10th).
+zone: projectcar.ca
+hosts: [projectcar.ca, www.projectcar.ca]
+captured: 2026-09-10
+html_handling: none  # Worker Assets; not a Redirect Rule
+rule_count: 10
+rules:
+  - name: brochure-root-to-index
+    paths: ["/", "/index", "/index/"]
+    target: 'concat("https://", http.host, "/index.html")'
+    status: 301
+  - name: brochure-shop-to-the-shop
+    paths: ["/shop", "/shop/"]
+    target: 'concat("https://", http.host, "/the-shop.html")'
+    status: 301
+  - name: brochure-shop-html-to-the-shop
+    paths: ["/shop.html"]
+    target: 'concat("https://", http.host, "/the-shop.html")'
+    status: 301
+  - name: brochure-membership-to-html
+    paths: ["/membership", "/membership/"]
+    target: 'concat("https://", http.host, "/membership.html")'
+    status: 301
+  - name: brochure-about-to-html
+    paths: ["/about", "/about/"]
+    target: 'concat("https://", http.host, "/about.html")'
+    status: 301
+  - name: brochure-the-shop-to-html
+    paths: ["/the-shop", "/the-shop/"]
+    target: 'concat("https://", http.host, "/the-shop.html")'
+    status: 301
+  - name: brochure-contact-to-html
+    paths: ["/contact", "/contact/"]
+    target: 'concat("https://", http.host, "/contact.html")'
+    status: 301
+  - name: brochure-roadmap-to-html
+    paths: ["/roadmap", "/roadmap/"]
+    target: 'concat("https://", http.host, "/roadmap.html")'
+    status: 301
+  - name: brochure-chat-slash-to-contact
+    paths: ["/chat/"]
+    target: 'concat("https://", http.host, "/contact.html")'
+    status: 301
+  - name: brochure-chat-to-contact
+    paths: ["/chat", "/chat.html"]
+    target: 'concat("https://", http.host, "/contact.html")'
+    status: 301
+```
+
+Cutover **FAILS** this gate if those **301**s are gone and only Pages `_redirects` (chat → contact) remains, or if anyone treats **#82** PASS / a Pages bind as “wipe Dynamic.”
 
 ---
 
@@ -76,7 +141,7 @@ Do **not** run these from this PR. Auth first. Member host (`STATUS.md` Next #1)
 1. **Confirm auth.** Cloudflare can see `Coombzy/Project-Car`. If the GitHub connect screen still fails, stop. **Direct Upload stays the locked live method.** Do **not** start this cut while auth is missing.
 2. **Create Classic Pages** from git: repo + `main` + root **`apps/website/html`**. No build. Wait for the first production deployment of the current `main` tip.
 3. **Preview smoke on the `*.pages.dev` hostname** (or the Pages preview URL) before touching custom domains: six pages **200**, Home waitlist CTA present, **no** Chat nav/page, thin `_redirects` Chat → Contact if Pages honors it. Preview may **lack** Zone pretty-URL 301s (`/` / `/shop` / extensionless) — that is expected on `*.pages.dev`. Do not bind apex/www yet if the six pages or Chat check is wrong. Do **not** treat missing preview pretty-URLs as “Pages `_redirects` will cover them on apex.”
-4. **Keep or Bulk-import the Option A pretty-URL pack** before / when binding custom domains. Zone Dynamic Redirect pack is **FULL 10/10** and owns `/` → `/index.html`, `/shop` (+ `/shop.html` → `/the-shop.html`), extensionless → `*.html`. Pages `_redirects` is chat → contact only (**after #82** still thin). **Keep** those Zone rules on apex+www **or Bulk-import** the pretty-URL pack. Do **not** detach/delete the pack and rely on Pages `_redirects` alone. Do **not** execute Bulk Phase1 / Redirect A from this file (parked Member-precondition — not a Pages shortcut). **#82** Worker-live gate is **unchanged**.
+4. **Hard cutover gate — keep or Bulk-import the frozen Option A pack** before / when binding custom domains. The **Sep 10 2026** inventory above is Docs SSOT (`rule_count: 10`). Pages `_redirects` is chat → contact only (**after #82** still thin). **Keep** those Zone rules on apex+www **or Bulk-import** them smoke-equal. Do **not** detach/delete the pack and rely on Pages `_redirects` alone. Do **not** execute Bulk Phase1 / Redirect A from this file (parked Member-precondition — not a Pages shortcut). **#82** Worker-live gate is **unchanged**. **#82 Worker-live ≠ retire Dynamic (`49ccf90`)** — do **not** wipe the pack on upload day or Pages-bind day.
 5. **Bind custom domains** `projectcar.ca` and `www.projectcar.ca` to the Pages project. Unbind / stop serving those hosts from Worker **`projectcar-brochure`**. Do **not** retarget `ops.`, `app.`, or `api.`.
 6. **Confirm DNS** still points those two names at Cloudflare (already on CF). This is a **Pages custom-domain attach**, not a registrar move and not an `app.` cut.
 7. **Public smoke** (§4) — include pretty-URL **301**s (`/` / `/shop` / extensionless → `*.html`). Then Garage waitlist e2e once `GET https://api.projectcar.ca/health` is **200** (skip e2e if lid-close **530 / 1033** — that is Doc, not Pages).
@@ -124,8 +189,8 @@ Home HTML must not contain `Website progress` or a `10%` progress bar. Chat must
 - **No Apex revival.** Brochure stays Worker / Pages — no Apex sidecar, no brochure Chat page.
 - **No `app.` alias cut.** Temporary alias stays until Ben cuts that DNS (`STATUS.md` Next #2). This plan does not touch `ops.` / `app.` tunnels.
 - **Member host cutover is separate.** Customer-host Member UI is `member-host-cutover.md` (STATUS Next #1, **Ben GO**). Zone path-split: `member-zone-edge.md`. Both **outrank** executing this Pages plan. Do not start Member work from a Pages bind.
-- **Do not replace the Option A pack with Pages `_redirects` alone.** Pretty URLs stay Zone Dynamic **301**s (**FULL 10/10**) **or** a Bulk import of that pack. Thin `_redirects` (chat → contact, **after #82** still thin) is not the pretty-URL SSOT.
-- **#82 gate unchanged.** Home canonical/og/sitemap `/index.html` is **not yet Worker-live**. This plan does **not** execute #82, Bulk Phase1, or a main Reality-tip reconcile.
+- **Hard cutover gate — frozen Sep 10 2026 inventory.** Pretty URLs stay Zone Dynamic **301**s matching the YAML above (**FULL 10/10**) **or** a Bulk import that is **LIVE and smoke-equal**. Thin `_redirects` (chat → contact, **after #82** still thin) is not the pretty-URL SSOT. Do **not** invent rules.
+- **#82 Worker-live ≠ retire Dynamic (`49ccf90`).** Home canonical/og/sitemap `/index.html` is **not yet Worker-live**. **#82** PASS / a Pages bind does **not** authorize deleting the **10/10** pack. This plan does **not** execute #82, Bulk Phase1, or a main Reality-tip reconcile.
 - **Direct Upload stays locked** until CF ↔ GitHub auth. Do not invent a live Pages cut from this file.
 - **No Stripe / shop-open.** Interest waitlist only. Do not publish live prices or “book now.”
 - **Shop API stays the lab tunnel.** `api.projectcar.ca` → Doc `:8000`. Pages does not host FastAPI.

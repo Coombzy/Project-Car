@@ -8,6 +8,28 @@ This file is **not** a runbook. Use the living docs below.
 
 ---
 
+## Soft-530 living paper index (held #70 — Monday map)
+
+Discoverability only. Monday’s **#70** tip-commits are paper. This table is the map so those essays are not tip-only. **No new product.** No Zone / Garage execute. Living dual-OPEN unchanged: Soft-530 **OPEN** CF **1033** since 2026-09-13 ~11:57 America/Edmonton; vault independently **OPEN** **502** since ~19:45 MT Sep 13; ListMachines **Mac.lan only**.
+
+Open **one** card for the moment you are in. Do **not** invent CLEAR, **#82**, unfreeze, Dynamic wipe, honesty-off, or companion rearm from this index.
+
+| When to open | Paper |
+|--------------|-------|
+| McKing vault is **OPEN** / `/alive` flipped — stay-up + post-CLEAR forensics (not Doc lid-restore) | [vault-stay-up.md](vault-stay-up.md) |
+| Soft-530 **OPEN** **and** vault **OPEN** — wake order (Doc first, then McKing; `Mac.lan` ≠ Docs ≠ `lightning`) | [dual-host-outage.md](dual-host-outage.md) |
+| Soft-530 **OPEN ~24h+** + vault **OPEN** + **Mac.lan only** — quiet-ops (no Ben re-nag; duration ≠ GO) | [soft-530-extended-open.md](soft-530-extended-open.md) |
+| Soft-530 just **CLEAR**ed after extended OPEN — first recovery smoke **before** desk / **#79.1** / unfreeze (**CLEAR ≠ honesty-off**) | [soft-530-clear-smoke.md](soft-530-clear-smoke.md) |
+| Vault just **CLEAR**ed after extended OPEN — first recovery smoke **before** Bitwarden / desk (**502→200**, not 1033) | [vault-clear-smoke.md](vault-clear-smoke.md) |
+| Option A Lookout watch is **GONE** / cron stalled — never delete to fix cron; **HOLD** recreate; interim Chief `*/20` | [lookout-rearm-sop.md](lookout-rearm-sop.md) |
+| Option A watch **spec** while Soft-530 **OPEN** — interim `*/20` Redirect **+ Soft-530 UX**; **Redirect-only PASS ≠ Soft-530 UX PASS** | [brochure-redirect-watch.md](brochure-redirect-watch.md) |
+| **Both** CLEARs + forensics already ack’d — ordered Ben GO menu (**never auto-fire**; dual CLEAR ≠ **#82** auto-go) | [post-dual-clear-go.md](post-dual-clear-go.md) |
+| Need the frozen Sep 10 **10/10** Redirect inventory (Docs SSOT) or Pages **hard cutover gate** — **#82** PASS ≠ retire Dynamic (`49ccf90`) | [brochure-worker-ci.md](brochure-worker-ci.md) · [brochure-pages-cutover.md](brochure-pages-cutover.md) |
+
+Living one-pager stays [STATUS.md](STATUS.md). Product / Next list stays there — this section is **not** a second STATUS.
+
+---
+
 ## Stay-up / deploy
 
 | Need | Doc |
@@ -28,14 +50,14 @@ This file is **not** a runbook. Use the living docs below.
 | Shop OS GitHub Actions quality gate (pytest + web typecheck / `next build`; git-only — **not** Doc deploy, **not** unfreeze GO) | `shop-os-ci.md` |
 | Member UI → projectcar.ca (plan only; **Ben GO**) | `member-host-cutover.md` |
 | Member path-split on projectcar.ca / www (Zone; plan only; **capacity-blocked** by Option A **FULL 10/10** — Ben GO only after **#82** Worker-live + Bulk Phase1) | `member-zone-edge.md` |
-| Brochure Worker CI / Option A **FULL 10/10** receipt (paper — Direct Upload → **mandatory** purge apex+www → body freshness; **never #81**) | `brochure-worker-ci.md` (upload click-path stays `brochure-worker-deploy.md`) |
-| Brochure Option A Lookout watch **spec** while Soft-530 OPEN. Living watch **GONE** (deleted to fix stalled cron; Auto-review blocked recreate). **HOLD** after one Ben ask. Interim Chief `*/20`. Flip Chief+Lead only when armed. **Not** companion re-ask. **#78 LIVE-SUPERSEDED**. Sep 9 baseline still **IN FLIGHT** → stamp **LIVE 10/10**. | `brochure-redirect-watch.md` |
-| Lookout rearm SOP: **never delete** an armed watch to fix stalled cron. Prefer in-place update / pause-resume / re-save. Delete already happened + Auto-review blocked recreate → **HOLD** after one Ben ask. Interim Option A = Chief `*/20`. After Ben approves: enabled + first fire ≤ **10m** + baseline **LIVE 10/10**. Soft-530 companions **HOLD**. Not **#82** / unfreeze / Zone execute / companion re-ask. **#78** is **LIVE-SUPERSEDED**. | `lookout-rearm-sop.md` |
+| Brochure Worker CI / Option A **FULL 10/10** receipt (paper — frozen Sep 10 2026 Redirect inventory is Docs SSOT; Direct Upload → **mandatory** purge apex+www → body freshness; **#82** PASS ≠ retire Dynamic (`49ccf90`); **never #81**) | `brochure-worker-ci.md` (upload click-path stays `brochure-worker-deploy.md`) |
+| Brochure Option A Lookout watch **spec** while Soft-530 OPEN. Living watch **GONE** (deleted to fix stalled cron; Auto-review blocked recreate). **HOLD** after one Ben ask. Interim Chief `*/20` **+ Soft-530 UX**. **Redirect-only PASS ≠ Soft-530 UX PASS.** Flip Chief+Lead only when armed. **Not** companion re-ask. **#78 LIVE-SUPERSEDED**. Sep 9 baseline still **IN FLIGHT** → stamp **LIVE 10/10**. | `brochure-redirect-watch.md` |
+| Lookout rearm SOP: **never delete** an armed watch to fix stalled cron. Prefer in-place update / pause-resume / re-save. Delete already happened + Auto-review blocked recreate → **HOLD** after one Ben ask. Interim Option A = Chief `*/20` redirect **+ Soft-530 UX**. **Redirect-only PASS ≠ Soft-530 UX PASS.** After Ben approves: enabled + first fire ≤ **10m** + baseline **LIVE 10/10**. Soft-530 companions **HOLD**. Not **#82** merge nag / Dynamic wipe / honesty-off / companions rearm. **#78** is **LIVE-SUPERSEDED**. | `lookout-rearm-sop.md` |
 | Temporary `app.` alias cut (plan only; STATUS Next #2 — do **not** execute) | `app-alias-cut.md` |
 | Public MVP cut-vs-keep (draft; not a Ben lock) | `ship-mvp-cut.md` |
 | Brochure Worker Direct Upload (`projectcar-brochure`) | `brochure-worker-deploy.md` |
 | Brochure security + cache headers (P2-4; **LIVE** — do **not** re-apply) | `brochure-security-headers.md` |
-| Brochure → Classic Pages git (plan only; blocked on CF ↔ GitHub auth) | `brochure-pages-cutover.md` |
+| Brochure → Classic Pages git (plan only; blocked on CF ↔ GitHub auth; frozen Redirect inventory = **hard cutover gate**; **#82** PASS ≠ retire Dynamic) | `brochure-pages-cutover.md` |
 | Google Calendar OAuth / two-way sync (plan only; STATUS Next #6 — not a GO) | `google-calendar-oauth.md` |
 | McKing shop-host cutover (plan only — Docker + tunnel hostname reuse; Soft-530 dual-run gate before public CF cut; **not** Next #1, **not** GO) | `mcking-shop-host-cutover.md` |
 | Ops demo hardening — Soft-530-CLEAR **Next Ben GO** (**#79**, **parallel to #82**): Garage **#79.1** strip-changeme is **git-only until Doc unfreeze+pull** (merge ≠ public `/login` clear while freeze holds `4cf8924` / **`5swmVz`**) + optional Access on `ops` / `app` until OIDC (plan only; do **not** execute Garage/Zone from this tip-fold) | `ops-demo-hardening.md` |

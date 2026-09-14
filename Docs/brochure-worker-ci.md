@@ -2,7 +2,7 @@
 
 **Status:** Paper CI + Member-precondition receipt — **not executed**  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock + **#82** smoke gate + Waitlist Live, `brochure-worker-deploy.md` (standing Zone Direct Upload runbook), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A watch **spec** — living watch **GONE**; flip Chief+Lead only when armed; **not** this CI paper, **not** companion re-ask), [lookout-rearm-sop.md](lookout-rearm-sop.md) (**HOLD** recreate; **#78 LIVE-SUPERSEDED**), `brochure-security-headers.md` (P2-4 **LIVE**), `member-zone-edge.md` (Next #1 capacity-blocked), `member-host-cutover.md`, `website-improvements.md` (P1-5 + Soft-530 Discord honesty), `brochure-pages-cutover.md`, `ops-demo-hardening.md` (**#79** / **#79.1**), [post-dual-clear-go.md](post-dual-clear-go.md) (dual CLEAR ≠ **#82** auto-go — **#82** is step 2; after Worker-live the **brochure lane** is **#83** ∥ **Bulk Phase1**, not Bulk→#83; **#82** PASS ≠ retire Option A Dynamic **10/10**; Member after Bulk — **never #81**; unfreeze+#79.1 is Shop OS parallel), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (CLEAR recovery smoke ≠ Garage GO to strip Soft-530 Discord honesty — **CLEAR ≠ honesty-off**), `apps/website/README.md`
+**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock + **#82** smoke gate + Waitlist Live, `brochure-worker-deploy.md` (standing Zone Direct Upload runbook), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A watch **spec** — living watch **GONE**; flip Chief+Lead only when armed; interim Chief `*/20` **+ Soft-530 UX**; **Redirect-only PASS ≠ Soft-530 UX PASS**; **not** this CI paper, **not** companion re-ask), [lookout-rearm-sop.md](lookout-rearm-sop.md) (**HOLD** recreate; **#78 LIVE-SUPERSEDED**; interim `*/20` Soft-530 UX), `brochure-security-headers.md` (P2-4 **LIVE**), `member-zone-edge.md` (Next #1 capacity-blocked), `member-host-cutover.md`, `website-improvements.md` (P1-5 + Soft-530 Discord honesty), [brochure-pages-cutover.md](brochure-pages-cutover.md) (frozen Redirect inventory = **hard cutover gate**), `ops-demo-hardening.md` (**#79** / **#79.1**), [post-dual-clear-go.md](post-dual-clear-go.md) (dual CLEAR ≠ **#82** auto-go — **#82** is step 2; after Worker-live the **brochure lane** is **#83** ∥ **Bulk Phase1**, not Bulk→#83; **#82** PASS ≠ retire Option A Dynamic **10/10** (`49ccf90`); Member after Bulk — **never #81**; unfreeze+#79.1 is Shop OS parallel), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (CLEAR recovery smoke ≠ Garage GO to strip Soft-530 Discord honesty — **CLEAR ≠ honesty-off** (`0705b37`)), `apps/website/README.md`
 
 This file is the **post–Soft-530-CLEAR** brochure CI paper that was queued on held **#70**. It is **not** a Zone upload, **not** a Garage HTML PR, **not** a GitHub Actions workflow, and **not** a license to apply Redirect / Bulk / DNS.
 
@@ -20,13 +20,13 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **#82 Ben GO unchanged** | Home canonical / og / sitemap `/index.html` is **not yet Worker-live**. Do **not** upload from this paper. Dual CLEAR ≠ **#82** auto-go — [post-dual-clear-go.md](post-dual-clear-go.md) step 2 still needs Ben GO. |
 | **Never Direct Upload from #81** | **#81** is **draft + superseded** (`cursor/website-option-a-home-index-98cf`). It reintroduces Worker `_redirects` `/` + `/shop` and bumps `styles.css?v=37`. Live upload SHA is **#82** after GO — never the #81 tree. |
 | **Option A FULL 10/10** | No new Dynamic Redirect Rules for brochure pretty-URLs until **#82** Worker-live **and** Bulk Phase1 frees Member-edge slots. |
-| **#82 Worker-live ≠ retire Dynamic** | **#82** PASS (upload + purge + freshness: canonical / og / sitemap + nav `/index.html`, no `href="/"`) does **not** authorize deleting the CF Dynamic Redirect **10/10** pack. Keep **full** Option A Dynamic (`root` / `shop` + pretty-URL + `chat`) until **Bulk Phase1 is LIVE and smoke-equal** to today’s **10/10**. Then drop pretty-URL Dynamic per parked Redirect A; keep `root` / `shop` unless Bulk covers them. Do **not** migrate Dynamic on upload day. Not “Worker-live so wipe Dynamic.” **Never #81.** Not unfreeze / **#79.1** / companions / Bitwarden. |
+| **#82 Worker-live ≠ retire Dynamic (`49ccf90`)** | **#82** PASS (upload + purge + freshness: canonical / og / sitemap + nav `/index.html`, no `href="/"`) does **not** authorize deleting the CF Dynamic Redirect **10/10** pack. Keep **full** Option A Dynamic (`root` / `shop` + pretty-URL + `chat`) until **Bulk Phase1 is LIVE and smoke-equal** to today’s **10/10**. Then drop pretty-URL Dynamic per parked Redirect A; keep `root` / `shop` unless Bulk covers them. Do **not** migrate Dynamic on upload day. Not “Worker-live so wipe Dynamic.” Frozen inventory below is Docs SSOT — do **not** invent rules. **Never #81.** Not unfreeze / **#79.1** / companions / Bitwarden. |
 | **Soft-530 companions HOLD** | Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask. Api + vault watches continue. |
 | **No weekend Zone / Worker** | plan-improve is **off Sat/Sun**. Do **not** schedule weekend Direct Upload / purge / Worker work. First Monday plan-improve resumes Soft-530 smoke. Weekend control plane is Doc KeepAlive / lid-close — **not** this file, **not** **#82**. |
 | **#79.1 git-only** | Strip-changeme stays git-only until Doc unfreeze+pull (`4cf8924` / **`5swmVz`**). **#79** stays **parallel to #82**. |
 | **Dual-Nextcloud unchanged** | Public `cloud.` stays on **Doc** until Ben GO. McKing NC unpublished. Not this file. |
 | **Waitlist-owner-desk retired** | Owner desk is **LIVE** when origin is up (STATUS Waitlist Live). Do **not** draft `waitlist-owner-desk.md`. Optional CSV Later. Soft-530 **CLEAR** / desk existence ≠ Doc unfreeze / **#79.1** rebuild GO. |
-| **Soft-530 Discord honesty permanent (#80)** | Membership/Contact honesty intro + `waitlist.js?v=3` fail-soft (502/530/1033→Discord+mailto) stay after CLEAR. Overnight sleep / tunnel flaps — **not** temporary banners. **CLEAR ≠ honesty-off.** Tone tweak only with Ben GO. Soft-530 CLEAR smoke ≠ Garage GO to strip. [soft-530-clear-smoke.md](soft-530-clear-smoke.md) · STATUS Waitlist Live · [website-improvements.md](website-improvements.md) P1-5. |
+| **Soft-530 Discord honesty permanent (#80) (`0705b37`)** | Membership/Contact honesty intro + `waitlist.js?v=3` fail-soft (502/530/1033→Discord+mailto) stay after CLEAR. Overnight sleep / tunnel flaps — **not** temporary banners. **CLEAR ≠ honesty-off.** Tone tweak only with Ben GO. Soft-530 CLEAR smoke ≠ Garage GO to strip. Interim Chief `*/20`: **Redirect-only PASS ≠ Soft-530 UX PASS** ([brochure-redirect-watch.md](brochure-redirect-watch.md)). [soft-530-clear-smoke.md](soft-530-clear-smoke.md) · STATUS Waitlist Live · [website-improvements.md](website-improvements.md) P1-5. |
 | **#83 is CI-only** | Thin `_redirects` assert on the **#82** base. Prefer merge after **#82**; **parallel with upload OK**. **Not** Bulk-gated. **Never #81.** |
 
 ---
@@ -87,11 +87,66 @@ Generic page **200**s in `brochure-worker-deploy.md` still apply for non-#82 upl
 
 **Paper lock — do not apply Zone Redirect / Bulk changes from this file.**
 
-Cloudflare Dynamic Redirect Rules for Option A are **FULL 10/10** Active **301**s (apex+www). That pack owns live pretty URLs: brochure-root-to-index (`/`→`/index.html`), brochure-shop-to-the-shop, brochure-shop-html-to-the-shop (`/shop.html`→`/the-shop.html`), membership/about/the-shop/contact/roadmap-to-html (+ trailing-slash), brochure-chat-to-contact, brochure-chat-slash-to-contact. Worker Assets **`html_handling: none`** — `*.html` is canonical. Worker `_redirects` stays **thin**: chat → contact.html only (no `/` or `/shop`).
+Cloudflare Dynamic Redirect Rules for Option A are **FULL 10/10** Active **301**s (apex+www). **Docs SSOT** is the frozen live inventory pasted below — do **not** invent rules. Worker Assets **`html_handling: none`** — `*.html` is canonical (not a Redirect Rule). Worker `_redirects` stays **thin**: chat → contact.html only (no `/` or `/shop`).
 
 **Garage must not** invent new brochure extensionless pretty-URLs that need another Dynamic Redirect Rule until after **#82** is Worker-live **and** Bulk Phase1 frees Dynamic slots.
 
-**#82 Worker-live ≠ retire this pack.** After Ben GO **#82** → Zone Direct Upload + **mandatory** purge + body freshness (canonical / og / sitemap + nav home = `/index.html`, **no** bare `href="/"`), **PASS** does **not** authorize deleting the CF Dynamic Redirect **10/10** pack. Keep **full** Option A Dynamic (`root` / `shop` + pretty-URL + `chat`) until **Bulk Phase1 is LIVE and smoke-equal** to today’s **10/10**. Then Zone may drop the pretty-URL Dynamic rules per the parked table below; keep `root` / `shop` Dynamic unless Bulk covers them too. Do **not** migrate Dynamic on upload day. Do **not** read “Worker-live so wipe Dynamic.” **Never #81.** This lock does **not** touch unfreeze / **#79.1** / companions / Bitwarden.
+**#82 Worker-live ≠ retire this pack (`49ccf90`).** After Ben GO **#82** → Zone Direct Upload + **mandatory** purge + body freshness (canonical / og / sitemap + nav home = `/index.html`, **no** bare `href="/"`), **PASS** does **not** authorize deleting the CF Dynamic Redirect **10/10** pack. Keep **full** Option A Dynamic (`root` / `shop` + pretty-URL + `chat`) until **Bulk Phase1 is LIVE and smoke-equal** to today’s **10/10**. Then Zone may drop the pretty-URL Dynamic rules per the parked table below; keep `root` / `shop` Dynamic unless Bulk covers them too. Do **not** migrate Dynamic on upload day. Do **not** read “Worker-live so wipe Dynamic.” **Never #81.** This lock does **not** touch unfreeze / **#79.1** / companions / Bitwarden. Pages cutover must keep or Bulk-import this same pack — [brochure-pages-cutover.md](brochure-pages-cutover.md) **hard cutover gate**.
+
+### Frozen live Redirect Rules inventory (Docs SSOT)
+
+Box parking, pasted as-is. Zone refresh **2026-09-10** (10-rule Option A SSOT). Source: Sep 9 dashboard export (9) + Sep 10 live `brochure-shop-html-to-the-shop` (10th). Do **not** invent, rename, or drop rows from this paper.
+
+```yaml
+# Frozen live Redirect Rules inventory — Zone refresh Sep 10 2026 (10-rule Option A SSOT)
+# Source: Sep 9 dashboard export (9) + Sep 10 live brochure-shop-html-to-the-shop (10th).
+zone: projectcar.ca
+hosts: [projectcar.ca, www.projectcar.ca]
+captured: 2026-09-10
+html_handling: none  # Worker Assets; not a Redirect Rule
+rule_count: 10
+rules:
+  - name: brochure-root-to-index
+    paths: ["/", "/index", "/index/"]
+    target: 'concat("https://", http.host, "/index.html")'
+    status: 301
+  - name: brochure-shop-to-the-shop
+    paths: ["/shop", "/shop/"]
+    target: 'concat("https://", http.host, "/the-shop.html")'
+    status: 301
+  - name: brochure-shop-html-to-the-shop
+    paths: ["/shop.html"]
+    target: 'concat("https://", http.host, "/the-shop.html")'
+    status: 301
+  - name: brochure-membership-to-html
+    paths: ["/membership", "/membership/"]
+    target: 'concat("https://", http.host, "/membership.html")'
+    status: 301
+  - name: brochure-about-to-html
+    paths: ["/about", "/about/"]
+    target: 'concat("https://", http.host, "/about.html")'
+    status: 301
+  - name: brochure-the-shop-to-html
+    paths: ["/the-shop", "/the-shop/"]
+    target: 'concat("https://", http.host, "/the-shop.html")'
+    status: 301
+  - name: brochure-contact-to-html
+    paths: ["/contact", "/contact/"]
+    target: 'concat("https://", http.host, "/contact.html")'
+    status: 301
+  - name: brochure-roadmap-to-html
+    paths: ["/roadmap", "/roadmap/"]
+    target: 'concat("https://", http.host, "/roadmap.html")'
+    status: 301
+  - name: brochure-chat-slash-to-contact
+    paths: ["/chat/"]
+    target: 'concat("https://", http.host, "/contact.html")'
+    status: 301
+  - name: brochure-chat-to-contact
+    paths: ["/chat", "/chat.html"]
+    target: 'concat("https://", http.host, "/contact.html")'
+    status: 301
+```
 
 Parked Bulk Phase1 (brochure redirects **after Bulk Phase1 is LIVE and smoke-equal** — drafted, not applied; **not** on **#82** upload day):
 
@@ -109,7 +164,7 @@ STATUS Next #1 is **capacity-blocked** until **#82** Worker-live + this Bulk Pha
 
 ## STATUS Reality quarantine (held #70)
 
-Until **#82** is Worker-live via Zone Direct Upload, **held #70 STATUS Reality tip / Option A** is brochure live SSOT. Do **not** execute Zone or Garage from **`main` Reality tip** — `main` still documents the pre-Option-A Worker (`_redirects` `/shop` **302** + `styles.css?v=35`). **Reinforce (no Ben ask / no tip-only PR):** `main` Reality tip is still **`2b772ff` / ?v=35 / Worker `/shop` 302**. Same class: `main` `doc-lid-restore.md` Soft-530 table still says Lookout api-health **paused** vs living **`enabled:true`** (**#78 LIVE-SUPERSEDED**). After **#82** upload + this ordered purge/freshness, **one** STATUS tip-fold reconciles `main` Reality to live. Soft-530 companion watches stay **HOLD / not armed**. Option A continuous watch is **GONE** while Soft-530 is OPEN (deleted to fix stalled cron; Auto-review blocked recreate) — **HOLD** recreate; interim Chief `*/20`; SOP [lookout-rearm-sop.md](lookout-rearm-sop.md); spec [brochure-redirect-watch.md](brochure-redirect-watch.md) (flip Chief+Lead only when armed; Sep 9 baseline still **IN FLIGHT** → stamp **LIVE 10/10**). **#78 lookout-resume** is **LIVE-SUPERSEDED**. Canonical banner: `STATUS.md`. Upload click-path: `brochure-worker-deploy.md`.
+Until **#82** is Worker-live via Zone Direct Upload, **held #70 STATUS Reality tip / Option A** is brochure live SSOT. Do **not** execute Zone or Garage from **`main` Reality tip** — `main` still documents the pre-Option-A Worker (`_redirects` `/shop` **302** + `styles.css?v=35`). **Reinforce (no Ben ask / no tip-only PR):** `main` Reality tip is still **`2b772ff` / ?v=35 / Worker `/shop` 302**. Same class: `main` `doc-lid-restore.md` Soft-530 table still says Lookout api-health **paused** vs living **`enabled:true`** (**#78 LIVE-SUPERSEDED**). After **#82** upload + this ordered purge/freshness, **one** STATUS tip-fold reconciles `main` Reality to live. Soft-530 companion watches stay **HOLD / not armed**. Option A continuous watch is **GONE** while Soft-530 is OPEN (deleted to fix stalled cron; Auto-review blocked recreate) — **HOLD** recreate; interim Chief `*/20` **+ Soft-530 UX**; **Redirect-only PASS ≠ Soft-530 UX PASS**; SOP [lookout-rearm-sop.md](lookout-rearm-sop.md); spec [brochure-redirect-watch.md](brochure-redirect-watch.md) (flip Chief+Lead only when armed; Sep 9 baseline still **IN FLIGHT** → stamp **LIVE 10/10**). **#78 lookout-resume** is **LIVE-SUPERSEDED**. Canonical banner: `STATUS.md`. Upload click-path: `brochure-worker-deploy.md`.
 
 ---
 
@@ -126,7 +181,7 @@ Until **#82** is Worker-live via Zone Direct Upload, **held #70 STATUS Reality t
 | Waitlist-owner-desk | **Retired.** Already shipped (STATUS Waitlist Live). Do **not** draft `waitlist-owner-desk.md`. Optional CSV Later. Soft-530 **CLEAR** / desk existence ≠ Doc unfreeze / **#79.1** rebuild GO. |
 | **#79** / **#79.1** | Parallel to **#82**. **#79.1** git-only until Doc unfreeze. `ops-demo-hardening.md`. |
 | Soft-530 companion watches | **HOLD / not armed.** Do not re-ask. |
-| Brochure Option A continuous watch | **GONE** (deleted; Auto-review blocked recreate). **HOLD** recreate. Interim Chief `*/20`. SOP: [lookout-rearm-sop.md](lookout-rearm-sop.md). Spec: [brochure-redirect-watch.md](brochure-redirect-watch.md). Flip Chief+Lead only when armed. Not this CI paper. |
+| Brochure Option A continuous watch | **GONE** (deleted; Auto-review blocked recreate). **HOLD** recreate. Interim Chief `*/20` **+ Soft-530 UX**. **Redirect-only PASS ≠ Soft-530 UX PASS.** SOP: [lookout-rearm-sop.md](lookout-rearm-sop.md). Spec: [brochure-redirect-watch.md](brochure-redirect-watch.md). Flip Chief+Lead only when armed. Not this CI paper. |
 | Weekend Zone Direct Upload / Worker | **Do not schedule.** plan-improve off Sat/Sun. First Monday resumes Soft-530 smoke. Not this file. |
 | Dual CLEAR / post-CLEAR forensics | Does **not** auto-GO **#82**. Menu: [post-dual-clear-go.md](post-dual-clear-go.md) — after **#82** Worker-live the **brochure lane** is **#83** ∥ **Bulk Phase1** (not Bulk→#83); Member-after-Bulk; unfreeze+#79.1 is Shop OS parallel. |
 | Dual-Nextcloud / `cloud.*` | Unchanged (`4cde204`). Not a `cloud.*` CF cutover. |

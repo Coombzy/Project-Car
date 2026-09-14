@@ -100,6 +100,8 @@ This smoke (`/health` **200** + waitlist OPTIONS CORS + POST **422**/**201**) is
 
 Cross-links: [brochure-worker-ci.md](brochure-worker-ci.md) Soft-530 Discord · STATUS Waitlist Live · [website-improvements.md](website-improvements.md) P1-5.
 
+While Lookout redirect watch is **GONE**, interim Chief `*/20` must keep this same UX live: `membership.html` + `contact.html` still show Soft-530 Discord honesty; `waitlist.js?v=3` still fail-softs **502 / 530 / 1033**. **Redirect-only PASS ≠ Soft-530 UX PASS.** Spec: [brochure-redirect-watch.md](brochure-redirect-watch.md). SOP: [lookout-rearm-sop.md](lookout-rearm-sop.md).
+
 ---
 
 ## Anti-goals
@@ -112,7 +114,8 @@ Cross-links: [brochure-worker-ci.md](brochure-worker-ci.md) Soft-530 Discord · 
 | **Soft-530 CLEAR alone ≠ unfreeze** | Freeze `4cf8924` / **`5swmVz`** until **Ben GO**. `changeme` on `/login` is freeze, not a 1033. |
 | **Vault CLEAR still separate** | McKing first card is [vault-clear-smoke.md](vault-clear-smoke.md) (`/alive` **200** + `/api/config` McKing **2026.6.0** class + **502→200**). Forensics stay [vault-stay-up.md](vault-stay-up.md). This file is Doc Soft-530 only. Green `/health` ≠ vault CLEAR. |
 | **`/health` 200 ≠ route alive** | Tunnel-up without OPTIONS CORS + POST 422/201 is **not** this card. |
-| **CLEAR smoke ≠ honesty-off** | **#80** Membership/Contact Discord honesty intro + `waitlist.js?v=3` fail-soft (502/530/1033→Discord+mailto) stay. **Permanent** product behavior for overnight sleep / tunnel flaps — **not** temporary outage banners. Tone tweak only with Ben GO. Not a Garage GO to strip. |
+| **CLEAR smoke ≠ honesty-off** | **#80** Membership/Contact Discord honesty intro + `waitlist.js?v=3` fail-soft (502/530/1033→Discord+mailto) stay. **Permanent** product behavior for overnight sleep / tunnel flaps — **not** temporary outage banners. Tone tweak only with Ben GO. Not a Garage GO to strip. Interim Chief `*/20`: **Redirect-only PASS ≠ Soft-530 UX PASS.** |
+| **Redirect-only PASS ≠ Soft-530 UX PASS** | Pretty-URL **301**s + `?v=` **200**s can PASS while honesty / fail-soft is gone. Interim `*/20` must assert Membership/Contact Discord honesty + `waitlist.js` 502/530/1033. |
 | **Invent CLEAR** | Soft-530 still **OPEN** (CF **1033**). Vault still **OPEN** (**502**). Only `Mac.lan`. |
 
 **#82** Ben GO / Soft-530 companions **HOLD** / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / weekend Soft-530 coverage (`84107e7`) / waitlist-owner-desk **retired** / **#79.1** git-only until Doc unfreeze / vault stay-up (`017f778`) / dual-host-outage (`7bf894b`) / Soft-530 post-CLEAR (`55e10d0`) / vault post-CLEAR (`d88cacb`) / living dual-OPEN honesty (`5f2fd1c`) / sequencer (`0c4e0ef`) / **#79.1** acceptance (`1cd73c7`) / quiet-ops (`1e6a0b1`) — **unchanged**. This file executes **none** of those.

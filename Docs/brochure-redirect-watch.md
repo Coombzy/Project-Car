@@ -2,9 +2,9 @@
 
 **Status:** Paper watch spec — living watch **GONE** (deleted to fix stalled cron; Auto-review blocked recreate). **HOLD** after one Ben ask. SOP: [lookout-rearm-sop.md](lookout-rearm-sop.md)  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` Live Option A + Reality quarantine + Lookout rows + living dual-OPEN + [lookout-rearm-sop.md](lookout-rearm-sop.md), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops — this watch **paper** continues; continuous watch is **GONE**; interim Chief `*/20`; Option A public SSOT), [dual-host-outage.md](dual-host-outage.md) (wake order), [vault-stay-up.md](vault-stay-up.md), `brochure-worker-ci.md` (Option A **FULL 10/10** receipt — **not** this watch), `brochure-worker-deploy.md` (upload click-path — **not** this watch), `doc-lid-restore.md` (`main` still stamps api-health **paused** — **#78 LIVE-SUPERSEDED**), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate**, already `enabled:true`), `website-improvements.md` P4-5, [post-dual-clear-go.md](post-dual-clear-go.md)
+**Related:** `STATUS.md` Live Option A + Reality quarantine + Lookout rows + living dual-OPEN + [lookout-rearm-sop.md](lookout-rearm-sop.md), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops — this watch **paper** continues; continuous watch is **GONE**; interim Chief `*/20` **+ Soft-530 UX**; Option A public SSOT), [dual-host-outage.md](dual-host-outage.md) (wake order), [vault-stay-up.md](vault-stay-up.md), `brochure-worker-ci.md` (Option A **FULL 10/10** frozen inventory SSOT — **not** this watch), [brochure-pages-cutover.md](brochure-pages-cutover.md) (same inventory = **hard cutover gate**), `brochure-worker-deploy.md` (upload click-path — **not** this watch), `doc-lid-restore.md` (`main` still stamps api-health **paused** — **#78 LIVE-SUPERSEDED**), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate**, already `enabled:true`), `website-improvements.md` P1-5 + P4-5, [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**CLEAR ≠ honesty-off** `0705b37`), [post-dual-clear-go.md](post-dual-clear-go.md)
 
-While Soft-530 is **OPEN**, brochure **Option A** is the only public **LIVE** surface. The continuous Lookout watch is **GONE**. Interim coverage is Chief plan-improve **`*/20` redirect smoke** until Ben enables recreate ([lookout-rearm-sop.md](lookout-rearm-sop.md)). This file stays the watch **spec**. Flip **Chief + Lead only** when armed. **Not** the Soft-530 ops/app companion watches Ben skipped.
+While Soft-530 is **OPEN**, brochure **Option A** is the only public **LIVE** surface. The continuous Lookout watch is **GONE**. Interim coverage is Chief plan-improve **`*/20` redirect smoke + Soft-530 UX acceptance** until Ben enables recreate ([lookout-rearm-sop.md](lookout-rearm-sop.md)). **Redirect-only PASS ≠ Soft-530 UX PASS.** This file stays the watch **spec**. Flip **Chief + Lead only** when armed. **Not** the Soft-530 ops/app companion watches Ben skipped.
 
 **Living:** `brochure-option-a-redirect-watch` was **deleted** to fix stalled cron. Recreate needed Auto-review; Auto-review **blocked** it. Do **not** claim `enabled:true`. **Never delete** an armed watch to fix cron — prefer in-place update / pause-resume / re-save ([lookout-rearm-sop.md](lookout-rearm-sop.md) rows 1–2). **HOLD** after one Ben ask (row 3). Soft-530 companions stay **HOLD**.
 
@@ -36,7 +36,8 @@ Option A stays up when Doc sleeps. A Redirect-pack or asset-`?v=` break is invis
 | **To arm — Chief + Lead only** | When Ben enables recreate: flip alerts **Chief + Lead only**. **Never Ben.** Never restart / mutate / Zone-edit from the watch. After approve: routine enabled + first fire ≤ **10m** + baseline **LIVE 10/10**. |
 | **Not companion re-ask** | Soft-530 ops/app (optional `cloud.`) companion watches stay **HOLD / not armed**. This watch ≠ those watches. Do **not** re-ask Ben. |
 | **#82 Ben GO unchanged** | Home canonical / og / sitemap `/index.html` is **not yet Worker-live**. Do **not** upload from this paper. |
-| **Option A FULL 10/10** | No new Dynamic pretty-URLs. Watch the **live** pack — do **not** invent rules. |
+| **Option A FULL 10/10** | No new Dynamic pretty-URLs. Watch the **live** pack — do **not** invent rules. Frozen inventory SSOT: [brochure-worker-ci.md](brochure-worker-ci.md). |
+| **Redirect-only PASS ≠ Soft-530 UX PASS** | Interim Chief `*/20` must also assert Membership/Contact Soft-530 Discord honesty + `waitlist.js` 502/530/1033 fail-soft (`0705b37`). Pretty-URL **301**s alone are **not** UX PASS. |
 | **Living dual-OPEN unchanged** | `5f2fd1c` stamp stands. This paper does **not** invent CLEAR, unfreeze, or Bitwarden. |
 | **Quiet-ops continue** | Soft-530 OPEN **~24h+** + vault OPEN + **Mac.lan only** → [soft-530-extended-open.md](soft-530-extended-open.md). This watch **paper** continues. Continuous watch is **GONE**. Interim Chief `*/20`. Option A is public SSOT. Do **not** drop this paper because quiet-ops is on. This fold still does **not** arm or recreate. |
 | **Not #78** | **#78 lookout-resume** is **LIVE-SUPERSEDED** — api-health already `enabled:true`. Recreate ≠ resume. Do **not** delete api-health or vault to fix cron. |
@@ -99,6 +100,37 @@ done
 
 Fail class: **200** on a pretty URL that should **301**, Worker `/shop` **302**, missing `?v=36` / `?v=3`, or a 404 where the pack should land. That is Zone/Garage **after** Ben GO — **not** Doc lid-restore, **not** vault wake.
 
+**Those rows are Redirect-only.** They do **not** prove Soft-530 UX. See interim Chief `*/20` Soft-530 UX below.
+
+---
+
+## Interim Chief `*/20` — Soft-530 UX acceptance
+
+Lookout continuous watch is **GONE**. Until Ben enables recreate, Chief plan-improve **`*/20`** is the only brochure coverage ([lookout-rearm-sop.md](lookout-rearm-sop.md) row 4).
+
+Redirect **301**s + `?v=` **200**s above are **Redirect-only**. They can PASS while Membership/Contact honesty or `waitlist.js` fail-soft is gone. **Redirect-only PASS ≠ Soft-530 UX PASS.**
+
+Permanent **#80** (`0705b37`) — overnight sleep / tunnel flaps, **not** temporary banners. **CLEAR ≠ honesty-off.** Tone tweak only with Ben GO. This fold does **not** strip honesty, re-arm companions, wipe Dynamic, or nag **#82**.
+
+| Assert (apex + www) | Expect |
+|---------------------|--------|
+| `GET /membership.html` | Soft-530 Discord honesty still present (`discord.gg/projectcar` + honesty intro). **#80** stays. |
+| `GET /contact.html` | Same Soft-530 Discord honesty. **#80** stays. |
+| `GET /waitlist.js?v=3` | **200** **and** body still fail-softs **502 / 530 / 1033** → Discord + mailto — not “try again.” Headers-only / asset-**200** alone **fails** this row. |
+
+```bash
+# Paper probes — interim Chief */20 Soft-530 UX. Challenge 403 is WAF.
+# Redirect 301 PASS does not skip these. Do not treat as upload, honesty-off, or companion re-ask.
+
+for h in https://projectcar.ca https://www.projectcar.ca; do
+  curl -sS "$h/membership.html" | grep -E 'discord\.gg/projectcar|waitlist\.js\?v=3'
+  curl -sS "$h/contact.html"    | grep -E 'discord\.gg/projectcar|waitlist\.js\?v=3'
+  curl -sS "$h/waitlist.js?v=3" | grep -E '502|530|1033'
+done
+```
+
+Fail class: missing Discord honesty on Membership/Contact, `waitlist.js?v=3` **200** without 502/530/1033 fail-soft, or “try again” replacing Discord+mailto. That is **Soft-530 UX FAIL** even if every pretty-URL **301** PASSed.
+
 ---
 
 ## Baseline honesty (Sep 9 still IN FLIGHT)
@@ -145,6 +177,7 @@ After **#82** upload + **mandatory** purge/freshness, **one** tip-fold reconcile
 | **#82** upload / purge / freshness | `brochure-worker-ci.md` · `brochure-worker-deploy.md`. Not this watch. |
 | Bulk Phase1 / Member edge / **#83** | Unchanged. Not this file. |
 | Doc unfreeze / **#79.1** / Bitwarden | Anti-goals. |
-| Homepage-only **200** as “brochure up” | Insufficient. Pretty-URL **301**s + live `?v=` are the watch. |
+| Homepage-only **200** as “brochure up” | Insufficient. Pretty-URL **301**s + live `?v=` + Soft-530 UX. |
+| Redirect-only `*/20` as Soft-530 UX | **Redirect-only PASS ≠ Soft-530 UX PASS.** Membership/Contact honesty + `waitlist.js` 502/530/1033 fail-soft required. |
 
-**Anti-goals:** not Zone change, not **#82** upload, not unfreeze, not companion re-ask, not Bitwarden, not **#78** re-open, not invent `enabled:true` while **GONE**. Quiet-ops: [soft-530-extended-open.md](soft-530-extended-open.md) — this **paper** continues; continuous watch **GONE**; duration ≠ arm-from-docs. SOP: [lookout-rearm-sop.md](lookout-rearm-sop.md).
+**Anti-goals:** not Zone change, not **#82** merge nag / upload, not Dynamic wipe, not honesty-off, not companion re-ask / rearm, not Bitwarden, not **#78** re-open, not invent `enabled:true` while **GONE**. Quiet-ops: [soft-530-extended-open.md](soft-530-extended-open.md) — this **paper** continues; continuous watch **GONE**; duration ≠ arm-from-docs. SOP: [lookout-rearm-sop.md](lookout-rearm-sop.md). Honesty permanence: [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (`0705b37`).

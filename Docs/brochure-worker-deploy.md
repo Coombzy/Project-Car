@@ -37,7 +37,7 @@ Cloudflare Dynamic Redirect Rules for Option A are **FULL 10/10** Active **301**
 
 **Garage must not** invent new brochure extensionless pretty-URLs that need another Dynamic Redirect Rule until after **#82** is Worker-live **and** Bulk Phase1 frees Dynamic slots.
 
-Redirect plan A is already parked (agent `/workspace` parking is outside this repo). In-repo Member-precondition receipt (Option A matrix + **#82 mandatory purge** before body-freshness): `brochure-worker-ci.md`. This table stays the upload-runbook copy. Bulk Phase1 brochure redirects apply **after #82 live** — do **not** execute from this runbook.
+Redirect plan A is already parked. Frozen live Redirect inventory (Zone refresh **2026-09-10**, `rule_count: 10`) is now **in-repo Docs SSOT** — [brochure-worker-ci.md](brochure-worker-ci.md) Option A matrix · [brochure-pages-cutover.md](brochure-pages-cutover.md) **hard cutover gate**. Do **not** invent rules. **#82 Worker-live ≠ retire Dynamic** (`49ccf90`). This table stays the upload-runbook copy. Bulk Phase1 brochure redirects apply **after #82 live** — do **not** execute from this runbook.
 
 | Stay on Dynamic until migrate | Move to Bulk Phase1 (drafted, not live) |
 |-------------------------------|-----------------------------------------|
