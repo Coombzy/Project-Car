@@ -2,7 +2,7 @@
 
 **Status:** Living ops  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (weekend Soft-530 + vault Live / Locks + living dual-OPEN), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — this file stays **wake order**), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** desk / **#79.1** / unfreeze), [vault-clear-smoke.md](vault-clear-smoke.md) (**first** recovery smoke after extended-OPEN vault CLEAR — **before** Bitwarden / desk; **502→200** not CF **1033→200**), [api-stay-up.md](api-stay-up.md), [vault-stay-up.md](vault-stay-up.md) (McKing half + **vault post-CLEAR stay-up evidence** `@d88cacb`), [doc-lid-restore.md](doc-lid-restore.md) (Doc half + Soft-530 **post-CLEAR stay-up evidence** — lastExit / KeepAlive / caffeinate·CDM / Tailscale), [post-dual-clear-go.md](post-dual-clear-go.md) (post-dual-CLEAR **Ben GO sequencer** — **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [shop-web-stay-up.md](shop-web-stay-up.md), `deployment-guide.md`, `home-lab-specification.md` (machine map)
+**Related:** `STATUS.md` (weekend Soft-530 + vault Live / Locks + living dual-OPEN), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — this file stays **wake order**), [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (**first hop** when `Docs-MacBook-Pro` reappears — machineId `95a229f5-9296-4a18-aa98-70fd300dabdf`; **never** `Mac.lan` / Porsche), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** desk / **#79.1** / unfreeze), [vault-clear-smoke.md](vault-clear-smoke.md) (**first** recovery smoke after extended-OPEN vault CLEAR — **before** Bitwarden / desk; **502→200** not CF **1033→200**), [api-stay-up.md](api-stay-up.md), [vault-stay-up.md](vault-stay-up.md) (McKing half + **vault post-CLEAR stay-up evidence** `@d88cacb`), [doc-lid-restore.md](doc-lid-restore.md) (Doc half + Soft-530 **post-CLEAR stay-up evidence** — lastExit / KeepAlive / caffeinate·CDM / Tailscale), [post-dual-clear-go.md](post-dual-clear-go.md) (post-dual-CLEAR **Ben GO sequencer** — **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [shop-web-stay-up.md](shop-web-stay-up.md), `deployment-guide.md` (Monday paper map), `home-lab-specification.md` (machine map — Porsche = travel client)
 
 Weekend dual-OPEN glue. `vault-stay-up.md` named the two planes. This file names **wake order**, **independent CLEAR**, and the **ListMachines identity lock** when both Soft-530 and vault are **OPEN** at once. After Soft-530 CLEAR, stamp **Doc forensics** on [doc-lid-restore.md](doc-lid-restore.md). After vault CLEAR, stamp **McKing forensics** on [vault-stay-up.md](vault-stay-up.md). After **both** CLEARs + both forensic papers (`55e10d0` / `d88cacb`), Ben’s GO menu is [post-dual-clear-go.md](post-dual-clear-go.md) — **never auto-fire**. This file is **wake order** — not either forensic, not the GO menu.
 
@@ -34,23 +34,24 @@ When Soft-530 is **OPEN** and vault is **OPEN** and **only `Mac.lan` is online**
 
 **Parallel only if both hosts appear on ListMachines** — `Docs-MacBook-Pro` **and** `lightning` both listed. One name online is **not** parallel.
 
-`Mac.lan` online does **not** unlock a Doc Shell and does **not** skip the Doc-first order. Wait for the right host. Do **not** substitute.
+`Mac.lan` online does **not** unlock a Doc Shell and does **not** skip the Doc-first order. Wait for the right host. Do **not** substitute. After quiet-ops, Doc’s **first hop** on reappear is [doc-reappear-first-hop.md](doc-reappear-first-hop.md) — assert machineId **`95a229f5-9296-4a18-aa98-70fd300dabdf`** before smoke. Porsche (travel client) is also **not** Doc.
 
 ---
 
 ## ListMachines identity lock
 
-**Lock.** `Mac.lan` ≠ `Docs-MacBook-Pro` ≠ `lightning`. No wrong-host Shell.
+**Lock.** `Mac.lan` ≠ `Docs-MacBook-Pro` ≠ Porsche ≠ `lightning`. No wrong-host Shell.
 
 | ListMachines name | Who | Shell for |
 |-------------------|-----|-----------|
-| **`Docs-MacBook-Pro`** | Doc (Hakosuka) — shop Soft-530 | `doc-lid-restore.md` / shop KeepAlive only |
+| **`Docs-MacBook-Pro`** | Doc (Hakosuka) — shop Soft-530. machineId **`95a229f5-9296-4a18-aa98-70fd300dabdf`**. | After quiet-ops: [doc-reappear-first-hop.md](doc-reappear-first-hop.md) **then** `doc-lid-restore.md` / shop KeepAlive only |
 | **`lightning`** | McKing — public vault | `vault-stay-up.md` only |
-| **`Mac.lan`** | **Neither.** Not the Doc shop host. Not McKing. | **Do not Shell** as Doc or McKing |
+| **`Mac.lan`** | **Neither.** Not the Doc shop host. Not McKing. | **Do not Shell** as Doc or McKing. A `Mac.lan` Shell ≠ Doc evidence. |
+| **Porsche** | Travel **client** — not a server | **Do not Shell** as Doc. Porsche ≠ Doc. |
 
-`Mac.lan` is **not** the Doc shop host. A Shell on `Mac.lan` does **not** wake `com.projectcar.cloudflared` / shop-api / shop-web and does **not** wake McKing Vaultwarden.
+`Mac.lan` is **not** the Doc shop host. A Shell on `Mac.lan` does **not** wake `com.projectcar.cloudflared` / shop-api / shop-web and does **not** wake McKing Vaultwarden. Porsche is the travel client — same anti-goal.
 
-Home-lab Tailscale stamp for Doc is `docs-macbook-pro` (`100.97.10.72`). Treat that as the same machine as ListMachines `Docs-MacBook-Pro`. Do **not** alias `Mac.lan` onto it.
+Home-lab Tailscale stamp for Doc is `docs-macbook-pro` (`100.97.10.72`). Treat that as the same machine as ListMachines `Docs-MacBook-Pro` **and** machineId **`95a229f5-9296-4a18-aa98-70fd300dabdf`**. Do **not** alias `Mac.lan` or Porsche onto it.
 
 ---
 
@@ -119,7 +120,8 @@ Anti-goals that stay on this file: CLEAR ≠ companion re-ask; CLEAR ≠ Bitward
 ## Do not
 
 - Treat dual-OPEN as one restore or fold vault into Doc KeepAlive
-- Shell `Mac.lan` as Doc (`Docs-MacBook-Pro`) or McKing (`lightning`)
+- Shell `Mac.lan` or Porsche as Doc (`Docs-MacBook-Pro` / machineId `95a229f5-9296-4a18-aa98-70fd300dabdf`) or McKing (`lightning`)
+- Skip [doc-reappear-first-hop.md](doc-reappear-first-hop.md) when `Docs-MacBook-Pro` first reappears after quiet-ops
 - Wake McKing first, or wake in parallel when only `Mac.lan` is online
 - Claim Soft-530 CLEAR from `api.` `/health` **200** alone (after extended OPEN: [soft-530-clear-smoke.md](soft-530-clear-smoke.md) — OPTIONS CORS + POST **422**/**201** + `cloud.` `status.php`; `changeme` on `/login` is freeze)
 - Claim vault CLEAR from Soft-530 green

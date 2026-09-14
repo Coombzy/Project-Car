@@ -2,7 +2,7 @@
 
 **Status:** Paper — first recovery smoke, **not** a GO  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (living dual-OPEN + Waitlist Live + this pointer), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops while OPEN **~24h+** — this file is the **next** Soft-530 CLEAR card), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — ordered Ben GO menu, **never auto-fire**; **#79.1** acceptance is **later**), [doc-lid-restore.md](doc-lid-restore.md) (process wake + Doc forensics `@55e10d0`), [dual-host-outage.md](dual-host-outage.md) (wake order — Doc first, then McKing), [cors-origins.md](cors-origins.md) (waitlist OPTIONS Origin), [ops-demo-hardening.md](ops-demo-hardening.md) (**#79** / **#79.1** — **after** this smoke), [doc-unfreeze.md](doc-unfreeze.md) (Ben GO pull — **after** this smoke), [vault-stay-up.md](vault-stay-up.md) (vault wake + McKing forensics `@d88cacb`), [vault-clear-smoke.md](vault-clear-smoke.md) (vault CLEAR recovery smoke — **separate** McKing lane; **not** this file), [brochure-worker-ci.md](brochure-worker-ci.md) (Soft-530 Discord fail-soft **#80** — **permanent**; this smoke ≠ Garage GO to strip it), [website-improvements.md](website-improvements.md) (P1-5 waitlist + Discord honesty)
+**Related:** `STATUS.md` (living dual-OPEN + Waitlist Live + this pointer), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops while OPEN **~24h+** — this file is the **next** Soft-530 CLEAR card), [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (**first hop** when `Docs-MacBook-Pro` reappears — identity `95a229f5-9296-4a18-aa98-70fd300dabdf` **then** this smoke; **never** `Mac.lan` / Porsche), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — ordered Ben GO menu, **never auto-fire**; **#79.1** acceptance is **later**), [doc-lid-restore.md](doc-lid-restore.md) (process wake + Doc forensics `@55e10d0`), [dual-host-outage.md](dual-host-outage.md) (wake order — Doc first, then McKing), [cors-origins.md](cors-origins.md) (waitlist OPTIONS Origin), [ops-demo-hardening.md](ops-demo-hardening.md) (**#79** / **#79.1** — **after** this smoke), [doc-unfreeze.md](doc-unfreeze.md) (Ben GO pull — **after** this smoke), [vault-stay-up.md](vault-stay-up.md) (vault wake + McKing forensics `@d88cacb`), [vault-clear-smoke.md](vault-clear-smoke.md) (vault CLEAR recovery smoke — **separate** McKing lane; **not** this file), [brochure-worker-ci.md](brochure-worker-ci.md) (Soft-530 Discord fail-soft **#80** — **permanent**; this smoke ≠ Garage GO to strip it), [website-improvements.md](website-improvements.md) (P1-5 waitlist + Discord honesty), [deployment-guide.md](deployment-guide.md) (Monday paper map)
 
 After Soft-530 **CLEAR** following **extended OPEN** (**>~24h**), run this **first recovery smoke BEFORE** any Owner desk / **#79.1** / unfreeze talk. Quiet-ops named the lock ([soft-530-extended-open.md](soft-530-extended-open.md)). This file names the first public proof that the **route** is back — not only that the tunnel answered.
 
@@ -17,7 +17,7 @@ All three — then this smoke, **not** the GO menu.
 | Gate | Living stamp / meaning |
 |------|------------------------|
 | **Prior OPEN was extended** | Soft-530 **OPEN ~24h+** — CF **1033** since 2026-09-13 **~11:57** America/Edmonton (`api.` / `app.` / `ops.` / `cloud.` + waitlist OPTIONS). Quiet-ops: [soft-530-extended-open.md](soft-530-extended-open.md). |
-| **A live Soft-530 CLEAR just happened** | Doc lid-restore process wake ran ([doc-lid-restore.md](doc-lid-restore.md)). Wake order stays [dual-host-outage.md](dual-host-outage.md) — **Doc first**. |
+| **A live Soft-530 CLEAR just happened** | After quiet-ops, first hop is [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (machineId **`95a229f5-9296-4a18-aa98-70fd300dabdf`**). Then Doc lid-restore process wake ([doc-lid-restore.md](doc-lid-restore.md)). Wake order stays [dual-host-outage.md](dual-host-outage.md) — **Doc first**. |
 | **Before desk / #79.1 / unfreeze talk** | Owner desk existence, Garage **#79.1**, and [doc-unfreeze.md](doc-unfreeze.md) wait. This smoke is **first**. The **#79.1** acceptance card is [post-dual-clear-go.md](post-dual-clear-go.md) — **later**, after Ben GO. |
 
 Living this fold: Soft-530 is still **OPEN** (CF **1033** since 2026-09-13 ~11:57). Vault is independently **OPEN** (**502** since ~19:45 MT Sep 13 — **not** 1033). ListMachines **Mac.lan only**. This paper does **not** invent CLEAR.
@@ -133,5 +133,6 @@ While Lookout redirect watch is **GONE**, interim Chief `*/20` must keep this sa
 - Treat Soft-530 CLEAR alone as unfreeze
 - Fold vault CLEAR into this Doc smoke — vault first card is [vault-clear-smoke.md](vault-clear-smoke.md)
 - Auto-fire [post-dual-clear-go.md](post-dual-clear-go.md)
-- Shell `Mac.lan` as Doc or McKing
+- Shell `Mac.lan` or Porsche as Doc or McKing
+- Run this smoke on a name-only `Docs-MacBook-Pro` hit — first hop is [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (machineId `95a229f5-9296-4a18-aa98-70fd300dabdf`)
 - Execute Zone / Garage / Lookout arm from this paper

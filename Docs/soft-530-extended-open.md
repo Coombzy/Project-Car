@@ -2,7 +2,7 @@
 
 **Status:** Living ops — paper lock  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (living dual-OPEN + this pointer), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** desk / **#79.1** / unfreeze), [vault-clear-smoke.md](vault-clear-smoke.md) (**first** recovery smoke after extended-OPEN vault CLEAR — **before** Bitwarden / desk), [dual-host-outage.md](dual-host-outage.md) (wake order — **not** this lock), [vault-stay-up.md](vault-stay-up.md) (McKing half + forensics `@d88cacb`), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Option A Lookout **spec** — living watch **GONE**), [lookout-rearm-sop.md](lookout-rearm-sop.md) (never delete to fix cron; **HOLD** after one Ben ask; interim Chief `*/20`; **#78 LIVE-SUPERSEDED**), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — **never auto-fire**), [doc-lid-restore.md](doc-lid-restore.md) (Lead process wake when `Docs-MacBook-Pro` reappears)
+**Related:** `STATUS.md` (living dual-OPEN + this pointer), [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (**first hop** when `Docs-MacBook-Pro` reappears — machineId `95a229f5-9296-4a18-aa98-70fd300dabdf`; **never** `Mac.lan` / Porsche), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** desk / **#79.1** / unfreeze), [vault-clear-smoke.md](vault-clear-smoke.md) (**first** recovery smoke after extended-OPEN vault CLEAR — **before** Bitwarden / desk), [dual-host-outage.md](dual-host-outage.md) (wake order — **not** this lock), [vault-stay-up.md](vault-stay-up.md) (McKing half + forensics `@d88cacb`), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Option A Lookout **spec** — living watch **GONE**), [lookout-rearm-sop.md](lookout-rearm-sop.md) (never delete to fix cron; **HOLD** after one Ben ask; interim Chief `*/20`; **#78 LIVE-SUPERSEDED**), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — **never auto-fire**), [doc-lid-restore.md](doc-lid-restore.md) (Lead process wake on the **asserted** host), [deployment-guide.md](deployment-guide.md) (Monday paper map)
 
 When Soft-530 **OPEN** crosses **~24h** **and** vault is **OPEN** **and** ListMachines is **only `Mac.lan`**, lock **quiet-ops**. This file names that lock. It is **not** wake order ([dual-host-outage.md](dual-host-outage.md)), **not** the CLEAR menu ([post-dual-clear-go.md](post-dual-clear-go.md)), and **not** a Ben re-nag.
 
@@ -29,12 +29,12 @@ Weekend coverage (`84107e7`) was Sat/Sun plan-improve-off. This lock is **not** 
 | # | Lock | Meaning |
 |---|------|---------|
 | **1** | **No Ben re-nag** | Doc-wake + McKing wake **already asked**. Do **not** page Ben again because the clock crossed ~24h. |
-| **2** | **Lead + Chief stay armed** | **Lead** stays armed for ListMachines **`Docs-MacBook-Pro`** reappear → [doc-lid-restore.md](doc-lid-restore.md) **process wake only**. **Chief** stays armed for **`lightning`** reappear → [vault-stay-up.md](vault-stay-up.md) vault wake. Identity lock unchanged — no `Mac.lan` Shell. |
+| **2** | **Lead + Chief stay armed** | **Lead** stays armed for ListMachines **`Docs-MacBook-Pro`** reappear → [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (assert machineId **`95a229f5-9296-4a18-aa98-70fd300dabdf`**, **never** `Mac.lan` / Porsche) **then** [doc-lid-restore.md](doc-lid-restore.md) **process wake only**. **Chief** stays armed for **`lightning`** reappear → [vault-stay-up.md](vault-stay-up.md) vault wake. Identity lock unchanged — no `Mac.lan` Shell. |
 | **3** | **Lookout continues; companions HOLD until Ben reopens** | Lookout `api.` `/health` + vault `/alive` stay **armed** — **never delete** them to fix stalled cron ([lookout-rearm-sop.md](lookout-rearm-sop.md)). Brochure-redirect **paper** **continues** ([brochure-redirect-watch.md](brochure-redirect-watch.md)). Living Option A continuous watch is **GONE** (deleted to fix stalled cron; Auto-review blocked recreate) — **HOLD** after one Ben ask; interim = Chief `*/20` redirect smoke. Soft-530 companions stay **HOLD / not armed** until **Ben reopens** — **not** weekend-only. Do **not** re-ask. **#78 lookout-resume** is **LIVE-SUPERSEDED** (api-health already `enabled:true`). |
 | **4** | **Option A is public SSOT** | Brochure Option A is the public live SSOT during extended OPEN (Zone Redirect **FULL 10/10**; `waitlist.js?v=3`; `styles.css?v=36`; Soft-530 Discord honesty). Home still bare `href="/"` + canonical/og apex until **#82**. **#70** Reality tip / Option A stays SSOT until **#82**. |
 | **5** | **Duration alone ≠ GO** | Crossing ~24h is **not** **#82** GO, **not** unfreeze, **not** Zone Direct Upload, **not** Bitwarden import/rotate, **not** companion re-ask. |
 
-Wake order when a host **does** reappear stays [dual-host-outage.md](dual-host-outage.md) — **Doc first, then McKing**; parallel only if both names are on ListMachines.
+Wake order when a host **does** reappear stays [dual-host-outage.md](dual-host-outage.md) — **Doc first, then McKing**; parallel only if both names are on ListMachines. Doc’s **first hop** on reappear is [doc-reappear-first-hop.md](doc-reappear-first-hop.md) — identity, then smoke, then (only if CLEAR) forensics, then the sequencer (**never auto-fire**).
 
 ---
 
@@ -84,7 +84,8 @@ After an **extended** vault OPEN (**502** since ~19:45 MT Sep 13), the **next** 
 - Delete an armed Lookout watch to fix stalled cron (living Option A watch is already **GONE** — **HOLD** recreate; [lookout-rearm-sop.md](lookout-rearm-sop.md))
 - Arm Soft-530 companions from this paper, or treat HOLD as weekend-only
 - Re-open **#78** (api-health already `enabled:true` — **LIVE-SUPERSEDED**)
-- Shell `Mac.lan` as Doc or McKing
+- Shell `Mac.lan` or Porsche as Doc or McKing
+- Skip [doc-reappear-first-hop.md](doc-reappear-first-hop.md) identity (machineId `95a229f5-9296-4a18-aa98-70fd300dabdf`) when `Docs-MacBook-Pro` first reappears
 - Invent a CLEAR while Soft-530 is still **OPEN** (CF **1033**) or vault is still **OPEN** (**502**)
 - Execute the [soft-530-clear-smoke.md](soft-530-clear-smoke.md) curls, desk, **#79.1**, or unfreeze from this bounce
 - Execute the [vault-clear-smoke.md](vault-clear-smoke.md) curls or Bitwarden from this bounce
