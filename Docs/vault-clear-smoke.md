@@ -2,7 +2,7 @@
 
 **Status:** Paper — first recovery smoke, **not** a GO  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (living dual-OPEN + this pointer), [vault-stay-up.md](vault-stay-up.md) (McKing wake + **post-CLEAR stay-up evidence** `@d88cacb` — this file is the **next** vault CLEAR card), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (Soft-530 twin — **already** `502ab2e`; this file is **not** that smoke), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops while Soft-530 OPEN **~24h+** + vault OPEN + **Mac.lan only**), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — ordered Ben GO menu, **never auto-fire**; Bitwarden is **not** on that menu), [dual-host-outage.md](dual-host-outage.md) (wake order — Doc first, then McKing)
+**Related:** `STATUS.md` (living dual-OPEN + this pointer), [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) (**first hop** when `lightning` / McKing reappears — machineId `9067d14b-46e5-4ef0-82d5-fce0febdc8f7`; **never** `Mac.lan`; **then** this smoke), [vault-stay-up.md](vault-stay-up.md) (McKing wake + **post-CLEAR stay-up evidence** `@d88cacb` — this file is the **next** vault CLEAR card), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (Soft-530 twin — **already** `502ab2e`; this file is **not** that smoke), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops while Soft-530 OPEN **~24h+** + vault OPEN + **Mac.lan only**), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — ordered Ben GO menu, **never auto-fire**; Bitwarden is **not** on that menu), [dual-host-outage.md](dual-host-outage.md) (wake order — Doc first, then McKing), [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (Doc twin — **independent**)
 
 After vault **CLEAR** following **extended OPEN** (vault **502** since 2026-09-13 **~19:45** America/Edmonton, during Soft-530 **~24h+** quiet-ops), run this **first recovery smoke BEFORE** any Bitwarden import/rotate or desk talk. Quiet-ops named the lock ([soft-530-extended-open.md](soft-530-extended-open.md)). This file names the first public proof that **McKing Vaultwarden** is back — not only that `/alive` answered, and not a Doc VW sibling.
 
@@ -17,7 +17,7 @@ All three — then this smoke, **not** the GO menu.
 | Gate | Living stamp / meaning |
 |------|------------------------|
 | **Prior OPEN was extended** | Vault **OPEN** — **502** since 2026-09-13 **~19:45** America/Edmonton on `/alive` + `/api/config` (**not** 1033), during Soft-530 **OPEN ~24h+** (CF **1033** since 2026-09-13 **~11:57** MT). Quiet-ops: [soft-530-extended-open.md](soft-530-extended-open.md). |
-| **A live vault CLEAR just happened** | McKing VW + McKing `cloudflared` wake ran ([vault-stay-up.md](vault-stay-up.md)). Wake order stays [dual-host-outage.md](dual-host-outage.md) — **McKing second**. |
+| **A live vault CLEAR just happened** | After quiet-ops, first hop is [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) (machineId **`9067d14b-46e5-4ef0-82d5-fce0febdc8f7`**). Then McKing VW + McKing `cloudflared` wake ([vault-stay-up.md](vault-stay-up.md)). Wake order stays [dual-host-outage.md](dual-host-outage.md) — **McKing second**. |
 | **Before Bitwarden / desk talk** | Import/rotate and any vault desk stay **Ben GO**. This smoke is **first**. CLEAR lifts the *down-origin block* only — it does **not** auto-start Bitwarden. |
 
 Living this fold: Soft-530 is still **OPEN** (CF **1033** since 2026-09-13 ~11:57). Vault is independently **OPEN** (**502** since ~19:45 MT Sep 13 — **not** 1033). ListMachines **Mac.lan only**. This paper does **not** invent CLEAR.
@@ -99,4 +99,5 @@ Vault **CLEAR** alone ≠ the Soft-530 card. Green `/alive` ≠ `/health` **200*
 - Auto-fire [post-dual-clear-go.md](post-dual-clear-go.md)
 - Walk away without the McKing forensic stamp ([vault-stay-up.md](vault-stay-up.md) — `d88cacb` paper already ack’d; still capture live lines)
 - Shell `Mac.lan` as Doc or McKing
+- Skip [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) identity (machineId `9067d14b-46e5-4ef0-82d5-fce0febdc8f7`) when `lightning` first reappears
 - Execute Zone / Garage / Lookout arm from this paper
