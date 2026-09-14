@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-14  
 **Public URL:** https://vault.projectcar.ca  
-**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**; Soft-530 **post-CLEAR stay-up evidence** is Doc-only), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN **wake order** — Doc first, then McKing), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
+**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks + **vault post-CLEAR stay-up evidence** pointer), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**; Soft-530 **post-CLEAR stay-up evidence** is **Doc forensics**), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN **wake order** — Doc first, then McKing; this file is **McKing forensics** after vault CLEAR), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
 
 Keep public Vaultwarden reachable on McKing. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md`.
 
@@ -85,6 +85,8 @@ A **502** with local `:8222` **200** is still an edge/tunnel problem (Zone + McK
 
 Soft-530 **530 / 1033** on `api.` / `ops.` / `app.` is **Doc lid-close**. Vault **530 / 1033** is **McKing**. Do not swap the wake.
 
+Living this fold — OPEN class honesty (do **not** invent CLEAR): **Soft-530** is still **OPEN** as CF **1033** tunnel-down. **Vault** is independently **OPEN** as **502** origin-down — **not** 1033 — on `/alive` **and** `/api/config`. When `lightning` returns, first checks differ: Soft-530 **1033** → Doc `cloudflared` / host / tunnel; vault **502** → local `:8222` / VW (table above).
+
 ---
 
 ## Bitwarden import / rotate — blocked until vault CLEAR
@@ -164,6 +166,45 @@ Alerts can come from anyone who sees a **502**, **530 / error 1033**, or a Bitwa
 5. **Zone — edge.** Local `:8222` **200** but public **502** / **530 / 1033** / DNS miss → Zone checks **McKing** `cloudflared` + the `vault.projectcar.ca` hostname rule. **Never** move the Doc mission-control token. Lead does not edit Cloudflare.
 6. **Import/rotate.** Stay **blocked** until step 1 is **200**. Soft-530 CLEAR on Doc does **not** lift this.
 7. **Soft-530 still down?** Separate plane. Chief/Lead run `doc-lid-restore.md` **only** for `api.` `/health` — not from this checklist.
+8. **Post-CLEAR stay-up evidence.** After step 1 is **200**, stamp the McKing forensic (below) **before walking away**. Dual-OPEN **wake order** stays [dual-host-outage.md](dual-host-outage.md). Soft-530 post-CLEAR is [doc-lid-restore.md](doc-lid-restore.md) — **Doc forensics**, not this stamp.
+
+---
+
+## Post-CLEAR stay-up evidence (next vault flip)
+
+**One-liner:** After vault **CLEAR** (public `/alive` **200**), stamp stay-up evidence **before walking away** — so the next McKing vault flip has a baseline. [dual-host-outage.md](dual-host-outage.md) is **wake order**. Soft-530 post-CLEAR on [doc-lid-restore.md](doc-lid-restore.md) is **Doc forensics**. This is **McKing forensics** for the next vault flip.
+
+Living this fold — do **not** invent CLEAR:
+
+| Plane | Living OPEN class | First check when `lightning` returns |
+|-------|-------------------|--------------------------------------|
+| **Soft-530 (Doc)** | CF **1033** tunnel-down (`api.` / `ops.` / `app.` / `cloud.` **530** / error **1033**; waitlist OPTIONS **530**) | Doc `cloudflared` / host / tunnel — [doc-lid-restore.md](doc-lid-restore.md) |
+| **Vault (McKing)** | **502** origin-down — **not** 1033 — on `/alive` **and** `/api/config` | Local `:8222` / VW (this file’s triage) |
+
+ListMachines shows only `Mac.lan` (Ben Laptop, LocalHostName Laptop; `:8000`/`:8080` down) — `Docs-MacBook-Pro` + `lightning` absent. Brochure Option A + Soft-530 Discord assets stay **LIVE**. **#82** unchanged (**never #81**). This paper does **not** invent a CLEAR or a live restore. Capture on **McKing** (`lightning`) after the **next** vault CLEAR — **not** on `Mac.lan`, **not** on Doc.
+
+On **every** vault CLEAR after McKing wake, Lead records:
+
+| Capture | On McKing (`lightning`) | Why |
+|---------|-------------------------|-----|
+| **cloudflared.service** | `systemctl show cloudflared.service` → **ActiveState** / **Result** / **ExecMainStatus** (or lastExit if the unit already exited) | Next flip: was systemd already down, or did the tunnel die while “active”? |
+| **VW container + DOMAIN** | Container **healthy**; `DOMAIN=https://vault.projectcar.ca` | Next **502**: origin process / DOMAIN mismatch vs tunnel |
+| **Tailscale** | `tailscale status` — `lightning` **up** | Next flip: was McKing off-mesh? `Mac.lan` ≠ this host |
+| **Recovery class** | Whether this CLEAR was **1033→200** (tunnel) vs **502→200** (origin) | Living OPEN this fold is **502**, not 1033 — do not collapse the classes |
+
+Stamp: America/Edmonton timestamp + the four lines. Do **not** treat the stamp as unfreeze GO, **#82**, Zone/Garage execute, or a companion re-ask.
+
+```bash
+# ONLY on lightning after vault CLEAR — paper capture, not a restore
+systemctl show cloudflared.service -p ActiveState -p Result -p ExecMainStatus
+# lastExit if the unit already exited:
+systemctl show cloudflared.service -p ExecMainCode -p ExecMainStatus -p Result -p ActiveState
+# VW container healthy (McKing — not the Doc compose sibling)
+docker ps --format '{{.Names}} {{.Status}}'
+# DOMAIN from that VW container env — expect https://vault.projectcar.ca
+docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$(docker ps -q -f name=vaultwarden)" | grep '^DOMAIN='
+tailscale status
+```
 
 ---
 
@@ -176,6 +217,7 @@ plan-improve is **off Sat/Sun**. Soft-530 companion ops/app watches stay **HOLD 
 | `api.` `/health` non-200 | `doc-lid-restore.md` **process wake only** (Doc). **Not** this file. |
 | `vault.` `/alive` non-200 | **This file** (McKing). **Not** lid-restore. |
 | Both OPEN | [dual-host-outage.md](dual-host-outage.md) — **Doc first, then McKing**. Parallel only if both hosts on ListMachines. |
+| Vault CLEAR after McKing wake | **This file** — stamp **post-CLEAR stay-up evidence** (above). Soft-530 post-CLEAR stays [doc-lid-restore.md](doc-lid-restore.md). |
 
 Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-improve resumes Soft-530 smoke. Anti-goal: Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask ≠ vault import/rotate while vault is down.
 
@@ -194,5 +236,9 @@ Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-
 - Treat vault LIVE as shop CF cutover GO or Doc unfreeze
 - Bitwarden import/rotate until public `/alive` is **CLEAR**
 - Use Soft-530 `/health` **200** as vault CLEAR
+- Collapse vault **502** origin-down into Soft-530 CF **1033** tunnel-down (different first checks when `lightning` returns)
+- Walk away from a vault CLEAR without the stay-up evidence stamp (cloudflared.service ActiveState/Result/ExecMainStatus · VW healthy + DOMAIN · Tailscale · 1033→200 vs 502→200)
+- Invent a CLEAR or a live restore from this paper while vault is still **OPEN** as **502**
+- Capture the stamp on `Mac.lan` or Doc (not McKing / `lightning`)
 - Re-ask companion watches / schedule weekend Zone Direct Upload / **#82**
 - Execute Zone or Garage from this paper

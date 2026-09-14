@@ -2,9 +2,9 @@
 
 **Status:** Living ops  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (weekend Soft-530 + vault Live / Locks), [api-stay-up.md](api-stay-up.md), [vault-stay-up.md](vault-stay-up.md), [doc-lid-restore.md](doc-lid-restore.md) (Doc half + **post-CLEAR stay-up evidence** — lastExit / KeepAlive / caffeinate·CDM / Tailscale), [shop-web-stay-up.md](shop-web-stay-up.md), `deployment-guide.md`, `home-lab-specification.md` (machine map)
+**Related:** `STATUS.md` (weekend Soft-530 + vault Live / Locks), [api-stay-up.md](api-stay-up.md), [vault-stay-up.md](vault-stay-up.md) (McKing half + **vault post-CLEAR stay-up evidence**), [doc-lid-restore.md](doc-lid-restore.md) (Doc half + Soft-530 **post-CLEAR stay-up evidence** — lastExit / KeepAlive / caffeinate·CDM / Tailscale), [shop-web-stay-up.md](shop-web-stay-up.md), `deployment-guide.md`, `home-lab-specification.md` (machine map)
 
-Weekend dual-OPEN glue. `vault-stay-up.md` named the two planes. This file names **wake order**, **independent CLEAR**, and the **ListMachines identity lock** when both Soft-530 and vault are **OPEN** at once. After Soft-530 CLEAR, stamp stay-up evidence on [doc-lid-restore.md](doc-lid-restore.md) — this file does **not** cover why it died after Fri→Sun flip-flops.
+Weekend dual-OPEN glue. `vault-stay-up.md` named the two planes. This file names **wake order**, **independent CLEAR**, and the **ListMachines identity lock** when both Soft-530 and vault are **OPEN** at once. After Soft-530 CLEAR, stamp **Doc forensics** on [doc-lid-restore.md](doc-lid-restore.md). After vault CLEAR, stamp **McKing forensics** on [vault-stay-up.md](vault-stay-up.md). This file is **wake order** — not either forensic.
 
 Do **not** invent a Doc unfreeze, **#82**, Zone Direct Upload, a companion re-ask, a Bitwarden import/rotate while vault is down, or a Zone/Garage execute from this paper.
 
@@ -76,7 +76,9 @@ Lookout Soft-530 coverage is still **api-only**. Companions stay **HOLD**. Manua
 | `GET https://vault.projectcar.ca/alive` | **200** — **CLEAR** (prefer) |
 | VW `GET https://vault.projectcar.ca/api/config` | **200** + version **2026.6.0** (stamp; fallback if `/alive` 404s) |
 
-Essay: [vault-stay-up.md](vault-stay-up.md). Soft-530 `/health` **200** is **not** vault CLEAR.
+Essay: [vault-stay-up.md](vault-stay-up.md). Soft-530 `/health` **200** is **not** vault CLEAR. After that CLEAR, stamp **vault post-CLEAR stay-up evidence** (cloudflared.service ActiveState/Result/ExecMainStatus · VW healthy + `DOMAIN=https://vault.projectcar.ca` · Tailscale · **1033→200** vs **502→200**) on [vault-stay-up.md](vault-stay-up.md) before walking away.
+
+Living this fold — OPEN class honesty (do **not** invent CLEAR): Soft-530 still **OPEN** as CF **1033** tunnel-down. Vault independently **OPEN** as **502** origin-down — **not** 1033 — on `/alive` **and** `/api/config`. ListMachines only `Mac.lan`. Different first checks when `lightning` returns — Soft-530 **1033** = Doc tunnel first; vault **502** = VW origin first.
 
 ---
 
@@ -93,7 +95,7 @@ Essay: [vault-stay-up.md](vault-stay-up.md). Soft-530 `/health` **200** is **not
 | **One restore for two planes** | Vault flip ≠ Doc lid-restore. Doc Soft-530 ≠ McKing vault wake. |
 | **Parallel wake from `Mac.lan` only** | Parallel **only** when both `Docs-MacBook-Pro` and `lightning` are on ListMachines. |
 
-**#82** Ben GO / Soft-530 companions **HOLD** / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / weekend Soft-530 coverage (`84107e7`) / waitlist-owner-desk **retired** / **#79.1** git-only until Doc unfreeze / vault stay-up (`017f778`) / dual-host-outage (`7bf894b`) — **unchanged**. This file executes **none** of those. Post-CLEAR stay-up evidence lives on [doc-lid-restore.md](doc-lid-restore.md).
+**#82** Ben GO / Soft-530 companions **HOLD** / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / weekend Soft-530 coverage (`84107e7`) / waitlist-owner-desk **retired** / **#79.1** git-only until Doc unfreeze / vault stay-up (`017f778`) / dual-host-outage (`7bf894b`) — **unchanged**. This file executes **none** of those. Soft-530 post-CLEAR (**Doc forensics**) lives on [doc-lid-restore.md](doc-lid-restore.md). Vault post-CLEAR (**McKing forensics**) lives on [vault-stay-up.md](vault-stay-up.md). This file is **wake order**.
 
 ---
 
@@ -109,4 +111,5 @@ Essay: [vault-stay-up.md](vault-stay-up.md). Soft-530 `/health` **200** is **not
 - Execute **#82**, Zone Direct Upload, or Garage from this paper
 - Re-ask companion watches
 - Walk away from a Soft-530 CLEAR without the stay-up evidence stamp ([doc-lid-restore.md](doc-lid-restore.md) — lastExit / KeepAlive / caffeinate·CDM / Tailscale)
-- Invent a CLEAR from this paper while Soft-530 is still **OPEN**
+- Walk away from a vault CLEAR without the stay-up evidence stamp ([vault-stay-up.md](vault-stay-up.md) — cloudflared.service / VW+DOMAIN / Tailscale / 1033→200 vs 502→200)
+- Invent a CLEAR from this paper while Soft-530 is still **OPEN** (CF **1033**) or vault is still **OPEN** (**502**, not 1033)
