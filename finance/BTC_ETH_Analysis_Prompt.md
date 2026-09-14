@@ -1,7 +1,7 @@
 # BTC / ETH Daily Analysis Prompt
 
-**Version:** 1.17  
-**Last edited:** 2026-09-13T15:25:00Z  
+**Version:** 1.18  
+**Last edited:** 2026-09-14T16:05:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** BTC ETH Daily Crypto Analysis automation
 
@@ -16,7 +16,7 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
 
 ## Process rules (always apply)
 
-1. **ATR-proxy (v1.17)** — median true range of last 5 **completed weekday** UTC sessions. Exclude Sat/Sun and US-holiday thin sessions. Or published 14d ATR. State dollar value for BTC and ETH. (Week of 7–11 Sep: BTC median ~$1,969; ETH ~$77.)
+1. **ATR-proxy (v1.17)** — median true range of last 5 **completed weekday** UTC sessions. Exclude Sat/Sun and US-holiday thin sessions. Or published 14d ATR. State dollar value for BTC and ETH. (Week of 7–11 Sep: BTC median ~$1,969; ETH ~$77. After 11 Sep weekday-5 incl. 4 Sep holiday skip: BTC ~$2,050; ETH ~$78.)
 2. **Regime** per asset: `trend-up` | `trend-down` | `digestion` | `failed-break`.
    - **One token only.** Never compound labels (`trend-up digestion` is invalid — Sep 4 title).
    - Do **not** label digestion the day after a high-volume trend-up close.
@@ -38,6 +38,7 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
    - **ETF-flip extra high (v1.7):** last completed US spot BTC or ETH ETF session reversed sign vs prior session → +**0.5 × ATR-proxy** extra to that asset's 1d `range_high`.
    - **Post-impulse high clearance (v1.8):** prior completed UTC session ≥ **+5%** OR live impulse ≥ **+3%** / **1.0 × ATR** → 1d printed-high clearance = **1.0 × ATR-proxy**. (Sep 3 BTC 1d cap $81,000 vs path H $82,300.)
    - **Mega-inflow extra high (v1.8):** last completed US spot BTC ETF ≥ **+$400M** → +0.5×ATR to BTC 1d and 1w high. ETH ETF ≥ **+$100M** → same for ETH. Stacks with ETF-flip and weekend-carry. (Sep 11 ETH +$216.4M.)
+   - **Known-macro extra high (v1.18):** CPI/PCE/FOMC/NFP **inside 24h** → +0.5×ATR both 1d highs. (FOMC 16 Sep is not inside 24h of a 14 Sep as-of.)
    - **Spike-fade:** wick ≥ 0.8×ATR is not a cap; still apply 0.5×ATR clearance above that high.
    - **RANGE_CHECK (v1.17 — hard).** Immediately after the parseable table and before `TRACKER_SHA`, print one line:
      `RANGE_CHECK: BTC ATR $A (weekday-5); 1d width $W vs 2.0×=$M; high $H vs req $R; low $L vs req $K; fade/outflow 0.75x yes/no; stacked-low 1.0x yes/no; weekend-carry yes/no. ETH ATR $A2 (weekday-5); width $W2 vs $M2; high $H2 vs req $R2; low $L2 vs req $K2; fade 0.75x yes/no; stacked-low 1.0x yes/no; weekend-carry yes/no.`
@@ -46,22 +47,23 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
    - **conf** is an integer **40–85**, never a 0.xx decimal and never below 40. (Sep 11/12 Daily wrote 0.55/0.58. Sep 12 3m wrote 35.)
    - **prior_day_pct (v1.17):** last **completed UTC daily close-to-close %** from **Yahoo BTC-USD / ETH-USD official daily Close** only. Print `source: Yahoo YYYY-MM-DD $c1 → YYYY-MM-DD $c2 = Z%`.
    - **Banned sources:** tracker `actual_close`, path-refresh Last, live-session %, 24h change, live-to-prior-close, or yesterday's Daily figure.
-   - (Sep 10 reused Sep 8 −0.8/−0.2 vs true Sep 8→9 Yahoo −0.23/−1.17. Sep 11 wrote −1.62/−1.97 vs true Sep 9→10 BTC −2.16% / ETH −1.21%. Sep 12 wrote ETH +7.25 vs true Sep 10→11 Yahoo $2,437→$2,515 = **+3.19%**. Sep 13 used tracker $77,174→$77,439 = +0.34% vs Yahoo $77,173.80→$77,270.47 = **+0.13%** / ETH tracker $2,515→$2,537 = +0.87% vs Yahoo $2,514.73→$2,525.94 = **+0.45%**.)
+   - (Sep 10 reused Sep 8 −0.8/−0.2 vs true Sep 8→9 Yahoo −0.23/−1.17. Sep 11 wrote −1.62/−1.97 vs true Sep 9→10 BTC −2.16% / ETH −1.21%. Sep 12 wrote ETH +7.25 vs true Sep 10→11 Yahoo $2,437→$2,515 = **+3.19%**. Sep 13 used tracker $77,174→$77,439 = +0.34% vs Yahoo $77,173.80→$77,270.47 = **+0.13%** / ETH tracker $2,515→$2,537 = +0.87% vs Yahoo $2,514.73→$2,525.94 = **+0.45%**. Sep 14 was clean: Yahoo Sep 12→13 BTC $77,270.47→$76,838.16 = **−0.56%** / ETH $2,525.94→$2,477.02 = **−1.94%**.)
 5. Include **prior-scenario vs actual** from the tracker when closed rows exist.
 6. **Decision map** (3 bullets): confirm vs fail; path-changing levels; calibration from last closed miss/hit.
 7. **Parseable table first:** immediately after Key Takeaway, 8-row table (asset, horizon, range_low, range_high, bias_low, bias_high, conf, pred_regime, prior_day_pct). Entire table + `RANGE_CHECK:` + `TRACKER_SHA:` line in first ~1400 characters.
-8. **Weekend/holiday ETF:** Sat/Sun and US market holidays have no US spot ETF print. State last completed session date and figure. **Last completed as of 2026-09-13 = Fri 2026-09-11 BTC −$13.2M / ETH +$216.4M.** 10 Sep BTC −$282.7M / ETH −$29.9M. Labor Day 2026-09-07 = no print. Do not invent 0.0 as a completed session.
+8. **Weekend/holiday ETF:** Sat/Sun and US market holidays have no US spot ETF print. State last completed session date and figure. **Last completed as of 2026-09-14 = Fri 2026-09-11 BTC −$13.2M / ETH +$216.4M.** 10 Sep BTC −$282.7M / ETH −$29.9M. Labor Day 2026-09-07 = no print. Mon 14 Sep Farside dashes / 0.0 is a placeholder — not a completed session. Do not invent 0.0 as a completed session.
 9. **Weekend writes are mandatory.** Saturday and Sunday must append 8 tracker rows for that `analysis_date` **only if those 8 rows do not already exist**.
 10. **Write-first:** commit the 8 tracker rows immediately after the parseable table — before long narrative.
 11. **Write-SHA gate (hard).** After the table: get tracker SHA → merge 8 rows into existing body → re-get. Do not write snapshot until response contains the new **blob SHA**. `WRITE PENDING` is banned.
-12. **Write is the first tool sequence.** First tool calls = `get_file_contents` on tracker then `push_files` FULL MERGED body. If SHA unchanged, `create_or_update_file` same body. **SHA-delta:** emitted SHA must differ from pre-write SHA. Runtime is irrelevant — Sep 1 through Sep 13 Daily wrote 0 durable SHA-deltas (write-streak **15**). Sep 13 Daily 14:26Z reused blob `9c84dd0f` after a partial-push wipe+restore.
+12. **Write is the first tool sequence.** First tool calls = `get_file_contents` on tracker then `push_files` FULL MERGED body. If SHA unchanged, `create_or_update_file` same body. **SHA-delta:** emitted SHA must differ from pre-write SHA. Runtime is irrelevant — Sep 1 through Sep 14 Daily wrote 0 durable SHA-deltas that preserved history (write-streak **16**). Sep 13 Daily 14:26Z reused blob `9c84dd0f` after a partial-push wipe+restore. Sep 14 Daily commit `65182fba` deleted 127 lines from 126-row blob `79b6000a` and left header-only `d2c1cac8` (email: "Partial push wiped the table.").
 13. **Price-quote cap.** After the two GitHub reads, at most one quote batch (Yahoo BTC-USD + ETH-USD history Close + live Last + Farside last completed session). As-of = that live quote. Quote ≤20 minutes old. Title-quote match: BTC within $1,000 of as-of; ETH within $30. If a second print within 20 min differs BTC ≥$1,000 or ETH ≥$30, re-quote once before lock. NEXT call is the tracker write. (Sep 11 locked ETH $2,500 vs Coinbase $2,594.)
-14. **Write-streak emergency ON (streak 15).** After the two reads + one quote batch, ONLY GitHub write tools until a new 40-char blob SHA exists. Sub-90s no new SHA = WRITE FAILED.
+14. **Write-streak emergency ON (streak 16).** After the two reads + one quote batch, ONLY GitHub write tools until a new 40-char blob SHA exists. Sub-90s no new SHA = WRITE FAILED.
     - **push_files-first:** first write tool is `push_files` with the **full merged markdown**. Do not lead with `create_or_update_file`.
-    - **Preexisting-rows skip (v1.17):** if get_file_contents already contains today's 8 `(analysis_date, asset, horizon)` rows, do **not** rewrite the same body. Emit `PREEXISTING_ROWS` plus the current blob SHA. Do not claim SHA-delta. Auditor pre-wrote Sep 13 rows at 13:30Z; Daily 14:26Z then SHA-reused.
+    - **Preexisting-rows skip (v1.17):** if get_file_contents already contains today's 8 `(analysis_date, asset, horizon)` rows, do **not** rewrite the same body. Emit `PREEXISTING_ROWS` plus the current blob SHA. Do not claim SHA-delta.
+    - **Outbound-row-count gate (v1.18 — hard).** Count inbound data rows from `get_file_contents`. The body you push MUST contain ≥ that count. If outbound < inbound, **do not call any write tool**. Emit `WRITE FAILED` plus today's 8 rows. Sep 14 Daily started from a full 126-row file and still wiped it — header-only / <20-row inbound abort is not enough.
 15. **Append-only / anti-wipe (hard).**
     - **Never** replace the tracker with only today's 8 rows. Merge into existing body. Preserve every prior row including `pred_regime` / `prior_day_pct` / closed actuals.
-    - **Never** write `PLACEHOLDER` or `SEE_LOCAL_FULL_FILE`. Both are wipes. Sep 7 audit wiped to PLACEHOLDER. Sep 10/11 audits wrote SEE_LOCAL_FULL_FILE (header-only blob `497d68df`). Restore source = commit `87e37a2` / blob `08175782`.
+    - **Never** write `PLACEHOLDER` or `SEE_LOCAL_FULL_FILE`. Both are wipes. Sep 7 audit wiped to PLACEHOLDER. Sep 10/11 audits wrote SEE_LOCAL_FULL_FILE (header-only blob `497d68df`). Restore source = commit `4d740d9` / blob `bc737881` (2026-09-14 audit). Fallback commit `358a097` / blob `79b6000a`. Older fallback commit `87e37a2`.
     - After `get_file_contents`, if tracker body is `PLACEHOLDER` / `SEE_LOCAL_FULL_FILE` / fewer than 20 data rows, **do not overwrite**. Emit `WRITE FAILED` plus today's 8 rows. Restoration is Auditor-only.
     - After write, re-get row-count must be `prior_count + 8` (or `prior_count` if today's 8 already existed). A post-write body with only 8 data rows or header-only is WRITE FAILED.
     - Payload-compact: if write rejects size, shorten CLOSED notes only; keep every row; retry. Never emit SEE_LOCAL_FULL_FILE.
@@ -94,7 +96,7 @@ Get SHA immediately before write; retry once on conflict.
 
 - Merge one row per (analysis_date, asset, horizon) for BTC and ETH × {1d, 1w, 1m, 3m}. Status = open.
 - Do not duplicate (analysis_date, asset, horizon). Do not change ranges on already-open prior-day rows.
-- Dual-write full merged body. SHA-delta. Anti-wipe row-count gate.
+- Dual-write full merged body. SHA-delta. Anti-wipe row-count gate. **v1.18 outbound-row-count ≥ inbound.**
 - Response must include `TRACKER_SHA: <sha>` (40-char hex, different from pre-write) **or** `PREEXISTING_ROWS` if today's 8 already exist. Never write `WRITE PENDING`.
 
 Cite sources. Be objective and data-driven.
