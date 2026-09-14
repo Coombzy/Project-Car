@@ -58,11 +58,11 @@ Unfreeze + **#79.1** is **Shop OS parallel** ([doc-unfreeze.md](doc-unfreeze.md)
 
 | Plane | Living class | ListMachines |
 |-------|--------------|--------------|
-| **Soft-530 (Doc)** | Still **OPEN** — CF **1033** tunnel-down (`api.` / `ops.` / `app.` / `cloud.` **530** / error **1033**; waitlist OPTIONS **530**) | `Docs-MacBook-Pro` **absent** |
-| **Vault (McKing)** | Still **OPEN** — **502** origin-down (**not** 1033) on `/alive` + `/api/config` | `lightning` **absent** |
+| **Soft-530 (Doc)** | Still **OPEN** — CF **1033** since 2026-09-13 ~11:57 America/Edmonton (`api.` / `ops.` / `app.` / `cloud.` **530** / error **1033**; waitlist OPTIONS **530**) | `Docs-MacBook-Pro` **absent** |
+| **Vault (McKing)** | Still **OPEN** — **502** since ~19:45 MT Sep 13 (**not** 1033) on `/alive` + `/api/config` | `lightning` **absent** |
 | **Neither host** | — | Only **`Mac.lan`** (Ben Laptop). `Mac.lan` ≠ Doc ≠ McKing. No wrong-host Shell. |
 
-Brochure Option A + Soft-530 Discord assets stay **LIVE**. **#82** unchanged (**never #81**). This paper does **not** invent a CLEAR, a live restore, or a Ben GO.
+Brochure Option A **LIVE**: Zone Redirect **FULL 10/10**; `waitlist.js?v=3`; `styles.css?v=36`; Soft-530 Discord honesty; Home still bare `href="/"` + canonical/og apex until **#82**. Freeze intact **`4cf8924`** / BUILD_ID **`5swmVz`**. **#82** still Ben GO. Apex deferred. This paper does **not** invent a CLEAR, a live restore, or a Ben GO.
 
 ---
 

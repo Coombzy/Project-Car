@@ -78,7 +78,7 @@ Lookout Soft-530 coverage is still **api-only**. Companions stay **HOLD**. Manua
 
 Essay: [vault-stay-up.md](vault-stay-up.md). Soft-530 `/health` **200** is **not** vault CLEAR. After that CLEAR, stamp **vault post-CLEAR stay-up evidence** (cloudflared.service ActiveState/Result/ExecMainStatus · VW healthy + `DOMAIN=https://vault.projectcar.ca` · Tailscale · **1033→200** vs **502→200**) on [vault-stay-up.md](vault-stay-up.md) before walking away.
 
-Living this fold — OPEN class honesty (do **not** invent CLEAR): Soft-530 still **OPEN** as CF **1033** tunnel-down. Vault independently **OPEN** as **502** origin-down — **not** 1033 — on `/alive` **and** `/api/config`. ListMachines only `Mac.lan`. Different first checks when `lightning` returns — Soft-530 **1033** = Doc tunnel first; vault **502** = VW origin first.
+Living this fold — OPEN class honesty (do **not** invent CLEAR): Soft-530 still **OPEN** as CF **1033** since 2026-09-13 ~11:57 America/Edmonton. Vault independently **OPEN** as **502** since ~19:45 MT Sep 13 — **not** 1033 — on `/alive` **and** `/api/config`. ListMachines only `Mac.lan` — `Mac.lan` ≠ `Docs-MacBook-Pro` ≠ `lightning` (lid-restore + vault wake **blocked**). Different first checks when `lightning` returns — Soft-530 **1033** = Doc tunnel first; vault **502** = VW origin first. Brochure Option A **LIVE** (FULL 10/10; `waitlist.js?v=3`; `styles.css?v=36`; Home bare `href="/"` + canonical/og apex until **#82**). Freeze intact **`4cf8924`** / **`5swmVz`**. **#82** still Ben GO.
 
 ---
 

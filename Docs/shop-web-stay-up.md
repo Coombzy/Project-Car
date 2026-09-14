@@ -166,7 +166,7 @@ Companion flip watches are **HOLD / not armed**. Ben skipped companion-watch app
 
 Cadence ≈ the api `/health` watch. Baselines (Lookout-owned): `/workspace/lookout/projectcar-ops-health-baseline.json` + `projectcar-app-health-baseline.json` (+ cloud if armed). Flip-only alerts: **Chief + Lead only**; **never Ben**; never restart / mutate.
 
-**HOLD / not armed.** Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask. Do **not** claim companion watches armed / `enabled:true` / LIVE. Api + vault watches continue. Soft-530 companion watches ≠ vault `/alive` watch ≠ Doc lid-restore. Soft-530 **CLEAR** live. Vault flip watch stays **LIVE/armed**. Api `/health` stay-up: `api-stay-up.md`. STATUS Live is canonical.
+**HOLD / not armed.** Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask. Do **not** claim companion watches armed / `enabled:true` / LIVE. Api + vault watches continue. Soft-530 companion watches ≠ vault `/alive` watch ≠ Doc lid-restore. Soft-530 living is **OPEN** (CF **1033** since 2026-09-13 ~11:57 America/Edmonton) — Fri CLEAR is historical. Vault flip watch stays **LIVE/armed**. Api `/health` stay-up: `api-stay-up.md`. STATUS Live is canonical.
 
 ---
 

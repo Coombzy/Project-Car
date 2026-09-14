@@ -99,7 +99,7 @@ Parked Bulk Phase1 (brochure redirects **after #82 live** — drafted, not appli
 
 **Anti-collision:** `/membership` / `/membership/` → **301** `/membership.html` is live Option A. `/member*` is **not** that rule. Today `/member*` is Worker **404**. Apex+www `/member/login` must **never** 301 into `membership.html`. `/member` is a prefix of `/membership` — rank + exact path, not `starts_with /member`.
 
-STATUS Next #1 is **capacity-blocked** until **#82** Worker-live + this Bulk Phase1 slot-free. That is **not** Member GO, **not** this upload, **not** this tip-fold. **#83** is **not** this gate. Soft-530 **CLEAR** / **LIVE** does **not** unlock Member edge or Bulk Phase1. Post-dual-CLEAR **brochure lane** after **#82** Worker-live: [post-dual-clear-go.md](post-dual-clear-go.md) (Bulk Phase1 → **#83** → Member after Bulk; unfreeze+#79.1 is Shop OS parallel).
+STATUS Next #1 is **capacity-blocked** until **#82** Worker-live + this Bulk Phase1 slot-free. That is **not** Member GO, **not** this upload, **not** this tip-fold. **#83** is **not** this gate. Soft-530 living is **OPEN** (CF **1033** since 2026-09-13 ~11:57 America/Edmonton) — Fri **CLEAR** / **LIVE** is historical and does **not** unlock Member edge or Bulk Phase1. Post-dual-CLEAR **brochure lane** after **#82** Worker-live: [post-dual-clear-go.md](post-dual-clear-go.md) (Bulk Phase1 → **#83** → Member after Bulk; unfreeze+#79.1 is Shop OS parallel).
 
 ---
 

@@ -6,7 +6,7 @@
 
 Standing plan for two interim gates while the shop is **not** open and staff **OIDC** (STATUS Next #5) is still later. Original plan PR is **#79**. This tip-fold **elevates** the card into STATUS living-ops / Next because Soft-530 **CLEAR** re-exposed public demo credentials. Merging this file / folding it on held **#70** is **not** a login-code change, **not** an Access enable, **not** a Doc pull, and **not** OIDC.
 
-Garage **#79.1** strip-changeme (Owner/Member banner + password prefill) is **git-only until Doc unfreeze+pull**. Merge alone will **not** clear public `ops.` / `app.` `/login` while the freeze holds (`4cf8924` / BUILD_ID **`5swmVz`**). Soft-530 is **CLEAR**; live `/login` still prints `changeme` on that frozen build.
+Garage **#79.1** strip-changeme (Owner/Member banner + password prefill) is **git-only until Doc unfreeze+pull**. Merge alone will **not** clear public `ops.` / `app.` `/login` while the freeze holds (`4cf8924` / BUILD_ID **`5swmVz`**). **Living:** Soft-530 is **OPEN** (CF **1033** since 2026-09-13 ~11:57 America/Edmonton) — Fri CLEAR is historical. When origin is next up, `/login` still prints `changeme` on that frozen build.
 
 Do **not** execute Garage or Zone from this tip-fold. **Ben GO** is required before either flip. Soft-530-CLEAR **#79** Next Ben GO stays **parallel to #82** — **not** blocked on Worker SEO / Option A upload / Bulk Phase1. Soft-530 CLEAR makes this **more urgent** than when Doc was 530 (login HTML was then often unreachable behind lid-close **530 / 1033**). Do **not** invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, Mission Control cockpit work, or an OIDC implementation. This file does **not** ping Ben. Do **not** rewrite **#82** → Zone upload+purge; **#83** after **#82**; Bulk for Member. **Never #81.**
 
@@ -35,7 +35,7 @@ Ben decides when to execute. This file does **not** ping Ben.
 
 ## Reality today (do not claim this is done)
 
-Soft-530 is **CLEAR** / **LIVE** (Lead verified 2026-09-11 ~06:50 America/Edmonton): public `GET /health` **200**; `ops.` + `app.` **307** → `/login`; waitlist **OPTIONS 200**. Future lid-close can still **530 / 1033**.
+Fri Soft-530 **CLEAR** / **LIVE** (Lead verified 2026-09-11 ~06:50 America/Edmonton) is **historical**. **Living:** Soft-530 **OPEN** CF **1033** since 2026-09-13 ~11:57 America/Edmonton. When origin is up: public `GET /health` **200**; `ops.` + `app.` **307** → `/login`; waitlist **OPTIONS 200**. Future lid-close can still **530 / 1033**.
 
 **Soft-530 CLEAR re-exposed the public demo password.** Lead/Chief verified live: `https://ops.projectcar.ca/login` (and the `app.` alias) still shows banner Password `` `changeme` `` and **prefills** the password input **on frozen Doc BUILD_ID `5swmVz`**. Same-class leak on `/member/login`. Email prefill is **ok**. That is why **#79** is now Soft-530-CLEAR **Next Ben GO** — more urgent than when Doc was 530 — and **parallel to #82**. Garage **#79.1** merge will **not** change that public HTML until unfreeze+pull.
 

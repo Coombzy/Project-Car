@@ -33,7 +33,7 @@ Ben decides when (if) to execute. This file does **not** ping Ben and is **not**
 
 ## Reality today (do not claim this is done)
 
-Soft-530 is **CLEAR** (Doc origin **LIVE** 2026-09-11). Future lid-close can still **530 / 1033**. Lookout `projectcar-api-health-watch` is **`enabled:true`**. **#78 lookout-resume** is **LIVE-SUPERSEDED** — that watch is already **`enabled:true` while Doc stays frozen** at `4cf8924` / `5swmVz`. Soft-530 companions stay **HOLD**.
+Fri Soft-530 **CLEAR** (Doc origin **LIVE** 2026-09-11) is **historical**. **Living:** Soft-530 **OPEN** CF **1033** since 2026-09-13 ~11:57 America/Edmonton. Future lid-close can still **530 / 1033**. Lookout `projectcar-api-health-watch` is **`enabled:true`**. **#78 lookout-resume** is **LIVE-SUPERSEDED** — that watch is already **`enabled:true` while Doc stays frozen** at `4cf8924` / `5swmVz`. Soft-530 companions stay **HOLD**.
 
 **Shop OS/MC hop ~10:32 America/Edmonton** (lightning / Omarchy) opened the McKing path. Do **not** keep the stale hub line “McKing is not on the tailnet / migrate not started.” [home-lab-specification.md](home-lab-specification.md) host table + anti-goals now match STATUS dual-tunnel + vault LIVE (McKing / `lightning` = `vault.` → `:8222`; Doc tunnel = `cloud.` + `api.` + `app.` + `ops.` only). 2026-08-16 rows in `nextcloud-progress.md` can still be stale for that path — this paper is the shop-host reality stamp.
 
@@ -112,7 +112,7 @@ Mirror Vaultwarden Tailscale Serve on McKing (`lightning.tailbe8f55.ts.net`) —
 
 ## Soft-530 dual-run acceptance gate (before any public shop CF hostname leaves Doc)
 
-**Hard gate for Doc shop hosts only (`cloud.` / `api.` / `app.` / `ops.`).** **Vault is EXCLUDED** — `vault.projectcar.ca` is already **LIVE verified** on McKing. Do **not** cut public `api.` / `ops.` / `app.` (or `cloud.`) off Doc until **all five** rows PASS. This paper is **not** that shop cut. Soft-530 is **CLEAR** today (Doc origin **LIVE** 2026-09-11); this table is for a **later** shop execution — not a claim the shop cut started, and not a claim Soft-530 is an active outage. Vault LIVE does **not** satisfy this gate.
+**Hard gate for Doc shop hosts only (`cloud.` / `api.` / `app.` / `ops.`).** **Vault is EXCLUDED** — `vault.projectcar.ca` is already **LIVE verified** on McKing. Do **not** cut public `api.` / `ops.` / `app.` (or `cloud.`) off Doc until **all five** rows PASS. This paper is **not** that shop cut. Fri Soft-530 **CLEAR** (Doc origin **LIVE** 2026-09-11) is **historical**; living Soft-530 is **OPEN** (CF **1033** since 2026-09-13 ~11:57 America/Edmonton). This table is for a **later** shop execution — not a claim the shop cut started. Vault LIVE (when CLEAR) does **not** satisfy this gate.
 
 | # | Gate | Pass | Fail |
 |---|------|------|------|
@@ -228,7 +228,7 @@ Shop-web host allowlist (`ops.` / `app.` / customer hosts / localhost — never 
 
 ## 6. Lookout `/health` gates (before DNS / origin flip)
 
-Soft-530 dual-run gate **row 3**. Watch: Lookout **`projectcar-api-health-watch`** (today **`enabled:true`**, live `/health` **200** as of 2026-09-11 restore). **#78 lookout-resume** is **LIVE-SUPERSEDED**. Soft-530 **CLEAR** live honesty is unchanged — this streak is a **later** cut gate, not a claim the edge is down now.
+Soft-530 dual-run gate **row 3**. Watch: Lookout **`projectcar-api-health-watch`** (today **`enabled:true`**, live `/health` **200** as of 2026-09-11 restore). **#78 lookout-resume** is **LIVE-SUPERSEDED**. Soft-530 living is **OPEN** (CF **1033** since 2026-09-13 ~11:57 America/Edmonton) — this streak is a **later** cut gate, not a claim Fri CLEAR is still live.
 
 **Default streak:** **N = 15** consecutive public `GET /health` **200** over **~15 minutes** (~one probe/minute), **zero** CF **1033** / **530** / **502**. Ben may tune **N** in **10–20** and the window. A single 200 is **not** the gate.
 

@@ -49,7 +49,7 @@ Redirect plan A is already parked (agent `/workspace` parking is outside this re
 
 **STATUS Next #1 is capacity-blocked** until **#82** Worker-live + this Bulk Phase1 slot-free. That is **not** Member GO, **not** this upload, **not** this tip-fold. **#83** is **not** this gate.
 
-Do **not** create a new Dynamic Redirect Rule for a new pretty path. Do **not** execute Bulk Phase1 or Redirect A from a docs PR or this upload. **#82** Home canonical/og/sitemap `/index.html` is **not yet Worker-live**. Soft-530 **#80** (`waitlist.js?v=3` + `styles.css?v=36`) stays Worker-live. Soft-530 is **CLEAR** / **LIVE** — that does **not** unlock Member edge or Bulk Phase1.
+Do **not** create a new Dynamic Redirect Rule for a new pretty path. Do **not** execute Bulk Phase1 or Redirect A from a docs PR or this upload. **#82** Home canonical/og/sitemap `/index.html` is **not yet Worker-live** (Home still bare `href="/"` + canonical/og apex). Soft-530 **#80** (`waitlist.js?v=3` + `styles.css?v=36`) stays Worker-live. Soft-530 living is **OPEN** (CF **1033** since 2026-09-13 ~11:57 America/Edmonton) — Fri CLEAR is historical. That does **not** unlock Member edge or Bulk Phase1.
 
 ---
 

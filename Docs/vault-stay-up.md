@@ -85,7 +85,7 @@ A **502** with local `:8222` **200** is still an edge/tunnel problem (Zone + McK
 
 Soft-530 **530 / 1033** on `api.` / `ops.` / `app.` is **Doc lid-close**. Vault **530 / 1033** is **McKing**. Do not swap the wake.
 
-Living this fold — OPEN class honesty (do **not** invent CLEAR): **Soft-530** is still **OPEN** as CF **1033** tunnel-down. **Vault** is independently **OPEN** as **502** origin-down — **not** 1033 — on `/alive` **and** `/api/config`. When `lightning` returns, first checks differ: Soft-530 **1033** → Doc `cloudflared` / host / tunnel; vault **502** → local `:8222` / VW (table above).
+Living this fold — OPEN class honesty (do **not** invent CLEAR): **Soft-530** is still **OPEN** as CF **1033** since 2026-09-13 ~11:57 America/Edmonton. **Vault** is independently **OPEN** as **502** since ~19:45 MT Sep 13 — **not** 1033 — on `/alive` **and** `/api/config`. When `lightning` returns, first checks differ: Soft-530 **1033** → Doc `cloudflared` / host / tunnel; vault **502** → local `:8222` / VW (table above). ListMachines **Mac.lan only** — lid-restore + vault wake **blocked**.
 
 ---
 
@@ -178,10 +178,10 @@ Living this fold — do **not** invent CLEAR:
 
 | Plane | Living OPEN class | First check when `lightning` returns |
 |-------|-------------------|--------------------------------------|
-| **Soft-530 (Doc)** | CF **1033** tunnel-down (`api.` / `ops.` / `app.` / `cloud.` **530** / error **1033**; waitlist OPTIONS **530**) | Doc `cloudflared` / host / tunnel — [doc-lid-restore.md](doc-lid-restore.md) |
-| **Vault (McKing)** | **502** origin-down — **not** 1033 — on `/alive` **and** `/api/config` | Local `:8222` / VW (this file’s triage) |
+| **Soft-530 (Doc)** | CF **1033** since 2026-09-13 ~11:57 America/Edmonton (`api.` / `ops.` / `app.` / `cloud.` **530** / error **1033**; waitlist OPTIONS **530**) | Doc `cloudflared` / host / tunnel — [doc-lid-restore.md](doc-lid-restore.md) |
+| **Vault (McKing)** | **502** since ~19:45 MT Sep 13 — **not** 1033 — on `/alive` **and** `/api/config` | Local `:8222` / VW (this file’s triage) |
 
-ListMachines shows only `Mac.lan` (Ben Laptop, LocalHostName Laptop; `:8000`/`:8080` down) — `Docs-MacBook-Pro` + `lightning` absent. Brochure Option A + Soft-530 Discord assets stay **LIVE**. **#82** unchanged (**never #81**). This paper does **not** invent a CLEAR or a live restore. Capture on **McKing** (`lightning`) after the **next** vault CLEAR — **not** on `Mac.lan`, **not** on Doc.
+ListMachines shows only `Mac.lan` (Ben Laptop, LocalHostName Laptop; `:8000`/`:8080` down) — `Docs-MacBook-Pro` + `lightning` absent (lid-restore + vault wake **blocked**). Brochure Option A **LIVE**: Zone Redirect **FULL 10/10**; `waitlist.js?v=3`; `styles.css?v=36`; Soft-530 Discord honesty; Home still bare `href="/"` + canonical/og apex until **#82**. Freeze intact **`4cf8924`** / **`5swmVz`**. **#82** still Ben GO. This paper does **not** invent a CLEAR or a live restore. Capture on **McKing** (`lightning`) after the **next** vault CLEAR — **not** on `Mac.lan`, **not** on Doc.
 
 On **every** vault CLEAR after McKing wake, Lead records:
 
