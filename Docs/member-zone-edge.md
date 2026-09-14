@@ -2,7 +2,7 @@
 
 **Status:** Checklist / plan only — **not shipped**. Capacity-blocked by Option A **FULL 10/10**. Do **not** execute until **#82** Worker-live + Bulk Phase1 **and** **Ben GO**.  
 **Updated:** 2026-09-11 (Option A capacity lock on held **#70**)  
-**Related:** `STATUS.md` Next #1, `member-host-cutover.md`, `app-alias-cut.md` (STATUS Next #2; later — do **not** cut `app.` here), `brochure-worker-deploy.md` (upload click-path), `brochure-worker-ci.md` (Option A matrix / Member-precondition receipt + **#82** purge/freshness), `shop-web-stay-up.md`, `brochure-pages-cutover.md`, `cors-origins.md`, `website-webapp-specification.md` §3, `mcking-shop-host-cutover.md` (later shop origin — **not** this cut)
+**Related:** `STATUS.md` Next #1, `member-host-cutover.md`, `app-alias-cut.md` (STATUS Next #2; later — do **not** cut `app.` here), `brochure-worker-deploy.md` (upload click-path), `brochure-worker-ci.md` (Option A matrix / Member-precondition receipt + **#82** purge/freshness), [post-dual-clear-go.md](post-dual-clear-go.md) (after **#82** Worker-live the **brochure lane** is Bulk Phase1 → **#83** → Member after Bulk — **never #81**; unfreeze+#79.1 is Shop OS parallel), `shop-web-stay-up.md`, `brochure-pages-cutover.md`, `cors-origins.md`, `website-webapp-specification.md` §3, `mcking-shop-host-cutover.md` (later shop origin — **not** this cut)
 
 This file is the **edge / path-split** slice Zone needs for STATUS **Next #1** (Member UI on **projectcar.ca**). Cookie Domain / Path / Secure / SameSite, CORS allowlist, and Next middleware host allowlist live in `member-host-cutover.md` §2 — **summarize + point**, do not rewrite that essay here.
 
@@ -35,7 +35,7 @@ Soft-530 is **CLEAR** / **LIVE**. That does **not** unlock Member edge. **#82** 
 
 | Hard gate | Meaning |
 |-----------|---------|
-| **Member edge Ben GO only after #82 Worker-live + Bulk Phase1** | Bulk Phase1 frees pretty-URL Dynamic slots. Redirect SSOT pick A is **already parked** (`brochure-worker-ci.md` Option A matrix — Member-precondition receipt; upload click-path `brochure-worker-deploy.md`). Bulk stays after the **#82** upload **only** for those slots. |
+| **Member edge Ben GO only after #82 Worker-live + Bulk Phase1** | Bulk Phase1 frees pretty-URL Dynamic slots. Redirect SSOT pick A is **already parked** (`brochure-worker-ci.md` Option A matrix — Member-precondition receipt; upload click-path `brochure-worker-deploy.md`). Bulk stays after the **#82** upload **only** for those slots. Post-dual-CLEAR **brochure lane** ([post-dual-clear-go.md](post-dual-clear-go.md)): Member edge only after Bulk — not after unfreeze. |
 | **#83 is not this gate** | **#83** is CI-only thin `_redirects` assert on the **#82** base. Prefer merge after **#82**; **may run in parallel with** Zone Direct Upload. Does **not** need Bulk Phase1. **Never #81.** Do **not** write `#82 → upload → Bulk Phase1 → #83`. |
 | **Keep `root` / `shop` Dynamic** | `root` / `index` / `shop` / `chat` stay Dynamic until Member **needs** those remaining slots. Do **not** migrate them in Bulk Phase1 just to “make room.” |
 | **Rank `/member*` BEFORE the brochure Redirect pack** | Path/tunnel + www→apex `/member*` 301 evaluate **first**. Brochure pretty-URLs (including `membership` → `membership.html`) must not win. |
