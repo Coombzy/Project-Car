@@ -178,6 +178,8 @@ Weekend Soft-530 control plane is still Doc KeepAlive / lid-close: `com.projectc
 
 Anti-goal: Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask. **#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk **retired** (Owner desk LIVE; optional CSV Later) / **#79.1** git-only until Doc unfreeze — **unchanged**.
 
+Friday last weekday `*/20` (~17:40 MT) hands **into this** weekend coverage. **Mon–Thu nights** after last `*/20` until next weekday first fire (~06:00) are [soft-530-weekday-overnight.md](soft-530-weekday-overnight.md) — same Lookout api+vault-only set; companions stay **HOLD**; **not** this Sat/Sun card.
+
 ---
 
 ## Ownership

@@ -54,6 +54,8 @@ plan-improve is **off Sat/Sun**. Soft-530 companion ops/app watches stay **HOLD 
 
 **#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk **retired** (Owner desk LIVE; optional CSV Later) / **#79.1** git-only until Doc unfreeze / vault stay-up (`017f778`) / dual-host-outage (`7bf894b`) — **unchanged**. Essays: `api-stay-up.md`, `shop-web-stay-up.md`, `vault-stay-up.md`. STATUS Live / Locks is canonical.
 
+Friday last weekday `*/20` (~17:40 MT) hands **into this** weekend coverage. **Mon–Thu nights** after last `*/20` until next weekday first fire (~06:00) are [soft-530-weekday-overnight.md](soft-530-weekday-overnight.md) — same Lookout api+vault-only set; **not** this Sat/Sun card. Mid-overnight Doc reappear still [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (**never** `Mac.lan`; **never auto-fire**).
+
 ---
 
 ## Ownership (this run)
