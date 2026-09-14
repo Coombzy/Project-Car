@@ -2,13 +2,13 @@
 
 **Status:** Paper watch spec — Lookout **to arm** (this fold does **not** claim `enabled:true`)  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` Live Option A + Reality quarantine + Lookout rows, `brochure-worker-ci.md` (Option A **FULL 10/10** receipt — **not** this watch), `brochure-worker-deploy.md` (upload click-path — **not** this watch), `doc-lid-restore.md` (`main` still stamps api-health **paused**), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate**), `website-improvements.md` P4-5, [post-dual-clear-go.md](post-dual-clear-go.md)
+**Related:** `STATUS.md` Live Option A + Reality quarantine + Lookout rows + living dual-OPEN, [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops — this watch paper **continues**; Option A public SSOT during extended OPEN), [dual-host-outage.md](dual-host-outage.md) (wake order), [vault-stay-up.md](vault-stay-up.md), `brochure-worker-ci.md` (Option A **FULL 10/10** receipt — **not** this watch), `brochure-worker-deploy.md` (upload click-path — **not** this watch), `doc-lid-restore.md` (`main` still stamps api-health **paused**), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate**), `website-improvements.md` P4-5, [post-dual-clear-go.md](post-dual-clear-go.md)
 
 While Soft-530 is **OPEN**, brochure **Option A** is the only public **LIVE** surface. It has **no** continuous watch — only `*/20` smokes. This file is the Lookout watch **to arm**. Flip **Chief + Lead only**. **Not** the Soft-530 ops/app companion watches Ben skipped.
 
 This file is **not** a Zone apply, **not** a Garage HTML PR, **not** **#82** upload, **not** a Doc unfreeze, **not** a companion re-ask, and **not** Bitwarden.
 
-**Living dual-OPEN (`5f2fd1c`) is unchanged.** Soft-530 **OPEN** CF **1033** since 2026-09-13 ~11:57 America/Edmonton. Vault independently **OPEN** **502** since ~19:45 MT Sep 13. ListMachines **Mac.lan only**. Freeze intact **`4cf8924`** / **`5swmVz`**. **#82** still Ben GO.
+**Living dual-OPEN (`5f2fd1c`) is unchanged.** Soft-530 **OPEN** CF **1033** since 2026-09-13 ~11:57 America/Edmonton (**~24h+**). Vault independently **OPEN** **502** since ~19:45 MT Sep 13. ListMachines **Mac.lan only**. Quiet-ops: [soft-530-extended-open.md](soft-530-extended-open.md) — this watch paper **continues**; Option A is public SSOT during extended OPEN; this fold still does **not** arm the watch. Freeze intact **`4cf8924`** / **`5swmVz`**. **#82** still Ben GO.
 
 ---
 
@@ -35,6 +35,7 @@ Option A stays up when Doc sleeps. A Redirect-pack or asset-`?v=` break is invis
 | **#82 Ben GO unchanged** | Home canonical / og / sitemap `/index.html` is **not yet Worker-live**. Do **not** upload from this paper. |
 | **Option A FULL 10/10** | No new Dynamic pretty-URLs. Watch the **live** pack — do **not** invent rules. |
 | **Living dual-OPEN unchanged** | `5f2fd1c` stamp stands. This paper does **not** invent CLEAR, unfreeze, or Bitwarden. |
+| **Quiet-ops continue** | Soft-530 OPEN **~24h+** + vault OPEN + **Mac.lan only** → [soft-530-extended-open.md](soft-530-extended-open.md). This watch paper **continues**. Option A is public SSOT. Do **not** drop this paper because quiet-ops is on. This fold still does **not** arm. |
 | **Never #81** | Do **not** watch or upload `#81` `?v=37` / Worker `/` + `/shop` `_redirects`. |
 
 ---
@@ -141,4 +142,4 @@ After **#82** upload + **mandatory** purge/freshness, **one** tip-fold reconcile
 | Doc unfreeze / **#79.1** / Bitwarden | Anti-goals. |
 | Homepage-only **200** as “brochure up” | Insufficient. Pretty-URL **301**s + live `?v=` are the watch. |
 
-**Anti-goals:** not Zone change, not **#82** upload, not unfreeze, not companion re-ask, not Bitwarden.
+**Anti-goals:** not Zone change, not **#82** upload, not unfreeze, not companion re-ask, not Bitwarden. Quiet-ops: [soft-530-extended-open.md](soft-530-extended-open.md) — this paper **continues**; duration ≠ arm-from-docs.

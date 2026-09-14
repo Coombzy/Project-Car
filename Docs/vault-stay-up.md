@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-14  
 **Public URL:** https://vault.projectcar.ca  
-**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks + **vault post-CLEAR stay-up evidence** pointer), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**; Soft-530 **post-CLEAR stay-up evidence** is **Doc forensics**), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN **wake order** — Doc first, then McKing; this file is **McKing forensics** after vault CLEAR), [post-dual-clear-go.md](post-dual-clear-go.md) (after **both** CLEARs + forensics `@55e10d0` / `@d88cacb` — Ben GO menu, **never auto-fire**), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
+**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks + **vault post-CLEAR stay-up evidence** pointer), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**; Soft-530 **post-CLEAR stay-up evidence** is **Doc forensics**), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN **wake order** — Doc first, then McKing; this file is **McKing forensics** after vault CLEAR), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — Chief stays armed for `lightning` → this file; no Ben re-nag), [post-dual-clear-go.md](post-dual-clear-go.md) (after **both** CLEARs + forensics `@55e10d0` / `@d88cacb` — Ben GO menu, **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
 
 Keep public Vaultwarden reachable on McKing. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md`.
 
@@ -66,7 +66,7 @@ Baseline (Lookout-owned): `/workspace/lookout/projectcar-vault-health-baseline.j
 
 **Flip-only alerts:** **Chief + Lead only** on **200↔non-200**. **Never Ben.** Never restart / mutate from the watch.
 
-Weekend flip coverage (plan-improve off Sat/Sun) = Lookout `api.` `/health` **+** this vault `/alive` **only**. Companions stay **HOLD**. Vault flips stay here.
+Weekend flip coverage (plan-improve off Sat/Sun) = Lookout `api.` `/health` **+** this vault `/alive` **only**. Companions stay **HOLD until Ben reopens** — **not** weekend-only ([soft-530-extended-open.md](soft-530-extended-open.md)). Vault flips stay here. Lookout api+vault+brochure-redirect **continue** during quiet-ops.
 
 ---
 
@@ -85,7 +85,7 @@ A **502** with local `:8222` **200** is still an edge/tunnel problem (Zone + McK
 
 Soft-530 **530 / 1033** on `api.` / `ops.` / `app.` is **Doc lid-close**. Vault **530 / 1033** is **McKing**. Do not swap the wake.
 
-Living this fold — OPEN class honesty (do **not** invent CLEAR): **Soft-530** is still **OPEN** as CF **1033** since 2026-09-13 ~11:57 America/Edmonton. **Vault** is independently **OPEN** as **502** since ~19:45 MT Sep 13 — **not** 1033 — on `/alive` **and** `/api/config`. When `lightning` returns, first checks differ: Soft-530 **1033** → Doc `cloudflared` / host / tunnel; vault **502** → local `:8222` / VW (table above). ListMachines **Mac.lan only** — lid-restore + vault wake **blocked**.
+Living this fold — OPEN class honesty (do **not** invent CLEAR): **Soft-530** is still **OPEN** as CF **1033** since 2026-09-13 ~11:57 America/Edmonton (**~24h+**). **Vault** is independently **OPEN** as **502** since ~19:45 MT Sep 13 — **not** 1033 — on `/alive` **and** `/api/config`. When `lightning` returns, first checks differ: Soft-530 **1033** → Doc `cloudflared` / host / tunnel; vault **502** → local `:8222` / VW (table above). ListMachines **Mac.lan only** — lid-restore + vault wake **blocked**. Quiet-ops is in force — [soft-530-extended-open.md](soft-530-extended-open.md): **no Ben re-nag**; Chief stays armed for `lightning` → this file; duration ≠ Bitwarden / **#82** / unfreeze.
 
 ---
 
@@ -219,7 +219,7 @@ plan-improve is **off Sat/Sun**. Soft-530 companion ops/app watches stay **HOLD 
 | Both OPEN | [dual-host-outage.md](dual-host-outage.md) — **Doc first, then McKing**. Parallel only if both hosts on ListMachines. |
 | Vault CLEAR after McKing wake | **This file** — stamp **post-CLEAR stay-up evidence** (above). Soft-530 post-CLEAR stays [doc-lid-restore.md](doc-lid-restore.md). |
 
-Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-improve resumes Soft-530 smoke. Anti-goal: Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask ≠ vault import/rotate while vault is down.
+Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-improve resumes Soft-530 smoke. Anti-goal: Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask ≠ vault import/rotate while vault is down. Extended OPEN quiet-ops (Soft-530 **~24h+** + vault OPEN + **Mac.lan only**): [soft-530-extended-open.md](soft-530-extended-open.md) — **no Ben re-nag**; Chief stays armed here; duration ≠ Bitwarden.
 
 **#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk **retired** (Owner desk LIVE; optional CSV Later) / **#79.1** git-only until Doc unfreeze — **unchanged**. STATUS Live / Locks is canonical.
 
@@ -241,5 +241,7 @@ Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-
 - Walk away from a vault CLEAR without the stay-up evidence stamp (cloudflared.service ActiveState/Result/ExecMainStatus · VW healthy + DOMAIN · Tailscale · 1033→200 vs 502→200)
 - Invent a CLEAR or a live restore from this paper while vault is still **OPEN** as **502**
 - Capture the stamp on `Mac.lan` or Doc (not McKing / `lightning`)
+- Re-nag Ben for McKing wake (already asked — [soft-530-extended-open.md](soft-530-extended-open.md))
+- Treat ~24h OPEN as Bitwarden / **#82** / unfreeze
 - Re-ask companion watches / schedule weekend Zone Direct Upload / **#82**
 - Execute Zone or Garage from this paper
