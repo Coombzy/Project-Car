@@ -2,7 +2,7 @@
 
 **Status:** Living ops (Lead checklist)  
 **Updated:** 2026-09-11  
-**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file; Soft-530 **CLEAR** Friday ≠ this GO), `api-stay-up.md` (weekend `/health` flip → this file), `shop-web-stay-up.md`, `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md` (weekend Soft-530 coverage), `shop-os-ci.md` (green CI ≠ unfreeze)
+**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file; Soft-530 **CLEAR** Friday ≠ this GO), `api-stay-up.md` (weekend `/health` flip → this file), `shop-web-stay-up.md`, `vault-stay-up.md` (McKing vault — **OUT** of this sequence; weekend dual-outage proved Soft-530 ≠ vault), `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md` (weekend Soft-530 coverage), `shop-os-ci.md` (green CI ≠ unfreeze)
 
 Single **ordered** wake/restore after Doc lid-close / sleep (the morning **530 / 1033** pattern). Plan/ops checklist for **Lead**. This file is the sequence. Process essays stay in the Related docs — do not copy them here.
 
@@ -20,7 +20,7 @@ Amphetamine + plugged-in no-sleep (`doc-software-baseline.md`) plus LaunchAgent 
 
 The public brochure (Worker `projectcar-brochure`) does **not** go down when Doc sleeps. Waitlist still needs the API.
 
-**Vault is OUT of this file.** `vault.projectcar.ca` is McKing-only LIVE (`cloudflared` → `localhost:8222`). Soft-530 lid-restore / LaunchAgent KeepAlive must **not** recreate `vault.` ingress on Doc. Vault watch ≠ this sequence.
+**Vault is OUT of this file.** `vault.projectcar.ca` is McKing-only LIVE (`cloudflared` → `localhost:8222`). Soft-530 lid-restore / LaunchAgent KeepAlive must **not** recreate `vault.` ingress on Doc. Vault watch ≠ this sequence. Vault flip ≠ this restore; Doc Soft-530 ≠ McKing vault wake. Essay: [vault-stay-up.md](vault-stay-up.md).
 
 ---
 
@@ -43,11 +43,11 @@ plan-improve is **off Sat/Sun**. Soft-530 companion ops/app watches stay **HOLD 
 |------|---------|
 | **Weekend control plane** | This file: Doc KeepAlive / lid-close (`com.projectcar.cloudflared` + uvicorn `:8000` + `next start` `:3000` LaunchAgents). **Not** `doc-unfreeze.md`. **Not** **#82**. |
 | **`api.` `/health` flips non-200** | Chief/Lead run **this** ordered restore — **process wake only**. No pull while freeze `4cf8924` / `5swmVz` is intact. |
-| **Vault flips** | Stay on the **separate** McKing vault watch. Vault is **OUT** of this file (below). |
+| **Vault flips** | Stay on the **separate** McKing vault watch — [vault-stay-up.md](vault-stay-up.md). Vault is **OUT** of this file (below). Vault flip ≠ this restore. |
 | **No weekend Zone / Worker** | Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-improve resumes Soft-530 smoke. |
 | **Anti-goal** | Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask. |
 
-**#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk **retired** (Owner desk LIVE; optional CSV Later) / **#79.1** git-only until Doc unfreeze — **unchanged**. Essays: `api-stay-up.md`, `shop-web-stay-up.md`. STATUS Live / Locks is canonical.
+**#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk **retired** (Owner desk LIVE; optional CSV Later) / **#79.1** git-only until Doc unfreeze — **unchanged**. Essays: `api-stay-up.md`, `shop-web-stay-up.md`, `vault-stay-up.md`. STATUS Live / Locks is canonical.
 
 ---
 
