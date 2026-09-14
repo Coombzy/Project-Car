@@ -53,6 +53,7 @@ plan-improve is **off Sat/Sun**. Soft-530 companion ops/app watches stay **HOLD 
 | **`/health` flips non-200** | Chief/Lead run `doc-lid-restore.md` **process wake only**. No `git pull` / rebuild while freeze `4cf8924` / `5swmVz` is intact. |
 | **Vault flips** | Stay on the **separate** McKing vault watch — [vault-stay-up.md](vault-stay-up.md). Do **not** fold vault into this API KeepAlive / lid-restore. Vault flip ≠ Doc lid-restore; Doc Soft-530 ≠ McKing vault wake. Dual-OPEN glue: [dual-host-outage.md](dual-host-outage.md). |
 | **No weekend Zone / Worker** | Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-improve resumes Soft-530 smoke. |
+| **Option A Dynamic redirect UNCOVERED** | While `brochure-option-a-redirect-watch` is **GONE**, weekend Option A Dynamic redirect is **explicitly uncovered — accept that risk**. Same class as [soft-530-weekday-overnight.md](soft-530-weekday-overnight.md). Do **not** invent weekend plan-improve, Zone, or Garage Option A coverage. **Next Option A smoke** = first weekday `*/20` after ~06:00, **or** Ben-approved Lookout recreate ([lookout-rearm-sop.md](lookout-rearm-sop.md)). **HOLD** a second Ben recreate ask. |
 | **Anti-goal** | Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask. |
 | **Post-CLEAR stay-up evidence** | After lid-restore CLEAR, stamp lastExit / KeepAlive / caffeinate·CDM / Tailscale — [doc-lid-restore.md](doc-lid-restore.md). Dual-host-outage is **wake order**. Soft-530 still **OPEN** this fold — paper does **not** invent CLEAR. |
 

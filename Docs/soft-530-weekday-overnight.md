@@ -2,11 +2,13 @@
 
 **Status:** Living ops — paper lock  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (living dual-OPEN + this pointer + weekend Soft-530), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops lock while OPEN **~24h+** + vault OPEN + **Mac.lan only** — this file is the **weekday overnight coverage** twin, **not** that lock), weekend Soft-530 coverage (`84107e7` — Sat/Sun plan-improve-off; STATUS Live / Locks + [api-stay-up.md](api-stay-up.md) / [doc-lid-restore.md](doc-lid-restore.md) / [vault-stay-up.md](vault-stay-up.md) / [shop-web-stay-up.md](shop-web-stay-up.md)), [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (**first hop** if Doc reappears mid-overnight — machineId `95a229f5-9296-4a18-aa98-70fd300dabdf`; **never** `Mac.lan` / Porsche), [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) (**first hop** if McKing / `lightning` reappears mid-overnight — machineId `9067d14b-46e5-4ef0-82d5-fce0febdc8f7`; **never** `Mac.lan`), [lookout-rearm-sop.md](lookout-rearm-sop.md) (interim Chief `*/20` **pauses** in this window; Lookout api+vault stay armed), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Option A **paper** continues; continuous watch **GONE**), [dual-host-outage.md](dual-host-outage.md) (wake order — **Doc first, then McKing**), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — **never auto-fire**), [deployment-guide.md](deployment-guide.md) (Monday paper map)
+**Related:** `STATUS.md` (living dual-OPEN + this pointer + weekend Soft-530), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops lock while OPEN **~24h+** + vault OPEN + **Mac.lan only** — this file is the **weekday overnight coverage** twin, **not** that lock), weekend Soft-530 coverage (`84107e7` — Sat/Sun plan-improve-off; STATUS Live / Locks + [api-stay-up.md](api-stay-up.md) / [doc-lid-restore.md](doc-lid-restore.md) / [vault-stay-up.md](vault-stay-up.md) / [shop-web-stay-up.md](shop-web-stay-up.md)), [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (**first hop** if Doc reappears mid-overnight — machineId `95a229f5-9296-4a18-aa98-70fd300dabdf`; **never** `Mac.lan` / Porsche), [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) (**first hop** if McKing / `lightning` reappears mid-overnight — machineId `9067d14b-46e5-4ef0-82d5-fce0febdc8f7`; **never** `Mac.lan`), [lookout-rearm-sop.md](lookout-rearm-sop.md) (weekday Chief `*/20` **pauses** in this window — Option A Dynamic redirect **UNCOVERED**; Lookout api+vault stay armed; **HOLD** second Ben recreate ask), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Option A **paper** continues; continuous watch **GONE**; overnight/weekend **UNCOVERED**), [dual-host-outage.md](dual-host-outage.md) (wake order — **Doc first, then McKing**), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — **never auto-fire**), [deployment-guide.md](deployment-guide.md) (Monday paper map)
 
 Complement of **weekend Soft-530 coverage** (`84107e7` — plan-improve **off Sat/Sun**) and **quiet-ops** ([soft-530-extended-open.md](soft-530-extended-open.md)). This file names the **weekday overnight gap**: after the last weekday Chief plan-improve `*/20` until the next weekday first fire. Soft-530 + vault coverage in that window is Lookout `api.` `/health` + vault `/alive` **only**.
 
-This card is **Mon–Thu nights only**. Friday’s last `*/20` hands **into weekend coverage**, not back into this file. This fold executes **none** of Zone Direct Upload, Garage, **#82**, unfreeze, companions, Bitwarden, or a Ben Doc-wake re-nag.
+While `brochure-option-a-redirect-watch` is **GONE**, overnight (this card) **and** weekend (`84107e7` stay-up rows) Option A Dynamic redirect coverage is **explicitly uncovered — accept that risk**. Do **not** invent overnight plan-improve, Zone, or Garage coverage. **Next Option A smoke** = first weekday `*/20` after ~06:00, **or** Ben-approved Lookout recreate ([lookout-rearm-sop.md](lookout-rearm-sop.md)). Cross-link: [lookout-rearm-sop.md](lookout-rearm-sop.md) · this file · weekend Soft-530 coverage (`84107e7` / stay-up rows). **HOLD** a second Ben recreate ask (`lookout-rearm-sop` already one-ask).
+
+This card is **Mon–Thu nights only**. Friday’s last `*/20` hands **into weekend coverage**, not back into this file. This fold executes **none** of Zone Direct Upload, Garage, **#82**, unfreeze, companions, Bitwarden, a Ben Doc-wake re-nag, or a second Ben recreate ask.
 
 ---
 
@@ -32,7 +34,7 @@ Same flip set as weekend coverage. Companions stay **HOLD**.
 |-------|--------------------|-----------------|
 | **Soft-530** | Lookout `projectcar-api-health-watch` — `GET https://api.projectcar.ca/health` | Soft-530 ops/app (`cloud.`) companion watches — **HOLD / not armed** (Ben skipped ~14:35 America/Edmonton — do **not** re-ask) |
 | **Vault** | Lookout vault `/alive` (fallback `/api/config` if `/alive` 404s) | Bitwarden import/rotate. Vault flip ≠ Doc lid-restore. |
-| **Option A brochure** | **Paper** continues ([brochure-redirect-watch.md](brochure-redirect-watch.md)). Continuous watch is **GONE**. Interim Chief `*/20` **pauses** after last weekday fire until next weekday first fire ([lookout-rearm-sop.md](lookout-rearm-sop.md)). | Overnight Zone Direct Upload / Worker / purge. **Redirect-only** smokes do **not** resume at 02:00. Soft-530 UX assets stay **root-relative LIVE** (`/styles.css?v=36` + `/waitlist.js?v=3` — not `/assets/`). |
+| **Option A brochure** | **UNCOVERED — accept that risk.** Paper continues ([brochure-redirect-watch.md](brochure-redirect-watch.md)). Continuous watch is **GONE**. Weekday Chief `*/20` **pauses** after last weekday fire until next weekday first fire. Same uncovered class as weekend (`84107e7`). **Next Option A smoke** = first weekday `*/20` after ~06:00, **or** Ben-approved Lookout recreate ([lookout-rearm-sop.md](lookout-rearm-sop.md)). Do **not** invent overnight plan-improve / Zone / Garage coverage. **HOLD** a second Ben recreate ask. | Overnight Zone Direct Upload / Worker / purge. Overnight redirect smoke. Soft-530 UX assets stay **root-relative LIVE** (`/styles.css?v=36` + `/waitlist.js?v=3` — not `/assets/`). |
 | **Control plane** | Doc KeepAlive / lid-close if Doc is reachable: `com.projectcar.cloudflared` + uvicorn `:8000` + `next start` `:3000`. **Not** unfreeze. **Not** **#82**. | Overnight Garage **#79.1** execute. Overnight `git pull` / rebuild while freeze `4cf8924` / **`5swmVz`** holds. |
 
 `ops.` / `app.` (and `cloud.`) can **530 while `api.` `/health` stays 200**. That blind spot is **accepted** overnight — companions stay **HOLD**. Do **not** invent a companion re-ask because the shop UI is dark.
@@ -64,7 +66,8 @@ STATUS pointers stay canonical. Honesty this fold:
 | **ListMachines** | **`Mac.lan` only** — `Mac.lan` ≠ `Docs-MacBook-Pro` ≠ `lightning` |
 | **Freeze** | Intact **`4cf8924`** / BUILD_ID **`5swmVz`** |
 | **#82** | Still **Ben GO**. Soft-530 **OPEN ≠ #82 blocked** — this overnight gap still ≠ auto-GO |
-| **Soft-530 UX assets** | **Root-relative LIVE** — `/styles.css?v=36` + `/waitlist.js?v=3` (not `/assets/`; those 404s are **not** a regression). Membership/Contact Discord honesty stays. |
+| **Option A Dynamic redirect** | **UNCOVERED overnight** while watch **GONE** — accept that risk. **Next smoke** = first weekday `*/20` after ~06:00, or Ben-approved Lookout recreate. |
+| **Soft-530 UX assets** | **Root-relative LIVE** — `/styles.css?v=36` + `/waitlist.js?v=3` (not `/assets/`; those 404s are **not** a regression). Membership/Contact Discord honesty stays. UX **LIVE** ≠ overnight redirect smoke. |
 
 This paper does **not** invent CLEAR, a host reappear, or a morning fire.
 
@@ -79,8 +82,10 @@ This paper does **not** invent CLEAR, a host reappear, or a morning fire.
 | **Companion re-ask** | ops/app companions **HOLD until Ben reopens** — not weekend-only, not overnight-only. Do **not** re-ask. |
 | **Bitwarden** | Import/rotate **blocked** until vault **CLEAR**, then still **Ben GO**. Overnight **502** ≠ rotate. |
 | **Ben Doc-wake re-nag** | Doc-wake + McKing wake **already asked**. OPEN duration alone (weekday overnight or ~24h quiet-ops) ≠ a new Ben page. |
-| **Overnight Zone Direct Upload** | No Worker upload / purge from this gap. Friday last `*/20` → weekend coverage, which also forbids weekend Zone. |
-| **Overnight Garage execute** | No **#79.1** rebuild / `changeme` strip from this paper. |
+| **Overnight Zone Direct Upload** | No Worker upload / purge from this gap. Friday last `*/20` → weekend coverage, which also forbids weekend Zone. Do **not** invent Zone Option A coverage. |
+| **Overnight Garage execute** | No **#79.1** rebuild / `changeme` strip from this paper. Do **not** invent Garage Option A coverage. |
+| **Invent overnight redirect smoke** | Option A Dynamic redirect is **uncovered — accept that risk**. Do **not** invent overnight plan-improve. **Next Option A smoke** = first weekday `*/20` after ~06:00, or Ben-approved Lookout recreate. |
+| **Second Ben recreate ask** | [lookout-rearm-sop.md](lookout-rearm-sop.md) already one-ask. Overnight uncovered ≠ a new Ben page. |
 | **Treat Friday night as this card** | Friday last `*/20` → **weekend coverage**. This file is **Mon–Thu nights** only. |
 | **Treat `Mac.lan` as Doc or McKing** | Identity lock unchanged. Mid-overnight reappear still [doc-reappear-first-hop.md](doc-reappear-first-hop.md) / [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md). |
 | **Auto-fire on reappear** | First hops, then smoke, then (only if CLEAR) forensics, then the sequencer. **Never auto-fire.** |
@@ -94,6 +99,8 @@ This paper does **not** invent CLEAR, a host reappear, or a morning fire.
 
 - Re-nag Ben for Doc-wake because the weekday clock crossed ~17:40 or the OPEN lasted overnight
 - Schedule overnight Zone Direct Upload / Worker / purge, or overnight Garage execute
+- Invent overnight plan-improve / Zone / Garage Option A redirect smoke (uncovered — accept that risk)
+- Re-ask Ben to recreate Lookout Option A from this paper (`lookout-rearm-sop` already one-ask)
 - Arm Soft-530 companions from this paper, or treat HOLD as weekend-only
 - Treat Friday last `*/20` as another Mon–Thu overnight — that handoff is **weekend coverage**
 - Shell `Mac.lan` or Porsche as Doc or McKing if a host name appears overnight
