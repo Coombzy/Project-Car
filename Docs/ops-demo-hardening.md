@@ -2,7 +2,7 @@
 
 **Status:** Plan only — Soft-530-CLEAR **Next Ben GO**, **parallel to #82**. **Not** a GO from this tip-fold. Do **not** change login HTML or enable Cloudflare Access here. Garage **#79.1** strip-changeme is **git-only until Doc unfreeze+pull**.  
 **Updated:** 2026-09-11 (#79.1 freeze honesty on held **#70**)  
-**Related:** `STATUS.md` living-ops / Next (this card), `deployment-guide.md`, `security-playbook.md`, `shop-web-stay-up.md`, `api-stay-up.md`, `cors-origins.md`, `doc-lid-restore.md`, `doc-unfreeze.md`, [post-dual-clear-go.md](post-dual-clear-go.md) (after dual CLEAR, **#79.1** live strip is **Shop OS parallel** — not “next after **#82**” in place of Bulk / **#83**; **#79** paper stays parallel), `app-alias-cut.md` (later — do **not** cut `app.` here), `apps/project-car/web/app/login/page.tsx`, `apps/project-car/web/app/login/login-form.tsx`, `apps/project-car/web/app/member/login/page.tsx`, `apps/project-car/web/app/member/login/login-form.tsx`
+**Related:** `STATUS.md` living-ops / Next (this card), `deployment-guide.md`, `security-playbook.md`, `shop-web-stay-up.md`, `api-stay-up.md`, `cors-origins.md`, `doc-lid-restore.md`, `doc-unfreeze.md`, [post-dual-clear-go.md](post-dual-clear-go.md) (after dual CLEAR, **#79.1** live strip is **Shop OS parallel** — not “next after **#82**” in place of Bulk / **#83**; **#79** paper stays parallel; **unfreeze + #79.1 acceptance smoke** is that file’s Shop OS card), `app-alias-cut.md` (later — do **not** cut `app.` here), `apps/project-car/web/app/login/page.tsx`, `apps/project-car/web/app/login/login-form.tsx`, `apps/project-car/web/app/member/login/page.tsx`, `apps/project-car/web/app/member/login/login-form.tsx`
 
 Standing plan for two interim gates while the shop is **not** open and staff **OIDC** (STATUS Next #5) is still later. Original plan PR is **#79**. This tip-fold **elevates** the card into STATUS living-ops / Next because Soft-530 **CLEAR** re-exposed public demo credentials. Merging this file / folding it on held **#70** is **not** a login-code change, **not** an Access enable, **not** a Doc pull, and **not** OIDC.
 
@@ -203,6 +203,8 @@ curl -sS -o /dev/null -w '%{http_code}\n' https://ops.projectcar.ca/login
 
 Expect **200**, email present, **`changeme` absent**. Temporary `app.` same until Next #2.
 
+**Lane-done** (after Ben GO unfreeze + this rebuild — not this tip-fold) is the four-row card on [post-dual-clear-go.md](post-dual-clear-go.md) **Shop OS parallel — unfreeze + #79.1 acceptance smoke**: (1) public `app.` + `ops.` `/login` HTML no longer prints Password `` `changeme` ``; (2) `BUILD_ID` / freeze tip ≠ `4cf8924` / `5swmVz`; (3) `api` `/health` **200** + waitlist OPTIONS CORS Origin `https://projectcar.ca` (+ www); (4) merge of **#79.1** alone without Doc unfreeze+pull does **NOT** clear public `changeme`. Soft-530 CLEAR alone ≠ that card. Not **#82**, not Zone Direct Upload, not companions re-ask, not Bitwarden.
+
 ### After Zone §2 Access enable
 
 | Check | Expect |
@@ -255,5 +257,6 @@ Do **not** run the Access-on row until Ben GO + Zone enable.
 ## Index
 
 - `STATUS.md` living-ops / Next (Soft-530-CLEAR **Next Ben GO**, **parallel to #82**; **#79.1** git-only until unfreeze+pull)
+- [post-dual-clear-go.md](post-dual-clear-go.md) Shop OS parallel **unfreeze + #79.1 acceptance smoke** (lane-done card)
 - `deployment-guide.md` stay-up / deploy index (plan only)
 - `security-playbook.md` Related

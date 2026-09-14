@@ -2,7 +2,7 @@
 
 **Status:** Living ops (Lead checklist)  
 **Updated:** 2026-09-14  
-**Related:** `doc-lid-restore.md` (process wake only — **not** this pull), `shop-web-stay-up.md` (rebuild essay), `api-stay-up.md`, `cors-origins.md`, `shop-os-ci.md` (git-only — **not** this GO), `STATUS.md`, `doc-software-baseline.md`, [post-dual-clear-go.md](post-dual-clear-go.md) (this file is **Shop OS parallel** on the post-dual-CLEAR menu — not “next after **#82**” in place of Bulk / **#83**; Soft-530 CLEAR alone ≠ this GO), `ops-demo-hardening.md` (Garage **#79.1** strip-changeme lands only after this pull)
+**Related:** `doc-lid-restore.md` (process wake only — **not** this pull), `shop-web-stay-up.md` (rebuild essay), `api-stay-up.md`, `cors-origins.md`, `shop-os-ci.md` (git-only — **not** this GO), `STATUS.md` (living-ops / Next **#79**), `doc-software-baseline.md`, [post-dual-clear-go.md](post-dual-clear-go.md) (this file is **Shop OS parallel** on the post-dual-CLEAR menu — not “next after **#82**” in place of Bulk / **#83**; Soft-530 CLEAR alone ≠ this GO; **unfreeze + #79.1 acceptance smoke** is that file’s Shop OS card), `ops-demo-hardening.md` (Garage **#79.1** strip-changeme lands only after this pull)
 
 Ordered **Ben GO** pull/rebuild on Doc after the freeze at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**). This file is the pull sequence. Lid-close wake stays in `doc-lid-restore.md` — do **not** copy that process essay here.
 
@@ -188,12 +188,15 @@ curl -sS -D - -o /dev/null -X OPTIONS https://api.projectcar.ca/waitlist \
 
 Garage may re-run brochure waitlist e2e **after** health is 200. Form only. No process restarts.
 
+When this pull is the Shop OS **#79.1** landing (Ben GO unfreeze + Garage strip on the pulled tip), the **lane-done** card is [post-dual-clear-go.md](post-dual-clear-go.md) **Shop OS parallel — unfreeze + #79.1 acceptance smoke**: public `app.`/`ops.` `/login` without Password `` `changeme` ``; tip / `BUILD_ID` ≠ `4cf8924` / `5swmVz`; `/health` **200** + waitlist OPTIONS CORS Origin `https://projectcar.ca` (+ www); **#79.1** merge-alone without this pull does **not** clear public `changeme`. Soft-530 CLEAR alone ≠ that card. Not **#82**, not Zone Direct Upload, not companions re-ask, not Bitwarden.
+
 ---
 
 ## After a successful unfreeze
 
 - Doc checkout and `.next/BUILD_ID` match the tip you intended.
 - **#36** and **#69** may be called **LIVE on Doc** only after steps 5–7.
+- Shop OS **#79.1** public strip is **LIVE** only after the [post-dual-clear-go.md](post-dual-clear-go.md) acceptance smoke — merge-alone is **not** that proof.
 - Lid-restore **stays** process-only. A later morning 530 is still wake-only — do **not** pull again unless Ben GOs another unfreeze.
 - Shop OS CI remains git-only. Green CI on a *later* SHA is still **not** a new unfreeze GO.
 - Soft-530 **CLEAR** / public `GET /health` **200** is still **not** a new unfreeze GO.

@@ -90,7 +90,7 @@ Ordered Ben GO menu — [post-dual-clear-go.md](post-dual-clear-go.md):
 
 1. Keep Soft-530 healthy (KeepAlive / CDM / caffeinate) as ops baseline
 2. **#82** Worker-live (Direct Upload + **mandatory** purge/freshness). After Worker-live the **brochure lane** is **Bulk Phase1** (free Option A **FULL 10/10** slots) → **#83** CI thin `_redirects` (not Bulk-gated) → Member edge **only after Bulk**. **Never #81.**
-3. Doc unfreeze + pull + Garage **#79.1** strip-changeme is **Shop OS parallel** — not “next after **#82**” in place of Bulk / **#83**.
+3. Doc unfreeze + pull + Garage **#79.1** strip-changeme is **Shop OS parallel** — not “next after **#82**” in place of Bulk / **#83**. Lane-done = [post-dual-clear-go.md](post-dual-clear-go.md) **unfreeze + #79.1 acceptance smoke** (not Soft-530 CLEAR alone; not **#82** / Zone Direct Upload / companions re-ask / Bitwarden).
 
 Anti-goals that stay on this file: CLEAR ≠ companion re-ask; CLEAR ≠ Bitwarden import/rotate; Soft-530 CLEAR alone ≠ Doc unfreeze; vault CLEAR ≠ Soft-530 work; dual CLEAR ≠ **#82** auto-go.
 

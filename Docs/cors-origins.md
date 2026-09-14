@@ -2,7 +2,7 @@
 
 **Status:** Living ops  
 **Updated:** 2026-09-07  
-**Related:** `api-stay-up.md`, `doc-lid-restore.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `app-alias-cut.md` (later drop of `https://app.projectcar.ca` — **not** this file), `apps/project-car/api/.env.example`, `apps/project-car/api/app/config.py`, `apps/website/html/waitlist.js`
+**Related:** `api-stay-up.md`, `doc-lid-restore.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `app-alias-cut.md` (later drop of `https://app.projectcar.ca` — **not** this file), [post-dual-clear-go.md](post-dual-clear-go.md) (Shop OS **#79.1** acceptance smoke asserts waitlist OPTIONS CORS Origin `https://projectcar.ca` + www), `apps/project-car/api/.env.example`, `apps/project-car/api/app/config.py`, `apps/website/html/waitlist.js`
 
 Browser waitlist from https://projectcar.ca must be allowed to call the Shop API. After any `.env` change, **Lead** restarts the API process on Doc.
 

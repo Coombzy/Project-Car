@@ -2,7 +2,7 @@
 
 **Status:** Paper — **never auto-fire** on CLEAR  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (living-ops / Locks · Option A **FULL 10/10** · Member-edge capacity), [dual-host-outage.md](dual-host-outage.md) (wake order), [doc-lid-restore.md](doc-lid-restore.md) (Soft-530 CLEAR + Doc forensics `@55e10d0`), [vault-stay-up.md](vault-stay-up.md) (vault CLEAR + McKing forensics `@d88cacb`), [brochure-worker-ci.md](brochure-worker-ci.md) (**#82** gates + Option A receipt — never **#81**), [brochure-worker-deploy.md](brochure-worker-deploy.md) (upload click-path), [member-zone-edge.md](member-zone-edge.md) (Next #1 — capacity-blocked until Bulk), [doc-unfreeze.md](doc-unfreeze.md) (Shop OS parallel unfreeze), [ops-demo-hardening.md](ops-demo-hardening.md) (**#79** / Garage **#79.1** — Shop OS parallel)
+**Related:** `STATUS.md` (living-ops / Locks · Option A **FULL 10/10** · Member-edge capacity · **#79** Next), [dual-host-outage.md](dual-host-outage.md) (wake order), [doc-lid-restore.md](doc-lid-restore.md) (Soft-530 CLEAR + Doc forensics `@55e10d0`), [vault-stay-up.md](vault-stay-up.md) (vault CLEAR + McKing forensics `@d88cacb`), [brochure-worker-ci.md](brochure-worker-ci.md) (**#82** gates + Option A receipt — never **#81**), [brochure-worker-deploy.md](brochure-worker-deploy.md) (upload click-path), [member-zone-edge.md](member-zone-edge.md) (Next #1 — capacity-blocked until Bulk), [doc-unfreeze.md](doc-unfreeze.md) (Shop OS parallel unfreeze pull), [ops-demo-hardening.md](ops-demo-hardening.md) (**#79** / Garage **#79.1** strip plan), [cors-origins.md](cors-origins.md) (waitlist OPTIONS Origin)
 
 After **both** planes CLEAR **and** both forensic papers are already ack’d, lock an **ordered Ben GO menu**. CLEAR is restore proof. It is **not** a GO. This file executes **none** of the menu.
 
@@ -33,9 +33,9 @@ After a **live** Soft-530 CLEAR, still stamp Doc forensics on [doc-lid-restore.m
 |-------|--------|------|-----|
 | **1** | Keep Soft-530 **healthy** | Ops baseline: Doc KeepAlive (`com.projectcar.cloudflared` + shop-api + shop-web) + caffeinate / CDM / Amphetamine so the next lid-close is less likely to 1033. Essay: [doc-lid-restore.md](doc-lid-restore.md), [api-stay-up.md](api-stay-up.md), [shop-web-stay-up.md](shop-web-stay-up.md) | Unfreeze. **#82**. Companion re-ask. Vault work. |
 | **2** | **#82** Worker-live | Bare Home `href` / canonical / og / sitemap → `https://projectcar.ca/index.html`. Ordered smoke: Direct Upload → **mandatory** purge apex+www → body freshness. [brochure-worker-ci.md](brochure-worker-ci.md). **Never #81.** **#82 is not only Direct Upload** — after Worker-live, the **brochure lane** below is the next brochure work. | Auto-GO from dual CLEAR. Weekend Zone. Treating upload as the end of brochure. Substituting unfreeze for Bulk / **#83**. |
-| **3** | Doc **unfreeze** + pull + Garage **#79.1** strip-changeme | **Shop OS parallel** — not “next after **#82**” in place of Bulk / **#83**. Explicit Ben GO to unfreeze → [doc-unfreeze.md](doc-unfreeze.md) pull/rebuild → new `BUILD_ID` ≠ `5swmVz` → Garage **#79.1** strip plaintext `changeme` from public `/login` actually lands. [ops-demo-hardening.md](ops-demo-hardening.md). **#79.1** merge alone will **not** clear public login while freeze holds (`4cf8924` / **`5swmVz`**). | Soft-530 CLEAR alone. Lid-restore. Green `shop-os-ci`. Occupying the brochure-lane slot after **#82**. |
+| **3** | Doc **unfreeze** + pull + Garage **#79.1** strip-changeme | **Shop OS parallel** — not “next after **#82**” in place of Bulk / **#83**. Explicit Ben GO to unfreeze → [doc-unfreeze.md](doc-unfreeze.md) pull/rebuild → Garage **#79.1** strip lands. **Acceptance smoke** (this file, below) before calling the lane done. [ops-demo-hardening.md](ops-demo-hardening.md). **#79.1** merge alone will **not** clear public login while freeze holds (`4cf8924` / **`5swmVz`**). | Soft-530 CLEAR alone. Lid-restore. Green `shop-os-ci`. Occupying the brochure-lane slot after **#82**. **#82** / Zone Direct Upload. Companions re-ask. Bitwarden. |
 
-**#79 paper stays parallel to #82** (not blocked on Worker SEO / Option A / Bulk). After dual CLEAR, KeepAlive is first, then **#82**. The **brochure lane after #82 Worker-live** is Bulk / **#83** / Member — **not** unfreeze + **#79.1** in that slot. Unfreeze + **#79.1** is **Shop OS parallel**. Garage may merge **#79.1** git-only anytime; public strip waits on the unfreeze GO.
+**#79 paper stays parallel to #82** (not blocked on Worker SEO / Option A / Bulk). After dual CLEAR, KeepAlive is first, then **#82**. The **brochure lane after #82 Worker-live** is Bulk / **#83** / Member — **not** unfreeze + **#79.1** in that slot. Unfreeze + **#79.1** is **Shop OS parallel**. Garage may merge **#79.1** git-only anytime; public strip waits on the unfreeze GO. Do **not** call that parallel lane done until the **acceptance smoke** below.
 
 ---
 
@@ -50,7 +50,52 @@ After a **live** Soft-530 CLEAR, still stamp Doc forensics on [doc-lid-restore.m
 | **Member edge** | Next #1 path-split (`/member*` ranked **BEFORE** brochure Redirect pack; www→apex `/member*` **301**). | **Only after Bulk frees capacity.** Today `/member*` is Worker **404** — never **301** into `membership.html`. [member-zone-edge.md](member-zone-edge.md). |
 | **Never #81** | Draft + superseded. Reintroduces Worker `_redirects` `/` + `/shop` and `styles.css?v=37`. | Never Direct Upload from **#81**. |
 
-Unfreeze + **#79.1** is **Shop OS parallel** ([doc-unfreeze.md](doc-unfreeze.md) · [ops-demo-hardening.md](ops-demo-hardening.md)). It does **not** replace Bulk / **#83** as “next after **#82**.”
+Unfreeze + **#79.1** is **Shop OS parallel** ([doc-unfreeze.md](doc-unfreeze.md) · [ops-demo-hardening.md](ops-demo-hardening.md)). It does **not** replace Bulk / **#83** as “next after **#82**.” Acceptance before calling that lane done is the card below.
+
+---
+
+## Shop OS parallel lane — unfreeze + #79.1 acceptance smoke
+
+**Paper card — not a GO.** After Ben GO Doc unfreeze + pull ([doc-unfreeze.md](doc-unfreeze.md)) **and** Garage **#79.1** rebuild ([ops-demo-hardening.md](ops-demo-hardening.md)), assert the four rows **before** calling this Shop OS lane done. STATUS living-ops / Next **#79** stays **parallel to #82**. This file executes **none** of the curls.
+
+Lid-close **530 / 1033** aborts the public checks — wake first ([doc-lid-restore.md](doc-lid-restore.md)), then re-run. Soft-530 **CLEAR** alone ≠ this card.
+
+| # | Assert | Expect |
+|---|--------|--------|
+| **1** | Public `app.` + `ops.` `/login` HTML | Body no longer prints Password `` `changeme` `` (Owner **and** Member). Email prefill ok. |
+| **2** | Doc freeze tip / shop-web `BUILD_ID` | Checkout tip ≠ `4cf8924`. `.next/BUILD_ID` ≠ `5swmVz` (frozen Dashboard **#28** is `5swmVz-T2CqKEQzTk1ifU`). |
+| **3** | Shop API + waitlist CORS | `GET https://api.projectcar.ca/health` **200**. Waitlist `OPTIONS` returns `Access-Control-Allow-Origin` for Origin `https://projectcar.ca` **and** `https://www.projectcar.ca` ([cors-origins.md](cors-origins.md)). |
+| **4** | Negative — **#79.1** merge-alone | Merge of **#79.1** **alone** without Doc unfreeze+pull does **NOT** clear public `changeme`. While freeze holds (`4cf8924` / **`5swmVz`**), public `/login` stays the frozen banner. |
+
+```bash
+# after Ben GO unfreeze + pull + #79.1 rebuild — not this paper
+curl -sS https://ops.projectcar.ca/login | grep -E 'changeme|owner@projectcar.ca' || true
+curl -sS https://app.projectcar.ca/login | grep -E 'changeme|owner@projectcar.ca' || true
+# on Doc
+git -C ~/src/Project-Car rev-parse --short HEAD
+cat ~/src/Project-Car/apps/project-car/web/.next/BUILD_ID
+curl -sS -o /dev/null -w '%{http_code}\n' https://api.projectcar.ca/health
+curl -sS -D - -o /dev/null -X OPTIONS https://api.projectcar.ca/waitlist \
+  -H 'Origin: https://projectcar.ca' \
+  -H 'Access-Control-Request-Method: POST'
+curl -sS -D - -o /dev/null -X OPTIONS https://api.projectcar.ca/waitlist \
+  -H 'Origin: https://www.projectcar.ca' \
+  -H 'Access-Control-Request-Method: POST'
+```
+
+Expect after the GO+rebuild: login bodies have Owner/Member email **without** `changeme`; tip / `BUILD_ID` **not** `4cf8924` / `5swmVz`; `/health` **200**; both OPTIONS echo `Access-Control-Allow-Origin` matching the request Origin.
+
+**#79.1 merge-alone (negative):** if Doc is still frozen at `4cf8924` / **`5swmVz`**, public `/login` **still prints** `changeme` even after Garage **#79.1** is on `main`. That is expected. Do **not** call the lane done from the merge.
+
+| This card is not | Why |
+|------------------|-----|
+| **#82** | Brochure Worker-live is the other lane. This card does **not** GO or smoke **#82**. |
+| **Zone Direct Upload** | No Worker upload / purge from this Shop OS card. |
+| **Companions re-ask** | Soft-530 companion watches stay **HOLD / not armed**. |
+| **Bitwarden** | Vault import/rotate is not this card. |
+| **Soft-530 CLEAR alone** | Lid-restore / public `/health` **200** is **not** unfreeze GO and **not** this acceptance. Dual CLEAR ≠ auto-unfreeze. |
+
+Living dual-OPEN honesty (`5f2fd1c`) is **unchanged** — see **Living this fold** below. This card does **not** invent CLEAR, a Ben GO, or a Doc pull.
 
 ---
 
@@ -72,14 +117,14 @@ Brochure Option A **LIVE**: Zone Redirect **FULL 10/10**; `waitlist.js?v=3`; `st
 |-----------|-----|
 | **CLEAR ≠ Soft-530 companions re-ask** | Companions stay **HOLD / not armed**. Ben skipped ~14:35 America/Edmonton. Dual CLEAR does **not** re-open that ask. |
 | **CLEAR ≠ Bitwarden import/rotate** | Vault CLEAR lifts the *down-origin block* ([vault-stay-up.md](vault-stay-up.md)). It does **not** put import/rotate on this menu and does **not** auto-start it. |
-| **Soft-530 CLEAR alone ≠ Doc unfreeze** | Lid-restore is process wake only. Freeze `4cf8924` / `5swmVz` until **Ben GO**. Unfreeze is a **separate** Shop OS GO — **parallel**, not “next after **#82**” in place of Bulk / **#83**. |
+| **Soft-530 CLEAR alone ≠ Doc unfreeze** | Lid-restore is process wake only. Freeze `4cf8924` / `5swmVz` until **Ben GO**. Unfreeze is a **separate** Shop OS GO — **parallel**, not “next after **#82**” in place of Bulk / **#83**. Soft-530 CLEAR alone ≠ the **#79.1** acceptance card. |
 | **Vault CLEAR ≠ Soft-530 work** | Vault is McKing. Soft-530 is Doc. Green `/alive` does **not** wake KeepAlive, unfreeze Doc, or GO **#82**. |
 | **Dual CLEAR ≠ #82 auto-go** | Both CLEARs + both forensic papers ack’d **offer** step 2. Ben still GOs **#82**. Do **not** Zone Direct Upload from CLEAR. |
-| **#82 ≠ end of brochure** | After Worker-live (upload + purge/freshness), brochure continues: **Bulk Phase1** → **#83** (CI, not Bulk-gated) → Member edge **only after Bulk**. **Never #81.** Unfreeze + **#79.1** is Shop OS parallel. |
+| **#82 ≠ end of brochure** | After Worker-live (upload + purge/freshness), brochure continues: **Bulk Phase1** → **#83** (CI, not Bulk-gated) → Member edge **only after Bulk**. **Never #81.** Unfreeze + **#79.1** is Shop OS parallel — acceptance smoke is this file’s Shop OS card, not **#82**. |
 
 Wake order stays [dual-host-outage.md](dual-host-outage.md). Doc forensics stay [doc-lid-restore.md](doc-lid-restore.md). McKing forensics stay [vault-stay-up.md](vault-stay-up.md). This file is the **menu after** those.
 
-**#82** Ben GO / Soft-530 companions **HOLD** / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / weekend Soft-530 coverage (`84107e7`) / waitlist-owner-desk **retired** / **#79.1** git-only until Doc unfreeze / vault stay-up (`017f778`) / dual-host-outage (`7bf894b`) / Soft-530 post-CLEAR (`55e10d0`) / vault post-CLEAR (`d88cacb`) — **unchanged**. This file executes **none** of those.
+**#82** Ben GO / Soft-530 companions **HOLD** / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / weekend Soft-530 coverage (`84107e7`) / waitlist-owner-desk **retired** / **#79.1** git-only until Doc unfreeze / vault stay-up (`017f778`) / dual-host-outage (`7bf894b`) / Soft-530 post-CLEAR (`55e10d0`) / vault post-CLEAR (`d88cacb`) / living dual-OPEN honesty (`5f2fd1c`) — **unchanged**. This file executes **none** of those.
 
 ---
 
@@ -93,6 +138,8 @@ Wake order stays [dual-host-outage.md](dual-host-outage.md). Doc forensics stay 
 - Skip step 1 (keep Soft-530 healthy) and jump to **#82** or unfreeze
 - Treat **#82** as Direct Upload only — skip Bulk / **#83** / Member-after-Bulk
 - Put unfreeze + **#79.1** “next after **#82**” in place of the brochure lane
+- Call the Shop OS lane done without the four-row **#79.1** acceptance smoke (or from **#79.1** merge-alone)
+- Treat Soft-530 CLEAR / `#82` / Zone Direct Upload / companions re-ask / Bitwarden as this Shop OS card
 - Direct Upload from **#81**, or write `#82 → upload → Bulk Phase1 → #83` as a **#83** gate
 - Execute Zone Direct Upload / Bulk / Member edge / Garage / Doc pull from this paper
 - Invent a CLEAR while Soft-530 is still **OPEN** (CF **1033**) or vault is still **OPEN** (**502**)
