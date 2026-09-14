@@ -1,0 +1,144 @@
+# Brochure redirect watch — Option A Lookout (to arm)
+
+**Status:** Paper watch spec — Lookout **to arm** (this fold does **not** claim `enabled:true`)  
+**Updated:** 2026-09-14  
+**Related:** `STATUS.md` Live Option A + Reality quarantine + Lookout rows, `brochure-worker-ci.md` (Option A **FULL 10/10** receipt — **not** this watch), `brochure-worker-deploy.md` (upload click-path — **not** this watch), `doc-lid-restore.md` (`main` still stamps api-health **paused**), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate**), `website-improvements.md` P4-5, [post-dual-clear-go.md](post-dual-clear-go.md)
+
+While Soft-530 is **OPEN**, brochure **Option A** is the only public **LIVE** surface. It has **no** continuous watch — only `*/20` smokes. This file is the Lookout watch **to arm**. Flip **Chief + Lead only**. **Not** the Soft-530 ops/app companion watches Ben skipped.
+
+This file is **not** a Zone apply, **not** a Garage HTML PR, **not** **#82** upload, **not** a Doc unfreeze, **not** a companion re-ask, and **not** Bitwarden.
+
+**Living dual-OPEN (`5f2fd1c`) is unchanged.** Soft-530 **OPEN** CF **1033** since 2026-09-13 ~11:57 America/Edmonton. Vault independently **OPEN** **502** since ~19:45 MT Sep 13. ListMachines **Mac.lan only**. Freeze intact **`4cf8924`** / **`5swmVz`**. **#82** still Ben GO.
+
+---
+
+## Why this exists
+
+| Surface | Living | Continuous watch |
+|---------|--------|------------------|
+| Soft-530 `api.` `/health` | **OPEN** CF **1033** | Lookout `projectcar-api-health-watch` **`enabled:true`** (resume 2026-09-11 ~06:52; **#78 LIVE-SUPERSEDED**) |
+| Soft-530 `ops.` / `app.` `/login` | **OPEN** CF **1033** | **HOLD / not armed** (Ben skipped ~14:35 America/Edmonton — do **not** re-ask) |
+| Vault `/alive` | **OPEN** **502** | Lookout vault watch **LIVE/armed** (`enabled:true`) |
+| Brochure Option A (apex+www) | **LIVE** Zone Redirect **FULL 10/10** + Soft-530 **#80** assets | **None.** Only `*/20` smokes |
+
+Option A stays up when Doc sleeps. A Redirect-pack or asset-`?v=` break is invisible to api/vault watches. `*/20` smokes are not a flip watch.
+
+---
+
+## Locks (read first — do not weaken)
+
+| Lock | Meaning |
+|------|---------|
+| **Paper only** | Merging this file on held **#70** is **not** Lookout execute, Zone apply, Garage upload, or an `enabled:true` claim. |
+| **To arm — Chief + Lead only** | Flip alerts: **Chief + Lead only**. **Never Ben.** Never restart / mutate / Zone-edit from the watch. |
+| **Not companion re-ask** | Soft-530 ops/app (optional `cloud.`) companion watches stay **HOLD / not armed**. This watch ≠ those watches. Do **not** re-ask Ben. |
+| **#82 Ben GO unchanged** | Home canonical / og / sitemap `/index.html` is **not yet Worker-live**. Do **not** upload from this paper. |
+| **Option A FULL 10/10** | No new Dynamic pretty-URLs. Watch the **live** pack — do **not** invent rules. |
+| **Living dual-OPEN unchanged** | `5f2fd1c` stamp stands. This paper does **not** invent CLEAR, unfreeze, or Bitwarden. |
+| **Never #81** | Do **not** watch or upload `#81` `?v=37` / Worker `/` + `/shop` `_redirects`. |
+
+---
+
+## Watch to arm (Lookout)
+
+**Name (Lookout-owned):** `projectcar-brochure-redirect-watch`  
+**Hosts:** `https://projectcar.ca` **and** `https://www.projectcar.ca`  
+**Cadence:** Lookout flip cadence (not `*/20` plan-improve smokes)  
+**Baseline (Lookout-owned):** `/workspace/lookout/brochure-routing-baseline.json`
+
+**Flip-only alerts:** **Chief + Lead only** on assert **pass↔fail**. **Never Ben.** Never restart / mutate.
+
+A Cloudflare **403** HTML challenge (`cf-mitigated: challenge`) is WAF, not a Redirect-pack fail. Zone owns that.
+
+### Asserts (apex + www)
+
+| Probe | Expect |
+|-------|--------|
+| `GET /` | **301** `Location: /index.html` |
+| `GET /shop` | **301** `Location: /the-shop.html` |
+| `GET /shop.html` | **301** `Location: /the-shop.html` |
+| Extensionless pretty pack | **301** → matching `*.html` (see pack below) |
+| `GET /styles.css?v=36` | **200** |
+| `GET /waitlist.js?v=3` | **200** |
+
+**Extensionless pretty pack** (live Option A Dynamic **301**s — matching `*.html`):
+
+| From | To |
+|------|----|
+| `/membership` · `/membership/` | `/membership.html` |
+| `/about` · `/about/` | `/about.html` |
+| `/the-shop` · `/the-shop/` | `/the-shop.html` |
+| `/contact` · `/contact/` | `/contact.html` |
+| `/roadmap` · `/roadmap/` | `/roadmap.html` |
+
+Chat → contact (`/chat` · `/chat/` **301** `/contact.html`) is part of the live **10/10** pack. Include it if the baseline already lists it; do **not** drop `/` / `/shop` / `/shop.html` / `?v=` to make room.
+
+```bash
+# Paper probes — Lookout owns the armed watch. Challenge 403 is WAF.
+# Do not treat these curls as an upload, purge, or companion re-ask.
+
+for h in https://projectcar.ca https://www.projectcar.ca; do
+  curl -sSI "$h/"            # 301 Location: /index.html
+  curl -sSI "$h/shop"        # 301 Location: /the-shop.html
+  curl -sSI "$h/shop.html"   # 301 Location: /the-shop.html
+  curl -sSI "$h/membership"  # 301 Location: /membership.html
+  curl -sSI "$h/about"       # 301 Location: /about.html
+  curl -sSI "$h/the-shop"    # 301 Location: /the-shop.html
+  curl -sSI "$h/contact"     # 301 Location: /contact.html
+  curl -sSI "$h/roadmap"     # 301 Location: /roadmap.html
+  curl -sS -o /dev/null -w '%{http_code}\n' "$h/styles.css?v=36"   # 200
+  curl -sS -o /dev/null -w '%{http_code}\n' "$h/waitlist.js?v=3"   # 200
+done
+```
+
+Fail class: **200** on a pretty URL that should **301**, Worker `/shop` **302**, missing `?v=36` / `?v=3`, or a 404 where the pack should land. That is Zone/Garage **after** Ben GO — **not** Doc lid-restore, **not** vault wake.
+
+---
+
+## Baseline honesty (Sep 9 still IN FLIGHT)
+
+Sep 9 Lookout `brochure-routing-baseline.json` still stamps extensionless pretty-URLs **IN FLIGHT**.
+
+**Living stamp (this paper):** Option A Redirect pack is **LIVE 10/10** Active Dynamic **301**s (apex+www). Extensionless is **not** in flight.
+
+Lookout should refresh that baseline to **LIVE 10/10** when the watch is armed. This fold does **not** edit Lookout files and does **not** apply Zone.
+
+---
+
+## `main` honesty (held #70 SSOT until #82)
+
+Same class as STATUS **Brochure Reality quarantine**. Do **not** open a tip-only PR. Do **not** execute from `main`.
+
+| `main` still says | Living (#70 SSOT) |
+|-------------------|-------------------|
+| STATUS Reality tip **`2b772ff` / #67** · `styles.css?v=35` · Worker `_redirects` `/shop` **302** | Option A Zone **301** **FULL 10/10** + Soft-530 **#80** `waitlist.js?v=3` + `styles.css?v=36`. Home still bare `href="/"` + canonical/og apex until **#82**. |
+| `doc-lid-restore.md` Soft-530 table: Lookout `projectcar-api-health-watch` **paused** (Lead morning probe) | Watch **`enabled:true`** since 2026-09-11 ~06:52 America/Edmonton. **#78 lookout-resume** is **LIVE-SUPERSEDED**. |
+
+After **#82** upload + **mandatory** purge/freshness, **one** tip-fold reconciles `main` Reality to live. Until then **#70** is SSOT.
+
+---
+
+## Ownership
+
+| Role | Owns | Does not own |
+|------|------|----------------|
+| **Lookout** | Arm this watch; refresh Sep 9 baseline **IN FLIGHT → LIVE 10/10**; flip Chief+Lead | Zone Redirect edits; Worker upload; companion watches; claiming companions `enabled:true` |
+| **Chief + Lead** | Receive flips; triage Redirect vs WAF 403 vs Soft-530 | Page Ben; re-ask companions; lid-restore from a brochure 301 fail |
+| **Zone** | Live Redirect pack + Worker (only after standing GO) | Arming this watch from a docs PR |
+| **Garage** | HTML / `?v=` SSOT after **#82** | Zone apply; Lookout execute |
+
+---
+
+## Out of scope
+
+| Topic | Where / why |
+|-------|-------------|
+| Soft-530 `api.` `/health` | Already armed. `api-stay-up.md`. |
+| Soft-530 companions | **HOLD / not armed.** Do **not** re-ask. |
+| Vault `/alive` | Already armed. `vault-stay-up.md`. |
+| **#82** upload / purge / freshness | `brochure-worker-ci.md` · `brochure-worker-deploy.md`. Not this watch. |
+| Bulk Phase1 / Member edge / **#83** | Unchanged. Not this file. |
+| Doc unfreeze / **#79.1** / Bitwarden | Anti-goals. |
+| Homepage-only **200** as “brochure up” | Insufficient. Pretty-URL **301**s + live `?v=` are the watch. |
+
+**Anti-goals:** not Zone change, not **#82** upload, not unfreeze, not companion re-ask, not Bitwarden.

@@ -2,7 +2,7 @@
 
 **Status:** Living ops (Lead checklist)  
 **Updated:** 2026-09-14  
-**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file; Soft-530 **CLEAR** Friday ≠ this GO), `api-stay-up.md` (weekend `/health` flip → this file; post-CLEAR stay-up evidence pointer), `shop-web-stay-up.md`, `vault-stay-up.md` (McKing vault — **OUT** of this sequence; weekend dual-outage proved Soft-530 ≠ vault; **vault post-CLEAR stay-up evidence** is McKing forensics — twin of this file’s Doc stamp), [dual-host-outage.md](dual-host-outage.md) (dual-OPEN **wake order** — Doc first, then McKing; this file is the Doc half + **post-CLEAR stay-up evidence**), [post-dual-clear-go.md](post-dual-clear-go.md) (after **both** CLEARs + forensics `@55e10d0` / `@d88cacb` — Ben GO menu, **never auto-fire**), `doc-software-baseline.md` (Amphetamine / Tailscale), `cors-origins.md`, `STATUS.md` (weekend Soft-530 coverage), `shop-os-ci.md` (green CI ≠ unfreeze)
+**Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file; Soft-530 **CLEAR** Friday ≠ this GO), `api-stay-up.md` (weekend `/health` flip → this file; post-CLEAR stay-up evidence pointer), `shop-web-stay-up.md`, `vault-stay-up.md` (McKing vault — **OUT** of this sequence; weekend dual-outage proved Soft-530 ≠ vault; **vault post-CLEAR stay-up evidence** is McKing forensics — twin of this file’s Doc stamp), [dual-host-outage.md](dual-host-outage.md) (dual-OPEN **wake order** — Doc first, then McKing; this file is the Doc half + **post-CLEAR stay-up evidence**), [post-dual-clear-go.md](post-dual-clear-go.md) (after **both** CLEARs + forensics `@55e10d0` / `@d88cacb` — Ben GO menu, **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Option A Lookout **to arm** — not this restore; `main` still stamps this file’s api-health **paused**), `doc-software-baseline.md` (Amphetamine / Tailscale), `cors-origins.md`, `STATUS.md` (weekend Soft-530 coverage), `shop-os-ci.md` (green CI ≠ unfreeze)
 
 Single **ordered** wake/restore after Doc lid-close / sleep (the morning **530 / 1033** pattern). Plan/ops checklist for **Lead**. This file is the sequence. Process essays stay in the Related docs — do not copy them here.
 
@@ -32,6 +32,8 @@ The public brochure (Worker `projectcar-brochure`) does **not** go down when Doc
 | Doc will not wake, **Grok Bot desktop offline**, or a **prolonged** outage after a normal wake window | Ping **Ben**. Lead still owns process restore once the Mac is up. |
 
 Alerts can come from anyone who sees **502**, **530 / error 1033**, or a failed waitlist submit. **Recovery of the processes is Lead only.** Lookout `projectcar-api-health-watch` is **resumed** (`enabled:true`). **#78 lookout-resume** is **LIVE-SUPERSEDED**. Soft-530 companion watches stay **HOLD**.
+
+**`main` lid-restore honesty (held #70):** `main` `doc-lid-restore.md` Soft-530 table still says Lookout `projectcar-api-health-watch` is **paused** (Lead owns the morning probe). Living is **`enabled:true`** (2026-09-11 ~06:52 America/Edmonton). Do **not** execute from `main`’s paused row. **#70** is SSOT until **#82**. Same class as STATUS Reality quarantine (`main` still `2b772ff` / `styles.css?v=35` / Worker `/shop` **302**). Brochure Option A watch **to arm** (flip Chief+Lead only; **not** companion re-ask): [brochure-redirect-watch.md](brochure-redirect-watch.md).
 
 ---
 

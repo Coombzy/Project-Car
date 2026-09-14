@@ -2,7 +2,7 @@
 
 **Status:** Paper CI + Member-precondition receipt — **not executed**  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock + **#82** smoke gate, `brochure-worker-deploy.md` (standing Zone Direct Upload runbook), `brochure-security-headers.md` (P2-4 **LIVE**), `member-zone-edge.md` (Next #1 capacity-blocked), `member-host-cutover.md`, `website-improvements.md`, `brochure-pages-cutover.md`, `ops-demo-hardening.md` (**#79** / **#79.1**), [post-dual-clear-go.md](post-dual-clear-go.md) (dual CLEAR ≠ **#82** auto-go — **#82** is step 2; after Worker-live the **brochure lane** is **#83** ∥ **Bulk Phase1**, not Bulk→#83; Member after Bulk — **never #81**; unfreeze+#79.1 is Shop OS parallel), `apps/website/README.md`
+**Related:** `STATUS.md` Live brochure + Option A **FULL 10/10** lock + **#82** smoke gate, `brochure-worker-deploy.md` (standing Zone Direct Upload runbook), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A watch **to arm** while Soft-530 OPEN — flip Chief+Lead only; **not** this CI paper, **not** companion re-ask), `brochure-security-headers.md` (P2-4 **LIVE**), `member-zone-edge.md` (Next #1 capacity-blocked), `member-host-cutover.md`, `website-improvements.md`, `brochure-pages-cutover.md`, `ops-demo-hardening.md` (**#79** / **#79.1**), [post-dual-clear-go.md](post-dual-clear-go.md) (dual CLEAR ≠ **#82** auto-go — **#82** is step 2; after Worker-live the **brochure lane** is **#83** ∥ **Bulk Phase1**, not Bulk→#83; Member after Bulk — **never #81**; unfreeze+#79.1 is Shop OS parallel), `apps/website/README.md`
 
 This file is the **post–Soft-530-CLEAR** brochure CI paper that was queued on held **#70**. It is **not** a Zone upload, **not** a Garage HTML PR, **not** a GitHub Actions workflow, and **not** a license to apply Redirect / Bulk / DNS.
 
@@ -105,7 +105,7 @@ STATUS Next #1 is **capacity-blocked** until **#82** Worker-live + this Bulk Pha
 
 ## STATUS Reality quarantine (held #70)
 
-Until **#82** is Worker-live via Zone Direct Upload, **held #70 STATUS Reality tip / Option A** is brochure live SSOT. Do **not** execute Zone or Garage from **`main` Reality tip** — `main` still documents the pre-Option-A Worker (`_redirects` `/shop` **302** + `styles.css?v=35`). After **#82** upload + this ordered purge/freshness, **one** STATUS tip-fold reconciles `main` Reality to live. Soft-530 companion watches stay **HOLD / not armed**. Canonical banner: `STATUS.md`. Upload click-path: `brochure-worker-deploy.md`.
+Until **#82** is Worker-live via Zone Direct Upload, **held #70 STATUS Reality tip / Option A** is brochure live SSOT. Do **not** execute Zone or Garage from **`main` Reality tip** — `main` still documents the pre-Option-A Worker (`_redirects` `/shop` **302** + `styles.css?v=35`). **Reinforce (no Ben ask / no tip-only PR):** `main` Reality tip is still **`2b772ff` / ?v=35 / Worker `/shop` 302**. Same class: `main` `doc-lid-restore.md` Soft-530 table still says Lookout api-health **paused** vs living **`enabled:true`** (**#78 LIVE-SUPERSEDED**). After **#82** upload + this ordered purge/freshness, **one** STATUS tip-fold reconciles `main` Reality to live. Soft-530 companion watches stay **HOLD / not armed**. Option A has **no** continuous watch while Soft-530 is OPEN (only `*/20` smokes) — Lookout watch **to arm**: [brochure-redirect-watch.md](brochure-redirect-watch.md) (flip Chief+Lead only; Sep 9 baseline still **IN FLIGHT** → stamp **LIVE 10/10**). Canonical banner: `STATUS.md`. Upload click-path: `brochure-worker-deploy.md`.
 
 ---
 
@@ -122,6 +122,7 @@ Until **#82** is Worker-live via Zone Direct Upload, **held #70 STATUS Reality t
 | Waitlist-owner-desk | **Retired.** Already shipped (STATUS Waitlist Live). Do **not** draft `waitlist-owner-desk.md`. Optional CSV Later. Soft-530 **CLEAR** / desk existence ≠ Doc unfreeze / **#79.1** rebuild GO. |
 | **#79** / **#79.1** | Parallel to **#82**. **#79.1** git-only until Doc unfreeze. `ops-demo-hardening.md`. |
 | Soft-530 companion watches | **HOLD / not armed.** Do not re-ask. |
+| Brochure Option A continuous watch | **None today** (only `*/20` smokes). Paper **to arm**: [brochure-redirect-watch.md](brochure-redirect-watch.md). Flip Chief+Lead only. Not this CI paper. |
 | Weekend Zone Direct Upload / Worker | **Do not schedule.** plan-improve off Sat/Sun. First Monday resumes Soft-530 smoke. Not this file. |
 | Dual CLEAR / post-CLEAR forensics | Does **not** auto-GO **#82**. Menu: [post-dual-clear-go.md](post-dual-clear-go.md) — after **#82** Worker-live the **brochure lane** is **#83** ∥ **Bulk Phase1** (not Bulk→#83); Member-after-Bulk; unfreeze+#79.1 is Shop OS parallel. |
 | Dual-Nextcloud / `cloud.*` | Unchanged (`4cde204`). Not a `cloud.*` CF cutover. |
