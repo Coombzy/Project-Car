@@ -3,7 +3,7 @@
 **Status:** Living ops  
 **Updated:** 2026-09-14  
 **Public URL:** https://vault.projectcar.ca  
-**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks + **vault post-CLEAR stay-up evidence** pointer), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**; Soft-530 **post-CLEAR stay-up evidence** is **Doc forensics**), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN **wake order** — Doc first, then McKing; this file is **McKing forensics** after vault CLEAR), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — Chief stays armed for `lightning` → this file; no Ben re-nag), [post-dual-clear-go.md](post-dual-clear-go.md) (after **both** CLEARs + forensics `@55e10d0` / `@d88cacb` — Ben GO menu, **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
+**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks + **vault post-CLEAR stay-up evidence** pointer + [vault-clear-smoke.md](vault-clear-smoke.md)), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**; Soft-530 **post-CLEAR stay-up evidence** is **Doc forensics**), [vault-clear-smoke.md](vault-clear-smoke.md) (**first** recovery smoke after extended-OPEN vault CLEAR — **before** Bitwarden / desk; **502→200** not CF **1033→200**), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (Soft-530 twin — already `502ab2e`; **not** this lane), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN **wake order** — Doc first, then McKing; this file is **McKing forensics** after vault CLEAR), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — Chief stays armed for `lightning` → this file; no Ben re-nag), [post-dual-clear-go.md](post-dual-clear-go.md) (after **both** CLEARs + forensics `@55e10d0` / `@d88cacb` — Ben GO menu, **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
 
 Keep public Vaultwarden reachable on McKing. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md`.
 
@@ -95,12 +95,12 @@ Living this fold — OPEN class honesty (do **not** invent CLEAR): **Soft-530** 
 
 | Vault state | Import / rotate |
 |-------------|-----------------|
-| `/alive` **200** (CLEAR) | Allowed — this stay-up is green. Still not a shop cutover or Doc unfreeze. |
+| `/alive` **200** (CLEAR) | *Down-origin block lifts.* After **extended OPEN**, first card is [vault-clear-smoke.md](vault-clear-smoke.md) — **before** Bitwarden / desk. Import/rotate stays **Ben GO**, **never auto-fire**. Still not a shop cutover or Doc unfreeze. |
 | **502 / 530 / 1033 / timeout / non-200** | **Blocked.** Clients must not write a down or recovering origin. |
 | Soft-530 Doc down, vault `/alive` **200** | Import/rotate is a **vault** decision. Doc lid-close does **not** block it. |
 | Vault down, Soft-530 `/health` **200** | **Still blocked.** Green Doc API does **not** CLEAR vault. |
 
-CLEAR means public `GET https://vault.projectcar.ca/alive` → **200**. Prefer `/alive`. `/api/config` **2026.6.0** is the version stamp, not a license to import during a flip.
+CLEAR means public `GET https://vault.projectcar.ca/alive` → **200**. Prefer `/alive`. `/api/config` **2026.6.0** is the version stamp, not a license to import during a flip. After **extended OPEN**, prove McKing **2026.6.0** class (not Doc **2025.12.0**) on [vault-clear-smoke.md](vault-clear-smoke.md) **before** any import/rotate talk.
 
 This file does **not** run an import. It only names the gate.
 
@@ -157,7 +157,7 @@ Alerts can come from anyone who sees a **502**, **530 / error 1033**, or a Bitwa
 
 ## Recovery checklist
 
-1. **Public `/alive`.** `GET https://vault.projectcar.ca/alive` → **200**? If yes, **CLEAR** — stop. Import/rotate unblocked. 403 challenge page → Zone (not Lead).
+1. **Public `/alive`.** `GET https://vault.projectcar.ca/alive` → **200**? If yes, **CLEAR** — stop the wake. After **extended OPEN**, run [vault-clear-smoke.md](vault-clear-smoke.md) **before** Bitwarden / desk. Import/rotate stays **Ben GO**, **never auto-fire**. 403 challenge page → Zone (not Lead).
 2. **Triage the error class (this file, not Soft-530).**
    - **1033 / 530** → McKing `cloudflared` / host / tunnel (Zone if local `:8222` is already **200**).
    - **502** → local `:8222` first. Down = Vaultwarden. Up = edge/tunnel, same as 1033.
@@ -165,8 +165,8 @@ Alerts can come from anyone who sees a **502**, **530 / error 1033**, or a Bitwa
 4. **Lead — McKing origin.** Local `GET http://127.0.0.1:8222/alive`. If it fails, Lead wakes Vaultwarden on McKing. Do not hand that restart to Garage, Zone, or Doc KeepAlive.
 5. **Zone — edge.** Local `:8222` **200** but public **502** / **530 / 1033** / DNS miss → Zone checks **McKing** `cloudflared` + the `vault.projectcar.ca` hostname rule. **Never** move the Doc mission-control token. Lead does not edit Cloudflare.
 6. **Import/rotate.** Stay **blocked** until step 1 is **200**. Soft-530 CLEAR on Doc does **not** lift this.
-7. **Soft-530 still down?** Separate plane. Chief/Lead run `doc-lid-restore.md` **only** for `api.` `/health` — not from this checklist.
-8. **Post-CLEAR stay-up evidence.** After step 1 is **200**, stamp the McKing forensic (below) **before walking away**. Dual-OPEN **wake order** stays [dual-host-outage.md](dual-host-outage.md). Soft-530 post-CLEAR is [doc-lid-restore.md](doc-lid-restore.md) — **Doc forensics**, not this stamp.
+7. **Soft-530 still down?** Separate plane. Chief/Lead run `doc-lid-restore.md` **only** for `api.` `/health` — not from this checklist. Vault CLEAR alone ≠ Soft-530 CLEAR.
+8. **Post-CLEAR stay-up evidence.** After step 1 is **200** **and** (after extended OPEN) [vault-clear-smoke.md](vault-clear-smoke.md) passes, stamp the McKing forensic (below) **before walking away**. Dual-OPEN **wake order** stays [dual-host-outage.md](dual-host-outage.md). Soft-530 post-CLEAR is [doc-lid-restore.md](doc-lid-restore.md) — **Doc forensics**, not this stamp. Forensic paper already ack’d (`d88cacb`).
 
 ---
 
@@ -192,7 +192,7 @@ On **every** vault CLEAR after McKing wake, Lead records:
 | **Tailscale** | `tailscale status` — `lightning` **up** | Next flip: was McKing off-mesh? `Mac.lan` ≠ this host |
 | **Recovery class** | Whether this CLEAR was **1033→200** (tunnel) vs **502→200** (origin) | Living OPEN this fold is **502**, not 1033 — do not collapse the classes |
 
-Stamp: America/Edmonton timestamp + the four lines. Do **not** treat the stamp as unfreeze GO, **#82**, Zone/Garage execute, or a companion re-ask. Vault CLEAR ≠ Soft-530 work and ≠ Bitwarden import/rotate auto-start. After **this** stamp **and** Soft-530 CLEAR + Doc forensics (`55e10d0`), Ben’s GO menu is [post-dual-clear-go.md](post-dual-clear-go.md) — **never auto-fire**. Forensic paper for this stamp is already ack’d on held **#70** (`d88cacb`).
+Stamp: America/Edmonton timestamp + the four lines. Do **not** treat the stamp as unfreeze GO, **#82**, Zone/Garage execute, or a companion re-ask. Vault CLEAR ≠ Soft-530 work and ≠ Bitwarden import/rotate auto-start. After **extended OPEN**, the **first** public card is [vault-clear-smoke.md](vault-clear-smoke.md) (**502→200**, McKing **2026.6.0** class) **before** this stamp’s “walk away” and **before** Bitwarden / desk. After **this** stamp **and** Soft-530 CLEAR + Doc forensics (`55e10d0`), Ben’s GO menu is [post-dual-clear-go.md](post-dual-clear-go.md) — **never auto-fire**. Forensic paper for this stamp is already ack’d on held **#70** (`d88cacb`).
 
 ```bash
 # ONLY on lightning after vault CLEAR — paper capture, not a restore
@@ -217,7 +217,7 @@ plan-improve is **off Sat/Sun**. Soft-530 companion ops/app watches stay **HOLD 
 | `api.` `/health` non-200 | `doc-lid-restore.md` **process wake only** (Doc). **Not** this file. |
 | `vault.` `/alive` non-200 | **This file** (McKing). **Not** lid-restore. |
 | Both OPEN | [dual-host-outage.md](dual-host-outage.md) — **Doc first, then McKing**. Parallel only if both hosts on ListMachines. |
-| Vault CLEAR after McKing wake | **This file** — stamp **post-CLEAR stay-up evidence** (above). Soft-530 post-CLEAR stays [doc-lid-restore.md](doc-lid-restore.md). |
+| Vault CLEAR after McKing wake | After **extended OPEN**, first card is [vault-clear-smoke.md](vault-clear-smoke.md). Then **this file** — stamp **post-CLEAR stay-up evidence** (above). Soft-530 post-CLEAR stays [doc-lid-restore.md](doc-lid-restore.md). |
 
 Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-improve resumes Soft-530 smoke. Anti-goal: Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask ≠ vault import/rotate while vault is down. Extended OPEN quiet-ops (Soft-530 **~24h+** + vault OPEN + **Mac.lan only**): [soft-530-extended-open.md](soft-530-extended-open.md) — **no Ben re-nag**; Chief stays armed here; duration ≠ Bitwarden.
 
@@ -235,6 +235,7 @@ Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-
 - Publish McKing NC on this tunnel / point `cloud.*` at McKing
 - Treat vault LIVE as shop CF cutover GO or Doc unfreeze
 - Bitwarden import/rotate until public `/alive` is **CLEAR**
+- Jump to Bitwarden / desk after extended-OPEN CLEAR without [vault-clear-smoke.md](vault-clear-smoke.md)
 - Treat vault CLEAR as Bitwarden import/rotate GO or as Soft-530 / **#82** / unfreeze work ([post-dual-clear-go.md](post-dual-clear-go.md))
 - Use Soft-530 `/health` **200** as vault CLEAR
 - Collapse vault **502** origin-down into Soft-530 CF **1033** tunnel-down (different first checks when `lightning` returns)

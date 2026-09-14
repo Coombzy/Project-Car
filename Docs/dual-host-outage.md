@@ -2,7 +2,7 @@
 
 **Status:** Living ops  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (weekend Soft-530 + vault Live / Locks + living dual-OPEN), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — this file stays **wake order**), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** desk / **#79.1** / unfreeze), [api-stay-up.md](api-stay-up.md), [vault-stay-up.md](vault-stay-up.md) (McKing half + **vault post-CLEAR stay-up evidence**), [doc-lid-restore.md](doc-lid-restore.md) (Doc half + Soft-530 **post-CLEAR stay-up evidence** — lastExit / KeepAlive / caffeinate·CDM / Tailscale), [post-dual-clear-go.md](post-dual-clear-go.md) (post-dual-CLEAR **Ben GO sequencer** — **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [shop-web-stay-up.md](shop-web-stay-up.md), `deployment-guide.md`, `home-lab-specification.md` (machine map)
+**Related:** `STATUS.md` (weekend Soft-530 + vault Live / Locks + living dual-OPEN), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — this file stays **wake order**), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** desk / **#79.1** / unfreeze), [vault-clear-smoke.md](vault-clear-smoke.md) (**first** recovery smoke after extended-OPEN vault CLEAR — **before** Bitwarden / desk; **502→200** not CF **1033→200**), [api-stay-up.md](api-stay-up.md), [vault-stay-up.md](vault-stay-up.md) (McKing half + **vault post-CLEAR stay-up evidence** `@d88cacb`), [doc-lid-restore.md](doc-lid-restore.md) (Doc half + Soft-530 **post-CLEAR stay-up evidence** — lastExit / KeepAlive / caffeinate·CDM / Tailscale), [post-dual-clear-go.md](post-dual-clear-go.md) (post-dual-CLEAR **Ben GO sequencer** — **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [shop-web-stay-up.md](shop-web-stay-up.md), `deployment-guide.md`, `home-lab-specification.md` (machine map)
 
 Weekend dual-OPEN glue. `vault-stay-up.md` named the two planes. This file names **wake order**, **independent CLEAR**, and the **ListMachines identity lock** when both Soft-530 and vault are **OPEN** at once. After Soft-530 CLEAR, stamp **Doc forensics** on [doc-lid-restore.md](doc-lid-restore.md). After vault CLEAR, stamp **McKing forensics** on [vault-stay-up.md](vault-stay-up.md). After **both** CLEARs + both forensic papers (`55e10d0` / `d88cacb`), Ben’s GO menu is [post-dual-clear-go.md](post-dual-clear-go.md) — **never auto-fire**. This file is **wake order** — not either forensic, not the GO menu.
 
@@ -76,9 +76,9 @@ Lookout Soft-530 coverage is still **api-only**. Companions stay **HOLD**. After
 | Check | Expect |
 |-------|--------|
 | `GET https://vault.projectcar.ca/alive` | **200** — **CLEAR** (prefer) |
-| VW `GET https://vault.projectcar.ca/api/config` | **200** + version **2026.6.0** (stamp; fallback if `/alive` 404s) |
+| VW `GET https://vault.projectcar.ca/api/config` | **200** + version **2026.6.0** McKing class (**not** Doc **2025.12.0**; stamp; fallback if `/alive` 404s) |
 
-Essay: [vault-stay-up.md](vault-stay-up.md). Soft-530 `/health` **200** is **not** vault CLEAR. After that CLEAR, stamp **vault post-CLEAR stay-up evidence** (cloudflared.service ActiveState/Result/ExecMainStatus · VW healthy + `DOMAIN=https://vault.projectcar.ca` · Tailscale · **1033→200** vs **502→200**) on [vault-stay-up.md](vault-stay-up.md) before walking away.
+After **extended OPEN** (**502** since ~19:45 MT Sep 13), the **first** public card is [vault-clear-smoke.md](vault-clear-smoke.md) — **before** Bitwarden / desk: `/alive` **200** + `/api/config` McKing **2026.6.0** class (not Doc **2025.12.0**) + classify **502→200** (not CF **1033→200**). Bitwarden stays **Ben GO**, **never auto-fire**. Essay: [vault-stay-up.md](vault-stay-up.md). Soft-530 `/health` **200** is **not** vault CLEAR. After that CLEAR, stamp **vault post-CLEAR stay-up evidence** (cloudflared.service ActiveState/Result/ExecMainStatus · VW healthy + `DOMAIN=https://vault.projectcar.ca` · Tailscale · **1033→200** vs **502→200**) on [vault-stay-up.md](vault-stay-up.md) before walking away. Forensic paper already ack’d (`d88cacb`).
 
 Living this fold — OPEN class honesty (do **not** invent CLEAR): Soft-530 still **OPEN** as CF **1033** since 2026-09-13 ~11:57 America/Edmonton (**~24h+** — quiet-ops [soft-530-extended-open.md](soft-530-extended-open.md)). Vault independently **OPEN** as **502** since ~19:45 MT Sep 13 — **not** 1033 — on `/alive` **and** `/api/config`. ListMachines only `Mac.lan` — `Mac.lan` ≠ `Docs-MacBook-Pro` ≠ `lightning` (lid-restore + vault wake **blocked**). Different first checks when `lightning` returns — Soft-530 **1033** = Doc tunnel first; vault **502** = VW origin first. Brochure Option A **LIVE** (FULL 10/10; `waitlist.js?v=3`; `styles.css?v=36`; Home bare `href="/"` + canonical/og apex until **#82**) — public SSOT during extended OPEN. Freeze intact **`4cf8924`** / **`5swmVz`**. **#82** still Ben GO.
 
@@ -86,7 +86,7 @@ Living this fold — OPEN class honesty (do **not** invent CLEAR): Soft-530 stil
 
 ## After both CLEARs — Ben GO menu (never auto-fire)
 
-Forensic papers already ack’d on held **#70**: Soft-530 post-CLEAR **`55e10d0`** · vault post-CLEAR **`d88cacb`**. After **extended OPEN**, a **live** Soft-530 CLEAR first runs [soft-530-clear-smoke.md](soft-530-clear-smoke.md) — **before** desk / **#79.1** / unfreeze. After a **live** Soft-530 CLEAR **and** a **live** vault CLEAR, do **not** auto-fire **#82**, unfreeze, or Garage **#79.1**.
+Forensic papers already ack’d on held **#70**: Soft-530 post-CLEAR **`55e10d0`** · vault post-CLEAR **`d88cacb`**. After **extended OPEN**, a **live** Soft-530 CLEAR first runs [soft-530-clear-smoke.md](soft-530-clear-smoke.md) — **before** desk / **#79.1** / unfreeze. A **live** vault CLEAR first runs [vault-clear-smoke.md](vault-clear-smoke.md) — **before** Bitwarden / desk. After a **live** Soft-530 CLEAR **and** a **live** vault CLEAR, do **not** auto-fire **#82**, unfreeze, Garage **#79.1**, or Bitwarden.
 
 Ordered Ben GO menu — [post-dual-clear-go.md](post-dual-clear-go.md):
 
@@ -123,7 +123,8 @@ Anti-goals that stay on this file: CLEAR ≠ companion re-ask; CLEAR ≠ Bitward
 - Wake McKing first, or wake in parallel when only `Mac.lan` is online
 - Claim Soft-530 CLEAR from `api.` `/health` **200** alone (after extended OPEN: [soft-530-clear-smoke.md](soft-530-clear-smoke.md) — OPTIONS CORS + POST **422**/**201** + `cloud.` `status.php`; `changeme` on `/login` is freeze)
 - Claim vault CLEAR from Soft-530 green
-- Bitwarden import/rotate until vault `/alive` is **CLEAR**
+- Jump to Bitwarden / desk after extended-OPEN vault CLEAR without [vault-clear-smoke.md](vault-clear-smoke.md)
+- Bitwarden import/rotate until vault `/alive` is **CLEAR** — then still **Ben GO**, **never auto-fire**
 - Unfreeze Doc / pull tip / rebuild (`5swmVz`)
 - Execute **#82**, Zone Direct Upload, or Garage from this paper
 - Re-nag Ben for Doc-wake or McKing wake (already asked — [soft-530-extended-open.md](soft-530-extended-open.md))

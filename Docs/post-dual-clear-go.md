@@ -2,7 +2,7 @@
 
 **Status:** Paper — **never auto-fire** on CLEAR  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (living-ops / Locks · Option A **FULL 10/10** · Member-edge capacity · **#79** Next · living dual-OPEN), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops while OPEN **~24h+** — this file stays the **CLEAR path**; duration ≠ auto-fire), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** this menu / desk / **#79.1** / unfreeze), [dual-host-outage.md](dual-host-outage.md) (wake order), [doc-lid-restore.md](doc-lid-restore.md) (Soft-530 CLEAR + Doc forensics `@55e10d0`), [vault-stay-up.md](vault-stay-up.md) (vault CLEAR + McKing forensics `@d88cacb`), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [brochure-worker-ci.md](brochure-worker-ci.md) (**#82** gates + Option A receipt — never **#81**), [brochure-worker-deploy.md](brochure-worker-deploy.md) (upload click-path), [member-zone-edge.md](member-zone-edge.md) (Next #1 — capacity-blocked until Bulk), [doc-unfreeze.md](doc-unfreeze.md) (Shop OS parallel unfreeze pull), [ops-demo-hardening.md](ops-demo-hardening.md) (**#79** / Garage **#79.1** strip plan), [cors-origins.md](cors-origins.md) (waitlist OPTIONS Origin)
+**Related:** `STATUS.md` (living-ops / Locks · Option A **FULL 10/10** · Member-edge capacity · **#79** Next · living dual-OPEN), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops while OPEN **~24h+** — this file stays the **CLEAR path**; duration ≠ auto-fire), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** this menu / desk / **#79.1** / unfreeze), [vault-clear-smoke.md](vault-clear-smoke.md) (**first** recovery smoke after extended-OPEN vault CLEAR — **before** Bitwarden / desk; **502→200** not CF **1033→200**), [dual-host-outage.md](dual-host-outage.md) (wake order), [doc-lid-restore.md](doc-lid-restore.md) (Soft-530 CLEAR + Doc forensics `@55e10d0`), [vault-stay-up.md](vault-stay-up.md) (vault wake + McKing forensics `@d88cacb`), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [brochure-worker-ci.md](brochure-worker-ci.md) (**#82** gates + Option A receipt — never **#81**), [brochure-worker-deploy.md](brochure-worker-deploy.md) (upload click-path), [member-zone-edge.md](member-zone-edge.md) (Next #1 — capacity-blocked until Bulk), [doc-unfreeze.md](doc-unfreeze.md) (Shop OS parallel unfreeze pull), [ops-demo-hardening.md](ops-demo-hardening.md) (**#79** / Garage **#79.1** strip plan), [cors-origins.md](cors-origins.md) (waitlist OPTIONS Origin)
 
 After **both** planes CLEAR **and** both forensic papers are already ack’d, lock an **ordered Ben GO menu**. CLEAR is restore proof. It is **not** a GO. This file executes **none** of the menu.
 
@@ -17,11 +17,11 @@ The menu is **offered** only when every row is true. Living this fold: the two l
 | Gate | Meaning | Ack / essay |
 |------|---------|-------------|
 | **Soft-530 CLEAR** | After **extended OPEN**, first card is [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**before** desk / **#79.1** / unfreeze): `api.` `/health` **200** + waitlist OPTIONS CORS (apex **and** www) + waitlist POST **422** or **201** + note `app.`/`ops.` may still print `` `changeme` `` (freeze, **not** Soft-530) + `cloud.` `status.php` **200** when Doc public is up. Shorter OPEN still uses lid-restore / dual-host five-row. | [soft-530-clear-smoke.md](soft-530-clear-smoke.md) · [doc-lid-restore.md](doc-lid-restore.md) · [dual-host-outage.md](dual-host-outage.md) Independent CLEAR |
-| **Vault CLEAR** | McKing public `/alive` **200** (+ VW `/api/config` stamp) | [vault-stay-up.md](vault-stay-up.md) |
+| **Vault CLEAR** | After **extended OPEN**, first card is [vault-clear-smoke.md](vault-clear-smoke.md) (**before** Bitwarden / desk): `/alive` **200** + `/api/config` **200** / McKing **2026.6.0** class (not Doc **2025.12.0**) + classify **502→200** (not CF **1033→200**). Shorter OPEN still uses `/alive` **200** + VW `/api/config` stamp. Bitwarden stays **Ben GO**, **never auto-fire**. | [vault-clear-smoke.md](vault-clear-smoke.md) · [vault-stay-up.md](vault-stay-up.md) |
 | **Soft-530 post-CLEAR forensics ack’d** | Doc stamp paper already on held **#70**: lastExit / KeepAlive / caffeinate·CDM / Tailscale | **`55e10d0`** — [doc-lid-restore.md](doc-lid-restore.md) Post-CLEAR stay-up evidence |
 | **Vault post-CLEAR forensics ack’d** | McKing stamp paper already on held **#70**: cloudflared.service / VW+DOMAIN / Tailscale / **1033→200** vs **502→200** | **`d88cacb`** — [vault-stay-up.md](vault-stay-up.md) Post-CLEAR stay-up evidence |
 
-After a **live** Soft-530 CLEAR, still stamp Doc forensics on [doc-lid-restore.md](doc-lid-restore.md) before walking away. After a **live** vault CLEAR, still stamp McKing forensics on [vault-stay-up.md](vault-stay-up.md). Those two commits are the **paper** baselines — not a live stamp and **not** a CLEAR.
+After a **live** Soft-530 CLEAR, still stamp Doc forensics on [doc-lid-restore.md](doc-lid-restore.md) before walking away. After a **live** vault CLEAR, still run [vault-clear-smoke.md](vault-clear-smoke.md) **before** Bitwarden / desk, then stamp McKing forensics on [vault-stay-up.md](vault-stay-up.md). Those two commits are the **paper** baselines — not a live stamp and **not** a CLEAR.
 
 **Never auto-fire.** Dual CLEAR + both papers ack’d unlocks this **menu**. Ben still says **GO** to each step, in order.
 
@@ -109,7 +109,7 @@ Living dual-OPEN honesty (`5f2fd1c`) is **unchanged** — see **Living this fold
 
 Brochure Option A **LIVE**: Zone Redirect **FULL 10/10**; `waitlist.js?v=3`; `styles.css?v=36`; Soft-530 Discord honesty; Home still bare `href="/"` + canonical/og apex until **#82**. Freeze intact **`4cf8924`** / BUILD_ID **`5swmVz`**. **#82** still Ben GO. Apex deferred. Soft-530 OPEN has crossed **~24h** + vault OPEN + **Mac.lan only** → quiet-ops ([soft-530-extended-open.md](soft-530-extended-open.md)). Duration of this OPEN does **not** auto-fire this menu. This paper does **not** invent a CLEAR, a live restore, or a Ben GO.
 
-**After extended OPEN:** the **next** Soft-530 **CLEAR** runs [soft-530-clear-smoke.md](soft-530-clear-smoke.md) **first** (OPTIONS CORS + POST **422**/**201**) **before** Owner desk / **#79.1** / this menu. Do **not** execute that smoke from this fold. Pointer: [soft-530-extended-open.md](soft-530-extended-open.md) · [cors-origins.md](cors-origins.md).
+**After extended OPEN:** the **next** Soft-530 **CLEAR** runs [soft-530-clear-smoke.md](soft-530-clear-smoke.md) **first** (OPTIONS CORS + POST **422**/**201**) **before** Owner desk / **#79.1** / this menu. The **next** vault **CLEAR** runs [vault-clear-smoke.md](vault-clear-smoke.md) **first** (`/alive` **200** + `/api/config` McKing **2026.6.0** class + **502→200**) **before** Bitwarden / desk. Do **not** execute those smokes from this fold. Pointer: [soft-530-extended-open.md](soft-530-extended-open.md) · [cors-origins.md](cors-origins.md).
 
 ---
 
@@ -118,7 +118,7 @@ Brochure Option A **LIVE**: Zone Redirect **FULL 10/10**; `waitlist.js?v=3`; `st
 | Anti-goal | Why |
 |-----------|-----|
 | **CLEAR ≠ Soft-530 companions re-ask** | Companions stay **HOLD / not armed**. Ben skipped ~14:35 America/Edmonton. Dual CLEAR does **not** re-open that ask. |
-| **CLEAR ≠ Bitwarden import/rotate** | Vault CLEAR lifts the *down-origin block* ([vault-stay-up.md](vault-stay-up.md)). It does **not** put import/rotate on this menu and does **not** auto-start it. |
+| **CLEAR ≠ Bitwarden import/rotate** | Vault CLEAR lifts the *down-origin block* ([vault-stay-up.md](vault-stay-up.md)). After **extended OPEN**, first card is [vault-clear-smoke.md](vault-clear-smoke.md). It does **not** put import/rotate on this menu and does **not** auto-start it. **Ben GO**, **never auto-fire**. |
 | **Soft-530 CLEAR alone ≠ Doc unfreeze** | Lid-restore is process wake only. Freeze `4cf8924` / `5swmVz` until **Ben GO**. Unfreeze is a **separate** Shop OS GO — **parallel**, not “next after **#82**” in place of Bulk / **#83**. Soft-530 CLEAR alone ≠ the **#79.1** acceptance card. |
 | **Vault CLEAR ≠ Soft-530 work** | Vault is McKing. Soft-530 is Doc. Green `/alive` does **not** wake KeepAlive, unfreeze Doc, or GO **#82**. |
 | **Dual CLEAR ≠ #82 auto-go** | Both CLEARs + both forensic papers ack’d **offer** step 2. Ben still GOs **#82**. Do **not** Zone Direct Upload from CLEAR. |
@@ -146,5 +146,5 @@ Wake order stays [dual-host-outage.md](dual-host-outage.md). Doc forensics stay 
 - Execute Zone Direct Upload / Bulk / Member edge / Garage / Doc pull from this paper
 - Invent a CLEAR while Soft-530 is still **OPEN** (CF **1033**) or vault is still **OPEN** (**502**)
 - Treat ~24h OPEN as this menu auto-firing ([soft-530-extended-open.md](soft-530-extended-open.md))
-- Execute [soft-530-clear-smoke.md](soft-530-clear-smoke.md), desk, or **#79** from this bounce
+- Execute [soft-530-clear-smoke.md](soft-530-clear-smoke.md), [vault-clear-smoke.md](vault-clear-smoke.md), desk, Bitwarden, or **#79** from this bounce
 - Shell `Mac.lan` as Doc or McKing

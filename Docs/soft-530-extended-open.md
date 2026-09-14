@@ -2,7 +2,7 @@
 
 **Status:** Living ops — paper lock  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (living dual-OPEN + this pointer), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** desk / **#79.1** / unfreeze), [dual-host-outage.md](dual-host-outage.md) (wake order — **not** this lock), [vault-stay-up.md](vault-stay-up.md) (McKing half), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Option A Lookout **to arm** — continues), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — **never auto-fire**), [doc-lid-restore.md](doc-lid-restore.md) (Lead process wake when `Docs-MacBook-Pro` reappears)
+**Related:** `STATUS.md` (living dual-OPEN + this pointer), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** desk / **#79.1** / unfreeze), [vault-clear-smoke.md](vault-clear-smoke.md) (**first** recovery smoke after extended-OPEN vault CLEAR — **before** Bitwarden / desk), [dual-host-outage.md](dual-host-outage.md) (wake order — **not** this lock), [vault-stay-up.md](vault-stay-up.md) (McKing half + forensics `@d88cacb`), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Option A Lookout **to arm** — continues), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — **never auto-fire**), [doc-lid-restore.md](doc-lid-restore.md) (Lead process wake when `Docs-MacBook-Pro` reappears)
 
 When Soft-530 **OPEN** crosses **~24h** **and** vault is **OPEN** **and** ListMachines is **only `Mac.lan`**, lock **quiet-ops**. This file names that lock. It is **not** wake order ([dual-host-outage.md](dual-host-outage.md)), **not** the CLEAR menu ([post-dual-clear-go.md](post-dual-clear-go.md)), and **not** a Ben re-nag.
 
@@ -52,6 +52,12 @@ After an **extended** Soft-530 OPEN, the **next** Soft-530 **CLEAR** runs [soft-
 
 ---
 
+## Next vault CLEAR after this lock
+
+After an **extended** vault OPEN (**502** since ~19:45 MT Sep 13), the **next** vault **CLEAR** runs [vault-clear-smoke.md](vault-clear-smoke.md) **first** — **before** Bitwarden / desk: `/alive` **200** + `/api/config` **200** / McKing **2026.6.0** class (not Doc **2025.12.0**) + classify **502→200** (not CF **1033→200**). Soft-530 may still be **OPEN**. Bitwarden stays **Ben GO**, **never auto-fire**. Forensics still [vault-stay-up.md](vault-stay-up.md) (`d88cacb`). CLEAR path still [post-dual-clear-go.md](post-dual-clear-go.md) (**never auto-fire**). This paper does **not** execute that smoke and does **not** invent CLEAR.
+
+---
+
 ## Anti-goals
 
 | Anti-goal | Why |
@@ -78,4 +84,5 @@ After an **extended** Soft-530 OPEN, the **next** Soft-530 **CLEAR** runs [soft-
 - Shell `Mac.lan` as Doc or McKing
 - Invent a CLEAR while Soft-530 is still **OPEN** (CF **1033**) or vault is still **OPEN** (**502**)
 - Execute the [soft-530-clear-smoke.md](soft-530-clear-smoke.md) curls, desk, **#79.1**, or unfreeze from this bounce
+- Execute the [vault-clear-smoke.md](vault-clear-smoke.md) curls or Bitwarden from this bounce
 - Execute Zone / Garage / Lookout arm from this paper

@@ -2,7 +2,7 @@
 
 **Status:** Paper — first recovery smoke, **not** a GO  
 **Updated:** 2026-09-14  
-**Related:** `STATUS.md` (living dual-OPEN + this pointer), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops while OPEN **~24h+** — this file is the **next** Soft-530 CLEAR card), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — ordered Ben GO menu, **never auto-fire**; **#79.1** acceptance is **later**), [doc-lid-restore.md](doc-lid-restore.md) (process wake + Doc forensics `@55e10d0`), [dual-host-outage.md](dual-host-outage.md) (wake order — Doc first, then McKing), [cors-origins.md](cors-origins.md) (waitlist OPTIONS Origin), [ops-demo-hardening.md](ops-demo-hardening.md) (**#79** / **#79.1** — **after** this smoke), [doc-unfreeze.md](doc-unfreeze.md) (Ben GO pull — **after** this smoke), [vault-stay-up.md](vault-stay-up.md) (vault CLEAR — **separate** McKing lane)
+**Related:** `STATUS.md` (living dual-OPEN + this pointer), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops while OPEN **~24h+** — this file is the **next** Soft-530 CLEAR card), [post-dual-clear-go.md](post-dual-clear-go.md) (**CLEAR path** — ordered Ben GO menu, **never auto-fire**; **#79.1** acceptance is **later**), [doc-lid-restore.md](doc-lid-restore.md) (process wake + Doc forensics `@55e10d0`), [dual-host-outage.md](dual-host-outage.md) (wake order — Doc first, then McKing), [cors-origins.md](cors-origins.md) (waitlist OPTIONS Origin), [ops-demo-hardening.md](ops-demo-hardening.md) (**#79** / **#79.1** — **after** this smoke), [doc-unfreeze.md](doc-unfreeze.md) (Ben GO pull — **after** this smoke), [vault-stay-up.md](vault-stay-up.md) (vault wake + McKing forensics `@d88cacb`), [vault-clear-smoke.md](vault-clear-smoke.md) (vault CLEAR recovery smoke — **separate** McKing lane; **not** this file)
 
 After Soft-530 **CLEAR** following **extended OPEN** (**>~24h**), run this **first recovery smoke BEFORE** any Owner desk / **#79.1** / unfreeze talk. Quiet-ops named the lock ([soft-530-extended-open.md](soft-530-extended-open.md)). This file names the first public proof that the **route** is back — not only that the tunnel answered.
 
@@ -72,7 +72,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' https://cloud.projectcar.ca/status.php
 # expect 200
 ```
 
-After this smoke passes, stamp Doc forensics on [doc-lid-restore.md](doc-lid-restore.md) (lastExit / KeepAlive / caffeinate·CDM / Tailscale) before walking away. Vault CLEAR + McKing forensics stay [vault-stay-up.md](vault-stay-up.md). Then — and only then — the ordered Ben GO menu is [post-dual-clear-go.md](post-dual-clear-go.md). **Never auto-fire.**
+After this smoke passes, stamp Doc forensics on [doc-lid-restore.md](doc-lid-restore.md) (lastExit / KeepAlive / caffeinate·CDM / Tailscale) before walking away. Vault CLEAR first card is [vault-clear-smoke.md](vault-clear-smoke.md); McKing forensics stay [vault-stay-up.md](vault-stay-up.md). Then — and only then — the ordered Ben GO menu is [post-dual-clear-go.md](post-dual-clear-go.md). **Never auto-fire.**
 
 ---
 
@@ -95,7 +95,7 @@ Soft-530 **CLEAR** alone ≠ the **#79.1** card. This smoke **before** that talk
 | **CLEAR smoke ≠ companion re-ask** | Soft-530 companions stay **HOLD / not armed**. Ben skipped ~14:35 America/Edmonton. Do **not** re-ask. |
 | **CLEAR smoke ≠ Bitwarden** | Import/rotate is vault. Vault CLEAR is still the **separate** McKing lane ([vault-stay-up.md](vault-stay-up.md)). Soft-530 green does **not** lift Bitwarden. |
 | **Soft-530 CLEAR alone ≠ unfreeze** | Freeze `4cf8924` / **`5swmVz`** until **Ben GO**. `changeme` on `/login` is freeze, not a 1033. |
-| **Vault CLEAR still separate** | McKing `/alive` **200** is [vault-stay-up.md](vault-stay-up.md). This file is Doc Soft-530 only. Green `/health` ≠ vault CLEAR. |
+| **Vault CLEAR still separate** | McKing first card is [vault-clear-smoke.md](vault-clear-smoke.md) (`/alive` **200** + `/api/config` McKing **2026.6.0** class + **502→200**). Forensics stay [vault-stay-up.md](vault-stay-up.md). This file is Doc Soft-530 only. Green `/health` ≠ vault CLEAR. |
 | **`/health` 200 ≠ route alive** | Tunnel-up without OPTIONS CORS + POST 422/201 is **not** this card. |
 | **Invent CLEAR** | Soft-530 still **OPEN** (CF **1033**). Vault still **OPEN** (**502**). Only `Mac.lan`. |
 
@@ -111,7 +111,7 @@ Soft-530 **CLEAR** alone ≠ the **#79.1** card. This smoke **before** that talk
 - Start Owner desk / **#79.1** / unfreeze talk from this smoke
 - Treat this smoke as **#82** GO, companion re-ask, or Bitwarden
 - Treat Soft-530 CLEAR alone as unfreeze
-- Fold vault CLEAR into this Doc smoke
+- Fold vault CLEAR into this Doc smoke — vault first card is [vault-clear-smoke.md](vault-clear-smoke.md)
 - Auto-fire [post-dual-clear-go.md](post-dual-clear-go.md)
 - Shell `Mac.lan` as Doc or McKing
 - Execute Zone / Garage / Lookout arm from this paper
