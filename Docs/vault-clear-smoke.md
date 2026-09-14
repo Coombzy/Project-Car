@@ -36,7 +36,7 @@ Run **in order**. `/alive` **200** alone is origin-up, not “the right VW is se
 | **2** | `GET https://vault.projectcar.ca/api/config` | **200** with a Vaultwarden **version present**. Expect McKing **2026.6.0** class. **Reject** Doc sibling **2025.12.0**. Version stamp, not a license to import. |
 | **3** | Classify the recovery path | This OPEN is origin-down **502→200**, **not** CF **1033→200**. Soft-530 tunnel class ([soft-530-clear-smoke.md](soft-530-clear-smoke.md) — `502ab2e`) stays **separate**. Do **not** collapse the classes. |
 | **4** | Soft-530 may still be **OPEN** | Vault CLEAR alone ≠ Soft-530 CLEAR ≠ **#82** ≠ unfreeze ≠ companions. Green `/alive` proves **nothing** on Doc. |
-| **5** | Bitwarden import/rotate | Stays **Ben GO** after this smoke. **Never auto-fire.** CLEAR ≠ import/rotate start. Not on [post-dual-clear-go.md](post-dual-clear-go.md). |
+| **5** | Bitwarden import/rotate | Gate is **vault CLEAR** + this smoke, then **Ben GO**. **Never auto-fire.** Soft-530 **OPEN** can coexist — do **not** block Bitwarden on Soft-530 CLEAR. Not on [post-dual-clear-go.md](post-dual-clear-go.md). |
 
 ```bash
 # ONLY after a live vault CLEAR following extended OPEN — not this paper
@@ -78,7 +78,8 @@ Vault **CLEAR** alone ≠ the Soft-530 card. Green `/alive` ≠ `/health` **200*
 | **Not Soft-530 CLEAR smoke** | That card is already `502ab2e`. This file is McKing vault only. Do **not** fold Doc OPTIONS/POST into this smoke. |
 | **Vault CLEAR alone ≠ Soft-530 CLEAR** | Soft-530 may still be **OPEN** (CF **1033**). Green `/alive` ≠ `/health` **200**. |
 | **Vault CLEAR ≠ #82 / unfreeze / companions** | McKing plane only. Doc KeepAlive / freeze / Lookout companions stay put. |
-| **Bitwarden never auto-fire** | Import/rotate stays **Ben GO** after CLEAR. This smoke does **not** start a client import, vault-item rotate, bulk re-key, or official Bitwarden → Vaultwarden move. |
+| **Bitwarden never auto-fire** | Gate is **vault CLEAR** + this smoke, then **Ben GO**. This smoke does **not** start a client import, vault-item rotate, bulk re-key, or official Bitwarden → Vaultwarden move. |
+| **Block Bitwarden on Soft-530** | Soft-530 **OPEN** can coexist with vault CLEAR + Bitwarden work. Do **not** wait for Soft-530 CLEAR. |
 | **`/alive` 200 ≠ right VW** | Need `/api/config` **200** + McKing **2026.6.0** class (not Doc **2025.12.0**). |
 | **Invent CLEAR** | Soft-530 still **OPEN** (CF **1033**). Vault still **OPEN** (**502**). Only `Mac.lan`. |
 | **Collapse 502→200 into 1033→200** | This OPEN is origin-down. Soft-530 tunnel class stays separate. |

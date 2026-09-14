@@ -97,9 +97,9 @@ Living this fold — OPEN class honesty (do **not** invent CLEAR): **Soft-530** 
 
 | Vault state | Import / rotate |
 |-------------|-----------------|
-| `/alive` **200** (CLEAR) | *Down-origin block lifts.* After **extended OPEN**, first card is [vault-clear-smoke.md](vault-clear-smoke.md) — **before** Bitwarden / desk. Import/rotate stays **Ben GO**, **never auto-fire**. Still not a shop cutover or Doc unfreeze. |
+| `/alive` **200** (CLEAR) | *Down-origin block lifts.* After **extended OPEN**, first card is [vault-clear-smoke.md](vault-clear-smoke.md) — **before** Bitwarden / desk. Import/rotate stays **Ben GO**, **never auto-fire**. Soft-530 **OPEN** can coexist — do **not** block Bitwarden on Soft-530 CLEAR. Still not a shop cutover or Doc unfreeze. |
 | **502 / 530 / 1033 / timeout / non-200** | **Blocked.** Clients must not write a down or recovering origin. |
-| Soft-530 Doc down, vault `/alive` **200** | Import/rotate is a **vault** decision. Doc lid-close does **not** block it. |
+| Soft-530 Doc down, vault `/alive` **200** | Import/rotate is a **vault** decision. Soft-530 **OPEN** can coexist with vault CLEAR + Bitwarden work. Doc lid-close / Soft-530 OPEN does **not** block it. |
 | Vault down, Soft-530 `/health` **200** | **Still blocked.** Green Doc API does **not** CLEAR vault. |
 
 CLEAR means public `GET https://vault.projectcar.ca/alive` → **200**. Prefer `/alive`. `/api/config` **2026.6.0** is the version stamp, not a license to import during a flip. After **extended OPEN**, prove McKing **2026.6.0** class (not Doc **2025.12.0**) on [vault-clear-smoke.md](vault-clear-smoke.md) **before** any import/rotate talk.
@@ -239,6 +239,7 @@ Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-
 - Bitwarden import/rotate until public `/alive` is **CLEAR**
 - Jump to Bitwarden / desk after extended-OPEN CLEAR without [vault-clear-smoke.md](vault-clear-smoke.md)
 - Treat vault CLEAR as Bitwarden import/rotate GO or as Soft-530 / **#82** / unfreeze work ([post-dual-clear-go.md](post-dual-clear-go.md))
+- Block Bitwarden on Soft-530 CLEAR — Soft-530 **OPEN** can coexist with vault CLEAR + Bitwarden work
 - Use Soft-530 `/health` **200** as vault CLEAR
 - Collapse vault **502** origin-down into Soft-530 CF **1033** tunnel-down (different first checks when `lightning` returns)
 - Walk away from a vault CLEAR without the stay-up evidence stamp (cloudflared.service ActiveState/Result/ExecMainStatus · VW healthy + DOMAIN · Tailscale · 1033→200 vs 502→200)

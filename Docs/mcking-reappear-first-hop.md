@@ -34,7 +34,7 @@ Run **in order**. A name on ListMachines is **not** McKing evidence. Duration of
 | **1** | **Assert identity** | ListMachines name / label **`lightning`** **and** machineId **`9067d14b-46e5-4ef0-82d5-fce0febdc8f7`**. Tailscale stamp `lightning.tailbe8f55.ts.net` is the same host. **Never** treat **`Mac.lan`** (Ben Laptop) as McKing. No Shell on `Mac.lan` as vault host. |
 | **2** | **Run [vault-clear-smoke.md](vault-clear-smoke.md)** | After Chief vault wake on the **asserted** host ([vault-stay-up.md](vault-stay-up.md) — VW + McKing `cloudflared` only): `GET https://vault.projectcar.ca/alive` **200**; `GET https://vault.projectcar.ca/api/config` **200** + Vaultwarden **2026.6.0** class (**reject** Doc sibling **2025.12.0**); classify this OPEN **502→200** (origin-down), **not** CF **1033→200**. |
 | **3** | **Only if CLEAR → vault post-CLEAR forensic baseline** | Stamp cloudflared.service ActiveState/Result/ExecMainStatus (or lastExit) / VW healthy + `DOMAIN=https://vault.projectcar.ca` / Tailscale `lightning` up / **502→200** vs **1033→200** on [vault-stay-up.md](vault-stay-up.md) **before walking away**. Paper baseline already ack’d (`d88cacb`). Do **not** stamp on `Mac.lan` or Doc. If smoke is **not** CLEAR, stay on vault-stay-up — do **not** invent CLEAR and do **not** treat the plane as green. |
-| **4** | **Soft-530 independence** | Bitwarden stays **blocked** until Soft-530 **CLEAR** happens as a **separate** event. **Never auto Bitwarden.** **Never** treat vault CLEAR as Soft-530 CLEAR, unfreeze, or **#82** GO. Green `/alive` proves **nothing** on Doc. [post-dual-clear-go.md](post-dual-clear-go.md) still needs **both** CLEARs + both forensic papers — vault CLEAR alone does **not** open that menu. |
+| **4** | **Soft-530 independence** | Bitwarden gate is **vault CLEAR** (Ben GO after `/alive` **200** + VW **2026.6.0** smoke) — **not** Soft-530 CLEAR. Soft-530 **OPEN** can coexist with vault CLEAR + Bitwarden work. **Never auto Bitwarden.** **Never** treat vault CLEAR as Soft-530 CLEAR, unfreeze, or **#82** GO. Green `/alive` proves **nothing** on Doc. [post-dual-clear-go.md](post-dual-clear-go.md) still needs **both** CLEARs + both forensic papers — vault CLEAR alone does **not** open that menu. |
 
 Chief process wake stays [vault-stay-up.md](vault-stay-up.md). This file does **not** replace that sequence — it locks **which host** and **what comes first** when `lightning` reappears after quiet-ops.
 
@@ -66,7 +66,7 @@ This hop is **McKing vault only**. Soft-530 stays a **separate** plane.
 
 | Independence lock | Meaning |
 |-------------------|---------|
-| **Bitwarden stays blocked until Soft-530 CLEAR separate** | Vault CLEAR lifts the *down-origin* proof only. Import/rotate stays **blocked** until Soft-530 **CLEAR** is a **separate** live event. Then still **Ben GO**. **Never auto Bitwarden.** Not on [post-dual-clear-go.md](post-dual-clear-go.md). |
+| **Bitwarden gate is vault CLEAR + Ben GO** | After [vault-clear-smoke.md](vault-clear-smoke.md) (`/alive` **200** + VW **2026.6.0**), import/rotate is **Ben GO** — **not** blocked on Soft-530 CLEAR. Soft-530 **OPEN** can coexist with vault CLEAR + Bitwarden work. **Never auto Bitwarden.** Not on [post-dual-clear-go.md](post-dual-clear-go.md). |
 | **Vault CLEAR ≠ Soft-530 CLEAR** | Soft-530 may still be **OPEN** (`api.` / `app.` / `ops.` / `cloud.` **530** CF **1033**; waitlist OPTIONS **530**). Green `/alive` ≠ `/health` **200**. |
 | **Vault CLEAR ≠ unfreeze / #82 GO** | Freeze `4cf8924` / **`5swmVz`** intact. **#82** still Ben GO. Dual CLEAR ≠ **#82** auto-go. Vault green does **not** offer Worker-live, Doc pull, or Garage **#79.1**. |
 | **Green `/alive` ≠ this hop done without hop 4** | Smoke + forensics do **not** collapse the planes. Stay on independence. |
@@ -87,7 +87,8 @@ Lead stays armed for `Docs-MacBook-Pro` on the Doc lane ([soft-530-extended-open
 | **Collapse 502→200 into 1033→200** | This OPEN is origin-down. Soft-530 tunnel class stays separate. |
 | **Vault CLEAR = Soft-530 CLEAR** | Soft-530 may still be **OPEN** (CF **1033**). Green `/alive` ≠ `/health` **200**. |
 | **Vault CLEAR = unfreeze / #82 GO** | Freeze intact. **#82** still Ben GO. Never auto-fire. |
-| **Auto Bitwarden** | Import/rotate stays **blocked** until Soft-530 CLEAR is separate, then still **Ben GO**. This hop does **not** start a client import, vault-item rotate, bulk re-key, or official Bitwarden → Vaultwarden move. |
+| **Auto Bitwarden** | Gate is **vault CLEAR** (Ben GO after `/alive` + VW **2026.6.0** smoke) — **not** Soft-530 CLEAR. This hop does **not** auto-start a client import, vault-item rotate, bulk re-key, or official Bitwarden → Vaultwarden move. |
+| **Block Bitwarden on Soft-530** | Soft-530 independence is vault CLEAR ≠ Soft-530 CLEAR ≠ unfreeze / **#82** — **not** “wait for Soft-530 CLEAR before Bitwarden.” Soft-530 **OPEN** can coexist with vault CLEAR + Bitwarden work. |
 | **Vault CLEAR opens the sequencer** | [post-dual-clear-go.md](post-dual-clear-go.md) needs **both** CLEARs + both forensic papers. Vault alone does **not** offer **#82** / unfreeze / **#79.1**. |
 | **Soft-530 folded into this hop** | Doc stays Lead `Docs-MacBook-Pro`. [doc-reappear-first-hop.md](doc-reappear-first-hop.md). |
 | **Not Lookout companion re-ask** | Soft-530 companions stay **HOLD / not armed**. Ben skipped ~14:35 America/Edmonton. Do **not** re-ask. |
@@ -105,7 +106,7 @@ Lead stays armed for `Docs-MacBook-Pro` on the Doc lane ([soft-530-extended-open
 - Skip hop **1** and run smoke / vault-stay-up on a name-only match
 - Run [vault-clear-smoke.md](vault-clear-smoke.md) from this paper while vault is still **OPEN** and `lightning` is still absent
 - Stamp post-CLEAR forensics unless hop **2** is **CLEAR**
-- Auto-fire Bitwarden import/rotate from vault CLEAR — Bitwarden stays **blocked** until Soft-530 CLEAR is **separate**, then still **Ben GO**
+- Auto-fire Bitwarden import/rotate from vault CLEAR — Bitwarden is **Ben GO** after vault CLEAR + `/alive` + VW **2026.6.0** smoke; **not** blocked on Soft-530 CLEAR
 - Treat vault CLEAR as Soft-530 CLEAR, unfreeze, or **#82** GO
 - Auto-fire [post-dual-clear-go.md](post-dual-clear-go.md) from vault CLEAR alone
 - Fold Soft-530 CLEAR / lid-restore / **#82** into this McKing hop — Soft-530 stays Lead `Docs-MacBook-Pro`
