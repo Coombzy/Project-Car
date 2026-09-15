@@ -42,14 +42,14 @@ Vault **OPEN 502** (McKing origin since ~19:45 MT Sep 13) stays living honesty. 
 
 | Plane / pin | Living class |
 |-------------|--------------|
-| **Soft-530 (Doc)** | **CLEAR** — `api.` `/health` **200**; waitlist OPTIONS = Origin CORS preflight (**bare 405 ≠ OPEN**) |
-| **Vault (McKing)** | **OPEN 502** since ~19:45 MT Sep 13 (**not** 1033; docker dead — **not** CLEAR) |
+| **Soft-530 (Doc)** | **OPEN 530 / CF 1033** — `api.` / `app.` / `ops.` (Lookout + Lead **~16:36**; **was CLEAR**). Half-state **OVER**. |
+| **Vault (McKing)** | **OPEN 530 / CF 1033** connector-down (was 502 since ~19:45 MT Sep 13 — **not** CLEAR) |
 | **Brochure** | **LIVE** since the **2026-09-06** unlock (Option A). Shared “stays 502” is **false**. |
-| **Shared `shop-os-mc-plan.md`** | **Rewritten** ~15:42 America/Edmonton on Doc `~/Desktop/Fleet-Nextcloud/Memory/Shared/shop-os-mc-plan.md`. Still **non-SSOT**. |
-| **Freeze** | `` `changeme` `` / BUILD_ID **`5swmVz`** / tip **`4cf8924`** — live-verify **PASS** (confirmed frozen, **not** lifted) |
+| **Shared `shop-os-mc-plan.md`** | **Rewritten** ~15:42 America/Edmonton on Doc `~/Desktop/Fleet-Nextcloud/Memory/Shared/shop-os-mc-plan.md`. Still **non-SSOT**. Shared ~15:42 aligned Soft-530 **CLEAR** half-state — living now **OPEN** both 1033. |
+| **Freeze** | `` `changeme` `` / BUILD_ID **`5swmVz`** / tip **`4cf8924`** — **`last_known`** (Soft-530 OPEN → unverifiable live ≠ DIFF) |
 | **Option A** | Redirect+UX **PASS** (rungs 1–2). Public brochure is **LIVE**. Home still **STALE** until **#82**. Redirect+UX **PASS** ≠ Worker body freshness **PASS** / **#82** done |
 | **Brochure 502 (Shared old lock)** | **False** since **2026-09-06** unlock. Rewrite dropped it. Do **not** restore. |
-| **Half-state** | Soft-530 **CLEAR** + vault **OPEN** ≠ dual CLEAR ≠ camp GO ≠ unfreeze ≠ **#82** auto |
+| **Combined class** | **Dual OPEN both 1033**. Soft-530 CLEAR + vault OPEN half-state is **OVER**. ≠ dual CLEAR ≠ camp GO ≠ unfreeze ≠ **#82** auto |
 
 ---
 

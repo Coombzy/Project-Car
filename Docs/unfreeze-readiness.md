@@ -98,12 +98,12 @@ Soft-530 **CLEAR** alone ≠ that card. This draft does **not** start Garage. Me
 
 | Plane / pin | Living class |
 |-------------|--------------|
-| **Soft-530 (Doc)** | **CLEAR** — `api.` `/health` **200**; waitlist OPTIONS = Origin CORS preflight (**bare 405 ≠ OPEN**) |
-| **Vault (McKing)** | **OPEN 502** since ~19:45 MT Sep 13 (**not** 1033; docker dead — **not** CLEAR) |
-| **Freeze** | **`4cf8924`** / BUILD_ID **`5swmVz`** / public `` `changeme` `` — live-verify **PASS** (confirmed frozen, **not** lifted) |
+| **Soft-530 (Doc)** | **OPEN 530 / CF 1033** — `api.` / `app.` / `ops.` (Lookout + Lead **~16:36**; **was CLEAR**). Half-state **OVER**. Draft paper stays; **draft ≠ GO**. |
+| **Vault (McKing)** | **OPEN 530 / CF 1033** connector-down (was 502 since ~19:45 MT Sep 13 — **not** CLEAR) |
+| **Freeze** | **`4cf8924`** / BUILD_ID **`5swmVz`** / public `` `changeme` `` — **`last_known`** (Soft-530 OPEN → unverifiable ≠ DIFF) |
 | **Option A** | Redirect+UX **PASS** (rungs 1–2). Home still **STALE** until **#82** (canonical/`og:url` + nav Home bare `/`; sitemap loc bare `/`, lastmod **2026-09-08**). Redirect+UX **PASS** ≠ Worker body freshness **PASS** / **#82** done |
 | **Doc vs `main`** | HEAD **`4cf8924`** **~89** behind `origin/main` — draft reason, **not** pull license |
-| **Half-state** | Soft-530 **CLEAR** + vault **OPEN** ≠ dual CLEAR. Vault OPEN **does not** block **this draft**. Still **do not enter** the post-dual-CLEAR menu |
+| **Combined class** | **Dual OPEN both 1033**. Soft-530 CLEAR + vault OPEN half-state is **OVER**. Vault OPEN **does not** block **this draft**. Still **do not enter** the post-dual-CLEAR menu |
 
 **No Ben re-nag.** Soft-530 **CLEAR** duration ≠ auto-unfreeze ≠ auto **#82**. This paper executes **none** of the curls, pulls, or rebuilds.
 
