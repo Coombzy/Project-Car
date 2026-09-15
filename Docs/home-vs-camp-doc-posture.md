@@ -24,7 +24,7 @@ This fold executes **none** of the curls, Shells, Zone retargets, or GOs. Do **n
 | **Away weeks supersede McKing=`vault.`→`:8222`** | Camp weeks **supersede** the standing home/lab McKing=`vault.projectcar.ca`→`:8222` matrix. McKing 24/7 + WOL / remote LUKS are **deferred** — not the camp path, not a Ben 24/7 ask. |
 | **Pi/VPS long-term if vault must stay up while Doc is home-off** | Home-off Doc + vault-on-Doc is a contradiction. A Pi/VPS is still **better long-term** if public vault must stay up while Doc is home-off. Paper only — **not** a Pi/VPS GO. |
 
-Living this fold (do **not** invent CLEAR or a live retarget): Soft-530 **OPEN** — `api.` / `app.` / `ops.` / `cloud.` **530** CF **1033** since 2026-09-13 ~11:57 America/Edmonton; waitlist OPTIONS **530**. Vault independently **OPEN** — **502** since ~19:45 MT Sep 13 on `/alive` + `/api/config` (McKing docker dead — **not** CLEAR). ListMachines **`lightning` CONNECTED only** — `Mac.lan` dropped vs ~12:24 America/Edmonton 2026-09-15; Docs still **ABSENT** (`Mac.lan` ≠ `Docs-MacBook-Pro` ≠ `lightning`) — **home-off expected**. HTTP class unchanged — **no Ben surface**. Option A Redirect **PASS**. Soft-530 UX **LIVE** (`styles.css?v=36` + `waitlist.js?v=3` + Discord honesty). Freeze last_known **`4cf8924`** / **`5swmVz`**. **#82** still Ben GO. Camp cutover paper **ready, pending Ben GO**. This paper does **not** page Ben for Doc-wake or McKing docker.
+Living this fold (do **not** invent CLEAR or a live retarget): Soft-530 **OPEN** — `api.` / `app.` / `ops.` / `cloud.` **530** CF **1033** since 2026-09-13 ~11:57 America/Edmonton; waitlist OPTIONS **530**. Vault independently **OPEN** — **502** since ~19:45 MT Sep 13 on `/alive` + `/api/config` (McKing docker dead — **not** CLEAR). ListMachines **`Mac.lan` + `lightning`** — `Mac.lan` flap **reappeared** vs ~12:45 America/Edmonton 2026-09-15 (after the ~12:24 drop); Docs still **ABSENT** (`Mac.lan` ≠ `Docs-MacBook-Pro` ≠ `lightning`) — **home-off expected**. HTTP class unchanged — **not a Ben surface**. Option A Redirect **PASS**. Soft-530 UX **LIVE** (`styles.css?v=36` + `waitlist.js?v=3` + Discord honesty). Freeze last_known **`4cf8924`** / **`5swmVz`**. **#82** still Ben GO. Camp cutover paper **ready, pending Ben GO** — Zone `vault.` checklist is hop **4** on [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (**not** a live retarget). This paper does **not** page Ben for Doc-wake or McKing docker.
 
 ---
 
@@ -85,7 +85,7 @@ Until Ben GOs that cutover, do **not** score living home Soft-530 **OPEN** as �
 | **Vault class at home** | Independent of Soft-530. Same vault class+since → stay quiet on vault. Vault DIFF still follows existing stamp rules (first-hop absorb if McKing hop already ran). | Require Soft-530 CLEAR before vault can stay quiet. Fold vault 502 into a Soft-530 Ben page. |
 | **Lookout `ok=false` Soft-530 at home** | Expected baseline while Docs **ABSENT**. **Not** a Lookout class DIFF. **Not** stickiness panic. | Re-arm Soft-530 companions. Page Ben to “fix” expected `ok=false`. |
 | **First weekday `*/20` after overnight home-off** | Diff the stamp. Home-off Soft-530 still **OPEN** + Docs still **ABSENT** = **same-class**. | Auto-queue lid-restore / KeepAlive / Doc-wake because the night passed. |
-| **`Mac.lan` drop (Ben laptop) + HTTP unchanged** | Living vs ~12:24: `Mac.lan` dropped; only **`lightning` CONNECTED**; Docs still **ABSENT**. Soft-530 still **1033**; vault still **502**. **Refresh** the living stamp. **No Ben surface** — laptop leave is not Doc / McKing identity. | Treat laptop drop as Doc-wake or McKing wake. Page Ben. Fold it into Soft-530 / vault HTTP class. |
+| **`Mac.lan` flap (Ben laptop) + HTTP unchanged** | Living vs ~12:45: `Mac.lan` flap **reappeared** (after the ~12:24 drop); **`Mac.lan` + `lightning`**; Docs still **ABSENT**. Soft-530 still **1033**; vault still **502**. **Refresh** the living stamp. **No Ben surface** — laptop flap is not Doc / McKing identity. | Treat laptop flap as Doc-wake or McKing wake. Page Ben. Fold it into Soft-530 / vault HTTP class. |
 
 Quiet-ops ([soft-530-extended-open.md](soft-530-extended-open.md)) + weekday overnight ([soft-530-weekday-overnight.md](soft-530-weekday-overnight.md)) + this stamp lock **align**: home-off does **not** auto-queue recovery pressure.
 
@@ -133,7 +133,7 @@ Do **not** delete the api watch because home-off Soft-530 stays false. Do **not*
 | **Ben Doc-wake / docker re-ask** | Already asked. This paper does **not** page Ben. |
 | **McKing 24/7 / WOL / remote LUKS as camp path** | Away weeks **supersede** McKing=`vault.`→`:8222`. Those McKing stay-up paths are **deferred**. |
 | **Invent Pi/VPS GO** | Pi/VPS is the **better long-term** host if vault must stay up while Doc is home-off. Paper only — not a buy/deploy GO. |
-| **`Mac.lan` drop = Ben page** | Laptop leave vs ~12:24 with HTTP class unchanged is a stamp refresh, **not** a Doc-wake / McKing-wake page. |
+| **`Mac.lan` flap = Ben page** | Laptop flap vs ~12:45 (after ~12:24 drop) with HTTP class unchanged is a stamp refresh, **not** a Doc-wake / McKing-wake page. |
 
 **#82** Ben GO / Soft-530 companions **HOLD** / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / weekend Soft-530 coverage (`84107e7`) / waitlist-owner-desk **retired** / **#79.1** git-only until Doc unfreeze / vault stay-up (`017f778`) / dual-host-outage (`7bf894b`) / Soft-530 post-CLEAR (`55e10d0`) / vault post-CLEAR (`d88cacb`) / living dual-OPEN honesty (`5f2fd1c`) / sequencer (`0c4e0ef`) / quiet-ops (`1e6a0b1`) / camp vault cutover (`fb86f90`) — **unchanged**. This file executes **none** of those.
 
@@ -158,4 +158,4 @@ Do **not** delete the api watch because home-off Soft-530 stays false. Do **not*
 - Invent vault CLEAR, Soft-530 CLEAR, or a live retarget
 - Treat McKing 24/7 / WOL / remote LUKS as the camp / away-week path (deferred — McKing=`vault.`→`:8222` is **superseded** for those weeks)
 - Invent a Pi/VPS GO from the long-term “better if vault must stay up while Doc is home-off” note
-- Surface Ben from `Mac.lan` drop vs ~12:24 when only `lightning` is CONNECTED, Docs stay **ABSENT**, and Soft-530 / vault HTTP class is unchanged
+- Surface Ben from `Mac.lan` flap vs ~12:45 (or the earlier ~12:24 drop) when Docs stay **ABSENT** and Soft-530 / vault HTTP class is unchanged

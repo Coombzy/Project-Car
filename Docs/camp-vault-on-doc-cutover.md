@@ -23,10 +23,10 @@ This fold executes **none** of the curls, Shells, Zone retargets, or GOs. Do **n
 | **Camp SSOT (this file)** | Zone/Doc follow **this** card at camp GO. [mcking-shop-host-cutover.md](mcking-shop-host-cutover.md) + McKing-centric [vault-stay-up.md](vault-stay-up.md) are **PARKED for camp weeks** / desk/lab optional. Do **not** walk those cards as host SSOT. |
 | **Monday #70 gap** | vault-stay-up / mcking-reappear / dual-tunnel still assume McKing = public vault **at home/lab**. Camp recovery is **not** “wake McKing docker.” |
 | **Paper only until Ben GO** | Never auto-cutover. Zone owns the `vault.projectcar.ca` hostname retarget. This file does **not** retarget. |
-| **Zone `vault.` retarget checklist** | Hop **4** on this file **is** that checklist. Execute **only on Ben GO**. Do **not** open a second Zone appendix this tip. |
+| **Zone `vault.` retarget checklist** | Hop **4** expands **in this file** (same paper — **not** a second Zone appendix). Preflight → inventory McKing origin → Doc ingress ready → Zone cut → **2026.6.0** smoke → rollback. Execute **only on Ben GO**. |
 | **`lightning` ABSENT after GO** | Intentional McKing sleep. **Must not** trigger [dual-host-outage.md](dual-host-outage.md) McKing wake. That file is **SUPERSEDED for camp**. |
 
-Living this fold (do **not** invent CLEAR or a live retarget): Soft-530 **OPEN** — `api.` / `app.` / `ops.` / `cloud.` **530** CF **1033** since 2026-09-13 ~11:57 America/Edmonton; waitlist OPTIONS **530**. Vault independently **OPEN** — **502** since ~19:45 MT Sep 13 on `/alive` + `/api/config` (McKing docker dead — **not** CLEAR). ListMachines **`Mac.lan` + `lightning`** — Docs **ABSENT** (`Mac.lan` ≠ `Docs-MacBook-Pro` ≠ `lightning`) — **home EXPECTED**. Option A Redirect **PASS**. Soft-530 UX **LIVE** (`styles.css?v=36` + `waitlist.js?v=3` + Discord honesty). Freeze last_known **`4cf8924`** / **`5swmVz`**. **#82** still Ben GO. This paper does **not** page Ben for Doc-wake or McKing docker.
+Living this fold (do **not** invent CLEAR or a live retarget): Soft-530 **OPEN** — `api.` / `app.` / `ops.` / `cloud.` **530** CF **1033** since 2026-09-13 ~11:57 America/Edmonton; waitlist OPTIONS **530**. Vault independently **OPEN** — **502** since ~19:45 MT Sep 13 on `/alive` + `/api/config` (McKing docker dead — **not** CLEAR). ListMachines **`Mac.lan` + `lightning`** — `Mac.lan` flap **reappeared** vs ~12:45 America/Edmonton 2026-09-15 (after the ~12:24 drop); Docs still **ABSENT** (`Mac.lan` ≠ `Docs-MacBook-Pro` ≠ `lightning`) — **home EXPECTED**. HTTP class unchanged — **not a Ben surface**. Option A Redirect **PASS**. Soft-530 UX **LIVE** (`styles.css?v=36` + `waitlist.js?v=3` + Discord honesty). Freeze last_known **`4cf8924`** / **`5swmVz`**. **#82** still Ben GO. Soft-530 **OPEN ≠** block this paper. This paper does **not** page Ben for Doc-wake or McKing docker.
 
 ---
 
@@ -65,10 +65,11 @@ Run **only after Ben GO**. Identity first. Zone owns the hostname retarget. This
 | **0** | **Ben GO** | Explicit GO to camp vault cutover. Duration of vault **502**, McKing sleep, or Docs ABSENT is **not** GO. **Never auto-cutover.** |
 | **1** | **Assert Doc identity** | ListMachines **`Docs-MacBook-Pro`** **and** machineId **`95a229f5-9296-4a18-aa98-70fd300dabdf`**. [doc-reappear-first-hop.md](doc-reappear-first-hop.md). **Never** `Mac.lan` (Ben Laptop) as Doc or vault. **Never** Porsche. |
 | **2** | **Doc CDM on** | Docs Mac plugged at camp; CDM / caffeinate / Amphetamine noted so lid-close is less likely to 1033 **both** planes. [doc-lid-restore.md](doc-lid-restore.md). |
-| **3** | **Bring VW (+ NC) up on Doc** | Doc Vaultwarden origin up (local `:8222` / compose sibling becomes the **public** origin after hop **4**). Doc NC up for camp hub. **Not** a McKing docker wake. **Not** a Ben docker re-ask from this paper. |
-| **4** | **Zone retarget** | Zone points `vault.projectcar.ca` at the **Doc** origin. One hostname, one origin. Zone owns the edit. Lead / Chief / Garage / Hatch do **not** retarget from this paper. |
-| **5** | **Smoke** | `GET https://vault.projectcar.ca/alive` → **200**. `GET https://vault.projectcar.ca/api/config` → **200** + Vaultwarden **class present**. After camp retarget, the serving class is the **Doc** VW (may be Doc sibling **2025.12.0** — that is **expected** once `vault.` is on Doc). **Reject** a 200 that is still the dead McKing class with no origin. Classify camp recovery as **Doc-origin + Zone retarget**, **not** McKing **502→200** docker permanence. |
-| **6** | **Bitwarden** | Gate is still **vault CLEAR** + hop **5**, then **Ben GO**. **Never auto-fire.** Soft-530 may still be **OPEN** — do **not** block Bitwarden on Soft-530 CLEAR. |
+| **3** | **Bring VW (+ NC) up on Doc** | Doc Vaultwarden origin up (local `:8222` / compose sibling becomes the **public** origin after hop **4**). Prefer local `/api/config` VW **2026.6.0** class before Zone cut (this tip’s public smoke). Doc NC up for camp hub. **Not** a McKing docker wake. **Not** a Ben docker re-ask from this paper. |
+| **4** | **Zone retarget** | [Zone `vault.projectcar.ca` tunnel-retarget checklist](#zone-vaultprojectcarca-tunnel-retarget-checklist) **in this file**. Zone points `vault.projectcar.ca` at the **Doc** origin. One hostname, one origin. Zone owns the CF edit. **Ben GO required — never auto.** Lead / Chief / Garage / Hatch do **not** retarget from this paper. Soft-530 shop hostnames stay on Doc. |
+| **5** | **Smoke** | `GET https://vault.projectcar.ca/alive` → **200**. `GET https://vault.projectcar.ca/api/config` → **200** + VW **2026.6.0** class (this tip). Classify **502→200** vs **1033→200** — living OPEN is McKing origin-down **502**; after retarget, recovery class is **Doc-origin + Zone retarget**, **not** McKing docker permanence. **Reject** a 200 that is still the dead McKing class with no origin. If Doc local is still sibling **2025.12.0**, do **not** leave `vault.` on Doc without Ben confirming the serving class. If smoke fails → hop **5a**. |
+| **5a** | **Rollback** | Zone restores `vault.` hostname to the **prior McKing / `lightning` origin** (inventory). Leave Soft-530 hostnames (`api.` / `app.` / `ops.` / `cloud.`) **untouched**. |
+| **6** | **Bitwarden** | Gate is still **vault CLEAR** + hop **5**, then **Ben GO**. **Never auto-fire.** Soft-530 may still be **OPEN** — do **not** block Bitwarden on Soft-530 CLEAR. Soft-530 **OPEN ≠** block this paper. |
 
 ```bash
 # ONLY after Ben GO + Zone retarget — not this paper
@@ -77,10 +78,33 @@ curl -sS -o /dev/null -w '%{http_code}\n' https://vault.projectcar.ca/alive
 # expect 200
 
 curl -sS -o /tmp/vw-config.json -w '%{http_code}\n' https://vault.projectcar.ca/api/config
-# expect 200 + Vaultwarden class present (Doc origin after retarget)
+# expect 200 + VW 2026.6.0 class (Doc origin after retarget — this tip)
+# classify 502→200 (living McKing origin-down) vs 1033→200 (Soft-530 tunnel class — not this hop)
 ```
 
-Home/lab McKing smoke ([vault-clear-smoke.md](vault-clear-smoke.md) docker.service **enabled** + **active** + McKing **2026.6.0**) stays the **home/lab** card. Do **not** require McKing `docker.service` permanence as camp CLEAR. Do **not** reject Doc **2025.12.0** as “wrong VW” after Zone has retargeted to Doc.
+Home/lab McKing smoke ([vault-clear-smoke.md](vault-clear-smoke.md) docker.service **enabled** + **active** + McKing **2026.6.0**) stays the **home/lab** card. Do **not** require McKing `docker.service` permanence as camp CLEAR. This Zone paper **names public 2026.6.0** after retarget — prefer that class on Doc **before** cut (hop **3** / Z1). Sibling **2025.12.0** is a known Doc compose class; it is **not** this tip’s pass without Ben confirming.
+
+---
+
+## Zone `vault.projectcar.ca` tunnel-retarget checklist
+
+**Status:** Paper — hop **4** of this file — **Ben GO required**, **never auto**  
+**Not a second appendix.** Zone owns Cloudflare. This fold does **not** execute.
+
+Run **only after Ben GO** and hops **1–3** (Doc identity + CDM/Amphetamine + VW(+NC) listening local). Soft-530 shop tunnels **stay on Doc**. Soft-530 **OPEN ≠** block this paper. Bitwarden still **vault CLEAR** + **Ben GO**. **No live Zone execute until Ben GO.**
+
+| # | Step | Expect / lock |
+|---|------|----------------|
+| **Z0** | **Ben GO** | Explicit GO to Zone `vault.projectcar.ca` retarget. Duration / Soft-530 **OPEN** / vault **502** / Docs **ABSENT** / `Mac.lan` flap ≠ GO. **Never auto.** |
+| **Z1** | **Preflight** | Confirm Doc identity ListMachines **`Docs-MacBook-Pro`** **and** machineId **`95a229f5-9296-4a18-aa98-70fd300dabdf`**. CDM / Amphetamine on. VW (+ NC) **listening local** on Doc (`:8222` / compose sibling). Soft-530 shop tunnels **stay on Doc** — do **not** retarget `api.` / `app.` / `ops.` / `cloud.`. Prefer Doc local `/api/config` VW **2026.6.0** class before cut. If Doc local is still sibling **2025.12.0**, do **not** cut until Ben confirms the serving class. **Never** `Mac.lan`. |
+| **Z2** | **Inventory live vault tunnel origin** | Record the **current** Cloudflare hostname / tunnel origin for `vault.projectcar.ca`. Living: **McKing / `lightning`** expected while public vault is **OPEN 502**. Stamp that prior origin — **Z6 rollback** needs it. Do **not** wake McKing docker to “fix” the 502 as the camp path. |
+| **Z3** | **Doc ingress ready before cut** | On the **asserted** Doc: `cloudflared` / ingress for the **vault** hostname is ready **before** Zone cuts. Shop Soft-530 ingress stays as-is. Do **not** mint vault ingress from lid-restore KeepAlive without this GO. |
+| **Z4** | **Zone cutover** | Zone points `vault.projectcar.ca` tunnel/hostname at the **Doc** origin. One hostname, one origin. Zone owns the CF edit. **Ben GO required — never auto.** Lead / Chief / Garage / Hatch do **not** execute. |
+| **Z5** | **Smoke** | `GET https://vault.projectcar.ca/alive` → **200**. `GET https://vault.projectcar.ca/api/config` → **200** + VW **2026.6.0** class. Classify **502→200** vs **1033→200**: living OPEN is McKing origin-down **502**; Soft-530 tunnel class stays **separate**. Reject a 200 that is still the dead McKing class with no origin. Classify camp recovery as **Doc-origin + Zone retarget**, **not** McKing docker permanence. |
+| **Z6** | **Rollback** | If Doc smoke fails: Zone **restores** `vault.` hostname to the **prior McKing / `lightning` origin** (Z2). Leave Soft-530 hostnames (`api.` / `app.` / `ops.` / `cloud.`) **untouched**. Do **not** invent a shop retarget while rolling vault back. |
+| **Z7** | **Anti-goals (this checklist)** | Never `Mac.lan` as Doc/vault. Never wake McKing docker as the camp vault path. Never retarget shop Soft-530 hostnames. Bitwarden still **vault CLEAR** + **Ben GO**. Soft-530 **OPEN ≠** block this paper. **No live Zone execute until Ben GO.** |
+
+This checklist executes **none** of those hops. Inventory (Z2) is paper observation of the living McKing-origin **502** class — **not** a McKing docker wake.
 
 ---
 
@@ -125,7 +149,10 @@ Until Ben GOs this cutover, living vault OPEN is still the **home/lab** McKing *
 | **Follow parked McKing cards at camp GO** | [mcking-shop-host-cutover.md](mcking-shop-host-cutover.md) + McKing-centric [vault-stay-up.md](vault-stay-up.md) are **PARKED for camp weeks**. This file is **camp SSOT**. |
 | **Fold camp into home/lab independence** | Soft-530 independence is **home/lab only**. At camp they couple. |
 | **`lightning` ABSENT = McKing wake after GO** | Sleep is intentional. Do **not** walk [dual-host-outage.md](dual-host-outage.md) Doc-then-McKing. |
-| **Invent CLEAR / invent retarget** | Soft-530 still **OPEN** 530/1033. Vault still **OPEN** 502. Docs **ABSENT**. Option A **PASS**. Soft-530 UX **LIVE**. |
+| **Invent CLEAR / invent retarget** | Soft-530 still **OPEN** 530/1033. Vault still **OPEN** 502. Docs **ABSENT**. `Mac.lan` flap vs ~12:45 + HTTP unchanged is **not** a Ben surface. Option A **PASS**. Soft-530 UX **LIVE**. |
+| **Retarget shop Soft-530 hostnames** | `api.` / `app.` / `ops.` / `cloud.` stay on Doc. This checklist is **`vault.` only**. Rollback leaves shop hostnames untouched. |
+| **Live Zone execute from this paper** | Zone owns CF. **Ben GO** only. Soft-530 **OPEN ≠** block this paper — and ≠ execute. |
+| **Treat `Mac.lan` flap as a Ben page** | Flap **reappeared** vs ~12:45 after ~12:24 drop. HTTP class unchanged — **not a Ben surface**. |
 | **#82 / unfreeze / companions / Bitwarden auto** | Unchanged locks. Vault CLEAR still ≠ those GOs. |
 
 **#82** Ben GO / Soft-530 companions **HOLD** / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / weekend Soft-530 coverage (`84107e7`) / waitlist-owner-desk **retired** / **#79.1** git-only until Doc unfreeze / vault stay-up (`017f778`) / dual-host-outage (`7bf894b`) / Soft-530 post-CLEAR (`55e10d0`) / vault post-CLEAR (`d88cacb`) / living dual-OPEN honesty (`5f2fd1c`) / sequencer (`0c4e0ef`) / quiet-ops (`1e6a0b1`) — **unchanged**. This file executes **none** of those.
@@ -135,8 +162,11 @@ Until Ben GOs this cutover, living vault OPEN is still the **home/lab** McKing *
 ## Do not
 
 - Auto-cutover, or treat duration / McKing sleep / Docs ABSENT as Ben GO
-- Execute Zone hostname retarget, Garage, or Hatch from this paper
+- Execute Zone hostname retarget, Garage, or Hatch from this paper — **no live Zone execute until Ben GO**
+- Retarget Soft-530 shop hostnames (`api.` / `app.` / `ops.` / `cloud.`) as part of this cut or rollback
+- Leave shop hostnames touched if vault smoke fails — rollback is **`vault.` only** back to the inventoried McKing origin
 - Re-ask Ben Doc-wake or McKing docker
+- Surface Ben from the `Mac.lan` flap vs ~12:45 when HTTP class is unchanged
 - Treat `Mac.lan` as `Docs-MacBook-Pro` or as vault origin
 - Leave `vault.projectcar.ca` pointed at dead McKing docker while Doc VW is the live origin
 - Run two vault origins (Doc + McKing) on the same public name
@@ -147,4 +177,6 @@ Until Ben GOs this cutover, living vault OPEN is still the **home/lab** McKing *
 - Claim Soft-530 independence at camp (they couple on Doc lid / CDM / KeepAlive)
 - Treat `lightning` **ABSENT** after Ben GO as a [dual-host-outage.md](dual-host-outage.md) McKing wake — that file is **SUPERSEDED for camp**
 - Invent vault CLEAR, Soft-530 CLEAR, or a live retarget from this paper
+- Cut while Doc local `/api/config` is still sibling **2025.12.0** without Ben confirming the serving class (this tip names public **2026.6.0**)
 - Auto-fire Bitwarden import/rotate — still **vault CLEAR** + **Ben GO**
+- Treat Soft-530 **OPEN** as blocking this paper (it does **not**)
