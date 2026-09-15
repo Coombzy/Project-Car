@@ -1,10 +1,12 @@
 # McKing shop-host cutover
 
-**Status:** Checklist / plan only — **not executed**. McKing path **OPEN**; shop CF cutover **not** GO.  
-**Updated:** 2026-09-11 (~10:32 America/Edmonton hop fold)  
-**Related:** `STATUS.md` (pointer only — **not** Next #1, **not** a GO), `deployment-guide.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `doc-unfreeze.md` (Ben GO pull — **not** this cut), `doc-lid-restore.md` (Doc process wake only), `cors-origins.md`, `shop-os-ci.md` (green CI ≠ unfreeze, ≠ this cut), `home-lab-specification.md`, `brochure-worker-deploy.md`, `member-host-cutover.md` (different cut — customer `/member` host), `member-zone-edge.md` (Next #1 still `/member*` → Doc `:3000`)
+**Status:** **PARKED for camp weeks** / **desk/lab optional** — **not camp SSOT**. Camp host SSOT is [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (Doc hosts Soft-530 shop + vault + NC; McKing may sleep). This file is a later **home/lab** McKing shop-host plan — checklist only, **not executed**. McKing path **OPEN**; shop CF cutover **not** GO.  
+**Updated:** 2026-09-15  
+**Related:** [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (**camp SSOT** — Zone/Doc follow **that** card at camp GO, **not** this file), [home-vs-camp-doc-posture.md](home-vs-camp-doc-posture.md) (`0a32a83`), `STATUS.md` (pointer only — **not** Next #1, **not** a GO), `deployment-guide.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `doc-unfreeze.md` (Ben GO pull — **not** this cut), `doc-lid-restore.md` (Doc process wake only), `cors-origins.md`, `shop-os-ci.md` (green CI ≠ unfreeze, ≠ this cut), `home-lab-specification.md`, `brochure-worker-deploy.md`, `member-host-cutover.md` (different cut — customer `/member` host), `member-zone-edge.md` (Next #1 still `/member*` → Doc `:3000`)
 
-Draft paper for a **later** move of Shop OS origins (`api.` / `ops.` / temporary `app.`) from **Doc LaunchAgents** onto **McKing Docker**, reusing the same Cloudflare tunnel public hostnames. Brochure stays on Worker `projectcar-brochure`.
+> **Host SSOT supersede.** At camp GO, Zone/Doc **do not** follow this card. Dual-tunnel rows below (Doc = shop only / McKing = vault; “never recreate `vault.` ingress on Doc”) are **home/lab only**. Soft-530 independence is **home/lab only**. Camp weeks: leave this file parked. Camp recovery is Doc VW + Zone `vault.` retarget — [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md).
+
+Draft paper for a **later home/lab** move of Shop OS origins (`api.` / `ops.` / temporary `app.`) from **Doc LaunchAgents** onto **McKing Docker**, reusing the same Cloudflare tunnel public hostnames. Brochure stays on Worker `projectcar-brochure`. **Not** the camp host plan.
 
 **Hard gate before any public shop CF hostname leaves Doc** (`cloud.` / `api.` / `app.` / `ops.` only — **vault EXCLUDED**): the Soft-530 dual-run acceptance table below. Dual-run is **not** “McKing on public `api.` / `ops.` / `app.` while Doc is still up.” Hub dual-run NC+VW healthy does **not** mean shop CF hostname cutover GO. Vault is already **LIVE verified** on McKing — that does **not** pass this shop gate.
 
@@ -18,6 +20,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 
 | Lock | Meaning |
 |------|---------|
+| **PARKED for camp weeks** | This file is **desk/lab optional**, **not camp SSOT**. At camp GO, Zone/Doc follow [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md). |
 | **Paper only** | Merging this file is **not** a cut. No live Cloudflare / DNS / tunnel flip / compose-down / LaunchAgent changes from this PR. |
 | **Hop OPEN ≠ cutover GO ≠ Doc unfreeze** | Path OPEN (sshd / docker / `/opt/mission-control`) is **not** license to leave Doc as public origin, and **not** Ben GO unfreeze. Freeze stays **`4cf8924`** / **`5swmVz`** until **Ben GO**. |
 | **Not Next #1** | STATUS Next #1 is Member UI on projectcar.ca (`member-host-cutover.md` / `member-zone-edge.md`). This McKing host move is a **later** machine plan. Do **not** treat it as GO’d. If McKing later becomes shop origin, Next #1 `/member*` retargets with the Soft-530 flip — **not now**. |
@@ -54,9 +57,9 @@ Fri Soft-530 **CLEAR** (Doc origin **LIVE** 2026-09-11) is **historical**. **Liv
 
 ---
 
-## Dual-tunnel ownership (separate from shop CF cutover)
+## Dual-tunnel ownership (separate from shop CF cutover — **home/lab only**)
 
-**Living-ops lock. Vault is LIVE verified. Not this shop-host cutover. Not a shop Zone live apply.** STATUS keeps this as its **own** row. Hop OPEN ≠ shop cutover GO ≠ Doc unfreeze.
+**Home/lab lock — SUPERSEDED at camp.** Camp host SSOT is [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (Doc hosts shop + vault + NC; McKing may sleep). Do **not** follow this matrix at camp GO. Vault is LIVE verified **at home/lab**. Not this shop-host cutover. Not a shop Zone live apply. STATUS keeps this as its **own** row. Hop OPEN ≠ shop cutover GO ≠ Doc unfreeze.
 
 | Tunnel | Hostnames | Origin / role |
 |--------|-----------|----------------|
@@ -299,11 +302,12 @@ None of the flip-row checks are a license to run the flip from this PR.
 
 | Do not | Why |
 |--------|-----|
+| Follow this card at camp GO | **PARKED.** Camp SSOT is [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md). |
 | Live-cut from this doc | Paper only. |
 | Treat hop OPEN / hub NC+VW dual-run as cutover GO | Path OPEN ≠ Soft-530 five-row PASS ≠ Doc unfreeze ≠ `cloud.*` leave. |
 | Point `cloud.*` tunnel / CNAME at McKing | Public `cloud.` stays on **Doc** until **Ben GO** + `status.php` parity vs Doc. Paper path is Tailscale Serve + `NEXTCLOUD_TRUSTED_DOMAINS` MagicDNS — **not** a CF cutover of `cloud.*`. |
 | Publish McKing `/opt/mission-control` NC on Cloudflare | Lab/hub loopback-only (unpublished). McKing CF tunnel stays **`vault.` only**. |
-| Recreate `vault.` ingress on Doc / move the Doc mission-control token for `vault.` | Dual-tunnel lock: `vault.` is **LIVE verified** on McKing (`cloudflared` → `localhost:8222`; `/api/config` **2026.6.0**, Chief verified). Lid-restore / KeepAlive must **not** recreate that ingress on Doc. Vault LIVE ≠ shop hostname leave ≠ Doc unfreeze. |
+| Recreate `vault.` ingress on Doc **at home/lab** / move the Doc mission-control token for `vault.` | Dual-tunnel lock **home/lab only**: `vault.` is **LIVE verified** on McKing. Lid-restore / KeepAlive must **not** recreate that ingress on Doc **without camp Ben GO**. **Camp SSOT** ([camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md)) **does** retarget `vault.` to Doc after Ben GO. Vault LIVE ≠ shop hostname leave ≠ Doc unfreeze. |
 | Move the brochure to McKing / Doc / Pages from here | Worker `projectcar-brochure` stays. Pages git is a different, blocked plan. |
 | Garage / Zone / Hatch fan-out | No Worker upload, no tunnel/DNS edit, no compose apply. |
 | Unfreeze Doc / rebuild to tip | `doc-unfreeze.md` + Ben GO only. |
@@ -348,6 +352,7 @@ None of the flip-row checks are a license to run the flip from this PR.
 
 ## Locks (copy — do not weaken)
 
+- **PARKED for camp weeks** / desk/lab optional. Camp SSOT is [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md). Soft-530 independence is **home/lab only**.
 - Host split stays: customer = projectcar.ca / www (Worker). Management = **ops.** (temporary `app.` alias still live). API = `api.`.
 - Doc frozen at `4cf8924` / `5swmVz` until Ben GO (`doc-unfreeze.md`). Hop OPEN ≠ unfreeze.
 - Green shop-os-ci ≠ unfreeze ≠ McKing cut ≠ Soft-530 dual-run gate PASS.
