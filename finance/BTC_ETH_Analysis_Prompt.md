@@ -1,7 +1,7 @@
 # BTC / ETH Daily Analysis Prompt
 
 **Version:** 1.20  
-**Last edited:** 2026-09-15T15:32:00Z  
+**Last edited:** 2026-09-15T15:34:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** BTC ETH Daily Crypto Analysis automation
 
@@ -31,7 +31,7 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
    - 1-week width ≥ **3.0 × ATR-proxy** (≥ **4.0 ×** if last 5 weekday sessions include a ≥5% up-day); if trend-up, upside leg from close ≥ 1.5× downside leg.
    - 1-month and 3-month: wider numeric bands; bias optional but preferred.
    - **Printed-high clearance:** `range_high` ≥ `max(as-of, UTC-session high already printed)` + **0.5 × ATR-proxy**. Never park the high on a wick/magnet ($80k / $81.5k / $81500).
-   - **Printed-low clearance:** `range_low` ≥ `min(as-of, UTC-session low already printed)` − **0.5 × ATR-proxy**.
+   - **Printed-low clearance:** `range_low` ≤ `min(as-of, UTC-session low already printed)` − **0.5 × ATR-proxy**.
    - **Weekend printed-extreme carry-forward (v1.16):** Sat/Sun and US holidays use the **last completed UTC session** high/low as the printed extreme, not today's thin weekend session. `range_high` ≥ last-completed-UTC high + applicable clearance; `range_low` ≤ last-completed-UTC low − applicable clearance. (Sep 12 BTC 1d cap $79,800 sat **under** Fri Yahoo H $79,818. Fade 0.75× off Fri H + last ETF outflow required ≥~$81,470.)
    - **Fade/outflow low+high clearance (v1.6/v1.7):** if `prior_day_pct` ≤ **−1.0** OR last completed US spot ETF **for that asset** is net outflow, use **0.75 × ATR-proxy** printed-low AND printed-high clearance. Applies even when the last ETF print is several sessions old (weekend/holiday).
    - **Post-fade stacked low (v1.14):** if the last **completed** UTC session is down **AND** last completed US spot ETF for that asset is net outflow, 1d printed-low clearance = **1.0 × ATR-proxy**. Stacks over 0.75× fade — use the larger clearance. (Sep 9 BTC 1d floor $77,500 vs req ≤~$76,410; path L $76,732 / C $77,158 missed.)
