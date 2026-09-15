@@ -1,7 +1,7 @@
 # BTC / ETH Daily Analysis Prompt
 
-**Version:** 1.19  
-**Last edited:** 2026-09-15T15:20:00Z  
+**Version:** 1.20  
+**Last edited:** 2026-09-15T15:32:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** BTC ETH Daily Crypto Analysis automation
 
@@ -31,23 +31,24 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
    - 1-week width ≥ **3.0 × ATR-proxy** (≥ **4.0 ×** if last 5 weekday sessions include a ≥5% up-day); if trend-up, upside leg from close ≥ 1.5× downside leg.
    - 1-month and 3-month: wider numeric bands; bias optional but preferred.
    - **Printed-high clearance:** `range_high` ≥ `max(as-of, UTC-session high already printed)` + **0.5 × ATR-proxy**. Never park the high on a wick/magnet ($80k / $81.5k / $81500).
-   - **Printed-low clearance:** `range_low` ≤ `min(as-of, UTC-session low already printed)` − **0.5 × ATR-proxy**.
+   - **Printed-low clearance:** `range_low` ≥ `min(as-of, UTC-session low already printed)` − **0.5 × ATR-proxy**.
    - **Weekend printed-extreme carry-forward (v1.16):** Sat/Sun and US holidays use the **last completed UTC session** high/low as the printed extreme, not today's thin weekend session. `range_high` ≥ last-completed-UTC high + applicable clearance; `range_low` ≤ last-completed-UTC low − applicable clearance. (Sep 12 BTC 1d cap $79,800 sat **under** Fri Yahoo H $79,818. Fade 0.75× off Fri H + last ETF outflow required ≥~$81,470.)
    - **Fade/outflow low+high clearance (v1.6/v1.7):** if `prior_day_pct` ≤ **−1.0** OR last completed US spot ETF **for that asset** is net outflow, use **0.75 × ATR-proxy** printed-low AND printed-high clearance. Applies even when the last ETF print is several sessions old (weekend/holiday).
    - **Post-fade stacked low (v1.14):** if the last **completed** UTC session is down **AND** last completed US spot ETF for that asset is net outflow, 1d printed-low clearance = **1.0 × ATR-proxy**. Stacks over 0.75× fade — use the larger clearance. (Sep 9 BTC 1d floor $77,500 vs req ≤~$76,410; path L $76,732 / C $77,158 missed.)
    - **ETF-flip extra high (v1.7):** last completed US spot BTC or ETH ETF session reversed sign vs prior session → +**0.5 × ATR-proxy** extra to that asset's 1d `range_high`.
    - **Post-impulse high clearance (v1.8):** prior completed UTC session ≥ **+5%** OR live impulse ≥ **+3%** / **1.0 × ATR** → 1d printed-high clearance = **1.0 × ATR-proxy**. (Sep 3 BTC 1d cap $81,000 vs path H $82,300.)
+   - **Live-impulse low clearance (v1.20):** if at as-of, (UTC-session open − spot) ≥ **3%** OR ≥ **1.0 × ATR-proxy**, 1d printed-low clearance = **1.0 × ATR-proxy**. Symmetric to v1.8 post-impulse high. Stacks: use the larger of this 1.0× and stacked-low/fade 0.75×. (15 Sep live: BTC open $78,181 → ~$75,998 = −2.8%/1.06×ATR; ETH open $2,515 → $2,412 = −4.1%/1.32×ATR. Last UTC was up + ETF inflow so v1.14 stacked-low did not fire.)
    - **Mega-inflow extra high (v1.8):** last completed US spot BTC ETF ≥ **+$400M** → +0.5×ATR to BTC 1d and 1w high. ETH ETF ≥ **+$100M** → same for ETH. Stacks with ETF-flip and weekend-carry. (14 Sep ETH +$121.1M; 11 Sep ETH +$216.4M.)
-   - **Known-macro extra high (v1.19):** CPI/PCE/FOMC/NFP extra applies only if the **event timestamp** is ≤ as-of+24h, not if the calendar day is tomorrow. FOMC 16 Sep 18:00Z is **not** inside 24h of a 15 Sep ~14:36Z as-of (~27h). Do not add +0.5×ATR for FOMC on a 15 Sep run.
+   - **Known-macro extra high (v1.19):** CPI/PCE/FOMC/NFP extra applies only if the **event timestamp** is ≤ as-of+24h, not if the calendar day is tomorrow. FOMC 16 Sep 18:00Z is **not** inside 24h of a 15 Sep ~14:36Z as-of (~27h). Do not add +0.5×ATR for FOMC on a 15 Sep run. Sep 16 Daily ~14:00Z as-of **is** inside 24h of FOMC 18:00Z — apply the extra then.
    - **Spike-fade:** wick ≥ 0.8×ATR is not a cap; still apply 0.5×ATR clearance above that high.
-   - **RANGE_CHECK (v1.17 — hard).** Immediately after the parseable table and before `TRACKER_SHA`, print one line:
-     `RANGE_CHECK: BTC ATR $A (weekday-5); 1d width $W vs 2.0×=$M; high $H vs req $R; low $L vs req $K; fade/outflow 0.75x yes/no; stacked-low 1.0x yes/no; weekend-carry yes/no. ETH ATR $A2 (weekday-5); width $W2 vs $M2; high $H2 vs req $R2; low $L2 vs req $K2; fade 0.75x yes/no; stacked-low 1.0x yes/no; weekend-carry yes/no.`
+   - **RANGE_CHECK (v1.17/v1.20 — hard).** Immediately after the parseable table and before `TRACKER_SHA`, print one line:
+     `RANGE_CHECK: BTC ATR $A (weekday-5); 1d width $W vs 2.0×=$M; high $H vs req $R; low $L vs req $K; fade/outflow 0.75x yes/no; stacked-low 1.0x yes/no; live-impulse-low 1.0x yes/no; weekend-carry yes/no. ETH ATR $A2 (weekday-5); width $W2 vs $M2; high $H2 vs req $R2; low $L2 vs req $K2; fade 0.75x yes/no; stacked-low 1.0x yes/no; live-impulse-low 1.0x yes/no; weekend-carry yes/no.`
      If 1d width < 2.0×ATR **or** `range_high` < required printed-high **or** `range_low` > required printed-low, **widen and reprint the table** before writing.
 4. Fill **pred_regime** and **prior_day_pct** on every tracker row. Put the **as-of UTC timestamp** in 1d notes.
    - **conf** is an integer **40–85**, never a 0.xx decimal and never below 40. (Sep 11/12 Daily wrote 0.55/0.58. Sep 12 3m wrote 35.)
    - **prior_day_pct (v1.17):** last **completed UTC daily close-to-close %** from **Yahoo BTC-USD / ETH-USD official daily Close** only. Print `source: Yahoo YYYY-MM-DD $c1 → YYYY-MM-DD $c2 = Z%`.
    - **Banned sources:** tracker `actual_close`, path-refresh Last, live-session %, 24h change, live-to-prior-close, or yesterday's Daily figure.
-   - (Sep 10 reused Sep 8 −0.8/−0.2 vs true Sep 8→9 Yahoo −0.23/−1.17. Sep 11 wrote −1.62/−1.97 vs true Sep 9→10 BTC −2.16% / ETH −1.21%. Sep 12 wrote ETH +7.25 vs true Sep 10→11 Yahoo $2,437→$2,515 = **+3.19%**. Sep 13 used tracker $77,174→$77,439 = +0.34% vs Yahoo $77,173.80→$77,270.47 = **+0.13%** / ETH tracker $2,515→$2,537 = +0.87% vs Yahoo $2,514.73→$2,525.94 = **+0.45%**. Sep 14 was clean: Yahoo Sep 12→13 BTC $77,270.47→$76,838.16 = **−0.56%** / ETH $2,525.94→$2,477.02 = **−1.94%**. Sep 15 Yahoo Sep 13→14 BTC $76,838.16→$78,163.38 = **+1.72%**.)
+   - (Sep 10 reused Sep 8 −0.8/−0.2 vs true Sep 8→9 Yahoo −0.23/−1.17. Sep 11 wrote −1.62/−1.97 vs true Sep 9→10 BTC −2.16% / ETH −1.21%. Sep 12 wrote ETH +7.25 vs true Sep 10→11 Yahoo $2,437→$2,515 = **+3.19%**. Sep 13 used tracker $77,174→$77,439 = +0.34% vs Yahoo $77,173.80→$77,270.47 = **+0.13%** / ETH tracker $2,515→$2,537 = +0.87% vs Yahoo $2,514.73→$2,525.94 = **+0.45%**. Sep 14 was clean: Yahoo Sep 12→13 BTC $77,270.47→$76,838.16 = **−0.56%** / ETH $2,525.94→$2,477.02 = **−1.94%**. Sep 15 Yahoo Sep 13→14 BTC $76,838.16→$78,163.38 = **+1.72%** / ETH $2,477.02→$2,515.17 = **+1.54%**.)
 5. Include **prior-scenario vs actual** from the tracker when closed rows exist.
 6. **Decision map** (3 bullets): confirm vs fail; path-changing levels; calibration from last closed miss/hit.
 7. **Parseable table first:** immediately after Key Takeaway, 8-row table (asset, horizon, range_low, range_high, bias_low, bias_high, conf, pred_regime, prior_day_pct). Entire table + `RANGE_CHECK:` + `TRACKER_SHA:` line in first ~1400 characters.
@@ -81,7 +82,7 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
 
 **Parseable table** (8 rows)
 
-`RANGE_CHECK: ...` (v1.17; must pass or reprint table)
+`RANGE_CHECK: ...` (v1.17/v1.20; must pass or reprint table)
 
 `TRACKER_SHA: <blob sha>` (40-char hex that **differs** from the pre-write SHA, or `PREEXISTING_ROWS` + current SHA)
 
@@ -98,7 +99,7 @@ Get SHA immediately before write; retry once on conflict.
 
 - Merge one row per (analysis_date, asset, horizon) for BTC and ETH × {1d, 1w, 1m, 3m}. Status = open.
 - Do not duplicate (analysis_date, asset, horizon). Do not change ranges on already-open prior-day rows.
-- Dual-write full merged body. SHA-delta. Anti-wipe row-count gate. **v1.18 outbound-row-count ≥ inbound.** **v1.19 raw.githubusercontent fallback on truncation.**
+- Dual-write full merged body. SHA-delta. Anti-wipe row-count gate. **v1.18 outbound-row-count ≥ inbound.** **v1.19 raw.githubusercontent fallback on truncation.** **v1.20 live-impulse low 1.0×ATR on live down ≥3% / ≥1.0×ATR.**
 - Response must include `TRACKER_SHA: <sha>` (40-char hex, different from pre-write) **or** `PREEXISTING_ROWS` if today's 8 already exist. Never write `WRITE PENDING`.
 
 Cite sources. Be objective and data-driven.
