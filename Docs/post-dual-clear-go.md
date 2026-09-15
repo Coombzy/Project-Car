@@ -109,7 +109,7 @@ Living Soft-530 **CLEAR** half-state (`7209c1b`) is **superseded ~16:36** by **d
 
 | Plane | Living class | ListMachines |
 |-------|--------------|--------------|
-| **Soft-530 (Doc)** | **OPEN 530 / CF 1033** — `api.` / `app.` / `ops.` (Lookout + Lead **~16:36**; **was CLEAR**). | Docs `95a229f5` **CONNECTED** / Shell **unreachable** (lid-restore **blocked**) |
+| **Soft-530 (Doc)** | **OPEN 530 / CF 1033** — `api.` / `app.` / `ops.` (Lookout + Lead **~16:36**; **was CLEAR**). | ListMachines **EMPTY** / Docs **ABSENT** (Lead-verified **~16:51** after flap-while-connected; lid-restore **parked**) |
 | **Vault (McKing)** | Still **OPEN 530 / CF 1033** connector-down (was 502 since ~19:45 MT Sep 13) on `/alive` + `/api/config` — **not** CLEAR | `lightning` **ABSENT** (McKing sleep **intentional**) |
 | **Ben laptop** | — | **`Mac.lan` may CONNECTED**. `Mac.lan` ≠ Doc ≠ McKing. No wrong-host Shell. |
 

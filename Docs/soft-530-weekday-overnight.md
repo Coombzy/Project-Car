@@ -64,7 +64,7 @@ STATUS pointers stay canonical. Honesty this fold — **dual OPEN both 1033** (f
 |---------|--------|
 | **Soft-530** | **OPEN 530 / CF 1033** — `api.` / `app.` / `ops.` (Lookout + Lead **~16:36**; **was CLEAR**). Do **not** stamp CLEAR. |
 | **Vault** | Public **OPEN subclass 530 / CF 1033** connector-down (Lead-verified **~16:28**; **was 502** since ~19:45 MT Sep 13 — **not** CLEAR). Lightning **ABSENT** (McKing sleep intentional). |
-| **ListMachines** | Docs `95a229f5` **CONNECTED** / Shell **unreachable** (lid-restore **blocked**). Lightning **ABSENT**. `Mac.lan` may CONNECTED. `Mac.lan` ≠ `Docs-MacBook-Pro` ≠ `lightning`. Ben asked once Doc awake/desktop — **no re-nag**. **Not** camp GO. |
+| **ListMachines** | ListMachines **EMPTY** / Docs **ABSENT** (Lead-verified **~16:51** after flap-while-connected; lid-restore **parked**). Lightning **ABSENT**. `Mac.lan` may CONNECTED. `Mac.lan` ≠ `Docs-MacBook-Pro` ≠ `lightning`. Ben asked once Doc awake/desktop — **no re-nag**. **Not** camp GO. |
 | **Freeze** | **`last_known`** `` `changeme` `` / BUILD_ID **`5swmVz`** / HEAD **`4cf8924`**. Soft-530 OPEN → unverifiable ≠ DIFF. |
 | **Combined class** | Soft-530 **OPEN 530 / CF 1033** + vault **OPEN 530 / CF 1033** = **dual OPEN both 1033**. Half-state **OVER**. ≠ dual CLEAR ≠ “incident closed.” Soft-530 still OPEN overnight = **SAME**. Vault still **530 / CF 1033** = **SAME**. Vault **502 ↔ 530/1033** = Lead/Lookout field DIFF ≠ Ben re-nag. Lightning still **ABSENT** = SAME (McKing sleep intentional). |
 | **#82** | Still **Ben GO**. Soft-530 **OPEN ≠ #82 blocked**. Home **STALE** until **#82**. This overnight gap still ≠ auto-GO |
