@@ -6,7 +6,7 @@
 
 After **both** planes CLEAR **and** both forensic papers are already ack’d, lock an **ordered Ben GO menu**. CLEAR is restore proof. It is **not** a GO. **Living Soft-530 CLEAR + vault OPEN is half-state, not dual CLEAR — do not enter this menu until vault CLEAR.** This file executes **none** of the menu.
 
-**Vault CLEAR does not wait on McKing.** **Home/lab** vault CLEAR is McKing ([mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) → [vault-stay-up.md](vault-stay-up.md)). **Camp** vault CLEAR (after **Ben GO**) is Doc VW + Zone retarget ([camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md)). This sequencer **does not** assume McKing vault wake first. Soft-530 CLEAR is still the Doc shop card either way.
+**Vault CLEAR does not wait on McKing.** **Home/lab** vault CLEAR is McKing ([mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) → [vault-stay-up.md](vault-stay-up.md)). **Camp** vault CLEAR (after **Ben GO**) is Doc VW + Zone retarget ([camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md)) — **Doc local VW/NC healthy ≠ public vault CLEAR**; [vault-clear-smoke.md](vault-clear-smoke.md) SSOT stays `https://vault.projectcar.ca` (never Doc loopback). This sequencer **does not** assume McKing vault wake first. Soft-530 CLEAR is still the Doc shop card either way. Soft-530 **CLEAR** alone still **≠** camp GO.
 
 **Soft-530 OPEN ≠ #82 blocked.** KeepAlive→**#82** remains the *default ordered menu after dual CLEAR*. Soft-530 **OPEN** does **not** defer **#82**. Ben may GO **#82** Worker-live (Direct Upload + **mandatory** purge + freshness) while Soft-530 and/or vault are still **OPEN** — brochure is CF Worker/Zone, not Doc tunnel. Quiet-ops duration still ≠ auto-GO. Dual CLEAR ≠ auto-GO. **Never #81.** Keep Option A Dynamic **10/10** until Bulk Phase1 is **LIVE**.
 
@@ -16,7 +16,7 @@ Do **not** invent Soft-530 CLEAR, vault CLEAR, a Doc unfreeze, **#82**, Zone Dir
 
 ## Gate (all four — then the menu, not execute)
 
-The menu is **offered** only when every row is true. Living this fold: Soft-530 is **CLEAR**; vault is still **OPEN 502**. That **half-state ≠ dual CLEAR**. Paper does **not** invent vault CLEAR and does **not** open this menu. Soft-530 **OPEN** does **not** defer an independent **#82** Ben GO — this table gates the *post-dual-CLEAR menu*, not Worker-live. Soft-530 **CLEAR ≠ #82** ≠ unfreeze ≠ Bitwarden.
+The menu is **offered** only when every row is true. Living this fold: Soft-530 is **CLEAR**; vault is still **OPEN 502**. That **half-state ≠ dual CLEAR**. Doc VW/NC loopback **200** + public `vault.projectcar.ca` **502** is still vault **OPEN** — **not** partial CLEAR / **not** this menu. Paper does **not** invent vault CLEAR and does **not** open this menu. Soft-530 **OPEN** does **not** defer an independent **#82** Ben GO — this table gates the *post-dual-CLEAR menu*, not Worker-live. Soft-530 **CLEAR ≠ #82** ≠ unfreeze ≠ Bitwarden ≠ camp GO.
 
 | Gate | Meaning | Ack / essay |
 |------|---------|-------------|
