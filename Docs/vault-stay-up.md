@@ -3,13 +3,13 @@
 **Status:** Living ops  
 **Updated:** 2026-09-15  
 **Public URL:** https://vault.projectcar.ca  
-**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks + **vault post-CLEAR stay-up evidence** pointer + [vault-clear-smoke.md](vault-clear-smoke.md)), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch; remaining **OK-ish** ≠ vault watch firing — and is **not** living contrast this fold; api can stall the same class), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**; Soft-530 **post-CLEAR stay-up evidence** is **Doc forensics**), [vault-clear-smoke.md](vault-clear-smoke.md) (**first** recovery smoke after extended-OPEN vault CLEAR — **before** Bitwarden / desk; **502→200** not CF **1033→200**; docker permanence already `367172d` — **not** the stall fold), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (Soft-530 twin — already `502ab2e`; **not** this lane), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN **wake order** — Doc first, then McKing; this file is **McKing forensics** after vault CLEAR), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — Chief stays armed for `lightning` reappear → [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) **then** this file; no Ben re-nag), [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) (**first hop** when `lightning` reappears — machineId `9067d14b-46e5-4ef0-82d5-fce0febdc8f7`; **never** `Mac.lan`; assert **before** this wake), [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (Doc twin — **independent**), [post-dual-clear-go.md](post-dual-clear-go.md) (after **both** CLEARs + forensics `@55e10d0` / `@d88cacb` — Ben GO menu, **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [lookout-rearm-sop.md](lookout-rearm-sop.md) (**Lookout stall ≠ vault HTTP flip** — `enabled:true` + cron-stalled is a coverage class; **re-arm success ≠ first fire** — stickiness ≥3 consecutive `*/5` windows; chronic ≤1 pause/resume per calendar-day; Lead may GO in-place re-arm of **both** api + vault; **HOLD** Ben recreate), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
+**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks + **vault post-CLEAR stay-up evidence** pointer + [vault-clear-smoke.md](vault-clear-smoke.md) + [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md)), `home-lab-specification.md` (machine map — **home/lab vs camp** dual-tunnel), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch; remaining **OK-ish** ≠ vault watch firing — and is **not** living contrast this fold; api can stall the same class), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT** at **home/lab**; Soft-530 **post-CLEAR stay-up evidence** is **Doc forensics**), [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (**camp** vault path — Doc VW + Zone retarget; **not** this McKing docker wake; Ben GO, never auto-cutover), [vault-clear-smoke.md](vault-clear-smoke.md) (**first** recovery smoke after extended-OPEN vault CLEAR — **before** Bitwarden / desk; **home/lab** **502→200** not CF **1033→200**; docker permanence already `367172d` — **not** the stall fold; **camp** smoke = `/alive` **200** + `/api/config` VW class), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (Soft-530 twin — already `502ab2e`; **not** this lane), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN **wake order** — **home/lab** Doc first, then McKing; this file is **McKing forensics** after vault CLEAR; **camp couples** on Doc), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — Chief stays armed for `lightning` reappear → [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) **then** this file **at home/lab**; no Ben re-nag), [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) (**home/lab first hop** when `lightning` reappears — machineId `9067d14b-46e5-4ef0-82d5-fce0febdc8f7`; **never** `Mac.lan`; assert **before** this wake; **not** the camp vault path), [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (Doc twin — **independent** at home/lab), [post-dual-clear-go.md](post-dual-clear-go.md) (after **both** CLEARs + forensics `@55e10d0` / `@d88cacb` — Ben GO menu, **never auto-fire**; **does not** assume McKing vault wake first), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [lookout-rearm-sop.md](lookout-rearm-sop.md) (**Lookout stall ≠ vault HTTP flip** — `enabled:true` + cron-stalled is a coverage class; **re-arm success ≠ first fire** — stickiness ≥3 consecutive `*/5` windows; chronic ≤1 pause/resume per calendar-day; Lead may GO in-place re-arm of **both** api + vault; **HOLD** Ben recreate), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
 
-Keep public Vaultwarden reachable on McKing. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md`.
+Keep public Vaultwarden reachable. **Home/lab** = McKing. **Camp** (after **Ben GO**) = Doc VW + Zone retarget — [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md). This file is the **home/lab McKing** stay-up, not a product-lock rewrite. Product-lock status: `STATUS.md`.
 
-The weekend dual-outage proved **Soft-530 (Doc)** and **vault (McKing)** fail independently. Docs already had `api-stay-up.md` / `shop-web-stay-up.md` / `doc-lid-restore.md`. This file is the missing vault stay-up.
+The weekend dual-outage proved **Soft-530 (Doc)** and **vault (McKing)** fail independently **at home/lab**. That independence is **home/lab only**. At camp they couple on Doc lid / CDM / KeepAlive. Docs already had `api-stay-up.md` / `shop-web-stay-up.md` / `doc-lid-restore.md`. This file is the missing **home/lab** vault stay-up.
 
-After **extended OPEN / quiet-ops**, do **not** start this sequence on a name-only ListMachines hit. First hop is [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md): assert `lightning` machineId **`9067d14b-46e5-4ef0-82d5-fce0febdc8f7`**. **Never** treat `Mac.lan` as McKing. Then this wake. Then [vault-clear-smoke.md](vault-clear-smoke.md).
+After **extended OPEN / quiet-ops** at **home/lab**, do **not** start this sequence on a name-only ListMachines hit. First hop is [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md): assert `lightning` machineId **`9067d14b-46e5-4ef0-82d5-fce0febdc8f7`**. **Never** treat `Mac.lan` as McKing. Then this wake. Then [vault-clear-smoke.md](vault-clear-smoke.md). **Camp vault recovery is not this wake** — do **not** treat a McKing docker ask as the camp path.
 
 Do **not** invent a shop CF cutover, a Doc unfreeze, a `cloud.*` leave, a Bitwarden import/rotate while vault is down, or a Zone/Garage execute from this paper.
 
@@ -34,9 +34,20 @@ Stay-up lives on **McKing**, not in this git repo, and **not** on Doc LaunchAgen
 
 ---
 
-## Soft-530 independence (weekend dual-outage)
+## Camp vs home/lab (read first)
 
-Weekend dual-outage proved the two planes die on **different machines**.
+| Posture | This file | Vault recovery |
+|---------|-----------|----------------|
+| **Home/lab** (living public matrix until Ben GOs camp) | **This file** — McKing VW + McKing `cloudflared` | [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) then this wake |
+| **Camp** (paper — [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md)) | **Out of lane.** Soft-530 + vault share Doc. McKing **may sleep**. | Doc VW + **Zone** retarget `vault.` to Doc. **Not** McKing docker. **Ben GO**, never auto-cutover. |
+
+Living this fold: Soft-530 **OPEN** 530/1033; vault **OPEN** 502; **Mac.lan + lightning** / Docs **ABSENT**; Option A **PASS**; Soft-530 UX **LIVE**. Camp cutover is **not** LIVE. This paper does **not** re-ask Ben Doc-wake / docker.
+
+---
+
+## Soft-530 independence (weekend dual-outage — **home/lab only**)
+
+Weekend dual-outage proved the two planes die on **different machines** **at home/lab**. At camp they couple — one Doc lid / CDM fail = dual-OPEN ([camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md)).
 
 | Plane | Host | Public symptom | Watch | Wake |
 |-------|------|----------------|-------|------|
@@ -49,7 +60,7 @@ Weekend dual-outage proved the two planes die on **different machines**.
 | **Doc Soft-530 ≠ McKing vault wake** | An `api.` `/health` flip does **not** wake Vaultwarden or McKing `cloudflared`. Do **not** fold vault into Doc KeepAlive. |
 | **Green on one plane proves nothing on the other** | Soft-530 / `api.` `/health` can stay **green while vault dies**. Vault `/alive` can stay **200 while Doc is 530**. |
 
-Do **not** treat a weekend dual-outage as one restore. Two hosts, two tunnels, two watches, two wake paths. Dual-OPEN glue (wake order + ListMachines identity + independent CLEAR): [dual-host-outage.md](dual-host-outage.md).
+Do **not** treat a weekend dual-outage as one restore **at home/lab**. Two hosts, two tunnels, two watches, two wake paths. Dual-OPEN glue (wake order + ListMachines identity + independent CLEAR): [dual-host-outage.md](dual-host-outage.md). **Camp** is the other row — one Doc origin for shop + vault.
 
 ---
 
@@ -112,12 +123,16 @@ This file does **not** run an import. It only names the gate.
 
 ## Dual-tunnel anti-goals
 
+**Home/lab matrix** (living until Ben GOs camp): Doc = `cloud.` / `api.` / `app.` / `ops.`; McKing = `vault.` (+ unpublished NC). **Camp matrix** (after Ben GO): Doc hosts shop tunnels **+ vault (+ NC)**; McKing may sleep — [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md). Do **not** collapse the postures.
+
 | Anti-goal | Why |
 |-----------|-----|
-| **Never touch the Doc mission-control tunnel token for `vault.`** | Doc tunnel = **`cloud.` + `api.` + `app.` + `ops.` only**. `vault.` is the **McKing-only** token / ingress. Moving Doc’s token onto `vault.` (or McKing’s onto shop hosts) collapses the weekend independence proof. |
-| **McKing = `vault.` (+ unpublished NC)** | McKing CF tunnel stays **`vault.` only**. `/opt/mission-control` NC stays **lab/hub loopback-only** — not a tunnel hostname, not public `cloud.*`. |
-| **Doc = `cloud.` / `api.` / `app.` / `ops.`** | Soft-530 / KeepAlive / lid-restore stay on that set. Public `cloud.projectcar.ca` stays on **Doc** until explicit **Ben GO**. |
-| **Recreate `vault.` ingress on Doc** | Soft-530 lid-restore / LaunchAgent KeepAlive must **not** mint `vault.` on Doc. Local Doc VW sibling ≠ public vault. |
+| **Never touch the Doc mission-control tunnel token for `vault.` (home/lab)** | Doc tunnel = **`cloud.` + `api.` + `app.` + `ops.` only**. `vault.` is the **McKing-only** token / ingress **at home/lab**. Moving Doc’s token onto `vault.` without **Ben GO** camp cutover (or McKing’s onto shop hosts) collapses the weekend independence proof. |
+| **McKing = `vault.` (+ unpublished NC) — home/lab** | McKing CF tunnel stays **`vault.` only** until camp GO. `/opt/mission-control` NC stays **lab/hub loopback-only** — not a tunnel hostname, not public `cloud.*`. |
+| **Doc = `cloud.` / `api.` / `app.` / `ops.` — home/lab** | Soft-530 / KeepAlive / lid-restore stay on that set. Public `cloud.projectcar.ca` stays on **Doc** until explicit **Ben GO**. |
+| **Recreate `vault.` ingress on Doc without camp Ben GO** | Soft-530 lid-restore / LaunchAgent KeepAlive must **not** mint `vault.` on Doc at home/lab. Local Doc VW sibling ≠ public vault **until** [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) **Ben GO** + Zone retarget. |
+| **Leave vault pointed at dead McKing docker while Doc VW is live** | Camp recovery is Zone retarget — one origin. Dual origins are forbidden. |
+| **Treat McKing docker ask as camp vault path** | Camp vault recovery = Doc VW + Zone retarget. Not this file’s McKing wake. |
 | **Publish McKing NC on this tunnel** | Unpublished NC ≠ public `cloud.*`. Paper path is Tailscale Serve + MagicDNS — **not** a `cloud.*` CF cutover (`home-lab-specification.md`). |
 | **Treat vault LIVE as shop CF cutover GO** | Hop OPEN / hub NC+VW healthy / vault LIVE do **not** pass the Soft-530 five-row **shop** gate. |
 
@@ -247,7 +262,9 @@ Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-
 - Walk away from a vault CLEAR without the stay-up evidence stamp (cloudflared.service ActiveState/Result/ExecMainStatus · VW healthy + DOMAIN · Tailscale · 1033→200 vs 502→200)
 - Invent a CLEAR or a live restore from this paper while vault is still **OPEN** as **502**
 - Start this wake after quiet-ops without [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) identity (`9067d14b-46e5-4ef0-82d5-fce0febdc8f7`)
-- Capture the stamp on `Mac.lan` or Doc (not McKing / `lightning`)
+- Treat this McKing wake as the **camp** vault path — camp is [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (Doc VW + Zone retarget; **Ben GO**)
+- Leave `vault.` pointed at dead McKing docker while Doc VW is live
+- Capture the stamp on `Mac.lan` or Doc (not McKing / `lightning`) **at home/lab**
 - Re-nag Ben for McKing wake (already asked — [soft-530-extended-open.md](soft-530-extended-open.md))
 - Treat ~24h OPEN as Bitwarden / **#82** / unfreeze
 - Re-ask companion watches / schedule weekend Zone Direct Upload / **#82**

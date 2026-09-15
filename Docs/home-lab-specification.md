@@ -1,10 +1,10 @@
 # Home Lab Specification
 
-**Last Updated:** 2026-09-11  
+**Last Updated:** 2026-09-15  
 **Status:** Living spec  
 **Canonical:** `Coombzy/Project-Car` → `Docs/home-lab-specification.md`
 
-Host lock for the lab: who runs what **now**, who takes it **later**, and what is **not** on these machines. Product live/next/later stays in [STATUS.md](STATUS.md). This file is the machine map. Dual-tunnel + vault LIVE match STATUS (2026-09-11). Shop CF cutover stays **paper**. Dual-Nextcloud lock: public `cloud.projectcar.ca` stays on **Doc** until explicit **Ben GO**; McKing `/opt/mission-control` NC is **lab/hub loopback-only** (unpublished).
+Host lock for the lab: who runs what **now**, who takes it **later**, and what is **not** on these machines. Product live/next/later stays in [STATUS.md](STATUS.md). This file is the machine map. Dual-tunnel + vault LIVE match STATUS (2026-09-11) for **home/lab**. **Camp** (after **Ben GO**): Doc hosts shop tunnels + vault (+ NC); McKing may sleep — [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md). Shop CF cutover stays **paper**. Dual-Nextcloud lock: public `cloud.projectcar.ca` stays on **Doc** until explicit **Ben GO**; McKing `/opt/mission-control` NC is **lab/hub loopback-only** (unpublished) **at home/lab**.
 
 Do **not** restore the July skill / Desktop draft blindly — it still has Porsche hosting Nextcloud and Doc as the public `projectcar.ca` origin. Those are wrong. Do **not** restore the 2026-08-16 stamp that locked McKing as offline `lil-cachy` and Vaultwarden as Doc compose-down — that contradicts live dual-tunnel reality.
 
@@ -19,9 +19,9 @@ Do **not** restore the July skill / Desktop draft blindly — it still has Porsc
 | **Porsche** | M4 Pro, 24 GB | Travel **client** — NC Desktop + Bitwarden over Tailscale. Coordinator, not a server. | Same. **Never** the Nextcloud server |
 | **Code Mater** | Android + Hermes | Discord field agent | Termux / SSH only after a Ben security review |
 
-**Locked plan:** Doc now for public shop CF + temp NC hub → McKing later for permanent hub **and** shop origins (paper). Public **vault** ingress is **already McKing**. Public **`cloud.projectcar.ca` stays on Doc** until explicit **Ben GO**. McKing NC stays **unpublished** (loopback-only). Travel default is reach Doc (then McKing) over **Tailscale**. Do **not** move Nextcloud onto Porsche because Doc is a laptop.
+**Locked plan:** Doc now for public shop CF + temp NC hub → McKing later for permanent hub **and** shop origins (paper). Public **vault** ingress is **already McKing** **at home/lab**. **Camp posture** (Ben locked; cutover **Ben GO** only): leave Docs Mac plugged at camp for NC + VW so McKing need not be 24/7 — [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md). Public **`cloud.projectcar.ca` stays on Doc** until explicit **Ben GO**. McKing NC stays **unpublished** (loopback-only) at home/lab. Travel default is reach Doc (then McKing) over **Tailscale**. Do **not** move Nextcloud onto Porsche because Doc is a laptop.
 
-Hop OPEN ≠ shop cutover GO ≠ Doc unfreeze ≠ `cloud.*` leave. Vault LIVE ≠ shop hostname leave ≠ McKing NC publish.
+Hop OPEN ≠ shop cutover GO ≠ Doc unfreeze ≠ `cloud.*` leave. Vault LIVE ≠ shop hostname leave ≠ McKing NC publish. Camp cutover ≠ auto-GO ≠ Zone execute from this spec.
 
 ---
 
@@ -110,8 +110,9 @@ Older “Doc hosts projectcar.ca” / “Cloudflare Tunnel → `:8088`” lines 
 
 | Tunnel | Hostnames | Origin / role |
 |--------|-----------|----------------|
-| **Doc tunnel** | **`cloud.` + `api.` + `app.` + `ops.` only** | Shop Soft-530 / KeepAlive (plus `cloud.`). Public **`cloud.projectcar.ca` stays on Doc** until explicit **Ben GO**. Public shop names stay on Doc until the Soft-530 five-row **shop** gate PASSes. That gate is **Doc shop hosts only** — **vault EXCLUDED**. |
-| **McKing-only tunnel** | **`vault.projectcar.ca` — LIVE verified** (+ **unpublished** NC, not a tunnel hostname) | McKing `cloudflared` → **`localhost:8222`**. `/alive` Lead **200** (prefer); `/api/config` **2026.6.0** (Chief verified). Not the Doc mission-control token. Not shop `api.` / `ops.` / `app.`. McKing NC is **not** on this tunnel. |
+| **Doc tunnel (home/lab)** | **`cloud.` + `api.` + `app.` + `ops.` only** | Shop Soft-530 / KeepAlive (plus `cloud.`). Public **`cloud.projectcar.ca` stays on Doc** until explicit **Ben GO**. Public shop names stay on Doc until the Soft-530 five-row **shop** gate PASSes. That gate is **Doc shop hosts only** — **vault EXCLUDED**. |
+| **McKing-only tunnel (home/lab)** | **`vault.projectcar.ca` — LIVE verified** (+ **unpublished** NC, not a tunnel hostname) | McKing `cloudflared` → **`localhost:8222`**. `/alive` Lead **200** (prefer); `/api/config` **2026.6.0** (Chief verified). Not the Doc mission-control token. Not shop `api.` / `ops.` / `app.`. McKing NC is **not** on this tunnel. Living vault is **OPEN 502**. |
+| **Doc tunnel (camp — after Ben GO)** | Shop Soft-530 **+ `vault.` (+ NC)** | [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md). Zone retargets `vault.projectcar.ca` to Doc. McKing **may sleep**. Soft-530 independence **breaks** (one lid/CDM = dual-OPEN). **Never auto-cutover.** |
 | **Tailscale** | Private reach to the hub | Doc last recorded as `docs-macbook-pro` `100.97.10.72` ([doc-software-baseline.md](doc-software-baseline.md), [nextcloud-progress.md](nextcloud-progress.md)). Porsche / Ben join as clients. **Headscale is not used.** McKing path is **OPEN** (`lightning`). Paper for McKing NC: **Tailscale Serve HTTPS** mirroring VW Serve at `lightning.tailbe8f55.ts.net` + `NEXTCLOUD_TRUSTED_DOMAINS` MagicDNS — **not** a `cloud.*` CF cutover. |
 | **Worker** | Apex / www brochure | **Not** either tunnel. |
 
@@ -119,7 +120,7 @@ Do **not** expose Nextcloud on the naked marketing domain without Access. Prefer
 
 ### Dual-Nextcloud paper path (not a `cloud.*` CF cutover)
 
-**Lock.** Public `cloud.projectcar.ca` stays on **Doc** until explicit **Ben GO**. McKing `/opt/mission-control` NC stays **lab/hub loopback-only** (unpublished). Dual-tunnel matrix **unchanged**: Doc = `cloud.` / `api.` / `app.` / `ops.`; McKing = `vault.` (+ unpublished NC).
+**Lock.** Public `cloud.projectcar.ca` stays on **Doc** until explicit **Ben GO**. McKing `/opt/mission-control` NC stays **lab/hub loopback-only** (unpublished) **at home/lab**. Dual-tunnel matrix **home/lab**: Doc = `cloud.` / `api.` / `app.` / `ops.`; McKing = `vault.` (+ unpublished NC). **Camp** (after Ben GO): Doc = shop + vault (+ NC); McKing may sleep — [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md).
 
 **Paper path** (later execute — **not** this fold): Tailscale Serve HTTPS for McKing NC, mirroring VW Serve at `lightning.tailbe8f55.ts.net`, plus `NEXTCLOUD_TRUSTED_DOMAINS` MagicDNS hostnames. This is **not** a Cloudflare cutover of `cloud.*`. Checklist: [mcking-shop-host-cutover.md](mcking-shop-host-cutover.md) Dual-Nextcloud ownership.
 
@@ -141,7 +142,9 @@ Doc is a MacBook. Lid close or host sleep stops or stalls origin processes and c
 
 **Brochure / www do not go down** when Doc sleeps.
 
-**Vault does not go down** when Doc sleeps. `vault.projectcar.ca` is McKing-only. Soft-530 / `api.` `/health` can stay **green while vault dies**.
+**Home/lab:** **Vault does not go down** when Doc sleeps. `vault.projectcar.ca` is McKing-only. Soft-530 / `api.` `/health` can stay **green while vault dies**.
+
+**Camp (after Ben GO):** vault **does** go down when Doc sleeps. Soft-530 + vault couple on Doc lid / CDM / KeepAlive — [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md).
 
 | Need | Doc |
 |------|-----|
@@ -150,8 +153,9 @@ Doc is a MacBook. Lid close or host sleep stops or stalls origin processes and c
 | shop-web KeepAlive / rebuild / `BUILD_ID` | [shop-web-stay-up.md](shop-web-stay-up.md) |
 | Soft-530 five-row **shop** gate (before any public shop CF hostname leaves Doc) | [mcking-shop-host-cutover.md](mcking-shop-host-cutover.md) — **`cloud.` / `api.` / `app.` / `ops.` only; vault EXCLUDED** |
 | Lookout Soft-530 watch (`api.` `/health`) | STATUS Live — **resumed** (`enabled:true`). Shop hosts only |
-| McKing Vaultwarden + `cloudflared` stay-up (`vault.` → `:8222`) | [vault-stay-up.md](vault-stay-up.md) — weekend dual-outage proved Soft-530 ≠ vault. Vault flip ≠ Doc lid-restore; Doc Soft-530 ≠ McKing vault wake. After vault CLEAR: **post-CLEAR stay-up evidence**. Bitwarden import/rotate **blocked** until vault CLEAR |
-| Weekend dual-OPEN recovery glue | [dual-host-outage.md](dual-host-outage.md) — Soft-530 OPEN + vault OPEN: **Doc first, then McKing**. ListMachines lock: `Mac.lan` ≠ `Docs-MacBook-Pro` ≠ `lightning`. Wake order only — Soft-530 post-CLEAR is [doc-lid-restore.md](doc-lid-restore.md); vault post-CLEAR is [vault-stay-up.md](vault-stay-up.md) |
+| McKing Vaultwarden + `cloudflared` stay-up (`vault.` → `:8222`) — **home/lab** | [vault-stay-up.md](vault-stay-up.md) — weekend dual-outage proved Soft-530 ≠ vault **at home/lab**. Vault flip ≠ Doc lid-restore; Doc Soft-530 ≠ McKing vault wake. After vault CLEAR: **post-CLEAR stay-up evidence**. Bitwarden import/rotate **blocked** until vault CLEAR |
+| Camp vault on Doc (paper — Ben GO) | [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) — Doc VW + Zone retarget; McKing may sleep; independence **breaks**. Never auto-cutover. Never `Mac.lan`. |
+| Weekend dual-OPEN recovery glue | [dual-host-outage.md](dual-host-outage.md) — **home/lab** Soft-530 OPEN + vault OPEN: **Doc first, then McKing**. **Camp** couples on Doc. ListMachines lock: `Mac.lan` ≠ `Docs-MacBook-Pro` ≠ `lightning`. Wake order only — Soft-530 post-CLEAR is [doc-lid-restore.md](doc-lid-restore.md); vault post-CLEAR is [vault-stay-up.md](vault-stay-up.md) (home/lab) |
 | Soft-530 post-CLEAR stay-up evidence (next CF 1033) | [doc-lid-restore.md](doc-lid-restore.md) — after CLEAR, stamp cloudflared lastExit / KeepAlive loaded / caffeinate·CDM / Tailscale. **Doc forensics.** Capture on Doc, not `Mac.lan` |
 | Vault post-CLEAR stay-up evidence (next vault flip) | [vault-stay-up.md](vault-stay-up.md) — after McKing CLEAR, stamp cloudflared.service ActiveState/Result/ExecMainStatus · VW healthy + DOMAIN · Tailscale · 1033→200 vs 502→200. **McKing forensics.** Capture on `lightning`, not `Mac.lan` |
 | Post-dual-CLEAR Ben GO sequencer | [post-dual-clear-go.md](post-dual-clear-go.md) — after both CLEARs + forensics `@55e10d0` / `@d88cacb`: KeepAlive → **#82** Worker-live → **brochure lane** **#83** ∥ **Bulk Phase1** (not Bulk→#83; Member-after-Bulk) (**never #81**). Unfreeze+#79.1 is **Shop OS parallel**. **Never auto-fire.** Dual CLEAR ≠ **#82** auto-go. Soft-530 CLEAR alone ≠ unfreeze. |
@@ -179,7 +183,7 @@ Bring-up order (Doc is already past this) is in that baseline. Do **not** treat 
 | **Shop CF hostname leave (McKing shop-host cutover)** | **Paper only.** Hop OPEN ≠ shop cutover GO ≠ Doc unfreeze. Soft-530 five-row gate = **Doc shop hosts only** (`cloud.` / `api.` / `app.` / `ops.`) — **vault EXCLUDED**. Vault LIVE / hub NC+VW dual-run / hop OPEN do **not** pass that gate. [mcking-shop-host-cutover.md](mcking-shop-host-cutover.md). |
 | **Point `cloud.*` tunnel / CNAME at McKing** | Public `cloud.projectcar.ca` stays on **Doc** until explicit **Ben GO**. McKing `/opt/mission-control` NC stays **unpublished**. Do **not** retarget `cloud.*` until a dual-run acceptance gate PASSes: McKing `status.php` parity vs Doc `status.php`. Hub dual-run healthy / hop OPEN / vault LIVE / Tailscale Serve stand-up do **not** pass that gate. Paper path is Tailscale Serve + MagicDNS trusted domains — **not** a Cloudflare cutover of `cloud.*`. |
 | **Publish McKing NC on Cloudflare** | McKing CF tunnel stays **`vault.` only**. Unpublished NC ≠ public `cloud.*`. |
-| **Recreate `vault.` ingress on Doc** | Vault is **OUT** of [doc-lid-restore.md](doc-lid-restore.md) and Doc LaunchAgent KeepAlive. Public `vault.` stays McKing-only. Never move the Doc mission-control token for `vault.`. |
+| **Recreate `vault.` ingress on Doc without camp Ben GO** | Vault is **OUT** of [doc-lid-restore.md](doc-lid-restore.md) and Doc LaunchAgent KeepAlive **at home/lab**. Public `vault.` stays McKing-only until [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) **Ben GO** + Zone retarget. Never auto-cutover. Never leave `vault.` on dead McKing docker while Doc VW is live. |
 | **Treat vault flip watch as Soft-530** | Lookout vault `/alive` watch is **LIVE/armed** and **separate**. Soft-530 / `api.` `/health` can stay green while vault dies. |
 | **Cut the `app.` alias** | `ops.` is already LIVE. Ben cuts DNS. |
 | **n8n, Matrix, Apex sidecar** | Banned / deferred. |
@@ -200,7 +204,7 @@ Bring-up order (Doc is already past this) is in that baseline. Do **not** treat 
 | [mission-control-architecture.md](mission-control-architecture.md) | Ben-only cockpit (parked). Tip-fold matches this dual-tunnel + vault LIVE lock (VW not Doc compose host; shop CF paper; Soft-530 five-row = Doc shop hosts only) |
 | [website-webapp-specification.md](website-webapp-specification.md) | Domain + brochure architecture |
 | [brochure-worker-deploy.md](brochure-worker-deploy.md) | Standing Worker upload |
-| [doc-lid-restore.md](doc-lid-restore.md) · [api-stay-up.md](api-stay-up.md) · [shop-web-stay-up.md](shop-web-stay-up.md) · [vault-stay-up.md](vault-stay-up.md) · [dual-host-outage.md](dual-host-outage.md) · [post-dual-clear-go.md](post-dual-clear-go.md) | Lid-close 530 / 1033 — **vault OUT** of lid-restore / Doc KeepAlive. Vault stay-up is McKing-only. Dual-OPEN **wake order**: Doc first, then McKing. Soft-530 post-CLEAR (Doc forensics) is lid-restore. Vault post-CLEAR (McKing forensics) is vault-stay-up. After both CLEARs + forensics: Ben GO sequencer — **never auto-fire** |
+| [doc-lid-restore.md](doc-lid-restore.md) · [api-stay-up.md](api-stay-up.md) · [shop-web-stay-up.md](shop-web-stay-up.md) · [vault-stay-up.md](vault-stay-up.md) · [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) · [dual-host-outage.md](dual-host-outage.md) · [post-dual-clear-go.md](post-dual-clear-go.md) | Lid-close 530 / 1033 — **vault OUT** of lid-restore / Doc KeepAlive **at home/lab**. Vault stay-up is McKing-only **at home/lab**. **Camp** = Doc VW + Zone retarget. Dual-OPEN **wake order** (home/lab): Doc first, then McKing. Sequencer does **not** assume McKing vault wake first. Soft-530 post-CLEAR (Doc forensics) is lid-restore. Vault post-CLEAR (McKing forensics) is vault-stay-up. After both CLEARs + forensics: Ben GO sequencer — **never auto-fire** |
 | [agent-profiles-specification.md](agent-profiles-specification.md) | Hardware + jobs (coordinator ≠ hub host) |
 | [deployment-guide.md](deployment-guide.md) | Index of stay-up / deploy runbooks |
 

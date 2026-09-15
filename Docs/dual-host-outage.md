@@ -1,10 +1,12 @@
 # Dual-host outage — weekend recovery glue
 
 **Status:** Living ops  
-**Updated:** 2026-09-14  
-**Related:** `STATUS.md` (weekend Soft-530 + vault Live / Locks + living dual-OPEN), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — this file stays **wake order**), [soft-530-weekday-overnight.md](soft-530-weekday-overnight.md) (Mon–Thu overnight Lookout-only; Friday last `*/20` → weekend; mid-overnight reappear still first hops), [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (**first hop** when `Docs-MacBook-Pro` reappears — machineId `95a229f5-9296-4a18-aa98-70fd300dabdf`; **cold-boot** if Docs **ABSENT ≥1 calendar day** or Soft-530 **OPEN** 1033 **≥24h** with Docs **ABSENT** — verify cloudflared + KeepAlive + note CDM **before** smoke; overnight **warm wake** `<24h` after a prior CLEAR stays shorter process-wake; **never** treat multi-day lid as overnight sleep; **never** `Mac.lan` / Porsche), [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) (**first hop** when `lightning` / McKing reappears — machineId `9067d14b-46e5-4ef0-82d5-fce0febdc8f7`; **never** `Mac.lan`), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** desk / **#79.1** / unfreeze), [vault-clear-smoke.md](vault-clear-smoke.md) (**first** recovery smoke after extended-OPEN vault CLEAR — **before** Bitwarden / desk; **502→200** not CF **1033→200**), [api-stay-up.md](api-stay-up.md), [vault-stay-up.md](vault-stay-up.md) (McKing half + **vault post-CLEAR stay-up evidence** `@d88cacb`), [doc-lid-restore.md](doc-lid-restore.md) (Doc half + Soft-530 **post-CLEAR stay-up evidence** — lastExit / KeepAlive / caffeinate·CDM / Tailscale), [post-dual-clear-go.md](post-dual-clear-go.md) (post-dual-CLEAR **Ben GO sequencer** — **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [shop-web-stay-up.md](shop-web-stay-up.md), `deployment-guide.md` (Monday paper map), `home-lab-specification.md` (machine map — Porsche = travel client)
+**Updated:** 2026-09-15  
+**Related:** `STATUS.md` (weekend Soft-530 + vault Live / Locks + living dual-OPEN + [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md)), [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (**camp** — Soft-530 + vault **couple** on Doc; this file’s Doc-then-McKing order is **home/lab**), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — this file stays **wake order**), [soft-530-weekday-overnight.md](soft-530-weekday-overnight.md) (Mon–Thu overnight Lookout-only; Friday last `*/20` → weekend; mid-overnight reappear still first hops), [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (**first hop** when `Docs-MacBook-Pro` reappears — machineId `95a229f5-9296-4a18-aa98-70fd300dabdf`; **cold-boot** if Docs **ABSENT ≥1 calendar day** or Soft-530 **OPEN** 1033 **≥24h** with Docs **ABSENT** — verify cloudflared + KeepAlive + note CDM **before** smoke; overnight **warm wake** `<24h` after a prior CLEAR stays shorter process-wake; **never** treat multi-day lid as overnight sleep; **never** `Mac.lan` / Porsche), [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) (**home/lab first hop** when `lightning` / McKing reappears — machineId `9067d14b-46e5-4ef0-82d5-fce0febdc8f7`; **never** `Mac.lan`; **not** the camp vault path), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (**first** recovery smoke after extended-OPEN Soft-530 CLEAR — **before** desk / **#79.1** / unfreeze), [vault-clear-smoke.md](vault-clear-smoke.md) (**first** recovery smoke after extended-OPEN vault CLEAR — **before** Bitwarden / desk; **home/lab** **502→200** not CF **1033→200**), [api-stay-up.md](api-stay-up.md), [vault-stay-up.md](vault-stay-up.md) (McKing half + **vault post-CLEAR stay-up evidence** `@d88cacb` — **home/lab**), [doc-lid-restore.md](doc-lid-restore.md) (Doc half + Soft-530 **post-CLEAR stay-up evidence** — lastExit / KeepAlive / caffeinate·CDM / Tailscale), [post-dual-clear-go.md](post-dual-clear-go.md) (post-dual-CLEAR **Ben GO sequencer** — **never auto-fire**; **does not** assume McKing vault wake first), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [shop-web-stay-up.md](shop-web-stay-up.md), `deployment-guide.md` (Monday paper map), `home-lab-specification.md` (machine map — Porsche = travel client; **home/lab vs camp** dual-tunnel)
 
-Weekend dual-OPEN glue. `vault-stay-up.md` named the two planes. This file names **wake order**, **independent CLEAR**, and the **ListMachines identity lock** when both Soft-530 and vault are **OPEN** at once. After Soft-530 CLEAR, stamp **Doc forensics** on [doc-lid-restore.md](doc-lid-restore.md). After vault CLEAR, stamp **McKing forensics** on [vault-stay-up.md](vault-stay-up.md). After **both** CLEARs + both forensic papers (`55e10d0` / `d88cacb`), Ben’s GO menu is [post-dual-clear-go.md](post-dual-clear-go.md) — **never auto-fire**. This file is **wake order** — not either forensic, not the GO menu.
+Weekend dual-OPEN glue **at home/lab**. `vault-stay-up.md` named the two planes. This file names **wake order**, **independent CLEAR**, and the **ListMachines identity lock** when both Soft-530 and vault are **OPEN** at once **on two hosts**. After Soft-530 CLEAR, stamp **Doc forensics** on [doc-lid-restore.md](doc-lid-restore.md). After **home/lab** vault CLEAR, stamp **McKing forensics** on [vault-stay-up.md](vault-stay-up.md). After **both** CLEARs + both forensic papers (`55e10d0` / `d88cacb`), Ben’s GO menu is [post-dual-clear-go.md](post-dual-clear-go.md) — **never auto-fire**. This file is **home/lab wake order** — not either forensic, not the GO menu.
+
+**Camp** is the other posture ([camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md)): Soft-530 + vault share **one Doc origin**. Independence **breaks**. Do **not** walk “Doc first, then McKing” as if vault still lives on `lightning`. Camp vault recovery = Doc VW + Zone retarget — **not** McKing docker. Sequencer does **not** assume McKing vault wake first.
 
 Do **not** invent a Doc unfreeze, **#82**, Zone Direct Upload, a companion re-ask, a Bitwarden import/rotate while vault is down, or a Zone/Garage execute from this paper.
 
@@ -17,7 +19,8 @@ Soft-530 **OPEN** + vault **OPEN** is two outages, two hosts. Do **not** treat i
 | Plane | Host | Watch | Wake essay |
 |-------|------|-------|------------|
 | **Soft-530 OPEN** | Doc (`Docs-MacBook-Pro`) | Lookout `api.` `/health` non-200 | [doc-lid-restore.md](doc-lid-restore.md) **process wake only** — [api-stay-up.md](api-stay-up.md) / [shop-web-stay-up.md](shop-web-stay-up.md) |
-| **Vault OPEN** | McKing (`lightning`) | Lookout `/alive` non-200 | [vault-stay-up.md](vault-stay-up.md) — McKing VW + McKing `cloudflared` |
+| **Vault OPEN (home/lab)** | McKing (`lightning`) | Lookout `/alive` non-200 | [vault-stay-up.md](vault-stay-up.md) — McKing VW + McKing `cloudflared` |
+| **Vault OPEN (camp, after Ben GO)** | **Doc** (same host as Soft-530) | Lookout `/alive` non-200 | [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) — Doc VW + Zone retarget. **Not** McKing docker. |
 
 Weekend flip coverage stays Lookout `api.` `/health` + vault `/alive` **only**. Soft-530 companions stay **HOLD / not armed** (do **not** re-ask). Friday last weekday `*/20` (~17:40 MT) hands **into** weekend coverage. **Mon–Thu nights** after last `*/20` until next weekday first fire (~06:00) are [soft-530-weekday-overnight.md](soft-530-weekday-overnight.md) — same Lookout-only set. Mid-overnight reappear still [doc-reappear-first-hop.md](doc-reappear-first-hop.md) / [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) (**never** `Mac.lan`; **never auto-fire**).
 
@@ -25,9 +28,11 @@ When Soft-530 OPEN crosses **~24h** **and** vault is still **OPEN** **and** only
 
 ---
 
-## Wake order — Doc first, then McKing
+## Wake order — Doc first, then McKing (**home/lab**)
 
-When Soft-530 is **OPEN** and vault is **OPEN** and **only `Mac.lan` is online** on ListMachines:
+**Camp:** skip this section. Both planes are Doc — [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md). McKing **may sleep**.
+
+When Soft-530 is **OPEN** and vault is **OPEN** **at home/lab** and **only `Mac.lan` is online** on ListMachines:
 
 1. **Doc first.** Wake / restore Doc shop KeepAlive (`doc-lid-restore.md` — process wake only).
 2. **Then McKing.** Wake / restore McKing vault (`vault-stay-up.md`).
@@ -72,12 +77,12 @@ All of these — not `/health` alone. After **extended OPEN** (**>~24h**), the *
 
 Lookout Soft-530 coverage is still **api-only**. Companions stay **HOLD**. After extended OPEN, claim CLEAR from [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (not `/health` alone). Essay: [doc-lid-restore.md](doc-lid-restore.md) smoke + [api-stay-up.md](api-stay-up.md). After that CLEAR, stamp **post-CLEAR stay-up evidence** (lastExit / KeepAlive / caffeinate·CDM / Tailscale) on [doc-lid-restore.md](doc-lid-restore.md) before walking away.
 
-### Vault CLEAR (McKing)
+### Vault CLEAR (McKing at **home/lab**; Doc + Zone at **camp**)
 
 | Check | Expect |
 |-------|--------|
 | `GET https://vault.projectcar.ca/alive` | **200** — **CLEAR** (prefer) |
-| VW `GET https://vault.projectcar.ca/api/config` | **200** + version **2026.6.0** McKing class (**not** Doc **2025.12.0**; stamp; fallback if `/alive` 404s) |
+| VW `GET https://vault.projectcar.ca/api/config` | **200** + Vaultwarden class. **Home/lab:** McKing **2026.6.0** (**not** Doc **2025.12.0**). **Camp after Ben GO + Zone retarget:** Doc VW class is **expected** — [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md). |
 
 After **extended OPEN** (**502** since ~19:45 MT Sep 13), the **first** public card is [vault-clear-smoke.md](vault-clear-smoke.md) — **before** Bitwarden / desk: `/alive` **200** + `/api/config` McKing **2026.6.0** class (not Doc **2025.12.0**) + classify **502→200** (not CF **1033→200**). Bitwarden stays **Ben GO**, **never auto-fire**. Essay: [vault-stay-up.md](vault-stay-up.md). Soft-530 `/health` **200** is **not** vault CLEAR. After that CLEAR, stamp **vault post-CLEAR stay-up evidence** (cloudflared.service ActiveState/Result/ExecMainStatus · VW healthy + `DOMAIN=https://vault.projectcar.ca` · Tailscale · **1033→200** vs **502→200**) on [vault-stay-up.md](vault-stay-up.md) before walking away. Forensic paper already ack’d (`d88cacb`).
 
@@ -110,7 +115,8 @@ Anti-goals that stay on this file: CLEAR ≠ companion re-ask; CLEAR ≠ Bitward
 | **Ben re-nag / duration = GO** | Doc-wake + McKing wake already asked. ~24h OPEN ≠ **#82** / unfreeze / Zone / Bitwarden. |
 | **Bitwarden import/rotate** | **Blocked** until vault **CLEAR**. Soft-530 CLEAR does **not** lift this. |
 | **Wrong-host Shell** | `Mac.lan` ≠ Doc ≠ McKing. No Shell on `Mac.lan` as shop or vault host. |
-| **One restore for two planes** | Vault flip ≠ Doc lid-restore. Doc Soft-530 ≠ McKing vault wake. |
+| **One restore for two planes (home/lab)** | Vault flip ≠ Doc lid-restore. Doc Soft-530 ≠ McKing vault wake. **Camp** is the exception — they couple on Doc ([camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md)). |
+| **McKing docker as camp vault path** | Camp vault recovery = Doc VW + Zone retarget. Do **not** wake McKing first so the sequencer can open. |
 | **Parallel wake from `Mac.lan` only** | Parallel **only** when both `Docs-MacBook-Pro` and `lightning` are on ListMachines. |
 
 **#82** Ben GO / Soft-530 companions **HOLD** / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / weekend Soft-530 coverage (`84107e7`) / waitlist-owner-desk **retired** / **#79.1** git-only until Doc unfreeze / vault stay-up (`017f778`) / dual-host-outage (`7bf894b`) / Soft-530 post-CLEAR (`55e10d0`) / vault post-CLEAR (`d88cacb`) / living dual-OPEN honesty (`5f2fd1c`) — **unchanged**. Quiet-ops lock lives on [soft-530-extended-open.md](soft-530-extended-open.md). This file executes **none** of those. Soft-530 post-CLEAR (**Doc forensics**) lives on [doc-lid-restore.md](doc-lid-restore.md). Vault post-CLEAR (**McKing forensics**) lives on [vault-stay-up.md](vault-stay-up.md). Post-dual-CLEAR **Ben GO menu** lives on [post-dual-clear-go.md](post-dual-clear-go.md). This file is **wake order**.
@@ -124,7 +130,9 @@ Anti-goals that stay on this file: CLEAR ≠ companion re-ask; CLEAR ≠ Bitward
 - Skip [doc-reappear-first-hop.md](doc-reappear-first-hop.md) when `Docs-MacBook-Pro` first reappears after quiet-ops
 - Treat a multi-day lid (Docs **ABSENT ≥1 calendar day**, living **~4d** since Fri 2026-09-11 ~16:48) as overnight sleep / warm wake — that reappear is **cold-boot**
 - Skip [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) when `lightning` first reappears after quiet-ops (machineId `9067d14b-46e5-4ef0-82d5-fce0febdc8f7` — **never** `Mac.lan`)
-- Wake McKing first, or wake in parallel when only `Mac.lan` is online
+- Wake McKing first, or wake in parallel when only `Mac.lan` is online (**home/lab**)
+- Treat McKing docker / [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) as the **camp** vault path ([camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md))
+- Assume [post-dual-clear-go.md](post-dual-clear-go.md) waits on McKing vault wake first
 - Claim Soft-530 CLEAR from `api.` `/health` **200** alone (after extended OPEN: [soft-530-clear-smoke.md](soft-530-clear-smoke.md) — OPTIONS CORS + POST **422**/**201** + `cloud.` `status.php`; `changeme` on `/login` is freeze)
 - Claim vault CLEAR from Soft-530 green
 - Jump to Bitwarden / desk after extended-OPEN vault CLEAR without [vault-clear-smoke.md](vault-clear-smoke.md)
