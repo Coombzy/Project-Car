@@ -80,7 +80,7 @@ Same two public error classes as Soft-530, **different host**. Treat **1033** al
 |-------------|---------------|-------------|----------|
 | **502** | Tunnel up; **origin process** down or refusing on `:8222` | On McKing: local `GET http://127.0.0.1:8222/alive`. If that fails, Lead wakes **Vaultwarden**. | Doc lid-restore; Doc shop-api / shop-web; Bitwarden import/rotate |
 | **530 / error 1033** | Cloudflare Tunnel **cannot reach** McKing (`cloudflared` down, host unreachable, tunnel disconnected) | McKing awake? McKing **`cloudflared`** up? Zone: `vault.` hostname still on the **McKing** tunnel. | Restarting Doc `com.projectcar.cloudflared`; moving the Doc mission-control token |
-| **200** on `/alive` | **CLEAR** | Stop. Import/rotate may proceed (below). | Claiming Soft-530 CLEAR from this code |
+| **200** on `/alive` | Origin-up — **not** vault CLEAR after extended OPEN until [vault-clear-smoke.md](vault-clear-smoke.md) (VW **2026.6.0** + `docker.service` **enabled** + **active**) | Stop HTTP triage. After extended OPEN, `/alive` **200** + docker **disabled/inactive** = **NOT CLEAR / recurrence risk**. | Claiming Soft-530 CLEAR from this code; treating HTTP-only as CLEAR |
 | **403** HTML challenge (`cf-mitigated: challenge`) | Edge / WAF | Zone owns. | Restarting Vaultwarden |
 
 A **502** with local `:8222` **200** is still an edge/tunnel problem (Zone + McKing `cloudflared`), not “VW is dead.” A **1033** with local `:8222` **200** is the same class — tunnel, not the bitwarden process.
@@ -102,7 +102,7 @@ Living this fold — OPEN class honesty (do **not** invent CLEAR): **Soft-530** 
 | Soft-530 Doc down, vault `/alive` **200** | Import/rotate is a **vault** decision. Soft-530 **OPEN** can coexist with vault CLEAR + Bitwarden work. Doc lid-close / Soft-530 OPEN does **not** block it. |
 | Vault down, Soft-530 `/health` **200** | **Still blocked.** Green Doc API does **not** CLEAR vault. |
 
-CLEAR means public `GET https://vault.projectcar.ca/alive` → **200**. Prefer `/alive`. `/api/config` **2026.6.0** is the version stamp, not a license to import during a flip. After **extended OPEN**, prove McKing **2026.6.0** class (not Doc **2025.12.0**) on [vault-clear-smoke.md](vault-clear-smoke.md) **before** any import/rotate talk.
+After **extended OPEN**, CLEAR is **not** HTTP-only: public `GET https://vault.projectcar.ca/alive` → **200** **and** `/api/config` McKing **2026.6.0** class **and** `docker.service` **enabled** + **active** on `lightning` ([vault-clear-smoke.md](vault-clear-smoke.md)). Prefer `/alive`. `/api/config` **2026.6.0** is the version stamp, not a license to import during a flip. `/alive` **200** + docker **disabled/inactive** = **NOT CLEAR / recurrence risk**. Prove that card **before** any import/rotate talk.
 
 This file does **not** run an import. It only names the gate.
 
