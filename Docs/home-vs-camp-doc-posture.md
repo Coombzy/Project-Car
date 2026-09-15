@@ -2,7 +2,7 @@
 
 **Status:** Paper — **complement** to [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (`fb86f90`), **not** a re-cutover  
 **Updated:** 2026-09-15  
-**Related:** `STATUS.md` (Reality + living dual-OPEN + this pointer), [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (**camp vault cutover** after **Ben GO** — this file is the **Doc power / CDM posture**, not that retarget), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops — **home-off HOLD**; do **not** re-nag lid-restore / KeepAlive), [soft-530-weekday-overnight.md](soft-530-weekday-overnight.md) (Mon–Thu Lookout-only — home-off Soft-530 is **not** that overnight incident), [overnight-baseline-stamp.md](overnight-baseline-stamp.md) (intentional home Soft-530 + Docs **ABSENT** = **SAME-CLASS expected** — **not** a morning Ben DIFF), [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (first hop **when** `Docs-MacBook-Pro` actually reappears — home-off ABSENT does **not** queue this hop), [lookout-rearm-sop.md](lookout-rearm-sop.md) (`ok=false` Soft-530 while Docs **ABSENT** at home = **expected baseline**, not stickiness panic; do **not** re-arm Soft-530 companions), [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) (**home/lab** McKing identity hop — vault may CLEAR or OPEN **independently** of Soft-530 at home; **not** camp dual-OPEN recovery), [dual-host-outage.md](dual-host-outage.md) (**home/lab** wake order — **not** home-off recovery pressure), [deployment-guide.md](deployment-guide.md) (Monday paper map)
+**Related:** `STATUS.md` (Reality + living dual-OPEN + this pointer), [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (**camp vault cutover** after **Ben GO** — this file is the **Doc power / CDM posture**, not that retarget), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops — **home-off HOLD**; do **not** re-nag lid-restore / KeepAlive), [soft-530-weekday-overnight.md](soft-530-weekday-overnight.md) (Mon–Thu Lookout-only — home-off Soft-530 is **not** that overnight incident), [overnight-baseline-stamp.md](overnight-baseline-stamp.md) (intentional home Soft-530 + Docs **ABSENT** = **SAME-CLASS expected** — **not** a morning Ben DIFF), [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (first hop **when** `Docs-MacBook-Pro` actually reappears — home-off ABSENT does **not** queue this hop), [lookout-rearm-sop.md](lookout-rearm-sop.md) (`ok=false` Soft-530 while Docs **ABSENT** at home = **expected baseline**, not stickiness panic; do **not** re-arm Soft-530 companions), [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) (**home/lab** McKing identity hop — vault may CLEAR or OPEN **independently** of Soft-530 at home; **not** camp dual-OPEN recovery), [dual-host-outage.md](dual-host-outage.md) (**SUPERSEDED for camp** — Doc-then-McKing is **home/lab/pre-cutover only**; after camp Ben GO, **`lightning` ABSENT must not trigger McKing wake**; **not** home-off recovery pressure), [deployment-guide.md](deployment-guide.md) (Monday paper map)
 
 Ben clarified: **Doc is intentionally off at home** (Soft-530 **OPEN** expected) and **on + CDM at camp** (after vault cutover, Soft-530 + vault expected **CLEAR** on one Doc origin). Camp cutover paper already landed (`fb86f90`). Ops / stamp paper still treated multi-day Soft-530 + Docs **ABSENT** like a chronic incident to recover. That fights quiet-ops while Ben is home.
 
@@ -17,7 +17,7 @@ This fold executes **none** of the curls, Shells, Zone retargets, or GOs. Do **n
 | Lock | Meaning |
 |------|---------|
 | **Home-off is intentional** | At home, Docs **ABSENT** + Soft-530 **OPEN** is **EXPECTED**. Quiet-ops **HOLD**. Do **not** re-nag lid-restore / KeepAlive / Doc-wake because the clock moved. |
-| **Camp-on is the other posture** | After **Ben GO** [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md), Doc is on + CDM. Soft-530 + vault expected **CLEAR together** on one Doc origin. Dual **OPEN** = coupled Doc CDM / KeepAlive / cloudflared first-hop — **not** McKing docker, **not** independent [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md). |
+| **Camp-on is the other posture** | After **Ben GO** [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md), Doc is on + CDM. Soft-530 + vault expected **CLEAR together** on one Doc origin. Dual **OPEN** = coupled Doc CDM / KeepAlive / cloudflared first-hop — **not** McKing docker, **not** independent [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md). [dual-host-outage.md](dual-host-outage.md) is **SUPERSEDED**. **`lightning` ABSENT must not trigger McKing wake.** |
 | **Stamp / morning `*/20` must not fight home-off** | Intentional home Soft-530 is **SAME-CLASS expected**. Duration + Docs **ABSENT** is **not** a stamp class DIFF that pages Ben. |
 | **Lookout `ok=false` at home is baseline** | Soft-530 Lookout `ok=false` while Docs **ABSENT** at home is the **expected baseline**, not stickiness panic. Do **not** re-arm Soft-530 companions. |
 | **Not a re-cutover** | [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) is **camp SSOT**. [mcking-shop-host-cutover.md](mcking-shop-host-cutover.md) + McKing-centric [vault-stay-up.md](vault-stay-up.md) are **PARKED for camp weeks** / desk/lab optional — Zone/Doc do **not** follow those cards at camp GO. This file does **not** redo Zone retarget, VW-on-Doc, or McKing-sleep locks. |
@@ -67,7 +67,7 @@ After that cutover is **LIVE**:
 | **Doc on + CDM** | Docs Mac plugged at camp. Soft-530 shop KeepAlive **and** public vault share **one** Doc origin. |
 | **Soft-530 + vault CLEAR together** | One healthy Doc lid / CDM / KeepAlive / cloudflared should CLEAR **both** planes. |
 | **Dual OPEN** | Coupled. First hop = Doc identity ([doc-reappear-first-hop.md](doc-reappear-first-hop.md)) → CDM / KeepAlive / cloudflared — **not** [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md), **not** McKing docker wake. |
-| **McKing** | **May sleep.** A `lightning` name is lab identity only. |
+| **McKing** | **May sleep.** A `lightning` name is lab identity only. **`lightning` ABSENT is expected** — do **not** walk [dual-host-outage.md](dual-host-outage.md) Doc-then-McKing. |
 
 Until Ben GOs that cutover, do **not** score living home Soft-530 **OPEN** as “camp cutover failed.”
 
@@ -122,6 +122,7 @@ Do **not** delete the api watch because home-off Soft-530 stays false. Do **not*
 | **Re-cutover from this paper** | [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) already owns Zone retarget / VW-on-Doc. **Ben GO** only. |
 | **McKing docker as camp dual-OPEN path** | After camp GO, dual OPEN is Doc CDM / KeepAlive / cloudflared. |
 | **Independent mcking-reappear as camp vault recovery** | Home/lab only. |
+| **`lightning` ABSENT = dual-outage McKing wake after camp GO** | Sleep is intentional. [dual-host-outage.md](dual-host-outage.md) is **SUPERSEDED for camp**. |
 | **Re-arm Soft-530 companions from home-off `ok=false`** | Companions **HOLD**. Expected baseline ≠ companion GO. |
 | **Queue lid-restore / KeepAlive from ABSENT duration** | Home-off does **not** auto-queue recovery. Hop waits on reappear. |
 | **Invent CLEAR / invent retarget / invent camp LIVE** | Soft-530 still **OPEN** 530/1033. Vault still **OPEN** 502. Docs **ABSENT** (home-off). Option A **LIVE**. Camp paper **ready, pending Ben GO**. |
@@ -144,6 +145,7 @@ Do **not** delete the api watch because home-off Soft-530 stays false. Do **not*
 - Treat `Mac.lan` as `Docs-MacBook-Pro`
 - Auto-queue [doc-reappear-first-hop.md](doc-reappear-first-hop.md) from ABSENT duration — hop waits on actual reappear
 - Walk [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) / McKing docker as the camp dual-OPEN path
+- Treat `lightning` **ABSENT** after camp Ben GO as a [dual-host-outage.md](dual-host-outage.md) McKing wake — that file is **SUPERSEDED for camp**
 - Block **#82** on home Soft-530 (**OPEN ≠ #82 blocked**)
 - Re-ask Ben Doc-wake or McKing docker
 - Execute Zone / Garage / Hatch from this paper
