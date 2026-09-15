@@ -1,8 +1,8 @@
 # Doc unfreeze — Ben GO pull checklist
 
 **Status:** Living ops (Lead checklist)  
-**Updated:** 2026-09-08  
-**Related:** `doc-lid-restore.md` (process wake only — **not** this pull), `shop-web-stay-up.md` (rebuild essay), `api-stay-up.md`, `cors-origins.md`, `shop-os-ci.md` (git-only — **not** this GO), `STATUS.md`, `doc-software-baseline.md`
+**Updated:** 2026-09-14  
+**Related:** `doc-lid-restore.md` (process wake only — **not** this pull), `shop-web-stay-up.md` (rebuild essay), `api-stay-up.md`, `cors-origins.md`, `shop-os-ci.md` (git-only — **not** this GO), `STATUS.md` (living-ops / Next **#79**), `doc-software-baseline.md`, [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (after extended-OPEN Soft-530 CLEAR — **before** this unfreeze talk), [unfreeze-readiness.md](unfreeze-readiness.md) (Lead **draft** Ben-GO gates **before** any pull — **draft ≠ GO**; vault OPEN does **not** block drafting; Soft-530 CLEAR duration ≠ this GO ≠ auto **#82**), [post-dual-clear-go.md](post-dual-clear-go.md) (this file is **Shop OS parallel** on the post-dual-CLEAR menu — not “next after **#82**” in place of Bulk / **#83**; Soft-530 CLEAR alone ≠ this GO; **unfreeze + #79.1 acceptance smoke** is that file’s Shop OS card), `ops-demo-hardening.md` (Garage **#79.1** strip-changeme lands only after this pull)
 
 Ordered **Ben GO** pull/rebuild on Doc after the freeze at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**). This file is the pull sequence. Lid-close wake stays in `doc-lid-restore.md` — do **not** copy that process essay here.
 
@@ -16,9 +16,10 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 
 | Lock | Meaning |
 |------|---------|
-| **Ben GO required** | Lead does **not** `git pull` or rebuild until Ben says **GO** to unfreeze — in words, not inferred from CI, a docs merge, or lid-restore. |
+| **Ben GO required** | Lead does **not** `git pull` or rebuild until Ben says **GO** to unfreeze — in words, not inferred from CI, a docs merge, lid-restore, or Soft-530 **CLEAR** / public `GET /health` **200**. |
 | **Green Shop OS CI is not unfreeze GO** | A green `shop-os-ci` check on a later SHA is **expected** and means only that GitHub Actions passed pytest / typecheck / `next build`. It does **not** unfreeze Doc. Runbook: `shop-os-ci.md`. |
 | **Lid-restore stays process-only** | Morning **530 / 1033** wake is `doc-lid-restore.md`: cloudflared → shop-api KeepAlive → shop-web **kickstart if down**. Wake must **not** auto-pull or rebuild. |
+| **Soft-530 CLEAR / public GET /health 200 is not unfreeze GO** | Soft-530 **CLEAR** and public `GET /health` **200** mean Doc origin is up. That is **not** Ben GO to unfreeze. Same class as green `shop-os-ci` and lid-restore process-wake. Soft-530 **CLEAR** Friday ≠ this GO ≠ companion re-ask. Dual CLEAR ≠ this GO either — [post-dual-clear-go.md](post-dual-clear-go.md) puts unfreeze as **Shop OS parallel**, not “next after **#82**” in place of Bulk / **#83**. Weekend `/health` flip is `doc-lid-restore.md` process wake only. |
 | **This file is not the pull** | Do not execute from a docs PR. Garage / Zone do **not** pull Doc. |
 
 ---
@@ -30,7 +31,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **`doc-lid-restore.md`** | Doc slept / lid-close / public **530 / 1033** | Wake processes. Same frozen checkout. **No** `git pull`. |
 | **`doc-unfreeze.md` (this file)** | Ben said **GO** to unfreeze | Pull tip, migrate if needed, rebuild shop-web, new `BUILD_ID`, smoke **#36** / **#69** / banner honesty. |
 
-Do **not** collapse them. A soft morning 530 is **not** unfreeze GO.
+Do **not** collapse them. A soft morning 530 is **not** unfreeze GO. Soft-530 **CLEAR** / public `GET /health` **200** is also **not** unfreeze GO. Soft-530 **CLEAR** Friday ≠ this GO ≠ companion re-ask. Weekend coverage stays KeepAlive / lid-close — **not** this file, **not** **#82**.
 
 ---
 
@@ -38,7 +39,7 @@ Do **not** collapse them. A soft morning 530 is **not** unfreeze GO.
 
 | Clock | Pin | Meaning |
 |-------|-----|---------|
-| **Git `main`** | Moves with merges (this repo) | **#36** host allowlist (`f952cd3`) and **#69** ops layout (`b9f9019`) are **on git**. Shop OS CI (`#73`) is git-only. |
+| **Git `main`** | Moves with merges (this repo) | **#36** host allowlist (`f952cd3`) and **#69** ops layout (`b9f9019`) are **on git**. Shop OS CI (`#73`) is git-only. Garage **#79.1** strip-changeme is the same **git-only** bucket — merge will **not** clear public `/login` until this pull + rebuild. |
 | **Doc working tree** | Frozen at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** (Dashboard **#28**) | Live `ops.` / `app.` / `:3000` stay on that build until this checklist finishes **after** Ben GO. |
 | **Held #70** | Open docs / honesty PR | Optional tip fold + OwnerDemoBanner honesty copy. **Do not amend #70 from this file.** Merge of #70 is a separate lane — not this checklist. |
 
@@ -54,7 +55,7 @@ Do **not** call **#36** or **#69** live on Doc until step 5 shows a **new** `BUI
 | **Lead** | After GO: pull, alembic if needed, shop-web rebuild, `BUILD_ID` check, smoke | Cloudflare tunnel / DNS, Worker upload, Member cutover, `app.` cut |
 | **Garage** | Brochure / waitlist e2e **after** public health is 200 | Doc `git pull`, alembic, shop-web rebuild |
 | **Zone** | Tunnel / DNS only if local origin is healthy but public is still **1033** | Doc checkout |
-| **Lookout** | Live probes (when enabled) | Doc pull. Morning probe is **Lead** while `projectcar-api-health-watch` is paused. |
+| **Lookout** | Live probes. **#78 lookout-resume** is **LIVE-SUPERSEDED** — `projectcar-api-health-watch` is already **`enabled:true`**. Soft-530 companions stay **HOLD**. | Doc pull. Do **not** re-ask companion-watch approval. |
 | **Chief** | Standing GO for this **checklist**. Plan-improve. | Substituting for Ben’s unfreeze GO. uvicorn / shop-web restarts. |
 
 No edge flip. No CF ↔ GitHub re-ask. No Member GO. No `app.` cut. No OAuth implementation. No tip-only finance stamps.
@@ -72,7 +73,8 @@ Ben must say **GO** to unfreeze Doc (explicit). Record who / when in the heartbe
 **Not GO:**
 
 - Green Shop OS CI on `main` or on a PR
-- Merge of this file, `#73`, `#72`, `#71`, or held `#70`
+- Soft-530 **CLEAR** / public `GET /health` **200**
+- Merge of this file, `#73`, `#72`, `#71`, held `#70`, or Garage **#79.1** strip-changeme (git-only until this pull)
 - Lid-restore / morning 530 recovery
 - Chief standing GO for tests / CI / this checklist
 
@@ -186,20 +188,26 @@ curl -sS -D - -o /dev/null -X OPTIONS https://api.projectcar.ca/waitlist \
 
 Garage may re-run brochure waitlist e2e **after** health is 200. Form only. No process restarts.
 
+When this pull is the Shop OS **#79.1** landing (Ben GO unfreeze + Garage strip on the pulled tip), the **lane-done** card is [post-dual-clear-go.md](post-dual-clear-go.md) **Shop OS parallel — unfreeze + #79.1 acceptance smoke**: public `app.`/`ops.` `/login` without Password `` `changeme` ``; tip / `BUILD_ID` ≠ `4cf8924` / `5swmVz`; `/health` **200** + waitlist OPTIONS CORS Origin `https://projectcar.ca` (+ www); **#79.1** merge-alone without this pull does **not** clear public `changeme`. Soft-530 CLEAR alone ≠ that card. Not **#82**, not Zone Direct Upload, not companions re-ask, not Bitwarden.
+
 ---
 
 ## After a successful unfreeze
 
 - Doc checkout and `.next/BUILD_ID` match the tip you intended.
 - **#36** and **#69** may be called **LIVE on Doc** only after steps 5–7.
+- Shop OS **#79.1** public strip is **LIVE** only after the [post-dual-clear-go.md](post-dual-clear-go.md) acceptance smoke — merge-alone is **not** that proof.
 - Lid-restore **stays** process-only. A later morning 530 is still wake-only — do **not** pull again unless Ben GOs another unfreeze.
 - Shop OS CI remains git-only. Green CI on a *later* SHA is still **not** a new unfreeze GO.
+- Soft-530 **CLEAR** / public `GET /health` **200** is still **not** a new unfreeze GO.
 
 ---
 
 ## Do not
 
 - Treat green `shop-os-ci` as Ben GO
+- Treat Soft-530 **CLEAR** / public `GET /health` **200** as Ben GO
+- Treat dual CLEAR (Soft-530 + vault) as this GO — [post-dual-clear-go.md](post-dual-clear-go.md) unfreeze still needs its own Ben GO; it is **Shop OS parallel**, not “next after **#82**” in place of Bulk / **#83**
 - Auto-`git pull` or rebuild from lid-restore / morning 530
 - Run this checklist without explicit Ben GO
 - Hand Doc pull / alembic / `npm run build` to Garage or Zone
