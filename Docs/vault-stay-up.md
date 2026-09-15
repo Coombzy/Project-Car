@@ -1,9 +1,9 @@
 # Vault stay-up — `vault.projectcar.ca`
 
 **Status:** Living ops  
-**Updated:** 2026-09-14  
+**Updated:** 2026-09-15  
 **Public URL:** https://vault.projectcar.ca  
-**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks + **vault post-CLEAR stay-up evidence** pointer + [vault-clear-smoke.md](vault-clear-smoke.md)), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**; Soft-530 **post-CLEAR stay-up evidence** is **Doc forensics**), [vault-clear-smoke.md](vault-clear-smoke.md) (**first** recovery smoke after extended-OPEN vault CLEAR — **before** Bitwarden / desk; **502→200** not CF **1033→200**), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (Soft-530 twin — already `502ab2e`; **not** this lane), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN **wake order** — Doc first, then McKing; this file is **McKing forensics** after vault CLEAR), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — Chief stays armed for `lightning` reappear → [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) **then** this file; no Ben re-nag), [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) (**first hop** when `lightning` reappears — machineId `9067d14b-46e5-4ef0-82d5-fce0febdc8f7`; **never** `Mac.lan`; assert **before** this wake), [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (Doc twin — **independent**), [post-dual-clear-go.md](post-dual-clear-go.md) (after **both** CLEARs + forensics `@55e10d0` / `@d88cacb` — Ben GO menu, **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
+**Related:** `STATUS.md` (Live vault + Lookout `/alive` + dual-tunnel Locks + **vault post-CLEAR stay-up evidence** pointer + [vault-clear-smoke.md](vault-clear-smoke.md)), `home-lab-specification.md` (machine map), `api-stay-up.md` (Soft-530 `api.` `/health` — **separate** watch; remaining **OK-ish** ≠ vault watch firing), `shop-web-stay-up.md`, `doc-lid-restore.md` (**vault is OUT**; Soft-530 **post-CLEAR stay-up evidence** is **Doc forensics**), [vault-clear-smoke.md](vault-clear-smoke.md) (**first** recovery smoke after extended-OPEN vault CLEAR — **before** Bitwarden / desk; **502→200** not CF **1033→200**; docker permanence already `367172d` — **not** the stall fold), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (Soft-530 twin — already `502ab2e`; **not** this lane), [dual-host-outage.md](dual-host-outage.md) (weekend dual-OPEN **wake order** — Doc first, then McKing; this file is **McKing forensics** after vault CLEAR), [soft-530-extended-open.md](soft-530-extended-open.md) (quiet-ops once Soft-530 OPEN **~24h** + vault OPEN + **Mac.lan only** — Chief stays armed for `lightning` reappear → [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) **then** this file; no Ben re-nag), [mcking-reappear-first-hop.md](mcking-reappear-first-hop.md) (**first hop** when `lightning` reappears — machineId `9067d14b-46e5-4ef0-82d5-fce0febdc8f7`; **never** `Mac.lan`; assert **before** this wake), [doc-reappear-first-hop.md](doc-reappear-first-hop.md) (Doc twin — **independent**), [post-dual-clear-go.md](post-dual-clear-go.md) (after **both** CLEARs + forensics `@55e10d0` / `@d88cacb` — Ben GO menu, **never auto-fire**), [brochure-redirect-watch.md](brochure-redirect-watch.md) (Lookout Option A **continues** during quiet-ops), [lookout-rearm-sop.md](lookout-rearm-sop.md) (**Lookout stall ≠ vault HTTP flip** — `enabled:true` + cron-stalled is a coverage class; in-place re-arm; **HOLD** Ben recreate), `mcking-shop-host-cutover.md` (shop CF cutover **paper**; vault LIVE ≠ that cut), `mission-control-architecture.md`, `deployment-guide.md`
 
 Keep public Vaultwarden reachable on McKing. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md`.
 
@@ -59,9 +59,9 @@ Lookout owns the **vault** flip watch. It is **not** the Soft-530 `api.` `/healt
 
 | Watch | URL | Cadence | Status |
 |-------|-----|---------|--------|
-| **Vault (this file)** | `https://vault.projectcar.ca/alive` | every **5m** | **LIVE/armed** (`enabled:true`, Lookout confirmed) |
+| **Vault (this file)** | `https://vault.projectcar.ca/alive` | every **5m** | **LIVE/armed** (`enabled:true`, Lookout confirmed) — **`enabled:true` ≠ last fire on cadence** |
 | Fallback | `https://vault.projectcar.ca/api/config` if `/alive` **404**s | same | `/api/config` also **200** with **2026.6.0** when CLEAR |
-| Soft-530 API | `https://api.projectcar.ca/health` | api watch | **Separate.** `projectcar-api-health-watch` **resumed**. Does **not** cover vault. |
+| Soft-530 API | `https://api.projectcar.ca/health` | api watch | **Separate.** `projectcar-api-health-watch` **resumed**. Remaining **OK-ish** (armed + firing) does **not** cover vault and does **not** prove the vault `*/5` is firing. |
 | Soft-530 companions | `ops.` / `app.` `/login` (optional `cloud.` `/login`) | — | **HOLD / not armed.** Do **not** re-ask. ≠ this vault watch. |
 
 Baseline (Lookout-owned): `/workspace/lookout/projectcar-vault-health-baseline.json`.
@@ -69,6 +69,8 @@ Baseline (Lookout-owned): `/workspace/lookout/projectcar-vault-health-baseline.j
 **Flip-only alerts:** **Chief + Lead only** on **200↔non-200**. **Never Ben.** Never restart / mutate from the watch.
 
 Weekend flip coverage (plan-improve off Sat/Sun) = Lookout `api.` `/health` **+** this vault `/alive` **only**. Companions stay **HOLD until Ben reopens** — **not** weekend-only ([soft-530-extended-open.md](soft-530-extended-open.md)). Vault flips stay here. Lookout api+vault **continue** during quiet-ops. Brochure-redirect **paper** continues; living Option A watch is **GONE** — **HOLD** recreate, weekday Chief `*/20`; overnight/weekend Dynamic redirect **UNCOVERED** ([lookout-rearm-sop.md](lookout-rearm-sop.md)). **Never delete** api/vault watches to fix stalled cron.
+
+**Lookout stall ≠ vault HTTP flip** ([lookout-rearm-sop.md](lookout-rearm-sop.md) row 7). `projectcar-vault-health-watch` can stay `enabled:true` while cron stalls (example: ~**104m**, `lastRun` / baseline stuck ~**07:05** on a `*/5`). That is a **coverage class**, not this file’s OPEN **502** triage, and not a missing watch. Soft-530 api remaining **OK-ish** is contrast only. Lead → Lookout **in-place** re-arm (pause/resume or re-save) — **never delete**; **HOLD** any Ben recreate ask (quiet-ops + brochure Auto-review lesson). Until the vault watch re-arms, interim = Chief `*/20` smoke + Lead coding-progress probes — **not** a Ben ping. This paper does **not** pause/resume Lookout. Docker permanence `@367172d` is a **different** tip — do **not** redo it here.
 
 ---
 
@@ -148,8 +150,8 @@ Do **not** use `GET https://api.projectcar.ca/health` as a vault probe.
 
 | Role | Owns | Does not own |
 |------|------|----------------|
-| **Lookout** | Vault `/alive` flip watch **LIVE/armed** (`enabled:true`). Weekend McKing half of flip coverage. Baseline `projectcar-vault-health-baseline.json`. | Process restore on McKing; Doc lid-restore; Soft-530 `api.` `/health` (separate watch); claiming companions armed; weekend Zone Direct Upload / **#82** |
-| **Lead** | Vaultwarden + McKing `cloudflared` stay-up and recovery on McKing. Local `:8222` probe. | Cloudflare DNS / hostname edits; Doc shop KeepAlive; `git pull` / unfreeze / **#82**; Bitwarden import/rotate while not CLEAR |
+| **Lookout** | Vault `/alive` flip watch **LIVE/armed** (`enabled:true`). Weekend McKing half of flip coverage. Baseline `projectcar-vault-health-baseline.json`. In-place re-arm when cron stalls (`enabled:true` ≠ last fire on `*/5`). | Process restore on McKing; Doc lid-restore; Soft-530 `api.` `/health` (separate watch); claiming companions armed; weekend Zone Direct Upload / **#82**; delete-to-fix-cron |
+| **Lead** | Vaultwarden + McKing `cloudflared` stay-up and recovery on McKing. Local `:8222` probe. Ask Lookout for **in-place** re-arm when `lastRun` stalls — coding-progress probes until first fire. | Cloudflare DNS / hostname edits; Doc shop KeepAlive; `git pull` / unfreeze / **#82**; Bitwarden import/rotate while not CLEAR; Ben recreate / docker / Doc-wake ping from a stall |
 | **Zone** | Cloudflare tunnel + DNS for `vault.projectcar.ca` (McKing tunnel — **not** the Doc mission-control token) | Restarting Vaultwarden; moving tokens across tunnels |
 | **Garage** | Nothing on this host | Restarting VW, tunnel, or DNS; Bitwarden import/rotate |
 
@@ -250,3 +252,8 @@ Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-
 - Treat ~24h OPEN as Bitwarden / **#82** / unfreeze
 - Re-ask companion watches / schedule weekend Zone Direct Upload / **#82**
 - Execute Zone or Garage from this paper
+- Treat Lookout stall (`enabled:true` + stale `lastRun`) as vault OPEN **502**, or as a missing watch
+- Delete `projectcar-vault-health-watch` to unstick cron ([lookout-rearm-sop.md](lookout-rearm-sop.md))
+- Ping Ben to recreate the vault watch, or re-ask docker / Doc-wake from a stall
+- Treat Soft-530 api remaining OK-ish as proof the vault `*/5` is firing
+- Redo vault CLEAR docker.service permanence (`367172d`) — different tip
