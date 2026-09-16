@@ -1,30 +1,30 @@
 # Soft-530 OPEN blip then CLEAR — no camp GO mid-flap
 
 **Status:** Paper — recover class + GO lock, **not** a GO  
-**Updated:** 2026-09-16 ~07:25 America/Edmonton  
-**Related:** `STATUS.md` (living Soft-530 **CLEAR ~07:25** after **`soft530_open_blip` ~07:06–~07:25** + vault **OPEN 530 / CF 1033** + ListMachines **EMPTY** + this pointer), [soft-530-flap-while-connected.md](soft-530-flap-while-connected.md) (the **~07:06** OPEN flap — **CONNECTED ≠ Shellable ≠ tunnel healthy**; that OPEN is now a **blip**), [overnight-baseline-stamp.md](overnight-baseline-stamp.md) (**`soft530_open_blip` ~07:06–~07:25** + **`soft530_clear_since` ~07:25**; Shared amend **never mid-flap**), [post-dual-clear-go.md](post-dual-clear-go.md) (camp vault-on-Doc GO window **must not reopen** on this recover while Docs **EMPTY** / **CONNECTED≠Shellable**), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (CLEAR proof **after** Docs **CONNECTED+Shellable** — Lead `api.` `/health` **200** + `app.`/`ops.` **307** is **not** that card), [shared-fleet-cards.md](shared-fleet-cards.md) (cancel OPEN-since-07:06 Shared queue; amend Shared **only** after ≥30m SAME-CLASS CLEAR + Shellable), [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (camp still **Ben GO**), [home-vs-camp-doc-posture.md](home-vs-camp-doc-posture.md) (home-awake half-state ≠ camp GO), [deployment-guide.md](deployment-guide.md) (Monday paper map)
+**Updated:** 2026-09-16 ~07:51 America/Edmonton  
+**Related:** `STATUS.md` (living Soft-530 **CLEAR ~26m** since **~07:25** after **`soft530_open_blip` ~07:06–~07:25** + vault **OPEN 530 / CF 1033** + ListMachines **EMPTY** + this pointer), [soft530-clear-vs-local-exec.md](soft530-clear-vs-local-exec.md) (**steady-state** class split — Soft-530 = public HTTP only; local-exec = ListMachines+Shellable; **EMPTY ≠ Soft-530 OPEN**; CLEAR+EMPTY = **half-ops HOLD**), [soft-530-flap-while-connected.md](soft-530-flap-while-connected.md) (the **~07:06** OPEN flap — **CONNECTED ≠ Shellable ≠ tunnel healthy**; that OPEN is now a **blip**), [overnight-baseline-stamp.md](overnight-baseline-stamp.md) (**`soft530_open_blip` ~07:06–~07:25** + **`soft530_clear_since` ~07:25**; Shared amend **never mid-flap**), [post-dual-clear-go.md](post-dual-clear-go.md) (camp vault-on-Doc GO window **must not reopen** on this recover while Docs **EMPTY** / **CONNECTED≠Shellable**), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (CLEAR proof **after** Docs **CONNECTED+Shellable** — Lead `api.` `/health` **200** + `app.`/`ops.` **307** is **not** that card), [shared-fleet-cards.md](shared-fleet-cards.md) (cancel OPEN-since-07:06 Shared queue; amend Shared **only** after ≥30m SAME-CLASS CLEAR + Shellable), [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (camp still **Ben GO**), [home-vs-camp-doc-posture.md](home-vs-camp-doc-posture.md) (home-awake half-state ≠ camp GO), [deployment-guide.md](deployment-guide.md) (Monday paper map)
 
-A short Soft-530 **OPEN** blip that **CLEAR**s again while ListMachines is **EMPTY** (or **CONNECTED≠Shellable**) does **not** reopen camp GO / [post-dual-clear-go.md](post-dual-clear-go.md).
+A short Soft-530 **OPEN** blip that **CLEAR**s again while ListMachines is **EMPTY** (or **CONNECTED≠Shellable**) does **not** reopen camp GO / [post-dual-clear-go.md](post-dual-clear-go.md). **Steady-state** after that recover: Soft-530 class stays public HTTP only — **EMPTY ≠ Soft-530 OPEN**. CLEAR+EMPTY stays **half-ops HOLD**. Essay: [soft530-clear-vs-local-exec.md](soft530-clear-vs-local-exec.md).
 
 This fold executes **none** of the Shells, curls, hops, or GOs. Do **not** invent vault CLEAR, dual CLEAR, **#82**, unfreeze, **#79.1**, camp Zone, Bitwarden, or a Shared mid-flap amend from this paper.
 
 ---
 
-## Living recover (~07:25 America/Edmonton)
+## Living recover (~07:25 America/Edmonton; aged ~07:51)
 
 | Field | Living |
 |-------|--------|
-| **Soft-530** | **CLEAR** — Lead `api.` `/health` **200** ok; `app.` + `ops.` **307**. **`soft530_clear_since` ~07:25**. |
+| **Soft-530** | **CLEAR** — Lead `api.` `/health` **200** ok; `app.` + `ops.` **307**. **`soft530_clear_since` ~07:25**. Aged **~26m** by **~07:51** while EMPTY — **EMPTY ≠ Soft-530 OPEN**. |
 | **`soft530_open_blip`** | **~07:06–~07:25** 2026-09-16 (Lookout + Lead **200→530** CF **1033**, then **530→200**). Prior overnight CLEAR dwell **~22:00–07:06** (~9h) **ENDED** at the blip. |
 | **Vault** | still **OPEN 530 / CF 1033** — **EXPECTED**. ≠ vault CLEAR. |
-| **Combined class** | Soft-530 **CLEAR** + vault **OPEN** = **half-state**. **≠ dual CLEAR.** |
-| **ListMachines** | **EMPTY** (Lead confirm). **CONNECTED ≠ Shellable ≠ tunnel healthy** still holds if a name returns without Shell. |
-| **Camp / post-dual-clear-go** | **Do not reopen.** GO window stays **paused** on this recover. |
-| **Shared** | **Cancel** the OPEN-since-**~07:06** living-host queue. Amend Shared **only** after ≥30m SAME-CLASS CLEAR **and** Docs **CONNECTED+Shellable**. Next amend = **CLEAR since ~07:25** (blip noted). |
+| **Combined class** | Soft-530 **CLEAR** + vault **OPEN** = **half-state**. Soft-530 **CLEAR** + local-exec **EMPTY** = **half-ops HOLD**. **≠ dual CLEAR.** |
+| **ListMachines** | **EMPTY** (Lead confirm ~07:25 **and** ~07:51). Local-exec **ABSENT**. **CONNECTED ≠ Shellable ≠ tunnel healthy** still holds if a name returns without Shell. |
+| **Camp / post-dual-clear-go** | **Do not reopen.** GO window stays **paused** on this recover **and** in steady-state while EMPTY. |
+| **Shared** | **Cancel** the OPEN-since-**~07:06** living-host queue. Amend Shared **only** after ≥30m SAME-CLASS CLEAR **and** Docs **CONNECTED+Shellable**. Next amend = **CLEAR since ~07:25** (blip noted). Still **queued** at **~07:51**. |
 | **Freeze** | **`last_known`** `` `4cf8924` `` / **`5swmVz`**. Behind **intact** — **never auto-pull**. |
 | **Option A** | still **PASS** (`styles.css?v=36`, `/shop`→`the-shop`). Home **STALE** until **#82**. |
 
-Receipt: [overnight_2026-09-16_0725_blip_recover_verify.md](overnight_2026-09-16_0725_blip_recover_verify.md). The ~07:06 OPEN flap receipt stays [overnight_2026-09-16_0706_open_verify.md](overnight_2026-09-16_0706_open_verify.md) — **superseded as living**.
+Receipt: [overnight_2026-09-16_0725_blip_recover_verify.md](overnight_2026-09-16_0725_blip_recover_verify.md). Steady-state age: [overnight_2026-09-16_0751_clear_vs_local_exec_verify.md](overnight_2026-09-16_0751_clear_vs_local_exec_verify.md). The ~07:06 OPEN flap receipt stays [overnight_2026-09-16_0706_open_verify.md](overnight_2026-09-16_0706_open_verify.md) — **superseded as living**.
 
 ---
 
@@ -49,10 +49,10 @@ Lead **may re-offer** camp vault-on-Doc **Ben GO** only when **all four** are tr
 |---|------|------------------|
 | **1** | Docs `95a229f5` **CONNECTED+Shellable** | **EMPTY** — fail |
 | **2** | [soft-530-clear-smoke.md](soft-530-clear-smoke.md) on that host | Lead public `/health` **200** + `app.`/`ops.` **307** is **not** that card. Smoke waits on **Shellable**. |
-| **3** | ≥**30m SAME-CLASS** dwell after **`soft530_clear_since`** (still CLEAR; vault still **OPEN 1033**; no new OPEN flap) | **~07:25** just flipped — dwell **not** started as SAME-CLASS **and** Shellable |
+| **3** | ≥**30m SAME-CLASS** dwell after **`soft530_clear_since`** (still CLEAR; vault still **OPEN 1033**; no new OPEN flap) | **~26m** at **~07:51** — dwell **not** yet ≥30m. Even after 30m, EMPTY still **half-ops HOLD** ([soft530-clear-vs-local-exec.md](soft530-clear-vs-local-exec.md)) |
 | **4** | Vault still **OPEN 1033** is **EXPECTED** — does **not** block the *offer*, and does **not** auto-GO | Living **OPEN 1033** |
 
-Until those four, stay quiet on camp. **Ben GO** each later step; **never auto**.
+Until those four, stay quiet on camp. **CLEAR alone while EMPTY = half-ops HOLD** — this recover lock **extends** into steady-state ([soft530-clear-vs-local-exec.md](soft530-clear-vs-local-exec.md)). **Ben GO** each later step; **never auto**.
 
 ---
 
@@ -91,6 +91,7 @@ Amend ≠ Ben ask ≠ **#82** / unfreeze / camp. **Never** `Mac.lan`. Essay: [sh
 | **vault OPEN 1033 = EXPECTED** | Not vault CLEAR. Not dual CLEAR. Not a docker-wake queue. |
 | **behind freeze intact** | `` `4cf8924` `` / **`5swmVz`**. EMPTY / ≠Shellable → **`last_known`**. **Never auto-pull.** |
 | **EMPTY / CONNECTED≠Shellable ≠ camp GO reopen** | Presence class is not the re-offer gate. |
+| **EMPTY ≠ Soft-530 OPEN** | Soft-530 is public HTTP. Living **~07:25–~07:51** stayed CLEAR while EMPTY. |
 | **Lead `/health` 200 + 307 ≠ clear-smoke** | Full smoke waits on **CONNECTED+Shellable**. |
 | **≠ Shared OPEN-since-07:06 write** | Queue **cancelled**. Next write is CLEAR ~07:25 after dwell + Shellable. |
 
