@@ -5,7 +5,9 @@
 **Held:** #70 · [missed-clear-window-shared-supersede.md](missed-clear-window-shared-supersede.md) · [shared-fleet-cards.md](shared-fleet-cards.md) · [overnight-baseline-stamp.md](overnight-baseline-stamp.md) · [STATUS.md](STATUS.md) Reality  
 **Prior:** [overnight_2026-09-16_0841_open_verify.md](overnight_2026-09-16_0841_open_verify.md) (CLEAR→OPEN ~08:41 — living Soft-530 class **stands**; this receipt names the **missed** Shared CLEAR)
 
-Morning CLEAR dwell **~07:25–~08:41** met public **≥30m**. ListMachines **EMPTY** the **entire** dwell. Shared **CLEAR since ~07:25** was **queued**, then **OPEN ~08:41** landed **before** Shellable — **stamp never wrote**. That is a **missed CLEAR window**, not a living Shared CLEAR stamp.
+Morning CLEAR dwell **~07:25–~08:41** met public **≥30m**. ListMachines **EMPTY** the **entire** dwell. Shared **CLEAR since ~07:25** was **queued**, then **OPEN ~08:41** landed **before** Shellable — **stamp never wrote**. Shared **cancel stands**.
+
+**Reclassify ~12:29:** this window is **home half-ops living** (Soft-530 **CLEAR** while Docs **ABSENT**) — **not** a missed camp GO. **`missed_clear_window` omit.** Receipt: [overnight_2026-09-16_1229_home_half_ops_clear_verify.md](overnight_2026-09-16_1229_home_half_ops_clear_verify.md).
 
 Chief **cancels / supersedes** the Shared **CLEAR ~07:25** amend queue **now**. Do **not** backfill **CLEAR since ~07:25** as current living-host once OPEN.
 
@@ -25,6 +27,6 @@ Chief **cancels / supersedes** the Shared **CLEAR ~07:25** amend queue **now**. 
 | `shared_fleet_card_stale` | **`true`** |
 | Camp vault-on-Doc / post-dual-clear-go | **must not reopen** |
 
-**Stamp:** Soft-530=**OPEN** · **`soft530_open_since` ~08:41** · **`missed_clear_window={start:~07:25,end:~08:41,reason:empty}`** · vault **OPEN 530/1033** · ListMachines **EMPTY** · Option A **PASS** · **`shared_fleet_card_stale=true`**.
+**Stamp (as written ~08:49; `missed_clear_window` later omitted ~12:29):** Soft-530=**OPEN** · **`soft530_open_since` ~08:41** · Shared **CLEAR ~07:25** cancel **stands** · vault **OPEN 530/1033** · ListMachines **EMPTY** · Option A **PASS** · **`shared_fleet_card_stale=true`**.
 
 **Locks:** missed window ≠ living Shared CLEAR. **EMPTY during CLEAR ≠ Soft-530 OPEN.** Missed window ≠ extended-open. ≠ Ben re-nag. ≠ auto Shared write without Shellable. ≠ **#82** / unfreeze / Bitwarden / camp GO. Do **not** backfill **CLEAR since ~07:25**. Do **not** write OPEN-since-**~08:41** mid-flap. **Do not enter** [post-dual-clear-go.md](post-dual-clear-go.md). Quiet Ben.
