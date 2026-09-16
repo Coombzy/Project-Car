@@ -71,9 +71,13 @@ After a **live** Soft-530 **OPEN** flip, the last weekday `*/20` / paper stamp m
 
 ---
 
-## Living now (~16:51 America/Edmonton)
+## Living now (~16:51 America/Edmonton) — historical flap absorb
 
-Soft-530 **OPEN 530 / CF 1033** **`soft530_open_since` ~16:36** (same-day CLEAR dwell **~13:21–16:36**). Vault **OPEN 530 / CF 1033**. ListMachines **EMPTY** / Docs **ABSENT** (after flap; prior CONNECTED+Shell-unreachable **~16:36**). Option A Redirect+UX **PASS**. Home **STALE** until **#82**. Freeze **`last_known`** `4cf8924` / `5swmVz`. Lookout api+vault **armed**. Ben asked once — **no re-nag**. Quiet-ops **HOLD**. **#82** not auto-GO. **`shared_fleet_card_stale=true`**. Do **not** stamp Soft-530=CLEAR at **~17:20** / **~17:40**.
+Soft-530 then **OPEN 530 / CF 1033** **`soft530_open_since` ~16:36** (same-day CLEAR dwell **~13:21–16:36**). Vault **OPEN 530 / CF 1033**. ListMachines **EMPTY** / Docs **ABSENT** (after flap; prior CONNECTED+Shell-unreachable **~16:36**). That absorb is **historical**.
+
+## Living now (~22:08 America/Edmonton)
+
+Soft-530 **CLEAR** **`soft530_clear_since` ~22:00** (same-day OPEN dwell **~16:36–22:00**). Vault still **OPEN 530 / CF 1033**. Docs `95a229f5` **CONNECTED+Shellable** / KeepAlive **UP** ~22:07–22:08 (EMPTY flap **~16:51–22:00** ended). Option A Redirect+UX **PASS**. Home **STALE** until **#82**. Freeze **`4cf8924` / `5swmVz`**. Lookout api+vault **armed**. Companions **HOLD** forensics. Ben asked once — **no re-nag**. Quiet-ops **HOLD**. **#82** not auto-GO. **`shared_fleet_card_stale=false`**. Half-state ≠ dual CLEAR.
 
 ---
 
