@@ -22,4 +22,6 @@ After tip `994cd3b` landed, Docs returned and Chief amended Shared.
 
 **Follow-up ~06:20 2026-09-16:** overnight CLEAR dwell **≥8h** (~22:00→~06:20). SAME class. Receipt: [overnight_2026-09-16_0620_clear_dwell_verify.md](overnight_2026-09-16_0620_clear_dwell_verify.md).
 
-**Locks:** half-state ≠ dual CLEAR. **CLEAR ≠ ABSENT.** Companions **HOLD** forensics. Not unfreeze / not **#82** / not Bitwarden / not camp cutover. Shared still **non-SSOT**.
+**Follow-up ~07:06 2026-09-16:** Soft-530 **CLEAR→OPEN**. Overnight CLEAR dwell **ended**. Receipt: [overnight_2026-09-16_0706_open_verify.md](overnight_2026-09-16_0706_open_verify.md).
+
+**Locks:** half-state ≠ dual CLEAR. **CLEAR ≠ ABSENT.** Companions **HOLD** forensics. Not unfreeze / not **#82** / not Bitwarden / not camp cutover. Shared still **non-SSOT**. **Superseded ~07:06.**

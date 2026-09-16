@@ -25,4 +25,6 @@ Morning first weekday `*/20` after overnight Soft-530 **CLEAR**. Class is **SAME
 
 **Follow-up ~06:57:** FIRST Desktop checkout freeze live-verify **PASS** — **`freeze_git_verified=true`** / SHA **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** / behind **89** — **MATCH**. Receipt: [overnight_2026-09-16_0657_freeze_live_verify.md](overnight_2026-09-16_0657_freeze_live_verify.md).
 
-**Morning half-state:** CLEAR + vault OPEN **≠** dual CLEAR / **≠** unfreeze / **≠** **#82** / **≠** Bitwarden / **≠** camp cutover auto. Same-class = stay quiet. **Do not enter** [post-dual-clear-go.md](post-dual-clear-go.md).
+**Follow-up ~07:06 2026-09-16:** Soft-530 **CLEAR→OPEN**. Overnight CLEAR dwell **ended**. Receipt: [overnight_2026-09-16_0706_open_verify.md](overnight_2026-09-16_0706_open_verify.md).
+
+**Morning half-state:** CLEAR + vault OPEN **≠** dual CLEAR / **≠** unfreeze / **≠** **#82** / **≠** Bitwarden / **≠** camp cutover auto. Same-class = stay quiet. **Do not enter** [post-dual-clear-go.md](post-dual-clear-go.md). **Superseded ~07:06.**

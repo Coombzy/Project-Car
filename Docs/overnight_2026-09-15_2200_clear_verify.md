@@ -24,4 +24,6 @@ Lead public clear-smoke **PASS** after Soft-530 **OPEN→CLEAR**. Vault still **
 
 **Follow-up ~06:57 2026-09-16:** freeze live-verify **PASS** from Doc `/Users/dochak/src/Project-Car` (`freeze_git_verified=true` / `4cf8924` / `5swmVz-T2CqKEQzTk1ifU` / behind 89). Receipt: [overnight_2026-09-16_0657_freeze_live_verify.md](overnight_2026-09-16_0657_freeze_live_verify.md).
 
-**Locks:** half-state ≠ dual CLEAR. **CLEAR ≠ ABSENT** after ~22:08. Companions **HOLD** forensics. Not unfreeze / not **#82** / not Bitwarden / not camp cutover.
+**Follow-up ~07:06 2026-09-16:** Soft-530 **CLEAR→OPEN**. Overnight CLEAR dwell **~22:00–07:06** (~9h) **ENDED**. Receipt: [overnight_2026-09-16_0706_open_verify.md](overnight_2026-09-16_0706_open_verify.md).
+
+**Locks:** half-state ≠ dual CLEAR. **CLEAR ≠ ABSENT** after ~22:08. Companions **HOLD** forensics. Not unfreeze / not **#82** / not Bitwarden / not camp cutover. **Superseded ~07:06.**

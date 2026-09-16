@@ -25,4 +25,6 @@ FIRST Desktop checkout proof of freeze live-verify **PASS**. Closes the Sep-15 C
 
 **DRIFT (Lead lane):** SHA ≠ `4cf8924` or BUILD_ID ≠ `5swmVz*` → STATUS freeze **DRIFT**. Still ≠ auto-unfreeze / ≠ Ben nag.
 
+**Follow-up ~07:06 2026-09-16:** Soft-530 **CLEAR→OPEN**. Overnight CLEAR dwell **ended**. Receipt: [overnight_2026-09-16_0706_open_verify.md](overnight_2026-09-16_0706_open_verify.md). This freeze PASS is **last_known** evidence only (OPEN → unverifiable).
+
 **Locks:** half-state ≠ dual CLEAR. **CLEAR ≠ unfreeze / #82 / #79.1 / camp auto.** Behind N expected under freeze — **never auto-pull**. `` `changeme` `` print alone ≠ this verify. **No Ben re-nag.**
