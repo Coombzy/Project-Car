@@ -1,7 +1,7 @@
 # Deployment guide — living-ops index
 
 **Status:** Index (filename kept so old links resolve)  
-**Updated:** 2026-09-15  
+**Updated:** 2026-09-16  
 **Canonical:** `Coombzy/Project-Car` → `Docs/deployment-guide.md`
 
 This file is **not** a runbook. Use the living docs below.
@@ -10,7 +10,7 @@ This file is **not** a runbook. Use the living docs below.
 
 ## Soft-530 living paper index (held #70 — Monday map)
 
-Discoverability only. Monday’s **#70** tip-commits are paper. This table is the map so those essays are not tip-only. **No new product.** No Zone / Garage execute. **Camp SSOT** at camp GO is [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) — [mcking-shop-host-cutover.md](mcking-shop-host-cutover.md) + McKing-centric [vault-stay-up.md](vault-stay-up.md) are **PARKED for camp weeks**. Living half-state: Soft-530 **CLEAR** (`api.` `/health` **200**; **`soft530_clear_since` ~22:00**; Lookout **530→200** @10:00pm MT; Lead public clear-smoke **PASS**); vault independently **OPEN 530 / CF 1033** connector-down (was 502 since ~19:45 MT Sep 13 — **not** CLEAR); ListMachines Docs `95a229f5` **CONNECTED+Shellable** (KeepAlive **UP** ~22:07–22:08; EMPTY flap **~16:51–22:00** ended); **CLEAR ≠ ABSENT**; companions **HOLD** forensics; lightning **ABSENT** (McKing sleep intentional); `Mac.lan` may CONNECTED — **never** `Mac.lan` as Doc. Half-state ≠ dual CLEAR — do **not** enter [post-dual-clear-go.md](post-dual-clear-go.md). Soft-530 CLEAR at home ≠ camp GO. Soft-530 **CLEAR ≠ #82** ≠ unfreeze ≠ Bitwarden. Lookout: api `ok=true` expected; vault `ok=false` expected (half-state). Option A Redirect+UX **PASS** (rungs 1–2 — **≠** Worker body freshness / **#82**). Soft-530 **CLEAR** never auto-GOs **#82**. Body asserts stay on [brochure-worker-ci.md](brochure-worker-ci.md).
+Discoverability only. Monday’s **#70** tip-commits are paper. This table is the map so those essays are not tip-only. **No new product.** No Zone / Garage execute. **Camp SSOT** at camp GO is [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) — [mcking-shop-host-cutover.md](mcking-shop-host-cutover.md) + McKing-centric [vault-stay-up.md](vault-stay-up.md) are **PARKED for camp weeks**. Living half-state: Soft-530 **CLEAR** (`api.` `/health` **200**; **`soft530_clear_since` ~22:00**; overnight CLEAR dwell **≥8h** ~22:00→~06:20; Lookout **530→200** @10:00pm MT; Lead public clear-smoke **PASS**); vault independently **OPEN 530 / CF 1033** connector-down (was 502 since ~19:45 MT Sep 13 — **not** CLEAR); morning half-state **≠** dual CLEAR / **≠** unfreeze / **≠** **#82**; **Living Reality ≠ frozen tip SHA** (still Sep-7 **`2b772ff`**); ListMachines Docs `95a229f5` **CONNECTED+Shellable** (KeepAlive **UP** ~22:07–22:08; EMPTY flap **~16:51–22:00** ended); **CLEAR ≠ ABSENT**; companions **HOLD** forensics; lightning **ABSENT** (McKing sleep intentional); `Mac.lan` may CONNECTED — **never** `Mac.lan` as Doc. Half-state ≠ dual CLEAR — do **not** enter [post-dual-clear-go.md](post-dual-clear-go.md). Soft-530 CLEAR at home ≠ camp GO. Soft-530 **CLEAR ≠ #82** ≠ unfreeze ≠ Bitwarden. Lookout: api `ok=true` expected; vault `ok=false` expected (half-state). Option A Redirect+UX **PASS** (rungs 1–2 — **≠** Worker body freshness / **#82**). Soft-530 **CLEAR** never auto-GOs **#82**. Body asserts stay on [brochure-worker-ci.md](brochure-worker-ci.md).
 
 Open **one** card for the moment you are in. Do **not** invent CLEAR, **#82**, unfreeze, Dynamic wipe, honesty-off, or companion rearm from this index.
 

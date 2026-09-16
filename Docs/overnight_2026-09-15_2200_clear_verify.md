@@ -20,4 +20,6 @@ Lead public clear-smoke **PASS** after Soft-530 **OPEN→CLEAR**. Vault still **
 
 **Follow-up ~22:08:** Docs **KeepAlive UP / Shellable** + Shared amend **DONE** → **`shared_fleet_card_stale=false`**. Receipt: [overnight_2026-09-15_2208_shellable_verify.md](overnight_2026-09-15_2208_shellable_verify.md).
 
+**Follow-up ~06:20 2026-09-16:** overnight CLEAR dwell **≥8h** (~22:00→~06:20). SAME class. Receipt: [overnight_2026-09-16_0620_clear_dwell_verify.md](overnight_2026-09-16_0620_clear_dwell_verify.md).
+
 **Locks:** half-state ≠ dual CLEAR. **CLEAR ≠ ABSENT** after ~22:08. Companions **HOLD** forensics. Not unfreeze / not **#82** / not Bitwarden / not camp cutover.

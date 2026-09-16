@@ -20,4 +20,6 @@ After tip `994cd3b` landed, Docs returned and Chief amended Shared.
 
 **Stamp:** Soft-530=**CLEAR** · **`soft530_clear_since` ~22:00** · same-day OPEN dwell **~16:36–22:00** · vault **OPEN** · Docs **KeepAlive UP / Shellable** · **`shared_fleet_card_stale=false`**.
 
+**Follow-up ~06:20 2026-09-16:** overnight CLEAR dwell **≥8h** (~22:00→~06:20). SAME class. Receipt: [overnight_2026-09-16_0620_clear_dwell_verify.md](overnight_2026-09-16_0620_clear_dwell_verify.md).
+
 **Locks:** half-state ≠ dual CLEAR. **CLEAR ≠ ABSENT.** Companions **HOLD** forensics. Not unfreeze / not **#82** / not Bitwarden / not camp cutover. Shared still **non-SSOT**.
