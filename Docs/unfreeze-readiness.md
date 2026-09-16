@@ -1,7 +1,7 @@
 # Unfreeze readiness — draft Ben-GO gates (before any pull)
 
 **Status:** Paper — Lead may **draft** only. **draft ≠ GO**  
-**Updated:** 2026-09-15  
+**Updated:** 2026-09-16 ~06:57 America/Edmonton  
 **Related:** `STATUS.md` (living-ops / Locks · freeze **`4cf8924` / `5swmVz` / `changeme`** · Next **#79** · [post-dual-clear-go.md](post-dual-clear-go.md) Shop OS **#79.1** acceptance smoke), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (extended-OPEN Soft-530 **CLEAR** first card + freeze live-verify — **before** this draft), [doc-unfreeze.md](doc-unfreeze.md) (ordered **Ben GO** pull — **after** GO, not this file), [post-dual-clear-go.md](post-dual-clear-go.md) (**#79.1** acceptance smoke is lane-done **after** GO+pull+rebuild — not “next after **#82**”; this file does **not** enter that menu), [ops-demo-hardening.md](ops-demo-hardening.md) (Garage **#79.1** strip — git-only until the pull), [cors-origins.md](cors-origins.md) (Owner seed / waitlist CORS draft), [deployment-guide.md](deployment-guide.md) (Monday paper map)
 
 Soft-530 **CLEAR** + freeze live-verify **PASS** + Doc HEAD **`4cf8924`** **~89** behind `origin/main` means Lead can **draft** the Ben-GO gates **before** any `git pull` / unfreeze. This file is that draft card.
@@ -17,7 +17,7 @@ Do **not** invent a shop opening, Stripe, Member host migration, `app.` cut, Mis
 | Already true | Still not true |
 |--------------|----------------|
 | Soft-530 **CLEAR** (`api.` `/health` **200**; waitlist OPTIONS = Origin CORS preflight — **bare 405 ≠ OPEN**) | Dual CLEAR. Vault is still **OPEN 502**. **Do not enter** [post-dual-clear-go.md](post-dual-clear-go.md). |
-| Freeze live-verify **PASS** — public `app.`/`ops.` `/login` still print `` `changeme` `` on BUILD_ID **`5swmVz`** / tip **`4cf8924`** | Unfreeze. Live-verify **PASS** = freeze **confirmed**, not lifted. |
+| Freeze live-verify **PASS** — Doc checkout `/Users/dochak/src/Project-Car` **`freeze_git_verified=true`** / SHA **`4cf8924`** / disk BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** / behind **89** — **MATCH**. Public `app.`/`ops.` `/login` still print `` `changeme` `` (expected HTML — **not** the verify) | Unfreeze. Live-verify **PASS** = freeze **confirmed**, not lifted. SHA≠`4cf8924` or BUILD_ID≠`5swmVz*` → freeze **DRIFT** (Lead) — still ≠ GO. |
 | Doc HEAD **`4cf8924`** is **~89** behind `origin/main` (paper stamp this fold) | License to `git pull`. Behind-count is the reason to **draft**, not to pull. |
 
 [soft-530-clear-smoke.md](soft-530-clear-smoke.md) already ran (or its five-row class is living **CLEAR**). Freeze live-verify is **now allowed** after that CLEAR and is **PASS** this fold. Those two + the behind-count unlock **drafting** only.
@@ -100,7 +100,7 @@ Soft-530 **CLEAR** alone ≠ that card. This draft does **not** start Garage. Me
 |-------------|--------------|
 | **Soft-530 (Doc)** | **OPEN 530 / CF 1033** — `api.` / `app.` / `ops.` (Lookout + Lead **~16:36**; **was CLEAR**). Half-state **OVER**. Draft paper stays; **draft ≠ GO**. |
 | **Vault (McKing)** | **OPEN 530 / CF 1033** connector-down (was 502 since ~19:45 MT Sep 13 — **not** CLEAR) |
-| **Freeze** | **`4cf8924`** / BUILD_ID **`5swmVz`** / public `` `changeme` `` — **`last_known`** (Soft-530 OPEN → unverifiable ≠ DIFF) |
+| **Freeze** | **verified** — **`freeze_git_verified=true`** / SHA **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** / behind **89** (Doc `/Users/dochak/src/Project-Car`; was last_known/unverified since Sep-15) |
 | **Option A** | Redirect+UX **PASS** (rungs 1–2). Home still **STALE** until **#82** (canonical/`og:url` + nav Home bare `/`; sitemap loc bare `/`, lastmod **2026-09-08**). Redirect+UX **PASS** ≠ Worker body freshness **PASS** / **#82** done |
 | **Doc vs `main`** | HEAD **`4cf8924`** **~89** behind `origin/main` — draft reason, **not** pull license |
 | **Combined class** | **Dual OPEN both 1033**. Soft-530 CLEAR + vault OPEN half-state is **OVER**. Vault OPEN **does not** block **this draft**. Still **do not enter** the post-dual-CLEAR menu |
@@ -127,7 +127,7 @@ Soft-530 **CLEAR** alone ≠ that card. This draft does **not** start Garage. Me
 | **Vault OPEN ≠ draft blocked** | Half-state blocks the **menu**, not this paper. Do not wait on vault CLEAR to *write* the gates. |
 | **Soft-530 CLEAR duration ≠ auto-unfreeze ≠ auto #82** | CLEAR clock does not lift freeze and does not upload Worker. |
 | **Behind-count ≠ pull** | **~89** (or a later `rev-list`) is skim fuel. Finance tip-of-main is not Shop OS. |
-| **Freeze live-verify PASS ≠ unfreeze** | Confirmed `` `changeme` `` / **`5swmVz`** means the pin holds. |
+| **Freeze live-verify PASS ≠ unfreeze** | Confirmed SHA **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** / behind **89** means the pin holds. `` `changeme` `` print alone ≠ that confirm. DRIFT ≠ auto-unfreeze / ≠ Ben nag. |
 | **This draft ≠ #79.1 acceptance** | Acceptance is after GO+rebuild. Merge-alone still does not clear public `changeme`. |
 | **This draft ≠ #82 / Zone / Bitwarden / camp GO** | Brochure and vault stay on their own papers. Soft-530 **CLEAR ≠ #82**. Home **STALE** until **#82**. |
 | **No Ben re-nag** | Do not ping Ben because the draft exists, because Soft-530 stayed CLEAR, or because vault stayed 502. |

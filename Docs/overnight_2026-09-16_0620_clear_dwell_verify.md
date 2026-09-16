@@ -16,11 +16,13 @@ Morning first weekday `*/20` after overnight Soft-530 **CLEAR**. Class is **SAME
 | Vault | still **OPEN 530 / CF 1033** (lightning **ABSENT**; camp intentional) |
 | Docs `95a229f5` | still **KeepAlive UP / Shellable** |
 | `shared_fleet_card_stale` | still **`false`** |
-| Freeze | **`last_known`** `` `4cf8924` `` / **`5swmVz`** |
+| Freeze | **`last_known`** `` `4cf8924` `` / **`5swmVz`** (this receipt — **unverified** git tree; closed ~06:57) |
 | Option A Redirect | **LIVE** (`styles.css?v=36`, `waitlist.js?v=3`, `/shop`→`the-shop`) |
 | Home | still **STALE** until **#82** |
 | Frozen `main` / Reality tip SHA | still Sep-7 **`2b772ff` / #67** (`styles.css?v=35`, Worker `/shop` **302**) — **living ≠ that SHA** |
 
 **Stamp:** Soft-530=**CLEAR** · **`soft530_clear_since` ~22:00** · overnight CLEAR dwell **≥8h** · vault **OPEN** · Docs **KeepAlive UP / Shellable** · **`shared_fleet_card_stale=false`**.
+
+**Follow-up ~06:57:** FIRST Desktop checkout freeze live-verify **PASS** — **`freeze_git_verified=true`** / SHA **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** / behind **89** — **MATCH**. Receipt: [overnight_2026-09-16_0657_freeze_live_verify.md](overnight_2026-09-16_0657_freeze_live_verify.md).
 
 **Morning half-state:** CLEAR + vault OPEN **≠** dual CLEAR / **≠** unfreeze / **≠** **#82** / **≠** Bitwarden / **≠** camp cutover auto. Same-class = stay quiet. **Do not enter** [post-dual-clear-go.md](post-dual-clear-go.md).
