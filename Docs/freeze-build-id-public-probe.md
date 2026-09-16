@@ -1,8 +1,8 @@
 # Freeze BUILD_ID public probe — split from git verify
 
 **Status:** Paper — public BUILD_ID scrape + waitlist path SSOT, **not** a GO  
-**Updated:** 2026-09-16 ~08:16 America/Edmonton  
-**Related:** `STATUS.md` (living Soft-530 **CLEAR ≥51m** since **~07:25** + vault **OPEN 530 / CF 1033** + ListMachines **EMPTY** + **`freeze_build_id_public=true`** + this pointer), [soft530-clear-vs-local-exec.md](soft530-clear-vs-local-exec.md) (Soft-530 = public HTTP; local-exec = ListMachines+Shellable; **EMPTY ≠ Soft-530 OPEN**; this file extends that split onto freeze), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (may record **`freeze_build_id_public=true`** on half-ops; full **`freeze_git_verified`** still waits on Shellable), [unfreeze-readiness.md](unfreeze-readiness.md) (draft still needs full freeze live-verify **PASS** = **`freeze_git_verified`**), [overnight-baseline-stamp.md](overnight-baseline-stamp.md) (freeze field now splits public BUILD_ID vs git verify), [cors-origins.md](cors-origins.md) (waitlist smoke SSOT = **`/waitlist`**), [post-dual-clear-go.md](post-dual-clear-go.md) (camp vault-on-Doc still **half-ops HOLD** while EMPTY), [shared-fleet-cards.md](shared-fleet-cards.md) (Shared **CLEAR since ~07:25** amend still **Chief** when Shellable), [deployment-guide.md](deployment-guide.md) (Monday paper map)
+**Updated:** 2026-09-16 ~08:41 America/Edmonton  
+**Related:** `STATUS.md` (living Soft-530 **OPEN** **`soft530_open_since` ~08:41** + vault **OPEN 530 / CF 1033** + ListMachines **EMPTY** + **`freeze_build_id_public` last_known** + this pointer), [soft530-clear-vs-local-exec.md](soft530-clear-vs-local-exec.md) (Soft-530 = public HTTP; **EMPTY ≠ cause of OPEN**), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (may record **`freeze_build_id_public=true`** on half-ops; full **`freeze_git_verified`** still waits on Shellable), [unfreeze-readiness.md](unfreeze-readiness.md) (draft still needs full freeze live-verify **PASS** = **`freeze_git_verified`**), [overnight-baseline-stamp.md](overnight-baseline-stamp.md) (while OPEN, freeze stays **`last_known`** — login **530** unverifiable ≠ DIFF), [cors-origins.md](cors-origins.md) (waitlist smoke SSOT = **`/waitlist`**), [post-dual-clear-go.md](post-dual-clear-go.md) (camp vault-on-Doc **HOLD** while OPEN / EMPTY), [shared-fleet-cards.md](shared-fleet-cards.md) (Shared amend **HOLD** until next CLEAR + ≥30m + Shellable), [deployment-guide.md](deployment-guide.md) (Monday paper map)
 
 Soft-530 **CLEAR** while ListMachines is **EMPTY** does **not** make public `app.`/`ops.` `/login` unverifiable. Scrape `"b":"…"` from the public HTML. That stamp is **`freeze_build_id_public`**. Full freeze live-verify is still **`freeze_git_verified`** — Docs **CONNECTED+Shellable** + Doc checkout HEAD match.
 
@@ -25,25 +25,25 @@ While Soft-530 is **OPEN** (530 / CF 1033), public `/login` cannot be live-probe
 
 ---
 
-## Living proof (~08:16 America/Edmonton)
+## Living proof (~08:16 MATCH; ~08:41 OPEN → unreachable)
 
 | Field | Living |
 |-------|--------|
-| **Soft-530** | **CLEAR ≥51m** — Lead `api.` `/health` **200** ok; `app.` + `ops.` **307**. **`soft530_clear_since` ~07:25**. Do **not** stamp **OPEN** because EMPTY. Do **not** stamp **OPEN** because public BUILD_ID still serves. |
+| **Soft-530** | **OPEN** — Lookout `api.` **200→530** CF **1033**; Lead `api.` / `app.` / `ops.` all **530 / CF 1033**. **`soft530_open_since` ~08:41**. Prior CLEAR dwell **~07:25–~08:41** **ENDED**. |
 | **`soft530_open_blip`** | **~07:06–~07:25** (historical). |
 | **Vault** | still **OPEN 530 / CF 1033** — **EXPECTED**. ≠ vault CLEAR. |
-| **Combined HTTP** | Soft-530 **CLEAR** + vault **OPEN** = **half-state**. **≠ dual CLEAR.** |
-| **ListMachines** | **EMPTY**. Local-exec **ABSENT**. **CONNECTED ≠ Shellable ≠ tunnel healthy.** |
-| **Combined ops** | Soft-530 **CLEAR** + local-exec **EMPTY** = **half-ops HOLD**. SAME-CLASS dwell now **≥51m** (gate 1 **PASS**). Gate 2 Shellable still **fail**. |
+| **Combined HTTP** | Soft-530 **OPEN** + vault **OPEN** (both **1033**). **≠ dual CLEAR.** |
+| **ListMachines** | **EMPTY**. Local-exec **ABSENT**. **EMPTY ≠ cause of OPEN.** **CONNECTED ≠ Shellable ≠ tunnel healthy.** |
+| **Combined ops** | Camp / Shared **HOLD** until next CLEAR + ≥30m + Shellable. |
 | **Option A** | still **PASS** (`styles.css?v=36`, `/shop`→`the-shop`). Home **STALE** until **#82**. |
-| **Public `/login` BUILD_ID** | **`5swmVz-T2CqKEQzTk1ifU`** — scrape `"b":"…"` on `https://app.projectcar.ca/login` (and/or `ops.`) **MATCH** last_known. **`freeze_build_id_public=true`**. |
+| **Public `/login` BUILD_ID** | **`last_known` `5swmVz-T2CqKEQzTk1ifU` MATCH** (~08:16). Living **OPEN** → login **530** — scrape **unreachable**. That is **not** a freeze DIFF. |
 | **`freeze_git_verified`** | still **queued** until Docs **CONNECTED+Shellable**. ~06:57 PASS is last_known git evidence. **Never auto-pull.** |
-| **Shared** | **`shared_fleet_card_stale=true`**. CLEAR-since-**~07:25** amend still **Chief** after Shellable. Public BUILD_ID match **≠** Shared amend GO. |
-| **Camp / post-dual-clear-go** | still **half-ops HOLD**. Public BUILD_ID match **≠** camp GO reopen. |
+| **Shared** | **`shared_fleet_card_stale=true`**. Amend **HOLD** until next CLEAR + ≥30m + Shellable. |
+| **Camp / post-dual-clear-go** | **must not reopen**. Public MATCH ≠ camp GO. |
 
-Receipt: [overnight_2026-09-16_0816_freeze_build_id_public_probe.md](overnight_2026-09-16_0816_freeze_build_id_public_probe.md). Prior half-ops class receipt stays [overnight_2026-09-16_0751_clear_vs_local_exec_verify.md](overnight_2026-09-16_0751_clear_vs_local_exec_verify.md) — **same Soft-530 class**, now aged ≥51m, with public BUILD_ID **MATCH**.
+Receipt: [overnight_2026-09-16_0841_open_verify.md](overnight_2026-09-16_0841_open_verify.md). Prior public MATCH: [overnight_2026-09-16_0816_freeze_build_id_public_probe.md](overnight_2026-09-16_0816_freeze_build_id_public_probe.md).
 
-**Do not** leave BUILD_ID as unverified solely because ListMachines is **EMPTY**. Public login still serves the frozen build.
+While Soft-530 is **OPEN**, do **not** curl `app.`/`ops.` `/login` to “refresh” last_known. After the **next** CLEAR, scrape again — **EMPTY ≠ leave BUILD_ID unverified**.
 
 ---
 

@@ -25,3 +25,5 @@ Soft-530 **CLEAR** held **~26m** (~07:25–~07:51) while ListMachines stayed **E
 **Stamp:** Soft-530=**CLEAR** · **`soft530_clear_since` ~07:25** · dwell **~26m** · **`soft530_open_blip` ~07:06–~07:25** · vault **OPEN 530/1033 EXPECTED** · ListMachines **EMPTY** · Option A **PASS** · freeze **`last_known` `4cf8924`/`5swmVz`** · **`shared_fleet_card_stale=true`** · half-ops **HOLD**.
 
 **Locks:** **EMPTY ≠ Soft-530 OPEN.** CLEAR+EMPTY ≠ dual CLEAR / ≠ camp GO / ≠ **#82** / ≠ unfreeze. Never fan-out Garage/Zone on half-ops. Lookout watches public; Chief Shared / freeze stay queued. **Do not enter** [post-dual-clear-go.md](post-dual-clear-go.md). Quiet Ben.
+
+**Follow-up ~08:41 2026-09-16:** Soft-530 **CLEAR→OPEN**. CLEAR dwell **~07:25–~08:41** **ENDED**. **EMPTY ≠ cause of OPEN.** Receipt: [overnight_2026-09-16_0841_open_verify.md](overnight_2026-09-16_0841_open_verify.md). This CLEAR+EMPTY age is **superseded as living**.

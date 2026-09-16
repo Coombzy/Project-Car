@@ -1,8 +1,8 @@
 # Soft-530 CLEAR ≠ ListMachines present
 
 **Status:** Paper — class split + half-ops HOLD, **not** a GO  
-**Updated:** 2026-09-16 ~08:16 America/Edmonton  
-**Related:** `STATUS.md` (living Soft-530 **CLEAR ≥51m** since **~07:25** + vault **OPEN 530 / CF 1033** + ListMachines **EMPTY** + **`freeze_build_id_public=true`** + this pointer), [freeze-build-id-public-probe.md](freeze-build-id-public-probe.md) (public `"b"` scrape is Soft-530 class — **EMPTY ≠ leave BUILD_ID unverified**), [soft-530-blip-recover.md](soft-530-blip-recover.md) (short OPEN blip **~07:06–~07:25** then CLEAR — **no camp GO mid-flap**; this file extends that recover into **steady-state**), [overnight-baseline-stamp.md](overnight-baseline-stamp.md) (**`soft530_clear_since` ~07:25** + **`soft530_open_blip` ~07:06–~07:25** + EMPTY **stays EMPTY** — do **not** flip Soft-530=OPEN), [post-dual-clear-go.md](post-dual-clear-go.md) (camp vault-on-Doc GO = Soft-530 **CLEAR ≥30m SAME-CLASS AND** Docs **CONNECTED+Shellable** — CLEAR alone while EMPTY = **half-ops HOLD**), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (full smoke **after** Shellable — Lead public `/health` **200** + `app.`/`ops.` **307** is Soft-530 class only; **`freeze_build_id_public`** may record on half-ops), [shared-fleet-cards.md](shared-fleet-cards.md) (Chief Shared amend **queued** until Shellable), [soft-530-flap-while-connected.md](soft-530-flap-while-connected.md) (**CONNECTED ≠ Shellable ≠ tunnel healthy**), [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (camp still **Ben GO**), [home-vs-camp-doc-posture.md](home-vs-camp-doc-posture.md) (home-awake half-ops ≠ camp GO), [deployment-guide.md](deployment-guide.md) (Monday paper map)
+**Updated:** 2026-09-16 ~08:41 America/Edmonton  
+**Related:** `STATUS.md` (living Soft-530 **OPEN** **`soft530_open_since` ~08:41** after CLEAR dwell **~07:25–~08:41** ended + vault **OPEN 530 / CF 1033** + ListMachines **EMPTY** + this pointer), [freeze-build-id-public-probe.md](freeze-build-id-public-probe.md) (public `"b"` scrape is Soft-530 class — **unreachable while OPEN**), [soft-530-blip-recover.md](soft-530-blip-recover.md) (short OPEN blip **~07:06–~07:25** then CLEAR — **no camp GO mid-flap**; this file’s split still holds: **EMPTY ≠ cause of OPEN**), [overnight-baseline-stamp.md](overnight-baseline-stamp.md) (**`soft530_open_since` ~08:41**; prior CLEAR dwell **~07:25–~08:41** ended), [post-dual-clear-go.md](post-dual-clear-go.md) (camp vault-on-Doc GO **HOLD** until next CLEAR + ≥30m + Shellable), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (full smoke **after** Shellable), [shared-fleet-cards.md](shared-fleet-cards.md) (Chief Shared amend **HOLD** until next CLEAR + ≥30m + Shellable), [soft-530-flap-while-connected.md](soft-530-flap-while-connected.md) (**CONNECTED ≠ Shellable ≠ tunnel healthy**), [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (camp still **Ben GO**), [home-vs-camp-doc-posture.md](home-vs-camp-doc-posture.md) (home-awake OPEN ≠ camp GO), [deployment-guide.md](deployment-guide.md) (Monday paper map)
 
 Soft-530 class and local-exec class are **two stamps**. ListMachines **EMPTY** does **not** make Soft-530 **OPEN**. Soft-530 **CLEAR** while EMPTY does **not** make camp GO / dual CLEAR / **#82** / unfreeze.
 
@@ -21,22 +21,25 @@ This fold executes **none** of the Shells, curls, hops, or GOs. Do **not** inven
 
 ---
 
-## Living proof (~07:25–~08:16 America/Edmonton)
+## Living proof (~07:25–~08:41 America/Edmonton — CLEAR dwell ENDED)
+
+Morning **CLEAR while EMPTY** (~07:25–~08:41, ≥51m by ~08:16) is the proof that **EMPTY ≠ Soft-530 OPEN**. The **~08:41** flip is public HTTP — **not** ListMachines.
 
 | Field | Living |
 |-------|--------|
-| **Soft-530** | **CLEAR ≥51m** — Lead `api.` `/health` **200** ok; `app.` + `ops.` **307**. **`soft530_clear_since` ~07:25**. Do **not** stamp **OPEN** because EMPTY. Do **not** stamp **OPEN** because public BUILD_ID still serves. |
-| **`soft530_open_blip`** | **~07:06–~07:25** (historical). Recovered. Essay: [soft-530-blip-recover.md](soft-530-blip-recover.md). |
+| **Soft-530** | **OPEN** — Lookout `api.` **200→530** CF **1033**; Lead `api.` / `app.` / `ops.` all **530 / CF 1033**. **`soft530_open_since` ~08:41**. Prior CLEAR dwell **~07:25–~08:41** (~1h16m) **ENDED**. |
+| **Same-day pattern** | blip **~07:06–~07:25**; CLEAR **~07:25–~08:41**; OPEN again **~08:41**. **EMPTY** throughout morning after **~07:25**. |
+| **`soft530_open_blip`** | **~07:06–~07:25** (historical). Essay: [soft-530-blip-recover.md](soft-530-blip-recover.md). |
 | **Vault** | still **OPEN 530 / CF 1033** — **EXPECTED**. ≠ vault CLEAR. |
-| **Combined HTTP** | Soft-530 **CLEAR** + vault **OPEN** = **half-state**. **≠ dual CLEAR.** |
-| **ListMachines** | **EMPTY** (Lead confirm). Local-exec **ABSENT**. **CONNECTED ≠ Shellable ≠ tunnel healthy.** |
-| **Combined ops** | Soft-530 **CLEAR** + local-exec **EMPTY** = **half-ops HOLD**. SAME-CLASS dwell **≥51m** (gate 1 **PASS**). Shellable still **fail**. |
+| **Combined HTTP** | Soft-530 **OPEN** + vault **OPEN** (both **1033**) — prior half-state **OVER**. **≠ dual CLEAR.** |
+| **ListMachines** | **EMPTY** (Lead confirm). Local-exec **ABSENT**. **EMPTY ≠ cause of OPEN.** **CONNECTED ≠ Shellable ≠ tunnel healthy.** |
+| **Combined ops** | Soft-530 **OPEN** + local-exec **EMPTY**. Camp / Shared stay **HOLD** until next CLEAR + ≥30m + Shellable. |
 | **Option A** | still **PASS** (`styles.css?v=36`, `/shop`→`the-shop`). Home **STALE** until **#82**. |
-| **Shared** | **`shared_fleet_card_stale=true`**. CLEAR-since-**~07:25** amend still **Chief** after Shellable. OPEN-since-**~07:06** queue **cancelled**. Public BUILD_ID MATCH **≠** Shared amend GO. |
-| **`freeze_build_id_public`** | **`true`** — public `/login` `"b":"5swmVz-T2CqKEQzTk1ifU"` **MATCH**. Do **not** leave BUILD_ID unverified because EMPTY. Essay: [freeze-build-id-public-probe.md](freeze-build-id-public-probe.md). |
-| **`freeze_git_verified`** | still **queued** until Shellable. Behind **intact**. **Never auto-pull.** Public MATCH ≠ live-verify **PASS**. |
+| **Shared** | **`shared_fleet_card_stale=true`**. Amend **HOLD** until next CLEAR + ≥30m + Shellable. Do **not** write OPEN-since-**~08:41** mid-flap. OPEN-since-**~07:06** queue **cancelled**. |
+| **`freeze_build_id_public`** | **`last_known` true** — public MATCH ~08:16. OPEN → login **530** — scrape **unreachable** (not a DIFF). Essay: [freeze-build-id-public-probe.md](freeze-build-id-public-probe.md). |
+| **`freeze_git_verified`** | still **queued** until Shellable. Behind **intact**. **Never auto-pull.** |
 
-Receipt: [overnight_2026-09-16_0816_freeze_build_id_public_probe.md](overnight_2026-09-16_0816_freeze_build_id_public_probe.md). Prior half-ops class: [overnight_2026-09-16_0751_clear_vs_local_exec_verify.md](overnight_2026-09-16_0751_clear_vs_local_exec_verify.md). The ~07:25 recover receipt stays [overnight_2026-09-16_0725_blip_recover_verify.md](overnight_2026-09-16_0725_blip_recover_verify.md) — **same Soft-530 class**, now aged ≥51m while EMPTY.
+Receipt: [overnight_2026-09-16_0841_open_verify.md](overnight_2026-09-16_0841_open_verify.md). Prior CLEAR+EMPTY proof: [overnight_2026-09-16_0816_freeze_build_id_public_probe.md](overnight_2026-09-16_0816_freeze_build_id_public_probe.md) · [overnight_2026-09-16_0751_clear_vs_local_exec_verify.md](overnight_2026-09-16_0751_clear_vs_local_exec_verify.md).
 
 ---
 
@@ -44,9 +47,9 @@ Receipt: [overnight_2026-09-16_0816_freeze_build_id_public_probe.md](overnight_2
 
 Lead **may re-offer** camp vault-on-Doc **Ben GO** only when **both** are true. This paper does **not** offer it.
 
-| # | Gate | Living this fold (~08:16) |
+| # | Gate | Living this fold (~08:41) |
 |---|------|---------------------------|
-| **1** | Soft-530 **CLEAR ≥30m SAME-CLASS** (still CLEAR; same **`soft530_clear_since` ~07:25**; vault still **OPEN 1033**; no new OPEN flap) | **≥51m** — dwell **PASS** |
+| **1** | Soft-530 **CLEAR ≥30m SAME-CLASS** (still CLEAR; same **`soft530_clear_since`**; vault still **OPEN 1033**; no new OPEN flap) | Living **OPEN ~08:41** — dwell **reset**. Prior CLEAR dwell **~07:25–~08:41** **ENDED**. |
 | **2** | Docs `95a229f5` **CONNECTED+Shellable** + [soft-530-clear-smoke.md](soft-530-clear-smoke.md) on that host | **EMPTY** — fail |
 
 **CLEAR alone while EMPTY = half-ops HOLD.** Extends [soft-530-blip-recover.md](soft-530-blip-recover.md) (`5221d90`) past the recover instant into **steady-state**: the GO window stays **paused** for as long as local-exec is EMPTY, even after the Soft-530 dwell later crosses 30m.
@@ -71,7 +74,7 @@ Lookout **CLEAR** while ListMachines **EMPTY** is **expected half-ops**, not a S
 
 | Anti-goal | Why |
 |-----------|-----|
-| **EMPTY ≠ Soft-530 OPEN** | Soft-530 is public HTTP. EMPTY is local-exec **ABSENT**. Living **~07:25–~08:16** is the proof — public BUILD_ID still serves. |
+| **EMPTY ≠ Soft-530 OPEN** | Soft-530 is public HTTP. EMPTY is local-exec **ABSENT**. Living **~07:25–~08:41** stayed CLEAR while EMPTY. **EMPTY ≠ cause of the ~08:41 OPEN.** |
 | **CLEAR + EMPTY ≠ dual CLEAR** | Vault still **OPEN 1033**. Local-exec still **ABSENT**. Combined HTTP is **half-state**. Combined ops is **half-ops HOLD**. |
 | **CLEAR + EMPTY ≠ camp GO** | Gate is ≥30m SAME-CLASS **AND** **CONNECTED+Shellable**. Dwell **PASS** at ~08:16; Shellable still **fail**. |
 | **CLEAR + EMPTY ≠ #82 / unfreeze / Bitwarden / #79.1** | Each is a **separate Ben GO**. |
