@@ -1,8 +1,8 @@
 # Soft-530 OPEN blip then CLEAR — no camp GO mid-flap
 
 **Status:** Paper — recover class + GO lock, **not** a GO  
-**Updated:** 2026-09-16 ~08:41 America/Edmonton  
-**Related:** `STATUS.md` (living Soft-530 **OPEN** **`soft530_open_since` ~08:41** after morning CLEAR dwell **~07:25–~08:41** ended + vault **OPEN 530 / CF 1033** + ListMachines **EMPTY** + this pointer), [soft530-clear-vs-local-exec.md](soft530-clear-vs-local-exec.md) (class split — Soft-530 = public HTTP only; **EMPTY ≠ cause of OPEN**), [soft-530-flap-while-connected.md](soft-530-flap-while-connected.md) (the **~07:06** OPEN flap — **CONNECTED ≠ Shellable ≠ tunnel healthy**; that OPEN is a **blip**), [overnight-baseline-stamp.md](overnight-baseline-stamp.md) (**`soft530_open_since` ~08:41**; prior CLEAR dwell **~07:25–~08:41** ended; Shared amend **never mid-flap**), [post-dual-clear-go.md](post-dual-clear-go.md) (camp vault-on-Doc GO window **must not reopen** — **HOLD** until next CLEAR + ≥30m + Shellable), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (CLEAR proof **after** Docs **CONNECTED+Shellable**), [shared-fleet-cards.md](shared-fleet-cards.md) (Shared amend **HOLD** until next CLEAR + ≥30m SAME-CLASS + Shellable — do **not** write OPEN-since-**~08:41** mid-flap), [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (camp still **Ben GO**), [home-vs-camp-doc-posture.md](home-vs-camp-doc-posture.md) (home-awake OPEN ≠ camp GO), [deployment-guide.md](deployment-guide.md) (Monday paper map)
+**Updated:** 2026-09-16 ~08:49 America/Edmonton  
+**Related:** `STATUS.md` (living Soft-530 **OPEN** **`soft530_open_since` ~08:41** after morning CLEAR dwell **~07:25–~08:41** ended + vault **OPEN 530 / CF 1033** + ListMachines **EMPTY** + this pointer), [soft530-clear-vs-local-exec.md](soft530-clear-vs-local-exec.md) (class split — Soft-530 = public HTTP only; **EMPTY ≠ cause of OPEN**), [soft-530-flap-while-connected.md](soft-530-flap-while-connected.md) (the **~07:06** OPEN flap — **CONNECTED ≠ Shellable ≠ tunnel healthy**; that OPEN is a **blip**), [overnight-baseline-stamp.md](overnight-baseline-stamp.md) (**`soft530_open_since` ~08:41**; **`missed_clear_window={start:~07:25,end:~08:41,reason:empty}`**; Shared amend **never mid-flap**), [missed-clear-window-shared-supersede.md](missed-clear-window-shared-supersede.md) (CLEAR **~07:25–~08:41** met ≥30m but Shared never wrote — **supersede** the queued CLEAR amend), [post-dual-clear-go.md](post-dual-clear-go.md) (camp vault-on-Doc GO window **must not reopen** — **HOLD** until next CLEAR + ≥30m + Shellable), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (CLEAR proof **after** Docs **CONNECTED+Shellable**), [shared-fleet-cards.md](shared-fleet-cards.md) (Shared amend **HOLD** until next CLEAR recover + ≥30m SAME-CLASS + Shellable — **CLEAR since ~07:25** queue **superseded**; do **not** write OPEN-since-**~08:41** mid-flap), [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (camp still **Ben GO**), [home-vs-camp-doc-posture.md](home-vs-camp-doc-posture.md) (home-awake OPEN ≠ camp GO), [deployment-guide.md](deployment-guide.md) (Monday paper map)
 
 A short Soft-530 **OPEN** blip that **CLEAR**s again while ListMachines is **EMPTY** (or **CONNECTED≠Shellable**) does **not** reopen camp GO / [post-dual-clear-go.md](post-dual-clear-go.md). **Steady-state** after that recover: Soft-530 class stays public HTTP only — **EMPTY ≠ Soft-530 OPEN**. CLEAR+EMPTY stays **half-ops HOLD**. Essay: [soft530-clear-vs-local-exec.md](soft530-clear-vs-local-exec.md).
 
@@ -24,7 +24,7 @@ The **~07:25** recover lock **still holds**. A later same-morning **CLEAR→OPEN
 | **Combined class** | Soft-530 **OPEN** + vault **OPEN** (both **1033**) — prior half-state **OVER**. **≠ dual CLEAR.** |
 | **ListMachines** | **EMPTY** (Lead confirm ~07:25 **and** ~07:51 **and** ~08:16 **and** ~08:41). **EMPTY ≠ cause of OPEN** — OPEN is public HTTP. **CONNECTED ≠ Shellable ≠ tunnel healthy**. |
 | **Camp / post-dual-clear-go** | **Do not reopen.** GO window stays **paused**. Re-offer only after next **CLEAR + ≥30m SAME-CLASS + Shellable**. |
-| **Shared** | **HOLD.** Do **not** write OPEN-since-**~08:41** mid-flap. OPEN-since-**~07:06** queue stays **cancelled**. Amend Shared **only** after next CLEAR + ≥30m SAME-CLASS + Docs **CONNECTED+Shellable**. **`shared_fleet_card_stale=true`**. |
+| **Shared** | **HOLD.** Do **not** write OPEN-since-**~08:41** mid-flap. OPEN-since-**~07:06** queue stays **cancelled**. **CLEAR since ~07:25** queue **superseded** — **missed CLEAR window** (`missed_clear_window={start:~07:25,end:~08:41,reason:empty}`). Do **not** backfill that CLEAR. Amend Shared **only** after next CLEAR recover + ≥30m SAME-CLASS + Docs **CONNECTED+Shellable**. **`shared_fleet_card_stale=true`**. |
 | **Freeze** | **`last_known`** `` `4cf8924` `` / **`5swmVz`** / **`freeze_build_id_public=true`** (~08:16 MATCH). OPEN → login **530** — public scrape **unreachable** (not a DIFF). **`freeze_git_verified`** **queued**. Behind **intact** — **never auto-pull**. |
 | **Option A** | still **PASS** (`styles.css?v=36`, `/shop`→`the-shop`). Home **STALE** until **#82**. |
 
@@ -80,7 +80,8 @@ Cross [overnight-baseline-stamp.md](overnight-baseline-stamp.md). Same-class lat
 |------|-----|
 | **Never amend Shared mid-flap** | OPEN↔CLEAR inside a short morning window is **not** a living-host write. |
 | **Cancel OPEN amend if CLEAR recovers first** | The **~07:06** OPEN queue is **cancelled**. Do **not** stamp Shared **OPEN since ~07:06**. |
-| **Amend only after SAME-CLASS dwell** | After the **next** ≥**30m** SAME-CLASS **CLEAR** **and** Docs **CONNECTED+Shellable**. Do **not** write OPEN-since-**~08:41** mid-flap. |
+| **Supersede CLEAR amend if OPEN ends a missed window** | The **~07:25** CLEAR queue is **superseded**. Public dwell met ≥30m; ListMachines **EMPTY** entire window; stamp **never wrote**. Do **not** leave “write CLEAR since ~07:25” across the flap. Essay: [missed-clear-window-shared-supersede.md](missed-clear-window-shared-supersede.md). |
+| **Amend only after SAME-CLASS dwell** | After the **next** ≥**30m** SAME-CLASS **CLEAR** **and** Docs **CONNECTED+Shellable**. Do **not** write OPEN-since-**~08:41** mid-flap. Do **not** backfill the missed CLEAR. |
 | **Until that amend** | **`shared_fleet_card_stale=true`**. Shared ~22:08 **CLEAR ~22:00** as-of is stale vs living **OPEN ~08:41**. Docs/#70 is SSOT. Shared **never** overrides. |
 
 Amend ≠ Ben ask ≠ **#82** / unfreeze / camp. **Never** `Mac.lan`. Essay: [shared-fleet-cards.md](shared-fleet-cards.md).
@@ -97,7 +98,8 @@ Amend ≠ Ben ask ≠ **#82** / unfreeze / camp. **Never** `Mac.lan`. Essay: [sh
 | **EMPTY / CONNECTED≠Shellable ≠ camp GO reopen** | Presence class is not the re-offer gate. Public BUILD_ID MATCH ≠ camp GO. |
 | **EMPTY ≠ Soft-530 OPEN** | Soft-530 is public HTTP. Living **~07:25–~08:41** stayed CLEAR while EMPTY. **EMPTY ≠ cause of the ~08:41 OPEN** — that flip is Lookout **200→530** + Lead public **530/1033**. |
 | **Lead `/health` 200 + 307 ≠ clear-smoke** | Full smoke waits on **CONNECTED+Shellable**. |
-| **≠ Shared OPEN-since-07:06 write** | Queue **cancelled**. Next write is CLEAR ~07:25 after dwell + Shellable. |
+| **≠ Shared OPEN-since-07:06 write** | Queue **cancelled**. |
+| **≠ Shared CLEAR-since-07:25 write** | Queue **superseded**. Missed CLEAR window. Next write waits for the **next** CLEAR recover + ≥30m + Shellable. |
 
 **#82** Ben GO / companions **HOLD** / freeze `4cf8924` / `5swmVz` / vault subclass 502 vs 1033 — **unchanged**. This file executes **none** of those.
 
@@ -109,7 +111,7 @@ Amend ≠ Ben ask ≠ **#82** / unfreeze / camp. **Never** `Mac.lan`. Essay: [sh
 - Treat ListMachines **EMPTY** or **CONNECTED≠Shellable** as Shellable / clear-smoke / lid-restore
 - Keep living Soft-530=**CLEAR** / **`soft530_clear_since` ~07:25** after the **~08:41** OPEN
 - Omit the same-day pattern (blip **~07:06–~07:25**, CLEAR **~07:25–~08:41**, OPEN again **~08:41**)
-- Amend Shared living-host **mid-flap**, land the cancelled **OPEN since ~07:06** queue, or write **OPEN since ~08:41** before the next CLEAR + ≥30m + Shellable
+- Amend Shared living-host **mid-flap**, land the cancelled **OPEN since ~07:06** queue, land the **superseded CLEAR since ~07:25** queue, backfill the missed CLEAR, or write **OPEN since ~08:41** before the next CLEAR recover + ≥30m + Shellable
 - Auto-fire camp / **#82** / **#79.1** / unfreeze / Bitwarden
 - Invent vault CLEAR, or treat vault **OPEN 1033** as unexpected
 - Auto-pull because freeze is behind
