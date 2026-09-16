@@ -24,4 +24,6 @@ Soft-530 **CLEAR→OPEN** after overnight CLEAR dwell **~22:00→~07:06** (~9h).
 
 **Stamp:** Soft-530=**OPEN** · **`soft530_open_since` ~07:06** · prior CLEAR dwell **~22:00–07:06** ended · vault **OPEN 530/1033** · Docs **CONNECTED+Shell-unreachable** · Option A **PASS** · freeze **`last_known` `4cf8924`/`5swmVz`** · **`shared_fleet_card_stale=true`**.
 
+**Follow-up ~07:25 2026-09-16:** Soft-530 **OPEN→CLEAR**. Blip **~07:06–~07:25**. ListMachines **EMPTY**. Camp / post-dual-clear-go **must not reopen**. Receipt: [overnight_2026-09-16_0725_blip_recover_verify.md](overnight_2026-09-16_0725_blip_recover_verify.md) · [soft-530-blip-recover.md](soft-530-blip-recover.md). This OPEN flap is **superseded as living**.
+
 **Locks:** dual OPEN both 1033 ≠ dual CLEAR. **CONNECTED ≠ Shellable ≠ tunnel healthy.** ≠ auto lid-restore nag (Ben already aware). ≠ unfreeze / **#82** / **#79.1** / camp. GO window **paused**. **Do not enter** [post-dual-clear-go.md](post-dual-clear-go.md).

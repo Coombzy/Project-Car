@@ -27,4 +27,4 @@ Morning first weekday `*/20` after overnight Soft-530 **CLEAR**. Class is **SAME
 
 **Follow-up ~07:06 2026-09-16:** Soft-530 **CLEAR→OPEN**. Overnight CLEAR dwell **ended**. Receipt: [overnight_2026-09-16_0706_open_verify.md](overnight_2026-09-16_0706_open_verify.md).
 
-**Morning half-state:** CLEAR + vault OPEN **≠** dual CLEAR / **≠** unfreeze / **≠** **#82** / **≠** Bitwarden / **≠** camp cutover auto. Same-class = stay quiet. **Do not enter** [post-dual-clear-go.md](post-dual-clear-go.md). **Superseded ~07:06.**
+**Morning half-state:** CLEAR + vault OPEN **≠** dual CLEAR / **≠** unfreeze / **≠** **#82** / **≠** Bitwarden / **≠** camp cutover auto. Same-class = stay quiet. **Do not enter** [post-dual-clear-go.md](post-dual-clear-go.md). **Superseded ~07:06** (OPEN flap), then recover **~07:25** ([overnight_2026-09-16_0725_blip_recover_verify.md](overnight_2026-09-16_0725_blip_recover_verify.md)).

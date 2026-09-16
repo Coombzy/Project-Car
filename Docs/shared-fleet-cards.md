@@ -1,8 +1,8 @@
 # Shared fleet cards — Docs SSOT (held #70)
 
-**Status:** Paper — Chief standing-notes hygiene. **Not SSOT.** Rewrite **DONE**. Living-host Soft-530 class+as-of **amend DONE ~22:08** (CLEAR — now **stale**). Overnight stamp **`shared_fleet_card_stale=true`**.  
-**Updated:** 2026-09-16 ~07:06 America/Edmonton  
-**Related:** `STATUS.md` (Reality one-liner · living-ops / Locks), [deployment-guide.md](deployment-guide.md) (Monday paper map), [home-lab-specification.md](home-lab-specification.md) (host split), [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (camp vault-on-doc), [unfreeze-readiness.md](unfreeze-readiness.md) (freeze / draft ≠ GO), [overnight-baseline-stamp.md](overnight-baseline-stamp.md) (morning Soft-530=**OPEN** + **`soft530_open_since` ~07:06** + prior CLEAR dwell **~22:00–07:06** ended + Docs **CONNECTED+Shell-unreachable** + **`shared_fleet_card_stale=true`**; Shared never overrides Docs/#70 SSOT), [soft-530-flap-while-connected.md](soft-530-flap-while-connected.md) (**CONNECTED ≠ Shellable ≠ tunnel healthy**; living Docs `95a229f5` **CONNECTED+Shell-unreachable** ~07:06 — **never** `Mac.lan`)
+**Status:** Paper — Chief standing-notes hygiene. **Not SSOT.** Rewrite **DONE**. Living-host Soft-530 class+as-of **amend DONE ~22:08** (CLEAR — now **stale**). OPEN-since-**~07:06** queue **cancelled**. Overnight stamp **`shared_fleet_card_stale=true`**.  
+**Updated:** 2026-09-16 ~07:25 America/Edmonton  
+**Related:** `STATUS.md` (Reality one-liner · living-ops / Locks), [deployment-guide.md](deployment-guide.md) (Monday paper map), [home-lab-specification.md](home-lab-specification.md) (host split), [camp-vault-on-doc-cutover.md](camp-vault-on-doc-cutover.md) (camp vault-on-doc), [unfreeze-readiness.md](unfreeze-readiness.md) (freeze / draft ≠ GO), [overnight-baseline-stamp.md](overnight-baseline-stamp.md) (morning Soft-530=**CLEAR** + **`soft530_clear_since` ~07:25** + **`soft530_open_blip` ~07:06–~07:25** + ListMachines **EMPTY** + **`shared_fleet_card_stale=true`**; Shared never overrides Docs/#70 SSOT), [soft-530-blip-recover.md](soft-530-blip-recover.md) (cancel OPEN amend if CLEAR recovers first; amend **only** after ≥30m SAME-CLASS + Shellable), [soft-530-flap-while-connected.md](soft-530-flap-while-connected.md) (**CONNECTED ≠ Shellable ≠ tunnel healthy** — **never** `Mac.lan`)
 
 Fleet Shared `shop-os-mc-plan.md` is **rewritten** and remains **non-SSOT**. Prefer this thin card + the STATUS Reality one-liner. Do **not** dual-author living ops on Shared. **Docs/#70 → `main` is SSOT**; Shared is standing notes only.
 
@@ -29,7 +29,7 @@ Living-host lines on Fleet Shared `shop-os-mc-plan.md` must carry:
 | Field | Required |
 |-------|----------|
 | **Soft-530 class** | **CLEAR** or **OPEN** (public class: `/health` **200**, or **530 / CF 1033**) |
-| **as-of wall** | America/Edmonton wall time of that class. After same-day **CLEAR↔OPEN**, use the **current** flip — living **`soft530_open_since` ~07:06**. Do **not** keep the ~22:08 **CLEAR** as-of. |
+| **as-of wall** | America/Edmonton wall time of that class. After same-day **CLEAR↔OPEN**, use the **current** flip — living **`soft530_clear_since` ~07:25** (blip **~07:06–~07:25** noted). Do **not** keep the ~22:08 **CLEAR** as-of. Do **not** write the cancelled **OPEN since ~07:06**. |
 
 **Same-day flip queue.** If Soft-530 **CLEAR↔OPEN** flips the same America/Edmonton day **after** a Shared rewrite:
 
@@ -42,7 +42,7 @@ Living-host lines on Fleet Shared `shop-os-mc-plan.md` must carry:
 
 **Evidence 2026-09-15:** Shared rewrite **~15:42** stamped Soft-530 **CLEAR**. Live flipped **OPEN ~16:36**, then **CLEAR ~22:00**. EMPTY flap **~16:51–22:00** then Docs `95a229f5` **CONNECTED+Shellable** / KeepAlive **UP** ~22:07–22:08. Chief Shared living-host **amend DONE ~22:08** — Soft-530 **CLEAR** since **~22:00**; OPEN dwell **~16:36–22:00**; earlier CLEAR **~13:21–16:36**; vault **OPEN 530/1033**; freeze **`4cf8924`/`5swmVz`**. Overnight stamp **`shared_fleet_card_stale=false`** ([overnight-baseline-stamp.md](overnight-baseline-stamp.md)). Shared still **non-SSOT**. This fold records the amend receipt; it does **not** land Shared text in this repo.
 
-**Chief note:** Shared living-host **amend DONE ~22:08** (CLEAR). Living **CLEAR→OPEN ~07:06** re-queued the amend. CONNECTED+Shellable **failed** → stamp **`shared_fleet_card_stale=true`**. Shared still **never** overrides Docs/#70 SSOT.
+**Chief note:** Shared living-host **amend DONE ~22:08** (CLEAR). Living **CLEAR→OPEN ~07:06** re-queued an OPEN amend. **CLEAR recovered ~07:25** first → **cancel** that OPEN-since-**~07:06** queue ([soft-530-blip-recover.md](soft-530-blip-recover.md)). Next amend = **CLEAR since ~07:25** (blip noted) **only after** ≥30m SAME-CLASS dwell **and** Docs **CONNECTED+Shellable**. Never mid-flap. Until then stamp **`shared_fleet_card_stale=true`**. Shared still **never** overrides Docs/#70 SSOT.
 
 ---
 
@@ -68,15 +68,15 @@ Vault **OPEN 530 / CF 1033** (was 502 since ~19:45 MT Sep 13) stays living hones
 
 | Plane / pin | Living class |
 |-------------|--------------|
-| **Soft-530 (Doc)** | **OPEN** since **~07:06** America/Edmonton — `api.`/`app.`/`ops.` **530 / CF 1033** (Lookout + Lead; prior CLEAR dwell **~22:00–07:06** ended). Docs `95a229f5` **CONNECTED+Shell-unreachable**. Dual OPEN **living**. |
+| **Soft-530 (Doc)** | **CLEAR** since **~07:25** America/Edmonton — Lead `api.` `/health` **200**; `app.`/`ops.` **307**. **`soft530_open_blip` ~07:06–~07:25**. ListMachines **EMPTY**. Half-state **living**. |
 | **Vault (McKing)** | **OPEN 530 / CF 1033** connector-down (was 502 since ~19:45 MT Sep 13 — **not** CLEAR) |
 | **Brochure** | **LIVE** since the **2026-09-06** unlock (Option A). Shared “stays 502” is **false**. |
 | **Shared `shop-os-mc-plan.md`** | **Rewritten** ~15:42; living-host **amend DONE ~22:08** on Doc `~/Desktop/Fleet-Nextcloud/Memory/Shared/shop-os-mc-plan.md`. Still **non-SSOT**. Living-host now: Soft-530 **CLEAR** since **~22:00**; OPEN dwell **~16:36–22:00**; earlier CLEAR **~13:21–16:36**; vault **OPEN 530/1033**; freeze **`4cf8924`/`5swmVz`**. |
-| **Overnight stamp** | Morning Soft-530=**OPEN** + **`soft530_open_since` ~07:06** + Docs **CONNECTED+Shell-unreachable** + **`shared_fleet_card_stale=true`** ([overnight-baseline-stamp.md](overnight-baseline-stamp.md)). Shared still **non-SSOT**. |
+| **Overnight stamp** | Morning Soft-530=**CLEAR** + **`soft530_clear_since` ~07:25** + **`soft530_open_blip` ~07:06–~07:25** + ListMachines **EMPTY** + **`shared_fleet_card_stale=true`** ([overnight-baseline-stamp.md](overnight-baseline-stamp.md)). Shared still **non-SSOT**. |
 | **Freeze** | `` `changeme` `` / BUILD_ID **`5swmVz`** / tip **`4cf8924`** — live-verify **now allowed** (CLEAR); `/login` **307** **PASS** |
 | **Option A** | Redirect+UX **PASS** (rungs 1–2). Public brochure is **LIVE**. Home still **STALE** until **#82**. Redirect+UX **PASS** ≠ Worker body freshness **PASS** / **#82** done |
 | **Brochure 502 (Shared old lock)** | **False** since **2026-09-06** unlock. Rewrite dropped it. Do **not** restore. |
-| **Combined class** | **Dual OPEN both 1033** Soft-530 **OPEN** + vault **OPEN**. ≠ dual CLEAR ≠ camp GO ≠ unfreeze ≠ **#82** auto ≠ auto lid-restore nag |
+| **Combined class** | **Half-state** Soft-530 **CLEAR** + vault **OPEN**. ≠ dual CLEAR ≠ camp GO reopen ≠ unfreeze ≠ **#82** auto ≠ auto lid-restore nag |
 
 ---
 
@@ -86,11 +86,11 @@ Vault **OPEN 530 / CF 1033** (was 502 since ~19:45 MT Sep 13) stays living hones
 |-----------|-----|
 | **Not a Ben ask** | Shared living-host **amend ≠ Ben ask**. This fold does **not** page Ben for Shared rewrite, Shared amend, unfreeze, **#82**, camp, or Garage/Zone. Rewrite is **DONE**; class+as-of amend is **DONE ~22:08**. |
 | **No Garage / Zone fan-out** | Docs paper only. Shared rewrite / queued amend stay Chief’s standing notes. Do not assign or execute Garage / Zone / Hatch from this fold. |
-| **No unfreeze / #82 / camp GO** | Shared amend ≠ those GOs. Soft-530 **OPEN ≠** those GOs. Home **STALE** until **#82**. Camp vault-on-doc stays paper + **Ben GO**. |
-| **Don’t treat Shared as SSOT** | Amend **DONE ~22:08** is **stale** vs living **OPEN ~07:06**. Overnight stamp **`shared_fleet_card_stale=true`**. Shared still **non-SSOT**. Docs/#70 is SSOT. |
+| **No unfreeze / #82 / camp GO** | Shared amend ≠ those GOs. Short-blip recover **≠** those GOs. Home **STALE** until **#82**. Camp vault-on-doc stays paper + **Ben GO**. |
+| **Don’t treat Shared as SSOT** | Amend **DONE ~22:08** is **stale** vs living **CLEAR ~07:25**. OPEN-since-**~07:06** queue **cancelled**. Overnight stamp **`shared_fleet_card_stale=true`**. Shared still **non-SSOT**. Docs/#70 is SSOT. |
 | **Don’t restore 502 language** | Shared brochure “stays 502” was stale and is **dropped**. Vault **1033** remains living; do not collapse those two 502s. |
 | **Shared ≠ SSOT** | Discard Shared when it contradicts Docs tip / live. Rewrite must match Docs, not the other way. **DONE ≠** Shared is now SSOT. Amend **DONE** still **non-SSOT**. |
-| **Don’t keep “in progress” / “queued”** | The rewrite landed ~15:42. The living-host amend landed **~22:08**. “Rewrite in progress” and “amend queued” are **false**. |
+| **Don’t keep “in progress” / don’t land cancelled OPEN queue** | The rewrite landed ~15:42. The living-host amend landed **~22:08**. The **~07:06** OPEN queue is **cancelled**. Next queue is CLEAR ~07:25 after dwell + Shellable — **not** mid-flap. |
 | **Never `Mac.lan` as Doc** | Shared amend used asserted Docs **CONNECTED+Shellable** (`95a229f5`). Identity lock unchanged. |
 
 ---
@@ -111,4 +111,5 @@ Vault **OPEN 530 / CF 1033** (was 502 since ~19:45 MT Sep 13) stays living hones
 - Restore brochure-502 language
 - Keep “Shared rewrite in progress” after the ~15:42 America/Edmonton receipt
 - Treat Shared as SSOT because overnight **`shared_fleet_card_stale=false`**
-- Rewrite this morning’s overnight stamp away from Soft-530=**OPEN** + **`soft530_open_since` ~07:06** + Docs **CONNECTED+Shell-unreachable** + **`shared_fleet_card_stale=true`**
+- Rewrite this morning’s overnight stamp away from Soft-530=**CLEAR** + **`soft530_clear_since` ~07:25** + **`soft530_open_blip` ~07:06–~07:25** + ListMachines **EMPTY** + **`shared_fleet_card_stale=true`**
+- Land the cancelled Shared **OPEN since ~07:06** queue, or amend Shared mid-flap before ≥30m SAME-CLASS + Shellable
