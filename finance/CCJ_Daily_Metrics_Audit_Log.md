@@ -1,3 +1,51 @@
+### 2026-09-17 | 16:25 ET
+
+#### Metrics
+| Metric                        | Value                          | Source / Notes                  |
+|-------------------------------|--------------------------------|---------------------------------|
+| **1. Audit Timestamp**        | 2026-09-17 16:25 ET            | Official EOD (Polygon 16:00 regular-session print) |
+| **2. CCJ Price Snapshot**     | Close: $92.80<br>+$1.90 / +2.09% | Day Range $91.60–$93.10; Polygon O $92.62 VWAP $92.53 (cluster Yahoo 4:00:03 $92.80 V 2.074M) |
+| **3. Volume Metrics**         | Vol: 2.07M<br>Avg (20d): 2.65M<br>Rel Vol: 0.78x | Polygon V 2.074M vs 20d excl. today 2.65M |
+| **4. U3O8 Spot Price**        | $89.75 /lb                     | −$0.25 / −0.28% vs Sep 16 log $90.00; UraniumTracker $89.75 −0.22% widget (TE $89.75 −0.22%) |
+| **5. Market Cap & Valuation** | Mkt Cap: $40.42B<br>P/E: 162.7 TTM / 67.6 Fwd | 435.53M × $92.80; SA 162.67/67.93 scaled from Sep 16 |
+| **6. Technical Position**     | RSI(14): 41.9<br>vs 50-DMA: −2.2%<br>vs 200-DMA: −12.3% | 50-DMA $94.87 / 200-DMA $105.80 (Polygon SMA); 4th session under 50-DMA |
+| **7. Sector Relative Perf.**  | CCJ: +2.09%<br>URA: +3.17%<br>Rel: −1.08% | Polygon URA C $42.68 (H $43.00 L $42.17 V 3.27M) vs Sep 16 $41.37 |
+| **8. Key Catalysts / Sentiment** | Bounce under 50-DMA (H $93.10 never tagged $94.87). Rel 0.71x to 0.78x. Close top-third (80%). Wick $0.30 = 0.09×ATR (rule 7 OFF). No new Cameco release. Jefferies Buy / $138 PT overlay. Guidance 19.5-21.5M lbs + Westinghouse S-1 intact. BofA 13F stake noted Sep 16. Next print Oct 30. Sentiment: Cautious ST / Constructive MT |
+
+**Historical Deltas**: vs Sep 16 Polygon C $90.90: +$1.90 (+2.09%). No missed NYSE session (Wed to Thu). vs post-Q2 $86.38: +7.4%. U3O8 $90.00 to $89.75. RSI 37.4 to 41.9. Price −2.2% vs 50-DMA $94.87 (still lost, 4th session); −12.3% vs 200-DMA $105.80.
+**Anomaly Flags**: CCJ vs U3O8 +2.37pp (>1.5pp) — equity bounced while spot ticked down. CCJ vs URA −1.08pp (no flag). Rel 0.78x up from Wed 0.71x; top-third close (80%); 4th session under 50-DMA. Wick $0.30 = 0.09x ATR (rule 7 OFF). Sep 16 1d printed hit.
+**Data Sources**: Polygon primary | StockAnalysis P/E scaled + Yahoo 16:00 cluster | UraniumTracker U3O8 (TE fallback)
+**Analysis Confidence**: 86/100
+**Quality Evaluator Score**: 8.5/10
+
+#### Analysis Narrative
+Thursday bounced instead of extending Wednesday's fade, but the 50-DMA stays lost. CCJ closed $92.80 (+2.09%) on $91.60–$93.10 after opening $92.62, tagging $93.10 (never $94.87), and settling at 80% of a tight $1.50 high-low range. Rel 0.78x (2.07M vs 20d 2.65M) rose from Wednesday 0.71x but still misses the 0.80x trend-up gate. True range $2.20; wick $0.30 = 0.09×ATR — rule 7 OFF. Sep 16 1d $83.00–$101.00 printed inside (L91.60 H93.10 C92.80; close inside bias $87.00–$93.50).
+
+URA rose 3.17% to $42.68 on 3.27M (CCJ vs URA −1.08pp, no flag). U3O8 printed $89.75 on UraniumTracker (−$0.25 / −0.28% vs Wednesday's $90.00). CCJ vs spot +2.37pp is the anomaly — equity bounced while yellowcake ticked down. No new Cameco release. Jefferies Buy / $138 overlay intact. Guidance 19.5-21.5M lbs + Westinghouse S-1 intact. Rel 0.78x is below 0.80x so this is not trend-up despite the top-third close and URA up-day. Not digestion (Rel rose; close not mid-range; URA confirmed up). Not failed-break (Rel 0.78>0.5; high never tagged 50-DMA). Residual regime is trend-down after a fourth session under the 50-DMA. Post-Q2 bounce off $86.38 is +7.4% — mean-reversion / digestion risk still applies because this session was not Rel >=1.0x.
+
+Friday path-change: reclaim through $93.10 / $94.87 needs Rel >=1.0x with URA not down. Lose $91.60 on Rel >=0.8x and the break slides toward the post-Q2 low. Do not treat $93.10 as a launch without volume confirmation.
+
+Key takeaway: Fourth session under the 50-DMA closed $92.80 on Rel 0.78x with a pair flag vs U3O8 — next session is hold $91.60 or fade; do not treat $93.10 as a launch without Rel >=1.0x and URA not down.
+
+#### Decision map (required — 4 bullets)
+- Regime: trend-down. ATR-proxy: $3.19 (last 5 TR median: 1.90 / 4.71 / 3.39 / 3.19 / 2.20). Rel 0.78x 16:00 print; top-third close (80%); Rel rose 0.71x to 0.78x; U3O8 −0.28%; URA +3.17%. Not trend-up (Rel 0.78<0.80). Not failed-break (Rel 0.78>0.5; H $93.10 never tagged 50-DMA $94.87). Not digestion (Rel rose; close not mid-range; URA confirmed up).
+- Confirm vs fail: Reclaim confirms if Fri Rel >=1.0x AND URA not down AND close >$93.10 (then 50-DMA $94.87). Trend-down continues if close <$91.60 on Rel >=0.8x. Equity bounced harder than spot (CCJ vs U3O8 +2.37pp flag).
+- Levels: $92.80 / $91.60 (close + session low); $93.10 session high then 50-DMA $94.87 resistance; $100 magnet still lost; 200-DMA $105.80 overhead.
+- Calibration: rules 4+5 (rule 2 OFF 0/3 Sep 11/14/15 hits; rule 3 off Rel 0.78>0.5 but floor kept wide after 4th session under 50-DMA; rule 7 OFF wick 0.09x ATR). 1d width $17.00 vs ATR $3.19 (5.33x); 1d high $101.00 vs last session high $93.10 (clears; $100 magnet cleared to $101.00).
+
+#### Forward Scenarios (required)
+- 1-day / next session (Fri Sep 18): $84.00–$101.00 (bias $89.50–$96.00; 50% conf)
+- 1-week: $76.00–$111.00 (bias $84.00–$99.00; 50% conf)
+- 1-month: $70.00–$118.00 (bias $80.00–$104.00; 50% conf)
+- 3-month: $70.00–$142.00 (bias $84.00–$116.00; 55% conf)
+- Key invalidation: Close below $84.00 on Rel >=0.8x AND U3O8 <$86
+- Prior scenarios vs actual: Sep 16 1d $83.00–$101.00 → L91.60 H93.10 C92.80 hit (C inside bias $87.00–$93.50; auditor to close). Sep 16 1w $75.00–$108.00 day 1 of 5 on-track (path L91.60 H93.10 C92.80). Sep 15 1w $76.00–$108.00 day 2 of 5 on-track. Sep 14 1w $79.00–$108.00 day 3 of 5 on-track. Sep 11 1w $85.00–$111.00 day 4 of 5 on-track. Sep 10 1w $86.00–$112.00 day 5 prints inside (path L89.74 H98.27 C92.80) — auditor to close. Self-check: Today's 1d width $17.00 vs ATR-proxy $3.19; last closed 1d was hit; 1d high $101.00 vs last session high $93.10; Rel Vol 0.78x from 16:00 print; wick (H−C) $0.30 = 0.09x ATR — adjustment: rule 2 OFF; rule 7 OFF; magnet-clear $100 to $101.00 and 1w $110 to $111.00; trend-down after 4th session under 50-DMA; Rel 0.78x bounce unconfirmed; pair flag CCJ vs U3O8 +2.37pp.
+
+#### Audit / Reviewer Notes
+(To be completed by subsequent audit process)
+
+---
+
 ### 2026-09-16 | 16:20 ET
 
 #### Metrics
