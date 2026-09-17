@@ -1,3 +1,30 @@
+### 2026-09-17 | 08:20 America/Regina
+
+**Process:** Macro v1.3 · Write rules v1.2 · sources Fed/Reuters/Bloomberg/CNBC/NYT/S&P Global/AAA/EIA/CBP CSMS/NBS China/OilPrice 14–17 Sep 2026
+
+**Key Takeaway:** Warsh’s first hike, Aramco’s planned half-capacity East–West restart, a new diesel record, and the scheduled 15 Sep 338 adds all transmit through already-open duration, bypass, distillate, and Canada rows — leftover liquid single-name convexity does not clear the screen, so this run books **0 new themes**.
+
+**Overlap scan:** FOMC +25bp to 3.75–4.00% (12–0) and hawkish dots (median another +25bp YE2026) are the event the open `20260828-warsh-hike-gold` and `20260826-treasury-fed-tension` rows were built for — do not flip KGC/KEY/NLY/NEE/DHI/AMT/TLT. Bloomberg 16 Sep: Aramco targeting ~half Petroline capacity within days via a damaged-section bypass, full ops ~6 weeks; Wright (15 Sep) said “measured in days.” Same mechanism as open `20260914-saudi-bypass` (FRO/OXY/AAL frozen). Partial restart is the *FRO falsifier path*, not a new id; do not book the oil fade as a 4th theme. Oman Hormuz channel still postponed (Saudi objection) — no new date. AAA diesel **$6.40 record** (17 Sep) vs $6.06 Mon; NYMEX ULSD hit a record $5.262 on 15 Sep. Ukraine drones halted Rosneft Syzran (CDU-6, ≥1 month repair) and Saratov (~290 kbd combined) — same product-tightness cash-flow as open `20260827-distillate-squeeze` (STNG/VLO/KNX due 26 Sep). Canada 15 Sep 338 adds went live as scheduled (CBP CSMS #69851916; 122 extra HTS); energy, potash, fish, critical minerals still **exempt**; 29 Sep alcohol/motorcycle bans still calendar — overlay on `20260826-us-canada-tariffs` + `20260827-canada-8sep`. House passed Graham Act secondary-tariff option 16 Sep (discretionary, not automatic) — no 72h industry transmission. Thaw rows (`20260826-hormuz-thaw`) stay frozen opposite-sign; falsifier Brent >95 remains true — grade 25 Sep, do not edit ranges. Energy still 338-exempt. WCS–WTI ~16.5–17.4 (11 Sep weekly / 14 Sep Hardisty $17.35) is the re-esc path on open oil-sands rows, not a new tell.
+
+**Ranking**
+- FOMC path leftover after KEY/KGC/NLY/NEE/DHI/AMT/TLT — PGR (45/100)×8 = **3.6** — dropped (hike 87–93% priced; path already booked; mega-cap P&C mid-single-digits)
+- Duration/housing leftover LEN/PHM — (42/100)×10 = **4.2** — dropped (duplicate beta of open DHI/NEE)
+- Diesel record $6.40 + Syzran/Saratov halt — STNG/VLO/KNX already open; leftover TNK/MPC/WERN fail duplicate-beta / 52w / thin screen — (48/100)×12 = **5.8** — dropped (overlay on `20260827`)
+- Petroline partial-restart / oil fade $108→$103 — leftover after FRO/OXY/AAL + thaw/reesc oil beta — dropped (falsifier path of open bypass, not a new id)
+- Canada 15 Sep 338 adds live — (45/100)×8 = **3.6** — dropped (scheduled; RBC net value ~unchanged; no clean 3-pick after WHR/IP/SAP.TO/MGA/WFG/NUE)
+- Graham Act 100% secondary-tariff option — (42/100)×10 = **4.2** — dropped (discretionary; no 72h industry transmission)
+- JKM $25–27 / TTF €76–82 — VG/GLNG already open — dropped (no new id)
+- China Aug IP +5.2% / retail +0.4% / FAI −7.2% — no 72h tariff or stimulus print — dropped
+- BOJ 18 Sep 25bp to 1.25% — ~98% priced, not yet printed — dropped
+
+**Kept:** none. Do not invent.
+
+**Drivers (17 Sep morning):** Brent ~102–104 (Wed settle ~105.83; Tue high ~108.75) · WTI ~100–102 (Wed settle $102.43 / EIA $103.62) · WCS Hardisty Oct $17.35 under WTI (14 Sep) / OSM weekly WCS 83.51 / WCS–WTI ~16.5 (11 Sep) · TTF ~€76–82 · JKM ~$25.2–27.2 · HH ~$2.89–2.92 · Au ~4300–4340 (Wed dump ~4263) · 10y ~4.95–4.99% (Tue 5.04 high) · 30y ~5.31 · 2y ~4.68–4.72 · Oct hike ~45–50% / Dec ~70–79% · AAA diesel **$6.40 record** (17 Sep) · ULSD crack ~$113/bbl on HO ~$5.09 / WTI ~$100.5 · VLCC TD3C Baltic ~$1.0m/d (14 Sep) / physical ~$530–620k/d · Yanbu loadings suspended; partial Petroline bypass targeted in days · FOMC 3.75–4.00 now live · BOJ 18 Sep.
+
+**Calibration:** No official closed tracker rows. Sep 10 log noted unofficial first-14d tape on `20260827-canada-8sep` (WHR hit range+dir; IP dir only / range miss; SAP.TO miss) but those rows remain `status=open` — do not edit ranges. First official 30d grades 2026-09-25 (Hormuz thaw: JETS/XLE/USO/XEG/CRAK/UAL/SU/PSX) and 2026-09-26 (distillate: STNG/VLO/KNX). Tape note only: Brent 86.8→~103 and WTI 80.9→~101 have the thaw *hurt* side (XLE/USO/XEG/SU) running with the re-esc/bypass *benefit* side — grade at due date, do not edit ranges.
+
+**Disclaimer:** Not financial advice. Selection support only — no position sizes.
+
 ### 2026-09-14 | 08:05 America/Regina
 
 **Process:** Macro v1.3 · Write rules v1.2 · sources Guardian/CNBC/BBC/Reuters/NYT/Al Jazeera/CBS/White House/BLS/CME FedWatch/Oil Sands Magazine/TradeSmith 11–14 Sep 2026
