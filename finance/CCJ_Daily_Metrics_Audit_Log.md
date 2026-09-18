@@ -42,7 +42,30 @@ Key takeaway: Fifth session under the 50-DMA closed $91.62 on Rel 3.04x after ta
 - Prior scenarios vs actual: Sep 17 1d $84.00-$101.00 -> L90.68 H96.09 C91.62 hit (C inside bias $89.50-$96.00; auditor to close). Sep 17 1w $76.00-$111.00 day 1 of 5 on-track (path L90.68 H96.09 C91.62). Sep 16 1w $75.00-$108.00 day 2 of 5 on-track. Sep 15 1w $76.00-$108.00 day 3 of 5 on-track. Sep 14 1w $79.00-$108.00 day 4 of 5 on-track. Sep 11 1w $85.00-$111.00 day 5 prints inside (path L89.74 H96.09 C91.62) -- auditor to close. Self-check: Today's 1d width $19.00 vs ATR-proxy $3.39; last closed 1d was hit; 1d high $102.00 vs last session high $96.09; Rel Vol 3.04x from 16:00 print; wick (H-C) $4.47 = 1.32x ATR -- adjustment: rule 2 OFF; rule 7 ON (do not treat $96.09 as support); magnet-clear $100 to $102.00 and 1w $110 to $111.00; trend-down after 5th session under 50-DMA; volume 50-DMA tag-and-reject; no pair flag.
 
 #### Audit / Reviewer Notes
-(To be completed by subsequent audit process)
+**Independent Process Quality Audit** (2026-09-18 16:50 ET)
+
+### Process Quality Audit
+- Quality: [x] 8 metrics sourced [x] deltas [x] QE 8.5 [x] Conf 86 [x] history/prior [x] no contradiction [x] anomalies [x] Forward 1d/1w/1m/3m+inval+prior [x] Decision map [x] 1d width 5.60xATR >= 2.0x
+- Operational: [x] prompt v1.13 [x] newest-only patch [x] Health today [x] grades CLOSED (post 16:00) [x] Polygon primary [x] feature cols on backfill [x] Cal refreshed
+- Deduction arithmetic: 10 - 0 = **Score 10/10**
+- Recurring: Analysis tracker-append miss continues (Sep 14-18). Prompt v1.13 already requires append+re-read. Execution miss, not missing language. Sep 17 Audit Notes still placeholder -- left untouched per WRITE_RULES.
+- Overall: Official EOD is complete and internally consistent. Spike-fade on Rel 3.04x correctly set rule 7 ON and trend-down after a 5th session under the 50-DMA. Ranges respect width/magnet/wick rules. Independent public cluster confirms L90.68 H96.09 C91.62. Westinghouse >$50B IPO tape (Bloomberg) is the spike driver.
+
+### Prediction Accuracy
+- Closed this run (not preliminary): Sep 17 1d HIT; Sep 11 1w HIT. Full tables: `CCJ_Prediction_Tracker.md`
+- Sep 17 1d $84.00-$101.00 -> L90.68 H96.09 C91.62 hit (C inside bias $89.50-$96.00; pct_error 1.2%)
+- Sep 11 1w $85.00-$111.00 -> L89.74 H96.09 C91.62 hit (C inside bias $90-$102; pct_error 4.6%; 10th full 1w hit)
+- Calibration: refreshed yes (commit 5a926a24). 1d full-hit 17/21 (81%), last-10 10/10; 1w 10/17 (59%)
+- Root cause: no miss. Volume spike was Westinghouse IPO tape, not operations; fade stayed inside the wide 5.33xATR Sep 17 band.
+
+### Improvement Recommendations
+- Analysis must append four tracker rows in the same EOD run (v1.13 step 7). Fifth straight miss; auditor backfilled 517daa0a.
+- Keep 1d conf at 50% while 1w full-hit is 59%.
+- Do not treat $96.09 as Monday support (rule 7 ON).
+- Leave Sep 17 Audit Notes placeholder; do not nest post-performance text there.
+- Prompt edit this run: N/A (v1.13 language sufficient).
+
+**Final Action** Tracker 517daa0a; Cal 5a926a24; Health b06d7244 confirmed 2026-09-18 row present; notes this commit. Prompt edit N/A.
 
 ---
 
