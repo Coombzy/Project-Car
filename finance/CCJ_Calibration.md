@@ -2,19 +2,19 @@
 
 Rolling empirical priors for the Analysis Automater. **Auditor updates after each close.** Analysis reads this before building ranges. Not ML -- conditional hit/miss rates only.
 
-**As of:** 2026-09-16 post-close (closed tracker rows Aug 15-Sep 15 1d + Aug 15-Sep 9 1w; Sep 15 1d newly closed hit; Sep 9 1w newly closed hit; Sep 14 1d + Sep 8 1w persist-closed after tracker restore)
-**Sample:** closed 1d n=19 · closed 1w n=15 · open rows excluded
+**As of:** 2026-09-18 post-close (closed tracker rows Aug 15-Sep 17 1d + Aug 15-Sep 11 1w; Sep 17 1d newly closed hit; Sep 11 1w newly closed hit; persist Sep 16 1d + Sep 10 1w already closed in tracker)
+**Sample:** closed 1d n=21 · closed 1w n=17 · open rows excluded
 
 ## Closed 1-day
 
 | Metric | Value |
 |--------|-------|
-| Full hit | 15/19 (79%) |
-| Partial (one side exceed, close inside) | 2/19 (11%) |
-| Full upper exceed | 1/19 (5%) |
-| Full lower miss / wrong direction | 1/19 (5%) |
+| Full hit | 17/21 (81%) |
+| Partial (one side exceed, close inside) | 2/21 (10%) |
+| Full upper exceed | 1/21 (5%) |
+| Full lower miss / wrong direction | 1/21 (5%) |
 | Last-10 full hit | 10/10 (100%) |
-| Median |pct_error| where calculable | ~0.1-2.8% (hits + close-inside) · 0.1% (Sep 15 hit) · 0.9% (Sep 14 hit) · 2.3% (Sep 11 hit) · ~5% (full misses) |
+| Median |pct_error| where calculable | ~0.1-2.8% (hits + close-inside) · 1.2% (Sep 17 hit) · 2.8% (Sep 16 hit) · 0.1% (Sep 15 hit) · ~5% (full misses) |
 
 ### Conditional (1d)
 
@@ -37,50 +37,52 @@ Rolling empirical priors for the Analysis Automater. **Auditor updates after eac
 | Light-vol 50-DMA hold into volume-confirmed 50-DMA break (Rel 0.79x to 1.26x) | Sep 11 1d **hit** L91.97 H94.43 C93.26 inside $90.00-$102.00; C inside bias $93.00-$98.00; pct_error 2.3% | 4.05xATR + $100 magnet-clear to $102 absorbed the volume 50-DMA break; fade stayed inside bias |
 | Volume 50-DMA break into Rel-fade second session under 50-DMA (Rel 1.26x to 0.83x) | Sep 14 1d **hit** L91.01 H94.40 C91.21 inside $86.00-$101.00; C inside bias $89.00-$95.00; pct_error 0.9% | 4.76xATR + $100 magnet-clear to $101 absorbed the spike-fade; equity vs spot −2.03pp did not break the range |
 | Rel-fade second session under 50-DMA into third session under 50-DMA (Rel 0.83x to 0.71x) | Sep 15 1d **hit** L89.74 H92.93 C90.90 inside $84.00-$101.00; C inside bias $88.00-$94.00; pct_error 0.1% | 5.40xATR + $100 magnet-clear to $101 absorbed the third undercut; no pair flag; wick 0.64xATR so rule 7 OFF next session |
+| Third session under 50-DMA into light-vol bounce under 50-DMA (Rel 0.71x to 0.78x) | Sep 16 1d **hit** L91.60 H93.10 C92.80 inside $83.00-$101.00; C inside bias $87.00-$93.50; pct_error 2.8% | 5.64xATR + $100 magnet-clear to $101 absorbed the bounce; pair flag vs U3O8 +2.37pp did not break the range; wick 0.09xATR so rule 7 OFF next session |
+| Light-vol bounce under 50-DMA into volume spike-fade / 50-DMA tag-and-reject (Rel 0.78x to 3.04x) | Sep 17 1d **hit** L90.68 H96.09 C91.62 inside $84.00-$101.00; C inside bias $89.50-$96.00; pct_error 1.2% | 5.33xATR + $100 magnet-clear to $101 absorbed the Westinghouse-IPO tape spike to $96.09 and the fade; wick 1.32xATR so rule 7 ON next session |
 
 ## Closed 1-week
 
 | Metric | Value |
 |--------|-------|
-| Full hit | 8/15 (53%) |
-| Partial (one side exceed, close inside) | 2/15 (13%) |
-| Full upper exceed (H and C outside) | 1/15 (7%) |
-| Both-ends exceed | 2/15 (13%) |
-| Full lower exceed (L and C outside) | 2/15 (13%) |
+| Full hit | 10/17 (59%) |
+| Partial (one side exceed, close inside) | 2/17 (12%) |
+| Full upper exceed (H and C outside) | 1/17 (6%) |
+| Both-ends exceed | 2/17 (12%) |
+| Full lower exceed (L and C outside) | 2/17 (12%) |
 
-**Takeaway:** Eight full 1w hits: Aug 28, Aug 31, Sep 1, Sep 2, Sep 3, Sep 4, Sep 8, Sep 9. Sep 9 1w **hit** L89.74 H99.60 C90.90 inside $89.50-$116 (week Sep 10-11 + Sep 14-16; C under bias $95-$107; pct_error 10.0%). Floor was only $0.24 above the session low — keep 1w floors ≥$2–3 below last session low after Rel-fade breakdowns. Sep 8 1w remains **hit** L91.01 H102.30 C91.21 inside $90.50-$117 (pct_error 10.6%). Wide floors after the volume 200-DMA / 50-DMA breaks keep working; the close sliding under the bias floor is the residual 1w tightness. Aug 26 1w remains **lower-exceed**. Aug 24 1w remains **both-ends**. Keep 1w width >= 3.5xATR and do not park the low at a nearby round number after a breakdown.
+**Takeaway:** Ten full 1w hits: Aug 28, Aug 31, Sep 1, Sep 2, Sep 3, Sep 4, Sep 8, Sep 9, Sep 10, Sep 11. Sep 11 1w **hit** L89.74 H96.09 C91.62 inside $85.00-$111.00 (week Sep 14-18; C inside bias $90-$102; pct_error 4.6%). Sep 10 1w remains **hit** L89.74 H98.27 C92.80 inside $86-$112 (pct_error 4.3%). Wide floors after the volume 50-DMA break keep working; the residual tightness is still the close sliding under the bias floor on older 1w rows. Aug 26 1w remains **lower-exceed**. Aug 24 1w remains **both-ends**. Keep 1w width >= 3.5xATR and do not park the low at a nearby round number after a breakdown.
 
 ## Confidence calibration
 
-Stated conf mostly 50-60%. Realized full-hit 1d = 79% all-sample / **100% last-10** (Aug 31 hit dropped out of the window). Last-10 is now Sep 1 through Sep 15, all full hits. Do **not** raise 1d conf above 60% until 1w full-hit is less sparse (53%). Prefer **honest width** over high conf.
+Stated conf mostly 50-60%. Realized full-hit 1d = 81% all-sample / **100% last-10** (Sep 3 through Sep 17). Do **not** raise 1d conf above 60% until 1w full-hit is less sparse (59%). Prefer **honest width** over high conf.
 
 ## Active rules derived from this table
 
 1. Trend-up after Rel >= 1.0x -> center 1d at/above close; never below.
-2. 2+ upper-exceeds in last 3 closed 1d -> +1.0x ATR-proxy on the high. **Partial (H outside, C inside) counts.** Currently 0/3 (Sep 11 hit, Sep 14 hit, Sep 15 hit) -- **OFF**. Do not add +1.0xATR on the next 1d high from this count. High must still clear last session high and not park on a magnet.
-3. Failed-break / Rel < 0.5x at major level -> widen downside, cut upside conf. Rel 0.71x (Sep 16) does **not** fire this cut, but the third session under the 50-DMA still warrants a wide floor (already in published Thu 1d).
+2. 2+ upper-exceeds in last 3 closed 1d -> +1.0x ATR-proxy on the high. **Partial (H outside, C inside) counts.** Currently 0/3 (Sep 15 hit, Sep 16 hit, Sep 17 hit) -- **OFF**. Do not add +1.0xATR on the next 1d high from this count. High must still clear last session high and not park on a magnet.
+3. Failed-break / Rel < 0.5x at major level -> widen downside, cut upside conf. Rel 3.04x (Sep 18) does **not** fire this cut.
 4. 1d width >= 2.0x ATR-proxy; 1w >= 3.5x ATR-proxy.
 5. Do not set 1d **or 1w** high equal to a round magnet ($100/$105/$110/$115); clear it by >= $1 or 0.25xATR.
 6. Regime Rel Vol = official 16:00 print only.
-7. After a spike-fade session (high - close >= 0.8xATR): do **not** treat the wick high as support. Next 1d bias stays at/above close; continuation through the wick high requires Rel Vol >= 1.0x **and** URA not down. State wick size in the self-check. **OFF after Sep 16** (wick $2.03 = 0.64xATR). In confirmed trend-down after an MA break, a bias floor below close is allowed when it reflects breakdown risk.
+7. After a spike-fade session (high - close >= 0.8xATR): do **not** treat the wick high as support. Next 1d bias stays at/above close; continuation through the wick high requires Rel Vol >= 1.0x **and** URA not down. State wick size in the self-check. **ON after Sep 18** (wick $4.47 = 1.32xATR). In confirmed trend-down after an MA break, a bias floor below close is allowed when it reflects breakdown risk. Do not treat $96.09 as Monday support.
 
-## NEXT 1d worksheet (as of 2026-09-16 close)
+## NEXT 1d worksheet (as of 2026-09-18 close)
 
-Thu Sep 17 1d is **already published** ($83.00-$101.00). Use this table if republishing or for the Sep 17 session.
+Mon Sep 21 1d is **already published** ($83.00-$102.00). Use this table if republishing or for the Sep 21 session.
 
 | Input | Value |
 |-------|-------|
-| Official close / last session high | $90.90 / **$92.93** |
-| ATR-proxy (last 5 TR median) | **$3.19** (TRs 3.15 / 1.90 / 4.71 / 3.39 / 3.19) |
-| Wick (H-C) | **$2.03 = 0.64xATR** -> rule 7 **OFF** |
-| Rel Vol (16:00) | **0.71x** (Vol 1.90M vs 20d 2.67M) -> rule 3 off |
-| Min 1d width (2.0x) | $6.38 |
-| Min 1w width (3.5x) | $11.17 |
-| Last 3 closed 1d | Sep 11 **hit** · Sep 14 **hit** · Sep 15 **hit** |
-| Rule 2 | **OFF** (0/3); do not add +1.0xATR; high must still clear **$92.93** |
+| Official close / last session high | $91.62 / **$96.09** |
+| ATR-proxy (last 5 TR median) | **$3.39** (TRs 4.71 / 3.39 / 3.19 / 2.20 / 5.41) |
+| Wick (H-C) | **$4.47 = 1.32xATR** -> rule 7 **ON** |
+| Rel Vol (16:00) | **3.04x** (Vol 8.08M vs 20d 2.66M) -> rule 3 off |
+| Min 1d width (2.0x) | $6.78 |
+| Min 1w width (3.5x) | $11.87 |
+| Last 3 closed 1d | Sep 15 **hit** · Sep 16 **hit** · Sep 17 **hit** |
+| Rule 2 | **OFF** (0/3); do not add +1.0xATR; high must still clear **$96.09** |
 | Magnet | Do not park high on $100/$105/$110 |
-| Published Thu 1d | Sep 16 -> Thu Sep 17: **$83.00-$101.00** (bias $87.00-$93.50; 50% conf; 5.64xATR; high clears $92.93; $100 magnet cleared to $101) |
-| Regime | **trend-down**; U3O8 0.00% vs CCJ −0.34% (no pair flag); URA −0.96% (CCJ vs URA +0.62pp, no flag); third session under 50-DMA $94.91 on Rel 0.71x; lower-third close (36%) |
+| Published Mon 1d | Sep 18 -> Mon Sep 21: **$83.00-$102.00** (bias $86.50-$94.00; 50% conf; 5.60xATR; high clears $96.09; $100 magnet cleared to $102) |
+| Regime | **trend-down**; U3O8 0.00% vs CCJ −1.27% (no pair flag); URA −2.41% (CCJ vs URA +1.14pp, no flag); fifth session under 50-DMA $94.79 on Rel 3.04x; lower-third close (17%); spike-fade wick 1.32xATR |
 
 ## Update protocol (Auditor)
 
