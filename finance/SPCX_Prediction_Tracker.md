@@ -6,11 +6,11 @@ One row per `(analysis_date, horizon)`. Update in place. Do not duplicate.
 
 **Close clocks:** 1d = next RTH; **1w = 5th RTH after analysis_date**; 1m = 21st; 3m = 63rd.
 
-**Day N/5 after 2026-09-18 official:** 9/11=5/5 (closes after 9/18 RTH; Auditor); 9/14=4/5; 9/15=3/5; 9/16=2/5; 9/17=1/5; 9/18=0/5. Weekend 9/19–20 no increment.
+**Day N/5 after 2026-09-18 official:** 9/11=5/5 (closed after 9/18 RTH); 9/14=4/5; 9/15=3/5; 9/16=2/5; 9/17=1/5; 9/18=0/5. Weekend 9/19–20 no increment.
 
 Status: `open` · `preliminary` · `closed` · `expired`
 
-Last price: **2026-09-18 official Yahoo RTH** O **$154.66** H **$156.60** L **$149.93** C **$152.71** Vol ~335.22M (−1.36% vs 9/17 C $154.81). AH ~$152.64. Mid-session print replaced. Path high **$156.87** (9/17). Last-5 TRs 6.56/5.68/9.52/5.99/6.67 → median **$6.56**; prior 14d mean TR **$6.79**; differ 3% <20% → use **$6.56**. Closed 1d **9/16**; Closed 1w **9/10**. **Write-streak: 0**.
+Last price: **2026-09-18 official Yahoo RTH** O **$154.66** H **$156.60** L **$149.93** C **$152.71** Vol ~335.22M (−1.36% vs 9/17 C $154.81). AH ~$152.64. Mid-session print replaced. Path high **$156.87** (9/17). Last-5 TRs 6.56/5.68/9.52/5.99/6.67 → median **$6.56**; prior 14d mean TR **$6.88**; differ 5% <20% → use **$6.56**. Closed 1d **9/17**; Closed 1w **9/11**. **Write-streak: 0**.
 
 | analysis_date | horizon | range_low | range_high | bias_low | bias_high | conf | pred_regime | pred_rel_vol | prior_day_pct | actual_low | actual_high | actual_close | hit | directional | pct_error | status | notes |
 |---------------|---------|-----------|------------|----------|-----------|------|-------------|--------------|---------------|------------|-------------|--------------|-----|-------------|-----------|--------|-------|
@@ -59,7 +59,7 @@ Last price: **2026-09-18 official Yahoo RTH** O **$154.66** H **$156.60** L **$1
 | 2026-09-10 | 1m | 115 | 200 | 130 | 180 | 30 | digestion | elevated | -3.86 | 142.87 | 156.87 | 152.71 |  |  |  | open | path L142.87 H156.87 Last152.71 |
 | 2026-09-10 | 3m | 95 | 245 | 120 | 210 | 25 | digestion | elevated | -3.86 | 142.87 | 156.87 | 152.71 |  |  |  | open | path L142.87 H156.87 Last152.71 |
 | 2026-09-11 | 1d | 136 | 164 | 142 | 156 | 45 | digestion | elevated | 0.43 | 146.00 | 152.56 | 148.15 | yes | yes | 0.6% | closed | next 9/14 official inside 136-164 |
-| 2026-09-11 | 1w | 128 | 182 | 138 | 168 | 40 | digestion | elevated | 0.43 | 142.87 | 156.87 | 152.71 |  |  |  | open | Day 5/5 after 9/18 official; Auditor close; path L142.87 H156.87 Last152.71 |
+| 2026-09-11 | 1w | 128 | 182 | 138 | 168 | 40 | digestion | elevated | 0.43 | 142.87 | 156.87 | 152.71 | yes | yes | 0.2% | closed | Day 5/5 after 9/18 official |
 | 2026-09-11 | 1m | 115 | 205 | 130 | 185 | 30 | digestion | elevated | 0.43 | 142.87 | 156.87 | 152.71 |  |  |  | open | residual unlock 9/24 + F14; path L142.87 H156.87 Last152.71 |
 | 2026-09-11 | 3m | 95 | 250 | 120 | 215 | 25 | digestion | elevated | 0.43 | 142.87 | 156.87 | 152.71 |  |  |  | open | Q3 earnings unlock ~Nov; path L142.87 H156.87 Last152.71 |
 | 2026-09-14 | 1d | 143 | 159 | 146 | 154 | 50 | digestion | normal | 2.04 | 142.87 | 148.55 | 143.49 | no | no | 4.3% | closed | next 9/15 official L142.87 < 143 miss |
@@ -74,7 +74,7 @@ Last price: **2026-09-18 official Yahoo RTH** O **$154.66** H **$156.60** L **$1
 | 2026-09-16 | 1w | 136 | 168 | 151 | 164 | 40 | trend-up | normal | -3.15 | 144.36 | 156.87 | 152.71 |  |  |  | open | Day 2/5; closes after 9/23 RTH; 4.0x ATR (9/03 +6.42%); unlock extra H/L |
 | 2026-09-16 | 1m | 115 | 205 | 145 | 185 | 30 | trend-up | normal | -3.15 | 144.36 | 156.87 | 152.71 |  |  |  | open | path L144.36 H156.87 Last152.71; unlock 9/24 |
 | 2026-09-16 | 3m | 95 | 250 | 130 | 215 | 25 | trend-up | normal | -3.15 | 144.36 | 156.87 | 152.71 |  |  |  | open | Q3 ~Nov; path L144.36 H156.87 Last152.71 |
-| 2026-09-17 | 1d | 137 | 164 | 150 | 160 | 45 | digestion | elevated | 5.15 | 149.93 | 156.60 | 152.71 |  |  |  | preliminary | next-session 2026-09-18 official RTH; Auditor close; path L149.93 H156.60 C152.71 |
+| 2026-09-17 | 1d | 137 | 164 | 150 | 160 | 45 | digestion | elevated | 5.15 | 149.93 | 156.60 | 152.71 | yes | no | 1.5% | closed | next 9/18 official inside 137-164 |
 | 2026-09-17 | 1w | 128 | 180 | 145 | 168 | 40 | digestion | elevated | 5.15 | 149.93 | 156.87 | 152.71 |  |  |  | open | Day 1/5; closes after 9/24 RTH; 4.0x ATR (9/16 +5.15%); unlock extra H/L |
 | 2026-09-17 | 1m | 115 | 210 | 140 | 185 | 30 | digestion | elevated | 5.15 | 149.93 | 156.87 | 152.71 |  |  |  | open | path L149.93 H156.87 Last152.71; unlock 9/24 |
 | 2026-09-17 | 3m | 95 | 255 | 125 | 220 | 25 | digestion | elevated | 5.15 | 149.93 | 156.87 | 152.71 |  |  |  | open | Q3 ~Nov; path L149.93 H156.87 Last152.71 |
