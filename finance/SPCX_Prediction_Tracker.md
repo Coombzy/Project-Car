@@ -10,7 +10,7 @@ One row per `(analysis_date, horizon)`. Update in place. Do not duplicate.
 
 Status: `open` · `preliminary` · `closed` · `expired`
 
-Last price: **2026-09-18 official Yahoo RTH** O **$154.66** H **$156.60** L **$149.93** C **$152.71** Vol ~335.22M (−1.36% vs 9/17 C $154.81). AH ~$152.64. Mid-session print replaced. Path high **$156.87** (9/17). Last-5 TRs 6.56/5.68/9.52/5.99/6.67 → median **$6.56**; prior 14d mean TR **$6.88**; differ 5% <20% → use **$6.56**. Closed 1d **9/17**; Closed 1w **9/11**. **Write-streak: 0**. Weekend **2026-09-20** path-refresh: no RTH tape; Last still $152.71; Day N/5 unchanged.
+Last price: **2026-09-18 official Yahoo RTH** O **$154.66** H **$156.60** L **$149.93** C **$152.71** Vol ~335.22M (−1.36% vs 9/17 C $154.81). AH ~$152.64. Mid-session print replaced. Path high **$156.87** (9/17). Last-5 TRs 6.56/5.68/9.52/5.99/6.67 → median **$6.56**; prior 14d mean TR **$6.88**; differ 5% <20% → use **$6.56**. Closed 1d **9/17**; Closed 1w **9/11**. **Write-streak: 0**. Weekend **2026-09-20** path-refresh: no RTH tape; Last still $152.71; Day N/5 unchanged. **Auditor 2026-09-20:** no new closes (weekend). Closed 1d **13/16 (81%)**; Closed 1w **12/12 (100%)**. Last-3 1w no upper-exceed. 9/18 1d open until 9/21. Prompt v1.21 stacked-floor hard-fail.
 
 | analysis_date | horizon | range_low | range_high | bias_low | bias_high | conf | pred_regime | pred_rel_vol | prior_day_pct | actual_low | actual_high | actual_close | hit | directional | pct_error | status | notes |
 |---------------|---------|-----------|------------|----------|-----------|------|-------------|--------------|---------------|------------|-------------|--------------|-----|-------------|-----------|--------|-------|
