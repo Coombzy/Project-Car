@@ -1,7 +1,7 @@
 # SPCX Daily Analysis Prompt
 
-**Version:** 1.20  
-**Last edited:** 2026-09-19T15:30:00Z  
+**Version:** 1.21  
+**Last edited:** 2026-09-20T16:30:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** SPCX Daily Stock Analysis automation
 
@@ -15,6 +15,7 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
 - Horizons: **1-day (mandatory)**, 1-week, 1-month, 3-month.
 - **1d window = the next regular session after `analysis_date`.** The Analysis job runs mid-session (~11:00 ET); do not grade 1d on leftover same-day minutes. 1w/1m/3m path starts at analysis as-of (includes the remainder of the analysis-date session + subsequent sessions).
 - **Live next-session 1d is `preliminary` until that session's official RTH close.** Auditor marks it; Daily does not close it mid-session. **2026-09-16** 1d closed on 9/17 official (L152.63 H156.87 C154.81; H156.87 > 156 miss). **2026-09-17** 1d closed on 9/18 official (L149.93 H156.60 C152.71 vs range 137–164 HIT; dir NO; pct_error 1.5%). **2026-09-18** 1d maps to 9/21 and stays open.
+- **Auditor 2026-09-20:** no new RTH; closed 1d **13/16 HIT**; closed 1w **12/12 HIT**; last 3 closed 1w (9/09, 9/10, 9/11) all HIT — no widen-high trigger.
 
 ## Process rules (always apply)
 
@@ -30,6 +31,7 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
    - Printed-high clearance: `range_high` >= max(last completed close, printed session high) + **0.5 × ATR**. Never park 1d/1w high on $149 / $150 / $155.
    - Coil-spring: Rel Vol < 0.5x → 0.75× high clearance; last 3 each < 0.6x → 1.0×. **2026-09-02** 1d high $149; 9/03 H $152.30 miss.
    - Known-event extra HIGH and LOW stack: dated lock-up/unlock in next 10 RTH → +0.5×ATR to 1d/1w high AND −0.5×ATR from 1d/1w low. **Stacks on top of printed-high/low clearance** — printed-high floor does not consume the extra. Next dated unlock **2026-09-24** (still inside next 10 RTH as of Mon 9/21). **2026-09-14** 1d high $159 short (required >=$163 and <=$139). **2026-09-15** insert applied stack: 1d 137–163. **2026-09-16** 1d high $156 = printed +0.5×ATR without extra; extra required range_high >= **$158.16**; official 9/17 H **$156.87 > 156 miss**. Do not rewrite locked 9/16 bands. **2026-09-18** recovered 1d high $161 is short of stacked floor (~$162.59 using $5.99); do not rewrite. **Monday 9/21 stacked floors using $6.56:** 1d/1w high >= 156.60 + 1.0×$6.56 = **$163.16**; 1d/1w low <= 149.93 − 1.0×$6.56 = **$143.37**. If stacked 1d high floor > printed range_high, widen range_high **before lock** (same for the low). Self-check must print stacked floors.
+   - **Hard-fail reprint (v1.21):** if dated unlock is inside next 10 RTH and (`range_high` < stacked high floor OR `range_low` > stacked low floor), do **not** lock; reprint 1d/1w with `range_high` >= floor and `range_low` <= floor. Self-check prints floors + hard-fail reprint yes/no. **2026-09-16** locked $156 and **2026-09-18** locked $161 under the floor — those rows stay locked; Monday 9/21 must not repeat.
    - Live-impulse extra is directional. Post-impulse high: last completed >= +5% or Rel Vol >= 1.0x + close in top third → 1.0× high clearance.
 4. **Volume / confidence**
    - Buckets vs 20d: `<0.80x` below-avg; `0.80–1.19x` normal; `>=1.20x` elevated. Same value on all four rows. **2026-09-16** official Vol ~108.77M / 20d ~$77.54M ≈ **1.40x elevated**. **2026-09-17** official Vol ~83.99M / 20d ~$77.93M ≈ **1.08x = normal**. **2026-09-18** official Vol ~335.22M / 20d ~$77.89M ≈ **4.30x elevated** (real spike, not a bad print). Last completed on a 9/19+ / Monday 9/21 run is **9/18 official**, not 9/17. Do **not** reuse 9/17 `normal` / `prior_day_pct=+2.60`. **2026-09-18** recovered rows used `pred_rel_vol=normal` and `prior_day_pct=+2.60` (locked; do not rewrite). Rel Vol >= 3.0x on last completed must flow into the next session's `pred_rel_vol`.
@@ -38,7 +40,7 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
 6. Include prior-scenario vs actual from closed tracker rows.
 7. Decision map: 3 bullets.
 8. **Parseable table first.** No table = unrecoverable (**2026-09-01**).
-9. Self-check must include payload-compact used yes/no and TRACKER_SHA present yes/no. Self-check must also print known-event extra stacked yes/no with the resulting 1d high/low floors.
+9. Self-check must include payload-compact used yes/no and TRACKER_SHA present yes/no. Self-check must also print known-event extra stacked yes/no with the resulting 1d high/low floors **and hard-fail reprint yes/no**.
 10. Non-session days: no new rows; still refresh path + Day N/5. Weekend SHA-reuse does not increment write-streak.
 11. Close clocks: 1d = next RTH; 1w = 5th RTH after analysis_date; 1m = 21st; 3m = 63rd. **Day N/5 after 2026-09-18 official:** 9/11=5/5 (closed 9/18); 9/14=4/5; 9/15=3/5; 9/16=2/5; 9/17=1/5; 9/18=0/5. Weekend 9/19–20 no increment. 9/11 1w closed after 9/18 official. 9/14 1w closes after 9/21 official.
 12. pct_error format `X.X%` = |close − bias midpoint| / bias midpoint. Do not store the session % change.
@@ -52,7 +54,7 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
 17. **Write-streak emergency OFF.** Streak **0** after 9/14 session-day 4-row INSERT commit **3470d780** / blob **6a6e68f3**. Auditor 9/16 restore **304384dd** / blob **9a0e50bc**. Dual-write + SHA-delta + payload-compact remain. If a future session day emits pre-write SHA or drops today's 4 rows, streak returns to 1 and emergency ON.
    - Confirm today's four `(analysis_date, horizon)` rows exist on a post-write get_file_contents before emitting TRACKER_SHA.
    - Daily inserts session-day rows; Auditor grades / path-refreshes / closes only. Auditor may recover a Daily block that Daily already attempted and failed to write. Do not invent next-session rows.
-18. **Anti-wipe (v1.20):** never push a header-only tracker or prompt. Outbound tracker must contain ≥ inbound data-row count and ≥64 data rows. Commit **6a61d877** deleted the table (header-only blob 46a34efb) and truncated the prompt (blob 681c52ab). Restore tracker from 5e9cc670 / 0d488b02 or 304384dd / 9a0e50bc. Restore prompt from b32acbc7 / 1f19bf84 (v1.17 body) if main is stub-only.
+18. **Anti-wipe (v1.21):** never push a header-only tracker or prompt. Outbound tracker must contain ≥ inbound data-row count and ≥64 data rows. Commit **6a61d877** deleted the table (header-only blob 46a34efb) and truncated the prompt (blob 681c52ab). Restore tracker from 5e9cc670 / 0d488b02 or 304384dd / 9a0e50bc. Restore prompt from b32acbc7 / 1f19bf84 (v1.17) or 93d9e5ef / ca502b09 (v1.20) if main is stub-only.
 
 ## Report structure
 
@@ -66,7 +68,7 @@ Produce a concise, data-driven daily report for **SPCX** (Nasdaq: Space Explorat
 5. Decision map (3 bullets)
 6. Risks & Disclaimer — not financial advice
 
-Self-check: `1d width $X vs ATR-proxy $Y (last-5 med $A / 14d $B; used larger yes/no); 1d maps to next session YYYY-MM-DD; last completed Rel Vol Z.Zx vs 20d; 1d high $C vs last session high $D; coil-spring 0.5/0.75/1.0x; known-event extra stacked yes/no + 1d high/low floors; live-impulse dir up/down/no; post-impulse-high yes/no; write-streak emergency yes/no; dual-write used yes/no; payload-compact used yes/no; SHA-delta session-day yes/n/a; pred_rel_vol same on all 4 rows yes/no; Day N/5 after-only yes/no; TRACKER_SHA present yes/no; anti-wipe row-count >=64 yes/no.`
+Self-check: `1d width $X vs ATR-proxy $Y (last-5 med $A / 14d $B; used larger yes/no); 1d maps to next session YYYY-MM-DD; last completed Rel Vol Z.Zx vs 20d; 1d high $C vs last session high $D; coil-spring 0.5/0.75/1.0x; known-event extra stacked yes/no + 1d high/low floors; hard-fail reprint yes/no; live-impulse dir up/down/no; post-impulse-high yes/no; write-streak emergency yes/no; dual-write used yes/no; payload-compact used yes/no; SHA-delta session-day yes/n/a; pred_rel_vol same on all 4 rows yes/no; Day N/5 after-only yes/no; TRACKER_SHA present yes/no; anti-wipe row-count >=64 yes/no.`
 
 ## GitHub write (mandatory)
 
