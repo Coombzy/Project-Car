@@ -1,7 +1,7 @@
 # BTC / ETH Daily Analysis Prompt
 
-**Version:** 1.24  
-**Last edited:** 2026-09-19T15:25:00Z  
+**Version:** 1.25  
+**Last edited:** 2026-09-20T15:45:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** BTC ETH Daily Crypto Analysis automation
 
@@ -27,8 +27,9 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
    - **Two-down bounce (v1.13):** if the last **two completed** UTC sessions are both down, do **not** flip to `trend-up` on a sub-1.0×ATR bounce. Stay `digestion` (or `failed-break` if a break failed) unless live impulse ≥ **+3%** / **1.0 × ATR** **or** last completed close reclaimed the prior swing high.
    - **Beta-divergence (v1.15):** if |ETH live% − BTC live%| ≥ **4pp**, the leader is **not** `digestion` and gets +**0.5 × ATR** extra 1d high. (Sep 11 ETH ~+7% vs BTC ~+2% labeled digestion.)
 3. **Range construction**
-   - **1-day is mandatory.** Width ≥ **2.0 × ATR-proxy**. Trend-up never centered below close.
+   - **1-day is mandatory.** Width ≥ **2.0 × ATR-proxy**. After a completed UTC ≥ **+5%**, next 1d width ≥ **2.5 × ATR-proxy**. Trend-up never centered below close.
    - 1-week width ≥ **3.0 × ATR-proxy** (≥ **4.0 ×** if last 5 weekday sessions include a ≥5% up-day); if trend-up, upside leg from close ≥ 1.5× downside leg.
+   - **Post-+5% 1w high (v1.25):** after a completed UTC ≥ **+5%**, next 1w `range_high` ≥ that session high + **1.0 × ATR-proxy**. (Sep 12 1w cap $82000 vs path H $81911.)
    - 1-month and 3-month: wider numeric bands; bias optional but preferred.
    - **Printed-high clearance:** `range_high` ≥ `max(as-of, UTC-session high already printed)` + **0.5 × ATR-proxy**. Never park the high on a wick/magnet ($80k / $81.5k / $81500).
    - **Printed-low clearance:** `range_low` ≤ `min(as-of, UTC-session low already printed)` − **0.5 × ATR-proxy**.
@@ -42,12 +43,12 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
    - **Known-macro extra high (v1.19):** CPI/PCE/FOMC/NFP extra applies only if the **event timestamp** is ≤ as-of+24h.
    - **Post-event lag-squeeze high (v1.23):** if FOMC/CPI/PCE/NFP timestamp is in the prior 24h (already printed), 1d printed-high clearance = **1.0×ATR** even when pred_regime is digestion. Also 1d range_high ≥ as-of + **1.5×ATR**. Stacks — use the larger. Sep 17 Daily cap $78700 vs path H $81332 after FOMC 16 Sep 18:00Z.
    - **Spike-fade:** wick ≥ 0.8×ATR is not a cap; still apply 0.5×ATR clearance above that high.
-   - **RANGE_CHECK (v1.17/v1.20/v1.23 — hard).** Print this-run weekday-5 TR list + median + post-event-high 1.0x yes/no + live-impulse-low 1.0x yes/no for BTC and ETH. If 1d width < 2.0×ATR or high/low miss required clearance, widen and reprint before writing. Never reuse a dollar ATR from a prior run or this prompt example.
+   - **RANGE_CHECK (v1.17/v1.20/v1.23/v1.25 — hard).** Print this-run weekday-5 TR list + median + post-event-high 1.0x yes/no + live-impulse-low 1.0x yes/no + post-+5% 2.5x-width yes/no for BTC and ETH. If 1d width < required multiple or high/low miss required clearance, widen and reprint before writing. Hard-fail reprint if post-event-high=yes AND 1d high < as-of+1.5×ATR. Never reuse a dollar ATR from a prior run or this prompt example.
 4. Fill **pred_regime** and **prior_day_pct** on every tracker row. **conf** integer **40–85**. **prior_day_pct** = Yahoo BTC-USD / ETH-USD official UTC Close pair only. Print `source: Yahoo YYYY-MM-DD $c1 → YYYY-MM-DD $c2 = Z%`.
 5. Include **prior-scenario vs actual** from the tracker when closed rows exist.
 6. **Decision map** (3 bullets): confirm vs fail; path-changing levels; calibration from last closed miss/hit.
 7. **Parseable table first:** immediately after Key Takeaway, 8-row table. Entire table + `RANGE_CHECK:` + `TRACKER_SHA:` in first ~1400 characters.
-8. **Weekend/holiday ETF:** **Last completed as of 2026-09-19 = Thu 2026-09-18 BTC +$433.0M / ETH +$143.7M (mega-inflow both).** 17 Sep BTC +$159.5M / ETH −$39.3M. 16 Sep BTC −$295.9M / ETH −$224.1M. 15 Sep BTC −$450.4M / ETH −$142.3M. Sat 19 Sep Farside 0.0 is not a completed print.
+8. **Weekend/holiday ETF:** **Last completed as of 2026-09-20 = Thu 2026-09-18 BTC +$433.0M / ETH +$143.7M (mega-inflow both).** 17 Sep BTC +$159.5M / ETH −$39.3M. 16 Sep BTC −$295.9M / ETH −$224.1M. 15 Sep BTC −$450.4M / ETH −$142.3M. Sat/Sun Farside 0.0 is not a completed print.
 9. **Weekend writes are mandatory** only if today's 8 rows do not already exist.
 10. **Write-first.** `WRITE PENDING` banned.
 11. **Write-SHA gate (hard).** Emitted SHA must differ from pre-write SHA.
@@ -58,7 +59,8 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
     - **Inbound-floor (v1.21).** ≥100 data rows and ≥15kB before any non-restore write. Restore = f2d4bf74 / c0c37a51.
     - **Preexisting-rows skip.** If today's 8 exist, emit PREEXISTING_ROWS + current SHA.
     - **Outbound-row-count (v1.18).** Pushed body MUST contain ≥ inbound count AND ≥100 rows.
-    - **POST-WRITE VERIFY (v1.22/v1.24).** Fetch raw main tracker. If rows <100 OR size <15kB OR PLACEHOLDER / header-only / 8-row stub, do NOT emit TRACKER_SHA. Immediately restore-merge f2d4bf74/c0c37a51 + today's 8. Stubs e22b9936 / 0e4d529a / ae5f666d / 469ebcc7 are WRITE FAILED.
+    - **POST-WRITE VERIFY (v1.22/v1.24/v1.25).** Fetch raw main tracker. If rows <100 OR size <15kB OR PLACEHOLDER / header-only / 8-row stub, do NOT emit TRACKER_SHA. Immediately restore-merge f2d4bf74/c0c37a51 + today's 8. Stubs e22b9936 / 0e4d529a / ae5f666d / 469ebcc7 / 7e17d19f / 9ff30ee9 are WRITE FAILED.
+    - **Restore-blob-only (v1.25).** Never reconstruct early rows from memory. Start from raw restore blob bytes; only mutate path/grade cells and append sourced Daily rows. Main stub is not inbound.
 15. **Append-only / anti-wipe (hard).** Never write PLACEHOLDER / SEE_LOCAL_FULL_FILE / SEE_FILE / header-only to tracker **or this prompt**. After writing this prompt, raw size must be ≥8kB. Restore source f2d4bf74 / c0c37a51. Fallback 41e4ad58 / 47d11800.
 16. **Role split.** Daily inserts new analysis_date rows only. Auditor grades/path-refreshes/closes only. Auditor may recover a Daily block Daily already attempted and wiped.
 17. **1d actuals = window-only.** Path inside the 24h window from as-of, not multi-week path.
