@@ -1,3 +1,33 @@
+### 2026-09-21 | 08:25 America/Regina
+
+**Process:** Macro v1.3 · Write rules v1.2 · sources Reuters/Bloomberg/CNBC/NYT/AP/AAA/ISW/Al Jazeera/White House/OilPrice/Kpler/JPMorgan/Goldman/GIE AGSI+/CME FedWatch/NBS China 18–21 Sep 2026
+
+**Key Takeaway:** UNGA diplomacy and recovering Saudi Hormuz loadings pulled Brent to ~$101, diesel printed a new $6.51 AAA record, Ukraine hit the Moscow CDU, Houthis probed Riyadh/Yanbu, Graham Act was signed, and BOJ hiked to 1.25% — every line already sits inside open thaw, bypass, distillate, duration, Canada, Ven, and LNG rows, so leftover liquid single-name convexity does not clear the screen. This run books **0 new themes**.
+
+**Overlap scan:** Trump “probably open” to Pezeshkian at UNGA (22–28 Sep) plus Saudi Hormuz loadings 2.8–2.9 mbpd vs 0.7 in August (JPMorgan) pulled Brent $108.75 → ~$101 and WTI ~$103 → ~$98 — same cash-flow as open `20260826-hormuz-thaw` (JETS/XLE/USO/XEG/CRAK/UAL/SU/PSX due **25 Sep**) and the *FRO falsifier path* of open `20260914-saudi-bypass` (FRO/OXY/AAL frozen). Do not book the oil fade as a 4th id; thaw falsifier Brent >95 is still true on the tape — grade 25 Sep, do not edit ranges. Petroline still dark since 11 Sep; no confirmed half-capacity restart; Saudi workaround is route-through-Hormuz + STS off Oman (Sep exports >4 mbpd vs 2.4 Aug). Same mechanism as open bypass, not a new id. Houthi 19 Sep first Riyadh air-raid alert since July plus claimed Yanbu Aramco strike (Saudi says intercepted; AFP smoke at Riyadh airport fuel tanks; Yanbu-fire videos fact-checked as old) is the same Bab el-Mandeb / workaround line as `20260914` — overlay. AAA diesel **$6.5107 record** (21 Sep) vs $6.40 on 17 Sep; HO ~$4.88–4.93; Ukraine 19–21 Sep hit Gazpromneft-Moscow AVT-6 CDU + isomerization (FirePoint claims RU offline refining 10%→14%) and reported Bashneft Ufa — same product-tightness as open `20260827-distillate-squeeze` (STNG/VLO/KNX due **26 Sep**). Syzran/Saratov already overlayed 17 Sep. Leftover TNK/MPC/WERN fail duplicate-beta / 52w / thin screen. BOJ 18 Sep +25bp to 1.25% (7–2; Asada/Sato dissent) was ~100% priced; yen weakened ~1% to ~157 on the split — no leftover liquid convexity. Goolsbee (21 Sep) “demand may be adding to inflation beyond oil/tariffs” is the same path as open `20260828-warsh-hike-gold` (KGC/KEY/NLY due **27 Sep**) and `20260826-treasury-fed-tension` (TLT/XLF/NEE/DHI/AMT). LEN/PHM/PGR leftovers already failed the 17 Sep screen. Graham Act signed 18 Sep (House-only last run); 30-day clock starts; national-security waiver means Trump can suspend — no tariff imposed in 72h, no industry cash-flow. Canada 29 Sep alcohol/whey/molasses/motorcycle bans still calendar; Capital Economics ≈0.25% of Cdn US-bound exports; energy, potash, fish, critical minerals still **338-exempt** — overlay on `20260826-us-canada-tariffs` + `20260827-canada-8sep`. Pharma 232 second wave 29 Sep is calendar; Annex III already live since 31 Jul. Trump–Xi 24 Sep is talks (Bessent/He Lifeng Sun “very successful”; $30bn/side non-sensitive reciprocal cuts discussed; truce expires 10 Nov) — no signed goods print. Ven HAL MoUs with Eneva + WESCA 21 Sep overlay open `20260829-venezuela-heavy` (HAL/CVX frozen). TTF ~€74–80 / EU storage ~69.4% vs ~85% 5yr / JKM ~$27 — VG/GLNG/LYB already open to 2 Nov. WCS–WTI narrowed to ~$10.7–11.8 (18 Sep; WCS ~$88–90 / WTI settle $100.30) from ~16.5 on 11 Sep — thaw-path tell on open SU/CNQ/XEG even with Brent still >95. Energy still 338-exempt.
+
+**Ranking**
+- UNGA / Pezeshkian oil-fade leftover after UAL/JETS/AAL/DAL — (45/100)×10 = **4.5** — dropped (thaw grades 25 Sep; FRO falsifier path of open bypass)
+- Diesel $6.51 + Moscow/Ufa CDU — STNG/VLO/KNX already open; leftover TNK/MPC/WERN fail duplicate-beta / 52w — (48/100)×12 = **5.8** — dropped (overlay on `20260827`; grades 26 Sep)
+- Houthi Riyadh/Yanbu + Petroline still dark — leftover DHT after FRO — (48/100)×12 = **5.8** — dropped (overlay on `20260914`; 52w / duplicate-beta)
+- Graham Act signed 18 Sep — leftover after FRO/NUE — (42/100)×10 = **4.2** — dropped (waiver; no 72h duty imposed)
+- Canada 29 Sep bans — leftover DOO/alcohol — (45/100)×8 = **3.6** — dropped (0.25% of Cdn US exports; overlay Canada rows; no clean 3-pick)
+- Post-FOMC Goolsbee / Oct hike ~56% leftover duration — LEN/PHM/PGR — (42/100)×10 = **4.2** — dropped (duplicate of open DHI/NEE/AMT/TLT/KEY/KGC/NLY)
+- BOJ 1.25% leftover JPY/banks — (40/100)×8 = **3.2** — dropped (100% priced; yen faded on 7–2; Tokyo closed Mon–Wed)
+- Trump–Xi 24 Sep $30bn reciprocal talk — (40/100)×8 = **3.2** — dropped (no signed goods deal; empty AI banned)
+- Pharma 232 second wave 29 Sep — calendar; Annex III already live — dropped
+- Ven HAL MoUs 21 Sep — HAL/CVX already open — dropped
+- TTF €74–80 / JKM ~$27 / storage 69% — VG/GLNG/LYB already open — dropped
+- WCS–WTI squeeze to ~11 — tell on open SU/CNQ/XEG, not a new id — dropped
+
+**Kept:** none. Do not invent.
+
+**Drivers (21 Sep morning):** Brent ~$100.6–101.7 (Fri settle ~$103.87; 14 Sep high ~$108.75; 4th down session) · WTI ~$98 (Oct expiry Tue; Nov ~$94) · WCS ~$88–90 Fri / WCS–WTI **~$10.7–11.8** (18 Sep; narrowed from ~16.5 on 11 Sep) · TTF ~€74–80 (live ~€77) · JKM ~$26.8–27.5 · HH ~$2.85–2.87 · Au ~4350–4410 · 10y ~4.97% · 30y ~5.30 · 2y ~4.73–4.75 · Oct hike ~53–56% / Dec ~88–90% · AAA diesel **$6.5107 record** (21 Sep) · HO ~$4.88–4.93 · ULSD crack still ~$100+/bbl · VLCC TD3C Baltic ~$1.0–1.21m/d (week 38) · EU storage ~69.4% vs ~85% 5yr · Petroline still dark; Saudi Hormuz flows 2.8–2.9 mbpd vs 0.7 Aug · BOJ 1.25% live (7–2) · Graham Act signed 18 Sep · FOMC 3.75–4.00 live · UNGA 22–28 Sep · Trump–Xi 24 Sep · Canada/pharma 232 bans 29 Sep calendar.
+
+**Calibration:** No official closed tracker rows. Sep 10 log noted unofficial first-14d tape on `20260827-canada-8sep` (WHR hit range+dir; IP dir only / range miss; SAP.TO miss) but those rows remain `status=open` — do not edit ranges. First official 30d grades **2026-09-25** (Hormuz thaw: JETS/XLE/USO/XEG/CRAK/UAL/SU/PSX) and **2026-09-26** (distillate: STNG/VLO/KNX); Warsh-gold grades 27 Sep. Tape note only: Brent 86.8→~$101 and WTI 80.9→~$98 have the thaw *hurt* side (XLE/USO/XEG/SU) running against the re-esc/bypass *benefit* side, while WCS–WTI squeeze to ~11 is the thaw-path tell on open oil-sands even with Brent still >95 — grade at due date, do not edit ranges.
+
+**Disclaimer:** Not financial advice. Selection support only — no position sizes.
+
 ### 2026-09-17 | 08:20 America/Regina
 
 **Process:** Macro v1.3 · Write rules v1.2 · sources Fed/Reuters/Bloomberg/CNBC/NYT/S&P Global/AAA/EIA/CBP CSMS/NBS China/OilPrice 14–17 Sep 2026
