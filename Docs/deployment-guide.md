@@ -1,7 +1,7 @@
 # Deployment guide — living-ops index
 
 **Status:** Index (filename kept so old links resolve)  
-**Updated:** 2026-09-08  
+**Updated:** 2026-09-21  
 **Canonical:** `Coombzy/Project-Car` → `Docs/deployment-guide.md`
 
 This file is **not** a runbook. Use the living docs below.
@@ -13,6 +13,9 @@ This file is **not** a runbook. Use the living docs below.
 | Need | Doc |
 |------|-----|
 | Doc lid-close / morning 530 restore (ordered Lead sequence — process wake only) | `doc-lid-restore.md` |
+| Home vs camp Doc posture (home Soft-530 OPEN when Docs Mac off = **EXPECTED**) | `home-vs-camp-doc-posture.md` |
+| Camp vault on Doc (paper — **Ben GO** then Zone `vault.` retarget only; rollback Zone → McKing) | `camp-vault-on-doc.md` |
+| Host map (McKing = `lightning` Omarchy; `vault.projectcar.ca` = intended public VW) | `home-lab-specification.md` |
 | Doc unfreeze after **Ben GO** (pull / migrate / rebuild / `BUILD_ID` / smoke) | `doc-unfreeze.md` |
 | Shop UI stay-up on Doc (`ops.` / temporary `app.`, `:3000`, **`next start`**) | `shop-web-stay-up.md` |
 | Shop API stay-up on Doc (`api.`, `:8000`, uvicorn) | `api-stay-up.md` |
@@ -33,6 +36,7 @@ This file is **not** a runbook. Use the living docs below.
 | Need | Doc |
 |------|-----|
 | What’s live / host split | `STATUS.md` |
+| Home vs camp Soft-530 + camp vault-on-Doc | `home-vs-camp-doc-posture.md` · `camp-vault-on-doc.md` |
 | Stack, host plan, bans | `platform-architecture.md` |
 | Nextcloud / Vaultwarden / cockpit | `mission-control-architecture.md` |
 | Live hub status on Doc | `nextcloud-progress.md` |
