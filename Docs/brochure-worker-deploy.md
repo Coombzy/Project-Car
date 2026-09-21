@@ -1,8 +1,8 @@
 # Brochure Worker deploy — `projectcar-brochure`
 
 **Status:** Standing runbook  
-**Updated:** 2026-09-07  
-**Related:** `STATUS.md` Live brochure, `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 **LIVE** — do not re-apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md`, `apps/website/README.md`
+**Updated:** 2026-09-21  
+**Related:** `STATUS.md` Live brochure + Option A smoke-gate lock, `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 **LIVE** — do not re-apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md`, `apps/website/README.md`
 
 Re-deploy the public brochure after Garage merges HTML on `main`. This is the **locked live method**. It is not a one-off for a single hygiene ship.
 
@@ -67,7 +67,7 @@ Use whatever machine already has Cloudflare access for this Worker. Checkout `ma
 4. **Direct Upload** the **`apps/website/html` directory** (that folder is the site root). Confirm the Worker name is still **`projectcar-brochure`** before you commit the deploy.
 5. **Confirm hosts.** Apex `projectcar.ca` and `www.projectcar.ca` still attach to this Worker. Do **not** edit DNS, retarget `ops.` / `app.` / `api.`, or connect Classic Pages git.
 6. **Optional Zone setting** (already noted in `apps/website/README.md`): static `not_found_handling = "404-page"` so branded `404.html` is used. Do not add an SPA `/* → /index.html` fallback.
-7. **Smoke** the list below. Then Garage runs waitlist e2e once public `GET /health` is **200**.
+7. **Smoke** the list below. If this upload is the Option A HTML finish (open **#82** leftover: Home `index.html` + thin `_redirects`), also run the **Option A Worker-live smoke gate** — **FAIL** until **PASS**. Then Garage runs waitlist e2e once public `GET /health` is **200**.
 
 Do not upload shop-web (`apps/project-car/web`). Do not point the Worker at Doc `:8088`.
 
@@ -100,6 +100,45 @@ curl -sS -o /dev/null -w '%{http_code}\n' https://api.projectcar.ca/health
 
 Home HTML must not contain `Website progress` or a `10%` progress bar. Chat must stay gone (404 / redirect to Contact is fine; a Chat page is not).
 
+A green general smoke (200 pages + no Chat) is **not** Option A HTML finish. Reality tip / Option A finish **cannot** claim live HTML is done until the gate below is **PASS**.
+
+---
+
+## Option A Worker-live smoke gate
+
+**FAIL / fail unless all three are true** on **live** Worker HTML **after** Zone Direct Upload of `apps/website/html`. Do **not** stamp Reality tip or “Option A HTML finish” from git merge, Zone Redirect Rules, or this docs file.
+
+| # | Check | PASS only if (live HTML) | FAIL if |
+|---|--------|--------------------------|---------|
+| 1 | Home / nav Home links | `href="index.html"` (relative) on Home nav and other public pages’ Home links | Bare `href="/"` |
+| 2 | Home `rel=canonical` + `og:url` | Both exactly `https://projectcar.ca/index.html` | `https://projectcar.ca/` or www |
+| 3 | Worker `_redirects` | Thin **chat-only**: `/chat` + `/chat.html` → Contact **301**. No `/` or `/shop` 302s | Worker 302 on `/` or `/shop` (Zone **301** pretty-URL pack owns `/` `/shop` `/membership` `/about` → `*.html`) |
+
+`main` git may still list leftover `/shop` 302s in `apps/website/html/_redirects` until **#82** lands. Those leftovers are **not** the live pretty-URL SSOT. After the Option A upload, live `_redirects` must be thin chat-only.
+
+CF challenge **403** is WAF, not this gate (same as the general smoke). Soft-530 / **1033** on `api.` / `ops.` / `app.` is Doc origin down — **not** a brochure HTML fail.
+
+```bash
+# Option A smoke — live HTML after Direct Upload. FAIL unless all three pass.
+# 1) Home/nav: href="index.html" (not href="/")
+curl -sS https://projectcar.ca/index.html | rg -n 'href="/"|href="index.html"'
+# 2) canonical + og:url must both be https://projectcar.ca/index.html
+curl -sS https://projectcar.ca/index.html | rg -n 'rel="canonical"|property="og:url"'
+# 3) Worker _redirects stay thin — /shop must not be a Worker 302
+#    Zone 301 pretty-URL pack owns / and /shop. A Worker 302 to /the-shop is FAIL.
+curl -sSI https://projectcar.ca/shop
+```
+
+### Locks (do not weaken)
+
+| Lock | Meaning |
+|------|---------|
+| **Zone 301 pretty-URL pack alone ≠ Option A HTML finish** | Apex+www Redirect **301**s can make `/` and `/shop` work while live Home still has bare `href="/"` + canonical/og `https://projectcar.ca/`. Pretty URLs live ≠ Worker HTML done. |
+| **merge #82 ≠ Worker-live ≠ Reality tip-fold** | Open Website **#82** is the HTML leftover (nav / canonical / og / thin `_redirects`). Merge to `main` is not live. Live is Zone Direct Upload **then** this smoke **PASS**. Do **not** fold Reality tip or claim Option A finish until **PASS**. |
+| **Soft-530 OPEN `home_expected`** | When Doc origin is down, public `api.` / `ops.` / `app.` (and waitlist) **530 / 1033** is quiet-ops — **not** an incident stamp. Do **not** treat Soft-530 as a failed Option A smoke or a reason to flip the Worker. Restore: `doc-lid-restore.md`. |
+
+This docs lock ≠ Soft-530 restore ≠ Doc unfreeze ≠ vault retarget ≠ **#82** Worker-live execute. Do **not** tip-fold onto held **#70**. Do **not** amend held **#70**, **#75–#79**, **#81–#85**, **#86**.
+
 ---
 
 ## Rollback
@@ -131,5 +170,7 @@ Worker **`projectcar-brochure` 200s** send the P2-4 security headers (2026-09-07
 | Apex sidecar | Deferred. Do not revive. |
 | DNS / `app.` alias | Do not cut or retarget. |
 | Shop API / shop-web process | Lead (`:8000`) / `com.projectcar.shop-web` (`next start` on `:3000`). See `api-stay-up.md` / `shop-web-stay-up.md`. |
+| Option A HTML finish / **#82** execute | Smoke gate above. This runbook does **not** merge **#82**, upload the leftover tree, or fold Reality tip. |
+| Soft-530 restore / Doc unfreeze / vault retarget | `doc-lid-restore.md` / `doc-unfreeze.md`. Quiet-ops when Doc is down — not this upload. |
 
 **Ownership (unchanged):** Zone owns the Worker upload. Garage owns HTML + waitlist e2e. Lead owns Doc `:8000`.
