@@ -1,8 +1,8 @@
 # CCJ Stock Analysis Automater — Hermes Agent Process
 
-**Version:** 1.13 (2026-09-10)  
-**Last edited:** 2026-09-10 16:35 ET  
-**Supersedes:** v1.12 (2026-09-03)  
+**Version:** 1.14 (2026-09-22)  
+**Last edited:** 2026-09-22 16:40 ET  
+**Supersedes:** v1.13 (2026-09-10)  
 **Location:** `Project-Car/finance/`
 
 Read `finance/CCJ_WRITE_RULES.md` and `finance/CCJ_README.md` first.
@@ -68,7 +68,10 @@ Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Audi
 6. Commit log (prepend one entry). Get SHA immediately before write. **Re-read the living log and confirm the `### YYYY-MM-DD` heading for this session exists.** If missing, retry the log write once. Do not proceed to tracker/Health until the heading is confirmed.
    - Also confirm **at least one older `### YYYY-MM-DD` heading with a real body** remains after the prepend.
    - If the file is a placeholder, `SEE_LOCAL_FILE` stub, RESTORE NOTE only, or otherwise truncated: restore prior entries byte-for-byte from the last good full-log commit (`fa0f688` or `9353ad26`) **before** treating the run as complete. Never commit a truncated log. Do not replace the file body with a local-file pointer.
-7. Append four tracker rows with **structured features filled**: `pred_regime`, `pred_rel_vol`, `prior_day_pct` (status=`open`). **Re-read the tracker and confirm the four new `(analysis_date, horizon)` rows exist.** Missing them is an incomplete run. If the four `(analysis_date, horizon)` rows are absent after re-read, append them immediately — do not leave today's open rows for the Audit job.
+7. Tracker append is a **hard stop**, not optional, and is **not deferred to Audit**.
+   - If the **prior analysis_date** is missing its four tracker rows, append those four FIRST (copy range/bias/conf/regime/Rel Vol/prior_day_pct from that log entry).
+   - Then append today's four rows with **structured features filled**: `pred_regime`, `pred_rel_vol`, `prior_day_pct` (status=`open`).
+   - **Re-read the tracker and confirm both** the prior-session four (if they were missing) **and** today's four `(analysis_date, horizon)` rows exist. If either set is absent after re-read, append immediately. Do not leave open rows for the Audit job.
 8. Prepend one Process Health row with Audit Score `(pending)`. Re-read to confirm.
 9. Report commit SHA(s).
 
@@ -124,7 +127,7 @@ Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Audi
 - [ ] Regime + ATR-proxy + Decision map present
 - [ ] 1d width >= 2.0×ATR-proxy; trend-up 1d not centered below close
 - [ ] After 2-of-3 upper-exceed: 1d high clears last session high and is not parked on a magnet
-- [ ] Tracker rows include pred_regime, pred_rel_vol, prior_day_pct; four new rows confirmed present by re-read. If absent after re-read, append immediately — do not leave them for Audit.
+- [ ] Tracker rows include pred_regime, pred_rel_vol, prior_day_pct; today's four rows **and** any missing prior-session four confirmed present by re-read. If absent after re-read, append immediately — do not leave them for Audit.
 - [ ] Quality Evaluator >= 7; Confidence consistent with session timing + calibration
 - [ ] Health row confirmed present
 - [ ] Living-log `### YYYY-MM-DD` heading for this session confirmed present after commit (not only Health)
