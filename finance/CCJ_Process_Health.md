@@ -3,12 +3,13 @@
 Lightweight tracker for long-term quality of the Analysis Automater and Audit Process.  
 One short line per day. Does **not** replace the main living analysis log.
 
-**Current prompt versions (as of 2026-09-18 audit):** Analysis **v1.13** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
+**Current prompt versions (as of 2026-09-22 audit):** Analysis **v1.14** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
 See `finance/CCJ_README.md`. Official cadence: Analysis **16:10 ET** weekdays · Audit 16:30 ET weekdays.
 
 | Date       | Analysis Confidence | Audit Score | Top Issue / Note                          | Data Sources OK? |
 |------------|---------------------|-------------|-------------------------------------------|------------------|
-| 2026-09-21 | 86                  | (pending)   | Official EOD C$93.23 Rel 1.01x trend-down; 6th session under 50-DMA; pair flag vs U3O8 +1.76pp; Sep 18 1d printed hit; prompt v1.13 | Yes |
+| 2026-09-22 | 86                  | 10          | Official EOD C$94.59 Rel 1.05x trend-up; 7th session close under 50-DMA (H tagged through); Sep 18 1d + Sep 21 1d CLOSED hit; Sep 14 1w + Sep 15 1w CLOSED hit; Cal refresh; Analysis missed tracker append (auditor backfill); prompt v1.14 | Yes |
+| 2026-09-21 | 86                  | 10          | Official EOD C$93.23 Rel 1.01x trend-down; 6th session under 50-DMA; pair flag vs U3O8 +1.76pp; Sep 18 1d CLOSED hit; audit notes left placeholder (write-rules newest-only); prompt v1.13 | Yes |
 | 2026-09-18 | 86                  | 10          | Official EOD C$91.62 Rel 3.04x trend-down; 5th session under 50-DMA; spike-fade H$96.09 rule 7 ON; Sep 17 1d CLOSED hit; Sep 11 1w CLOSED hit; Cal refresh; Analysis missed tracker append (auditor backfill); prompt v1.13 | Yes |
 | 2026-09-17 | 86                  | 10          | Official EOD C$92.80 Rel 0.78x trend-down; 4th session under 50-DMA; pair flag vs U3O8 +2.37pp; Sep 16 1d CLOSED hit; Sep 10 1w CLOSED hit; Cal refresh; Analysis missed tracker append (auditor backfill); prompt v1.13 | Yes |
 | 2026-09-16 | 86                  | 10          | Official EOD C$90.90 Rel 0.71x; Sep 15 1d CLOSED hit; Sep 9 1w CLOSED hit; Sep 14 1d persist-close hit; Cal refreshed; Analysis missed tracker append + Health + log still truncated; auditor backfill; prompt v1.13 | Yes |
