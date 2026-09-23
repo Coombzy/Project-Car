@@ -1,8 +1,8 @@
 # CCJ Stock Analysis Automater — Hermes Agent Process
 
-**Version:** 1.14 (2026-09-22)  
-**Last edited:** 2026-09-22 16:40 ET  
-**Supersedes:** v1.13 (2026-09-10)  
+**Version:** 1.15 (2026-09-23)  
+**Last edited:** 2026-09-23 16:45 ET  
+**Supersedes:** v1.14 (2026-09-22)  
 **Location:** `Project-Car/finance/`
 
 Read `finance/CCJ_WRITE_RULES.md` and `finance/CCJ_README.md` first.
@@ -67,7 +67,8 @@ Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Audi
 5. Quality Evaluator. If < 7, fix before commit. If 1d width < 2×ATR-proxy, or 1d high ≤ last session high after a 2-of-3 upper-exceed, fix before commit.
 6. Commit log (prepend one entry). Get SHA immediately before write. **Re-read the living log and confirm the `### YYYY-MM-DD` heading for this session exists.** If missing, retry the log write once. Do not proceed to tracker/Health until the heading is confirmed.
    - Also confirm **at least one older `### YYYY-MM-DD` heading with a real body** remains after the prepend.
-   - If the file is a placeholder, `SEE_LOCAL_FILE` stub, RESTORE NOTE only, or otherwise truncated: restore prior entries byte-for-byte from the last good full-log commit (`fa0f688` or `9353ad26`) **before** treating the run as complete. Never commit a truncated log. Do not replace the file body with a local-file pointer.
+   - If the file is a placeholder, `SEE_LOCAL_FILE` stub, RESTORE NOTE only, or otherwise truncated: restore prior entries byte-for-byte from the last good full-log commit (`37e81b8d` Sep 22+21, `2c6bcd39`, or newer full-log SHA) **before** treating the run as complete. Never commit a truncated log. Do not replace the file body with a local-file pointer.
+   - **Hard stop:** a write whose resulting file contains only one `### YYYY-MM-DD` heading is a failed run. Restore prior bodies immediately, then re-read. Do not write Health until two or more dated headings with real bodies exist.
 7. Tracker append is a **hard stop**, not optional, and is **not deferred to Audit**.
    - If the **prior analysis_date** is missing its four tracker rows, append those four FIRST (copy range/bias/conf/regime/Rel Vol/prior_day_pct from that log entry).
    - Then append today's four rows with **structured features filled**: `pred_regime`, `pred_rel_vol`, `prior_day_pct` (status=`open`).
