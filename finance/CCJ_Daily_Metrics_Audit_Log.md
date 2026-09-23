@@ -42,7 +42,32 @@ Key takeaway: Eighth session close under the 50-DMA printed $90.80 on Rel 0.81x 
 - Prior scenarios vs actual: Sep 22 1d $86.00-$104.00 -> L90.76 H93.69 C90.80 hit (C under bias $94.50-$101.00; auditor to close). Sep 22 1w $80.00-$117.00 day 1 of 5 on-track (path L90.76 H93.69 C90.80). Sep 21 1d $84.00-$102.00 -> L92.25 H95.36 C94.59 hit (auditor to close). Sep 21 1w $76.00-$112.00 day 2 of 5 on-track. Sep 18 1w $74.00-$111.00 day 3 of 5 on-track. Self-check: Today's 1d width $20.00 vs ATR-proxy $3.11; last closed 1d was hit; 1d high $102.00 vs last session high $93.69; Rel Vol 0.81x from 16:00 print; wick (H-C) $2.89 = 0.93x ATR -- adjustment: rule 2 OFF; rule 7 ON; magnet-clear $100 to $102.00 and 1w $110 to $112.00; trend-down after 8th session under 50-DMA; pair flag vs U3O8 −4.01pp.
 
 #### Audit / Reviewer Notes
-(To be completed by subsequent audit process)
+**Independent Process Quality Audit** (2026-09-23 16:50 ET)
+
+### Process Quality Audit
+- Quality: [x] 8 metrics sourced [x] Historical deltas [x] QE 8.5 [x] Conf 86 [x] Narrative vs history [x] No contradictions [x] Anomaly flags (vs U3O8 −4.01pp) [x] Forward 1d/1w/1m/3m + invalidation + prior-scenario [x] Decision map [x] 1d width $20.00 = 6.43×ATR $3.11 ≥ 2.0×
+- Operational: [x] Prompt v1.15 matches last rec [x] Newest notes only [x] Health row today [x] Grades closed after RTH [x] Polygon primary (Yahoo/SA cluster match C$90.80) [x] Feature columns on backfill [x] Calibration refreshed (Sep 22 1d + Sep 16 1w)
+- Deduction arithmetic: 10 − 0 = **Score 10/10**
+- Recurring: Analysis truncated living log to one heading (Sep 23 only vs 37e81b8d Sep 22+21). Tracker append missed (Sep 21/22/23 four-packs absent). v1.15 already hard-stops both — restore from 37e81b8d is Analysis next-run work.
+- Overall: Official EOD complete and consistent with Polygon O$93.60 H$93.69 L$90.76 C$90.80 V2.43M and URA C$41.99. Regime trend-down earned (bottom-of-range close 1.4%, Rel 0.81x after Tue Rel 1.05x trend-up; no-digestion-next-day rule applied). Tue fail gate (close <$92.25 on Rel ≥0.8x) printed. Ranges respect ATR/magnet/rule 7.
+
+### Prediction Accuracy
+- Closed this run (not preliminary): Sep 22 1d HIT; Sep 16 1w HIT; persist-close Sep 18 1d HIT + Sep 21 1d HIT; persist-close Sep 14 1w HIT + Sep 15 1w HIT.
+- Pointer: full tables in `CCJ_Prediction_Tracker.md`
+  - Sep 22 1d $86–$104 → L90.76 H93.69 C90.80 hit; C under bias $94.50–$101.00; fade; pct_error 7.1%
+  - Sep 16 1w $75–$108 (sessions 17/18/21/22/23) → L90.68 H96.09 C90.80 hit; C inside bias $82–$97; pct_error 1.5%
+  - Sep 18 1d $83–$102 → L91.65 H94.66 C93.23 hit; pct_error 3.3%
+  - Sep 21 1d $84–$102 → L92.25 H95.36 C94.59 hit; pct_error 2.3%
+- Open: Sep 23 1d for Thu Sep 24; Sep 17/18/21/22/23 1w on-track (path L90.76 H96.09 C90.80).
+- Calibration: refreshed yes. 1d full-hit 20/24 (83%) last-10 10/10; 1w full-hit 13/20 (65%). Rule 2 OFF (0/3). Rule 7 ON (wick $2.89 = 0.93×ATR).
+
+### Improvement Recommendations
+- Analysis must restore Sep 22+21 bodies from 37e81b8d before any new prepend (v1.15 hard-stop already committed 16:45 ET).
+- Tracker four-pack append remains a hard stop — confirm by re-read before exit.
+- Keep 1d conf at 50% while 1w full-hit is 65% despite 1d last-10 100%.
+- Thu path: $93.69 is a wick not support; continuation needs Rel ≥1.0× AND URA not down. Lose $90.76 on Rel ≥0.8× continues trend-down.
+- Prompt edit this run: N/A — v1.15 already applied 16:45 ET (one-heading log = failed run). No further bump.
+
+**Final Action** notes + tracker + Cal + Health confirm.
 
 ---
-
