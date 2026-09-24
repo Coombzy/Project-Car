@@ -1,8 +1,8 @@
 # CCJ Stock Analysis Automater — Hermes Agent Process
 
-**Version:** 1.15 (2026-09-23)  
-**Last edited:** 2026-09-23 16:45 ET  
-**Supersedes:** v1.14 (2026-09-22)  
+**Version:** 1.16 (2026-09-24)  
+**Last edited:** 2026-09-24 16:45 ET  
+**Supersedes:** v1.15 (2026-09-23)  
 **Location:** `Project-Car/finance/`
 
 Read `finance/CCJ_WRITE_RULES.md` and `finance/CCJ_README.md` first.
@@ -66,14 +66,15 @@ Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Audi
 4. Fill **Forward Scenarios** + **Decision map** + prior-scenario lines.
 5. Quality Evaluator. If < 7, fix before commit. If 1d width < 2×ATR-proxy, or 1d high ≤ last session high after a 2-of-3 upper-exceed, fix before commit.
 6. Commit log (prepend one entry). Get SHA immediately before write. **Re-read the living log and confirm the `### YYYY-MM-DD` heading for this session exists.** If missing, retry the log write once. Do not proceed to tracker/Health until the heading is confirmed.
-   - Also confirm **at least one older `### YYYY-MM-DD` heading with a real body** remains after the prepend.
-   - If the file is a placeholder, `SEE_LOCAL_FILE` stub, RESTORE NOTE only, or otherwise truncated: restore prior entries byte-for-byte from the last good full-log commit (`37e81b8d` Sep 22+21, `2c6bcd39`, or newer full-log SHA) **before** treating the run as complete. Never commit a truncated log. Do not replace the file body with a local-file pointer.
-   - **Hard stop:** a write whose resulting file contains only one `### YYYY-MM-DD` heading is a failed run. Restore prior bodies immediately, then re-read. Do not write Health until two or more dated headings with real bodies exist.
+   - Re-read must show **today's heading PLUS the two immediately prior NYSE session headings** with real bodies (minimum three dated headings). "At least one older heading" is not enough.
+   - If the file is a placeholder, `SEE_LOCAL_FILE` stub, RESTORE NOTE only, or otherwise truncated: restore prior entries byte-for-byte from the last good full-log commit (`37e81b8d` Sep 22+21, `2c6bcd39`, `c2e00069` Sep 24+23, or newer full-log SHA) **before** treating the run as complete. Never commit a truncated log. Do not replace the file body with a local-file pointer.
+   - **Hard stop:** a write whose resulting file contains fewer than three `### YYYY-MM-DD` headings with real bodies is a failed run. A same-run restore followed by a later write that drops those restored bodies is also a failed run. Restore prior bodies immediately, then re-read. Do not write Health until three dated headings with real bodies exist.
 7. Tracker append is a **hard stop**, not optional, and is **not deferred to Audit**.
    - If the **prior analysis_date** is missing its four tracker rows, append those four FIRST (copy range/bias/conf/regime/Rel Vol/prior_day_pct from that log entry).
    - Then append today's four rows with **structured features filled**: `pred_regime`, `pred_rel_vol`, `prior_day_pct` (status=`open`).
    - **Re-read the tracker and confirm both** the prior-session four (if they were missing) **and** today's four `(analysis_date, horizon)` rows exist. If either set is absent after re-read, append immediately. Do not leave open rows for the Audit job.
 8. Prepend one Process Health row with Audit Score `(pending)`. Re-read to confirm.
+   - Do **not** write "tracker backfill" (or equivalent) in the Health note unless the tracker re-read already confirmed those `(analysis_date, horizon)` rows exist.
 9. Report commit SHA(s).
 
 ## Template (exact)
@@ -130,6 +131,6 @@ Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Audi
 - [ ] After 2-of-3 upper-exceed: 1d high clears last session high and is not parked on a magnet
 - [ ] Tracker rows include pred_regime, pred_rel_vol, prior_day_pct; today's four rows **and** any missing prior-session four confirmed present by re-read. If absent after re-read, append immediately — do not leave them for Audit.
 - [ ] Quality Evaluator >= 7; Confidence consistent with session timing + calibration
-- [ ] Health row confirmed present
+- [ ] Health row confirmed present; Health note does not claim tracker backfill unless the tracker re-read already showed those rows
 - [ ] Living-log `### YYYY-MM-DD` heading for this session confirmed present after commit (not only Health)
-- [ ] Living log is not a placeholder / `SEE_LOCAL_FILE` stub; at least one prior dated body remains
+- [ ] Living log is not a placeholder / `SEE_LOCAL_FILE` stub; re-read shows today + two immediately prior session headings with real bodies (min 3)
