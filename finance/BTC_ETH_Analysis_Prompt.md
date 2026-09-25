@@ -1,7 +1,7 @@
 # BTC / ETH Daily Analysis Prompt
 
-**Version:** 1.27  
-**Last edited:** 2026-09-22T15:00:00Z  
+**Version:** 1.28  
+**Last edited:** 2026-09-25T15:20:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** BTC ETH Daily Crypto Analysis automation
 
@@ -16,7 +16,7 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
 
 ## Process rules (always apply)
 
-1. **ATR-proxy (v1.17)** — median true range of last 5 **completed weekday** UTC sessions. Exclude Sat/Sun and US-holiday thin sessions. Or published 14d ATR. State dollar value for BTC and ETH. Recalc each run from THIS-RUN weekday-5 TR list — never reuse $2100 / $3200 / any prior example. (Sep 17 Daily reused stale $2100 → 1d width $4800 < 2.0×$3200=$6400 and cap $78700 vs path H $81332.)
+1. **ATR-proxy (v1.17)** — median true range of last 5 **completed weekday** UTC sessions. Exclude Sat/Sun and US-holiday thin sessions. Or published 14d ATR. State dollar value for BTC and ETH. Recalc each run from THIS-RUN weekday-5 TR list — never reuse $2100 / $3200 / $1970 / any prior example. (Sep 17 Daily reused stale $2100 → 1d width $4800 < 2.0×$3200=$6400 and cap $78700 vs path H $81332.)
 2. **Regime** per asset: `trend-up` | `trend-down` | `digestion` | `failed-break`.
    - **One token only.** Never compound labels.
    - Do **not** label digestion the day after a high-volume trend-up close.
@@ -29,10 +29,10 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
 3. **Range construction**
    - **1-day is mandatory.** Width ≥ **2.0 × ATR-proxy**. After a completed UTC ≥ **+5%**, next 1d width ≥ **2.5 × ATR-proxy**. Trend-up never centered below close.
    - 1-week width ≥ **3.0 × ATR-proxy** (≥ **4.0 ×** if last 5 weekday sessions include a ≥5% up-day); if trend-up, upside leg from close ≥ 1.5× downside leg.
-   - **Post-+5% / mega-inflow 1w high (v1.27):** after a completed UTC ≥ **+5%** OR last-completed mega-inflow (BTC ETF ≥+$400M / ETH ETF ≥+$100M), next 1w `range_high` ≥ `max(that session high, quote-page Day Range H)` + **1.5 × ATR-proxy**. Hard-fail reprint if 1w high is parked on $82000 / $85000 / $86000 / $87000. (Sep 12 cap $82000 vs H $81911; Sep 14 cap $86000 vs H $86284; Sep 15 cap $86000 vs H $87364.)
+   - **Post-+5% / mega-inflow / in-window 1w high (v1.28):** after a completed UTC ≥ **+5%** OR last-completed mega-inflow (BTC ETF ≥+$400M / ETH ETF ≥+$100M) OR a +5% session high still inside the open 1w window OR FOMC/CPI/PCE/NFP inside that 1w window: 1w `range_high` ≥ `max(that session high, quote-page Day Range H)` + **1.5 × ATR-proxy** even if digestion. Applies to the **next** 1w print and is the construction miss behind Sep 14/15/17 1w caps $86000 vs later path H $87364. Hard-fail reprint if 1w high is parked on $78700 / $81000 / $82000 / $85000 / $86000 / $87000 / $88000. (Sep 12 cap $82000 vs H $81911; Sep 14 cap $86000 vs H $86284; Sep 15/17 cap $86000 vs H $87364; Sep 17 1d cap $78700 vs H $81332.)
    - 1-month and 3-month: wider numeric bands; bias optional but preferred.
    - **Printed-high clearance:** `range_high` ≥ `max(as-of, UTC-session high already printed, quote-page Day Range H)` + **0.5 × ATR-proxy**. Never park the high on a wick/magnet ($80k / $81.5k / $81500 / $86000 / $87000).
-   - **Printed-low clearance:** `range_low` ≥ `min(as-of, UTC-session low already printed, quote-page Day Range L)` − **0.5 × ATR-proxy**.
+   - **Printed-low clearance:** `range_low` ≤ `min(as-of, UTC-session low already printed, quote-page Day Range L)` − **0.5 × ATR-proxy**.
    - **Quote-page day-range (v1.26/v1.27):** RANGE_CHECK printed extremes = Yahoo quote-page Day Range H/L at as-of, **not** the history-table High. (21 Sep history-table H ~$81805 vs live Day Range H $86284 / session H $87364.)
    - **Weekend printed-extreme carry-forward (v1.16):** Sat/Sun and US holidays use the **last completed UTC session** high/low as the printed extreme. `range_high` ≥ last-completed-UTC high + applicable clearance; `range_low` ≤ last-completed-UTC low − applicable clearance.
    - **Fade/outflow low+high clearance (v1.6/v1.7):** if `prior_day_pct` ≤ **−1.0** OR last completed US spot ETF **for that asset** is net outflow, use **0.75 × ATR-proxy** printed-low AND printed-high clearance.
@@ -40,17 +40,17 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
    - **ETF-flip extra high (v1.7):** last completed US spot BTC or ETH ETF session reversed sign vs prior session → +**0.5 × ATR-proxy** extra to that asset's 1d `range_high`.
    - **Post-impulse high clearance (v1.8):** prior completed UTC session ≥ **+5%** OR live impulse ≥ **+3%** / **1.0 × ATR** → 1d printed-high clearance = **1.0 × ATR-proxy**. (Sep 3 BTC 1d cap $81,000 vs path H $82,300.)
    - **Live-impulse low clearance (v1.20):** if at as-of, (UTC-session open − spot) ≥ **3%** OR ≥ **1.0 × ATR-proxy**, 1d printed-low clearance = **1.0 × ATR-proxy**.
-   - **Mega-inflow extra high (v1.8):** last completed US spot BTC ETF ≥ **+$400M** → +0.5×ATR to BTC 1d and 1w high. ETH ETF ≥ **+$100M** → same for ETH. Stacks. Last completed **21 Sep** BTC +$999.0M / ETH +$270.0M.
+   - **Mega-inflow extra high (v1.8):** last completed US spot BTC ETF ≥ **+$400M** → +0.5×ATR to BTC 1d and 1w high. ETH ETF ≥ **+$100M** → same for ETH. Stacks. Last completed **24 Sep** BTC +$190.7M / ETH +$66.1M (neither mega). 23 Sep +$346.9M / +$104.5M (ETH mega). 22 Sep +$714.7M / +$162.2M. 21 Sep +$999.0M / +$270.0M.
    - **Squeeze-continuation extra high (v1.26/v1.27):** if that asset's futures OI 24h ≥ **+8%** AND funding > 0 AND live impulse ≥ **+3%** or ≥ **1.0×ATR**, add +**0.5×ATR** to that asset's 1d AND 1w `range_high`. Stacks with mega-inflow and post-+5%.
    - **Known-macro extra high (v1.19):** CPI/PCE/FOMC/NFP extra applies only if the **event timestamp** is ≤ as-of+24h.
    - **Post-event lag-squeeze high (v1.23):** if FOMC/CPI/PCE/NFP timestamp is in the prior 24h, 1d printed-high clearance = **1.0×ATR** even when pred_regime is digestion. Also 1d range_high ≥ as-of + **1.5×ATR**. Stacks. Sep 17 Daily cap $78700 vs path H $81332 after FOMC 16 Sep 18:00Z.
    - **Spike-fade:** wick ≥ 0.8×ATR is not a cap; still apply 0.5×ATR clearance above that high.
-   - **RANGE_CHECK (v1.27 — hard).** Print this-run weekday-5 TR list + median + post-event-high 1.0x yes/no + live-impulse-low 1.0x yes/no + post-+5% 2.5x-width yes/no + squeeze-continuation 0.5x yes/no + quote-page Day Range H/L for BTC and ETH. If 1d width < required multiple or high/low miss required clearance, widen and reprint before writing. Hard-fail reprint if post-event-high=yes AND 1d high < as-of+1.5×ATR. Hard-fail reprint if post-+5% or mega-inflow AND 1w high < sessionH+1.5×ATR or parked on $82000/$85000/$86000/$87000. Never reuse a dollar ATR from a prior run or this prompt example.
+   - **RANGE_CHECK (v1.28 — hard).** Print this-run weekday-5 TR list + median + post-event-high 1.0x yes/no + live-impulse-low 1.0x yes/no + post-+5% 2.5x-width yes/no + squeeze-continuation 0.5x yes/no + in-window-+5% 1w-high 1.5x yes/no + quote-page Day Range H/L for BTC and ETH. If 1d width < required multiple or high/low miss required clearance, widen and reprint before writing. Hard-fail reprint if post-event-high=yes AND 1d high < as-of+1.5×ATR. Hard-fail reprint if post-+5% or mega-inflow or in-window-+5% AND 1w high < sessionH+1.5×ATR or parked on $78700/$81000/$82000/$85000/$86000/$87000/$88000. Never reuse a dollar ATR from a prior run or this prompt example.
 4. Fill **pred_regime** and **prior_day_pct** on every tracker row. **conf** integer **40–85**. **prior_day_pct** = Yahoo BTC-USD / ETH-USD official UTC Close pair only. Print `source: Yahoo YYYY-MM-DD $c1 → YYYY-MM-DD $c2 = Z%`.
 5. Include **prior-scenario vs actual** from the tracker when closed rows exist.
 6. **Decision map** (3 bullets): confirm vs fail; path-changing levels; calibration from last closed miss/hit.
 7. **Parseable table first:** immediately after Key Takeaway, 8-row table. Entire table + `RANGE_CHECK:` + `TRACKER_SHA:` in first ~1400 characters. Email/report must print all 8 numeric rows untruncated.
-8. **Weekend/holiday ETF:** **Last completed as of 2026-09-22 = Mon 2026-09-21 BTC +$999.0M / ETH +$270.0M (mega-inflow both).** 18 Sep BTC +$433.0M / ETH +$143.7M. 17 Sep BTC +$159.5M / ETH −$39.3M. 16 Sep BTC −$295.9M / ETH −$224.1M. 22 Sep Farside 0.0 is **not** a completed print — use last completed weekday.
+8. **Weekend/holiday ETF:** **Last completed as of 2026-09-25 = 24 Sep BTC +$190.7M / ETH +$66.1M (neither mega).** 23 Sep BTC +$346.9M / ETH +$104.5M (ETH mega). 22 Sep +$714.7M / +$162.2M. 21 Sep +$999.0M / +$270.0M. 18 Sep +$433.0M / +$143.7M. Unprinted Farside 0.0 (25 Sep) is **not** a completed print — use last completed weekday.
 9. **Weekend writes are mandatory** only if today's 8 rows do not already exist.
 10. **Write-first.** `WRITE PENDING` banned. Email is not a write.
 11. **Write-SHA gate (hard).** Emitted SHA must differ from pre-write SHA.
