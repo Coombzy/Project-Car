@@ -1,3 +1,51 @@
+### 2026-09-25 | 16:20 ET
+
+#### Metrics
+| Metric                        | Value                          | Source / Notes                  |
+|-------------------------------|--------------------------------|---------------------------------|
+| **1. Audit Timestamp**        | 2026-09-25 16:20 ET            | Official EOD (Polygon 16:00 regular-session print) |
+| **2. CCJ Price Snapshot**     | Close: $88.06<br>-$0.06 / -0.07% | Day Range $87.81-$89.29; Polygon O $89.24 VWAP $88.29 (cluster Yahoo 15:59:55 $88.05 V 1.818M). Polygon daily H $91.24 is premarket -- RTH H $89.29 used. vs log Sep 24 $88.16 cluster. |
+| **3. Volume Metrics**         | Vol: 1.82M<br>Avg (20d): 2.91M<br>Rel Vol: 0.63x | Polygon daily V 1.82M vs 20d excl. today 2.91M (RTH V 1.81M) |
+| **4. U3O8 Spot Price**        | $89.45 /lb                     | -$0.30 / -0.33% vs Sep 24 log $89.75; UraniumTracker $89.45 (TE confirm $89.45) |
+| **5. Market Cap & Valuation** | Mkt Cap: $38.35B<br>P/E: 151.8 TTM / 64.6 Fwd | 435.53M x $88.06; Yahoo TTM scaled 152.0*(88.06/88.16) + Fwd scaled 64.7*(88.06/88.16) |
+| **6. Technical Position**     | RSI(14): 36.4<br>vs 50-DMA: -7.1%<br>vs 200-DMA: -16.8% | 50-DMA $94.77 / 200-DMA $105.82 (Polygon SMA); 10th session close under 50-DMA |
+| **7. Sector Relative Perf.**  | CCJ: -0.07%<br>URA: +0.12%<br>Rel: -0.19% | Polygon URA C $40.91 (H $41.36 L $40.66 V 1.95M) vs Sep 24 $40.86 |
+| **8. Key Catalysts / Sentiment** | Light-vol inside day after Thu Rel 1.11x fade: close $88.06 held $87.81 on Rel 0.63x (10th under 50-DMA). Wick $1.23 = 0.40xATR (rule 7 OFF). No new Cameco IR. Globe Sep 25: TD Cowen Hutchison keeps Buy / C$190 PT (Port Hope). Guidance 19.5-21.5M lbs + Westinghouse S-1 intact. Jefferies Buy / $138 PT overlay. Next print Oct 30. Sentiment: Cautious ST / Constructive MT |
+
+**Historical Deltas**: vs Sep 24 Polygon C $88.12: -$0.06 (-0.07%). Log printed $88.16. No missed NYSE session (Thu to Fri). vs post-Q2 $86.38: +1.9%. U3O8 $89.75 to $89.45. RSI 36.4 to 36.4. Price -7.1% vs 50-DMA $94.77 (10th session); -16.8% vs 200-DMA $105.82.
+**Anomaly Flags**: none on pairs (CCJ vs U3O8 +0.26pp; CCJ vs URA -0.19pp). Rel 0.63x down from Thu 1.11x; bottom-of-range close (16.9%); 10th session close under 50-DMA; H $89.29 missed 50-DMA $94.77 by $5.48. Wick $1.23 = 0.40x ATR (rule 7 OFF). Sep 24 1d printed hit. Light-volume inside day. Thu fail gate (C<$88.07 Rel>=0.8x) did not fire.
+**Data Sources**: Polygon primary | Yahoo 15:59:55 cluster | UraniumTracker U3O8 (TE confirm)
+**Analysis Confidence**: 86/100
+**Quality Evaluator Score**: 8.5/10
+
+#### Analysis Narrative
+Friday was a light-volume inside day after Thursday's Rel 1.11x fade. CCJ closed $88.06 (-0.07%) on $87.81-$89.29 after opening $89.24, never retagging Thursday's high $90.48 or the 50-DMA $94.77 (high missed it by $5.48), and settling at 16.9% of a $1.48 high-low range. Rel 0.63x (1.82M vs 20d 2.91M) fell from Thursday's 1.11x. True range $1.48; wick $1.23 = 0.40xATR -- rule 7 OFF. Sep 24 1d $80.00-$102.00 printed inside (L87.81 H89.29 C88.06; close inside bias $86.00-$94.00). Thursday's fail gate (close <$88.07 on Rel >=0.8x) did not fire.
+
+URA rose 0.12% to $40.91 on 1.95M (CCJ vs URA -0.19pp, no flag). U3O8 $89.45 on UraniumTracker (-0.33% vs Sep 24 log $89.75; CCJ vs spot +0.26pp, no flag). No new Cameco IR. Globe Sep 25: TD Cowen Hutchison keeps Buy / C$190 PT on a Port Hope conversion note. Westinghouse Poland EPC main-terms + Westinghouse >$50B IPO / Cameco 49% stake overlay intact. Guidance 19.5-21.5M lbs + S-1 intact. Jefferies Buy / $138 overlay intact. Not trend-up (Rel 0.63x < 0.8; close bottom third). Not failed-break (Rel 0.63x > 0.5; high never tested 50-DMA). Not digestion (close not mid-range). Residual regime is trend-down after a tenth session under the 50-DMA. Post-Q2 bounce off $86.38 is +1.9%.
+
+Monday path-change: reclaim confirms if close >$94.77 on Rel >=1.0x AND URA not down. Lose $87.81 on Rel >=0.8x and the fade slides toward / through the post-Q2 low. 50-DMA $94.77 remains resistance; $89.29 is the session high, not a reclaim. Light Rel 0.63x means any Monday break needs volume confirmation.
+
+Key takeaway: Tenth session close under the 50-DMA printed $88.06 on Rel 0.63x -- a light-volume inside day that neither confirmed Thursday's fade through $88.07 nor reclaimed $89.29, so Monday still needs volume plus URA just to get back to Thursday's high, let alone the 50-DMA.
+
+#### Decision map (required -- 4 bullets)
+- Regime: trend-down. ATR-proxy: $3.04 (last 5 TR median: 3.04 / 3.11 / 3.83 / 2.73 / 1.48). Rel 0.63x 16:00 print; bottom-of-range close (16.9%); Rel 1.11x to 0.63x; U3O8 -0.33%; URA +0.12%. Not trend-up (Rel < 0.8; close not top-third). Not failed-break (Rel 0.63x > 0.5; no $100/50-DMA test). Not digestion (close not mid-range). Close $6.71 under 50-DMA $94.77.
+- Confirm vs fail: Reclaim confirms if Mon Rel >=1.0x AND URA not down AND close >$94.77. Trend-down continues if close <$87.81 on Rel >=0.8x.
+- Levels: $88.06 / $87.81 (close + session low); $89.29 session high; $94.77 50-DMA (resistance); $100 magnet overhead; 200-DMA $105.82 overhead.
+- Calibration: rules 4+5 (rule 2 OFF 0/3 Sep 21/22/23 hits; rule 3 off Rel 0.63x > 0.5; rule 7 OFF wick 0.40xATR). 1d width $22.00 vs ATR $3.04 (7.24x); 1d high $102.00 vs last session high $89.29 (clears; $100 magnet cleared to $102.00). Trend-down; bias $86.00-$94.00 sits around close.
+
+#### Forward Scenarios (required)
+- 1-day / next session (Mon Sep 28): $80.00-$102.00 (bias $86.00-$94.00; 50% conf)
+- 1-week: $72.00-$112.00 (bias $80.00-$98.00; 50% conf)
+- 1-month: $66.00-$118.00 (bias $76.00-$104.00; 50% conf)
+- 3-month: $64.00-$142.00 (bias $78.00-$116.00; 55% conf)
+- Key invalidation: Close below $80.00 on Rel >=0.8x AND U3O8 <$86
+- Prior scenarios vs actual: Sep 24 1d $80.00-$102.00 -> L87.81 H89.29 C88.06 hit (C inside bias $86.00-$94.00; auditor to close). Sep 24 1w $72.00-$112.00 day 1 of 5 on-track (path L87.81 H89.29 C88.06). Sep 23 1w $74.00-$112.00 day 2 of 5 on-track. Sep 18 1w $74.00-$111.00 printed inside L87.81 H95.36 C88.06 (auditor to close). Self-check: Today's 1d width $22.00 vs ATR-proxy $3.04; last closed 1d was hit; 1d high $102.00 vs last session high $89.29; Rel Vol 0.63x from 16:00 print; wick (H-C) $1.23 = 0.40x ATR -- adjustment: rule 2 OFF; rule 7 OFF; magnet-clear $100 to $102.00 and 1w $110 to $112.00; trend-down after 10th session under 50-DMA; no pair flags; light Rel 0.63x.
+
+#### Audit / Reviewer Notes
+(To be completed by subsequent audit process)
+
+---
+
 ### 2026-09-24 | 16:25 ET
 
 #### Metrics
