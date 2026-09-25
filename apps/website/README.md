@@ -20,7 +20,7 @@ Deferred. No Apex sidecar, Chat page, or assistant copy. Contact is email and Di
 | `sitemap.xml` | Canonical public HTML only (home, about, the-shop, membership, roadmap, contact). No Chat/Apex. |
 | `404.html` | Branded not-found page. nginx `error_page 404 /404.html`. Worker should use static `not_found_handling = "404-page"` on next Direct Upload (Zone owns that setting). |
 | `favicon.ico` + `assets/favicon.svg` / `favicon-32.png` / `apple-touch-icon.png` | Icon set. Do not use `mcking.jpg` as the favicon. |
-| `_redirects` | Chat → Contact 301s, plus `/shop` → `/the-shop` 302. No SPA `/* /index.html 200`. |
+| `_redirects` | Chat → Contact 301s only. Zone owns apex `/` and `/shop` 301s. No SPA `/* /index.html 200`. |
 | `_headers` | MIME hints for robots/sitemap when the host honors `_headers`. |
 
 ## Local verify (from `apps/website`)
