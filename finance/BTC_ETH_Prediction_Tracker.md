@@ -12,3 +12,5 @@ One row per `(analysis_date, asset, horizon)`. Update in place. Do not duplicate
 
 **Spot context:** ~13:20Z 26 Sep Yahoo BTC **$84185** quote-page/session H $84284.69 L $83799.75; last completed UTC Fri 25 H $85230.05 L $83165.53 C $84034.92. ETH **$2686** session H $2695.46 L $2680.88; Fri 25 H $2741.30 L $2667.05 C $2690.48. Multi-week BTC H $87363.76 / L $74944.59; ETH H $2805.50 / L $2357.96. prior_day_pct source: Yahoo 2026-09-24 $84379.06 → 2026-09-25 $84034.92 = -0.41%; ETH $2687.30 → $2690.48 = +0.12%.
 
+| analysis_date | asset | horizon | range_low | range_high | bias_low | bias_high | conf | pred_regime | prior_day_pct | actual_low | actual_high | actual_close | hit | directional | pct_error | status | notes |
+|---------------|-------|---------|-----------|------------|----------|-----------|------|-------------|---------------|------------|-------------|--------------|-----|-------------|-----------|--------|-------|
