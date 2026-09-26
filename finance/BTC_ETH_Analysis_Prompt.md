@@ -1,7 +1,7 @@
 # BTC / ETH Daily Analysis Prompt
 
-**Version:** 1.28  
-**Last edited:** 2026-09-25T15:20:00Z  
+**Version:** 1.29  
+**Last edited:** 2026-09-26T15:30:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** BTC ETH Daily Crypto Analysis automation
 
@@ -29,7 +29,7 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
 3. **Range construction**
    - **1-day is mandatory.** Width ≥ **2.0 × ATR-proxy**. After a completed UTC ≥ **+5%**, next 1d width ≥ **2.5 × ATR-proxy**. Trend-up never centered below close.
    - 1-week width ≥ **3.0 × ATR-proxy** (≥ **4.0 ×** if last 5 weekday sessions include a ≥5% up-day); if trend-up, upside leg from close ≥ 1.5× downside leg.
-   - **Post-+5% / mega-inflow / in-window 1w high (v1.28):** after a completed UTC ≥ **+5%** OR last-completed mega-inflow (BTC ETF ≥+$400M / ETH ETF ≥+$100M) OR a +5% session high still inside the open 1w window OR FOMC/CPI/PCE/NFP inside that 1w window: 1w `range_high` ≥ `max(that session high, quote-page Day Range H)` + **1.5 × ATR-proxy** even if digestion. Applies to the **next** 1w print and is the construction miss behind Sep 14/15/17 1w caps $86000 vs later path H $87364. Hard-fail reprint if 1w high is parked on $78700 / $81000 / $82000 / $85000 / $86000 / $87000 / $88000. (Sep 12 cap $82000 vs H $81911; Sep 14 cap $86000 vs H $86284; Sep 15/17 cap $86000 vs H $87364; Sep 17 1d cap $78700 vs H $81332.)
+   - **Post-+5% / mega-inflow / in-window 1w high (v1.28/v1.29):** after a completed UTC ≥ **+5%** OR last-completed mega-inflow (BTC ETF ≥+$400M / ETH ETF ≥+$100M) OR a +5% session high still inside the open 1w window OR FOMC/CPI/PCE/NFP inside that 1w window: 1w `range_high` ≥ `max(that session high, quote-page Day Range H)` + **1.5 × ATR-proxy** even if digestion. If the Sep 21 session high **$87363.76** is still inside the open 1w window, 1w `range_high` ≥ **$87363.76 + 0.5 × ATR-proxy**. Applies to the **next** 1w print and is the construction miss behind Sep 14/15/17 1w caps $86000 vs later path H $87364. Hard-fail reprint if 1w high is parked on $78700 / $81000 / $82000 / $85000 / $86000 / $87000 / $88000. (Sep 12 cap $82000 vs H $81911; Sep 14 cap $86000 vs H $86284; Sep 15/17 cap $86000 vs H $87364; Sep 17 1d cap $78700 vs H $81332.)
    - 1-month and 3-month: wider numeric bands; bias optional but preferred.
    - **Printed-high clearance:** `range_high` ≥ `max(as-of, UTC-session high already printed, quote-page Day Range H)` + **0.5 × ATR-proxy**. Never park the high on a wick/magnet ($80k / $81.5k / $81500 / $86000 / $87000).
    - **Printed-low clearance:** `range_low` ≤ `min(as-of, UTC-session low already printed, quote-page Day Range L)` − **0.5 × ATR-proxy**.
@@ -40,7 +40,7 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
    - **ETF-flip extra high (v1.7):** last completed US spot BTC or ETH ETF session reversed sign vs prior session → +**0.5 × ATR-proxy** extra to that asset's 1d `range_high`.
    - **Post-impulse high clearance (v1.8):** prior completed UTC session ≥ **+5%** OR live impulse ≥ **+3%** / **1.0 × ATR** → 1d printed-high clearance = **1.0 × ATR-proxy**. (Sep 3 BTC 1d cap $81,000 vs path H $82,300.)
    - **Live-impulse low clearance (v1.20):** if at as-of, (UTC-session open − spot) ≥ **3%** OR ≥ **1.0 × ATR-proxy**, 1d printed-low clearance = **1.0 × ATR-proxy**.
-   - **Mega-inflow extra high (v1.8):** last completed US spot BTC ETF ≥ **+$400M** → +0.5×ATR to BTC 1d and 1w high. ETH ETF ≥ **+$100M** → same for ETH. Stacks. Last completed **24 Sep** BTC +$190.7M / ETH +$66.1M (neither mega). 23 Sep +$346.9M / +$104.5M (ETH mega). 22 Sep +$714.7M / +$162.2M. 21 Sep +$999.0M / +$270.0M.
+   - **Mega-inflow extra high (v1.8):** last completed US spot BTC ETF ≥ **+$400M** → +0.5×ATR to BTC 1d and 1w high. ETH ETF ≥ **+$100M** → same for ETH. Stacks. Last completed **25 Sep** BTC +$134.5M / ETH +$87.0M (neither mega). 24 Sep +$190.7M / +$66.1M. 23 Sep +$346.9M / +$104.5M (ETH mega). 22 Sep +$714.7M / +$162.2M. 21 Sep +$999.0M / +$270.0M. 26 Sep unprinted.
    - **Squeeze-continuation extra high (v1.26/v1.27):** if that asset's futures OI 24h ≥ **+8%** AND funding > 0 AND live impulse ≥ **+3%** or ≥ **1.0×ATR**, add +**0.5×ATR** to that asset's 1d AND 1w `range_high`. Stacks with mega-inflow and post-+5%.
    - **Known-macro extra high (v1.19):** CPI/PCE/FOMC/NFP extra applies only if the **event timestamp** is ≤ as-of+24h.
    - **Post-event lag-squeeze high (v1.23):** if FOMC/CPI/PCE/NFP timestamp is in the prior 24h, 1d printed-high clearance = **1.0×ATR** even when pred_regime is digestion. Also 1d range_high ≥ as-of + **1.5×ATR**. Stacks. Sep 17 Daily cap $78700 vs path H $81332 after FOMC 16 Sep 18:00Z.
@@ -50,7 +50,7 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
 5. Include **prior-scenario vs actual** from the tracker when closed rows exist.
 6. **Decision map** (3 bullets): confirm vs fail; path-changing levels; calibration from last closed miss/hit.
 7. **Parseable table first:** immediately after Key Takeaway, 8-row table. Entire table + `RANGE_CHECK:` + `TRACKER_SHA:` in first ~1400 characters. Email/report must print all 8 numeric rows untruncated.
-8. **Weekend/holiday ETF:** **Last completed as of 2026-09-25 = 24 Sep BTC +$190.7M / ETH +$66.1M (neither mega).** 23 Sep BTC +$346.9M / ETH +$104.5M (ETH mega). 22 Sep +$714.7M / +$162.2M. 21 Sep +$999.0M / +$270.0M. 18 Sep +$433.0M / +$143.7M. Unprinted Farside 0.0 (25 Sep) is **not** a completed print — use last completed weekday.
+8. **Weekend/holiday ETF:** **Last completed as of 2026-09-26 = 25 Sep BTC +$134.5M / ETH +$87.0M (neither mega).** 24 Sep +$190.7M / +$66.1M. 23 Sep BTC +$346.9M / ETH +$104.5M (ETH mega). 22 Sep +$714.7M / +$162.2M. 21 Sep +$999.0M / +$270.0M. 18 Sep +$433.0M / +$143.7M. 26 Sep unprinted — use last completed weekday.
 9. **Weekend writes are mandatory** only if today's 8 rows do not already exist.
 10. **Write-first.** `WRITE PENDING` banned. Email is not a write.
 11. **Write-SHA gate (hard).** Emitted SHA must differ from pre-write SHA.
@@ -59,6 +59,8 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
 14. **Write-streak emergency ON.** Sub-90s no new SHA = WRITE FAILED.
     - **Truncation fallback (v1.19).** get_file_contents truncates ~20kB. Fetch raw.githubusercontent if body ends mid-row.
     - **Inbound-floor (v1.21).** ≥100 data rows and ≥15kB before any non-restore write. Restore = f2d4bf74 / c0c37a51.
+    - **Pre-write payload abort (v1.29).** Count bytes and `| 2026-` rows of the exact string you will send. If <15kB or <100 data rows, do **not** call create_or_update_file or push_files. Sep 26 Daily left header-only stub 3f3555d6 / 21ddfbda after claiming 148-row restore.
+    - **Email table-first (v1.29).** Key Takeaway then the 8 numeric rows with **no process-narrative preamble**. Sep 17 email truncated after BTC 1w 72000–86000; Sep 26 email had no table.
     - **Preexisting-rows skip.** If today's 8 exist, emit PREEXISTING_ROWS + current SHA.
     - **Outbound-row-count (v1.18).** Pushed body MUST contain ≥ inbound count AND ≥100 rows. If outbound < inbound or <100, do NOT call any write tool.
     - **POST-WRITE VERIFY (v1.22/v1.25).** Fetch raw main tracker. If rows <100 OR size <15kB OR PLACEHOLDER / SEE_FILE / SEE_FILE_USE_CREATE_OR_UPDATE / header-only / 8-row stub, do NOT emit TRACKER_SHA. Immediately restore-merge f2d4bf74/c0c37a51 + today's 8.
