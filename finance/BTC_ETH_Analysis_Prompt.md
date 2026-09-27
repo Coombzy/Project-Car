@@ -1,7 +1,7 @@
 # BTC / ETH Daily Analysis Prompt
 
-**Version:** 1.29  
-**Last edited:** 2026-09-26T15:30:00Z  
+**Version:** 1.30  
+**Last edited:** 2026-09-27T15:30:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** BTC ETH Daily Crypto Analysis automation
 
@@ -31,7 +31,7 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
    - 1-week width ≥ **3.0 × ATR-proxy** (≥ **4.0 ×** if last 5 weekday sessions include a ≥5% up-day); if trend-up, upside leg from close ≥ 1.5× downside leg.
    - **Post-+5% / mega-inflow / in-window 1w high (v1.28/v1.29):** after a completed UTC ≥ **+5%** OR last-completed mega-inflow (BTC ETF ≥+$400M / ETH ETF ≥+$100M) OR a +5% session high still inside the open 1w window OR FOMC/CPI/PCE/NFP inside that 1w window: 1w `range_high` ≥ `max(that session high, quote-page Day Range H)` + **1.5 × ATR-proxy** even if digestion. If the Sep 21 session high **$87363.76** is still inside the open 1w window, 1w `range_high` ≥ **$87363.76 + 0.5 × ATR-proxy**. Applies to the **next** 1w print and is the construction miss behind Sep 14/15/17 1w caps $86000 vs later path H $87364. Hard-fail reprint if 1w high is parked on $78700 / $81000 / $82000 / $85000 / $86000 / $87000 / $88000. (Sep 12 cap $82000 vs H $81911; Sep 14 cap $86000 vs H $86284; Sep 15/17 cap $86000 vs H $87364; Sep 17 1d cap $78700 vs H $81332.)
    - 1-month and 3-month: wider numeric bands; bias optional but preferred.
-   - **Printed-high clearance:** `range_high` ≥ `max(as-of, UTC-session high already printed, quote-page Day Range H)` + **0.5 × ATR-proxy**. Never park the high on a wick/magnet ($80k / $81.5k / $81500 / $86000 / $87000).
+   - **Printed-high clearance:** `range_high` ≥ `max(as-of, this UTC-session high already printed, quote-page Day Range H)` + **0.5 × ATR-proxy**. Weekend/holiday: use last-completed UTC H, not a multi-day-old +5% high outside the 24h window (that high is the **1w** floor only — v1.30). Never park the high on a wick/magnet ($80k / $81.5k / $81500 / $86000 / $87000).
    - **Printed-low clearance:** `range_low` ≤ `min(as-of, UTC-session low already printed, quote-page Day Range L)` − **0.5 × ATR-proxy**.
    - **Quote-page day-range (v1.26/v1.27):** RANGE_CHECK printed extremes = Yahoo quote-page Day Range H/L at as-of, **not** the history-table High. (21 Sep history-table H ~$81805 vs live Day Range H $86284 / session H $87364.)
    - **Weekend printed-extreme carry-forward (v1.16):** Sat/Sun and US holidays use the **last completed UTC session** high/low as the printed extreme. `range_high` ≥ last-completed-UTC high + applicable clearance; `range_low` ≤ last-completed-UTC low − applicable clearance.
@@ -66,7 +66,9 @@ Produce a concise, data-driven daily report for **BTC and ETH** with **numeric r
     - **POST-WRITE VERIFY (v1.22/v1.25).** Fetch raw main tracker. If rows <100 OR size <15kB OR PLACEHOLDER / SEE_FILE / SEE_FILE_USE_CREATE_OR_UPDATE / header-only / 8-row stub, do NOT emit TRACKER_SHA. Immediately restore-merge f2d4bf74/c0c37a51 + today's 8.
     - **Restore-blob-only (v1.25).** Never reconstruct early rows from memory. Start from raw restore blob bytes; only mutate path/grade cells and append sourced Daily rows. Main stub is not inbound.
 15. **Append-only / anti-wipe (hard).** Never write PLACEHOLDER / SEE_LOCAL_FULL_FILE / SEE_FILE / SEE_FILE_USE_CREATE_OR_UPDATE / LOADING_FULL_BODY_NEXT / header-only to tracker **or this prompt**. After writing this prompt, raw size must be ≥8kB. Restore source f2d4bf74 / c0c37a51. Fallback 41e4ad58 / 47d11800.
-16. **Role split.** Daily inserts new analysis_date rows only. Auditor grades/path-refreshes/closes only. Auditor may recover a Daily block Daily already attempted and wiped. Do not invent truncated ETH/Daily tables.
+    - **Auditor abort (v1.30).** Auditor writes are subject to the same pre-write payload abort. Never commit SEE_FILE / SEE_FILE_USE_CREATE_OR_UPDATE / PLACEHOLDER / header-only (dcfcd35a 26 Sep Auditor left SEE_FILE; 1ee28e9d / 21ddfbda Daily left stubs after claiming 148-row restores). Do not write "148-row restore" in the header unless the exact payload bytes ≥15kB and `| 2026-` rows ≥100.
+    - **POST-WRITE VERIFY applies to Auditor (v1.30).** Fetch raw main after every write. If size <15kB or `| 2026-` rows <100, immediately restore-merge raw f2d4bf74 / c0c37a51 + sourced Daily rows and do not emit TRACKER_SHA.
+16. **Role split.** Daily inserts new analysis_date rows only. Auditor grades/path-refreshes/closes only. Auditor may recover a Daily block Daily already attempted and wiped. Do not invent truncated ETH/Daily tables. Auditor inbound on a stub main = raw f2d4bf74 bytes (or a sourced ≥15kB email attachment), then grade in place.
 17. **1d actuals = window-only.** Path inside the 24h window from as-of, not multi-week path.
 
 ## Report structure
