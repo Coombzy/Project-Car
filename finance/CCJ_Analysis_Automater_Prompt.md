@@ -1,8 +1,8 @@
 # CCJ Stock Analysis Automater — Hermes Agent Process
 
-**Version:** 1.16 (2026-09-24)  
-**Last edited:** 2026-09-24 16:45 ET  
-**Supersedes:** v1.15 (2026-09-23)  
+**Version:** 1.17 (2026-09-28)  
+**Last edited:** 2026-09-28 16:50 ET  
+**Supersedes:** v1.16 (2026-09-24)  
 **Location:** `Project-Car/finance/`
 
 Read `finance/CCJ_WRITE_RULES.md` and `finance/CCJ_README.md` first.
@@ -70,6 +70,7 @@ Apply rules in `finance/CCJ_Calibration.md` **Active rules** section first (Audi
    - If the file is a placeholder, `SEE_LOCAL_FILE` stub, RESTORE NOTE only, or otherwise truncated: restore prior entries byte-for-byte from the last good full-log commit (`37e81b8d` Sep 22+21, `2c6bcd39`, `c2e00069` Sep 24+23, or newer full-log SHA) **before** treating the run as complete. Never commit a truncated log. Do not replace the file body with a local-file pointer.
    - **Hard stop:** a write whose resulting file contains fewer than three `### YYYY-MM-DD` headings with real bodies is a failed run. A same-run restore followed by a later write that drops those restored bodies is also a failed run. Restore prior bodies immediately, then re-read. Do not write Health until three dated headings with real bodies exist.
 7. Tracker append is a **hard stop**, not optional, and is **not deferred to Audit**.
+   - Never replace the tracker with only the last 2–3 analysis dates. Preserve every historical closed/open row; append or update in place.
    - If the **prior analysis_date** is missing its four tracker rows, append those four FIRST (copy range/bias/conf/regime/Rel Vol/prior_day_pct from that log entry).
    - Then append today's four rows with **structured features filled**: `pred_regime`, `pred_rel_vol`, `prior_day_pct` (status=`open`).
    - **Re-read the tracker and confirm both** the prior-session four (if they were missing) **and** today's four `(analysis_date, horizon)` rows exist. If either set is absent after re-read, append immediately. Do not leave open rows for the Audit job.
