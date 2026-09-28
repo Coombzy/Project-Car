@@ -42,7 +42,32 @@ Key takeaway: Eleventh session close under the 50-DMA printed $87.04 on Rel 1.00
 - Prior scenarios vs actual: Sep 25 1d $80.00-$102.00 -> L85.68 H87.78 C87.04 hit (C inside bias $86.00-$94.00; auditor to close). Sep 25 1w $72.00-$112.00 day 1 of 5 on-track (path L85.68 H87.78 C87.04). Sep 24 1w $72.00-$112.00 day 2 of 5 on-track. Self-check: Today's 1d width $24.00 vs ATR-proxy $2.73; last closed 1d was hit; 1d high $102.00 vs last session high $87.78; Rel Vol 1.00x from 16:00 print; wick (H-C) $0.74 = 0.27x ATR -- adjustment: rule 2 OFF; rule 7 OFF; magnet-clear $100 to $102.00 and 1w $110 to $112.00; trend-down after 11th session under 50-DMA; no pair flags; Fri fail gate printed; session low undercut post-Q2 $86.38.
 
 #### Audit / Reviewer Notes
-(To be completed by subsequent audit process)
+**Independent Process Quality Audit** (2026-09-28 16:50 ET)
+
+### Process Quality Audit
+- Quality: [x] 8 metrics sourced [x] Historical deltas [x] QE 8.5 [x] Conf 86 [x] Narrative vs history [x] No material contradictions [x] Anomaly flags (none on pairs; Rel 1.00x; Fri fail gate; low undercut post-Q2 $86.38) [x] Forward 1d/1w/1m/3m + invalidation + prior-scenario [x] Decision map [x] 1d width $24.00 = 8.79×ATR $2.73 ≥ 2.0×
+- Operational: [x] Prompt v1.16 at analysis time; bumped v1.17 this audit [x] Newest notes only [x] Health row today [x] Grades closed after RTH [x] Polygon primary (SA header / ChartExchange / StockScan cluster C$87.04 H$87.78 L$85.68; SA table C$87.32 outlier ignored) [x] Feature columns present [x] Calibration refreshed (Sep 25 1d + Sep 21 1w)
+- Deduction arithmetic: 10 − 0 = **Score 10/10**
+- Recurring: Analysis restored log to 3 headings (Sep 28/25/24) after a SEE_LOCAL_FILE stub — min-3 met, older bodies still gone. Tracker arrived as a 12-row stub after a “restore full history” commit; Sep 25 audit closes were dropped. Health row for today missing until this audit. Execution misses; prompt already required append-not-replace.
+- Overall: Official EOD complete. Polygon C$87.04 / Rel 1.00x / regime trend-down earned (11th under 50-DMA; close 64.8% not top-third; Rel rose 0.63x→1.00x so not digestion). Fri fail gate (C<$87.81 Rel≥0.8x) printed. Session low $85.68 undercut post-Q2 $86.38. Ranges respect ATR/magnet; rule 2 OFF; rule 7 OFF (wick 0.27×ATR).
+
+### Prediction Accuracy
+- Closed this run (not preliminary): Sep 25 1d HIT; Sep 21 1w HIT; persist-close Sep 24 1d HIT; persist-close Sep 18 1w HIT (already in Cal).
+- Pointer: full tables in `CCJ_Prediction_Tracker.md`
+  - Sep 25 1d $80–$102 → L85.68 H87.78 C87.04 hit; C inside bias $86–$94; fade / close inside bias; pct_error 3.3%
+  - Sep 24 1d $80–$102 → L87.81 H89.29 C88.06 hit; C inside bias; pct_error 2.2%
+  - Sep 21 1w $76–$112 (sessions 22/23/24/25/28) → L85.68 H95.36 C87.04 hit; C inside bias $84–$100; fade / close inside bias; pct_error 5.4%
+- Open: Sep 28 1d for Tue Sep 29; Sep 22 1w d4/5, Sep 23 1w d3, Sep 24 1w d2, Sep 25 1w d1 on-track (path L85.68 H95.36 C87.04).
+- Calibration: refreshed yes. 1d full-hit 23/27 (85%) last-10 10/10; 1w full-hit 16/23 (70%). Rule 2 OFF (0/3 Sep 23/24/25). Rule 7 OFF (wick $0.74 = 0.27×ATR).
+
+### Improvement Recommendations
+- Never replace tracker with last-3 dates — committed to `CCJ_Analysis_Automater_Prompt.md` v1.17.
+- Analysis must prepend Health the same run as the log (missed today).
+- Keep 1d conf at 50% while 1w full-hit is 70% despite 1d last-10 100%.
+- Tue path: reclaim needs Rel ≥1.0× AND URA not down AND close >$94.79. Lose $85.68 on Rel ≥0.8× extends the fade. $87.78 is session high, not a reclaim.
+- Keep living-log at today + two prior bodies minimum; restore from last full SHA if a write drops history.
+
+**Final Action** notes + tracker + Cal + Health + prompt v1.17. Health confirm after re-read.
 
 ---
 
