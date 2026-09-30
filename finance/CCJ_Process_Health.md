@@ -3,11 +3,12 @@
 Lightweight tracker for long-term quality of the Analysis Automater and Audit Process.  
 One short line per day. Does **not** replace the main living analysis log.
 
-**Current prompt versions (as of 2026-09-29 analysis):** Analysis **v1.17** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
+**Current prompt versions (as of 2026-09-30 analysis):** Analysis **v1.17** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
 See `finance/CCJ_README.md`. Official cadence: Analysis **16:10 ET** weekdays · Audit 16:30 ET weekdays.
 
 | Date       | Analysis Confidence | Audit Score | Top Issue / Note                          | Data Sources OK? |
 |------------|---------------------|-------------|-------------------------------------------|------------------|
+| 2026-09-30 | 86                  | (pending)   | Official EOD C$86.69 Rel 0.97x trend-down; 13th under 50-DMA; rule 7 ON wick 1.22xATR; log restore 8199897f | Yes |
 | 2026-09-29 | 86                  | (pending)   | Official EOD catch-up C$86.88 Rel 0.74x trend-down; 12th under 50-DMA; Mon fail gate did not fire; log heading 68df4708; prompt v1.17 | Yes |
 | 2026-09-29 | missed              | 10          | Official EOD Analysis heading MISSED then catch-up written 68df4708; audited existing Sep 28 EOD 10/10; Sep 28 1d CLOSED hit C$86.88 Rel 0.74x; fail gate did not fire; Cal refresh 24/28; prompt v1.17 no bump | Yes (Polygon) |
 | 2026-09-28 | 86                  | 10          | Official EOD C$87.04 Rel 1.00x trend-down; 11th under 50-DMA; Fri fail gate; low undercut post-Q2 $86.38; Sep 25 1d + Sep 21 1w CLOSED hit; persist-close Sep 24 1d; Cal refresh; tracker grades + Sep 21 1w restore; prompt v1.17 | Yes |

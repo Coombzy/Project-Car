@@ -8,10 +8,14 @@ Hit: actual regular-session H/L/Close inside **range** (not only bias).
 
 **Feature columns** (fill at prediction time): `pred_regime` = trend-up|trend-down|digestion|failed-break · `pred_rel_vol` = Rel Vol of the session being analyzed · `prior_day_pct` = prior regular-session % change.
 
-Last price context: 2026-09-29 official RTH close CCJ **$86.88** (Polygon 16:00 C $86.88 H $88.61 L $86.03 O $87.91 V 2.104M Rel 0.74x vs 20d 2.828M). Day range **L $86.03 H $88.61**. Prior close $87.04 (-0.18%). U3O8 $89.30/lb (UraniumTracker -0.22%). URA C $40.04 (-0.22% vs $40.13). Sep 28 1d **closed hit** L86.03 H88.61 C86.88. Sep 29 Analysis EOD heading written (commit 68df4708). Older closed history lives at commit `0acaace`. See also `CCJ_Calibration.md`.
+Last price context: 2026-09-30 official RTH close CCJ **$86.69** (Polygon snapshot C $86.69 H $89.83 L $86.29 O $87.79 V 2.688M Rel 0.97x vs 20d 2.777M). Day range **L $86.29 H $89.83**. Prior close $86.88 (-0.22%). U3O8 $89.50/lb (UraniumTracker +0.22%). URA C $39.86 (-0.46% vs $40.04). Sep 29 Analysis EOD heading present. Log restore 8199897f (Sep 30+29+28). Older closed history lives at commit `0acaace`. See also `CCJ_Calibration.md`.
 
 | analysis_date | horizon | range_low | range_high | bias_low | bias_high | conf | pred_regime | pred_rel_vol | prior_day_pct | actual_low | actual_high | actual_close | hit | directional | pct_error | status | notes |
 |---------------|---------|-----------|------------|----------|-----------|------|-------------|--------------|---------------|------------|-------------|--------------|-----|-------------|-----------|--------|-------|
+| 2026-09-30 | 1d | 78.00 | 102.00 | 83.00 | 91.00 | 50 | trend-down | 0.97 | -0.18 |  |  |  |  |  |  | open | v1.17 EOD; 13th under 50-DMA; Rel 0.97x 16:00; wick 1.22xATR rule 7 ON; rule 2 OFF; high $102 clears $89.83 and $100 magnet |
+| 2026-09-30 | 1w | 70.00 | 112.00 | 78.00 | 96.00 | 50 | trend-down | 0.97 | -0.18 |  |  |  |  |  |  | open | v1.17 EOD; width >= 3.5xATR $2.58; $110 magnet cleared to $112 |
+| 2026-09-30 | 1m | 64.00 | 118.00 | 74.00 | 102.00 | 50 | trend-down | 0.97 | -0.18 |  |  |  |  |  |  | open | v1.17 EOD |
+| 2026-09-30 | 3m | 62.00 | 142.00 | 76.00 | 114.00 | 55 | trend-down | 0.97 | -0.18 |  |  |  |  |  |  | open | v1.17 EOD |
 | 2026-09-29 | 1d | 78.00 | 102.00 | 83.00 | 91.00 | 50 | trend-down | 0.74 | -1.17 |  |  |  |  |  |  | open | v1.17 EOD catch-up; 12th under 50-DMA; Rel 0.74x 16:00; wick 0.67xATR rule 7 OFF; rule 2 OFF; high $102 clears $88.61 and $100 magnet |
 | 2026-09-29 | 1w | 70.00 | 112.00 | 78.00 | 96.00 | 50 | trend-down | 0.74 | -1.17 |  |  |  |  |  |  | open | v1.17 EOD; width >= 3.5xATR $2.58; $110 magnet cleared to $112 |
 | 2026-09-29 | 1m | 64.00 | 118.00 | 74.00 | 102.00 | 50 | trend-down | 0.74 | -1.17 |  |  |  |  |  |  | open | v1.17 EOD |
