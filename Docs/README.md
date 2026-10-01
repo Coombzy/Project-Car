@@ -3,7 +3,7 @@
 **Canonical:** `Coombzy/Project-Car` → `Docs/`  
 **Engineering clone:** `~/src/Project-Car/Docs/`  
 **Optional Desktop mirror:** `~/Desktop/Project Car/docs/` (read copy; do not author there)  
-**Updated:** 2026-09-08
+**Updated:** 2026-09-21
 
 `Coombzy/Automation/Docs/` is a **historical mirror**. Do not author product specs there.  
 `~/Desktop/Project-Car-Docs/` is **retired**.  
@@ -35,12 +35,14 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 | [website-improvements.md](website-improvements.md) | P0–P4 backlog for projectcar.ca (tick status as work ships) |
 | [nextcloud-progress.md](nextcloud-progress.md) | Last live hub check on Doc (no secrets; 2026-08-16). Public-site / `:8088` rows point at STATUS / home-lab / Worker — not a new hub probe. |
 | [doc-software-baseline.md](doc-software-baseline.md) | Doc M1 Max apps / settings |
-| [home-lab-specification.md](home-lab-specification.md) | Host lock: Doc = temp MC hub + Shop API `:8000` + shop-web `:3000`; McKing later; Porsche travel client. Brochure is Worker `projectcar-brochure`, not Doc. |
+| [home-lab-specification.md](home-lab-specification.md) | Host lock: Doc = temp MC hub + Shop API `:8000` + shop-web `:3000`; McKing = `lightning` Omarchy (not `lil-cachy` offline); `vault.projectcar.ca` = intended public VW; camp target = Doc hosts NC+VW after Ben GO + Zone retarget. Brochure is Worker `projectcar-brochure`, not Doc. |
+| [home-vs-camp-doc-posture.md](home-vs-camp-doc-posture.md) | Home Soft-530 **OPEN** when Docs Mac off = **EXPECTED**; camp Doc plugged + CDM hosts Nextcloud; Soft-530 matrix for Lookout/Lead. |
+| [camp-vault-on-doc.md](camp-vault-on-doc.md) | Camp interim: Doc hosts NC+VW while McKing/`lightning` sleeps; vault OPEN + `lightning` ABSENT = expected quiet; **Ben GO** then Zone `vault.` retarget only; rollback Zone → McKing. |
 | [doc-lid-restore.md](doc-lid-restore.md) | Ordered Lead wake/restore after lid-close / morning **530 / 1033**. Sequence only — process wake, **not** a `git pull`. Essays stay in api-stay-up / shop-web-stay-up / doc-software-baseline. After Ben GO, pull is [doc-unfreeze.md](doc-unfreeze.md). |
 | [doc-unfreeze.md](doc-unfreeze.md) | Ordered **Ben GO** pull on Doc (`~/src/Project-Car`): confirm GO → `git pull` → alembic if needed → shop-web rebuild (`next start`) → new `BUILD_ID` ≠ `5swmVz` → #36 / #69 / OwnerDemoBanner smoke → public health + waitlist CORS. Green Shop OS CI is **not** this GO. Lid-restore stays process-only. |
 | [api-stay-up.md](api-stay-up.md) | Keep https://api.projectcar.ca up (uvicorn on Doc; Zone owns tunnel). Brochure is Worker `projectcar-brochure`, not Doc `:8088`. |
 | [shop-web-stay-up.md](shop-web-stay-up.md) | Keep https://ops.projectcar.ca (and temporary `app.`) up — LaunchAgent `com.projectcar.shop-web` runs **`next start`** on Doc `:3000`. Zone owns tunnel/DNS. |
-| [deployment-guide.md](deployment-guide.md) | Index of stay-up / deploy runbooks (lid-close restore, Doc unfreeze after Ben GO, shop-web, API, Shop OS CI, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, ship-MVP cut draft, Google Calendar OAuth plan). |
+| [deployment-guide.md](deployment-guide.md) | Index of stay-up / deploy runbooks (lid-close restore, Doc unfreeze after Ben GO, home vs camp Soft-530, camp vault-on-Doc, shop-web, API, Shop OS CI, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, ship-MVP cut draft, Google Calendar OAuth plan). |
 | [shop-os-ci.md](shop-os-ci.md) | Shop OS GitHub Actions quality gate (shop-api pytest + shop-web lint / typecheck / `next build`). Git-only — no Doc deploy, no tunnel secrets, no Worker upload. Green CI is **not** Doc unfreeze GO ([doc-unfreeze.md](doc-unfreeze.md)). Doc checkout stays frozen at `4cf8924` / `5swmVz`. |
 | [brochure-worker-deploy.md](brochure-worker-deploy.md) | Standing brochure re-deploy: Zone Direct Upload of `apps/website/html` onto Worker `projectcar-brochure`. Classic Pages git skipped until auth — plan: `brochure-pages-cutover.md`. |
 | [brochure-security-headers.md](brochure-security-headers.md) | P2-4 Zone Transform Rules **LIVE** (2026-09-07 smoke PASS): Worker `projectcar-brochure` security headers + HTML vs `?v=` cache split. Do **not** re-apply from a docs PR. |
@@ -80,7 +82,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 
 | Doc | Go here instead |
 |-----|-----------------|
-| [deployment-guide.md](deployment-guide.md) | Now a living-ops index — lid-close restore, Doc unfreeze (Ben GO), shop-web / API stay-up, Shop OS CI, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, Google Calendar OAuth plan |
+| [deployment-guide.md](deployment-guide.md) | Now a living-ops index — lid-close restore, home vs camp Soft-530, camp vault-on-Doc, Doc unfreeze (Ben GO), shop-web / API stay-up, Shop OS CI, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, Google Calendar OAuth plan |
 | [phase-0-nextcloud-roadmap.md](phase-0-nextcloud-roadmap.md) | MC Phase A + nextcloud-progress |
 | [doc-nextcloud-headscale-setup-guide.md](doc-nextcloud-headscale-setup-guide.md) | Tailscale + MariaDB — not Headscale/Postgres |
 

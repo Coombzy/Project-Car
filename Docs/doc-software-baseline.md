@@ -1,7 +1,7 @@
 # Doc Hakosuka (M1 Max) — software baseline
 
-**Updated:** 2026-09-07  
-**Role:** Heavy local models / deep analysis. **Temporary Mission Control host** until McKing is home. Also hosts Shop API (`:8000`) + shop-web (`:3000`). **Not** the live brochure origin (Worker `projectcar-brochure` Direct Upload — `brochure-worker-deploy.md`). Not the travel edge host (that is Porsche).  
+**Updated:** 2026-09-21  
+**Role:** Heavy local models / deep analysis. **Temporary Mission Control host** until McKing is home. Also hosts Shop API (`:8000`) + shop-web (`:3000`). **Not** the live brochure origin (Worker `projectcar-brochure` Direct Upload — `brochure-worker-deploy.md`). Not the travel edge host (that is Porsche). Camp target (after **Ben GO**): Doc also hosts public VW — [camp-vault-on-doc.md](camp-vault-on-doc.md).  
 **Canonical:** `Coombzy/Project-Car` → `Docs/doc-software-baseline.md`
 
 This file used to say “don’t dump the MC stack onto Doc.” That is **obsolete**. Locked host plan: Doc now → McKing later.
@@ -10,7 +10,7 @@ This file used to say “don’t dump the MC stack onto Doc.” That is **obsole
 
 | Item | Why | Status |
 |------|-----|--------|
-| **Amphetamine** | Prevent sleep killing Hermes / shop API / shop-web / Docker hub / cloudflared | **Running** (checked 2026-08-16; session must stay started) |
+| **Amphetamine** | Prevent sleep killing Hermes / shop API / shop-web / Docker hub / cloudflared. **CDM / lid-close:** session **started** is mitigation, not a guarantee. At **camp** (after vault-on-Doc GO) lid-close can 1033 **both** Soft-530 shop **and** vault. At **home-off**, Amphetamine off + Docs Mac off → Soft-530 **OPEN** is **EXPECTED** ([home-vs-camp-doc-posture.md](home-vs-camp-doc-posture.md)). | Session must stay **started** when Doc is supposed to be on |
 | **Hermes gateway as service** | Survive reboot | Done (fleet Discord working) |
 | **`DISCORD_ALLOW_BOTS=mentions`** + inline-mention gate | Fleet bot-to-bot in `#tire-shop` | Done |
 | **Ollama** | Local heavy models | Done — `qwen3.6:35b`, `gemma4:26b` (2026-08-16) |
@@ -55,7 +55,11 @@ Doc is a MacBook (M1 Max). Lid close or host sleep stops or stalls origin proces
 
 The public brochure (Worker `projectcar-brochure`) does **not** go down when Doc sleeps. Waitlist still needs the API. See `api-stay-up.md`.
 
-Amphetamine + plugged-in no-sleep plus LaunchAgent KeepAlive are mitigation, not a guarantee. If the lid is closed, public API / ops / app are down until Doc is awake. Ordered wake after lid-close: `doc-lid-restore.md`.
+Amphetamine + plugged-in no-sleep plus LaunchAgent KeepAlive are mitigation, not a guarantee. Amphetamine **CDM** (session actually started) is the lid-close mitigation — installed-but-not-started still allows sleep.
+
+**Home vs camp:** home-off Docs Mac **off** → Soft-530 **OPEN 530/1033** is **EXPECTED** (do **not** treat as failed CDM). Camp Doc **plugged + CDM** hosts Nextcloud; after [camp-vault-on-doc.md](camp-vault-on-doc.md) **Ben GO**, lid-close / CDM miss is a **coupled** Soft-530 + vault OPEN. Home Soft-530 **CLEAR** with lid **open** never scores the camp CDM lid-close soak. Matrix: [home-vs-camp-doc-posture.md](home-vs-camp-doc-posture.md).
+
+If the lid is closed while Doc is supposed to be on, public API / ops / app are down until Doc is awake. Ordered wake after lid-close: `doc-lid-restore.md`. Do **not** queue that restore from intentional home-off ABSENT.
 
 ## Brochure is not Doc `:8088`
 
@@ -80,10 +84,12 @@ Do not treat `project-car-website` / `:8088` as a production bring-up step.
 - Lid-close / sleep → public **502** or **530 / error 1033** on tunneled hosts
 - Grok Build alone is not the full baseline
 - Reusing Porsche’s Discord token on Doc causes token lock / double replies
-- Amphetamine installed but session not started still allows sleep
+- Amphetamine installed but session not started still allows sleep (CDM is the started session, not the app icon)
+- Home-off Soft-530 **OPEN** is **EXPECTED** — not a failed Amphetamine CDM incident
+- Camp lid-close after vault-on-Doc GO 1033s shop **and** vault (coupled) — do not wake McKing / `lightning`
 - Shop-web KeepAlive must be **`next start`**, not `next dev`
 - **Do not** move Nextcloud onto Porsche “because Doc is a laptop”
 - **Do not** follow retired `doc-nextcloud-headscale-setup-guide.md` (Headscale + Postgres)
 - **Do not** treat Doc `:8088` as live projectcar.ca
 
-Related: `home-lab-specification.md`, `nextcloud-progress.md`, `agent-profiles-specification.md`, `mission-control-architecture.md`, `doc-lid-restore.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`
+Related: `home-lab-specification.md`, `home-vs-camp-doc-posture.md`, `camp-vault-on-doc.md`, `nextcloud-progress.md`, `agent-profiles-specification.md`, `mission-control-architecture.md`, `doc-lid-restore.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`
