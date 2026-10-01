@@ -1,14 +1,29 @@
 # Member zone edge — path split on projectcar.ca / www
 
-**Status:** Checklist / plan only — **not shipped**. Do **not** execute until **Ben GO**.  
-**Updated:** 2026-09-07  
-**Related:** `STATUS.md` Next #1, `member-host-cutover.md`, `app-alias-cut.md` (STATUS Next #2; later — do **not** cut `app.` here), `brochure-worker-deploy.md`, `shop-web-stay-up.md`, `brochure-pages-cutover.md`, `cors-origins.md`, `website-webapp-specification.md` §3
+**Status:** Checklist / plan only — **not shipped**. **Blocked** until Ben GO unfreeze lands **#36** live on Doc. Do **not** execute until that unfreeze **and** a separate **Ben GO**.  
+**Updated:** 2026-09-08  
+**Related:** `STATUS.md` Next #1, `member-host-cutover.md`, `doc-unfreeze.md` (Ben GO pull — **prerequisite**), `doc-lid-restore.md` (process wake only — **not** unfreeze), `shop-web-stay-up.md` (rebuild essay), `shop-os-ci.md` (green CI ≠ unfreeze), `app-alias-cut.md` (STATUS Next #2; later — do **not** cut `app.` here), `brochure-worker-deploy.md`, `brochure-pages-cutover.md`, `cors-origins.md`, `website-webapp-specification.md` §3
 
 This file is the **edge / path-split** slice Zone needs for STATUS **Next #1** (Member UI on **projectcar.ca**). Cookie Domain / Path / Secure / SameSite, CORS allowlist, and Next middleware host allowlist live in `member-host-cutover.md` §2 — **summarize + point**, do not rewrite that essay here.
 
-This file does **not** implement the migration, change DNS, cut the `app.projectcar.ca` alias, upload shop-web as the apex origin, or start Garage / Zone / Hatch work. A docs merge is not GO.
+This file does **not** implement the migration, change DNS, cut the `app.projectcar.ca` alias, upload shop-web as the apex origin, or start Garage / Zone / Hatch work. A docs merge is not GO. Unfreeze GO is not this GO.
 
-Do **not** invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, Matrix, or Apex revival. Demo session cookies stay demo cookies — **not OIDC**.
+Do **not** invent Stripe, a shop opening, a shipped Member host migration, a removed `app.` alias, Matrix, Apex revival, a Cloudflare ↔ GitHub re-ask, or **#36** live on Doc from git SHA alone. Demo session cookies stay demo cookies — **not OIDC**.
+
+---
+
+## Prerequisite lock (read first — do not weaken)
+
+Member edge (STATUS **Next #1**) must **not** execute until **Ben GO unfreeze** lands shop-web host allowlist **#36** (`f952cd3`) **live on Doc**.
+
+| Lock | Meaning |
+|------|---------|
+| **Unfreeze first** | Ordered pull: [doc-unfreeze.md](doc-unfreeze.md). New `.next/BUILD_ID` must **not** be `5swmVz-T2CqKEQzTk1ifU` (frozen Dashboard **#28** / checkout `4cf8924`). Rebuild essay: [shop-web-stay-up.md](shop-web-stay-up.md). |
+| **#36 live on Doc** | Host allowlist is **on git** (`f952cd3`). It is **not** live on `ops.` / `app.` / `:3000` until that rebuild. Do not add `/member*` path rules onto a frozen #28 origin. |
+| **Lid-restore stays process-only** | Morning **530 / 1033** wake is [doc-lid-restore.md](doc-lid-restore.md). Wake is **not** unfreeze and **not** Member GO. |
+| **Green shop-os-ci ≠ unfreeze** | A green Shop OS CI check is git-only. It does **not** unfreeze Doc and does **not** unlock this edge add ([doc-unfreeze.md](doc-unfreeze.md), [shop-os-ci.md](shop-os-ci.md)). |
+| **Keep `app.`** | Temporary alias stays live. Do **not** cut it here. Do **not** re-ask Cloudflare ↔ GitHub (`brochure-pages-cutover.md`). |
+| **Two GOs** | Unfreeze GO ≠ Member GO. This file still needs its own **Ben GO** before Zone applies path rules. |
 
 ---
 
@@ -20,6 +35,13 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Member demo** | Shop-UI `/member` on Doc `:3000` (`next start` via LaunchAgent `com.projectcar.shop-web`). Reachable on **`https://ops.projectcar.ca/member`** and **`https://app.projectcar.ca/member`**. **Not** on the customer host. |
 | **Ops / staff** | Same Doc `:3000` shop UI on **`ops.`** (LIVE when Doc origin is up). Temporary **`app.`** alias still live. **Not removed.** |
 | **Shop API** | `api.projectcar.ca` → Doc `:8000`. Lead owns uvicorn. |
+
+| Clock | Pin | Meaning |
+|-------|-----|---------|
+| **Git `main`** | Moves with merges | **#36** host allowlist (`f952cd3`) is **on git**. Customer-host redirect tests are on git. |
+| **Doc working tree** | Frozen at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** (Dashboard **#28**) | Live `ops.` / `app.` / `:3000` stay on that build until [doc-unfreeze.md](doc-unfreeze.md) finishes **after** Ben GO. Rebuild essay: [shop-web-stay-up.md](shop-web-stay-up.md). |
+
+Do **not** call **#36** live on Doc, and do **not** apply path rules from this file, until unfreeze step 5 shows a **new** `BUILD_ID` and step 6 / 7 smoke.
 
 Exact Cloudflare product (tunnel public hostname vs Worker route vs Transform) is **Zone’s** after GO. This file locks the **traffic map**, not a dashboard click-path.
 
@@ -81,7 +103,7 @@ Tunnel / edge must forward the **real public host** and **https** into shop-web.
 
 If these are missing or set to `localhost` / `127.0.0.1:3000`, login and auth-gate redirects hop to **`http://localhost:3000/...`**. That class of bug is **already fixed on ops** (`shop-web-stay-up.md` public smoke). Do not reintroduce it on the customer host.
 
-Do **not** allowlist `api.projectcar.ca` as a shop-web redirect host (`member-host-cutover.md` §2). Recommended explicit allowlist (Garage, after GO): localhost / `127.0.0.1`, `ops.projectcar.ca`, `app.projectcar.ca`, `projectcar.ca`, `www.projectcar.ca`.
+Do **not** allowlist `api.projectcar.ca` as a shop-web redirect host (`member-host-cutover.md` §2). Recommended explicit allowlist (Garage; **#36** `f952cd3` **on git**, live on Doc only after unfreeze): localhost / `127.0.0.1`, `ops.projectcar.ca`, `app.projectcar.ca`, `projectcar.ca`, `www.projectcar.ca`. Do **not** path-split until that allowlist is **live on Doc** — otherwise `Host` / `X-Forwarded-Host: projectcar.ca` on a frozen #28 origin can hop to localhost.
 
 ---
 
@@ -139,11 +161,13 @@ Rollback is **edge path rules**, not “remove the Worker,” not “cut `app.`,
 
 ## 6. Locks (do not weaken)
 
-- **Keep the `app.` alias.** Temporary until Ben cuts DNS. This plan does not touch `ops.` / `app.` tunnels except to leave them alone.
+- **Do not execute** until Ben GO unfreeze lands **#36** live on Doc (`doc-unfreeze.md`). New `BUILD_ID` ≠ `5swmVz-T2CqKEQzTk1ifU`.
+- Lid-restore stays process-only (`doc-lid-restore.md`). Green `shop-os-ci` ≠ unfreeze.
+- **Keep the `app.` alias.** Temporary until Ben cuts DNS. This plan does not touch `ops.` / `app.` tunnels except to leave them alone. Do **not** re-ask Cloudflare ↔ GitHub.
 - **Classic Pages git stays outranked.** `brochure-pages-cutover.md` is still blocked on CF ↔ GitHub auth and is **outranked** by this Member edge work **and** by STATUS Next #1. Direct Upload remains the locked live brochure method. Do not start Pages git from this file.
 - **No Apex.** Brochure stays Worker / Pages — no Apex sidecar, no brochure Chat page.
 - **No Stripe.** The shop is not open. Interest waitlist only.
-- **No Garage / Zone / Hatch fan-out from this PR.** Plan only. Ben GO gates execution.
+- **No Garage / Zone / Hatch fan-out from this PR.** Plan only. Unfreeze GO ≠ Member GO. Ben GO gates execution.
 - **No shop-web apex catch-all.** Path split or nothing.
 - Host split: customer = `projectcar.ca` / www. Management = **`ops.projectcar.ca`**. `app.` = temporary alias.
 - Shop-web KeepAlive is **`next start`**, not `next dev`.
@@ -158,7 +182,7 @@ Rollback is **edge path rules**, not “remove the Worker,” not “cut `app.`,
 | **Zone** | Cloudflare **path rules** and **tunnel hostname** so `/member*` on `projectcar.ca` / `www` hits Doc `:3000` (`http://127.0.0.1:3000`) and all other paths stay Worker **`projectcar-brochure`**. Forward real host + https. Rollback = remove those path rules. | HTML content, shop-web code, uvicorn, `app.` cut, Pages git, cookie Path edits |
 | **Garage** | shop-web Member surface **after GO** (`member-host-cutover.md`). Waitlist e2e after public API health is **200**. | Cloudflare path rules, tunnel hostnames, DNS, Direct Upload, process restarts |
 | **Lead** | Doc processes — LaunchAgent `com.projectcar.shop-web` (`next start` `:3000`) and `com.projectcar.shop-api` (uvicorn `:8000`). Restarts if `.env` / cookie Path change. | Brochure edge. Do not hand path rules or Worker uploads to Lead. |
-| **Ben** | **GO** before anyone executes this file or `member-host-cutover.md`. Later `app.` cut (Next #2 — `app-alias-cut.md`). | — |
+| **Ben** | **GO unfreeze** first (`doc-unfreeze.md` — lands **#36**). Then a separate **GO** before anyone executes this file or `member-host-cutover.md`. Later `app.` cut (Next #2 — `app-alias-cut.md`). | — |
 
 Alerts can come from anyone who sees Next HTML on Home, a localhost `Location`, or waitlist 404. **Recovery of a bad path split is Zone** (rollback above). **Recovery of a down shop-web / API is Lead** (process) / **Zone** (tunnel only).
 
@@ -168,14 +192,15 @@ Alerts can come from anyone who sees Next HTML on Home, a localhost `Location`, 
 
 | Order | Gate | Who | Notes |
 |-------|------|-----|-------|
-| 0 | **Both plan docs exist** | Docs PR | You are here. No DNS. No `app.` cut. No path rules. |
-| 1 | **Ben GO** | Ben | Required. Do not start Zone path rules or Garage site work from this file alone. |
-| 2 | Cookie / CORS / middleware allowlist on Doc | Lead + Garage | `member-host-cutover.md` §2. Code + `.env` only after GO. |
-| 3 | **This file** — edge path split | **Zone** | `/member*` → `http://127.0.0.1:3000`. Everything else → Worker. Host + proto forwarding. |
-| 4 | Member UI on customer host | **Garage** | Wire the surface; do not replace the Worker brochure. |
-| 5 | Prove smoke (§4) + `member-host-cutover.md` §5 | Garage e2e; anyone can curl | If brochure / waitlist / ops/app break → §5 rollback. |
-| 6 | Ben cuts `app.` alias | Ben / Zone | **Later.** STATUS Next #2. Checklist: **`app-alias-cut.md`**. Not this edge add — Member path-split does **not** require cutting `app.` first. |
-| — | Classic Pages git | Zone | **Outranked.** `brochure-pages-cutover.md` after CF ↔ GitHub auth. Not a substitute for Next #1. |
+| 0 | **Both plan docs exist** | Docs PR | You are here. No DNS. No `app.` cut. No path rules. No unfreeze. |
+| 1 | **Prerequisite — Doc unfreeze** | Ben + Lead | [doc-unfreeze.md](doc-unfreeze.md). Shop-web host allowlist **#36** live on Doc. New `BUILD_ID` ≠ `5swmVz-T2CqKEQzTk1ifU`. Lid-restore ([doc-lid-restore.md](doc-lid-restore.md)) and green `shop-os-ci` are **not** this. |
+| 2 | **Ben GO** (Member edge) | Ben | **Separate** from unfreeze GO. Do not start Zone path rules or Garage site work from this file, from an unfreeze alone, or from a docs merge. |
+| 3 | Cookie / CORS / middleware allowlist on Doc | Lead + Garage | `member-host-cutover.md` §2. Allowlist **#36** is on git — **live on Doc only after step 1**. `.env` / Path only after Member GO. |
+| 4 | **This file** — edge path split | **Zone** | `/member*` → `http://127.0.0.1:3000`. Everything else → Worker. Host + proto forwarding. |
+| 5 | Member UI on customer host | **Garage** | Wire the surface; do not replace the Worker brochure. |
+| 6 | Prove smoke (§4) + `member-host-cutover.md` §5 | Garage e2e; anyone can curl | If brochure / waitlist / ops/app break → §5 rollback. |
+| 7 | Ben cuts `app.` alias | Ben / Zone | **Later.** STATUS Next #2. Checklist: **`app-alias-cut.md`**. Not this edge add — Member path-split does **not** require cutting `app.` first. |
+| — | Classic Pages git | Zone | **Outranked.** `brochure-pages-cutover.md` after CF ↔ GitHub auth. **Do not re-ask.** Not a substitute for Next #1. |
 
 **Out of scope for this file:** app code, DNS edits, Garage / Zone / Hatch fan-out, Stripe, shop-open, Apex, Mission Control cockpit, cutting `app.`, executing Pages git.
 
