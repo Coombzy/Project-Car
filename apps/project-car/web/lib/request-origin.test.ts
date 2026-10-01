@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { publicOrigin, publicUrl } from "./request-origin.ts";
+import {
+  CUSTOMER_HOST_OPS_LOGIN,
+  customerHostAllowsPath,
+  isCustomerShopHost,
+  publicOrigin,
+  publicUrl,
+} from "./request-origin.ts";
 
 function headers(init: Record<string, string>): Pick<Headers, "get"> {
   const store = new Headers(init);
@@ -273,5 +279,81 @@ describe("publicUrl", () => {
     rejected.searchParams.set("next", "/member");
     assert.equal(rejected.toString(), "https://localhost:3000/member/login?next=%2Fmember");
     assert.notEqual(rejected.origin, "https://api.projectcar.ca");
+  });
+});
+
+describe("customer host surface guard", () => {
+  it("treats projectcar.ca and www as the customer host", () => {
+    assert.equal(
+      isCustomerShopHost(
+        headers({
+          "x-forwarded-host": "projectcar.ca",
+          "x-forwarded-proto": "https",
+          host: "localhost:3000",
+        }),
+      ),
+      true,
+    );
+    assert.equal(
+      isCustomerShopHost(
+        headers({
+          host: "www.projectcar.ca",
+          "x-forwarded-proto": "https",
+        }),
+      ),
+      true,
+    );
+  });
+
+  it("does not treat ops, app, localhost, or api as the customer host", () => {
+    for (const host of ["ops.projectcar.ca", "app.projectcar.ca", "localhost:3000", "api.projectcar.ca"]) {
+      assert.equal(
+        isCustomerShopHost(headers({ host, "x-forwarded-proto": "https" })),
+        false,
+        host,
+      );
+    }
+  });
+
+  it("ignores a spoofed customer X-Forwarded-Host when it is not allowlisted syntax, and falls through", () => {
+    assert.equal(
+      isCustomerShopHost(
+        headers({
+          "x-forwarded-host": "https://projectcar.ca/phish",
+          host: "ops.projectcar.ca",
+        }),
+      ),
+      false,
+    );
+    assert.equal(
+      isCustomerShopHost(
+        headers({
+          "x-forwarded-host": "evil.example",
+          host: "projectcar.ca",
+          "x-forwarded-proto": "https",
+        }),
+      ),
+      true,
+    );
+  });
+
+  it("allows /member/login on the customer host", () => {
+    assert.equal(customerHostAllowsPath("/member/login"), true);
+    assert.equal(customerHostAllowsPath("/member"), true);
+    assert.equal(customerHostAllowsPath("/member/schedule"), true);
+    assert.equal(customerHostAllowsPath("/member/chat/room-1"), true);
+  });
+
+  it("denies owner/ops routes on the customer host, including /members", () => {
+    for (const path of ["/", "/login", "/schedule", "/chat", "/parts", "/members", "/membership", "/payments"]) {
+      assert.equal(customerHostAllowsPath(path), false, path);
+    }
+    assert.equal(CUSTOMER_HOST_OPS_LOGIN, "https://ops.projectcar.ca/login");
+  });
+
+  it("still allows next assets and favicon", () => {
+    assert.equal(customerHostAllowsPath("/_next/static/chunks/app.js"), true);
+    assert.equal(customerHostAllowsPath("/_next/image"), true);
+    assert.equal(customerHostAllowsPath("/favicon.ico"), true);
   });
 });

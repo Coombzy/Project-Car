@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { MEMBER_SESSION_COOKIE, SESSION_COOKIE } from "./lib/config";
-import { publicUrl } from "./lib/request-origin";
+import {
+  CUSTOMER_HOST_OPS_LOGIN,
+  customerHostAllowsPath,
+  isCustomerShopHost,
+  publicUrl,
+} from "./lib/request-origin";
 
 function redirectTo(request: NextRequest, path: string): URL {
   return publicUrl(request.headers, request.url, path);
@@ -10,6 +15,13 @@ function redirectTo(request: NextRequest, path: string): URL {
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
+
+  // Customer host is Member-only. Do this before owner-login redirects so
+  // `/` and `/login` never render on projectcar.ca / www.
+  if (isCustomerShopHost(request.headers) && !customerHostAllowsPath(path)) {
+    return NextResponse.redirect(CUSTOMER_HOST_OPS_LOGIN);
+  }
+
   const ownerSession = request.cookies.get(SESSION_COOKIE)?.value;
   const memberSession = request.cookies.get(MEMBER_SESSION_COOKIE)?.value;
   const isOwnerLogin = path.startsWith("/login");
