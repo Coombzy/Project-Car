@@ -1,9 +1,9 @@
 # API stay-up — `api.projectcar.ca`
 
 **Status:** Living ops  
-**Updated:** 2026-09-07  
+**Updated:** 2026-09-08  
 **Public URL:** https://api.projectcar.ca  
-**Related:** `doc-lid-restore.md` (ordered wake), `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `shop-web-stay-up.md`, `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
+**Related:** `doc-lid-restore.md` (ordered wake), `doc-unfreeze.md` (Ben GO pull — **not** this stay-up), `lookout-resume.md` (re-arm after unfreeze or Ben resume GO — **not** a flip), `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `shop-web-stay-up.md`, `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
 
 Keep the Shop API reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -40,6 +40,10 @@ Mitigation already on Doc: Amphetamine + plugged-in no-sleep (`doc-software-base
 ---
 
 ## Health
+
+Public `GET /health` is **200 when Doc origin is up**. Lid-close / sleep (mornings included) still yields Cloudflare **502** or **530 / error 1033**. That is expected — not a product break.
+
+Lookout **`projectcar-api-health-watch`** owns the live probe **when re-armed**. Re-arm after Doc unfreeze or an explicit Ben resume GO: `lookout-resume.md`. Do **not** flip `enabled` from a docs PR. Held **#75** is the Lead interim morning/public probe until that checklist. Do **not** re-nag Ben to allow GET.
 
 | Check | Expect |
 |-------|--------|
@@ -78,5 +82,7 @@ Morning lid-close / **530 / 1033** (ordered sequence): `doc-lid-restore.md`.
 6. **Garage — after.** When public health is 200, Garage may re-run brochure waitlist e2e. Form only. No process restarts.
 
 CORS / waitlist preflight after an `.env` change: `cors-origins.md`.
+
+Lookout re-arm (after Doc unfreeze or an explicit Ben resume GO — do **not** flip `enabled` from a docs PR): `lookout-resume.md`. Held **#75** is the Lead interim probe lane until that checklist.
 
 Public HTTPS session cookies: shop-web KeepAlive **`com.projectcar.shop-web`** runs **`next start`** (`NODE_ENV=production`), not `next dev`. Doc already uses `COOKIE_SECURE=true` (API) and `SHOP_COOKIE_SECURE=true` (shop UI) so Firefox will store cookies on `app.` / `ops.`. Local `http://127.0.0.1:3000` should leave those unset or false. See `shop-web-stay-up.md` and `apps/project-car/web/README.md`. Member-on-projectcar.ca cookie / CORS plan: `member-host-cutover.md` (not shipped).
