@@ -2,7 +2,7 @@
 
 **Status:** Checklist / plan only — **not shipped**  
 **Updated:** 2026-09-07  
-**Related:** `STATUS.md` Next #1, `member-zone-edge.md` (Zone path-split), `app-alias-cut.md` (STATUS Next #2; plan only — **not** required first), `website-improvements.md` P1-6 (brochure Membership sign-in CTA after cutover GO), `cors-origins.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`, `brochure-pages-cutover.md`, `website-webapp-specification.md` §3
+**Related:** `member-cutover-sequence.md` (order), `STATUS.md` Next #1, `member-zone-edge.md` (Zone path-split), `app-alias-cut.md` (STATUS Next #2; plan only — **not** required first), `website-improvements.md` P1-6 (brochure Membership sign-in CTA after cutover GO), `cors-origins.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`, `brochure-pages-cutover.md`, `website-webapp-specification.md` §3
 
 Plan the move of Member self-serve from the shop UI `/member` (today on **`ops.`** + temporary **`app.`** alias) onto the customer host **projectcar.ca / www**. This file is a runbook. It does **not** implement the migration, change DNS, or cut the `app.projectcar.ca` alias.
 
