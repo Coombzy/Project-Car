@@ -5,11 +5,12 @@ management dashboard plus Member self-serve parked at `/member` for now
 (balance, book / cancel, schedule quote), Chat v1 (human / polling),
 members, hoists, bookings, token ledger, tiers, and waitlist.
 
-The management UI is `apps/project-car/web`. Live alias today is
-`app.projectcar.ca`; intended name is `ops.projectcar.ca` (naming only — no
-DNS in this slice). Keep building on the current `app` / Doc UI. Member
-`/member` on that demo is a temporary park — customer app is `projectcar.ca`.
-Do not migrate Member onto brochure/Pages in the calendar slice.
+The management UI is `apps/project-car/web`. Live management host is
+`ops.projectcar.ca` (LIVE at the edge when Doc is up); `app.projectcar.ca`
+is the temporary alias for the same Doc `:3000` UI. Keep building on this
+ops / app / Doc UI. Member `/member` on that demo is a temporary park —
+customer app is `projectcar.ca`. Do not migrate Member onto brochure/Pages
+in the calendar slice.
 
 Specs: `Docs/platform-architecture.md` §8, `Docs/project-car-application-specification.md` §4–9.
 

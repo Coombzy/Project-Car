@@ -1,8 +1,8 @@
 # CORS_ORIGINS — brochure waitlist
 
 **Status:** Living ops  
-**Updated:** 2026-09-07  
-**Related:** `api-stay-up.md`, `doc-lid-restore.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `app-alias-cut.md` (later drop of `https://app.projectcar.ca` — **not** this file), `apps/project-car/api/.env.example`, `apps/project-car/api/app/config.py`, `apps/website/html/waitlist.js`
+**Updated:** 2026-09-16  
+**Related:** `api-stay-up.md`, `doc-lid-restore.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `app-alias-cut.md` (later drop of `https://app.projectcar.ca` — **not** this file), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (after extended-OPEN Soft-530 CLEAR: OPTIONS CORS apex **and** www + POST **422**/**201** on **`/waitlist`** **before** desk / **#79.1**), [freeze-build-id-public-probe.md](freeze-build-id-public-probe.md) (waitlist smoke SSOT = **`/waitlist`** — **`/api/waitlist`** OPTIONS 200 CORS is a **false friend**), [post-dual-clear-go.md](post-dual-clear-go.md) (Shop OS **#79.1** acceptance smoke asserts waitlist OPTIONS CORS Origin `https://projectcar.ca` + www), `apps/project-car/api/.env.example`, `apps/project-car/api/app/config.py`, `apps/website/html/waitlist.js`
 
 Browser waitlist from https://projectcar.ca must be allowed to call the Shop API. After any `.env` change, **Lead** restarts the API process on Doc.
 
@@ -32,6 +32,8 @@ The public form (`apps/website/html/waitlist.js`, `shop-config.js`) POSTs JSON t
 
 `https://api.projectcar.ca/waitlist`
 
+**SSOT path is `/waitlist`.** Brochure `waitlist.js` POSTs here. **`https://api.projectcar.ca/api/waitlist` is a false friend** — OPTIONS may return **200** CORS while POST returns **404**. Do **not** stamp waitlist smoke / Soft-530 CLEAR from that OPTIONS.
+
 `Origin` must be an allowlist entry or the browser drops the response.
 
 ---
@@ -54,9 +56,13 @@ curl -sS -D - -o /dev/null -X OPTIONS https://api.projectcar.ca/waitlist \
   -H 'Access-Control-Request-Method: POST'
 ```
 
-**Expect:** HTTP **200** and `Access-Control-Allow-Origin: https://projectcar.ca`.
+**Expect:** HTTP **200** and `Access-Control-Allow-Origin: https://projectcar.ca`. Repeat with Origin `https://www.projectcar.ca` — expect the matching Allow-Origin.
 
-Wrong or missing origin → no `Access-Control-Allow-Origin: https://projectcar.ca`. Public health can still be 200 (`GET /health`); that does not prove CORS.
+**Smoke honesty:** waitlist OPTIONS class for Soft-530 must be this **Origin CORS preflight** on **`/waitlist`**. A **bare** `OPTIONS /waitlist` (no `Origin` / no `Access-Control-Request-Method`) that returns **405** is FastAPI method-not-allowed — **not** Soft-530 **OPEN**, **not** CF **530 / 1033**. Do **not** stamp Soft-530 OPEN from a bare 405. Do **not** smoke **`/api/waitlist`** — OPTIONS **200** CORS there is a **false friend**; POST **404**.
+
+Wrong or missing origin → no `Access-Control-Allow-Origin` matching the request Origin. Public health can still be 200 (`GET /health`); that does not prove CORS.
+
+After **extended OPEN** Soft-530 **CLEAR**, OPTIONS (both Origins) **and** waitlist POST **422** or **201** are the **first** recovery card — **before** Owner desk / **#79.1** / unfreeze: [soft-530-clear-smoke.md](soft-530-clear-smoke.md). Prefer POST `{"name":"","email":"not-an-email"}` → **422** so the smoke does not mint a live signup.
 
 ---
 

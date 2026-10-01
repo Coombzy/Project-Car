@@ -1,9 +1,9 @@
 # API stay-up — `api.projectcar.ca`
 
 **Status:** Living ops  
-**Updated:** 2026-09-07  
+**Updated:** 2026-09-15  
 **Public URL:** https://api.projectcar.ca  
-**Related:** `doc-lid-restore.md` (ordered wake), `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `shop-web-stay-up.md`, `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
+**Related:** `doc-lid-restore.md` (ordered wake — weekend `/health` flip = process wake only; Soft-530 **post-CLEAR stay-up evidence** for the next CF 1033 — **Doc forensics**), `vault-stay-up.md` (McKing vault — **separate** plane; weekend dual-outage proved Soft-530 ≠ vault; **vault post-CLEAR stay-up evidence** — **McKing forensics**), [dual-host-outage.md](dual-host-outage.md) (dual-OPEN **wake order** — Doc first, then McKing), [soft-530-clear-smoke.md](soft-530-clear-smoke.md) (after extended-OPEN Soft-530 CLEAR: `/health` + OPTIONS CORS + POST **422**/**201** **before** desk / **#79.1**), [post-dual-clear-go.md](post-dual-clear-go.md) (after both CLEARs — Ben GO menu, **never auto-fire**; keep Soft-530 healthy is step 1), `cors-origins.md`, `brochure-worker-deploy.md` (do **not** schedule weekend Zone Direct Upload), `member-host-cutover.md`, `shop-web-stay-up.md`, `mcking-shop-host-cutover.md` (future McKing **shop** host — plan only; **not** a cut; dual-tunnel vault is a **separate** living-ops row — **LIVE verified**), `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5, [lookout-rearm-sop.md](lookout-rearm-sop.md) (**#78 LIVE-SUPERSEDED**; **`enabled:true` ≠ firing**; **re-arm success ≠ first fire** — stickiness ≥3 consecutive `*/5` windows; Lead may GO in-place re-arm when stalled; chronic ≤1 pause/resume per calendar-day)
 
 Keep the Shop API reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -25,6 +25,10 @@ Keep the Shop API reachable. This is operational reality, not a product-lock rew
 
 The LaunchAgent lives on **Doc**, not in this git repo. Compose still does not start the API. KeepAlive is the primary stay-up for process crashes / logout-style exits. **Lid-close / sleep still kills the Mac** — launchd cannot outrun sleep.
 
+**Future host (plan only):** Shop API later moves to **McKing Docker** with Cloudflare tunnel **hostname reuse** (`api.projectcar.ca` stays the public name). Dual-run Doc KeepAlive, then cut — paper: `mcking-shop-host-cutover.md`. **Not** Next #1. **Not** GO’d. Do **not** execute from this stay-up file. Today’s origin is still Doc.
+
+**Dual-tunnel ownership (separate from shop CF cutover — vault McKing-owned):** Doc tunnel = **`cloud.` + `api.` + `app.` + `ops.` only** (this API hostname stays on that Doc tunnel / Soft-530 KeepAlive). McKing-only tunnel **`vault.projectcar.ca`**: `cloudflared` → `localhost:8222`. **Living:** vault independently **OPEN** as **502** since ~19:45 MT 2026-09-13 — **not** 1033. Fri `/alive` **200** + `/api/config` **2026.6.0** is **historical** (when CLEAR, prefer `/alive`). Soft-530 five-row dual-run gate is **Doc shop hosts only** (`cloud.` / `api.` / `app.` / `ops.`) — **vault EXCLUDED**. Soft-530 / this API `GET /health` can stay **green while vault dies**. Lookout vault flip watch is **LIVE/armed** (`enabled:true`, Lookout confirmed) on `https://vault.projectcar.ca/alive` every **5m** (fallback `/api/config` if `/alive` 404s) — vault watch ≠ Soft-530 / Soft-530 companion watches / Doc lid-restore. Flip-only alerts: Chief + Lead only on 200↔non-200; never Ben; never mutate. Soft-530 five-row is Doc shop hosts `cloud.` / `api.` / `app.` / `ops.`, but Lookout Soft-530 coverage was **api-only** (`/health`) — `ops.` / `app.` (and `cloud.`) can **530 while this API stays 200** (same class as pre-vault-watch). Soft-530 companion watches on `ops.` / `app.` `/login` (optional `cloud.` `/login`; Lead probed **200**) are **HOLD / not armed** (Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask). Companion watches ≠ vault `/alive` watch ≠ Doc lid-restore. Soft-530 living is **OPEN** (CF **1033** since 2026-09-13 ~11:57 America/Edmonton) — Fri CLEAR is historical. STATUS Live / Locks is canonical. Never move the Doc mission-control token for `vault.`. Soft-530 lid-restore / LaunchAgent KeepAlive must **not** recreate `vault.` ingress on Doc. Vault LIVE ≠ shop hostname leave ≠ Doc unfreeze. Shop CF cutover stays paper. Essay: `mcking-shop-host-cutover.md`.
+
 ---
 
 ## Lid-close / sleep
@@ -39,12 +43,34 @@ Mitigation already on Doc: Amphetamine + plugged-in no-sleep (`doc-software-base
 
 ---
 
+## Weekend Soft-530 coverage (plan-improve off Sat/Sun)
+
+plan-improve is **off Sat/Sun**. Soft-530 companion ops/app watches stay **HOLD / not armed** (Ben skipped ~14:35 America/Edmonton — do **not** re-ask). Weekend flip coverage = Lookout `projectcar-api-health-watch` (`GET https://api.projectcar.ca/health`) + the **separate** McKing vault `/alive` watch **only**.
+
+| Lock | Meaning |
+|------|---------|
+| **Weekend control plane** | Doc KeepAlive / lid-close: `com.projectcar.cloudflared` + uvicorn `:8000` (`com.projectcar.shop-api`) + `next start` `:3000` (`com.projectcar.shop-web`). **Not** Doc unfreeze. **Not** **#82**. |
+| **`/health` flips non-200** | Chief/Lead run `doc-lid-restore.md` **process wake only**. No `git pull` / rebuild while freeze `4cf8924` / `5swmVz` is intact. |
+| **Vault flips** | Stay on the **separate** McKing vault watch — [vault-stay-up.md](vault-stay-up.md). Do **not** fold vault into this API KeepAlive / lid-restore. Vault flip ≠ Doc lid-restore; Doc Soft-530 ≠ McKing vault wake. Dual-OPEN glue: [dual-host-outage.md](dual-host-outage.md). |
+| **No weekend Zone / Worker** | Do **not** schedule weekend Zone Direct Upload / Worker work. First Monday plan-improve resumes Soft-530 smoke. |
+| **Option A Dynamic redirect UNCOVERED** | While `brochure-option-a-redirect-watch` is **GONE**, weekend Option A Dynamic redirect is **explicitly uncovered — accept that risk**. Same class as [soft-530-weekday-overnight.md](soft-530-weekday-overnight.md). Do **not** invent weekend plan-improve, Zone, or Garage Option A coverage. **Next Option A smoke** = first weekday `*/20` after ~06:00, **or** Ben-approved Lookout recreate ([lookout-rearm-sop.md](lookout-rearm-sop.md)). **HOLD** a second Ben recreate ask. |
+| **Anti-goal** | Soft-530 **CLEAR** Friday ≠ unfreeze GO ≠ companion re-ask. |
+| **Post-CLEAR stay-up evidence** | After lid-restore CLEAR, stamp lastExit / KeepAlive / caffeinate·CDM / Tailscale — [doc-lid-restore.md](doc-lid-restore.md). Dual-host-outage is **wake order**. Soft-530 still **OPEN** this fold — paper does **not** invent CLEAR. |
+
+**#82** Ben GO / Soft-530 companions HOLD / dual-Nextcloud (`4cde204`) / `brochure-worker-ci` (`6e6efe8`) / waitlist-owner-desk **retired** (Owner desk LIVE; optional CSV Later) / **#79.1** git-only until Doc unfreeze / vault stay-up (`017f778`) / dual-host-outage (`7bf894b`) — **unchanged**. STATUS Live / Locks is canonical.
+
+Friday last weekday `*/20` (~17:40 MT) hands **into this** weekend coverage. **Mon–Thu nights** after last `*/20` until next weekday first fire (~06:00) are [soft-530-weekday-overnight.md](soft-530-weekday-overnight.md) — same Lookout api+vault-only set; **not** this Sat/Sun card.
+
+---
+
 ## Health
 
 | Check | Expect |
 |-------|--------|
 | `GET https://api.projectcar.ca/health` | **200** — `{"status":"ok","service":"project-car-api"}` |
 | Optional local (process up on Doc) | `GET http://127.0.0.1:8000/health` — same body |
+
+**Blind spot:** this `/health` **200** does **not** prove `ops.` / `app.` / `cloud.` are up. Soft-530 five-row is Doc shop hosts `cloud.` / `api.` / `app.` / `ops.`, but Lookout Soft-530 coverage was **api-only**. `ops.` / `app.` (and `cloud.`) can **530 while this API stays 200** — same class as pre-vault-watch. Soft-530 companion watches are **HOLD / not armed** (STATUS Live; Ben skipped ~14:35 America/Edmonton — do **not** re-ask). Do **not** claim armed: `https://ops.projectcar.ca/login` and `https://app.projectcar.ca/login` — ok = **200** (or **307** → `/login` then **200**); down = **502 / 530 / 1033 / timeout**. Optional `https://cloud.projectcar.ca/login` for five-row parity (Lead probed **200**). Cadence ≈ this api watch. Baselines (Lookout-owned): `/workspace/lookout/projectcar-ops-health-baseline.json` + `projectcar-app-health-baseline.json` (+ cloud if later armed). Flip-only: **Chief + Lead only**; **never Ben**; never restart / mutate. Soft-530 companion watches ≠ vault `/alive` watch ≠ Doc lid-restore. Soft-530 living is **OPEN** (CF **1033** since 2026-09-13 ~11:57 America/Edmonton) — Fri CLEAR is historical. Vault flip watch stays **LIVE/armed**. Shop-web probes: `shop-web-stay-up.md`.
 
 ```bash
 curl -sS -o /dev/null -w '%{http_code}\n' https://api.projectcar.ca/health
@@ -58,17 +84,18 @@ curl -sS http://127.0.0.1:8000/health
 
 | Role | Owns | Does not own |
 |------|------|----------------|
-| **Lead** | uvicorn / process stay-up and recovery on Doc | Cloudflare tunnel / DNS edits |
+| **Lookout** | `projectcar-api-health-watch` **resumed** (`enabled:true`) 2026-09-11 ~06:52 America/Edmonton (Lookout confirmed; live `/health` **200**). **`enabled:true` ≠ firing.** Living ~09:14 MT 2026-09-15: stalled ~**56m** since ~08:21 — same class as vault. Lead interim probe ended. **#78 lookout-resume** is **LIVE-SUPERSEDED** — api-health already **`enabled:true`** while Doc stays frozen at `4cf8924` / `5swmVz`. **Never delete** this watch (or vault `/alive`) to fix stalled cron ([lookout-rearm-sop.md](lookout-rearm-sop.md)). **Re-arm success ≠ first fire** — stickiness ≥3 consecutive `*/5` windows before healthy. Chronic ≤1 pause/resume per calendar-day (clock resets **America/Edmonton midnight**). Living 2026-09-15: **both chronic HOLD today** — quiet-ops “Lookout continues” is **false for flip detection**; interim = Chief `*/20` + Lead probes (accept **≤~20m**); Chronic Lookout ≠ quiet-ops failure ≠ Ben ping ([soft-530-extended-open.md](soft-530-extended-open.md)). Option A continuous watch is **GONE** — **HOLD** recreate; do **not** collapse that SOP into #78. Weekend flip coverage = this api `/health` + vault `/alive` **only**. Soft-530 companion watches on `ops.` / `app.` `/login` (optional `cloud.` `/login`) are **HOLD / not armed** (Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask). Companion watches ≠ this api `/health` watch ≠ vault `/alive` watch ≠ Doc lid-restore. | Process restore on Doc; Cloudflare tunnel / DNS edits; claiming companion watches armed / `enabled:true`; deleting this watch to fix cron; calling healthy on first fire; looping pause/resume on chronic; weekend Zone Direct Upload / **#82** |
+| **Lead** | uvicorn / process stay-up and recovery on Doc. Weekend `/health` non-200 → `doc-lid-restore.md` **process wake only** (with Chief). **May GO** in-place re-arm of this api watch **and** vault when `lastRun` stalls — verify stickiness before healthy ([lookout-rearm-sop.md](lookout-rearm-sop.md) row 8). | Cloudflare tunnel / DNS edits; interim morning probe (ended 2026-09-11); `git pull` / unfreeze / **#82**; Ben recreate / docker / Doc-wake from a stall |
 | **Zone** | Cloudflare tunnel + DNS for `api.projectcar.ca` | Restarting uvicorn |
 | **Garage** | Browser e2e of the brochure waitlist only | Restarting uvicorn, tunnel, or DNS |
 
-Alerts can come from anyone who sees a **502**, **530 / error 1033**, or a failed waitlist submit. **Recovery of the process is Lead only.** Do not instruct Garage (or anyone else) to restart uvicorn.
+Alerts can come from anyone who sees a **502**, **530 / error 1033**, or a failed waitlist submit. **Recovery of the process is Lead only.** Lookout owns the live api watch (`enabled:true`). Soft-530 companion watches (`ops.` / `app.` `/login`) are **HOLD / not armed** (Ben skipped companion-watch approval ~14:35 America/Edmonton — do **not** re-ask). Do not instruct Garage (or anyone else) to restart uvicorn. Companion flip alerts: **Chief + Lead only**; **never Ben**; never restart / mutate.
 
 ---
 
 ## Recovery checklist
 
-Morning lid-close / **530 / 1033** (ordered sequence): `doc-lid-restore.md`.
+Morning lid-close / **530 / 1033** (ordered sequence): `doc-lid-restore.md`. Weekend `/health` flip (plan-improve off): same sequence — **process wake only**.
 
 1. **Public health.** `GET https://api.projectcar.ca/health` → 200? If yes, stop. 403 challenge page → Zone (not Lead).
 2. **Doc awake?** Lid closed / sleep → **502** or **530 / error 1033**. Wake Doc (Amphetamine session if it should stay up).
@@ -80,3 +107,13 @@ Morning lid-close / **530 / 1033** (ordered sequence): `doc-lid-restore.md`.
 CORS / waitlist preflight after an `.env` change: `cors-origins.md`.
 
 Public HTTPS session cookies: shop-web KeepAlive **`com.projectcar.shop-web`** runs **`next start`** (`NODE_ENV=production`), not `next dev`. Doc already uses `COOKIE_SECURE=true` (API) and `SHOP_COOKIE_SECURE=true` (shop UI) so Firefox will store cookies on `app.` / `ops.`. Local `http://127.0.0.1:3000` should leave those unset or false. See `shop-web-stay-up.md` and `apps/project-car/web/README.md`. Member-on-projectcar.ca cookie / CORS plan: `member-host-cutover.md` (not shipped).
+
+---
+
+## Post-CLEAR stay-up evidence (next CF 1033)
+
+**One-liner:** After Soft-530 **CLEAR** (this file’s health + `doc-lid-restore.md` smoke), stamp stay-up evidence **before walking away** — cloudflared LaunchAgent lastExit, KeepAlive loaded, caffeinate / CDM, Tailscale — so the next CF **1033** has a Fri→Sun baseline.
+
+[dual-host-outage.md](dual-host-outage.md) is **wake order**. Checklist + commands: [doc-lid-restore.md](doc-lid-restore.md) **Post-CLEAR stay-up evidence**.
+
+Living this fold — OPEN class honesty (do **not** invent CLEAR): Soft-530 is still **OPEN** as CF **1033** tunnel-down (`api.` / `ops.` / `app.` / `cloud.` **530** / error **1033**; waitlist OPTIONS **530**). Vault independently **OPEN** as **502** origin-down — **not** 1033 — on `/alive` **and** `/api/config`. ListMachines only `Mac.lan` — Docs + lightning absent. This paper does **not** invent a CLEAR. Capture on **Doc** after the **next** lid-restore CLEAR. Vault twin (McKing forensics): [vault-stay-up.md](vault-stay-up.md). Anti-goals: not Doc unfreeze, not **#82**, not Zone/Garage execute, not companion re-ask.
