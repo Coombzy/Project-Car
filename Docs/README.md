@@ -19,6 +19,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 | [platform-architecture.md](platform-architecture.md) | Monorepo, stack, bans |
 | [project-car-application-specification.md](project-car-application-specification.md) | Shop product v1 (waitlist + Owner hoist booking) |
 | [token-pricing.md](token-pricing.md) | Shop OS token pricing v1 (bands + overlay + fill; Owner-editable defaults) |
+| [member-primary-surface.md](member-primary-surface.md) | Member token balance + self-serve hoist schedule is the primary customer surface (IA lock; not Owner-only; not the host cutover) |
 | [mission-control-architecture.md](mission-control-architecture.md) | Ben-only cockpit over Nextcloud |
 | [integration-plan.md](integration-plan.md) | How the pieces connect |
 | [high-level-apps-and-business-specification.md](high-level-apps-and-business-specification.md) | Two products + later fitness widget |
@@ -48,6 +49,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 | [cors-origins.md](cors-origins.md) | `CORS_ORIGINS` for brochure waitlist from https://projectcar.ca |
 | [member-host-cutover.md](member-host-cutover.md) | Member UI → apex `projectcar.ca` checklist (plan only; Ben GO before Garage/Zone). Canonical cookie host = apex; planned 301 `www…/member*` → apex. Linked from STATUS Next #1. Edge / path-split slice: `member-zone-edge.md`. Does **not** require cutting `app.` first (`app-alias-cut.md`). |
 | [member-zone-edge.md](member-zone-edge.md) | Zone Cloudflare path-split for `/member*` on apex (plan only; **Ben GO**). Planned 301 www `/member*` → `https://projectcar.ca/member*`. Brochure stays dual-host. Do not execute from this file. Cookie / CORS essay stays in `member-host-cutover.md`. |
+| [member-primary-surface.md](member-primary-surface.md) | Member IA lock under STATUS Next #1: balance + self-serve hoist schedule first. Does **not** replace `member-host-cutover.md` / `member-zone-edge.md`. Merge ≠ cutover. |
 | [app-alias-cut.md](app-alias-cut.md) | Temporary `app.projectcar.ca` cut checklist (plan only; STATUS Next #2). Do **not** execute DNS / tunnel / CORS from this file. Member cutover does **not** require this first. **`ops.` stays** the management host. |
 | [ship-mvp-cut.md](ship-mvp-cut.md) | Draft public-MVP cut-vs-keep table (proposed candidates, not a Ben lock). Linked from STATUS Ship-MVP cut. |
 | [google-calendar-oauth.md](google-calendar-oauth.md) | Google Calendar OAuth / two-way sync standing plan (plan only; STATUS Next #6 — not a GO). Env names, scopes, 501→live, token store, Apple ICS-only, rollback. |
