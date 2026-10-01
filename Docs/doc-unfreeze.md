@@ -28,7 +28,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | File | When | What |
 |------|------|------|
 | **`doc-lid-restore.md`** | Doc slept / lid-close / public **530 / 1033** | Wake processes. Same frozen checkout. **No** `git pull`. |
-| **`doc-unfreeze.md` (this file)** | Ben said **GO** to unfreeze | Pull tip, migrate if needed, rebuild shop-web, new `BUILD_ID`, smoke **#36** / **#69** / banner honesty. |
+| **`doc-unfreeze.md` (this file)** | Ben said **GO** to unfreeze | Pull tip, migrate if needed, rebuild shop-web, new `BUILD_ID`, smoke **#36** / **#69** / **#88** / banner honesty. |
 
 Do **not** collapse them. A soft morning 530 is **not** unfreeze GO.
 
@@ -38,11 +38,11 @@ Do **not** collapse them. A soft morning 530 is **not** unfreeze GO.
 
 | Clock | Pin | Meaning |
 |-------|-----|---------|
-| **Git `main`** | Moves with merges (this repo) | **#36** host allowlist (`f952cd3`) and **#69** ops layout (`b9f9019`) are **on git**. Shop OS CI (`#73`) is git-only. |
+| **Git `main`** | Moves with merges (this repo) | **#36** host allowlist (`f952cd3`), **#69** ops layout (`b9f9019`), and **#88** customer-host guard (`ae42b87`) are **on git**. Tip at the 2026-10-01 status pass is `2036a2d` (**#82**). Shop OS CI (`#73`) is git-only. |
 | **Doc working tree** | Frozen at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** (Dashboard **#28**) | Live `ops.` / `app.` / `:3000` stay on that build until this checklist finishes **after** Ben GO. |
 | **Held #70** | Open docs / honesty PR | Optional tip fold + OwnerDemoBanner honesty copy. **Do not amend #70 from this file.** Merge of #70 is a separate lane — not this checklist. |
 
-Do **not** call **#36** or **#69** live on Doc until step 5 shows a **new** `BUILD_ID` and step 6 / 7 smoke.
+Do **not** call **#36**, **#69**, or **#88** live on Doc until step 5 shows a **new** `BUILD_ID` and step 6 / 7 smoke.
 
 ---
 
@@ -148,11 +148,11 @@ cat ~/src/Project-Car/apps/project-car/web/.next/BUILD_ID
 | `.next/BUILD_ID` present | Non-empty |
 | Value | **Not** `5swmVz-T2CqKEQzTk1ifU` (frozen Dashboard **#28** id) |
 
-If `BUILD_ID` is missing, equals `5swmVz-T2CqKEQzTk1ifU`, or you skipped rebuild, you are still on the frozen build. **Do not** call **#36** / **#69** live. Rebuild again.
+If `BUILD_ID` is missing, equals `5swmVz-T2CqKEQzTk1ifU`, or you skipped rebuild, you are still on the frozen build. **Do not** call **#36** / **#69** / **#88** live. Rebuild again.
 
 Update `STATUS.md` when Lead ships the new id (separate docs pass — not this file’s job to invent a future id).
 
-### 6. Product smoke — #36 + #69 + banner honesty
+### 6. Product smoke — #36 + #69 + #88 + banner honesty
 
 Walk **`https://ops.projectcar.ca`** (or **`https://app.projectcar.ca`** if `ops.` DNS is flaky). Still the Doc demo. The shop is not open.
 
@@ -160,9 +160,10 @@ Walk **`https://ops.projectcar.ca`** (or **`https://app.projectcar.ca`** if `ops
 |-------|------------------------|
 | **#36 host allowlist** | `GET /` on `ops.` → `Location: https://ops.projectcar.ca/login` (no `localhost`). Same-host hop on the temporary `app.` alias. Allowlist in `apps/project-car/web/lib/request-origin.ts`: localhost / `127.0.0.1`, `ops.`, `app.`, `projectcar.ca`, `www.` — **never** `api.`. Junk `X-Forwarded-Host` must not mint a random origin. |
 | **#69 ops layout** | Owner chrome: primary nav **Dashboard / Schedule / Chat / Members**; secondary **Inventory** (Parts/Tools), **Floor** (Jobs/Cameras/Hoists), **Admin** (Payments/Tiers/Fill/Waitlist); compact dismissible demo banner. Dashboard: **3** primary metrics (booked hours / open to-dos / open POs) + **3×2** bay grid + Parts / To-dos split. |
+| **#88 customer-host guard** | On Doc shop-web only, after this pull: `curl -sI -H 'Host: projectcar.ca' http://127.0.0.1:3000/login` → **307** `Location: https://ops.projectcar.ca/login`. Same for `/`. `Host: projectcar.ca` on `/member/login` must **not** go to that ops login. `ops.` / `app.` stay on the #36 behavior. Public `https://projectcar.ca` is still the brochure Worker until the Member path-split — do not use that URL as this smoke. Order: [member-cutover-sequence.md](member-cutover-sequence.md). |
 | **OwnerDemoBanner honesty** | Banner (and login lede if present on that tip) must treat **`ops.projectcar.ca` as LIVE** and **`app.` as the temporary alias**. Fail if copy still says **“naming only, no DNS yet.”** Honesty wording may still be on held **#70** — do **not** amend #70 from this checklist; if the pulled tip still has naming-only copy, record the gap and leave the rewrite to that lane. |
 
-Do **not** claim #36 / #69 live from git SHA alone. `BUILD_ID` + this walk are the proof.
+Do **not** claim #36 / #69 / #88 live from git SHA alone. `BUILD_ID` + this walk are the proof.
 
 ### 7. Public smoke — health + waitlist CORS
 
@@ -191,7 +192,7 @@ Garage may re-run brochure waitlist e2e **after** health is 200. Form only. No p
 ## After a successful unfreeze
 
 - Doc checkout and `.next/BUILD_ID` match the tip you intended.
-- **#36** and **#69** may be called **LIVE on Doc** only after steps 5–7.
+- **#36**, **#69**, and **#88** may be called **LIVE on Doc** only after steps 5–7.
 - Lid-restore **stays** process-only. A later morning 530 is still wake-only — do **not** pull again unless Ben GOs another unfreeze.
 - Shop OS CI remains git-only. Green CI on a *later* SHA is still **not** a new unfreeze GO.
 
