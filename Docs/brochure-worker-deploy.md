@@ -1,8 +1,8 @@
 # Brochure Worker deploy — `projectcar-brochure`
 
 **Status:** Standing runbook  
-**Updated:** 2026-09-07  
-**Related:** `STATUS.md` Live brochure, `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 **LIVE** — do not re-apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md`, `apps/website/README.md`
+**Updated:** 2026-09-21  
+**Related:** `STATUS.md` Live brochure, `brochure-option-a-live.md` (Zone Option A 301s are **LIVE** SSOT for `/` and `/shop`; Worker `_redirects` stay thin), `website-webapp-specification.md` §3, `website-improvements.md`, `brochure-security-headers.md` (P2-4 **LIVE** — do not re-apply from this runbook), `api-stay-up.md`, `shop-web-stay-up.md`, `cors-origins.md`, `brochure-pages-cutover.md`, `member-zone-edge.md`, `apps/website/README.md`
 
 Re-deploy the public brochure after Garage merges HTML on `main`. This is the **locked live method**. It is not a one-off for a single hygiene ship.
 
@@ -23,6 +23,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Not the origin** | Doc `:8088`, `~/hermes-tools/project-car-website`, optional local nginx preview |
 | **Classic Pages git** | **Skipped** pending CF ↔ GitHub auth. Plan only: `brochure-pages-cutover.md`. Do not invent a live cutover from this runbook. |
 | **Apex sidecar** | **Deferred.** Do not revive. |
+| **Pretty URLs** | Zone Redirect **301** pack is **LIVE** SSOT for `/` and `/shop` (and `/membership`, `/about`) → `*.html`. Worker `_redirects` should stay thin (Chat → Contact only). Do **not** claim live Worker 302 `/shop`. Record: `brochure-option-a-live.md`. |
 
 Waitlist on Membership / Contact is a **browser POST** to the Shop API (`https://api.projectcar.ca/waitlist`). The Worker only serves static HTML/JS. API health and CORS live in `api-stay-up.md` and `cors-origins.md` — a green upload does not prove waitlist.
 
