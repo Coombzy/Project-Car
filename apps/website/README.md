@@ -10,7 +10,9 @@ Membership and Contact `POST` JSON to `{PC_SHOP_API_BASE}/waitlist` (`html/shop-
 
 ## Apex / Chat
 
-Deferred. No Apex sidecar, Chat page, or assistant copy. Contact is email and Discord. Backlog: [`Docs/website-improvements.md`](../../Docs/website-improvements.md).
+No Apex sidecar and no Chat page. Contact stays email, Discord, and the waitlist.
+
+`contact.html` also has a **demo** widget. It posts JSON to same-origin `/api/demo-chat`. The token is not in the page. The route is a separate Worker, not the brochure Direct Upload — [`demo-chat/README.md`](demo-chat/README.md). Until Zone deploys that route, the widget answers “not connected.” Not member sign-in. The shop is not open.
 
 ## Hygiene files (in `html/`)
 
