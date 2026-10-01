@@ -1,9 +1,9 @@
 # API stay-up — `api.projectcar.ca`
 
 **Status:** Living ops  
-**Updated:** 2026-09-07  
+**Updated:** 2026-09-08  
 **Public URL:** https://api.projectcar.ca  
-**Related:** `doc-lid-restore.md` (ordered wake), `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `shop-web-stay-up.md`, `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
+**Related:** `doc-lid-restore.md` (ordered wake), `doc-unfreeze.md` (Ben GO pull — **not** this stay-up), `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `shop-web-stay-up.md`, `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
 
 Keep the Shop API reachable. This is operational reality, not a product-lock rewrite. Product-lock status: `STATUS.md` and `project-car-application-specification.md` §13.
 
@@ -41,6 +41,10 @@ Mitigation already on Doc: Amphetamine + plugged-in no-sleep (`doc-software-base
 
 ## Health
 
+Public `GET /health` is **200 when Doc origin is up**. Lid-close / sleep (mornings included) still yields Cloudflare **502** or **530 / error 1033**. That is expected — not a product break.
+
+Lookout **`projectcar-api-health-watch`** is **paused** (`enabled:false`). **Lead owns the interim morning/public probe** until the watch is re-armed. Lookout remains the owner when re-armed. Do **not** re-nag Ben to allow GET.
+
 | Check | Expect |
 |-------|--------|
 | `GET https://api.projectcar.ca/health` | **200** — `{"status":"ok","service":"project-car-api"}` |
@@ -58,11 +62,14 @@ curl -sS http://127.0.0.1:8000/health
 
 | Role | Owns | Does not own |
 |------|------|----------------|
-| **Lead** | uvicorn / process stay-up and recovery on Doc | Cloudflare tunnel / DNS edits |
+| **Lead** | uvicorn / process stay-up and recovery on Doc. **Interim morning/public probe** while Lookout is paused | Cloudflare tunnel / DNS edits. Re-arming Lookout. Nagging Ben for GET allow |
+| **Lookout** | Live probe **when re-armed** (`projectcar-api-health-watch`) | Process restore. Interim probe while paused. GET-allow nag |
 | **Zone** | Cloudflare tunnel + DNS for `api.projectcar.ca` | Restarting uvicorn |
 | **Garage** | Browser e2e of the brochure waitlist only | Restarting uvicorn, tunnel, or DNS |
 
-Alerts can come from anyone who sees a **502**, **530 / error 1033**, or a failed waitlist submit. **Recovery of the process is Lead only.** Do not instruct Garage (or anyone else) to restart uvicorn.
+Alerts can come from anyone who sees a **502**, **530 / error 1033**, or a failed waitlist submit. **Recovery of the process is Lead only.** Do not instruct Garage (or anyone else) to restart uvicorn. Do **not** re-nag Ben to allow GET.
+
+Lid-close restore: `doc-lid-restore.md`. Unfreeze (Doc checkout pull) after **Ben GO** only: `doc-unfreeze.md`. Green **shop-os-ci** is **not** that GO.
 
 ---
 
