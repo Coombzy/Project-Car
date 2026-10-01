@@ -1,6 +1,6 @@
 # AI Agents Team Constitution
 
-**Last Updated:** 2026-09-07  
+**Last Updated:** 2026-09-08  
 **Part of:** Project Car documentation hierarchy  
 **Canonical:** `Coombzy/Project-Car` → `Docs/ai-agents-constitution.md`  
 **Optional Desktop mirror:** `~/Desktop/Project Car/docs/` (not an authoring path)  
@@ -27,7 +27,7 @@ Hardware profiles: [agent-profiles-specification.md](agent-profiles-specificatio
 - **Lead** — Head of coding projects. Sequences Shop OS. Standing Docs/GO lane. Owns Doc `:8000` and shop-web KeepAlive restore. Hands code to Cursor cloud agents / Garage. **This is the coding/docs sequencer** — not Porsche, not Hatch, not a single Hermes.
 - **Garage** — projectcar.ca site / brochure HTML. Cloud agent for that code. Waitlist e2e after public `GET /health` is 200. Does **not** restart uvicorn, tunnel, or DNS.
 - **Zone** — Cloudflare DNS / tunnel / Worker uploads. Path-split only **after Ben GO**. Brochure Worker Direct Upload has standing GO after Garage merges HTML (`brochure-worker-deploy.md`).
-- **Lookout** — Watches (e.g. `projectcar-api-health-watch` health flips). Alerts; does not take Lead’s process restore or Zone’s edge.
+- **Lookout** — Watches (e.g. `projectcar-api-health-watch` health flips) **when re-armed**. Currently **paused** (`enabled:false`); **Lead owns the interim morning/public probe**. Alerts; does not take Lead’s process restore or Zone’s edge. Do **not** re-arm from a docs PR.
 - **Hatch** — Invents new bot ideas. **Not** a production coding supervisor and **not** a second Lead.
 
 Do not fan out Garage / Zone / Hatch from a docs PR. Member host and Zone path-split wait for **Ben GO**. Mission Control cockpit and Classic Pages git stay parked.
@@ -58,7 +58,7 @@ Routing is lane-based. Default to one owner. No nested supervisor loops.
 1. Soft morning **530 / 1033** on `api.` / `ops.` / `app.` is expected lid-close. Stay quiet; restore when Doc is reachable (`doc-lid-restore.md`).
 2. **Lead** restores processes on Doc (cloudflared → shop-api KeepAlive → shop-web `next start`).
 3. **Zone** only if local origin is healthy but public is still 1033 (tunnel / DNS).
-4. **Lookout** owns the live probe. **Garage** may re-run waitlist e2e after public health is 200.
+4. **Lead** owns the interim morning/public probe while Lookout `projectcar-api-health-watch` is **paused** (`enabled:false`). Lookout owns the live probe **when re-armed**. **Lead still owns process restore.** **Garage** may re-run waitlist e2e after public health is 200.
 5. Ping **Ben** only if Doc will not wake, Grok Bot desktop is offline, or the outage is prolonged.
 
 ### Hermes-side work (not Project Car coding supervision)
@@ -109,4 +109,4 @@ This constitution is the source of truth for **how the team operates**. Product 
 ---
 **Maintained in** `Docs/` on `Coombzy/Project-Car`  
 **Canonical:** `Docs/ai-agents-constitution.md`  
-**Related:** [STATUS.md](STATUS.md), [home-lab-specification.md](home-lab-specification.md), [agent-profiles-specification.md](agent-profiles-specification.md), `master-overview-specification.md`, `security-playbook.md`, `heartbeat-standards.md`, `high-level-apps-and-business-specification.md`
+**Related:** [STATUS.md](STATUS.md), [home-lab-specification.md](home-lab-specification.md), [agent-profiles-specification.md](agent-profiles-specification.md), `master-overview-specification.md`, `security-playbook.md`, `heartbeat-standards.md`, `high-level-apps-and-business-specification.md`, `doc-lid-restore.md`, `doc-unfreeze.md`

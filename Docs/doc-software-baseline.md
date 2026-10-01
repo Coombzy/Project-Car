@@ -1,10 +1,12 @@
 # Doc Hakosuka (M1 Max) — software baseline
 
-**Updated:** 2026-09-07  
+**Updated:** 2026-09-08  
 **Role:** Heavy local models / deep analysis. **Temporary Mission Control host** until McKing is home. Also hosts Shop API (`:8000`) + shop-web (`:3000`). **Not** the live brochure origin (Worker `projectcar-brochure` Direct Upload — `brochure-worker-deploy.md`). Not the travel edge host (that is Porsche).  
 **Canonical:** `Coombzy/Project-Car` → `Docs/doc-software-baseline.md`
 
 This file used to say “don’t dump the MC stack onto Doc.” That is **obsolete**. Locked host plan: Doc now → McKing later.
+
+**Checkout freeze (until Ben GO):** Doc working tree is **frozen** at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**). Green **shop-os-ci** is **not** Ben GO to pull or unfreeze — it is git-only (`shop-os-ci.md`). Ordered pull after GO: `doc-unfreeze.md`. Lid-restore stays process-only: `doc-lid-restore.md`. LaunchAgents below are the **wake / KeepAlive** path only — **not** a `git pull` / rebuild license.
 
 ## Must install / verify
 
@@ -17,8 +19,8 @@ This file used to say “don’t dump the MC stack onto Doc.” That is **obsole
 | **Homebrew + git + `gh` + `jq`** | Agent / ops basics | Done (`gh` as Coombzy) |
 | **Docker Desktop** | Required while Doc hosts Nextcloud | Running — `mission-control` (3). Optional `project-car-website` compose is **local `:8088` preview only**, not production brochure |
 | **Tailscale** | Remote reach from Porsche / Ben | Up — `docs-macbook-pro` `100.97.10.72` |
-| **LaunchAgent `com.projectcar.shop-api`** | Shop API stay-up (KeepAlive) → uvicorn `:8000` | Live — wrapper `~/hermes-tools/mission-control/shop-api/run-shop-api.sh`. Lead owns this. See `api-stay-up.md` |
-| **LaunchAgent `com.projectcar.shop-web`** | Ops / app UI stay-up (KeepAlive) → **`next start`** `:3000` | Live — wrapper `~/hermes-tools/mission-control/shop-web/run-shop-web.sh`. **Not** `next dev`. Lead owns this. See `shop-web-stay-up.md` |
+| **LaunchAgent `com.projectcar.shop-api`** | Shop API stay-up (KeepAlive) → uvicorn `:8000` | Live — wrapper `~/hermes-tools/mission-control/shop-api/run-shop-api.sh`. Lead owns this. **Wake / KeepAlive only** — not a `git pull` / rebuild license. See `api-stay-up.md` |
+| **LaunchAgent `com.projectcar.shop-web`** | Ops / app UI stay-up (KeepAlive) → **`next start`** `:3000` | Live — wrapper `~/hermes-tools/mission-control/shop-web/run-shop-web.sh`. **Not** `next dev`. Lead owns this. **Wake / KeepAlive only** — not a `git pull` / rebuild license. See `shop-web-stay-up.md` |
 | **Host cloudflared** | Public tunnels for `api.` + **LIVE `ops.`** + temporary `app.` | Live on Doc. Zone owns Cloudflare hostname / DNS rules |
 
 ## Strongly recommended
@@ -55,7 +57,7 @@ Doc is a MacBook (M1 Max). Lid close or host sleep stops or stalls origin proces
 
 The public brochure (Worker `projectcar-brochure`) does **not** go down when Doc sleeps. Waitlist still needs the API. See `api-stay-up.md`.
 
-Amphetamine + plugged-in no-sleep plus LaunchAgent KeepAlive are mitigation, not a guarantee. If the lid is closed, public API / ops / app are down until Doc is awake. Ordered wake after lid-close: `doc-lid-restore.md`.
+Amphetamine + plugged-in no-sleep plus LaunchAgent KeepAlive are mitigation, not a guarantee. If the lid is closed, public API / ops / app are down until Doc is awake. Ordered wake after lid-close: `doc-lid-restore.md`. LaunchAgents are **wake / KeepAlive only** — not a pull/rebuild license. Checkout stays frozen at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` until **Ben GO** (`doc-unfreeze.md`). Green **shop-os-ci** is **not** that GO.
 
 ## Brochure is not Doc `:8088`
 
@@ -86,4 +88,4 @@ Do not treat `project-car-website` / `:8088` as a production bring-up step.
 - **Do not** follow retired `doc-nextcloud-headscale-setup-guide.md` (Headscale + Postgres)
 - **Do not** treat Doc `:8088` as live projectcar.ca
 
-Related: `home-lab-specification.md`, `nextcloud-progress.md`, `agent-profiles-specification.md`, `mission-control-architecture.md`, `doc-lid-restore.md`, `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`
+Related: `home-lab-specification.md`, `nextcloud-progress.md`, `agent-profiles-specification.md`, `mission-control-architecture.md`, `doc-lid-restore.md`, `doc-unfreeze.md`, `shop-os-ci.md` (green CI ≠ unfreeze), `api-stay-up.md`, `shop-web-stay-up.md`, `brochure-worker-deploy.md`

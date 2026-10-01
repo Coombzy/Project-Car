@@ -1,8 +1,8 @@
 # CORS_ORIGINS — brochure waitlist
 
 **Status:** Living ops  
-**Updated:** 2026-09-07  
-**Related:** `api-stay-up.md`, `doc-lid-restore.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `app-alias-cut.md` (later drop of `https://app.projectcar.ca` — **not** this file), `apps/project-car/api/.env.example`, `apps/project-car/api/app/config.py`, `apps/website/html/waitlist.js`
+**Updated:** 2026-09-08  
+**Related:** `api-stay-up.md`, `doc-lid-restore.md`, `doc-unfreeze.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `app-alias-cut.md` (later drop of `https://app.projectcar.ca` — **not** this file), `apps/project-car/api/.env.example`, `apps/project-car/api/app/config.py`, `apps/website/html/waitlist.js`
 
 Browser waitlist from https://projectcar.ca must be allowed to call the Shop API. After any `.env` change, **Lead** restarts the API process on Doc.
 
@@ -66,4 +66,4 @@ When Doc is asleep or the tunnel origin is unreachable, public **OPTIONS** and *
 
 Brochure `waitlist.js` **mailto fallback** is the user path while the origin is down. Run brochure waitlist e2e **only** when public **GET /health** is **200**.
 
-Live probe: Lookout **`projectcar-api-health-watch`**. Ordered restore: [doc-lid-restore.md](doc-lid-restore.md).
+Lookout **`projectcar-api-health-watch`** is **paused** (`enabled:false`). **Lead owns the interim morning/public probe** until the watch is re-armed. Lookout remains the owner when re-armed. Do **not** re-arm Lookout from this file. Ordered restore: [doc-lid-restore.md](doc-lid-restore.md). Unfreeze after **Ben GO**: [doc-unfreeze.md](doc-unfreeze.md).
