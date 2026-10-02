@@ -1,7 +1,7 @@
 # SPCX Daily Analysis Prompt
 
-**Version:** 1.29  
-**Last edited:** 2026-10-01T15:25:00Z  
+**Version:** 1.30  
+**Last edited:** 2026-10-02T15:25:00Z  
 **Owner:** Coombzy / Project-Car  
 **Audience:** SPCX Daily Stock Analysis automation
 
@@ -11,28 +11,28 @@ Not financial advice. Selection / range support only.
 
 1. First ~20 lines of the Daily output MUST be Key Takeaway + parseable 4-row table (`horizon, range_low, range_high, bias_low, bias_high, conf, pred_regime, pred_rel_vol, prior_day_pct`).
 2. Write-first. After the table: `get_file_contents` tracker → write today's 4 rows + path refresh with the **full table body**. Prefer `push_files` for the tracker (create_or_update_file truncated 109 lines at `daf3296c` on 2026-09-30). TRACKER_SHA must differ from pre-write SHA. Email is not a write. Never push a header-only tracker, TRACKER_BODY pointer, PLACEHOLDER, SEE_FILE, or prompt stub. Outbound tracker ≥ inbound row count and ≥64 data rows and ≥15kB.
-3. If today's 4 rows already exist: PREEXISTING_ROWS + current blob SHA. Do not duplicate 9/22, 9/23, 9/24, 9/25, 9/26, 9/27, 9/28, 9/29, 9/30, or 10/01 rows. Do not rewrite locked 9/14, 9/16, 9/18, 9/22, 9/23, 9/24, 9/25, 9/26, 9/27, 9/28, 9/29, 9/30, 10/01.
+3. If today's 4 rows already exist: PREEXISTING_ROWS + current blob SHA. Do not duplicate 9/22, 9/23, 9/24, 9/25, 9/26, 9/27, 9/28, 9/29, 9/30, 10/01, or 10/02 rows. Do not rewrite locked 9/14, 9/16, 9/18, 9/22, 9/23, 9/24, 9/25, 9/26, 9/27, 9/28, 9/29, 9/30, 10/01, 10/02.
 4. Anti-wipe: outbound tracker ≥ inbound row count and ≥64 `| 2026-` rows and ≥15kB. Pre-write abort if the exact payload is below those floors. Never header-only. Streak 0. Daily inserts session-day rows; Auditor grades/path-refreshes/closes only. Post-write verify raw.githubusercontent.com main; if stub / TRACKER_BODY / <15kB / <64 rows, restore-merge immediately and do not emit TRACKER_SHA.
-5. Restore a stub prompt (<2kB / missing Process rules) to this v1.29 body before using it. Restore a header-only / <60-row tracker from commit `6127247be7f8ae96655d7098115b79bb292fa64a` / blob `5640951b51eacddee176c387a0fba7ebbf70c3d8` (fallback `3afe8900814f026f09f7dfd57c479a7a311626f9` / `d0afc402b6d082e8f1fe071ed83423c13f8b5d62`) before writing. Abort SHAs: `daf3296c` (109-line wipe), `b3815b67` (header-only blob), `547fe344` (PLACEHOLDER).
+5. Restore a stub prompt (<2kB / missing Process rules) to this v1.30 body before using it. Restore a header-only / <60-row tracker from commit `6127247be7f8ae96655d7098115b79bb292fa64a` / blob `5640951b51eacddee176c387a0fba7ebbf70c3d8` (fallback `3afe8900814f026f09f7dfd57c479a7a311626f9` / `d0afc402b6d082e8f1fe071ed83423c13f8b5d62`) before writing. Abort SHAs: `daf3296c` (109-line wipe), `b3815b67` (header-only blob), `547fe344` (PLACEHOLDER).
 
 ## Range / regime
 
-- ATR-proxy: last-5 TR median vs 14d mean TR; if they differ <20%, use the last-5 median. After 9/30 official: last-5 H-L 4.83/4.59/5.44/3.67/3.12 → median **$4.59**; 14d mean H-L **$5.48**; differ ~16% <20% → use **$4.59**. Do not reuse the 9/29 $6.02 figure. Recompute after the next official EOD.
-- 1d width ≥2.0× ATR; 1w ≥3.0× (≥4.0× only if last 5 sessions include ≥+5%).
-- Never park 1d/1w high on $149 / $150 / $155 / $156. Closed 1d misses remain 9/02 H152.30>149, 9/14 L142.87<143, 9/16 H156.87>156 — all tight-range breaches. 1d hit rate after 10/01 audit: 22/25.
-- After each official EOD, recompute printed extremes then restack +1.0× ATR on 1d/1w. After 9/30 official stacked floors: 1d/1w high ≥ **$157.17** (152.58+1.0×$4.59); 1d/1w low ≤ **$143.16** (147.75−1.0×$4.59). Hard-fail reprint if short. 10/01 printed 1d 139–161 / 1w 132–176 already clears these floors — do not reprint them tighter.
-- Keep known-event extra while the next dated unlock sits inside the next 10 RTH. Next dated unlock **2026-10-09** remains inside that window as of Thu 10/01.
-- pred_rel_vol vs 20d official volume only. prior_day_pct from last official close. Do not bucket Rel Vol off mid-session volume. After 9/30 official: Rel Vol ~79.03M / 20d ~93.3M ≈ 0.85x **normal**; prior_day_pct **+1.09**.
-- Regime from last official close location / impulse, not live mid-prints.
-- 1d maps to the next RTH. Weekend analysis_date 1d also maps to the next RTH. 1d actuals are that next session only — do not store the analysis-session OHLC as the 1d window. Do not close 1w mid-session; Auditor marks Day N/5 closes.
-- Last 3 closed 1w as of 1 Oct audit (9/18, 9/22, 9/23) are all HIT — widen-high / 4.0× ATR rule OFF.
+- ATR-proxy: last-5 TR median vs 14d mean TR; if they differ <20%, use the last-5 median. After 10/01 official: last-5 H-L 7.75/4.83/4.59/5.44/3.67 → median **$4.83**; 14d mean H-L **$5.61**; differ ~14% <20% → use **$4.83**. Do not reuse the 9/30 $4.59 figure or the 9/29 $6.02 figure. Recompute after the next official EOD.
+- 1d width ≥2.0× ATR; 1w ≥3.0× (≥4.0× only if last 5 sessions include ≥+5%). If 10/02 official close is ≥+5% vs 10/01 C$148.07, the next insert uses 1w width ≥4.0× ATR. Do not rewrite locked 10/02 bands.
+- Never park 1d/1w high on $149 / $150 / $155 / $156 / $157. Closed 1d misses remain 9/02 H152.30>149, 9/14 L142.87<143, 9/16 H156.87>156 — all tight-range breaches. 1d hit rate after 10/02 audit: 23/26.
+- After each official EOD, recompute printed extremes then restack +1.0× ATR on 1d/1w. After 10/01 official stacked floors: 1d/1w high ≥ **$158.61** (153.78+1.0×$4.83); 1d/1w low ≤ **$141.20** (146.03−1.0×$4.83). Hard-fail reprint if short. 10/02 printed 1d 140–166 / 1w 133–180 already clears these floors — do not reprint them tighter.
+- Keep known-event extra while the next dated unlock sits inside the next 10 RTH. Next dated unlock **2026-10-09** remains inside that window as of Fri 10/02.
+- pred_rel_vol vs 20d official volume only. prior_day_pct from last official close. Do not bucket Rel Vol off mid-session volume. After 10/01 official: Rel Vol ~69.09M / 20d ~93.3M ≈ 0.74x **below-avg**; prior_day_pct **−1.85**.
+- Regime from last official close location / impulse, not live mid-prints. 10/02 live ~+6% is not a regime until the 10/02 official close. If that close is ≥+5%, the next session-day insert is trend-up, not digestion.
+- 1d maps to the next RTH. Weekend analysis_date 1d also maps to the next RTH. 1d actuals are that next session only — do not store the analysis-session OHLC as the 1d window. Do not close 1w/1m mid-session; Auditor marks Day N/5 and Day N/21 closes.
+- Last 3 closed 1w as of 2 Oct audit (9/22, 9/23, 9/24) are all HIT, none upper-exceed — widen-high / 4.0× ATR rule OFF.
 
-## Path + close-clock (v1.29)
+## Path + close-clock (v1.30)
 
-- Path H/L/C for a row = official extremes from **that analysis_date session** through last official (or through horizon close). Weekend as-of = last official session. Do **not** inherit another row's path high (e.g. do not copy 9/21 H$158.13 onto 9/22+ 1m/3m). 9/22 path high is session-isolated **$154.94**. 9/23 path high is **$154.26**. 9/24+ path high is session-isolated **$152.58** (9/30), not 9/28 H$150.80.
+- Path H/L/C for a row = official extremes from **that analysis_date session** through last official (or through horizon close). Weekend as-of = last official session. Do **not** inherit another row's path high (e.g. do not copy 9/21 H$158.13 onto 9/22+ 1m/3m). 9/22 path high is session-isolated **$154.94**. 9/23 path high is **$154.26**. 9/24+ path high is session-isolated **$153.78** (10/01), not 9/30 H$152.58.
 - Header must print **1m Day N/21** for the oldest open 1m and any 1m/3m that hits its close clock on last official (21st / 63rd RTH after analysis_date). 1w Day N/5 counts RTH **after** analysis_date, not including it.
-- Auditor closed on 2026-10-01: 8/27 1m (after 9/28), 8/28 1m and 8/29 1m (after 9/29), 8/31 1m (after 9/30), 9/22 1w (after 9/29), 9/23 1w (after 9/30), 1d 9/25–9/29. Oldest open 1m as of Thu 10/01: **9/02 1m Day 19/21** (closes after 10/02). 9/24 1w Day 4/5 closes after 10/01 — Daily does not close it mid-session. 9/30 1d maps to 10/01 — do not close mid-session.
+- Auditor closed on 2026-10-02: 9/25–9/30 1d (all HIT; 1d window = next RTH only), 9/22 1w (clock 9/29 C149.24), 9/23 1w (clock 9/30 C150.86), 9/24 1w (clock 10/01 C148.07), 8/27 1m (clock 9/28 C145.47), 8/28+8/29 1m (clock 9/29 C149.24), 8/31 1m (clock 9/30 C150.86). Oldest open 1m as of Fri 10/02: **9/02 1m Day 20/21** (closes after 10/02 — do not close mid-session). 9/25 1w Day 4/5 closes after 10/02 — do not close mid-session. 10/01 1d maps to 10/02 — do not close mid-session and do not store 10/01 OHLC as that 1d actual.
 
 ## Report order
 
-Key Takeaway; 4-row table; TRACKER_SHA; snapshot; technical; news; forward 1d/1w/1m/3m; 3-bullet decision map; disclaimer. Self-check including stacked floors + hard-fail reprint yes/no + anti-wipe ≥64 / ≥15kB + path isolation + 1m Day N/21 header line.
+Key Takeaway; 4-row table; TRACKER_SHA; snapshot; technical; news; forward 1d/1w/1m/3m; 3-bullet decision map; disclaimer. Self-check including stacked floors 158.61/141.20 + hard-fail reprint yes/no + anti-wipe ≥64 / ≥15kB + path isolation + 1m Day N/21 header line.
