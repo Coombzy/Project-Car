@@ -1,14 +1,14 @@
 # Doc lid-close restore — ordered wake sequence
 
 **Status:** Living ops (Lead checklist)  
-**Updated:** 2026-09-08  
+**Updated:** 2026-10-03  
 **Related:** `doc-unfreeze.md` (Ben GO pull — **not** this file), `api-stay-up.md`, `shop-web-stay-up.md`, `doc-software-baseline.md`, `cors-origins.md`, `STATUS.md`, `shop-os-ci.md` (green CI ≠ unfreeze)
 
 Single **ordered** wake/restore after Doc lid-close / sleep (the morning **530 / 1033** pattern). Plan/ops checklist for **Lead**. This file is the sequence. Process essays stay in the Related docs — do not copy them here.
 
 Do **not** invent an edge flip, a Cloudflare ↔ GitHub re-ask, or a Member **GO**. Soft 530 mornings are expected lid-close.
 
-**Doc checkout is frozen** at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**) until **Ben GO**. Lid-restore is process wake only — **not** a license to `git pull` or rebuild to tip. That would flip **#36** / **#69** live on Doc. After Ben GO, the ordered pull is [doc-unfreeze.md](doc-unfreeze.md). Green Shop OS CI is **not** that GO.
+Doc is **unfrozen** at `795f301` / BUILD_ID `vQRsAOI0JtWYZ_ogRUjgG` (**#36** / **#69** / **#88** live on Doc; was `4cf8924` / `5swmVz-T2CqKEQzTk1ifU`). Lid-restore is process wake only — **not** a license to `git pull` finance tip `6366d62` or rebuild to that tip. A further checkout move is a new **Ben GO** ([doc-unfreeze.md](doc-unfreeze.md)). Green Shop OS CI is **not** that GO.
 
 ---
 
@@ -37,7 +37,7 @@ Alerts can come from anyone who sees **502**, **530 / error 1033**, or a failed 
 
 | Role | Owns | Does not own |
 |------|------|----------------|
-| **Lead** | Restore processes on Doc (cloudflared up, shop-api KeepAlive, shop-web `next start` **kickstart only if the process is down**) | Cloudflare tunnel / DNS edits, edge flip, Member GO, **`git pull` / rebuild to tip** while checkout is frozen |
+| **Lead** | Restore processes on Doc (cloudflared up, shop-api KeepAlive, shop-web `next start` **kickstart only if the process is down**) | Cloudflare tunnel / DNS edits, edge flip, Member GO, **`git pull` / rebuild to finance tip `6366d62`** |
 | **Zone** | Only if **local origin is healthy** but public is still **1033** (tunnel / DNS) | Restarting uvicorn or shop-web |
 | **Garage** | Brochure waitlist e2e **after** public health is 200 | Restarting processes, tunnel, or DNS |
 
@@ -70,11 +70,11 @@ Essay: `api-stay-up.md`. Do not hand the restart to Garage or Zone.
 
 LaunchAgent **`com.projectcar.shop-web`** → **`next start`** `:3000`. **Not** `next dev`. **Lead owns.**
 
-Doc checkout is **frozen** at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**). Lid-restore must **not** auto-`git pull` or rebuild to tip — that would accidentally flip **#36** (host allowlist) and **#69** (ops layout) live on Doc.
+Doc checkout is **unfrozen** at `795f301` / BUILD_ID `vQRsAOI0JtWYZ_ogRUjgG`. **#36** and **#69** (and **#88**) are already live on Doc. Lid-restore must **not** auto-`git pull` or rebuild to finance tip `6366d62`.
 
 **Kickstart only if the process is down** (existing `next start` KeepAlive path). Do **not** `git pull origin main` or `npm run build` on wake.
 
-**Pull/rebuild remains Ben GO.** After that GO, the ordered pull is [doc-unfreeze.md](doc-unfreeze.md) (rebuild essay: `shop-web-stay-up.md`). Until then, do **not** claim **#36** or **#69** is live on Doc.
+A further pull is a new **Ben GO** ([doc-unfreeze.md](doc-unfreeze.md); rebuild essay: `shop-web-stay-up.md`). Wake does not move the checkout.
 
 Must be **`next start`**, not `next dev`.
 
@@ -107,7 +107,7 @@ Garage may re-run brochure waitlist e2e **after** health is 200. Form only.
 - Take Member **GO** (`member-host-cutover.md`)
 - Cut the `app.` alias
 - Instruct Garage or Zone to restart uvicorn / shop-web
-- Auto-`git pull` or rebuild shop-web on wake while Doc checkout is frozen (`4cf8924` / `5swmVz-T2CqKEQzTk1ifU`)
+- Auto-`git pull` or rebuild shop-web on wake (Doc stays at `795f301` / `vQRsAOI0JtWYZ_ogRUjgG` until a new Ben GO)
 - Treat lid-restore as Chief / plan-improve / Lead license to pull tip
 - Call a `main` pull live without a new `.next/BUILD_ID`
 - Treat green Shop OS CI as unfreeze GO (`doc-unfreeze.md`)

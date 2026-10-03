@@ -1,7 +1,7 @@
 # Shop OS CI — GitHub Actions quality gate
 
 **Status:** Living ops (git-only quality gate)  
-**Updated:** 2026-09-08  
+**Updated:** 2026-10-03  
 **Related:** `STATUS.md`, `deployment-guide.md`, `doc-lid-restore.md` (process wake only), `doc-unfreeze.md` (Ben GO pull — **not** this file), `api-stay-up.md`, `shop-web-stay-up.md`, `ai-agents-constitution.md`, `.github/workflows/shop-os-ci.yml`, `apps/project-car/api/README.md`, `apps/project-car/web/README.md`
 
 Plan + runbook for GitHub Actions on **`apps/project-car`**. Merging this file (and the workflow) is a **git-only** quality gate. It is **not** a Doc deploy, **not** a tunnel/live-secret change, **not** a Cloudflare Worker upload, and **not** a license to `git pull` or rebuild shop-web on Doc.
@@ -15,7 +15,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | Lock | Meaning |
 |------|---------|
 | **Git-only** | CI runs on GitHub-hosted runners against this repo. It never SSHs to Doc, never curls production with write tokens, and never uploads Worker `projectcar-brochure`. |
-| **Doc checkout stays frozen** | Doc remains at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**) until **Ben GO**. A green Shop OS CI check is **not** that GO. Ordered pull after GO: `doc-unfreeze.md`. Lid-restore is process wake only (`doc-lid-restore.md`). |
+| **Green CI does not move Doc** | Doc is **unfrozen** at `795f301` / BUILD_ID `vQRsAOI0JtWYZ_ogRUjgG` (was `4cf8924` / `5swmVz-T2CqKEQzTk1ifU`). **#36** / **#69** / **#88** are live on Doc. A green Shop OS CI check is **not** a pull to finance tip `6366d62`. A further checkout move is a new Ben GO (`doc-unfreeze.md`). Lid-restore is process wake only (`doc-lid-restore.md`). |
 | **No production credentials** | Workflow uses public install only (`pip` / `npm ci`). No GitHub Actions secrets. No Doc `.env`, no tunnel tokens, no Cloudflare API tokens, no `GOOGLE_OAUTH_*`, no Stripe. |
 | **Path-filtered** | Jobs run when a PR (or push to `main`) touches `apps/project-car/**` or `.github/workflows/shop-os-ci.yml`. Docs-only / brochure / finance PRs do **not** pay this tax. |
 | **Not a live probe** | Lookout `projectcar-api-health-watch` and public `GET /health` stay ops. This workflow does not replace them. |
@@ -41,7 +41,7 @@ Workflow file: `.github/workflows/shop-os-ci.yml`.
 
 | Do not | Why |
 |--------|-----|
-| Deploy / `git pull` / rebuild on Doc | Checkout frozen at `4cf8924` / `5swmVz`. That would flip **#36** / **#69** live on Doc. After **Ben GO**, the pull is `doc-unfreeze.md` — **not** this workflow. |
+| Deploy / `git pull` / rebuild on Doc | **#36** / **#69** / **#88** are already live on Doc (`795f301` / `vQRsAOI0JtWYZ_ogRUjgG`). This workflow must not pull finance tip `6366d62`. A further pull is `doc-unfreeze.md` — **not** this workflow. |
 | Doc lid-restore | Ordered wake stays `doc-lid-restore.md`. CI green does not mean `api.` / `ops.` / `app.` are up. |
 | Brochure Worker Direct Upload | Zone / `brochure-worker-deploy.md`. This workflow does not touch `apps/website/`. |
 | Classic Pages git / Wrangler from CI | Still skipped (`brochure-pages-cutover.md`). |
@@ -146,16 +146,16 @@ Do **not**:
 
 ---
 
-## How this relates to Doc freeze
+## How this relates to Doc
 
 CI and Doc are **two clocks**.
 
 | Clock | Tip / pin | What it means |
 |-------|-----------|----------------|
-| **Git `main`** | Moves with merges (this repo) | Shop OS CI gates PRs that touch `apps/project-car/**`. Green means the **checkout in GitHub Actions** passed pytest / typecheck / build. |
-| **Doc working tree** | Frozen at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** (Dashboard **#28**) | Live `ops.` / `app.` / `:3000` stay on that build until **Ben GO**. Lid-restore must **not** auto-pull (`doc-lid-restore.md`). After GO, Lead follows `doc-unfreeze.md`. |
+| **Git `main`** | `6366d62` (finance only after `795f301`) | Shop OS CI gates PRs that touch `apps/project-car/**`. Green means the **checkout in GitHub Actions** passed pytest / typecheck / build. Product brochure tip is **#82** (`2036a2d`). |
+| **Doc working tree** | **UNFROZEN** at **`795f301`** / BUILD_ID **`vQRsAOI0JtWYZ_ogRUjgG`** | **#36** / **#69** / **#88** are live on Doc. Live `ops.` / `app.` / `:3000` are that build. Lid-restore must **not** auto-pull (`doc-lid-restore.md`). A later pull is a new Ben GO (`doc-unfreeze.md`). |
 
-A green Shop OS CI check on a later SHA is **expected** and **does not** mean Doc is on that SHA. Green CI is **not** Doc unfreeze GO. `#36` (host allowlist) and later shop-web slices stay **on git, not live on Doc** until Lead `git pull` + rebuild **after** Ben GO (`doc-unfreeze.md`).
+A green Shop OS CI check on finance tip `6366d62` is **expected** and **does not** mean Doc is on that SHA. Green CI is **not** a Doc pull.
 
 ---
 

@@ -3,7 +3,7 @@
 **Canonical:** `Coombzy/Project-Car` → `Docs/`  
 **Engineering clone:** `~/src/Project-Car/Docs/`  
 **Optional Desktop mirror:** `~/Desktop/Project Car/docs/` (read copy; do not author there)  
-**Updated:** 2026-10-02
+**Updated:** 2026-10-03
 
 `Coombzy/Automation/Docs/` is a **historical mirror**. Do not author product specs there.  
 `~/Desktop/Project-Car-Docs/` is **retired**.  
@@ -30,13 +30,13 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 
 | Doc | What |
 |-----|------|
-| [STATUS.md](STATUS.md) | What’s live, what’s next, locks. **Start here.** The date in that file’s title is the reality date (`main` `66ed7f1` on 2026-10-02; finance tip ≠ product **#82**). Do not paste smoke essays into this index. How to update: [STATUS.md](STATUS.md) “How to update this file.” |
+| [STATUS.md](STATUS.md) | What’s live, what’s next, locks. **Start here.** The date in that file’s title is the reality date (`main` `6366d62` on 2026-10-03; finance tip ≠ product **#82** / `2036a2d`). Do not paste smoke essays into this index. How to update: [STATUS.md](STATUS.md) “How to update this file.” |
 | [token-pricing.md](token-pricing.md) | Token pricing lock (bands + overlay; Basic 1000 / Premium 1500; 6 hoists; shop hoist = Owner-only) |
 | [website-improvements.md](website-improvements.md) | P0–P4 backlog for projectcar.ca (tick status as work ships) |
 | [nextcloud-progress.md](nextcloud-progress.md) | Last live hub check on Doc (no secrets; 2026-08-16). Public-site / `:8088` rows point at STATUS / home-lab / Worker — not a new hub probe. |
 | [doc-software-baseline.md](doc-software-baseline.md) | Doc M1 Max apps / settings |
 | [home-lab-specification.md](home-lab-specification.md) | Host lock: Doc = temp MC hub + Shop API `:8000` + shop-web `:3000`; McKing later; Porsche travel client. Brochure is Worker `projectcar-brochure`, not Doc. |
-| [doc-lid-restore.md](doc-lid-restore.md) | Ordered Lead wake/restore after lid-close / morning **530 / 1033**. Sequence only — process wake, **not** a `git pull`. Essays stay in api-stay-up / shop-web-stay-up / doc-software-baseline. After Ben GO, pull is [doc-unfreeze.md](doc-unfreeze.md). |
+| [doc-lid-restore.md](doc-lid-restore.md) | Ordered Lead wake/restore after lid-close / morning **530 / 1033**. Sequence only — process wake, **not** a `git pull`. Doc is **unfrozen** at `795f301`; wake still does not pull finance tip `6366d62`. |
 | [doc-unfreeze.md](doc-unfreeze.md) | **Ben GO** Doc-pull checklist. The 2026-10-01 unfreeze is **done** (`795f301` / `BUILD_ID` `vQRsAOI0JtWYZ_ogRUjgG`; was `5swmVz`). **#36** / **#69** / **#88** are live on Doc. Green CI does **not** move Doc. Lid-restore stays process-only. |
 | [api-stay-up.md](api-stay-up.md) | Keep https://api.projectcar.ca up (uvicorn on Doc; Zone owns tunnel). Brochure is Worker `projectcar-brochure`, not Doc `:8088`. |
 | [shop-web-stay-up.md](shop-web-stay-up.md) | Keep https://ops.projectcar.ca (and temporary `app.`) up — LaunchAgent `com.projectcar.shop-web` runs **`next start`** on Doc `:3000`. Zone owns tunnel/DNS. |

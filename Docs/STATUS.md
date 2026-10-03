@@ -1,4 +1,4 @@
-# Status — 2026-10-02
+# Status — 2026-10-03
 
 Living one-pager: what’s live, what’s next, locks. Product detail stays in the start-here specs. This file is not a runbook.
 
@@ -9,14 +9,14 @@ Do this when `main` moves or a live smoke changes what the next person should be
 1. Set the date in the title to the day you verified.
 2. Rewrite **Reality** below. Keep four short bullets: git SHA, Worker, Doc, not shipped. One sentence each.
 3. If brochure behavior changed, add one Changelog row in [website-improvements.md](website-improvements.md) and fix that file’s snapshot. Do not paste the smoke here.
-4. If Doc is still frozen, name the checkout SHA. Do not call a git SHA live on Doc until [doc-unfreeze.md](doc-unfreeze.md) steps 5–7 pass, including **#88**.
+4. Name the Doc checkout SHA and `BUILD_ID`. Do not call a later git SHA live on Doc until that pull’s `BUILD_ID` is smoked. Green CI is not that pull.
 5. Do not merge an older docs PR to catch up. Edit this file. September P-id smokes stay in `website-improvements.md`.
 6. Locks and the Next list change only when Ben changes them. A tip update is not a new product decision.
 7. Member cutover order is [member-cutover-sequence.md](member-cutover-sequence.md). Tick that file when a step happens. Do not paste the checklist into Reality.
 
-## Reality (2026-10-02)
+## Reality (2026-10-03)
 
-- **Git `main`:** `66ed7f1` (SPCX/finance only after Doc checkout `795f301`); product brochure tip is still **#82** (`2036a2d`), so the finance tip ≠ the product tip.
+- **Git `main`:** `6366d62` (finance only — CCJ / SPCX / BTC-ETH logs after Doc checkout `795f301`); product brochure tip is still **#82** (`2036a2d`), so the finance tip ≠ the product tip.
 - **Brochure Worker:** Option A is still **LIVE** on `projectcar-brochure` (2026-10-01 smoke stands: `https://projectcar.ca/` **301** → `/index.html`).
 - **Doc shop:** **UNFROZEN** at `795f301` / `BUILD_ID` `vQRsAOI0JtWYZ_ogRUjgG` (was `4cf8924` / `5swmVz-T2CqKEQzTk1ifU`); **#36** / **#69** / **#88** are live on Doc — Host-header smoke on `:3000` (2026-10-02): `Host: projectcar.ca` `/login` and `/` **307** `Location: https://ops.projectcar.ca/login`, `/member/login` **200**, `/member` **307** to member login; `Host: ops.projectcar.ca` `/login` **200**; `Host: www.projectcar.ca` `/member/login` **200**.
 - **Not shipped:** Member UI on projectcar.ca, Zone path-split, the `app.` cut, Stripe, a shop opening, and Mission Control cockpit (**Ben GO**); public apex `/member` is still **404** (Worker; path-split not done).

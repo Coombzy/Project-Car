@@ -1,7 +1,7 @@
 # Member cutover sequence
 
 **Status:** Step 1 done on Doc. Steps 2–5 are paper only — not a GO to change Cloudflare. Not shipped.  
-**Updated:** 2026-10-02  
+**Updated:** 2026-10-03  
 **Related:** [member-host-cutover.md](member-host-cutover.md) (full checklist), [member-zone-edge.md](member-zone-edge.md) (Zone traffic map), [doc-unfreeze.md](doc-unfreeze.md), [STATUS.md](STATUS.md) Reality.
 
 This is the order. The long checklists stay in those files. Do not copy them here. Do not execute from this file. A docs merge is not GO.
@@ -10,7 +10,7 @@ This is the order. The long checklists stay in those files. Do not copy them her
 
 ## #88 is on Doc
 
-**#88** (`ae42b87`) is on Doc at checkout `795f301` / `BUILD_ID` `vQRsAOI0JtWYZ_ogRUjgG` (shop code includes **#36** / **#69** / **#88**). Git `main` `66ed7f1` is SPCX/finance only after `795f301`. Product brochure tip is still **#82** (`2036a2d`).
+**#88** (`ae42b87`) is on Doc at checkout `795f301` / `BUILD_ID` `vQRsAOI0JtWYZ_ogRUjgG` (shop code includes **#36** / **#69** / **#88**). Git `main` `6366d62` is finance only (CCJ / SPCX / BTC-ETH logs) after `795f301`. Product brochure tip is still **#82** (`2036a2d`).
 
 Shop-web middleware:
 
