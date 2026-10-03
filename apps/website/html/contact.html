@@ -19,6 +19,7 @@
   <title>Contact — Project Car</title>
   <link rel="preconnect" href="https://api.projectcar.ca" crossorigin />
   <link rel="stylesheet" href="styles.css?v=36" />
+  <link rel="stylesheet" href="demo-chat.css?v=1" />
 </head>
 <body>
   <div class="bg" aria-hidden="true"></div>
@@ -82,6 +83,27 @@
 
       <div class="divider" role="presentation"></div>
 
+      <h2 class="section-heading">Demo chat</h2>
+      <div class="waitlist-block demo-chat">
+        <p class="waitlist-intro">
+          A demo of the public assistant. Not member sign-in. The shop is not open, and this cannot book a bay or take payment.
+          Don’t send passwords, card numbers, or anything private. If it’s down, email and Discord above still work — Soft-530 on the shop API is normal.
+        </p>
+        <div class="demo-chat-log" data-demo-chat-log aria-live="polite"></div>
+        <form class="waitlist-form" data-demo-chat novalidate>
+          <div class="waitlist-field">
+            <label for="demo-chat-message">Message</label>
+            <textarea id="demo-chat-message" data-demo-chat-input maxlength="400" rows="3" required></textarea>
+          </div>
+          <div class="waitlist-actions">
+            <button type="submit">Send</button>
+          </div>
+          <p class="waitlist-status" data-demo-chat-status hidden aria-live="polite"></p>
+        </form>
+      </div>
+
+      <div class="divider" role="presentation"></div>
+
       <h2 class="section-heading">Waitlist</h2>
       <p class="description">
         Want early notice when membership access becomes concrete? Leave your details. Interest only — not a booking and not a claim that the shop is open.
@@ -138,5 +160,6 @@
   </footer>
   <script src="shop-config.js?v=1" defer></script>
   <script src="waitlist.js?v=3" defer></script>
+  <script src="demo-chat.js?v=1" defer></script>
 </body>
 </html>
