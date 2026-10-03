@@ -1,10 +1,10 @@
 # Doc unfreeze — Ben GO pull checklist
 
-**Status:** Living ops (Lead checklist)  
-**Updated:** 2026-09-08  
+**Status:** The 2026-10-02 unfreeze is **done**. This file is the checklist record. A later Doc pull is a new **Ben GO**.  
+**Updated:** 2026-10-03  
 **Related:** `doc-lid-restore.md` (process wake only — **not** this pull), `shop-web-stay-up.md` (rebuild essay), `api-stay-up.md`, `cors-origins.md`, `shop-os-ci.md` (git-only — **not** this GO), `STATUS.md`, `doc-software-baseline.md`
 
-Ordered **Ben GO** pull/rebuild on Doc after the freeze at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**). This file is the pull sequence. Lid-close wake stays in `doc-lid-restore.md` — do **not** copy that process essay here.
+The freeze at `4cf8924` / BUILD_ID `5swmVz-T2CqKEQzTk1ifU` (Dashboard **#28**) is **over**. Doc shop is **unfrozen** at checkout `795f301` / `BUILD_ID` `vQRsAOI0JtWYZ_ogRUjgG`. **#36**, **#69**, and **#88** are live on Doc (Host-header smoke on `:3000`, 2026-10-02). Git `main` `6366d62` is finance only after that checkout. Product brochure tip is **#82** (`2036a2d`). Do not pull `6366d62` onto Doc from this file. Lid-close wake stays in `doc-lid-restore.md` — do **not** copy that process essay here.
 
 Merging this file is **not** a pull, **not** a rebuild, and **not** a substitute for Ben’s explicit GO.
 
@@ -16,7 +16,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 
 | Lock | Meaning |
 |------|---------|
-| **Ben GO required** | Lead does **not** `git pull` or rebuild until Ben says **GO** to unfreeze — in words, not inferred from CI, a docs merge, or lid-restore. |
+| **Ben GO required** | The 2026-10-02 unfreeze already happened. Lead does **not** `git pull` or rebuild again until Ben says **GO** for a further checkout move — in words, not inferred from CI, a docs merge, or lid-restore. |
 | **Green Shop OS CI is not unfreeze GO** | A green `shop-os-ci` check on a later SHA is **expected** and means only that GitHub Actions passed pytest / typecheck / `next build`. It does **not** unfreeze Doc. Runbook: `shop-os-ci.md`. |
 | **Lid-restore stays process-only** | Morning **530 / 1033** wake is `doc-lid-restore.md`: cloudflared → shop-api KeepAlive → shop-web **kickstart if down**. Wake must **not** auto-pull or rebuild. |
 | **This file is not the pull** | Do not execute from a docs PR. Garage / Zone do **not** pull Doc. |
@@ -27,22 +27,22 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 
 | File | When | What |
 |------|------|------|
-| **`doc-lid-restore.md`** | Doc slept / lid-close / public **530 / 1033** | Wake processes. Same frozen checkout. **No** `git pull`. |
-| **`doc-unfreeze.md` (this file)** | Ben said **GO** to unfreeze | Pull tip, migrate if needed, rebuild shop-web, new `BUILD_ID`, smoke **#36** / **#69** / **#88** / banner honesty. |
+| **`doc-lid-restore.md`** | Doc slept / lid-close / public **530 / 1033** | Wake processes. Same checkout (`795f301`). **No** `git pull`. |
+| **`doc-unfreeze.md` (this file)** | Ben said **GO** to move Doc’s checkout | The 2026-10-02 GO already landed `795f301` / `BUILD_ID` `vQRsAOI0JtWYZ_ogRUjgG`. A later pull still needs a new GO. |
 
 Do **not** collapse them. A soft morning 530 is **not** unfreeze GO.
 
 ---
 
-## Reality today (do not claim this is done)
+## Reality (2026-10-03)
 
 | Clock | Pin | Meaning |
 |-------|-----|---------|
-| **Git `main`** | Moves with merges (this repo) | **#36** host allowlist (`f952cd3`), **#69** ops layout (`b9f9019`), and **#88** customer-host guard (`ae42b87`) are **on git**. Tip at the 2026-10-01 status pass is `2036a2d` (**#82**). Shop OS CI (`#73`) is git-only. |
-| **Doc working tree** | Frozen at **`4cf8924`** / BUILD_ID **`5swmVz-T2CqKEQzTk1ifU`** (Dashboard **#28**) | Live `ops.` / `app.` / `:3000` stay on that build until this checklist finishes **after** Ben GO. |
-| **Held #70** | Open docs / honesty PR | Optional tip fold + OwnerDemoBanner honesty copy. **Do not amend #70 from this file.** Merge of #70 is a separate lane — not this checklist. |
+| **Git `main`** | `6366d62` | Finance only (CCJ / SPCX / BTC-ETH logs) after Doc checkout `795f301`. Product brochure tip is **#82** (`2036a2d`). Shop OS CI stays git-only. |
+| **Doc working tree** | **UNFROZEN** at **`795f301`** / BUILD_ID **`vQRsAOI0JtWYZ_ogRUjgG`** (was `4cf8924` / `5swmVz-T2CqKEQzTk1ifU`) | **#36** / **#69** / **#88** are live on Doc. Live `ops.` / `app.` / `:3000` are that build. A later pull is a new Ben GO. |
+| **Public apex** | Worker `projectcar-brochure` | `/member` is still **404**. Zone path-split is not done. Member on projectcar.ca, the `app.` cut, Stripe, and a shop opening are not shipped. |
 
-Do **not** call **#36**, **#69**, or **#88** live on Doc until step 5 shows a **new** `BUILD_ID` and step 6 / 7 smoke.
+**#36**, **#69**, and **#88** are live on Doc as of the 2026-10-02 Host-header smoke. Do not call finance tip `6366d62` live on Doc. A further checkout move needs a new `BUILD_ID` smoke.
 
 ---
 
@@ -61,9 +61,9 @@ No edge flip. No CF ↔ GitHub re-ask. No Member GO. No `app.` cut. No OAuth imp
 
 ---
 
-## Ordered pull (after Ben GO only)
+## Ordered pull (record of the completed GO)
 
-Run these **in order**. Stop if Ben has not said GO.
+The steps below are the record of the unfreeze that landed Doc at `795f301` / `BUILD_ID` `vQRsAOI0JtWYZ_ogRUjgG` (2026-10-01 ~19:48 MDT; Host-header smoke 2026-10-02). Do **not** re-run them to chase finance tip `6366d62`. A further checkout move needs a new explicit Ben GO. This docs change is not that GO.
 
 ### 1. Confirm Ben GO to unfreeze
 
@@ -76,7 +76,7 @@ Ben must say **GO** to unfreeze Doc (explicit). Record who / when in the heartbe
 - Lid-restore / morning 530 recovery
 - Chief standing GO for tests / CI / this checklist
 
-If there is no explicit Ben GO, stop. Leave checkout frozen. Use `doc-lid-restore.md` if the public hosts are 530 / 1033.
+If there is no explicit Ben GO for a further pull, stop. Leave Doc at `795f301`. Use `doc-lid-restore.md` if the public hosts are 530 / 1033.
 
 ### 2. `git pull` on the Doc checkout
 
@@ -138,6 +138,8 @@ Do **not** point KeepAlive at `npm run dev` / `next dev`. That was the Schedule-
 
 ### 5. Verify new `BUILD_ID` ≠ frozen Dashboard #28
 
+2026-10-02 result: `BUILD_ID` `vQRsAOI0JtWYZ_ogRUjgG`. The checks below are that record. Do not rebuild Doc from this file.
+
 ```bash
 # on Doc
 cat ~/src/Project-Car/apps/project-car/web/.next/BUILD_ID
@@ -189,12 +191,13 @@ Garage may re-run brochure waitlist e2e **after** health is 200. Form only. No p
 
 ---
 
-## After a successful unfreeze
+## After the 2026-10-02 unfreeze
 
-- Doc checkout and `.next/BUILD_ID` match the tip you intended.
-- **#36**, **#69**, and **#88** may be called **LIVE on Doc** only after steps 5–7.
+- Doc checkout is `795f301`. `.next/BUILD_ID` is `vQRsAOI0JtWYZ_ogRUjgG`.
+- **#36**, **#69**, and **#88** are **LIVE on Doc** (Host-header smoke on `:3000`, 2026-10-02).
 - Lid-restore **stays** process-only. A later morning 530 is still wake-only — do **not** pull again unless Ben GOs another unfreeze.
-- Shop OS CI remains git-only. Green CI on a *later* SHA is still **not** a new unfreeze GO.
+- Shop OS CI remains git-only. Green CI on finance tip `6366d62` is **not** a new unfreeze GO.
+- Not shipped: Member on projectcar.ca, Zone path-split, the `app.` cut, Stripe, a shop opening. Public apex `/member` is still **404**.
 
 ---
 

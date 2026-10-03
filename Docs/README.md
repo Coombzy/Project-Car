@@ -3,7 +3,7 @@
 **Canonical:** `Coombzy/Project-Car` → `Docs/`  
 **Engineering clone:** `~/src/Project-Car/Docs/`  
 **Optional Desktop mirror:** `~/Desktop/Project Car/docs/` (read copy; do not author there)  
-**Updated:** 2026-10-01
+**Updated:** 2026-10-03
 
 `Coombzy/Automation/Docs/` is a **historical mirror**. Do not author product specs there.  
 `~/Desktop/Project-Car-Docs/` is **retired**.  
@@ -30,25 +30,25 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 
 | Doc | What |
 |-----|------|
-| [STATUS.md](STATUS.md) | What’s live, what’s next, locks. **Start here.** The date in that file’s title is the reality date (`main` `2036a2d` on 2026-10-01). Do not paste smoke essays into this index. How to update: [STATUS.md](STATUS.md) “How to update this file.” |
+| [STATUS.md](STATUS.md) | What’s live, what’s next, locks. **Start here.** The date in that file’s title is the reality date (`main` `6366d62` on 2026-10-03; finance tip ≠ product **#82** / `2036a2d`). Do not paste smoke essays into this index. How to update: [STATUS.md](STATUS.md) “How to update this file.” |
 | [token-pricing.md](token-pricing.md) | Token pricing lock (bands + overlay; Basic 1000 / Premium 1500; 6 hoists; shop hoist = Owner-only) |
 | [website-improvements.md](website-improvements.md) | P0–P4 backlog for projectcar.ca (tick status as work ships) |
 | [nextcloud-progress.md](nextcloud-progress.md) | Last live hub check on Doc (no secrets; 2026-08-16). Public-site / `:8088` rows point at STATUS / home-lab / Worker — not a new hub probe. |
 | [doc-software-baseline.md](doc-software-baseline.md) | Doc M1 Max apps / settings |
 | [home-lab-specification.md](home-lab-specification.md) | Host lock: Doc = temp MC hub + Shop API `:8000` + shop-web `:3000`; McKing later; Porsche travel client. Brochure is Worker `projectcar-brochure`, not Doc. |
-| [doc-lid-restore.md](doc-lid-restore.md) | Ordered Lead wake/restore after lid-close / morning **530 / 1033**. Sequence only — process wake, **not** a `git pull`. Essays stay in api-stay-up / shop-web-stay-up / doc-software-baseline. After Ben GO, pull is [doc-unfreeze.md](doc-unfreeze.md). |
-| [doc-unfreeze.md](doc-unfreeze.md) | Ordered **Ben GO** pull on Doc (`~/src/Project-Car`): confirm GO → `git pull` → alembic if needed → shop-web rebuild (`next start`) → new `BUILD_ID` ≠ `5swmVz` → #36 / #69 / #88 / OwnerDemoBanner smoke → public health + waitlist CORS. Green Shop OS CI is **not** this GO. Lid-restore stays process-only. |
+| [doc-lid-restore.md](doc-lid-restore.md) | Ordered Lead wake/restore after lid-close / morning **530 / 1033**. Sequence only — process wake, **not** a `git pull`. Doc is **unfrozen** at `795f301`; wake still does not pull finance tip `6366d62`. |
+| [doc-unfreeze.md](doc-unfreeze.md) | **Ben GO** Doc-pull checklist. The 2026-10-01 unfreeze is **done** (`795f301` / `BUILD_ID` `vQRsAOI0JtWYZ_ogRUjgG`; was `5swmVz`). **#36** / **#69** / **#88** are live on Doc. Green CI does **not** move Doc. Lid-restore stays process-only. |
 | [api-stay-up.md](api-stay-up.md) | Keep https://api.projectcar.ca up (uvicorn on Doc; Zone owns tunnel). Brochure is Worker `projectcar-brochure`, not Doc `:8088`. |
 | [shop-web-stay-up.md](shop-web-stay-up.md) | Keep https://ops.projectcar.ca (and temporary `app.`) up — LaunchAgent `com.projectcar.shop-web` runs **`next start`** on Doc `:3000`. Zone owns tunnel/DNS. |
 | [deployment-guide.md](deployment-guide.md) | Index of stay-up / deploy runbooks (lid-close restore, Doc unfreeze after Ben GO, shop-web, API, Shop OS CI, member cutover + Zone path-split + `app.` alias cut plans, brochure Worker, P2-4 headers (LIVE), Pages git plan, ship-MVP cut draft, Google Calendar OAuth plan). |
-| [shop-os-ci.md](shop-os-ci.md) | Shop OS GitHub Actions quality gate (shop-api pytest + shop-web lint / typecheck / `next build`). Git-only — no Doc deploy, no tunnel secrets, no Worker upload. Green CI is **not** Doc unfreeze GO ([doc-unfreeze.md](doc-unfreeze.md)). Doc checkout stays frozen at `4cf8924` / `5swmVz`. |
+| [shop-os-ci.md](shop-os-ci.md) | Shop OS GitHub Actions quality gate (shop-api pytest + shop-web lint / typecheck / `next build`). Git-only — no Doc deploy, no tunnel secrets, no Worker upload. Green CI does **not** move Doc. Doc is **unfrozen**; **#36** / **#69** / **#88** are live on Doc ([STATUS.md](STATUS.md)). |
 | [brochure-worker-deploy.md](brochure-worker-deploy.md) | Standing brochure re-deploy: Zone Direct Upload of `apps/website/html` onto Worker `projectcar-brochure`. Classic Pages git skipped until auth — plan: `brochure-pages-cutover.md`. |
 | [brochure-security-headers.md](brochure-security-headers.md) | P2-4 Zone Transform Rules **LIVE** (2026-09-07 smoke PASS): Worker `projectcar-brochure` security headers + HTML vs `?v=` cache split. Do **not** re-apply from a docs PR. |
 | [brochure-pages-cutover.md](brochure-pages-cutover.md) | Brochure Worker → Classic Pages git checklist (plan only; blocked on CF ↔ GitHub auth). Do not start from this file. Member host + Zone path-split (`member-host-cutover.md`, `member-zone-edge.md`) outrank executing Pages git. |
 | [cors-origins.md](cors-origins.md) | `CORS_ORIGINS` for brochure waitlist from https://projectcar.ca |
 | [member-host-cutover.md](member-host-cutover.md) | Member UI → apex `projectcar.ca` checklist (plan only; Ben GO before Garage/Zone). Canonical cookie host = apex; planned 301 `www…/member*` → apex. Linked from STATUS Next #1. Edge / path-split slice: `member-zone-edge.md`. Does **not** require cutting `app.` first (`app-alias-cut.md`). |
 | [member-zone-edge.md](member-zone-edge.md) | Zone Cloudflare path-split for `/member*` on apex (plan only; **Ben GO**). Planned 301 www `/member*` → `https://projectcar.ca/member*`. Brochure stays dual-host. Do not execute from this file. Cookie / CORS essay stays in `member-host-cutover.md`. |
-| [member-cutover-sequence.md](member-cutover-sequence.md) | Thin order for Next #1: #88 is on git, not on Doc; unfreeze before Zone path-split; cookie path stays off until the www 301; P1-6 after that. Points at the two checklists. Paper only. |
+| [member-cutover-sequence.md](member-cutover-sequence.md) | Thin order for Next #1: step 1 (unfreeze + #88 on Doc) is **done**; steps 2–5 (Zone path-split, cookie path, P1-6, `app.` cut) stay paper / **Ben GO**. Public apex curl does not test #88. |
 | [app-alias-cut.md](app-alias-cut.md) | Temporary `app.projectcar.ca` cut checklist (plan only; STATUS Next #2). Do **not** execute DNS / tunnel / CORS from this file. Member cutover does **not** require this first. **`ops.` stays** the management host. |
 | [ship-mvp-cut.md](ship-mvp-cut.md) | Draft public-MVP cut-vs-keep table (proposed candidates, not a Ben lock). Linked from STATUS Ship-MVP cut. |
 | [google-calendar-oauth.md](google-calendar-oauth.md) | Google Calendar OAuth / two-way sync standing plan (plan only; STATUS Next #6 — not a GO). Env names, scopes, 501→live, token store, Apple ICS-only, rollback. |

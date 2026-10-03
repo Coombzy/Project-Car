@@ -1,7 +1,7 @@
 # Shop-web stay-up — `ops.projectcar.ca` / `app.projectcar.ca`
 
 **Status:** Living ops  
-**Updated:** 2026-09-08  
+**Updated:** 2026-10-03  
 **Public URLs:** https://ops.projectcar.ca (LIVE management) · https://app.projectcar.ca (temporary alias)  
 **Related:** `doc-lid-restore.md` (ordered wake — **not** a pull), `doc-unfreeze.md` (Ben GO pull), `api-stay-up.md`, `doc-software-baseline.md`, `brochure-worker-deploy.md`, `STATUS.md` host split, `shop-os-ci.md` (green CI ≠ unfreeze), `member-host-cutover.md` (plan only), `member-zone-edge.md` (Zone path-split; plan only), `app-alias-cut.md` (later `app.` cut; plan only), `apps/project-car/web/README.md`
 
@@ -44,7 +44,7 @@ If you see `next dev` in `ps`, repeated LaunchAgent exits, or a missing `.next/B
 
 A `git pull` on `main` does **not** update the running UI. `next start` serves the last **`npm run build`**. Do not leave a stale `.next` behind a new `main` pull.
 
-**While Doc checkout is frozen** (`4cf8924` / `5swmVz-T2CqKEQzTk1ifU`), do **not** run this rebuild from lid-restore or from a green Shop OS CI check. **Ben GO** first; ordered pull + migrate + rebuild + smoke: [doc-unfreeze.md](doc-unfreeze.md). This section is the rebuild essay that unfreeze step 4 calls.
+Doc is **unfrozen** at `795f301` / `BUILD_ID` `vQRsAOI0JtWYZ_ogRUjgG` (**#36** / **#69** / **#88** live on Doc). Do **not** `git pull` finance tip `6366d62` from lid-restore or from a green Shop OS CI check. A further pull is a new **Ben GO** ([doc-unfreeze.md](doc-unfreeze.md)). Rebuilding the **current** tree after process flap is stay-up, not a new unfreeze. This section is the rebuild essay that unfreeze step 4 called.
 
 After **Ben GO** and Lead `git pull` (or, later, after Garage merges further shop-web onto `main` and Ben GOs again), **Lead** on Doc:
 
@@ -64,7 +64,7 @@ launchctl kickstart -k gui/$(id -u)/com.projectcar.shop-web
 # confirm next start (not next dev) and BUILD_ID still present
 ```
 
-Last recorded shop-web **BUILD** on Doc (STATUS): after Dashboard **#28** (`main` `afb37f9`, `BUILD_ID` `5swmVz-T2CqKEQzTk1ifU`). **#36** / **#69** stay **on git** until **Ben GO** + this rebuild ([doc-unfreeze.md](doc-unfreeze.md)). The new `BUILD_ID` must **not** be `5swmVz-T2CqKEQzTk1ifU`. Do not call #36 live on Doc until that build. Update STATUS when Lead ships it.
+Last recorded shop-web **BUILD** on Doc (STATUS): checkout `795f301`, `BUILD_ID` `vQRsAOI0JtWYZ_ogRUjgG` (**UNFROZEN**; was Dashboard **#28** `afb37f9` / `5swmVz-T2CqKEQzTk1ifU`). **#36** / **#69** / **#88** are live on Doc. Do not re-run the rebuild above to chase finance tip `6366d62`. A further pull is a new **Ben GO** ([doc-unfreeze.md](doc-unfreeze.md)).
 
 ---
 
@@ -167,7 +167,7 @@ Alerts can come from anyone who sees a **502**, **530 / error 1033**, a login re
    - **1033 / 530 / 502** and Doc asleep or cloudflared dead → lid-close / tunnel / Mac sleep (`api-stay-up.md` same class). Wake Doc (Amphetamine session if it should stay up).
    - **Process flap** (`next dev`, EADDRINUSE, repeated restart, `BUILD_ID` missing) → skip to step 4.
 3. **Doc awake?** Local `GET http://127.0.0.1:3000/login` after wake. If it fails, Lead checks LaunchAgent `com.projectcar.shop-web` (KeepAlive) and `~/hermes-tools/mission-control/shop-web/run-shop-web.sh`. Confirm the process is **`next start`**.
-4. **Lead — flap / stale build.** Boot out KeepAlive → `npm run build` in `apps/project-car/web` → kickstart → verify `.next/BUILD_ID`. Do not leave `next dev` in the LaunchAgent. While checkout is frozen, this is **rebuild of the current tree** — not `git pull` / unfreeze (`doc-unfreeze.md`).
+4. **Lead — flap / stale build.** Boot out KeepAlive → `npm run build` in `apps/project-car/web` → kickstart → verify `.next/BUILD_ID`. Do not leave `next dev` in the LaunchAgent. This is a rebuild of the **current** Doc tree (`795f301` / `vQRsAOI0JtWYZ_ogRUjgG`) — not a `git pull` to finance tip `6366d62` (`doc-unfreeze.md`).
 5. **Zone — edge.** Local `:3000` login OK but public **502** / **530 / 1033** / DNS miss → Zone checks host cloudflared + the `ops.` / `app.` hostname rules. Origin must be **`http://127.0.0.1:3000`**, not bare `localhost`. Lead does not edit Cloudflare. Do not cut the `app.` alias.
 6. **Garage — after.** When public smoke is green, Garage may re-walk ops/app UI. No process restarts.
 
