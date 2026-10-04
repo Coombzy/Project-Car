@@ -126,6 +126,9 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `POST` | `/member/bookings` | Member | Create own customer booking |
 | `POST` | `/member/bookings/{id}/confirm` | Member | Confirm own pending booking |
 | `POST` | `/member/bookings/{id}/cancel` | Member | Cancel own booking, refund reserve |
+| `GET` | `/tool-crib/events` | Owner | Crib checkout and return rows, newest first |
+| `POST` | `/tool-crib/checkouts` | Owner | Store one checkout row for a TC SKU |
+| `POST` | `/tool-crib/returns` | Owner | Store one return row for the open checkout |
 
 Owner auth is the v1 stub from the product spec (email + password **or** `Authorization: Bearer $OWNER_API_SECRET`). Member auth is a parallel session cookie (`pc_member_session`) — email must match a `members` row; password is `MEMBER_DEMO_PASSWORD`. Neither is OIDC.
 
@@ -169,7 +172,7 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 
 ## Domain
 
-Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work. `20260906_0005` adds `fill_offers` and `notification_outbox`. `20260906_0006` adds `chat_rooms`, `chat_participants`, and `chat_messages`. `20260906_0007` adds `todos`, `parts_orders` (PT SKU / PO stubs), and `calendar_connections` (OAuth scaffold).
+Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work. `20260906_0005` adds `fill_offers` and `notification_outbox`. `20260906_0006` adds `chat_rooms`, `chat_participants`, and `chat_messages`. `20260906_0007` adds `todos`, `parts_orders` (PT SKU / PO stubs), and `calendar_connections` (OAuth scaffold). `20261004_0009` adds `tool_crib_events`: a checkout row and a return row. Bay-kit and PT SKUs are rejected. Job claim is not this table.
 
 Membership tier seed rows (Basic 1000 / Premium 1500) are placeholders only. Two tiers in fixtures.
 

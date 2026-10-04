@@ -14,12 +14,13 @@ from __future__ import annotations
 
 import enum
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Optional
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     Enum as SAEnum,
@@ -53,6 +54,10 @@ def _enum_column(enum_cls: type[enum.Enum], *, length: int = 32) -> SAEnum:
 JsonList = JSON().with_variant(JSONB(), "postgresql")
 JsonObject = JSON().with_variant(JSONB(), "postgresql")
 UuidPk = Uuid(as_uuid=True).with_variant(UUID(as_uuid=True), "postgresql")
+
+
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class MemberStatus(str, enum.Enum):
@@ -145,6 +150,11 @@ class PartsOrderStatus(str, enum.Enum):
     SHIPPED = "shipped"
     IN_TRANSIT = "in_transit"
     RECEIVED = "received"
+
+
+class ToolCribEventKind(str, enum.Enum):
+    CHECKOUT = "checkout"
+    RETURN = "return"
 
 
 class CalendarProvider(str, enum.Enum):
@@ -241,6 +251,7 @@ class Member(Base):
     notifications: Mapped[list[NotificationOutbox]] = relationship(back_populates="member")
     chat_participations: Mapped[list[ChatParticipant]] = relationship(back_populates="member")
     todos: Mapped[list[Todo]] = relationship(back_populates="member")
+    tool_crib_events: Mapped[list[ToolCribEvent]] = relationship(back_populates="member")
 
     def __repr__(self) -> str:
         return f"<Member(id={self.id!r}, email={self.email!r})>"
@@ -282,7 +293,7 @@ class Hoist(Base):
 
 
 class Tool(Base):
-    """Shared tool inventory. Schema now; checkout UI later."""
+    """Shared tool inventory. Schema now; crib checkout is a separate ledger."""
 
     __tablename__ = "tools"
 
@@ -301,6 +312,46 @@ class Tool(Base):
 
     def __str__(self) -> str:
         return f"{self.name} ({self.part_number})"
+
+
+class ToolCribEvent(Base):
+    """Append-only crib ledger. Checkout stores one row. Return stores another."""
+
+    __tablename__ = "tool_crib_events"
+    __table_args__ = (
+        CheckConstraint(
+            "(kind = 'checkout' AND checkout_id IS NULL) OR (kind = 'return' AND checkout_id IS NOT NULL)",
+            name="ck_tool_crib_events_kind",
+        ),
+        UniqueConstraint("checkout_id", name="uq_tool_crib_events_checkout_id"),
+        Index("ix_tool_crib_events_sku_created", "sku", "created_at"),
+        Index("ix_tool_crib_events_member_created", "member_id", "created_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    member_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("members.id", ondelete="RESTRICT"), nullable=False
+    )
+    sku: Mapped[str] = mapped_column(String(80), nullable=False)
+    kind: Mapped[ToolCribEventKind] = mapped_column(
+        _enum_column(ToolCribEventKind),
+        nullable=False,
+    )
+    note: Mapped[Optional[str]] = mapped_column(Text)
+    checkout_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("tool_crib_events.id", ondelete="RESTRICT")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=_utc_now,
+        server_default=func.now(),
+    )
+
+    member: Mapped[Member] = relationship(back_populates="tool_crib_events")
+
+    def __repr__(self) -> str:
+        return f"<ToolCribEvent(id={self.id!r}, kind={self.kind!r}, sku={self.sku!r})>"
 
 
 class Booking(Base):
@@ -840,6 +891,7 @@ ALL_MODELS = [
     Member,
     Hoist,
     Tool,
+    ToolCribEvent,
     Booking,
     TokenTransaction,
     WaitlistEntry,

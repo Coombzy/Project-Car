@@ -1,6 +1,8 @@
 import { InventoryKitNav } from "../../components/inventory-kit-nav";
 import { OwnerShell } from "../../components/owner-shell";
 import { PlaceholderNote } from "../../components/placeholder-note";
+import { ToolCribLedger } from "../../components/tool-crib-ledger";
+import type { Member, ToolCribEvent } from "../../lib/config";
 import { handlePageError } from "../../lib/page";
 import {
   BAY_KITS,
@@ -13,35 +15,51 @@ import {
   checkoutLabel,
   parseKitParam,
 } from "../../lib/inventory";
-import { getMe } from "../../lib/shop-api";
+import { getMe, listMembers, listToolCribEvents } from "../../lib/shop-api";
 
 export const dynamic = "force-dynamic";
 
 export default async function OpsToolsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ kit?: string }>;
+  searchParams: Promise<{ kit?: string; error?: string }>;
 }) {
-  const kit = parseKitParam((await searchParams).kit);
+  const params = await searchParams;
+  const kit = parseKitParam(params.kit);
   try {
     const me = await getMe();
+    let members: Member[] = [];
+    let events: ToolCribEvent[] = [];
+    if (kit === CRIB_PREFIX) {
+      [members, events] = await Promise.all([listMembers(), listToolCribEvents()]);
+    }
     return (
       <OwnerShell email={me.email} current="tools" wide>
-        <OpsToolsBody kit={kit} />
+        <OpsToolsBody kit={kit} members={members} events={events} error={params.error} />
       </OwnerShell>
     );
   } catch (error) {
     const message = await handlePageError(error);
     return (
       <OwnerShell current="tools" wide>
-        <OpsToolsBody kit={kit} />
+        <OpsToolsBody kit={kit} members={[]} events={[]} error={params.error} />
         <div className="banner error">{message}</div>
       </OwnerShell>
     );
   }
 }
 
-function OpsToolsBody({ kit }: { kit: ReturnType<typeof parseKitParam> }) {
+function OpsToolsBody({
+  kit,
+  members,
+  events,
+  error,
+}: {
+  kit: ReturnType<typeof parseKitParam>;
+  members: Member[];
+  events: ToolCribEvent[];
+  error?: string;
+}) {
   const bay = kit === CRIB_PREFIX ? null : BAY_KITS[kit];
   const bayRows = bay ? bayKitItems(bay.prefix) : [];
 
@@ -52,15 +70,15 @@ function OpsToolsBody({ kit }: { kit: ReturnType<typeof parseKitParam> }) {
       <p className="lede">
         Locked prefixes: <strong>B1–B6</strong> are resident bay hand-tool kits
         (one kit per hoist). <strong>B6</strong> is the shop hoist bay — same
-        B-scheme, never <code>SH</code>. <strong>TC</strong> is the tool crib
-        (checkout / return / overdue stub). Not live QR or hardware. Schema may
-        already have <code>tools</code>; these lists are labeled demo SKUs.
+        B-scheme, never <code>SH</code>. <strong>TC</strong> is the tool crib.
+        A checkout and a return each store a row. Overdue, QR, and hardware
+        stay later. The shop is not open.
       </p>
       <PlaceholderNote>
-        Placeholder inventory — not a working checkout system. Member UI does
-        not get this Tools section. Members may <em>request</em> a crib tool
-        from <code>/member/parts</code>. Consumables (<code>CM</code>) stay
-        Later.
+        Bay-kit lists and the sample crib table stay placeholders. Member UI
+        does not get this Tools section. Members may <em>request</em> a crib
+        tool from <code>/member/parts</code>. Consumables (<code>CM</code>) stay
+        Later. The shop is not open.
       </PlaceholderNote>
 
       <InventoryKitNav current={kit} />
@@ -112,9 +130,11 @@ function OpsToolsBody({ kit }: { kit: ReturnType<typeof parseKitParam> }) {
         <>
           <h2>Tool crib · TC</h2>
           <p className="muted">
-            Specialty tools. Checkout / return / overdue is a stub — no QR,
-            no hardware, no due-date mail.
+            Specialty tools. Checkout and return store rows below. The sample
+            table is not those rows. No QR, no hardware, no due-date mail.
           </p>
+          <ToolCribLedger members={members} events={events} error={error} />
+          <h2>Sample crib list (not stored)</h2>
           <div className="card">
             <table>
               <thead>

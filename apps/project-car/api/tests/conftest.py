@@ -69,6 +69,7 @@ def client() -> TestClient:
 
     app.dependency_overrides[get_db] = override_db
     with TestClient(app) as test_client:
+        test_client.session_factory = TestingSession  # type: ignore[attr-defined]
         yield test_client
     app.dependency_overrides.clear()
 
