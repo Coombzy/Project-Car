@@ -29,6 +29,22 @@ def _dec(value) -> Decimal:
     return Decimal(str(value))
 
 
+def _balance(client: TestClient, member_id: str) -> Decimal:
+    detail = client.get(f"/members/{member_id}", headers=AUTH)
+    assert detail.status_code == 200, detail.text
+    return _dec(detail.json()["token_balance"])
+
+
+def _ledger(client: TestClient, member_id: str) -> list[dict]:
+    ledger = client.get(f"/members/{member_id}/tokens", headers=AUTH)
+    assert ledger.status_code == 200, ledger.text
+    return ledger.json()
+
+
+def _rows(ledger: list[dict], *, kind: str, booking_id: str) -> list[dict]:
+    return [row for row in ledger if row["kind"] == kind and row["booking_id"] == booking_id]
+
+
 def test_create_booking_reserves_tokens_and_writes_ledger(client: TestClient) -> None:
     member = create_member(client)
     hoist = create_hoist(client)
@@ -199,6 +215,95 @@ def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None
     assert cancelled.status_code == 200
     assert cancelled.json()["status"] == "cancelled"
     assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == Decimal("1500") - used
+
+
+def test_booking_debits_tokens_and_cancel_returns_them(client: TestClient) -> None:
+    member = create_member(client)
+    hoist = create_hoist(client)
+    opening = Decimal("1500")
+
+    held_start, held_end = _window(6)
+    held = _expected_reserve(client, held_start, held_end, member["id"])
+    opened = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": held_start,
+            "end_at": held_end,
+        },
+    )
+    assert opened.status_code == 201, opened.text
+    open_id = opened.json()["id"]
+    assert _balance(client, member["id"]) == opening - held
+    reserve_rows = _rows(_ledger(client, member["id"]), kind="booking_reserve", booking_id=open_id)
+    assert len(reserve_rows) == 1
+    assert _dec(reserve_rows[0]["amount"]) == -held
+
+    assert client.post(f"/bookings/{open_id}/confirm", headers=AUTH).status_code == 200
+    assert _balance(client, member["id"]) == opening - held
+    assert _rows(_ledger(client, member["id"]), kind="booking_debit", booking_id=open_id) == []
+
+    cancelled = client.post(f"/bookings/{open_id}/cancel", headers=AUTH)
+    assert cancelled.status_code == 200, cancelled.text
+    assert cancelled.json()["status"] == "cancelled"
+    assert _dec(cancelled.json()["reserved_tokens"]) == Decimal("0")
+    returned = _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=open_id)
+    assert len(returned) == 1
+    assert _dec(returned[0]["amount"]) == held
+    assert returned[0]["meta"]["pricing_rule"]["final_reserve_cost"] == str(held)
+    assert _rows(_ledger(client, member["id"]), kind="booking_debit", booking_id=open_id) == []
+    assert _balance(client, member["id"]) == opening
+
+    repeat = client.post(f"/bookings/{open_id}/cancel", headers=AUTH)
+    assert repeat.status_code == 400
+    assert repeat.json()["error"]["code"] == "invalid_transition"
+    assert len(_rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=open_id)) == 1
+    assert _balance(client, member["id"]) == opening
+
+    spent_start, spent_end = _window(30)
+    reserved = _expected_reserve(client, spent_start, spent_end, member["id"])
+    unused = Decimal("1")
+    assert reserved > unused
+    spent = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": spent_start,
+            "end_at": spent_end,
+        },
+    )
+    assert spent.status_code == 201, spent.text
+    spent_id = spent.json()["id"]
+    assert client.post(f"/bookings/{spent_id}/confirm", headers=AUTH).status_code == 200
+    assert client.post(f"/bookings/{spent_id}/check-in", headers=AUTH).status_code == 200
+    used = reserved - unused
+    completed = client.post(
+        f"/bookings/{spent_id}/complete",
+        headers=AUTH,
+        json={"unused_tokens": str(unused)},
+    )
+    assert completed.status_code == 200, completed.text
+    assert completed.json()["status"] == "completed"
+    ledger = _ledger(client, member["id"])
+    debits = _rows(ledger, kind="booking_debit", booking_id=spent_id)
+    releases = _rows(ledger, kind="booking_refund", booking_id=spent_id)
+    assert len(debits) == 1
+    assert _dec(debits[0]["amount"]) == -used
+    assert debits[0]["meta"]["pricing_rule"]["final_reserve_cost"] == str(reserved)
+    assert len(releases) == 1
+    assert _dec(releases[0]["amount"]) == reserved
+    assert _balance(client, member["id"]) == opening - used
+
+    denied = client.post(f"/bookings/{spent_id}/cancel", headers=AUTH)
+    assert denied.status_code == 400
+    assert denied.json()["error"]["code"] == "invalid_transition"
+    assert len(_rows(_ledger(client, member["id"]), kind="booking_debit", booking_id=spent_id)) == 1
+    assert _dec(_rows(_ledger(client, member["id"]), kind="booking_debit", booking_id=spent_id)[0]["amount"]) == -used
+    assert _balance(client, member["id"]) == opening - used
 
 
 def test_tier_rules_enforced(client: TestClient) -> None:
