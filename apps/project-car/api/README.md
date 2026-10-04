@@ -48,17 +48,17 @@ Owner UI: from `apps/project-car/web` run `npm install && npm run dev`, then ope
 | Field | Value |
 |-------|--------|
 | Email | `owner@projectcar.ca` |
-| Password | `changeme` |
+| Password | `OWNER_PASSWORD` in the API env (loopback-only seed) |
 | Bearer | `OWNER_API_SECRET` (default `dev-owner-secret`) |
 
-These are local defaults from `.env.example`. The shop is **not** open. There is no live Stripe. Seeded names, bookings, and placeholder prices are sample data so a prospect can click through Dashboard, Schedule, Members, Hoists, Waitlist, Tiers, and the Member self-serve pages.
+The seed accepts that owner email and password only when the database host is loopback. These are local defaults from `.env.example`. The shop is **not** open. There is no live Stripe. Seeded names, bookings, and placeholder prices are sample data so a prospect can click through Dashboard, Schedule, Members, Hoists, Waitlist, Tiers, and the Member self-serve pages.
 
 ### Demo Member login (localhost walkthrough)
 
 | Field | Value |
 |-------|--------|
 | Email | `ada.reyes@example.com` (any seeded **active** member email) |
-| Password | `changeme` (`MEMBER_DEMO_PASSWORD`) |
+| Password | `MEMBER_DEMO_PASSWORD` in the API env |
 | Cookie | `pc_member_session` |
 
 Member routes are under `/member/*`. Members can only see their own balance / ledger / bookings. Customer bookings use Bays 1–5. The shop hoist returns `400 shop_hoist_owner_only`. Not OIDC — Staff OIDC can follow later.

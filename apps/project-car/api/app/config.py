@@ -5,6 +5,10 @@ from functools import lru_cache
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Demo Owner pair. The seed accepts this pair only when the database host is loopback.
+DEMO_OWNER_EMAIL = "owner@projectcar.ca"
+DEMO_OWNER_PASSWORD = "changeme"
+
 
 class Settings(BaseSettings):
     """Runtime settings for the shop API. Secrets come from the environment."""
@@ -19,8 +23,8 @@ class Settings(BaseSettings):
         default="postgresql+psycopg://projectcar:projectcar@localhost:5432/projectcar",
         description="SQLAlchemy URL for shop Postgres (never Nextcloud MariaDB).",
     )
-    owner_email: str = "owner@projectcar.ca"
-    owner_password: str = "changeme"
+    owner_email: str = DEMO_OWNER_EMAIL
+    owner_password: str = DEMO_OWNER_PASSWORD
     owner_api_secret: str = "dev-owner-secret"
     session_secret: str = "dev-session-secret-change-me"
     session_ttl_seconds: int = 86_400

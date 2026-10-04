@@ -20,11 +20,14 @@ Demo bookings use that engine. Not live prices.
 This is sample data for localhost prospect walkthroughs. The shop is not
 open. There is no live payment processor (no Stripe). Shop members do not
 get Nextcloud accounts.
+
+The demo Owner login is accepted only when the database host is loopback.
 """
 
 from __future__ import annotations
 
 import argparse
+import sys
 from datetime import datetime, timedelta
 from decimal import Decimal
 from uuid import UUID, uuid5
@@ -32,6 +35,7 @@ from uuid import UUID, uuid5
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.db import SessionLocal
 from app.models import (
     AccessEvent,
@@ -59,6 +63,12 @@ from app.models import (
     TokenTransaction,
     TokenTransactionKind,
     WaitlistEntry,
+)
+from app.seed_guard import (
+    DemoOwnerSeedRefused,
+    database_host,
+    refuse_demo_owner_off_loopback,
+    session_database_host,
 )
 from app.services.fill import resolve_fill_for_slot
 from app.services.pricing import BASE_TOKENS_PER_HOUR, quote_reserve
@@ -632,6 +642,12 @@ def _seed_parts_orders(session: Session) -> None:
 
 
 def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
+    settings = get_settings()
+    refuse_demo_owner_off_loopback(
+        session_database_host(session),
+        settings.owner_email,
+        settings.owner_password,
+    )
     for payload in PLACEHOLDER_TIERS:
         _upsert_tier(session, payload)
     session.flush()
@@ -1082,6 +1098,25 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     }
 
 
+def _run_seed(*, reset: bool) -> dict[str, int]:
+    settings = get_settings()
+    refuse_demo_owner_off_loopback(
+        database_host(settings.database_url),
+        settings.owner_email,
+        settings.owner_password,
+    )
+    session = SessionLocal()
+    try:
+        summary = seed(session, reset=reset)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+    return summary
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Seed Project Car shop OS demo data.")
     parser.add_argument(
@@ -1090,15 +1125,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Wipe members/hoists/bookings/ledger/waitlist, then insert the demo set.",
     )
     args = parser.parse_args(argv)
-    session = SessionLocal()
     try:
-        summary = seed(session, reset=args.reset)
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+        summary = _run_seed(reset=args.reset)
+    except DemoOwnerSeedRefused as exc:
+        print(exc, file=sys.stderr)
+        return 1
 
     mode = "reset + seed" if args.reset else "upsert seed"
     print(f"Shop OS demo data ready ({mode}).")
@@ -1108,8 +1139,8 @@ def main(argv: list[str] | None = None) -> int:
         "{chat_rooms} chat rooms, {waitlist} waitlist entries, {tiers} tiers "
         "(Basic 1000 / Premium 1500).".format(**summary)
     )
-    print("  Owner login (localhost demo): owner@projectcar.ca / changeme")
-    print("  Member login (localhost demo): ada.reyes@example.com / changeme")
+    print("  Owner login (loopback-only demo): owner@projectcar.ca")
+    print("  Member login (loopback-only demo): ada.reyes@example.com")
     print("  The shop is not open. This is sample data for walkthroughs.")
     return 0
 
