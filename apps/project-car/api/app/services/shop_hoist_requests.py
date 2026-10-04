@@ -6,22 +6,32 @@ Approval is a later step. This module does not approve.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from uuid import UUID
 
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from app.auth import Principal
 from app.models import (
     ActorKind,
+    Booking,
+    BookingKind,
+    BookingStatus,
     Hoist,
     Member,
     MemberStatus,
     ShopHoistRequest,
     ShopHoistRequestStatus,
+    StaffAction,
+    StaffSubject,
+    TokenTransactionKind,
 )
-from app.services.bookings import UNAVAILABLE_HOIST, preview_reserve
+from app.services.bookings import UNAVAILABLE_HOIST, hoist_has_overlap, preview_reserve
+from app.services.staff import actor_of, record_action, reject_own_request
+from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
 
 
@@ -129,3 +139,90 @@ def create_shop_hoist_request(
     session.add(row)
     session.flush()
     return get_shop_hoist_request(session, row.id)
+
+
+def _decide(row: ShopHoistRequest, principal: Principal, *, status: ShopHoistRequestStatus) -> None:
+    kind, actor_id = actor_of(principal)
+    row.status = status
+    row.decided_by_kind = kind
+    row.decided_by_id = actor_id
+    row.decided_at = datetime.now(timezone.utc)
+
+
+def approve_shop_hoist_request(
+    session: Session, request_id: UUID, principal: Principal
+) -> tuple[ShopHoistRequest, StaffAction]:
+    """Turn a pending request into a confirmed booking and reserve tokens."""
+    row = get_shop_hoist_request(session, request_id)
+    if row.status != ShopHoistRequestStatus.PENDING:
+        raise _error(400, "invalid_transition", "Only a pending shop hoist request can be approved.")
+    reject_own_request(principal, row.created_by_kind, row.created_by_id)
+    if row.hoist.status in UNAVAILABLE_HOIST:
+        raise _error(400, "hoist_unavailable", "That hoist is in maintenance or locked.")
+    member = row.member
+    if member.status != MemberStatus.ACTIVE:
+        raise _error(400, "member_not_bookable", "Only active members can hold an approved shop hoist hour.")
+    quote = Decimal(row.token_quote)
+    if Decimal(member.token_balance) < quote:
+        raise _error(400, "insufficient_tokens", "Member does not have enough tokens to reserve.")
+    if hoist_has_overlap(session, row.hoist_id, row.start_at, row.end_at):
+        raise _error(
+            409,
+            "hoist_overlap",
+            "That hour is already booked. This approval did not take tokens.",
+        )
+
+    booking = Booking(
+        member_id=member.id,
+        hoist_id=row.hoist_id,
+        start_at=row.start_at,
+        end_at=row.end_at,
+        kind=BookingKind.CUSTOMER,
+        status=BookingStatus.CONFIRMED,
+        reserved_tokens=quote,
+        pricing_rule=row.pricing_rule,
+        notes=row.notes,
+    )
+    session.add(booking)
+    session.flush()
+    apply_ledger(
+        session,
+        member,
+        kind=TokenTransactionKind.BOOKING_RESERVE,
+        amount=-quote,
+        booking_id=booking.id,
+        note="Reserve tokens for an approved shop hoist request",
+        meta={"pricing_rule": row.pricing_rule} if row.pricing_rule else None,
+    )
+    row.booking_id = booking.id
+    _decide(row, principal, status=ShopHoistRequestStatus.APPROVED)
+    session.add(row)
+    action = record_action(
+        session,
+        principal=principal,
+        action="approve",
+        request_id=row.id,
+        subject=StaffSubject.SHOP_HOIST,
+    )
+    session.flush()
+    return get_shop_hoist_request(session, row.id), action
+
+
+def deny_shop_hoist_request(
+    session: Session, request_id: UUID, principal: Principal
+) -> tuple[ShopHoistRequest, StaffAction]:
+    """Refuse a pending request. Tokens stay where they are."""
+    row = get_shop_hoist_request(session, request_id)
+    if row.status != ShopHoistRequestStatus.PENDING:
+        raise _error(400, "invalid_transition", "Only a pending shop hoist request can be denied.")
+    _decide(row, principal, status=ShopHoistRequestStatus.DENIED)
+    session.add(row)
+    action = record_action(
+        session,
+        principal=principal,
+        action="deny",
+        request_id=row.id,
+        subject=StaffSubject.SHOP_HOIST,
+    )
+    session.flush()
+    return get_shop_hoist_request(session, row.id), action

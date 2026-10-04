@@ -28,7 +28,12 @@ from app.schemas import (
     MemberSelfOut,
     OccupancyOut,
     PricingRuleOut,
+    PartsRequestCreate,
+    PartsRequestOut,
     ShopHoistRequestOut,
+    ShopJobOut,
+    ToolCribExceptionCreate,
+    ToolCribExceptionOut,
     TokenTransactionOut,
 )
 from app.routers.dashboard import member_dashboard_payload
@@ -39,6 +44,7 @@ from app.services.shop_hoist_requests import (
     get_shop_hoist,
     list_shop_hoist_requests,
 )
+from app.services.staff import claim_job, create_parts_request, create_tool_crib_exception
 from app.shop_time import as_utc
 
 router = APIRouter(prefix="/member", tags=["member"])
@@ -312,3 +318,42 @@ def member_cancel_booking(
 ) -> BookingOut:
     _own_booking(session, principal, booking_id)
     return BookingOut.from_booking(booking_service.cancel_booking(session, booking_id))
+
+
+@router.post("/parts-requests", response_model=PartsRequestOut, status_code=201)
+def member_create_parts_request(
+    body: PartsRequestCreate,
+    session: DbSession,
+    principal: MemberUser,
+) -> PartsRequestOut:
+    row = create_parts_request(
+        session,
+        member_id=principal.member_id,
+        sku=body.sku,
+        note=body.note,
+        created_by_kind=ActorKind.HUMAN,
+        created_by_id=str(principal.member_id),
+    )
+    return PartsRequestOut.model_validate(row)
+
+
+@router.post("/tool-crib-exceptions", response_model=ToolCribExceptionOut, status_code=201)
+def member_create_tool_crib_exception(
+    body: ToolCribExceptionCreate,
+    session: DbSession,
+    principal: MemberUser,
+) -> ToolCribExceptionOut:
+    row = create_tool_crib_exception(
+        session,
+        member_id=principal.member_id,
+        tool_code=body.tool_code,
+        reason=body.reason,
+        created_by_kind=ActorKind.HUMAN,
+        created_by_id=str(principal.member_id),
+    )
+    return ToolCribExceptionOut.model_validate(row)
+
+
+@router.post("/jobs/{job_id}/claim", response_model=ShopJobOut)
+def member_claim_job(job_id: UUID, session: DbSession, principal: MemberUser) -> ShopJobOut:
+    return ShopJobOut.model_validate(claim_job(session, job_id, principal.member_id))

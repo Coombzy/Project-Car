@@ -17,6 +17,7 @@ from app.routers import (
     member,
     member_chat,
     members,
+    staff,
     tiers,
     todos,
     waitlist,
@@ -55,6 +56,7 @@ def create_app() -> FastAPI:
     application.include_router(members.router)
     application.include_router(hoists.router)
     application.include_router(bookings.router)
+    application.include_router(staff.router)
     application.include_router(fill.router)
     application.include_router(chat.router)
     application.include_router(member_chat.router)

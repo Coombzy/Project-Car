@@ -19,6 +19,7 @@ from app.schemas import (
     TokenAdjustment,
     TokenTransactionOut,
 )
+from app.services.staff import reject_ai
 from app.services.tokens import apply_ledger
 
 router = APIRouter(tags=["members"])
@@ -135,8 +136,13 @@ def adjust_member_tokens(
     member_id: UUID,
     body: TokenAdjustment,
     session: DbSession,
-    _owner: Owner,
+    owner: Owner,
 ) -> TokenTransactionOut:
+    reject_ai(
+        owner,
+        code="token_change_requires_human",
+        message="An AI cannot change a token balance on its own.",
+    )
     member = _member_or_404(session, member_id)
     if body.amount == 0:
         raise HTTPException(

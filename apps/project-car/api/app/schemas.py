@@ -12,12 +12,15 @@ from app.models import (
     BookingKind,
     BookingStatus,
     ChatSenderRole,
+    DraftKind,
+    DraftStatus,
     HoistStatus,
     MemberStatus,
     NotificationChannel,
     NotificationStatus,
     PartsOrderStatus,
     ShopHoistRequestStatus,
+    ShopJobStatus,
     TodoStatus,
     TokenTransactionKind,
 )
@@ -688,6 +691,10 @@ class ShopHoistRequestOut(BaseModel):
     notes: str | None
     created_by_kind: ActorKind
     created_by_id: str
+    booking_id: UUID | None = None
+    decided_by_kind: ActorKind | None = None
+    decided_by_id: str | None = None
+    decided_at: datetime | None = None
     created_at: datetime
 
     @classmethod
@@ -716,5 +723,139 @@ class ShopHoistRequestOut(BaseModel):
             notes=row.notes,
             created_by_kind=row.created_by_kind,
             created_by_id=row.created_by_id,
+            booking_id=row.booking_id,
+            decided_by_kind=row.decided_by_kind,
+            decided_by_id=row.decided_by_id,
+            decided_at=row.decided_at,
             created_at=row.created_at,
         )
+
+
+class StaffDecisionOut(BaseModel):
+    request_id: UUID
+    status: str
+    actor_kind: ActorKind
+    actor_id: str
+    action_id: UUID
+    action: str
+    booking_id: UUID | None = None
+    token_balance: Decimal | None = None
+
+
+class PartsRequestCreate(BaseModel):
+    member_id: UUID | None = None
+    sku: str = Field(min_length=1, max_length=80)
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class PartsRequestOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    member_id: UUID
+    sku: str
+    note: str | None
+    status: ShopHoistRequestStatus
+    created_by_kind: ActorKind
+    created_by_id: str
+    decided_by_kind: ActorKind | None = None
+    decided_by_id: str | None = None
+
+
+class ToolCribExceptionCreate(BaseModel):
+    member_id: UUID | None = None
+    tool_code: str = Field(min_length=1, max_length=80)
+    reason: str | None = Field(default=None, max_length=2000)
+
+
+class ToolCribExceptionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    member_id: UUID
+    tool_code: str
+    reason: str | None
+    status: ShopHoistRequestStatus
+    created_by_kind: ActorKind
+    created_by_id: str
+    decided_by_kind: ActorKind | None = None
+    decided_by_id: str | None = None
+
+
+class ShopJobCreate(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    notes: str | None = Field(default=None, max_length=2000)
+    token_bounty: Decimal = Field(default=Decimal("0"), ge=0)
+
+
+class ShopJobOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    title: str
+    notes: str | None
+    token_bounty: Decimal
+    status: ShopJobStatus
+    claimed_by_member_id: UUID | None
+
+
+class FillDraftCreate(BaseModel):
+    body: str = Field(min_length=1, max_length=4000)
+
+
+class ChatDraftCreate(BaseModel):
+    room_id: UUID
+    body: str = Field(min_length=1, max_length=4000)
+
+
+class StaffDraftOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    kind: DraftKind
+    status: DraftStatus
+    body: str
+    room_id: UUID | None
+    created_by_kind: ActorKind
+    created_by_id: str
+    accepted_by_kind: ActorKind | None = None
+    accepted_by_id: str | None = None
+
+
+class RefundRequestCreate(BaseModel):
+    booking_id: UUID
+
+
+class RefundRequestOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    booking_id: UUID
+    status: ShopHoistRequestStatus
+    created_by_kind: ActorKind
+    created_by_id: str
+    decided_by_kind: ActorKind | None = None
+    decided_by_id: str | None = None
+
+
+class StaffBalanceOut(BaseModel):
+    member_id: UUID
+    token_balance: Decimal
+    actor_kind: ActorKind
+    action_id: UUID
+
+
+class OpenRequestsOut(BaseModel):
+    shop_hoist: list[ShopHoistRequestOut]
+    parts: list[PartsRequestOut]
+    tool_crib: list[ToolCribExceptionOut]
+    actor_kind: ActorKind
+    action_id: UUID
+
+
+class StaffShopHoistRequestCreate(BaseModel):
+    member_id: UUID
+    hoist_id: UUID
+    start_at: datetime
+    end_at: datetime
+    notes: str | None = Field(default=None, max_length=2000)

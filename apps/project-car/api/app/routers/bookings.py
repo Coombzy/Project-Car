@@ -21,6 +21,7 @@ from app.schemas import (
 )
 from app.services import bookings as booking_service
 from app.services.shop_hoist_requests import create_shop_hoist_request, list_shop_hoist_requests
+from app.services.staff import reject_ai
 from app.shop_time import as_utc
 
 router = APIRouter(tags=["bookings"])
@@ -149,9 +150,14 @@ def check_in_booking(booking_id: UUID, session: DbSession, _owner: Owner) -> Boo
 def complete_booking(
     booking_id: UUID,
     session: DbSession,
-    _owner: Owner,
+    owner: Owner,
     body: BookingComplete | None = None,
 ) -> BookingOut:
+    reject_ai(
+        owner,
+        code="refund_requires_human",
+        message="A refund is not applied until a human accepts it.",
+    )
     unused = body.unused_tokens if body is not None else Decimal("0")
     return BookingOut.from_booking(
         booking_service.complete_booking(session, booking_id, unused_tokens=unused)
@@ -159,5 +165,10 @@ def complete_booking(
 
 
 @router.post("/bookings/{booking_id}/cancel", response_model=BookingOut)
-def cancel_booking(booking_id: UUID, session: DbSession, _owner: Owner) -> BookingOut:
+def cancel_booking(booking_id: UUID, session: DbSession, owner: Owner) -> BookingOut:
+    reject_ai(
+        owner,
+        code="refund_requires_human",
+        message="A refund is not applied until a human accepts it.",
+    )
     return BookingOut.from_booking(booking_service.cancel_booking(session, booking_id))

@@ -98,3 +98,9 @@ def bearer_matches(settings: Settings, token: str | None) -> bool:
     if not token or not settings.owner_api_secret:
         return False
     return token == settings.owner_api_secret
+
+
+def ai_bearer_matches(settings: Settings, token: str | None) -> bool:
+    if not token or not settings.ai_api_secret:
+        return False
+    return token == settings.ai_api_secret
