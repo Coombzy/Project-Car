@@ -8,7 +8,7 @@ A green check starts the next item. One item per pass. The check lands in the sa
 
 ## Order
 
-1. Remove `owner@projectcar.ca` / `changeme` from the public README. The seed refuses that password unless the host is loopback.
+1. Remove the demo Owner login (`owner@projectcar.ca`) from the public README. The seed accepts that password only when the host is loopback.
 2. Member login and a booking screen on the customer host, in git. Not a Doc pull. Not a Worker upload.
 3. Keep the existing breadth. Do not delete the parts, tools, camera, or payment placeholders. Do not deepen a placeholder while item 2 is open.
 4. Stamp `Docs/STATUS.md` so the finance tip and the product tip are different lines. Name `bc264968` as finance only if that is still the tip. Do not call a finance commit the shop tip.
