@@ -25,6 +25,8 @@ get Nextcloud accounts.
 from __future__ import annotations
 
 import argparse
+import os
+import sys
 from datetime import datetime, timedelta
 from decimal import Decimal
 from uuid import UUID, uuid5
@@ -1082,6 +1084,22 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     }
 
 
+LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+
+
+def seed_host() -> str:
+    return os.environ.get("SHOP_HOST", "127.0.0.1").strip()
+
+
+def demo_password_refusal(host: str, password: str) -> str | None:
+    if password != "changeme":
+        return None
+    normalized = host.strip().lower().strip("[]")
+    if normalized in LOOPBACK_HOSTS:
+        return None
+    return "the seed refuses changeme unless the host is loopback"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Seed Project Car shop OS demo data.")
     parser.add_argument(
@@ -1090,6 +1108,14 @@ def main(argv: list[str] | None = None) -> int:
         help="Wipe members/hoists/bookings/ledger/waitlist, then insert the demo set.",
     )
     args = parser.parse_args(argv)
+    from app.config import settings
+
+    host = seed_host()
+    for password in (settings.owner_password, settings.member_demo_password):
+        refused = demo_password_refusal(host, password)
+        if refused:
+            print(refused, file=sys.stderr)
+            return 1
     session = SessionLocal()
     try:
         summary = seed(session, reset=args.reset)
