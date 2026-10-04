@@ -1,6 +1,6 @@
 # Status — 2026-10-03
 
-Living one-pager: what’s live, what’s next, locks. Product detail stays in the start-here specs. This file is not a runbook.
+Living one-pager: what’s live, what’s next, locks. Product detail stays in the start-here specs. This file is not a runbook. Skipped work and placeholders: [later.md](later.md).
 
 ## How to update this file
 
@@ -13,6 +13,7 @@ Do this when `main` moves or a live smoke changes what the next person should be
 5. Do not merge an older docs PR to catch up. Edit this file. September P-id smokes stay in `website-improvements.md`.
 6. Locks and the Next list change only when Ben changes them. A tip update is not a new product decision.
 7. Member cutover order is [member-cutover-sequence.md](member-cutover-sequence.md). Tick that file when a step happens. Do not paste the checklist into Reality.
+8. Skipped work and placeholders are one list: [later.md](later.md). Change a row in the same commit that changes the hold. A row closes only when its fix has landed and a proof names it. Do not open a second list.
 
 ## Reality (2026-10-03)
 
@@ -23,7 +24,7 @@ Do this when `main` moves or a live smoke changes what the next person should be
 
 September P-id smokes (P1 through P4-2) stay true unless a bullet above replaces them. The old “Worker 302s `/shop`” sentence does **not**. Detail: [website-improvements.md](website-improvements.md).
 
-Living one-pager: what’s live, what’s next, locks. Product detail stays in the start-here specs. Stay-up / CORS / brochure-deploy runbooks live elsewhere — this file is not a runbook. Living ops: [doc-lid-restore.md](doc-lid-restore.md) (process wake only) · [doc-unfreeze.md](doc-unfreeze.md) (Ben GO pull) · [shop-web-stay-up.md](shop-web-stay-up.md) · [api-stay-up.md](api-stay-up.md) · [shop-os-ci.md](shop-os-ci.md) (git-only Shop OS CI — **not** Doc unfreeze) · [brochure-worker-deploy.md](brochure-worker-deploy.md) · [brochure-security-headers.md](brochure-security-headers.md) (P2-4 **LIVE**). Member host cutover (plan only): [member-host-cutover.md](member-host-cutover.md). Member edge / path-split (plan only; **Ben GO**): [member-zone-edge.md](member-zone-edge.md). Order (step 1 done; 2–5 paper): [member-cutover-sequence.md](member-cutover-sequence.md). Temporary `app.` alias cut (plan only): [app-alias-cut.md](app-alias-cut.md). Brochure → Classic Pages git (plan only; skipped until CF ↔ GitHub auth; outranked by Next #1 + Member edge): [brochure-pages-cutover.md](brochure-pages-cutover.md). Proposed public-MVP cut-vs-keep (draft, not a Ben lock): [ship-mvp-cut.md](ship-mvp-cut.md). Google Calendar OAuth / two-way sync (plan only; STATUS Next #6 — not a GO): [google-calendar-oauth.md](google-calendar-oauth.md).
+Living one-pager: what’s live, what’s next, locks. Product detail stays in the start-here specs. Stay-up / CORS / brochure-deploy runbooks live elsewhere — this file is not a runbook. Living ops: [doc-lid-restore.md](doc-lid-restore.md) (process wake only) · [doc-unfreeze.md](doc-unfreeze.md) (Ben GO pull) · [shop-web-stay-up.md](shop-web-stay-up.md) · [api-stay-up.md](api-stay-up.md) · [shop-os-ci.md](shop-os-ci.md) (git-only Shop OS CI — **not** Doc unfreeze) · [brochure-worker-deploy.md](brochure-worker-deploy.md) · [brochure-security-headers.md](brochure-security-headers.md) (P2-4 **LIVE**). Member host cutover (plan only): [member-host-cutover.md](member-host-cutover.md). Member edge / path-split (plan only; **Ben GO**): [member-zone-edge.md](member-zone-edge.md). Order (step 1 done; 2–5 paper): [member-cutover-sequence.md](member-cutover-sequence.md). Temporary `app.` alias cut (plan only): [app-alias-cut.md](app-alias-cut.md). Brochure → Classic Pages git (plan only; skipped until CF ↔ GitHub auth; outranked by Next #1 + Member edge): [brochure-pages-cutover.md](brochure-pages-cutover.md). Proposed public-MVP cut-vs-keep (draft, not a Ben lock): [ship-mvp-cut.md](ship-mvp-cut.md). Google Calendar OAuth / two-way sync (plan only; STATUS Next #6 — not a GO): [google-calendar-oauth.md](google-calendar-oauth.md). Skipped work and placeholders (one ledger): [later.md](later.md).
 
 ## Host split (LOCKED — Ben GO ~12:22; ops LIVE at edge ~12:55)
 

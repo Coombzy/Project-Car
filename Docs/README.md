@@ -3,7 +3,7 @@
 **Canonical:** `Coombzy/Project-Car` → `Docs/`  
 **Engineering clone:** `~/src/Project-Car/Docs/`  
 **Optional Desktop mirror:** `~/Desktop/Project Car/docs/` (read copy; do not author there)  
-**Updated:** 2026-10-03
+**Updated:** 2026-10-04
 
 `Coombzy/Automation/Docs/` is a **historical mirror**. Do not author product specs there.  
 `~/Desktop/Project-Car-Docs/` is **retired**.  
@@ -31,6 +31,7 @@ Hermes skill `project-car/references/` holds **pointers + agent-only notes**, no
 | Doc | What |
 |-----|------|
 | [STATUS.md](STATUS.md) | What’s live, what’s next, locks. **Start here.** The date in that file’s title is the reality date (`main` `6366d62` on 2026-10-03; finance tip ≠ product **#82** / `2036a2d`). Do not paste smoke essays into this index. How to update: [STATUS.md](STATUS.md) “How to update this file.” |
+| [later.md](later.md) | One ledger of skipped work and placeholders. A row closes only when the fix has landed and a proof names it. Do not keep a second list. |
 | [token-pricing.md](token-pricing.md) | Token pricing lock (bands + overlay; Basic 1000 / Premium 1500; 6 hoists; shop hoist = Owner-only) |
 | [website-improvements.md](website-improvements.md) | P0–P4 backlog for projectcar.ca (tick status as work ships) |
 | [nextcloud-progress.md](nextcloud-progress.md) | Last live hub check on Doc (no secrets; 2026-08-16). Public-site / `:8088` rows point at STATUS / home-lab / Worker — not a new hub probe. |
