@@ -139,12 +139,16 @@ def test_member_cannot_book_shop_hoist(client: TestClient) -> None:
     assert names == {"Bay 1"}
     assert all(row["is_shop"] is False for row in hoists.json())
 
-    blocked = client.post(
+    balance_before = _dec(client.get("/member/me").json()["token_balance"])
+    requested = client.post(
         "/member/bookings",
         json={"hoist_id": shop["id"], "start_at": start, "end_at": end},
     )
-    assert blocked.status_code == 400
-    assert blocked.json()["error"]["code"] == "shop_hoist_owner_only"
+    assert requested.status_code == 201, requested.text
+    assert requested.json()["record"] == "shop_hoist_request"
+    assert requested.json()["status"] == "pending"
+    assert _dec(client.get("/member/me").json()["token_balance"]) == balance_before
+    assert client.get("/member/bookings").json() == []
 
     ok = client.post(
         "/member/bookings",

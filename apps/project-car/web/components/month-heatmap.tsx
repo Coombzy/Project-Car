@@ -65,7 +65,7 @@ export function MonthHeatmap({
                     const density = hoistDayDensity(intervals, hoist.id, day);
                     const title = [
                       hoist.name,
-                      hoist.is_shop ? "Owner-only" : null,
+                      hoist.is_shop ? "Request" : null,
                       `${density.bookedHours.toFixed(density.bookedHours % 1 ? 2 : 0)}h booked`,
                       density.level,
                     ]
@@ -79,7 +79,7 @@ export function MonthHeatmap({
                         title={title}
                       >
                         <span>{hoistChipLabel(hoist.name, hoist.is_shop)}</span>
-                        {hoist.is_shop ? <em>Owner</em> : null}
+                        {hoist.is_shop ? <em>Request</em> : null}
                       </Link>
                     );
                   })}

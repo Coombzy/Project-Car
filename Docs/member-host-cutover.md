@@ -35,7 +35,7 @@ Shop-web App Router paths under `/member` (today parked on ops/app):
 |------|------|
 | `/member/login` | Demo Member login (`ada.reyes@example.com` + `MEMBER_DEMO_PASSWORD`). Cookie `pc_member_session`. |
 | `/member` | Balance + ledger + personal todos + next-24h hours on bays that member booked. |
-| `/member/schedule` | Book / quote / confirm / cancel on **Bays 1–5 only**. Shop hoist stays `400 shop_hoist_owner_only`. |
+| `/member/schedule` | Book / quote / confirm / cancel on **Bays 1–5**. Shop hoist is a pending request, not a direct booking. |
 | `/member/schedule/quote` | Same-origin quote POST (browser → Next, not browser → API). |
 | `/member/chat`, `/member/chat/{id}` | Chat v1 — own rooms, reply, poll. Logged-out **auth-gate 307**. |
 | `/member/parts` | Parts **request desk** (PT / TC SKUs). Not commerce. |
@@ -177,7 +177,7 @@ All of these must be true before calling the cutover done. **None of them are tr
 |---|--------|--------|
 | 1 | Member login on customer host | **Apex only:** `https://projectcar.ca/member/login` serves the demo form. Seed `ada.reyes@example.com` + demo password sets `pc_member_session` (Secure, Lax, host-only, Path as decided — prefer `/member` when `SHOP_MEMBER_COOKIE_PATH_SCOPED` is on). Redirect stays on **`projectcar.ca`** — **no localhost hop**, **no www hop**. Do **not** smoke `https://www.projectcar.ca/member…` as a success path. After GO, Zone **301** `www…/member*` → `https://projectcar.ca/member*` (plan only — not live). |
 | 2 | Balance | Logged-in `GET /member` shows tokens + ledger (same demo as ops `/member`). |
-| 3 | Booking routes | `/member/schedule` renders Bays 1–5; quote / book / cancel still work; shop hoist still `400 shop_hoist_owner_only`. `/member/schedule/quote` same-origin. |
+| 3 | Booking routes | `/member/schedule` renders Bays 1–5; quote / book / cancel still work; shop hoist is a pending request. `/member/schedule/quote` same-origin. |
 | 4 | Member extras still gated | `/member/chat` auth-gate 307 when logged out; logged-in own rooms. Placeholders (`/member/parts`, `/member/jobs`, `/member/cameras`) load as demo UI — not Stripe / Frigate / checkout. |
 | 5 | Brochure still brochure | Home / About / The Shop / Membership / Roadmap / Contact **200** from Worker HTML. Chat page stays gone. |
 | 6 | Waitlist e2e | Membership / Contact `POST` → `api.projectcar.ca/waitlist` still **PASS**. OPTIONS smoke still returns `Access-Control-Allow-Origin` for brochure origins. |

@@ -53,7 +53,7 @@ These are local defaults from `.env.example`. The shop is **not** open. There is
 
 The member password stays in `MEMBER_DEMO_PASSWORD`. It is not listed here. The seed refuses the demo password unless the host is loopback. Any seeded **active** member email can sign in on loopback. Cookie `pc_member_session`.
 
-Member routes are under `/member/*`. Members can only see their own balance / ledger / bookings. Customer bookings use Bays 1–5. The shop hoist returns `400 shop_hoist_owner_only`. Not OIDC — Staff OIDC can follow later.
+Member routes are under `/member/*`. Members can only see their own balance / ledger / bookings. Customer bookings use Bays 1–5. A shop hoist post creates a pending request. It is not a booking and it does not move tokens until approval. Not OIDC — Staff OIDC can follow later.
 
 ## Re-seed
 
@@ -64,7 +64,7 @@ python -m app.seed          # upsert demo IDs; rebuild this week's sample bookin
 python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then seed
 ```
 
-`--reset` refreshes Basic **1000** / Premium **1500** placeholders (Weekly / Pro seed leftovers are retired; Pro members move to Premium). Seed creates **6 hoists** (Bay 1–5 customer + **Bay 6** Owner-only shop hoist). Bookings are placed relative to **today** in `America/Edmonton` so a fresh DB always shows a live-looking week. Reserve amounts are computed from duration × band × overlay (`America/Regina`). Shop work (`kind=shop`) does not reserve member tokens. Customers cannot book the shop hoist (v1 choice A).
+`--reset` refreshes Basic **1000** / Premium **1500** placeholders (Weekly / Pro seed leftovers are retired; Pro members move to Premium). Seed creates **6 hoists** (Bay 1–5 customer + **Bay 6** shop hoist). Bookings are placed relative to **today** in `America/Edmonton` so a fresh DB always shows a live-looking week. Reserve amounts are computed from duration × band × overlay (`America/Regina`). Shop work (`kind=shop`) does not reserve member tokens. A member shop-hoist post is a pending request, not a booking.
 
 ## Endpoints
 
@@ -157,7 +157,7 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 3. Completing an active booking releases the reserve, then **debits** used tokens (`booking_debit`) and **refunds** any unused reserve (`booking_refund`).
 4. Cancel refunds remaining reserve. `member.token_balance` is a cached ledger sum — never changed without a row.
 5. Tier `included_tokens`, `booking_window_days`, and `max_simultaneous_bookings` are enforced in the API.
-6. Exactly one hoist may be `is_shop`. **v1 = (A) Owner-only** — customer bookings on that hoist return `400 shop_hoist_owner_only`. (B) bumpable is a later tweak.
+6. Exactly one hoist may be `is_shop`. A member request for that hoist stays pending until a person or an AI approves it. Bays 1–5 stay a direct booking. (B) bumpable is a later tweak.
 
 ## Domain
 

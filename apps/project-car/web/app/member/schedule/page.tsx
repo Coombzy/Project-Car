@@ -1,11 +1,12 @@
 import { MemberBookingCard } from "../../../components/member-booking-card";
 import { MemberBookingForm } from "../../../components/member-booking-form";
 import { MemberShell } from "../../../components/member-shell";
+import { ShopHoistRequestForm } from "../../../components/shop-hoist-request-form";
 import { MonthHeatmap } from "../../../components/month-heatmap";
 import { ScheduleToolbar } from "../../../components/schedule-toolbar";
 import { WeekHoistCalendars } from "../../../components/week-hoist-calendars";
 import { handleMemberPageError, shopErrorMessage } from "../../../lib/page";
-import { getMemberFill, getMemberMe, getMemberSchedule } from "../../../lib/shop-api";
+import { getMemberFill, getMemberMe, getMemberSchedule, getMemberShopHoist } from "../../../lib/shop-api";
 import {
   addDays,
   calendarTodayIso,
@@ -56,7 +57,7 @@ export default async function MemberSchedulePage({
     }
 
     let loadError: string | null = null;
-    const [schedule, fill] = await Promise.all([
+    const [schedule, fill, shopHoist] = await Promise.all([
       getMemberSchedule({
         windowStart: shopWindowQuery(window.start),
         windowEnd: shopWindowQuery(window.end),
@@ -65,6 +66,7 @@ export default async function MemberSchedulePage({
         return { hoists: [], bookings: [], occupancy: [] };
       }),
       getMemberFill().catch(() => null),
+      getMemberShopHoist().catch(() => null),
     ]);
 
     const ordered = sortHoists(schedule.hoists.filter((hoist) => !hoist.is_shop));
@@ -82,8 +84,8 @@ export default async function MemberSchedulePage({
           Customer bays only — temporary /member demo on this management alias.
           Customer app is projectcar.ca. Month is a density heat-map; week is
           an hour grid per bay. Reserve is duration × 100 × band × overlay ×
-          fill. Cancel refunds the locked reserve. The shop hoist is not on
-          this calendar.
+          fill. Cancel refunds the locked reserve. Bays 1–5 book directly.
+          The shop hoist is a request until someone approves it.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
         {loadError ? <div className="banner error">{loadError}</div> : null}
@@ -144,7 +146,7 @@ export default async function MemberSchedulePage({
           <h2>Book a customer bay</h2>
           <p className="lede">
             Quote shows band + overlay + fill + total before reserve. Book confirms the
-            slot. You cannot book the shop hoist.
+            slot. Bays book directly. The shop hoist is a separate request.
             {slot ? ` Prefilling ${slot} from the hour slot you clicked.` : ""}
           </p>
           {ordered.length === 0 ? (
@@ -162,6 +164,23 @@ export default async function MemberSchedulePage({
             />
           )}
         </section>
+
+        {shopHoist ? (
+          <section className="card" style={{ marginTop: "1.4rem" }}>
+            <h2>Request the shop hoist</h2>
+            <p className="lede">
+              This is a request, not a booking. It does not hold the hour and does not use tokens
+              until a person or an AI approves it. The shop is not open.
+            </p>
+            <ShopHoistRequestForm
+              hoist={shopHoist}
+              weekStart={weekStart}
+              defaultStart={defaultStart}
+              defaultEnd={defaultEnd}
+              returnTo={returnTo}
+            />
+          </section>
+        ) : null}
       </MemberShell>
     );
   } catch (error) {

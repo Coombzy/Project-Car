@@ -83,6 +83,17 @@ class BookingKind(str, enum.Enum):
     SHOP = "shop"
 
 
+class ActorKind(str, enum.Enum):
+    HUMAN = "human"
+    AI = "ai"
+
+
+class ShopHoistRequestStatus(str, enum.Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    DENIED = "denied"
+
+
 class TokenTransactionKind(str, enum.Enum):
     BOOKING_RESERVE = "booking_reserve"
     BOOKING_DEBIT = "booking_debit"
@@ -304,7 +315,7 @@ class Tool(Base):
 
 
 class Booking(Base):
-    """Hoist reservation. Customer rows reserve tokens; shop rows are Owner-only."""
+    """Hoist reservation. Customer bays reserve tokens. Shop-hoist hours start as requests."""
 
     __tablename__ = "bookings"
     __table_args__ = (
@@ -354,6 +365,45 @@ class Booking(Base):
 
     def __str__(self) -> str:
         return f"Booking {self.id} ({self.status.value})"
+
+
+class ShopHoistRequest(Base):
+    """A member ask for the shop hoist. Pending rows are not bookings and do not hold the hour."""
+
+    __tablename__ = "shop_hoist_requests"
+    __table_args__ = (
+        Index("ix_shop_hoist_requests_hoist_status", "hoist_id", "status"),
+        Index("ix_shop_hoist_requests_member", "member_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    member_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("members.id", ondelete="RESTRICT"), nullable=False
+    )
+    hoist_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("hoists.id", ondelete="RESTRICT"), nullable=False
+    )
+    start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    end_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    status: Mapped[ShopHoistRequestStatus] = mapped_column(
+        _enum_column(ShopHoistRequestStatus),
+        nullable=False,
+        default=ShopHoistRequestStatus.PENDING,
+    )
+    token_quote: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=Decimal("0"))
+    pricing_rule: Mapped[Optional[dict]] = mapped_column(JsonObject)
+    notes: Mapped[Optional[str]] = mapped_column(Text)
+    created_by_kind: Mapped[ActorKind] = mapped_column(_enum_column(ActorKind), nullable=False)
+    created_by_id: Mapped[str] = mapped_column(String(320), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    member: Mapped[Member] = relationship()
+    hoist: Mapped[Hoist] = relationship()
+
+    def __repr__(self) -> str:
+        return f"<ShopHoistRequest(id={self.id!r}, status={self.status!r})>"
 
 
 class TokenTransaction(Base):

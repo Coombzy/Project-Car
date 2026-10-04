@@ -50,7 +50,7 @@ export function WeekHoistCalendars({
             className={focusHoistId === hoist.id ? "is-active" : undefined}
           >
             {hoistChipLabel(hoist.name, hoist.is_shop)}
-            {hoist.is_shop ? <span className="muted"> · Owner-only</span> : null}
+            {hoist.is_shop ? <span className="muted"> · Request</span> : null}
           </a>
         ))}
       </nav>
@@ -63,7 +63,7 @@ export function WeekHoistCalendars({
           <header className="hoist-week-head">
             <h2>{hoist.name}</h2>
             <div className="hoist-pills">
-              {hoist.is_shop ? <span className="pill pill-shop">Owner-only</span> : null}
+              {hoist.is_shop ? <span className="pill pill-shop">Request</span> : null}
               <span className={`pill pill-${hoist.status}`}>{hoist.status}</span>
             </div>
           </header>

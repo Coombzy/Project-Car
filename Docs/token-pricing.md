@@ -76,7 +76,7 @@ How (A) is encoded:
 1. `hoists.is_shop` — boolean. Seed and API allow **exactly one** shop hoist.
 2. `bookings.kind` — `customer` (default) or `shop`. `kind=shop` is the Owner-only shop-work path. It may omit `member_id` and does **not** reserve member tokens.
 3. Shop work (`kind=shop`) can only be created on the shop hoist.
-4. A **customer** booking on the shop hoist is rejected at create and at confirm (`400 shop_hoist_owner_only`). Customers use the five customer bays.
+4. A **customer** use of the shop hoist is a pending request, not a booking. It does not reserve tokens until a person or an AI approves it. Bays 1–5 stay a direct booking.
 
 Owner schedule shows the shop hoist and `kind=shop` chips so the week grid matches this rule. Re-seed notes: 6 bays + one Owner-only shop hoist.
 

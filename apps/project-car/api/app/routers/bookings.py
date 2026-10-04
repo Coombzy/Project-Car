@@ -4,12 +4,12 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.deps import DbSession, Owner
-from app.models import Booking, BookingStatus
+from app.models import ActorKind, Booking, BookingKind, BookingStatus, Hoist, ShopHoistRequestStatus
 from app.schemas import (
     BookingComplete,
     BookingCreate,
@@ -17,8 +17,10 @@ from app.schemas import (
     BookingQuoteOut,
     BookingQuoteRequest,
     PricingRuleOut,
+    ShopHoistRequestOut,
 )
 from app.services import bookings as booking_service
+from app.services.shop_hoist_requests import create_shop_hoist_request, list_shop_hoist_requests
 from app.shop_time import as_utc
 
 router = APIRouter(tags=["bookings"])
@@ -88,8 +90,39 @@ def quote_booking(body: BookingQuoteRequest, session: DbSession, _owner: Owner) 
     )
 
 
-@router.post("/bookings", response_model=BookingOut, status_code=201)
-def create_booking(body: BookingCreate, session: DbSession, _owner: Owner) -> BookingOut:
+@router.get("/shop-hoist-requests", response_model=list[ShopHoistRequestOut])
+def list_owner_shop_hoist_requests(
+    session: DbSession,
+    _owner: Owner,
+    status: ShopHoistRequestStatus | None = None,
+) -> list[ShopHoistRequestOut]:
+    rows = list_shop_hoist_requests(session, status=status)
+    return [ShopHoistRequestOut.from_row(row) for row in rows]
+
+
+@router.post("/bookings", status_code=201)
+def create_booking(
+    body: BookingCreate, session: DbSession, owner: Owner
+) -> BookingOut | ShopHoistRequestOut:
+    if body.kind == BookingKind.CUSTOMER:
+        hoist = session.get(Hoist, body.hoist_id)
+        if hoist is not None and hoist.is_shop:
+            if body.member_id is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"code": "member_required", "message": "A shop hoist request needs a member."},
+                )
+            row = create_shop_hoist_request(
+                session,
+                member_id=body.member_id,
+                hoist_id=body.hoist_id,
+                start_at=body.start_at,
+                end_at=body.end_at,
+                notes=body.notes,
+                created_by_kind=ActorKind.HUMAN,
+                created_by_id=owner.email,
+            )
+            return ShopHoistRequestOut.from_row(row)
     booking = booking_service.create_booking(
         session,
         member_id=body.member_id,

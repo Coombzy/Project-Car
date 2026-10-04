@@ -163,8 +163,8 @@ def create_booking(
     if hoist.is_shop:
         raise _error(
             400,
-            "shop_hoist_owner_only",
-            "The shop hoist is Owner-only. Customer bookings use the five customer bays.",
+            "shop_hoist_request_required",
+            "The shop hoist takes a request. It is not a booking until a person or an AI approves it.",
         )
 
     window = timedelta(days=member.tier.booking_window_days)
@@ -263,8 +263,8 @@ def confirm_booking(session: Session, booking_id: UUID) -> Booking:
     if booking.kind == BookingKind.CUSTOMER and booking.hoist.is_shop:
         raise _error(
             400,
-            "shop_hoist_owner_only",
-            "The shop hoist is Owner-only. Customer bookings use the five customer bays.",
+            "shop_hoist_approval_required",
+            "A shop hoist request is not a booking until a person or an AI approves it.",
         )
     if hoist_has_overlap(
         session,

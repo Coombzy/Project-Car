@@ -123,7 +123,7 @@ const BAY_KIT_TEMPLATE = [
 
 function bayNote(bay: BayPrefix, category: string): string {
   if (bay === "B6") {
-    return "Shop-hoist resident kit (B6, not SH). Owner-only bay. Stays on the cart.";
+    return "Shop-hoist resident kit (B6, not SH). Members request the hour. Stays on the cart.";
   }
   if (bay === "B2" && category === "PL") {
     return "Placeholder missing row — kit is still bay-resident, not a crib checkout.";

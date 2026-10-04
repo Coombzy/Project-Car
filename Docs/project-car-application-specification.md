@@ -112,7 +112,7 @@ These rules are the product, not an implementation detail.
 5. Overdue bookings do not auto-charge money in v1. They flip to `overdue` and can open an `Incident` (`late_return`) for the Owner to review.
 6. Cancelled bookings refund any remaining reserve.
 7. Tier fields (`included_tokens`, `booking_window_days`, `max_simultaneous_bookings`) are enforced in the API, not only in the UI.
-8. **Shop hoist — v1 choice (A).** Exactly one hoist is `is_shop`. **Owner-only:** customers cannot book it (`400 shop_hoist_owner_only`). Only Owner `kind=shop` landings. **(B) bumpable** (customer overflow, shop work displaces) is a later tweak — do not implement displace/refund-on-bump in v1. No public booking. No Stripe. See `token-pricing.md`.
+8. **Shop hoist — Ben lock 2026-10-04.** Exactly one hoist is `is_shop`. A member can request it. The request is pending until a person or an AI approves it. A pending request is not a booking, does not hold the hour, and does not move tokens. Bays 1–5 stay a direct booking. Owner `kind=shop` landings stay shop work. **(B) bumpable** (customer overflow, shop work displaces) is a later tweak — do not implement displace/refund-on-bump. No public booking. No Stripe. See `token-pricing.md`.
 
 Dollar prices and tier **names** stay Owner-editable. Slot cost is **not** an arbitrary Owner-entered reserve amount — see §5.1. Seed allotment placeholders: Basic **1000** / Premium **1500** per period (`token-pricing.md`). Two tiers, not three. No Pro. No Weekly.
 

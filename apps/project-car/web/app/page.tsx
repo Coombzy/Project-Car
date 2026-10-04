@@ -32,7 +32,7 @@ export default async function DashboardPage({
               <p className="eyebrow">Owner · demo</p>
               <h1>Shop dashboard</h1>
               <p className="lede">
-                Next 24 hours on Bays 1–6 (Bay 6 is the Owner-only shop hoist). Times are
+                Next 24 hours on Bays 1–6 (Bay 6 is the shop hoist; members request it). Times are
                 America/Regina. Seeded sample data — the shop is not open.
               </p>
             </div>

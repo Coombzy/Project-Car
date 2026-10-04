@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationError, field_validator
 
 from app.models import (
+    ActorKind,
     BookingKind,
     BookingStatus,
     ChatSenderRole,
@@ -15,6 +17,7 @@ from app.models import (
     NotificationChannel,
     NotificationStatus,
     PartsOrderStatus,
+    ShopHoistRequestStatus,
     TodoStatus,
     TokenTransactionKind,
 )
@@ -666,3 +669,52 @@ class ChatMuteRequest(BaseModel):
 class ChatMessagePage(BaseModel):
     messages: list[ChatMessageOut]
     cursor: UUID | None = None
+
+
+class ShopHoistRequestOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    record: Literal["shop_hoist_request"] = "shop_hoist_request"
+    id: UUID
+    member_id: UUID
+    member_name: str
+    hoist_id: UUID
+    hoist_name: str
+    start_at: datetime
+    end_at: datetime
+    status: ShopHoistRequestStatus
+    token_quote: Decimal
+    pricing_rule: PricingRuleOut | None = None
+    notes: str | None
+    created_by_kind: ActorKind
+    created_by_id: str
+    created_at: datetime
+
+    @classmethod
+    def from_row(cls, row) -> ShopHoistRequestOut:
+        hoist = getattr(row, "hoist", None)
+        member = getattr(row, "member", None)
+        raw = row.pricing_rule
+        rule = None
+        if raw:
+            try:
+                rule = PricingRuleOut.model_validate(raw)
+            except ValidationError:
+                rule = None
+        return cls(
+            record="shop_hoist_request",
+            id=row.id,
+            member_id=row.member_id,
+            member_name=member.name if member is not None else "Member",
+            hoist_id=row.hoist_id,
+            hoist_name=hoist.name if hoist is not None else "Shop hoist",
+            start_at=row.start_at,
+            end_at=row.end_at,
+            status=row.status,
+            token_quote=row.token_quote,
+            pricing_rule=rule,
+            notes=row.notes,
+            created_by_kind=row.created_by_kind,
+            created_by_id=row.created_by_id,
+            created_at=row.created_at,
+        )
