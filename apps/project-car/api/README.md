@@ -117,6 +117,8 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `GET` | `/member/chat/rooms/{id}` | Member | Own room detail |
 | `GET/POST` | `/member/chat/rooms/{id}/messages` | Member | Poll (`after_id`) / reply |
 | `GET` | `/member/dashboard` | Member | Own todos + next-24h hours on bays the member booked |
+| `GET/POST` | `/member/parts-requests` | Member | Own PT parts requests. A post stores one row. Not checkout. |
+| `GET` | `/parts-requests` | Owner | Stored member parts requests |
 | `GET/POST` | `/todos` | Owner or Member | Personal to-do list (scoped to the session) |
 | `GET/PATCH/DELETE` | `/todos/{id}` | Owner or Member | Own to-do only |
 | `GET` | `/todos/{id}/ics` | Owner or Member | ICS download for a due date (`America/Regina`) |

@@ -86,7 +86,7 @@ After the same seed:
 | Email | `ada.reyes@example.com` |
 | Password | `changeme` |
 
-Open `/member/login`, then Home (tokens + ledger, personal to-dos + ICS, next-24h hours only on bays you booked), Schedule (Bays 1–5 month heat-map + weekly hour grids, band + overlay + total, book / cancel), Chat (own rooms only; Owner starts them), and the customer-facing Parts **request desk** / Job board / primary-camera **placeholders**. Parts is requests only (PT / TC SKUs) — not a storefront. Bay 6 is not on the Member calendar. Not OIDC. This `/member` park is temporary — customer app is `projectcar.ca`; management’s intended name is `ops.projectcar.ca`.
+Open `/member/login`, then Home (tokens + ledger, personal to-dos + ICS, next-24h hours only on bays you booked), Schedule (Bays 1–5 month heat-map + weekly hour grids, band + overlay + total, book / cancel), Chat (own rooms only; Owner starts them), and the customer-facing Parts request desk / Job board / primary-camera placeholders. A PT parts request stores a row. Crib tool checkout is not started. Parts is not a storefront. Bay 6 is not on the Member calendar. Not OIDC. This `/member` park is temporary — customer app is `projectcar.ca`; management’s intended name is `ops.projectcar.ca`.
 
 Re-seed anytime from the API directory: `python -m app.seed --reset`. See `../api/README.md`.
 

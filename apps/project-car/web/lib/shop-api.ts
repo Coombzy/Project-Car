@@ -20,6 +20,7 @@ import {
   type MemberSelf,
   type MembershipTier,
   type NotificationOutbox,
+  type PartsRequest,
   type Principal,
   type Todo,
   type TokenTransaction,
@@ -114,6 +115,10 @@ export async function getMe(): Promise<Principal> {
 
 export async function getDashboard(): Promise<Dashboard> {
   return shopJson<Dashboard>("/dashboard", "Could not load the dashboard.");
+}
+
+export async function listPartsRequests(): Promise<PartsRequest[]> {
+  return shopJson<PartsRequest[]>("/parts-requests", "Could not load parts requests.");
 }
 
 export async function listTodos(): Promise<Todo[]> {
@@ -439,6 +444,28 @@ export async function getMemberDashboard(): Promise<MemberDashboard> {
 
 export async function listMemberTodos(): Promise<Todo[]> {
   return memberJson<Todo[]>("/todos", "Could not load to-dos.");
+}
+
+export async function listMemberPartsRequests(): Promise<PartsRequest[]> {
+  return memberJson<PartsRequest[]>(
+    "/member/parts-requests",
+    "Could not load parts requests.",
+  );
+}
+
+export async function createMemberPartsRequest(payload: {
+  sku: string;
+  note?: string;
+}): Promise<PartsRequest> {
+  return memberJson<PartsRequest>(
+    "/member/parts-requests",
+    "Could not store the parts request.",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 export async function createMemberTodo(payload: Record<string, unknown>): Promise<Todo> {
