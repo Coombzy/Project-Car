@@ -4,7 +4,7 @@ Ben asked for this on 2026-10-03. Build does not stop between items. A green che
 
 ## Order
 
-1. Remove the demo password from the public README and the web README. The seed refuses `changeme` unless the host is loopback.
+1. Remove the demo password from the public README and the web README. The seed refuses that password unless the host is loopback.
 2. Stamp `Docs/STATUS.md` so the finance tip and the product tip are separate. The product brochure tip stays `#82`. Doc stays `795f301` until Ben says pull.
 3. Member login and a booking screen on the customer host, on git. Zone path-split stays a plan until Ben says go.
 4. Leave cameras, jobs, parts checkout, and Stripe. Those wait until a person has a bay.
