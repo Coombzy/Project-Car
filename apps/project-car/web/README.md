@@ -55,11 +55,11 @@ npm run dev
 | Chat (Owner/ops, human / polling) | http://localhost:3000/chat |
 | Parts (ops PT stock + PO stub) | http://localhost:3000/parts |
 | Tools (ops B1–B6 kits + TC crib) | http://localhost:3000/tools |
-| Job board (placeholder) | http://localhost:3000/jobs |
+| Job board (claim and done rows) | http://localhost:3000/jobs |
 | Cameras (placeholder) | http://localhost:3000/cameras |
 | Payments (ops placeholder) | http://localhost:3000/payments |
 | Member parts (request desk) | http://localhost:3000/member/parts |
-| Member job board (placeholder) | http://localhost:3000/member/jobs |
+| Member job board (claim and done rows) | http://localhost:3000/member/jobs |
 | Member camera (primary only) | http://localhost:3000/member/cameras |
 | Member chat (own rooms) | http://localhost:3000/member/chat |
 | Shop API | http://127.0.0.1:8000 |
@@ -75,7 +75,7 @@ The login screen is pre-filled and labeled as a **demo**. After `python -m app.s
 | Email | `owner@projectcar.ca` |
 | Password | `changeme` |
 
-These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (Bays 1–6 next-24h strips — Bay 6 is the Owner-only shop hoist — personal to-dos + ICS, current parts POs, token-at-risk; no “Today’s bookings” list), Schedule (month heat-map, then week-by-hoist hour grids), Members (Basic / Premium), Hoists, Waitlist (mark contacted), Tiers (edit allowances), Fill gaps (next-day openings + notify), Chat (Owner starts rooms; see-all + mute; not Matrix), and the Parts / Tools / Job board / Cameras / Payments **placeholders**. Tools = B1–B6 bay kits + TC crib (demo SKUs). Parts = PT qty / reorder + dashboard PO strip. Not live purchasing, QR checkout, Frigate, or Stripe. Re-seed notes: Bay 1–6 + one Owner-only shop hoist on Bay 6 (v1 choice A). B6 is the shop-hoist kit prefix — not `SH`.
+These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (Bays 1–6 next-24h strips — Bay 6 is the Owner-only shop hoist — personal to-dos + ICS, current parts POs, token-at-risk; no “Today’s bookings” list), Schedule (month heat-map, then week-by-hoist hour grids), Members (Basic / Premium), Hoists, Waitlist (mark contacted), Tiers (edit allowances), Fill gaps (next-day openings + notify), Chat (Owner starts rooms; see-all + mute; not Matrix), and the Parts / Tools / Job board / Cameras / Payments screens. Tools = B1–B6 bay kits + TC crib (demo SKUs). Parts = PT qty / reorder + dashboard PO strip. The job board lists claim and done rows; the sample table stays a sample. Not live purchasing, QR checkout, Frigate, or Stripe. The shop is not open. Re-seed notes: Bay 1–6 + one Owner-only shop hoist on Bay 6 (v1 choice A). B6 is the shop-hoist kit prefix — not `SH`.
 
 ### Demo Member — Ada on localhost
 
@@ -86,7 +86,7 @@ After the same seed:
 | Email | `ada.reyes@example.com` |
 | Password | `changeme` |
 
-Open `/member/login`, then Home (tokens + ledger, personal to-dos + ICS, next-24h hours only on bays you booked), Schedule (Bays 1–5 month heat-map + weekly hour grids, band + overlay + total, book / cancel), Chat (own rooms only; Owner starts them), and the customer-facing Parts **request desk** / Job board / primary-camera **placeholders**. Parts is requests only (PT / TC SKUs) — not a storefront. Bay 6 is not on the Member calendar. Not OIDC. This `/member` park is temporary — customer app is `projectcar.ca`; management’s intended name is `ops.projectcar.ca`.
+Open `/member/login`, then Home (tokens + ledger, personal to-dos + ICS, next-24h hours only on bays you booked), Schedule (Bays 1–5 month heat-map + weekly hour grids, band + overlay + total, book / cancel), Chat (own rooms only; Owner starts them), and the customer-facing Parts **request desk** / Job board / primary-camera screens. Parts is requests only (PT / TC SKUs) — not a storefront. The job board stores a claim row and a done row; it does not credit tokens. Bay 6 is not on the Member calendar. Not OIDC. The shop is not open. This `/member` park is temporary — customer app is `projectcar.ca`; management’s intended name is `ops.projectcar.ca`.
 
 Re-seed anytime from the API directory: `python -m app.seed --reset`. See `../api/README.md`.
 
@@ -104,4 +104,4 @@ On **`projectcar.ca` / `www` only**, middleware allows `/member` and `/member/*`
 
 ## Out of scope
 
-Website / apex / Cloudflare, Mission Control, Stripe live charges, NFC, live Frigate / NVR wiring, full parts purchase / eBay, live tool QR / checkout hardware, job claim-complete, Member/Staff OIDC, n8n. Breadth-first placeholder pages (Parts, Tools, Job board, Cameras, Payments) are in the demo UI only. Inventory prefixes are locked (B1–B6 / TC / PT; CM later).
+Website / apex / Cloudflare, Mission Control, Stripe live charges, NFC, live Frigate / NVR wiring, full parts purchase / eBay, live tool QR / checkout hardware, token credit when a job is marked done, Member/Staff OIDC, n8n. Breadth-first placeholder pages (Parts, Tools, Cameras, Payments) stay in the demo UI. Job claim and done store rows; the sample job table is not those rows. Inventory prefixes are locked (B1–B6 / TC / PT; CM later). The shop is not open.

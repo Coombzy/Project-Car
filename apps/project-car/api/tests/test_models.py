@@ -31,6 +31,7 @@ def test_all_models_import() -> None:
         "todos",
         "parts_orders",
         "calendar_connections",
+        "job_events",
     ]
 
 

@@ -126,6 +126,10 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `POST` | `/member/bookings` | Member | Create own customer booking |
 | `POST` | `/member/bookings/{id}/confirm` | Member | Confirm own pending booking |
 | `POST` | `/member/bookings/{id}/cancel` | Member | Cancel own booking, refund reserve |
+| `GET` | `/jobs/events` | Owner | Job claim and done rows, newest first |
+| `GET` | `/member/jobs/events` | Member | Own claim and done rows |
+| `POST` | `/member/jobs/claims` | Member | Store one claim row for a posted job |
+| `POST` | `/member/jobs/done` | Member | Store one done row for that member’s open claim |
 
 Owner auth is the v1 stub from the product spec (email + password **or** `Authorization: Bearer $OWNER_API_SECRET`). Member auth is a parallel session cookie (`pc_member_session`) — email must match a `members` row; password is `MEMBER_DEMO_PASSWORD`. Neither is OIDC.
 
@@ -169,7 +173,7 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 
 ## Domain
 
-Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work. `20260906_0005` adds `fill_offers` and `notification_outbox`. `20260906_0006` adds `chat_rooms`, `chat_participants`, and `chat_messages`. `20260906_0007` adds `todos`, `parts_orders` (PT SKU / PO stubs), and `calendar_connections` (OAuth scaffold).
+Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work. `20260906_0005` adds `fill_offers` and `notification_outbox`. `20260906_0006` adds `chat_rooms`, `chat_participants`, and `chat_messages`. `20260906_0007` adds `todos`, `parts_orders` (PT SKU / PO stubs), and `calendar_connections` (OAuth scaffold). `20261004_0010` adds `job_events`: a claim row and a done row. It revises `20260906_0007`. A done row does not write `token_transactions`. Tool checkout, parts requests, and chat are not this table.
 
 Membership tier seed rows (Basic 1000 / Premium 1500) are placeholders only. Two tiers in fixtures.
 

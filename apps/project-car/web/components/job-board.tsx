@@ -8,13 +8,16 @@ export function JobBoard({ audience }: { audience: "member" | "ops" }) {
         <p className="eyebrow">Pay model (locked)</p>
         <p className="lede" style={{ marginBottom: 0 }}>
           Ops posts the job and sets a <strong>token bounty</strong>. A member
-          claims it and completes the chore (cleaning, tool maintenance, random
-          upkeep). Complete credits that bounty to the member’s{" "}
-          <strong>append-only token ledger</strong> — same token system as hoist
-          booking, not Stripe. Claim / complete stay Later; amounts below are
-          the lock.
+          claims it and marks it done. Each of those stores a row. Done does
+          not credit the token ledger. The amounts below stay the model lock,
+          not a Stripe charge. The shop is not open.
         </p>
       </div>
+      <p className="muted">
+        {audience === "ops"
+          ? "Sample rows. They are not stored claims. The shop is not open."
+          : "Sample rows. Claim and done use the forms above. The shop is not open."}
+      </p>
       <div className="card">
         <table>
           <thead>
@@ -49,9 +52,7 @@ export function JobBoard({ audience }: { audience: "member" | "ops" }) {
                 <td className="notes">{job.note}</td>
                 <td>
                   <button type="button" disabled>
-                    {audience === "ops"
-                      ? "Post / assign (later)"
-                      : "Claim / complete (later)"}
+                    Sample only
                   </button>
                 </td>
               </tr>

@@ -14,12 +14,13 @@ from __future__ import annotations
 
 import enum
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Optional
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Date,
     DateTime,
     Enum as SAEnum,
@@ -53,6 +54,10 @@ def _enum_column(enum_cls: type[enum.Enum], *, length: int = 32) -> SAEnum:
 JsonList = JSON().with_variant(JSONB(), "postgresql")
 JsonObject = JSON().with_variant(JSONB(), "postgresql")
 UuidPk = Uuid(as_uuid=True).with_variant(UUID(as_uuid=True), "postgresql")
+
+
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class MemberStatus(str, enum.Enum):
@@ -152,6 +157,11 @@ class CalendarProvider(str, enum.Enum):
     APPLE = "apple"
 
 
+class JobEventKind(str, enum.Enum):
+    CLAIM = "claim"
+    DONE = "done"
+
+
 class MembershipTier(Base):
     """Membership plan. Prices and token allowances are data, not UI copy."""
 
@@ -241,6 +251,7 @@ class Member(Base):
     notifications: Mapped[list[NotificationOutbox]] = relationship(back_populates="member")
     chat_participations: Mapped[list[ChatParticipant]] = relationship(back_populates="member")
     todos: Mapped[list[Todo]] = relationship(back_populates="member")
+    job_events: Mapped[list[JobEvent]] = relationship(back_populates="member")
 
     def __repr__(self) -> str:
         return f"<Member(id={self.id!r}, email={self.email!r})>"
@@ -835,6 +846,47 @@ class CalendarConnection(Base):
         return f"<CalendarConnection(provider={self.provider!r}, status={self.status!r})>"
 
 
+class JobEvent(Base):
+    """Append-only job ledger. A claim stores one row. Done stores another."""
+
+    __tablename__ = "job_events"
+    __table_args__ = (
+        CheckConstraint(
+            "(kind = 'claim' AND claim_id IS NULL) OR (kind = 'done' AND claim_id IS NOT NULL)",
+            name="ck_job_events_kind",
+        ),
+        UniqueConstraint("claim_id", name="uq_job_events_claim_id"),
+        Index("ix_job_events_job_created", "job_key", "created_at"),
+        Index("ix_job_events_member_created", "member_id", "created_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    member_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("members.id", ondelete="RESTRICT"), nullable=False
+    )
+    job_key: Mapped[str] = mapped_column(String(80), nullable=False)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    kind: Mapped[JobEventKind] = mapped_column(
+        _enum_column(JobEventKind),
+        nullable=False,
+    )
+    note: Mapped[Optional[str]] = mapped_column(Text)
+    claim_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("job_events.id", ondelete="RESTRICT")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=_utc_now,
+        server_default=func.now(),
+    )
+
+    member: Mapped[Member] = relationship(back_populates="job_events")
+
+    def __repr__(self) -> str:
+        return f"<JobEvent(id={self.id!r}, kind={self.kind!r}, job_key={self.job_key!r})>"
+
+
 ALL_MODELS = [
     MembershipTier,
     Member,
@@ -854,6 +906,7 @@ ALL_MODELS = [
     Todo,
     PartsOrder,
     CalendarConnection,
+    JobEvent,
 ]
 
 
