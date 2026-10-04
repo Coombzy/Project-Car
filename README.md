@@ -59,7 +59,7 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 Second terminal: `cd apps/project-car/web && cp .env.example .env.local && npm install && npm run dev`
 
-Open http://localhost:3000 and sign in with demo Owner `owner@projectcar.ca` / `changeme`. Re-seed with `python -m app.seed --reset`. Full steps: [`apps/project-car/web/README.md`](apps/project-car/web/README.md) and [`apps/project-car/api/README.md`](apps/project-car/api/README.md).
+Open http://localhost:3000 and sign in as the demo Owner (`owner@projectcar.ca`). The seed accepts that login only when the database host is loopback. Re-seed with `python -m app.seed --reset`. Full steps: [`apps/project-car/web/README.md`](apps/project-car/web/README.md) and [`apps/project-car/api/README.md`](apps/project-car/api/README.md).
 
 ## Engineering clone
 
