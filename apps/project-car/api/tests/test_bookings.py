@@ -238,15 +238,20 @@ def test_two_bookings_cannot_take_the_same_bay_hour(client: TestClient) -> None:
 
     open_on_bay = client.get("/bookings", headers=AUTH, params={"hoist_id": bay["id"]})
     assert open_on_bay.status_code == 200
+    freed_body = freed.json()
+    # Compare stored instants to each other. SQLite echoes naive UTC, so do not
+    # mix those strings with the original shop-local request values.
+    window_start = as_utc(datetime.fromisoformat(freed_body["start_at"]))
+    window_end = as_utc(datetime.fromisoformat(freed_body["end_at"]))
     holders = []
     for row in open_on_bay.json():
         if row["status"] not in {"pending", "confirmed", "active", "overdue"}:
             continue
         row_start = as_utc(datetime.fromisoformat(row["start_at"]))
         row_end = as_utc(datetime.fromisoformat(row["end_at"]))
-        if row_start < as_utc(hour_end) and row_end > as_utc(hour):
+        if row_start < window_end and row_end > window_start:
             holders.append(row["id"])
-    assert holders == [freed.json()["id"]]
+    assert holders == [freed_body["id"]]
 
 
 def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None:
