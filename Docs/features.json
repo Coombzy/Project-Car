@@ -1,0 +1,35 @@
+{
+  "passes_rule": "Every feature starts with passes set to false. Only Lead may set passes to true. Build must not set any passes value to true.",
+  "features": [
+    {
+      "id": "booking",
+      "title": "Bay booking",
+      "passes": false,
+      "on_main": "A member can book bays 1 to 5. Two bookings cannot take the same hour once that proof is on main."
+    },
+    {
+      "id": "shop-hoist-request",
+      "title": "Shop hoist request",
+      "passes": false,
+      "on_main": "A member can request the shop hoist. It stays pending until an Owner or an approved bot confirms it."
+    },
+    {
+      "id": "parts-request",
+      "title": "Parts request",
+      "passes": false,
+      "on_main": "A member parts request is a row. It is not a checkout."
+    },
+    {
+      "id": "crib",
+      "title": "Tool crib",
+      "passes": false,
+      "on_main": "A checkout and a return are rows. A camera feed is not in."
+    },
+    {
+      "id": "jobs",
+      "title": "Jobs",
+      "passes": false,
+      "on_main": "A claim and a done mark are rows."
+    }
+  ]
+}
