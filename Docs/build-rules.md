@@ -2,7 +2,11 @@
 
 Same instruction file as pBay `Docs/build-rules.md`. The proof tool is the shop test suite, not `npm run v0-proof`.
 
-The suite is the sign-off. The writer does not sign off. Write the failing proof, run it red, then write the code. The proof and the code land in the same commit. A reload must show the stored row.
+The suite is the sign-off. The writer does not sign off. A failing check cannot merge. A branch pass is not enough. The checks are `shop-api pytest` and `shop-web lint / typecheck / build`.
+
+The failing proof runs before the feature code. The red output is in the pass. Then the code makes it green, in the same pull request. A reload must show the stored row.
+
+Do not add a review note. Do not auto-apply review-bot comments. Do not add a review bot that merges its own suggestions.
 
 No open pull request is not idle. Read `Docs/queue.md` and start the next row. A status check does not ping. A missing token is a skip. An unwritten local case is built the safe way and named in `Docs/later.md`.
 
