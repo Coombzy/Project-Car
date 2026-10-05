@@ -1,11 +1,13 @@
 # Build rules
 
-Same six rules as pBay `Docs/build-rules.md`. Updated 2026-10-04. The proof tool is the shop test suite.
+Same instruction file as pBay `Docs/build-rules.md`. The proof tool is the shop test suite, not `npm run v0-proof`.
 
-No open pull request is not idle. Read `Docs/queue.md`. A draft is not done. Merge it before another agent starts on the same files.
+The suite is the sign-off. The writer does not sign off. Write the failing proof, run it red, then write the code. The proof and the code land in the same commit. A reload must show the stored row.
 
-An unwritten local case is built the safe way and named in `Docs/later.md`. Ask only when two real options change money, a host, or a public claim. A missing token is not a blocker.
+No open pull request is not idle. Read `Docs/queue.md` and start the next row. A status check does not ping. A missing token is a skip. An unwritten local case is built the safe way and named in `Docs/later.md`.
 
-A proof is in the same commit. A reload must show the stored row. `passes` false does not stop the next row.
+Build leaves `passes` false until Ben has seen the screen. That does not stop the next row.
 
-A migration does not branch from the same parent as an open pull request. This repo is second until the pBay queue is on `main`. Do not deploy Doc. Do not add Stripe. Do not say the shop is open.
+One writer on shared files. A second agent only gets a worktree that does not touch the same migration. One migration at a time. Do not add a review note for a pass.
+
+Do not deploy Doc. Do not add Stripe. Do not say the shop is open. This repo is second only while pBay `Docs/queue.md` has an open row.
