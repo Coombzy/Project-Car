@@ -26,7 +26,18 @@ from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
 
 OPEN_STATUSES = (BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.ACTIVE)
-OVERLAP_STATUSES = (BookingStatus.CONFIRMED, BookingStatus.ACTIVE)
+# Confirmed, active, and overdue already own the hour. Confirm checks these so a
+# second pending row left from older data can still lose with 409, without two
+# pending rows blocking each other.
+OVERLAP_STATUSES = (BookingStatus.CONFIRMED, BookingStatus.ACTIVE, BookingStatus.OVERDUE)
+# A bay hour is taken as soon as a booking exists. Cancelled and completed release it.
+HOLDING_STATUSES = (
+    BookingStatus.PENDING,
+    BookingStatus.CONFIRMED,
+    BookingStatus.ACTIVE,
+    BookingStatus.OVERDUE,
+)
+BAY_HOUR_TAKEN = "That bay already has a booking on this hour."
 UNAVAILABLE_HOIST = (HoistStatus.MAINTENANCE, HoistStatus.LOCKED)
 
 
@@ -52,16 +63,38 @@ def hoist_has_overlap(
     end_at: datetime,
     *,
     exclude_id: UUID | None = None,
+    statuses: tuple[BookingStatus, ...] = OVERLAP_STATUSES,
 ) -> bool:
+    """True when this hoist already holds any instant in [start_at, end_at)."""
     stmt = select(Booking.id).where(
         Booking.hoist_id == hoist_id,
-        Booking.status.in_(OVERLAP_STATUSES),
+        Booking.status.in_(statuses),
         Booking.start_at < end_at,
         Booking.end_at > start_at,
     )
     if exclude_id is not None:
         stmt = stmt.where(Booking.id != exclude_id)
     return session.scalars(stmt).first() is not None
+
+
+def _reject_if_bay_hour_taken(
+    session: Session,
+    hoist_id: UUID,
+    start_at: datetime,
+    end_at: datetime,
+    *,
+    exclude_id: UUID | None = None,
+    statuses: tuple[BookingStatus, ...] = HOLDING_STATUSES,
+) -> None:
+    if hoist_has_overlap(
+        session,
+        hoist_id,
+        start_at,
+        end_at,
+        exclude_id=exclude_id,
+        statuses=statuses,
+    ):
+        raise _error(409, "hoist_overlap", BAY_HOUR_TAKEN)
 
 
 def _open_booking_count(session: Session, member_id: UUID) -> int:
@@ -185,6 +218,8 @@ def create_booking(
     if Decimal(member.token_balance) < tokens:
         raise _error(400, "insufficient_tokens", "Member does not have enough tokens to reserve.")
 
+    _reject_if_bay_hour_taken(session, hoist.id, start_at, end_at)
+
     booking = Booking(
         member_id=member.id,
         hoist_id=hoist.id,
@@ -231,12 +266,7 @@ def _create_shop_booking(
         if member is None:
             raise _error(404, "not_found", "Member not found.")
 
-    if hoist_has_overlap(session, hoist.id, start_at, end_at):
-        raise _error(
-            409,
-            "hoist_overlap",
-            "That hoist already has a confirmed or active booking in this window.",
-        )
+    _reject_if_bay_hour_taken(session, hoist.id, start_at, end_at)
 
     booking = Booking(
         member_id=member.id if member is not None else None,
@@ -266,14 +296,14 @@ def confirm_booking(session: Session, booking_id: UUID) -> Booking:
             "shop_hoist_owner_only",
             "The shop hoist is Owner-only. Customer bookings use the five customer bays.",
         )
-    if hoist_has_overlap(
+    _reject_if_bay_hour_taken(
         session,
         booking.hoist_id,
         booking.start_at,
         booking.end_at,
         exclude_id=booking.id,
-    ):
-        raise _error(409, "hoist_overlap", "That hoist already has a confirmed or active booking in this window.")
+        statuses=OVERLAP_STATUSES,
+    )
     booking.status = BookingStatus.CONFIRMED
     session.add(booking)
     session.flush()

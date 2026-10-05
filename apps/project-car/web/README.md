@@ -70,10 +70,7 @@ npm run dev
 
 The login screen is pre-filled and labeled as a **demo**. After `python -m app.seed`, the app is not an empty waitlist:
 
-| Field | Local default |
-|-------|----------------|
-| Email | `owner@projectcar.ca` |
-| Password | `changeme` |
+The Owner email and password stay in the API env. They are not listed here. The seed refuses the demo password unless the host is loopback.
 
 These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (Bays 1–6 next-24h strips — Bay 6 is the Owner-only shop hoist — personal to-dos + ICS, current parts POs, token-at-risk; no “Today’s bookings” list), Schedule (month heat-map, then week-by-hoist hour grids), Members (Basic / Premium), Hoists, Waitlist (mark contacted), Tiers (edit allowances), Fill gaps (next-day openings + notify), Chat (Owner starts rooms; see-all + mute; not Matrix), and the Parts / Tools / Job board / Cameras / Payments **placeholders**. Tools = B1–B6 bay kits + TC crib (demo SKUs). Parts = PT qty / reorder + dashboard PO strip. Not live purchasing, QR checkout, Frigate, or Stripe. Re-seed notes: Bay 1–6 + one Owner-only shop hoist on Bay 6 (v1 choice A). B6 is the shop-hoist kit prefix — not `SH`.
 
@@ -81,10 +78,7 @@ These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Da
 
 After the same seed:
 
-| Field | Local default |
-|-------|----------------|
-| Email | `ada.reyes@example.com` |
-| Password | `changeme` |
+The member password stays in `MEMBER_DEMO_PASSWORD`. It is not listed here. The seed refuses the demo password unless the host is loopback. A seeded active member email can sign in on loopback.
 
 Open `/member/login`, then Home (tokens + ledger, personal to-dos + ICS, next-24h hours only on bays you booked), Schedule (Bays 1–5 month heat-map + weekly hour grids, band + overlay + total, book / cancel), Chat (own rooms only; Owner starts them), and the customer-facing Parts request desk / Job board / primary-camera placeholders. A PT parts request stores a row. Crib tool checkout is not started. Parts is not a storefront. Bay 6 is not on the Member calendar. Not OIDC. This `/member` park is temporary — customer app is `projectcar.ca`; management’s intended name is `ops.projectcar.ca`.
 
