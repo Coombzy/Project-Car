@@ -1,11 +1,11 @@
 # Build rules
 
-Same role as pBay `Docs/build-rules.md`. The proof tool is the shop test suite, not the pBay npm scripts.
+Same six rules as pBay `Docs/build-rules.md`. Updated 2026-10-04. The proof tool is the shop test suite.
 
-Read `Docs/queue.md` before code. If it disagrees with `Docs/work.md`, `Docs/queue.md` wins.
+No open pull request is not idle. Read `Docs/queue.md`. A draft is not done. Merge it before another agent starts on the same files.
 
-A button that says saved must return a row. A reload must show that row. A proof is in the same commit.
+An unwritten local case is built the safe way and named in `Docs/later.md`. Ask only when two real options change money, a host, or a public claim. A missing token is not a blocker.
 
-A migration does not branch from the same parent as an open pull request. Wait until the previous migration is on `main`.
+A proof is in the same commit. A reload must show the stored row. `passes` false does not stop the next row.
 
-One writer. Do not deploy Doc. Do not add Stripe. Do not say the shop is open.
+A migration does not branch from the same parent as an open pull request. This repo is second until the pBay queue is on `main`. Do not deploy Doc. Do not add Stripe. Do not say the shop is open.
