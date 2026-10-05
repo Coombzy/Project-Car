@@ -66,3 +66,19 @@ def test_queue_scripts_read_the_fixture_queue(tmp_path: Path) -> None:
         "| Queue check failed on PR 41 grok-build/fixture; leave the pull request open | proof | |\n"
     ), red.stdout
     assert "merge" not in red.stdout
+
+
+def test_next_row_reads_the_shop_queue(tmp_path: Path) -> None:
+    real = (ROOT / "Docs" / "queue.md").read_text()
+    assert "No open row." in real
+    live = run_script(NEXT, ROOT)
+    assert live.returncode == 0
+    assert live.stdout.strip() == "", live.stdout
+
+    copy = tmp_path / "shop"
+    (copy / "Docs").mkdir(parents=True)
+    (copy / "Docs" / "queue.md").write_text(real.replace("No open row.", "1. Alpha row stays open.", 1))
+    one = run_script(NEXT, copy)
+    assert one.returncode == 0 and one.stdout.strip() == "1. Alpha row stays open.", (
+        f"next-row did not print the shop row {one.stdout!r}"
+    )
