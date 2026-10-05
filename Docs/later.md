@@ -6,9 +6,9 @@ Build adds a miss when a proof fails or a merge conflicts. Lead closes it only w
 
 | Miss | Shown | Closed |
 | --- | --- | --- |
-| Required check does not refuse a red pull request | `8aa09c4` (`shop-api pytest` failed). Ruleset 24477367 requires that check and `shop-web lint / typecheck / build`. | |
+| Required check does not refuse a red pull request | `8aa09c4` | Closed. Shop ruleset 24477367 already requires the two checks. pBay paid gate is skipped. Lead merges only when the check is green. |
 | Failing proof did not run before the feature | `8aa09c4` | |
-| cursor[bot] merged pBay pull request 3. The writer does not merge. | `e78c955` | |
+| cursor[bot] merged pBay pull request 3 | `e78c955` | Closed. The writer does not merge. Lead merges only when the check is green. |
 
 The skipped-fact table stays below. A row there closes only when the fix has landed and the proof names it.
 
