@@ -157,6 +157,10 @@ class ToolCribEventKind(str, enum.Enum):
     RETURN = "return"
 
 
+class PartsRequestStatus(str, enum.Enum):
+    OPEN = "open"
+
+
 class CalendarProvider(str, enum.Enum):
     GOOGLE = "google"
     APPLE = "apple"
@@ -252,6 +256,7 @@ class Member(Base):
     chat_participations: Mapped[list[ChatParticipant]] = relationship(back_populates="member")
     todos: Mapped[list[Todo]] = relationship(back_populates="member")
     tool_crib_events: Mapped[list[ToolCribEvent]] = relationship(back_populates="member")
+    parts_requests: Mapped[list[PartsRequest]] = relationship(back_populates="member")
 
     def __repr__(self) -> str:
         return f"<Member(id={self.id!r}, email={self.email!r})>"
@@ -855,6 +860,36 @@ class PartsOrder(Base):
         return f"<PartsOrder(po_number={self.po_number!r}, status={self.status!r})>"
 
 
+class PartsRequest(Base):
+    """Member ask for a PT shop-stock line. Not a cart and not a tool checkout."""
+
+    __tablename__ = "parts_requests"
+    __table_args__ = (
+        Index("ix_parts_requests_member_created", "member_id", "created_at"),
+        Index("ix_parts_requests_status_created", "status", "created_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    member_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("members.id", ondelete="CASCADE"), nullable=False
+    )
+    sku: Mapped[str] = mapped_column(String(80), nullable=False)
+    note: Mapped[Optional[str]] = mapped_column(Text)
+    status: Mapped[PartsRequestStatus] = mapped_column(
+        _enum_column(PartsRequestStatus),
+        nullable=False,
+        default=PartsRequestStatus.OPEN,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    member: Mapped[Member] = relationship(back_populates="parts_requests")
+
+    def __repr__(self) -> str:
+        return f"<PartsRequest(id={self.id!r}, sku={self.sku!r})>"
+
+
 class CalendarConnection(Base):
     """Scaffold for Google / Apple calendar OAuth. Not production-complete."""
 
@@ -905,6 +940,7 @@ ALL_MODELS = [
     ChatMessage,
     Todo,
     PartsOrder,
+    PartsRequest,
     CalendarConnection,
 ]
 

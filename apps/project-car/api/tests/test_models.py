@@ -31,6 +31,7 @@ def test_all_models_import() -> None:
         "chat_messages",
         "todos",
         "parts_orders",
+        "parts_requests",
         "calendar_connections",
     ]
 

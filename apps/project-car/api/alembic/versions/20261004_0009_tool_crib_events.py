@@ -1,7 +1,7 @@
 """Crib checkout and return rows.
 
 Revision ID: 20261004_0009
-Revises: 20260906_0007
+Revises: 20261004_0008
 Create Date: 2026-10-04
 """
 
@@ -14,7 +14,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "20261004_0009"
-down_revision: Union[str, Sequence[str], None] = "20260906_0007"
+down_revision: Union[str, Sequence[str], None] = "20261004_0008"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

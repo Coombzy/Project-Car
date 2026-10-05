@@ -45,21 +45,13 @@ Owner UI: from `apps/project-car/web` run `npm install && npm run dev`, then ope
 
 ### Demo Owner login (localhost walkthrough)
 
-| Field | Value |
-|-------|--------|
-| Email | `owner@projectcar.ca` |
-| Password | `changeme` |
-| Bearer | `OWNER_API_SECRET` (default `dev-owner-secret`) |
+The Owner email and password stay in `OWNER_EMAIL` and `OWNER_PASSWORD`. They are not listed here. The seed refuses the demo password unless the host is loopback. Bearer stays `OWNER_API_SECRET`.
 
 These are local defaults from `.env.example`. The shop is **not** open. There is no live Stripe. Seeded names, bookings, and placeholder prices are sample data so a prospect can click through Dashboard, Schedule, Members, Hoists, Waitlist, Tiers, and the Member self-serve pages.
 
 ### Demo Member login (localhost walkthrough)
 
-| Field | Value |
-|-------|--------|
-| Email | `ada.reyes@example.com` (any seeded **active** member email) |
-| Password | `changeme` (`MEMBER_DEMO_PASSWORD`) |
-| Cookie | `pc_member_session` |
+The member password stays in `MEMBER_DEMO_PASSWORD`. It is not listed here. The seed refuses the demo password unless the host is loopback. Any seeded **active** member email can sign in on loopback. Cookie `pc_member_session`.
 
 Member routes are under `/member/*`. Members can only see their own balance / ledger / bookings. Customer bookings use Bays 1–5. The shop hoist returns `400 shop_hoist_owner_only`. Not OIDC — Staff OIDC can follow later.
 
@@ -117,6 +109,8 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `GET` | `/member/chat/rooms/{id}` | Member | Own room detail |
 | `GET/POST` | `/member/chat/rooms/{id}/messages` | Member | Poll (`after_id`) / reply |
 | `GET` | `/member/dashboard` | Member | Own todos + next-24h hours on bays the member booked |
+| `GET/POST` | `/member/parts-requests` | Member | Own PT parts requests. A post stores one row. Not checkout. |
+| `GET` | `/parts-requests` | Owner | Stored member parts requests |
 | `GET/POST` | `/todos` | Owner or Member | Personal to-do list (scoped to the session) |
 | `GET/PATCH/DELETE` | `/todos/{id}` | Owner or Member | Own to-do only |
 | `GET` | `/todos/{id}/ics` | Owner or Member | ICS download for a due date (`America/Regina`) |
@@ -163,7 +157,7 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 
 ### Booking / token rules (spec §5)
 
-1. A hoist has at most one overlapping **confirmed** or **active** booking (`409 hoist_overlap`).
+1. A bay hour belongs to at most one booking. **Pending**, **confirmed**, **active**, and **overdue** bookings hold that hour on that hoist. A second booking that overlaps the hour returns `409 hoist_overlap` and does not reserve tokens. **Cancelled** and **completed** release the hour. The same hour on another bay, and the next hour on the same bay, stay available. Confirm still rejects a window that overlaps a confirmed, active, or overdue booking.
 2. Creating a **customer** booking **reserves** tokens (`booking_reserve`, negative) and starts `pending`. The API computes `reserved_tokens` from duration (`hours × 100 × band × overlay × fill`) and ignores a client `tokens` field. The quote is stored on `booking.pricing_rule` and ledger `meta`. Shop work (`kind=shop`) skips the ledger. Fill applies only to next-day customer-bay openings (`token-pricing.md`).
 3. Completing an active booking releases the reserve, then **debits** used tokens (`booking_debit`) and **refunds** any unused reserve (`booking_refund`).
 4. Cancel refunds remaining reserve. `member.token_balance` is a cached ledger sum — never changed without a row.
