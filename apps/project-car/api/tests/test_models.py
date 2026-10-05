@@ -17,6 +17,7 @@ def test_all_models_import() -> None:
         "members",
         "hoists",
         "tools",
+        "tool_crib_events",
         "bookings",
         "token_transactions",
         "waitlist_entries",
@@ -30,6 +31,7 @@ def test_all_models_import() -> None:
         "chat_messages",
         "todos",
         "parts_orders",
+        "parts_requests",
         "calendar_connections",
         "job_events",
     ]

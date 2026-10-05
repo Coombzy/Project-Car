@@ -251,6 +251,27 @@ export type JobEvent = {
   created_at: string;
 };
 
+export type PartsRequest = {
+  id: string;
+  member_id: string;
+  member_name: string | null;
+  sku: string;
+  note: string | null;
+  status: "open";
+  created_at: string;
+};
+
+export type ToolCribEvent = {
+  id: string;
+  member_id: string;
+  member_name: string | null;
+  sku: string;
+  kind: "checkout" | "return";
+  note: string | null;
+  checkout_id: string | null;
+  created_at: string;
+};
+
 export type PartsOrder = {
   id: string;
   po_number: string;

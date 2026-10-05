@@ -21,9 +21,11 @@ import {
   type MemberSelf,
   type MembershipTier,
   type NotificationOutbox,
+  type PartsRequest,
   type Principal,
   type Todo,
   type TokenTransaction,
+  type ToolCribEvent,
   type WaitlistEntry,
 } from "./config";
 import {
@@ -117,6 +119,10 @@ export async function getDashboard(): Promise<Dashboard> {
   return shopJson<Dashboard>("/dashboard", "Could not load the dashboard.");
 }
 
+export async function listPartsRequests(): Promise<PartsRequest[]> {
+  return shopJson<PartsRequest[]>("/parts-requests", "Could not load parts requests.");
+}
+
 export async function listTodos(): Promise<Todo[]> {
   return shopJson<Todo[]>("/todos", "Could not load to-dos.");
 }
@@ -199,6 +205,30 @@ export async function listMembers(): Promise<Member[]> {
 
 export async function listJobEvents(): Promise<JobEvent[]> {
   return shopJson<JobEvent[]>("/jobs/events", "Could not load job rows.");
+}
+
+export async function listToolCribEvents(): Promise<ToolCribEvent[]> {
+  return shopJson<ToolCribEvent[]>("/tool-crib/events", "Could not load crib checkout rows.");
+}
+
+export async function checkoutCribTool(payload: {
+  member_id: string;
+  sku: string;
+  note?: string;
+}): Promise<ToolCribEvent> {
+  return shopJson<ToolCribEvent>("/tool-crib/checkouts", "Could not store the tool checkout.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function returnCribTool(payload: { sku: string; note?: string }): Promise<ToolCribEvent> {
+  return shopJson<ToolCribEvent>("/tool-crib/returns", "Could not store the tool return.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function getMember(id: string): Promise<MemberDetail> {
@@ -444,6 +474,28 @@ export async function getMemberDashboard(): Promise<MemberDashboard> {
 
 export async function listMemberTodos(): Promise<Todo[]> {
   return memberJson<Todo[]>("/todos", "Could not load to-dos.");
+}
+
+export async function listMemberPartsRequests(): Promise<PartsRequest[]> {
+  return memberJson<PartsRequest[]>(
+    "/member/parts-requests",
+    "Could not load parts requests.",
+  );
+}
+
+export async function createMemberPartsRequest(payload: {
+  sku: string;
+  note?: string;
+}): Promise<PartsRequest> {
+  return memberJson<PartsRequest>(
+    "/member/parts-requests",
+    "Could not store the parts request.",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 export async function createMemberTodo(payload: Record<string, unknown>): Promise<Todo> {

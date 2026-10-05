@@ -105,7 +105,7 @@ Identity rules:
 
 These rules are the product, not an implementation detail.
 
-1. A hoist has at most **one overlapping confirmed/active booking**.
+1. A bay hour belongs to at most **one booking**. Pending, confirmed, active, and overdue bookings hold that hour on that hoist. A second booking that overlaps the hour is rejected (`409 hoist_overlap`) and does not reserve tokens. Cancelled and completed bookings release the hour. The same hour on another bay, and the next hour on the same bay, stay available.
 2. Creating a **customer** booking **reserves** tokens (`booking_reserve`, negative amount) and does not spend them yet. Shop work (`kind=shop`) does not reserve member tokens.
 3. Completing a booking **debits** reserved tokens (`booking_debit`) or **refunds** unused reserve (`booking_refund`). Never silently change `member.token_balance` without a ledger row.
 4. `member.token_balance` is a cached sum of the ledger. If they disagree, the ledger wins; a rebuild job can recompute.
