@@ -16,6 +16,7 @@ REQUIRED_LINES = (
     "One writer on shared files.",
     "Do not deploy Doc.",
     "Do not say the shop is open.",
+    "sample rows are marked sample and are not counted by the proof.",
 )
 
 
