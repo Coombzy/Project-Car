@@ -1,13 +1,11 @@
 # Build rules
 
-Same instruction file as pBay `Docs/build-rules.md`. The proof tool is the shop test suite, not `npm run v0-proof`.
+Same instruction file as pBay. The proof tool is the shop test suite.
 
-The suite is the sign-off. The writer does not sign off. Write the failing proof, run it red, then write the code. The proof and the code land in the same commit. A reload must show the stored row.
+The suite is the sign-off. The writer does not sign off. Write the failing proof, run it red, then write the code. The proof and the code land in the same commit. A reload must show the stored row. A sample row is marked sample and is not counted.
 
-No open pull request is not idle. Read `Docs/queue.md` and start the next row. A status check does not ping. A missing token is a skip. An unwritten local case is built the safe way and named in `Docs/later.md`.
+No open pull request is not idle. Read `Docs/queue.md`. This repo is second while pBay `Docs/queue.md` has an open row. A status check does not ping. A missing token is a skip. An unwritten local case is built the safe way and named in `Docs/later.md`. `passes` false does not stop the next row.
 
-Build leaves `passes` false until Ben has seen the screen. That does not stop the next row.
+One writer on shared files. One migration at a time. Do not add a review note for a pass.
 
-One writer on shared files. A second agent only gets a worktree that does not touch the same migration. One migration at a time. Do not add a review note for a pass.
-
-Do not deploy Doc. Do not add Stripe. Do not say the shop is open. This repo is second only while pBay `Docs/queue.md` has an open row.
+Do not deploy Doc. Do not add Stripe. Do not say the shop is open.
