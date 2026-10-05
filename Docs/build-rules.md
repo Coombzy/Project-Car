@@ -2,7 +2,7 @@
 
 Same instruction file as pBay `Docs/build-rules.md`. The proof tool is the shop test suite, not `npm run v0-proof`.
 
-The suite is the sign-off. The writer does not sign off. A failing check cannot merge. A branch pass is not enough. The checks are `shop-api pytest` and `shop-web lint / typecheck / build`.
+The suite is the sign-off. The writer does not sign off. The writer does not merge. Lead merges only after the check is green. A failing check cannot merge. A branch pass is not enough. The checks are `shop-api pytest` and `shop-web lint / typecheck / build`.
 
 The failing proof runs before the feature code. The red output is in the pass. Then the code makes it green, in the same pull request. A reload must show the stored row.
 

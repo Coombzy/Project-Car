@@ -1,6 +1,16 @@
 # Later
 
-Skipped facts and placeholders. Same role as pBay `Docs/later.md`. A row closes only when the fix has landed and the proof names it.
+Skipped facts and placeholders. Same role as pBay `Docs/later.md`. This file is also the miss ledger. It does not replace `Docs/queue.md`.
+
+Build adds a miss when a proof fails or a merge conflicts. Lead closes it only when the fix is on `main`. No status column.
+
+| Miss | Shown | Closed |
+| --- | --- | --- |
+| Required check does not refuse a red pull request | `8aa09c4` (`shop-api pytest` failed). Ruleset 24477367 requires that check and `shop-web lint / typecheck / build`. | |
+| Failing proof did not run before the feature | `8aa09c4` | |
+| cursor[bot] merged pBay pull request 3. The writer does not merge. | `e78c955` | |
+
+The skipped-fact table stays below. A row there closes only when the fix has landed and the proof names it.
 
 | Item | State | Fix |
 | --- | --- | --- |
