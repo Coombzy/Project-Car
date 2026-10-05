@@ -17,6 +17,7 @@ def test_all_models_import() -> None:
         "members",
         "hoists",
         "tools",
+        "tool_crib_events",
         "bookings",
         "token_transactions",
         "waitlist_entries",

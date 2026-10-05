@@ -24,6 +24,7 @@ import {
   type Principal,
   type Todo,
   type TokenTransaction,
+  type ToolCribEvent,
   type WaitlistEntry,
 } from "./config";
 import {
@@ -199,6 +200,30 @@ export async function patchTier(name: string, payload: Partial<MembershipTier>):
 
 export async function listMembers(): Promise<Member[]> {
   return shopJson<Member[]>("/members", "Could not load members.");
+}
+
+export async function listToolCribEvents(): Promise<ToolCribEvent[]> {
+  return shopJson<ToolCribEvent[]>("/tool-crib/events", "Could not load crib checkout rows.");
+}
+
+export async function checkoutCribTool(payload: {
+  member_id: string;
+  sku: string;
+  note?: string;
+}): Promise<ToolCribEvent> {
+  return shopJson<ToolCribEvent>("/tool-crib/checkouts", "Could not store the tool checkout.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function returnCribTool(payload: { sku: string; note?: string }): Promise<ToolCribEvent> {
+  return shopJson<ToolCribEvent>("/tool-crib/returns", "Could not store the tool return.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function getMember(id: string): Promise<MemberDetail> {

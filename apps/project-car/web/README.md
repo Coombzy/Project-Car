@@ -72,7 +72,7 @@ The login screen is pre-filled and labeled as a **demo**. After `python -m app.s
 
 The Owner email and password stay in the API env. They are not listed here. The seed refuses the demo password unless the host is loopback.
 
-These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (Bays 1–6 next-24h strips — Bay 6 is the Owner-only shop hoist — personal to-dos + ICS, current parts POs, token-at-risk; no “Today’s bookings” list), Schedule (month heat-map, then week-by-hoist hour grids), Members (Basic / Premium), Hoists, Waitlist (mark contacted), Tiers (edit allowances), Fill gaps (next-day openings + notify), Chat (Owner starts rooms; see-all + mute; not Matrix), and the Parts / Tools / Job board / Cameras / Payments **placeholders**. Tools = B1–B6 bay kits + TC crib (demo SKUs). Parts = PT qty / reorder + dashboard PO strip. Not live purchasing, QR checkout, Frigate, or Stripe. Re-seed notes: Bay 1–6 + one Owner-only shop hoist on Bay 6 (v1 choice A). B6 is the shop-hoist kit prefix — not `SH`.
+These match `OWNER_EMAIL` / `OWNER_PASSWORD` in the API `.env`. Click through Dashboard (Bays 1–6 next-24h strips — Bay 6 is the Owner-only shop hoist — personal to-dos + ICS, current parts POs, token-at-risk; no “Today’s bookings” list), Schedule (month heat-map, then week-by-hoist hour grids), Members (Basic / Premium), Hoists, Waitlist (mark contacted), Tiers (edit allowances), Fill gaps (next-day openings + notify), Chat (Owner starts rooms; see-all + mute; not Matrix), and the Parts / Tools / Job board / Cameras / Payments **placeholders**. Tools = B1–B6 bay kits (demo SKUs) plus a TC crib ledger: checkout and return each store a row. Parts = PT qty / reorder + dashboard PO strip. Not live purchasing, QR checkout, Frigate, or Stripe. The shop is not open. Re-seed notes: Bay 1–6 + one Owner-only shop hoist on Bay 6 (v1 choice A). B6 is the shop-hoist kit prefix — not `SH`.
 
 ### Demo Member — Ada on localhost
 
@@ -98,4 +98,4 @@ On **`projectcar.ca` / `www` only**, middleware allows `/member` and `/member/*`
 
 ## Out of scope
 
-Website / apex / Cloudflare, Mission Control, Stripe live charges, NFC, live Frigate / NVR wiring, full parts purchase / eBay, live tool QR / checkout hardware, job claim-complete, Member/Staff OIDC, n8n. Breadth-first placeholder pages (Parts, Tools, Job board, Cameras, Payments) are in the demo UI only. Inventory prefixes are locked (B1–B6 / TC / PT; CM later).
+Website / apex / Cloudflare, Mission Control, Stripe live charges, NFC, live Frigate / NVR wiring, full parts purchase / eBay, live tool QR / checkout hardware, job claim-complete, Member/Staff OIDC, n8n. Breadth-first placeholder pages (Parts, Tools, Job board, Cameras, Payments) stay in the demo UI. Crib checkout and return store rows; QR hardware and job claim do not. Inventory prefixes are locked (B1–B6 / TC / PT; CM later). The shop is not open.
