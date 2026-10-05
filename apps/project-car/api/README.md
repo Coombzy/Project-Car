@@ -152,7 +152,7 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 
 ### Booking / token rules (spec §5)
 
-1. A hoist has at most one overlapping **confirmed** or **active** booking (`409 hoist_overlap`).
+1. A bay hour belongs to at most one booking. **Pending**, **confirmed**, **active**, and **overdue** bookings hold that hour on that hoist. A second booking that overlaps the hour returns `409 hoist_overlap` and does not reserve tokens. **Cancelled** and **completed** release the hour. The same hour on another bay, and the next hour on the same bay, stay available. Confirm still rejects a window that overlaps a confirmed, active, or overdue booking.
 2. Creating a **customer** booking **reserves** tokens (`booking_reserve`, negative) and starts `pending`. The API computes `reserved_tokens` from duration (`hours × 100 × band × overlay × fill`) and ignores a client `tokens` field. The quote is stored on `booking.pricing_rule` and ledger `meta`. Shop work (`kind=shop`) skips the ledger. Fill applies only to next-day customer-bay openings (`token-pricing.md`).
 3. Completing an active booking releases the reserve, then **debits** used tokens (`booking_debit`) and **refunds** any unused reserve (`booking_refund`).
 4. Cancel refunds remaining reserve. `member.token_balance` is a cached ledger sum — never changed without a row.

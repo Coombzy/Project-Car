@@ -6,7 +6,7 @@ from decimal import Decimal
 from fastapi.testclient import TestClient
 
 from app.services.pricing import quote_reserve
-from app.shop_time import shop_now
+from app.shop_time import as_utc, shop_now
 from tests.conftest import AUTH, create_hoist, create_member
 
 
@@ -120,27 +120,138 @@ def datetime_in_regina_band():
     return start
 
 
-def test_confirm_overlap_returns_409(client: TestClient) -> None:
+def _book(
+    client: TestClient,
+    *,
+    hoist_id: str,
+    start: datetime,
+    end: datetime,
+    member_id: str | None = None,
+    kind: str = "customer",
+    notes: str | None = None,
+):
+    payload: dict = {
+        "hoist_id": hoist_id,
+        "start_at": start.isoformat(),
+        "end_at": end.isoformat(),
+        "kind": kind,
+    }
+    if member_id is not None:
+        payload["member_id"] = member_id
+    if notes is not None:
+        payload["notes"] = notes
+    return client.post("/bookings", headers=AUTH, json=payload)
+
+
+def _assert_bay_hour_taken(response) -> None:
+    assert response.status_code == 409, response.text
+    assert response.json()["error"]["code"] == "hoist_overlap"
+    assert "hour" in response.json()["error"]["message"]
+
+
+def test_two_bookings_cannot_take_the_same_bay_hour(client: TestClient) -> None:
+    """One bay hour, one booking. Pending holds it. Cancel releases it."""
     ada = create_member(client, email="ada@example.com", tier_name="premium")
-    casey = create_member(client, name="Casey", email="casey@example.com", tier_name="basic")
-    hoist = create_hoist(client)
-    start, end = _window(5)
-    first = client.post(
-        "/bookings",
-        headers=AUTH,
-        json={"member_id": ada["id"], "hoist_id": hoist["id"], "start_at": start, "end_at": end},
-    )
-    second = client.post(
-        "/bookings",
-        headers=AUTH,
-        json={"member_id": casey["id"], "hoist_id": hoist["id"], "start_at": start, "end_at": end},
-    )
+    casey = create_member(client, name="Casey", email="casey@example.com", tier_name="premium")
+    riley = create_member(client, name="Riley", email="riley@example.com", tier_name="premium")
+    bay = create_hoist(client, name="Bay 1")
+    other = create_hoist(client, name="Bay 2")
+    shop = create_hoist(client, name="Bay 6", location_label="Shop", is_shop=True)
+
+    hour = datetime_in_regina_band()
+    hour_end = hour + timedelta(hours=1)
+    partial = hour + timedelta(minutes=30)
+    next_hour = hour_end
+    later = hour + timedelta(hours=3)
+
+    first = _book(client, member_id=ada["id"], hoist_id=bay["id"], start=hour, end=hour_end)
     assert first.status_code == 201, first.text
-    assert second.status_code == 201, second.text
-    assert client.post(f"/bookings/{first.json()['id']}/confirm", headers=AUTH).status_code == 200
-    conflict = client.post(f"/bookings/{second.json()['id']}/confirm", headers=AUTH)
-    assert conflict.status_code == 409
-    assert conflict.json()["error"]["code"] == "hoist_overlap"
+    assert first.json()["status"] == "pending"
+    ada_after = _dec(client.get(f"/members/{ada['id']}", headers=AUTH).json()["token_balance"])
+    assert ada_after < Decimal("1500")
+
+    # The same member still has a free simultaneous slot. The hour is the block.
+    own_again = _book(client, member_id=ada["id"], hoist_id=bay["id"], start=hour, end=hour_end)
+    _assert_bay_hour_taken(own_again)
+    assert _dec(client.get(f"/members/{ada['id']}", headers=AUTH).json()["token_balance"]) == ada_after
+
+    same = _book(client, member_id=casey["id"], hoist_id=bay["id"], start=hour, end=hour_end)
+    _assert_bay_hour_taken(same)
+    shared = _book(
+        client,
+        member_id=casey["id"],
+        hoist_id=bay["id"],
+        start=partial,
+        end=partial + timedelta(hours=1),
+    )
+    _assert_bay_hour_taken(shared)
+    assert _dec(client.get(f"/members/{casey['id']}", headers=AUTH).json()["token_balance"]) == Decimal("1500")
+
+    other_bay = _book(client, member_id=casey["id"], hoist_id=other["id"], start=hour, end=hour_end)
+    assert other_bay.status_code == 201, other_bay.text
+
+    adjacent = _book(client, member_id=riley["id"], hoist_id=bay["id"], start=next_hour, end=next_hour + timedelta(hours=1))
+    assert adjacent.status_code == 201, adjacent.text
+
+    confirmed = client.post(f"/bookings/{first.json()['id']}/confirm", headers=AUTH)
+    assert confirmed.status_code == 200, confirmed.text
+    still_held = _book(client, member_id=riley["id"], hoist_id=bay["id"], start=hour, end=hour_end)
+    _assert_bay_hour_taken(still_held)
+
+    cancelled = client.post(f"/bookings/{first.json()['id']}/cancel", headers=AUTH)
+    assert cancelled.status_code == 200, cancelled.text
+    freed = _book(client, member_id=riley["id"], hoist_id=bay["id"], start=hour, end=hour_end)
+    assert freed.status_code == 201, freed.text
+
+    finished = _book(client, member_id=ada["id"], hoist_id=bay["id"], start=later, end=later + timedelta(hours=1))
+    assert finished.status_code == 201, finished.text
+    assert client.post(f"/bookings/{finished.json()['id']}/confirm", headers=AUTH).status_code == 200
+    assert client.post(f"/bookings/{finished.json()['id']}/check-in", headers=AUTH).status_code == 200
+    completed = client.post(
+        f"/bookings/{finished.json()['id']}/complete",
+        headers=AUTH,
+        json={"unused_tokens": "0"},
+    )
+    assert completed.status_code == 200, completed.text
+    reused = _book(client, member_id=casey["id"], hoist_id=bay["id"], start=later, end=later + timedelta(hours=1))
+    assert reused.status_code == 201, reused.text
+
+    shop_hour = hour + timedelta(hours=5)
+    shop_first = _book(
+        client,
+        hoist_id=shop["id"],
+        start=shop_hour,
+        end=shop_hour + timedelta(hours=1),
+        kind="shop",
+        notes="Rack inspection",
+    )
+    assert shop_first.status_code == 201, shop_first.text
+    shop_second = _book(
+        client,
+        hoist_id=shop["id"],
+        start=shop_hour,
+        end=shop_hour + timedelta(hours=1),
+        kind="shop",
+        notes="Second rack",
+    )
+    _assert_bay_hour_taken(shop_second)
+
+    open_on_bay = client.get("/bookings", headers=AUTH, params={"hoist_id": bay["id"]})
+    assert open_on_bay.status_code == 200
+    freed_body = freed.json()
+    # Compare stored instants to each other. SQLite echoes naive UTC, so do not
+    # mix those strings with the original shop-local request values.
+    window_start = as_utc(datetime.fromisoformat(freed_body["start_at"]))
+    window_end = as_utc(datetime.fromisoformat(freed_body["end_at"]))
+    holders = []
+    for row in open_on_bay.json():
+        if row["status"] not in {"pending", "confirmed", "active", "overdue"}:
+            continue
+        row_start = as_utc(datetime.fromisoformat(row["start_at"]))
+        row_end = as_utc(datetime.fromisoformat(row["end_at"]))
+        if row_start < window_end and row_end > window_start:
+            holders.append(row["id"])
+    assert holders == [freed_body["id"]]
 
 
 def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None:
