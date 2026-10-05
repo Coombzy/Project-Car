@@ -10,6 +10,7 @@ from app.deps import DbSession, Owner
 from app.schemas import FillNotifyOut, FillNotifyRequest, FillPreviewOut, NotificationOutboxOut
 from app.services.fill import FillError, snapshot_next_day, upsert_published_offer
 from app.services.notify import NotifyError, enqueue_fill_campaign, list_outbox, parse_channels
+from app.services.staff import reject_ai
 
 router = APIRouter(tags=["fill"])
 
@@ -38,7 +39,12 @@ def fill_outbox(
 
 
 @router.post("/fill/notify", response_model=FillNotifyOut)
-def notify_fill(body: FillNotifyRequest, session: DbSession, _owner: Owner) -> FillNotifyOut:
+def notify_fill(body: FillNotifyRequest, session: DbSession, owner: Owner) -> FillNotifyOut:
+    reject_ai(
+        owner,
+        code="draft_required",
+        message="A fill notice stays a draft until a person or an AI accepts it.",
+    )
     try:
         channels = parse_channels(body.channels)
         snapshot = snapshot_next_day(

@@ -14,6 +14,7 @@ import {
   type FillPreview,
   type Hoist,
   type JobEvent,
+  type ShopHoistRequest,
   type Member,
   type MemberDashboard,
   type MemberDetail,
@@ -573,6 +574,18 @@ export async function quoteMemberBooking(payload: {
   end_at: string;
 }): Promise<BookingQuote> {
   return memberJson<BookingQuote>("/member/bookings/quote", "Could not quote the booking.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getMemberShopHoist(): Promise<Hoist> {
+  return memberJson<Hoist>("/member/shop-hoist", "Could not load the shop hoist.");
+}
+
+export async function requestMemberShopHoist(payload: Record<string, unknown>): Promise<ShopHoistRequest> {
+  return memberJson<ShopHoistRequest>("/member/shop-hoist-requests", "Could not request the shop hoist.", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

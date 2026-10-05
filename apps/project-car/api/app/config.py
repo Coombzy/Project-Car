@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     owner_email: str = "owner@projectcar.ca"
     owner_password: str = "changeme"
     owner_api_secret: str = "dev-owner-secret"
+    ai_api_secret: str = "dev-ai-secret"
+    ai_actor_id: str = "shop-ai"
     session_secret: str = "dev-session-secret-change-me"
     session_ttl_seconds: int = 86_400
     cookie_name: str = "pc_owner_session"

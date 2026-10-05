@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import (
     Principal,
+    ai_bearer_matches,
     bearer_matches,
     read_member_session_token,
     read_session_token,
@@ -33,9 +34,11 @@ def require_owner(
     authorization: Annotated[str | None, Header()] = None,
     session_cookie: Annotated[str | None, Cookie(alias="pc_owner_session")] = None,
 ) -> Principal:
-    """v1 Owner stub: httpOnly session cookie or Bearer OWNER_API_SECRET."""
+    """Staff stub: human Owner cookie/bearer, or the same routes with the AI bearer."""
     if authorization and authorization.lower().startswith("bearer "):
         token = authorization.split(" ", 1)[1].strip()
+        if ai_bearer_matches(settings, token):
+            return Principal(role="ai", email=settings.ai_actor_id)
         if bearer_matches(settings, token):
             return Principal(role="owner", email=settings.owner_email)
 
@@ -84,6 +87,8 @@ def require_principal(
     """Owner cookie/bearer or Member cookie. Used by GET /me."""
     if authorization and authorization.lower().startswith("bearer "):
         token = authorization.split(" ", 1)[1].strip()
+        if ai_bearer_matches(settings, token):
+            return Principal(role="ai", email=settings.ai_actor_id)
         if bearer_matches(settings, token):
             return Principal(role="owner", email=settings.owner_email)
 

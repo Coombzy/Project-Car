@@ -176,6 +176,23 @@ export type Hoist = {
   updated_at: string;
 };
 
+export type ShopHoistRequest = {
+  record: "shop_hoist_request";
+  id: string;
+  member_id: string;
+  member_name: string;
+  hoist_id: string;
+  hoist_name: string;
+  start_at: string;
+  end_at: string;
+  status: "pending" | "approved" | "denied";
+  token_quote: string;
+  notes: string | null;
+  created_by_kind: "human" | "ai";
+  created_by_id: string;
+  created_at: string;
+};
+
 export type Occupancy = {
   booking_id: string;
   hoist_id: string;

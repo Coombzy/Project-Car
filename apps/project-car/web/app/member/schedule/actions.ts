@@ -5,7 +5,12 @@ import { redirect } from "next/navigation";
 
 import { ShopApiError } from "../../../lib/config";
 import { scheduleHref, type ScheduleView } from "../../../lib/calendar";
-import { cancelMemberBooking, confirmMemberBooking, createMemberBooking } from "../../../lib/shop-api";
+import {
+  cancelMemberBooking,
+  confirmMemberBooking,
+  createMemberBooking,
+  requestMemberShopHoist,
+} from "../../../lib/shop-api";
 
 function scheduleTarget(formData: FormData): string {
   const view = String(formData.get("view") ?? "");
@@ -40,6 +45,22 @@ export async function memberCreateBookingAction(formData: FormData): Promise<voi
       notes: String(formData.get("notes") ?? "") || null,
     });
     await confirmMemberBooking(created.id);
+  } catch (error) {
+    fail(formData, error);
+  }
+  revalidatePath("/member/schedule");
+  revalidatePath("/member");
+  redirect(scheduleTarget(formData));
+}
+
+export async function memberRequestShopHoistAction(formData: FormData): Promise<void> {
+  try {
+    await requestMemberShopHoist({
+      hoist_id: String(formData.get("hoist_id") ?? ""),
+      start_at: String(formData.get("start_at") ?? ""),
+      end_at: String(formData.get("end_at") ?? ""),
+      notes: String(formData.get("notes") ?? "") || null,
+    });
   } catch (error) {
     fail(formData, error);
   }

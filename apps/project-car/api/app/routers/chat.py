@@ -25,6 +25,7 @@ from app.services.chat import (
     post_message,
     set_muted,
 )
+from app.services.staff import reject_ai
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -106,6 +107,11 @@ def owner_post_message(
     session: DbSession,
     owner: Owner,
 ) -> ChatMessageOut:
+    reject_ai(
+        owner,
+        code="draft_required",
+        message="A chat reply stays a draft until a person or an AI accepts it.",
+    )
     try:
         room = get_room(session, room_id)
         row = post_message(session, room, principal=owner, body=body.body)

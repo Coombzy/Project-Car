@@ -53,7 +53,7 @@ These are local defaults from `.env.example`. The shop is **not** open. There is
 
 The member password stays in `MEMBER_DEMO_PASSWORD`. It is not listed here. The seed refuses the demo password unless the host is loopback. Any seeded **active** member email can sign in on loopback. Cookie `pc_member_session`.
 
-Member routes are under `/member/*`. Members can only see their own balance / ledger / bookings. Customer bookings use Bays 1–5. The shop hoist returns `400 shop_hoist_owner_only`. Not OIDC — Staff OIDC can follow later.
+Member routes are under `/member/*`. Members can only see their own balance / ledger / bookings. Customer bookings use Bays 1–5. A shop hoist post creates a pending request. It is not a booking and it does not move tokens until approval. Not OIDC — Staff OIDC can follow later.
 
 ## Re-seed
 
@@ -64,7 +64,7 @@ python -m app.seed          # upsert demo IDs; rebuild this week's sample bookin
 python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then seed
 ```
 
-`--reset` refreshes Basic **1000** / Premium **1500** placeholders (Weekly / Pro seed leftovers are retired; Pro members move to Premium). Seed creates **6 hoists** (Bay 1–5 customer + **Bay 6** Owner-only shop hoist). Bookings are placed relative to **today** in `America/Edmonton` so a fresh DB always shows a live-looking week. Reserve amounts are computed from duration × band × overlay (`America/Regina`). Shop work (`kind=shop`) does not reserve member tokens. Customers cannot book the shop hoist (v1 choice A).
+`--reset` refreshes Basic **1000** / Premium **1500** placeholders (Weekly / Pro seed leftovers are retired; Pro members move to Premium). Seed creates **6 hoists** (Bay 1–5 customer + **Bay 6** shop hoist). Bookings are placed relative to **today** in `America/Edmonton` so a fresh DB always shows a live-looking week. Reserve amounts are computed from duration × band × overlay (`America/Regina`). Shop work (`kind=shop`) does not reserve member tokens. A member shop-hoist post is a pending request, not a booking.
 
 ## Endpoints
 
@@ -166,11 +166,11 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 3. Completing an active booking releases the reserve, then **debits** used tokens (`booking_debit`) and **refunds** any unused reserve (`booking_refund`).
 4. Cancel refunds remaining reserve. `member.token_balance` is a cached ledger sum — never changed without a row.
 5. Tier `included_tokens`, `booking_window_days`, and `max_simultaneous_bookings` are enforced in the API.
-6. Exactly one hoist may be `is_shop`. **v1 = (A) Owner-only** — customer bookings on that hoist return `400 shop_hoist_owner_only`. (B) bumpable is a later tweak.
+6. Exactly one hoist may be `is_shop`. A member request for that hoist stays pending until a person or an AI approves it. Bays 1–5 stay a direct booking. (B) bumpable is a later tweak.
 
 ## Domain
 
-Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work. `20260906_0005` adds `fill_offers` and `notification_outbox`. `20260906_0006` adds `chat_rooms`, `chat_participants`, and `chat_messages`. `20260906_0007` adds `todos`, `parts_orders` (PT SKU / PO stubs), and `calendar_connections` (OAuth scaffold). `20261004_0008` adds `parts_requests` and revises `20260906_0007`. `20261004_0009` adds `tool_crib_events` and revises `20261004_0008`. `20261004_0010` adds `job_events` and revises `20261004_0009`. A done row does not write `token_transactions`. Bay-kit and PT SKUs are rejected on the crib.
+Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work. `20260906_0005` adds `fill_offers` and `notification_outbox`. `20260906_0006` adds `chat_rooms`, `chat_participants`, and `chat_messages`. `20260906_0007` adds `todos`, `parts_orders` (PT SKU / PO stubs), and `calendar_connections` (OAuth scaffold). `20261004_0008` adds `parts_requests` and revises `20260906_0007`. `20261004_0009` adds `tool_crib_events` and revises `20261004_0008`. `20261004_0010` adds `job_events` and revises `20261004_0009`. `20261004_0011` adds `shop_hoist_requests` and revises `20261004_0010`. A done row does not write `token_transactions`. Bay-kit and PT SKUs are rejected on the crib.
 
 Membership tier seed rows (Basic 1000 / Premium 1500) are placeholders only. Two tiers in fixtures.
 

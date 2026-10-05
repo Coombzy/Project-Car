@@ -573,7 +573,10 @@ def test_shop_hoist_is_owner_only(client: TestClient) -> None:
     assert _dec(body["reserved_tokens"]) == Decimal("0")
     assert body["pricing_rule"] is None
 
-    blocked = client.post(
+    before = client.get(f"/members/{member['id']}", headers=AUTH)
+    assert before.status_code == 200, before.text
+    balance_before = _dec(before.json()["token_balance"])
+    requested = client.post(
         "/bookings",
         headers=AUTH,
         json={
@@ -583,11 +586,16 @@ def test_shop_hoist_is_owner_only(client: TestClient) -> None:
             "end_at": end,
         },
     )
-    assert blocked.status_code == 400
-    assert blocked.json()["error"]["code"] == "shop_hoist_owner_only"
+    assert requested.status_code == 201, requested.text
+    request_body = requested.json()
+    assert request_body["record"] == "shop_hoist_request"
+    assert request_body["status"] == "pending"
+    assert request_body["member_id"] == member["id"]
+    after = client.get(f"/members/{member['id']}", headers=AUTH)
+    assert _dec(after.json()["token_balance"]) == balance_before
 
     later_start, later_end = _window(12)
-    still_blocked = client.post(
+    second = client.post(
         "/bookings",
         headers=AUTH,
         json={
@@ -597,8 +605,9 @@ def test_shop_hoist_is_owner_only(client: TestClient) -> None:
             "end_at": later_end,
         },
     )
-    assert still_blocked.status_code == 400
-    assert still_blocked.json()["error"]["code"] == "shop_hoist_owner_only"
+    assert second.status_code == 201, second.text
+    assert second.json()["record"] == "shop_hoist_request"
+    assert second.json()["status"] == "pending"
 
     on_customer_bay = client.post(
         "/bookings",

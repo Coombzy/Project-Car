@@ -91,7 +91,7 @@ export default async function SchedulePage({
         <p className="lede">
           Management calendar on the current app / Doc UI (intended host
           ops.projectcar.ca). Month shows how booked each hoist is that day
-          (Bays 1–5 plus the Owner-only shop hoist). Week is a separate hour
+          (Bays 1–5 plus the shop hoist). Week is a separate hour
           grid per hoist. Reserve is duration × 100 × band × overlay × fill.
           Complete debits; cancel refunds the locked reserve.
         </p>
@@ -139,8 +139,8 @@ export default async function SchedulePage({
           <h2>Create booking</h2>
           <p className="lede">
             Customer bookings start pending; the server computes reserve from the
-            window. Shop work is Owner-only on the shop hoist (customers cannot
-            book it) and does not take member tokens.
+            window. Shop work on the shop hoist does not take member tokens.
+            A member request is not a booking until someone approves it.
             {slot ? ` Prefilling ${slot} from the hour slot you clicked.` : ""}
           </p>
           {activeMembers.length === 0 || ordered.length === 0 ? (

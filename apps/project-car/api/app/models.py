@@ -88,6 +88,47 @@ class BookingKind(str, enum.Enum):
     SHOP = "shop"
 
 
+class ActorKind(str, enum.Enum):
+    HUMAN = "human"
+    AI = "ai"
+
+
+class ShopHoistRequestStatus(str, enum.Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    DENIED = "denied"
+
+
+class DraftKind(str, enum.Enum):
+    FILL = "fill"
+    CHAT = "chat"
+
+
+class DraftStatus(str, enum.Enum):
+    DRAFT = "draft"
+    ACCEPTED = "accepted"
+
+
+class ShopJobStatus(str, enum.Enum):
+    OPEN = "open"
+    CLAIMED = "claimed"
+    DONE = "done"
+    SENT_BACK = "sent_back"
+
+
+class StaffSubject(str, enum.Enum):
+    SHOP_HOIST = "shop_hoist"
+    PARTS = "parts"
+    TOOL_CRIB = "tool_crib"
+    JOB = "job"
+    FILL_DRAFT = "fill_draft"
+    CHAT_DRAFT = "chat_draft"
+    REFUND = "refund"
+    SCHEDULE = "schedule"
+    TOKENS = "tokens"
+    OPEN_REQUESTS = "open_requests"
+
+
 class TokenTransactionKind(str, enum.Enum):
     BOOKING_RESERVE = "booking_reserve"
     BOOKING_DEBIT = "booking_debit"
@@ -366,7 +407,7 @@ class ToolCribEvent(Base):
 
 
 class Booking(Base):
-    """Hoist reservation. Customer rows reserve tokens; shop rows are Owner-only."""
+    """Hoist reservation. Customer bays reserve tokens. Shop-hoist hours start as requests."""
 
     __tablename__ = "bookings"
     __table_args__ = (
@@ -416,6 +457,200 @@ class Booking(Base):
 
     def __str__(self) -> str:
         return f"Booking {self.id} ({self.status.value})"
+
+
+class ShopHoistRequest(Base):
+    """A member ask for the shop hoist. Pending rows are not bookings and do not hold the hour."""
+
+    __tablename__ = "shop_hoist_requests"
+    __table_args__ = (
+        Index("ix_shop_hoist_requests_hoist_status", "hoist_id", "status"),
+        Index("ix_shop_hoist_requests_member", "member_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    member_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("members.id", ondelete="RESTRICT"), nullable=False
+    )
+    hoist_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("hoists.id", ondelete="RESTRICT"), nullable=False
+    )
+    start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    end_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    status: Mapped[ShopHoistRequestStatus] = mapped_column(
+        _enum_column(ShopHoistRequestStatus),
+        nullable=False,
+        default=ShopHoistRequestStatus.PENDING,
+    )
+    token_quote: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=Decimal("0"))
+    pricing_rule: Mapped[Optional[dict]] = mapped_column(JsonObject)
+    notes: Mapped[Optional[str]] = mapped_column(Text)
+    created_by_kind: Mapped[ActorKind] = mapped_column(_enum_column(ActorKind), nullable=False)
+    created_by_id: Mapped[str] = mapped_column(String(320), nullable=False)
+    booking_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("bookings.id", ondelete="SET NULL")
+    )
+    decided_by_kind: Mapped[Optional[ActorKind]] = mapped_column(_enum_column(ActorKind))
+    decided_by_id: Mapped[Optional[str]] = mapped_column(String(320))
+    decided_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    member: Mapped[Member] = relationship()
+    hoist: Mapped[Hoist] = relationship()
+    booking: Mapped[Optional[Booking]] = relationship()
+
+    def __repr__(self) -> str:
+        return f"<ShopHoistRequest(id={self.id!r}, status={self.status!r})>"
+
+
+class StaffPartsRequest(Base):
+    """A staff decision on a PT line. This is not the member parts-request desk."""
+
+    __tablename__ = "staff_parts_requests"
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    member_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("members.id", ondelete="RESTRICT"), nullable=False
+    )
+    sku: Mapped[str] = mapped_column(String(80), nullable=False)
+    note: Mapped[Optional[str]] = mapped_column(Text)
+    status: Mapped[ShopHoistRequestStatus] = mapped_column(
+        _enum_column(ShopHoistRequestStatus),
+        nullable=False,
+        default=ShopHoistRequestStatus.PENDING,
+    )
+    created_by_kind: Mapped[ActorKind] = mapped_column(_enum_column(ActorKind), nullable=False)
+    created_by_id: Mapped[str] = mapped_column(String(320), nullable=False)
+    decided_by_kind: Mapped[Optional[ActorKind]] = mapped_column(_enum_column(ActorKind))
+    decided_by_id: Mapped[Optional[str]] = mapped_column(String(320))
+    decided_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    member: Mapped[Member] = relationship()
+
+
+class ToolCribException(Base):
+    """A member ask to take a crib tool outside the usual rule. Approval does not move tokens."""
+
+    __tablename__ = "tool_crib_exceptions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    member_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("members.id", ondelete="RESTRICT"), nullable=False
+    )
+    tool_code: Mapped[str] = mapped_column(String(80), nullable=False)
+    reason: Mapped[Optional[str]] = mapped_column(Text)
+    status: Mapped[ShopHoistRequestStatus] = mapped_column(
+        _enum_column(ShopHoistRequestStatus),
+        nullable=False,
+        default=ShopHoistRequestStatus.PENDING,
+    )
+    created_by_kind: Mapped[ActorKind] = mapped_column(_enum_column(ActorKind), nullable=False)
+    created_by_id: Mapped[str] = mapped_column(String(320), nullable=False)
+    decided_by_kind: Mapped[Optional[ActorKind]] = mapped_column(_enum_column(ActorKind))
+    decided_by_id: Mapped[Optional[str]] = mapped_column(String(320))
+    decided_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    member: Mapped[Member] = relationship()
+
+
+class ShopJob(Base):
+    """A claimed shop job. Done or sent back. No photo upload."""
+
+    __tablename__ = "shop_jobs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    notes: Mapped[Optional[str]] = mapped_column(Text)
+    token_bounty: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=Decimal("0"))
+    status: Mapped[ShopJobStatus] = mapped_column(
+        _enum_column(ShopJobStatus),
+        nullable=False,
+        default=ShopJobStatus.OPEN,
+    )
+    claimed_by_member_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("members.id", ondelete="SET NULL")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+    claimed_by: Mapped[Optional[Member]] = relationship()
+
+
+class StaffDraft(Base):
+    """A fill notice or chat reply that is not sent until a person or an AI accepts it."""
+
+    __tablename__ = "staff_drafts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    kind: Mapped[DraftKind] = mapped_column(_enum_column(DraftKind), nullable=False)
+    status: Mapped[DraftStatus] = mapped_column(
+        _enum_column(DraftStatus),
+        nullable=False,
+        default=DraftStatus.DRAFT,
+    )
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    room_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("chat_rooms.id", ondelete="SET NULL"))
+    created_by_kind: Mapped[ActorKind] = mapped_column(_enum_column(ActorKind), nullable=False)
+    created_by_id: Mapped[str] = mapped_column(String(320), nullable=False)
+    accepted_by_kind: Mapped[Optional[ActorKind]] = mapped_column(_enum_column(ActorKind))
+    accepted_by_id: Mapped[Optional[str]] = mapped_column(String(320))
+    accepted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class RefundRequest(Base):
+    """A proposed token refund. Only a human accept moves the ledger."""
+
+    __tablename__ = "refund_requests"
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    booking_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("bookings.id", ondelete="RESTRICT"), nullable=False
+    )
+    status: Mapped[ShopHoistRequestStatus] = mapped_column(
+        _enum_column(ShopHoistRequestStatus),
+        nullable=False,
+        default=ShopHoistRequestStatus.PENDING,
+    )
+    created_by_kind: Mapped[ActorKind] = mapped_column(_enum_column(ActorKind), nullable=False)
+    created_by_id: Mapped[str] = mapped_column(String(320), nullable=False)
+    decided_by_kind: Mapped[Optional[ActorKind]] = mapped_column(_enum_column(ActorKind))
+    decided_by_id: Mapped[Optional[str]] = mapped_column(String(320))
+    decided_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class StaffAction(Base):
+    """Who did a staff action, human or AI, and which request it was."""
+
+    __tablename__ = "staff_actions"
+    __table_args__ = (Index("ix_staff_actions_request", "request_id"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    action: Mapped[str] = mapped_column(String(40), nullable=False)
+    actor_kind: Mapped[ActorKind] = mapped_column(_enum_column(ActorKind), nullable=False)
+    actor_id: Mapped[str] = mapped_column(String(320), nullable=False)
+    request_id: Mapped[Optional[uuid.UUID]] = mapped_column(UuidPk)
+    subject_kind: Mapped[StaffSubject] = mapped_column(_enum_column(StaffSubject), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
 
 
 class TokenTransaction(Base):

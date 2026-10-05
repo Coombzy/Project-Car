@@ -56,7 +56,7 @@ export function MemberShell({
         Customer app is projectcar.ca. Intended management host is
         ops.projectcar.ca. Parts is a request desk (PT / TC SKUs), not
         checkout. Job board (token bounties) and the primary shop camera are
-        labeled placeholders. Bay 6 is Owner-only. The shop is not
+        labeled placeholders. Bay 6 is a request until it is approved. The shop is not
         open. This is not live pricing or Stripe.
       </div>
       <main className={wide ? "wide" : undefined}>{children}</main>

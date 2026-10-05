@@ -6,4 +6,8 @@ An AI is a client of the same API. The actor is recorded. It can create a reques
 
 A member action that already needs approval still needs approval. The AI is one of the approvers. It is not a bypass.
 
+Human and AI call the same approve and deny routes. The stored action names the actor, human or AI, and the request id. A draft is not sent until one of them accepts it. An AI cannot approve a request it created, debit tokens before approval, or refund without a human accept.
+
+Proof: `apps/project-car/api/tests/test_staff_actions.py`.
+
 Git only. Do not deploy Doc. Do not add Stripe.

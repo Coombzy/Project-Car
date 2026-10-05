@@ -1,7 +1,8 @@
 """Member self-serve: own balance, quote, book / confirm / cancel.
 
 Reuses Owner booking services (duration × band × overlay + ledger). Members
-act only on their own rows, kind=customer, and cannot book the shop hoist.
+act only on their own rows. Bays 1-5 are a direct booking. The shop hoist is
+a pending request until a person or an AI approves it.
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.deps import DbSession, MemberUser
-from app.models import Booking, BookingKind, Hoist, Member, TokenTransaction
+from app.models import ActorKind, Booking, BookingKind, Hoist, Member, TokenTransaction
 from app.schemas import (
     BookingOut,
     BookingQuoteOut,
@@ -27,11 +28,21 @@ from app.schemas import (
     MemberSelfOut,
     OccupancyOut,
     PricingRuleOut,
+    ShopHoistRequestOut,
+    ShopJobOut,
+    ToolCribExceptionCreate,
+    ToolCribExceptionOut,
     TokenTransactionOut,
 )
 from app.routers.dashboard import member_dashboard_payload
 from app.services import bookings as booking_service
 from app.services.fill import snapshot_next_day
+from app.services.shop_hoist_requests import (
+    create_shop_hoist_request,
+    get_shop_hoist,
+    list_shop_hoist_requests,
+)
+from app.services.staff import claim_job, create_tool_crib_exception
 from app.shop_time import as_utc
 
 router = APIRouter(prefix="/member", tags=["member"])
@@ -223,13 +234,58 @@ def member_quote(
     )
 
 
-@router.post("/bookings", response_model=BookingOut, status_code=201)
+@router.get("/shop-hoist", response_model=HoistOut)
+def member_shop_hoist(session: DbSession, _principal: MemberUser) -> HoistOut:
+    return HoistOut.model_validate(get_shop_hoist(session))
+
+
+@router.get("/shop-hoist-requests", response_model=list[ShopHoistRequestOut])
+def member_shop_hoist_requests(
+    session: DbSession, principal: MemberUser
+) -> list[ShopHoistRequestOut]:
+    rows = list_shop_hoist_requests(session, member_id=principal.member_id)
+    return [ShopHoistRequestOut.from_row(row) for row in rows]
+
+
+@router.post("/shop-hoist-requests", response_model=ShopHoistRequestOut, status_code=201)
+def member_create_shop_hoist_request(
+    body: MemberBookingCreate,
+    session: DbSession,
+    principal: MemberUser,
+) -> ShopHoistRequestOut:
+    row = create_shop_hoist_request(
+        session,
+        member_id=principal.member_id,
+        hoist_id=body.hoist_id,
+        start_at=body.start_at,
+        end_at=body.end_at,
+        notes=body.notes,
+        created_by_kind=ActorKind.HUMAN,
+        created_by_id=str(principal.member_id),
+    )
+    return ShopHoistRequestOut.from_row(row)
+
+
+@router.post("/bookings", status_code=201)
 def member_create_booking(
     body: MemberBookingCreate,
     session: DbSession,
     principal: MemberUser,
-) -> BookingOut:
+) -> BookingOut | ShopHoistRequestOut:
     _own_member(session, principal)
+    hoist = session.get(Hoist, body.hoist_id)
+    if hoist is not None and hoist.is_shop:
+        row = create_shop_hoist_request(
+            session,
+            member_id=principal.member_id,
+            hoist_id=body.hoist_id,
+            start_at=body.start_at,
+            end_at=body.end_at,
+            notes=body.notes,
+            created_by_kind=ActorKind.HUMAN,
+            created_by_id=str(principal.member_id),
+        )
+        return ShopHoistRequestOut.from_row(row)
     booking = booking_service.create_booking(
         session,
         member_id=principal.member_id,
@@ -260,3 +316,25 @@ def member_cancel_booking(
 ) -> BookingOut:
     _own_booking(session, principal, booking_id)
     return BookingOut.from_booking(booking_service.cancel_booking(session, booking_id))
+
+
+@router.post("/tool-crib-exceptions", response_model=ToolCribExceptionOut, status_code=201)
+def member_create_tool_crib_exception(
+    body: ToolCribExceptionCreate,
+    session: DbSession,
+    principal: MemberUser,
+) -> ToolCribExceptionOut:
+    row = create_tool_crib_exception(
+        session,
+        member_id=principal.member_id,
+        tool_code=body.tool_code,
+        reason=body.reason,
+        created_by_kind=ActorKind.HUMAN,
+        created_by_id=str(principal.member_id),
+    )
+    return ToolCribExceptionOut.model_validate(row)
+
+
+@router.post("/jobs/{job_id}/claim", response_model=ShopJobOut)
+def member_claim_job(job_id: UUID, session: DbSession, principal: MemberUser) -> ShopJobOut:
+    return ShopJobOut.model_validate(claim_job(session, job_id, principal.member_id))

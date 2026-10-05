@@ -34,7 +34,7 @@ export default async function MemberHomePage({
         <h1>Your shop</h1>
         <p className="lede">
           Balance, your to-dos, and the next 24 hours on bays you have booked.
-          Customer bays only — Bay 6 is Owner-only. Temporary demo on this
+          Customer bays book directly. The shop hoist is a request until it is approved. Temporary demo on this
           management alias. The shop is not open.
         </p>
         {query.error ? <div className="banner error">{query.error}</div> : null}

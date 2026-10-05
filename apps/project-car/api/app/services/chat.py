@@ -173,6 +173,11 @@ def post_message(
         sender_member_id = None
         sender_email = principal.email
         sender_name = "Owner"
+    elif principal.role == "ai":
+        sender_role = ChatSenderRole.OWNER
+        sender_member_id = None
+        sender_email = principal.email
+        sender_name = "Shop AI"
     else:
         raise ChatError(403, "forbidden", "Only Owner or a room member can send.")
 

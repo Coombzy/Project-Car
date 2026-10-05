@@ -131,7 +131,7 @@ export function CreateBookingForm({
             {hoistChoices.map((hoist) => (
               <option key={hoist.id} value={hoist.id}>
                 {hoist.name}
-                {hoist.is_shop ? " · shop hoist · Owner-only" : ""} · {hoist.status}
+                {hoist.is_shop ? " · shop hoist · request" : ""} · {hoist.status}
               </option>
             ))}
           </select>
@@ -163,8 +163,8 @@ export function CreateBookingForm({
       </div>
       {kind === "shop" ? (
         <p className="muted">
-          Shop work is Owner-only on the shop hoist (v1 choice A). Customers
-          cannot book this bay. No member tokens reserved.
+          Shop work stays on the shop hoist and does not take member tokens.
+          A member request for this hoist is not a booking until someone approves it.
         </p>
       ) : rule ? (
         <div className="quote-preview">
