@@ -1,19 +1,15 @@
 # Build rules
 
-Same instruction file as pBay `Docs/build-rules.md`. The proof tool is the shop test suite, not `npm run v0-proof`.
+Same instruction file as pBay. The proof tool is the shop test suite.
 
-The suite is the sign-off. The writer does not sign off. The writer does not merge. Lead merges only after the check is green. A failing check cannot merge. A branch pass is not enough. The checks are `shop-api pytest` and `shop-web lint / typecheck / build`.
+Do not add a queue row that Ben has not asked for or that is not already in the docs. If fewer than three rows are open, copy the next planned local item from the shop docs. If none is left, ask Ben. Do not generate one.
 
-The failing proof runs before the feature code. The red output is in the pass. Then the code makes it green, in the same pull request. A reload must show the stored row.
+Lead merges only when the shop checks are green. A red pull request stays open. The writer does not merge.
 
-sample rows are marked sample and are not counted by the proof.
+Write the failing proof, run it red, then write the code. The proof and the code land in the same commit. A reload must show the stored row. A sample row is marked sample and is not counted.
 
-Do not add a review note. Do not auto-apply review-bot comments. Do not add a review bot that merges its own suggestions.
+No open pull request is not idle. Read `Docs/queue.md`. This repo is second while pBay has an open row. A status check does not ping. A missing token is a skip.
 
-No open pull request is not idle. Read `Docs/queue.md` and start the next row. A status check does not ping. A missing token is a skip. An unwritten local case is built the safe way and named in `Docs/later.md`.
+One writer on shared files. One migration at a time. Do not add a review note for a pass.
 
-Build leaves `passes` false until Ben has seen the screen. That does not stop the next row.
-
-One writer on shared files. A second agent only gets a worktree that does not touch the same migration. One migration at a time. Do not add a review note for a pass.
-
-Do not deploy Doc. Do not add Stripe. Do not say the shop is open. This repo is second only while pBay `Docs/queue.md` has an open row.
+Do not deploy Doc. Do not add Stripe. Do not say the shop is open.
