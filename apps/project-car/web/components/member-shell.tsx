@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
+import { headers } from "next/headers";
 import Link from "next/link";
 
 import { memberLogoutAction } from "../app/member/logout-action";
+import { memberShellCopy } from "../lib/member-shell-copy";
+import { isCustomerShopHost } from "../lib/request-origin";
 
 const NAV = [
   { href: "/member", current: "home", label: "Balance" },
@@ -14,7 +17,7 @@ const NAV = [
 
 export type MemberSection = (typeof NAV)[number]["current"];
 
-export function MemberShell({
+export async function MemberShell({
   email,
   current,
   wide,
@@ -25,12 +28,14 @@ export function MemberShell({
   wide?: boolean;
   children: ReactNode;
 }) {
+  const copy = memberShellCopy(isCustomerShopHost(await headers()));
+
   return (
     <div className="shell">
       <header className="topbar">
         <div className="brand">
           <strong>Project Car</strong>
-          <span>Member demo · parked</span>
+          <span>{copy.subtitle}</span>
         </div>
         <nav className="nav">
           {NAV.map((item) => (
@@ -50,15 +55,7 @@ export function MemberShell({
           </form>
         </nav>
       </header>
-      <div className="demo-banner">
-        Temporary Member demo on this management alias — customer bays 1–5.
-        Home shows your to-dos and only bays you booked in the next 24 hours.
-        Customer app is projectcar.ca. Intended management host is
-        ops.projectcar.ca. Parts is a request desk (PT / TC SKUs), not
-        checkout. Job board (token bounties) and the primary shop camera are
-        labeled placeholders. Bay 6 is Owner-only. The shop is not
-        open. This is not live pricing or Stripe.
-      </div>
+      <div className="demo-banner">{copy.banner}</div>
       <main className={wide ? "wide" : undefined}>{children}</main>
     </div>
   );
