@@ -28,8 +28,6 @@ from app.schemas import (
     MemberSelfOut,
     OccupancyOut,
     PricingRuleOut,
-    PartsRequestCreate,
-    PartsRequestOut,
     ShopHoistRequestOut,
     ShopJobOut,
     ToolCribExceptionCreate,
@@ -44,7 +42,7 @@ from app.services.shop_hoist_requests import (
     get_shop_hoist,
     list_shop_hoist_requests,
 )
-from app.services.staff import claim_job, create_parts_request, create_tool_crib_exception
+from app.services.staff import claim_job, create_tool_crib_exception
 from app.shop_time import as_utc
 
 router = APIRouter(prefix="/member", tags=["member"])
@@ -318,23 +316,6 @@ def member_cancel_booking(
 ) -> BookingOut:
     _own_booking(session, principal, booking_id)
     return BookingOut.from_booking(booking_service.cancel_booking(session, booking_id))
-
-
-@router.post("/parts-requests", response_model=PartsRequestOut, status_code=201)
-def member_create_parts_request(
-    body: PartsRequestCreate,
-    session: DbSession,
-    principal: MemberUser,
-) -> PartsRequestOut:
-    row = create_parts_request(
-        session,
-        member_id=principal.member_id,
-        sku=body.sku,
-        note=body.note,
-        created_by_kind=ActorKind.HUMAN,
-        created_by_id=str(principal.member_id),
-    )
-    return PartsRequestOut.model_validate(row)
 
 
 @router.post("/tool-crib-exceptions", response_model=ToolCribExceptionOut, status_code=201)

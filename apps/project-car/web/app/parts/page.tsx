@@ -1,36 +1,39 @@
 import { OwnerShell } from "../../components/owner-shell";
 import { PlaceholderNote } from "../../components/placeholder-note";
-import { handlePageError } from "../../lib/page";
+import type { PartsRequest } from "../../lib/config";
 import {
   SAMPLE_INVENTORY_REQUESTS,
   SAMPLE_OPS_PART_ORDERS,
   SAMPLE_PARTS_STOCK,
   partsReorderState,
 } from "../../lib/inventory";
-import { getMe } from "../../lib/shop-api";
+import { handlePageError } from "../../lib/page";
+import { getMe, listPartsRequests } from "../../lib/shop-api";
+import { formatShopDateTime } from "../../lib/time";
 
 export const dynamic = "force-dynamic";
 
 export default async function OpsPartsPage() {
   try {
     const me = await getMe();
+    const requests = await listPartsRequests();
     return (
       <OwnerShell email={me.email} current="parts" wide>
-        <OpsPartsBody />
+        <OpsPartsBody requests={requests} />
       </OwnerShell>
     );
   } catch (error) {
     const message = await handlePageError(error);
     return (
       <OwnerShell current="parts" wide>
-        <OpsPartsBody />
+        <OpsPartsBody requests={[]} />
         <div className="banner error">{message}</div>
       </OwnerShell>
     );
   }
 }
 
-function OpsPartsBody() {
+function OpsPartsBody({ requests }: { requests: PartsRequest[] }) {
   return (
     <>
       <p className="eyebrow">Ops · placeholder</p>
@@ -123,9 +126,43 @@ function OpsPartsBody() {
         </table>
       </div>
 
-      <h2>Member part requests</h2>
+      <h2>Stored parts requests</h2>
       <p className="muted">
-        Requests only — ops fulfills from PT stock or a PO. Not a storefront.
+        Rows members stored from the request desk. Not a storefront and not a
+        tool checkout. The shop is not open.
+      </p>
+      {requests.length === 0 ? (
+        <div className="banner empty">No parts requests stored yet.</div>
+      ) : (
+        <div className="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Who</th>
+                <th>SKU</th>
+                <th>Note</th>
+                <th>Status</th>
+                <th>Stored</th>
+              </tr>
+            </thead>
+            <tbody>
+              {requests.map((row) => (
+                <tr key={row.id}>
+                  <td>{row.member_name ?? "Member"}</td>
+                  <td className="sku">{row.sku}</td>
+                  <td>{row.note ?? "—"}</td>
+                  <td>{row.status}</td>
+                  <td>{formatShopDateTime(row.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <h2>Sample member requests (not stored)</h2>
+      <p className="muted">
+        Placeholder part asks. They are not rows in the parts-request table.
       </p>
       <div className="card">
         <table>

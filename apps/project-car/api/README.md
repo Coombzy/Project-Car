@@ -109,6 +109,8 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `GET` | `/member/chat/rooms/{id}` | Member | Own room detail |
 | `GET/POST` | `/member/chat/rooms/{id}/messages` | Member | Poll (`after_id`) / reply |
 | `GET` | `/member/dashboard` | Member | Own todos + next-24h hours on bays the member booked |
+| `GET/POST` | `/member/parts-requests` | Member | Own PT parts requests. A post stores one row. Not checkout. |
+| `GET` | `/parts-requests` | Owner | Stored member parts requests |
 | `GET/POST` | `/todos` | Owner or Member | Personal to-do list (scoped to the session) |
 | `GET/PATCH/DELETE` | `/todos/{id}` | Owner or Member | Own to-do only |
 | `GET` | `/todos/{id}/ics` | Owner or Member | ICS download for a due date (`America/Regina`) |
@@ -118,6 +120,13 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `POST` | `/member/bookings` | Member | Create own customer booking |
 | `POST` | `/member/bookings/{id}/confirm` | Member | Confirm own pending booking |
 | `POST` | `/member/bookings/{id}/cancel` | Member | Cancel own booking, refund reserve |
+| `GET` | `/jobs/events` | Owner | Job claim and done rows, newest first |
+| `GET` | `/member/jobs/events` | Member | Own claim and done rows |
+| `POST` | `/member/jobs/claims` | Member | Store one claim row for a posted job |
+| `POST` | `/member/jobs/done` | Member | Store one done row for that member’s open claim |
+| `GET` | `/tool-crib/events` | Owner | Crib checkout and return rows, newest first |
+| `POST` | `/tool-crib/checkouts` | Owner | Store one checkout row for a TC SKU |
+| `POST` | `/tool-crib/returns` | Owner | Store one return row for the open checkout |
 
 Owner auth is the v1 stub from the product spec (email + password **or** `Authorization: Bearer $OWNER_API_SECRET`). Member auth is a parallel session cookie (`pc_member_session`) — email must match a `members` row; password is `MEMBER_DEMO_PASSWORD`. Neither is OIDC.
 
@@ -152,7 +161,7 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 
 ### Booking / token rules (spec §5)
 
-1. A hoist has at most one overlapping **confirmed** or **active** booking (`409 hoist_overlap`).
+1. A bay hour belongs to at most one booking. **Pending**, **confirmed**, **active**, and **overdue** bookings hold that hour on that hoist. A second booking that overlaps the hour returns `409 hoist_overlap` and does not reserve tokens. **Cancelled** and **completed** release the hour. The same hour on another bay, and the next hour on the same bay, stay available. Confirm still rejects a window that overlaps a confirmed, active, or overdue booking.
 2. Creating a **customer** booking **reserves** tokens (`booking_reserve`, negative) and starts `pending`. The API computes `reserved_tokens` from duration (`hours × 100 × band × overlay × fill`) and ignores a client `tokens` field. The quote is stored on `booking.pricing_rule` and ledger `meta`. Shop work (`kind=shop`) skips the ledger. Fill applies only to next-day customer-bay openings (`token-pricing.md`).
 3. Completing an active booking releases the reserve, then **debits** used tokens (`booking_debit`) and **refunds** any unused reserve (`booking_refund`).
 4. Cancel refunds remaining reserve. `member.token_balance` is a cached ledger sum — never changed without a row.
@@ -161,7 +170,7 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 
 ## Domain
 
-Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work. `20260906_0005` adds `fill_offers` and `notification_outbox`. `20260906_0006` adds `chat_rooms`, `chat_participants`, and `chat_messages`. `20260906_0007` adds `todos`, `parts_orders` (PT SKU / PO stubs), and `calendar_connections` (OAuth scaffold).
+Alembic `20260816_0001` creates the v1 tables. `20260906_0002` adds `waitlist_entries.contacted_at`. `20260906_0003` adds `bookings.pricing_rule` and `token_transactions.meta`. `20260906_0004` adds `hoists.is_shop`, `bookings.kind`, and nullable `bookings.member_id` for shop work. `20260906_0005` adds `fill_offers` and `notification_outbox`. `20260906_0006` adds `chat_rooms`, `chat_participants`, and `chat_messages`. `20260906_0007` adds `todos`, `parts_orders` (PT SKU / PO stubs), and `calendar_connections` (OAuth scaffold). `20261004_0008` adds `parts_requests` and revises `20260906_0007`. `20261004_0009` adds `tool_crib_events` and revises `20261004_0008`. `20261004_0010` adds `job_events` and revises `20261004_0009`. `20261004_0011` adds `shop_hoist_requests` and revises `20261004_0010`. A done row does not write `token_transactions`. Bay-kit and PT SKUs are rejected on the crib.
 
 Membership tier seed rows (Basic 1000 / Premium 1500) are placeholders only. Two tiers in fixtures.
 

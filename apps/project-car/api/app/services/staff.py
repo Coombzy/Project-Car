@@ -27,7 +27,7 @@ from app.models import (
     NotificationChannel,
     NotificationOutbox,
     NotificationStatus,
-    PartsRequest,
+    StaffPartsRequest,
     RefundRequest,
     ShopHoistRequest,
     ShopHoistRequestStatus,
@@ -117,9 +117,9 @@ def create_parts_request(
     note: str | None,
     created_by_kind: ActorKind,
     created_by_id: str,
-) -> PartsRequest:
+) -> StaffPartsRequest:
     _active_member(session, member_id)
-    row = PartsRequest(
+    row = StaffPartsRequest(
         member_id=member_id,
         sku=sku.strip(),
         note=note,
@@ -132,8 +132,8 @@ def create_parts_request(
     return row
 
 
-def get_parts_request(session: Session, request_id: UUID) -> PartsRequest:
-    row = session.get(PartsRequest, request_id)
+def get_parts_request(session: Session, request_id: UUID) -> StaffPartsRequest:
+    row = session.get(StaffPartsRequest, request_id)
     if row is None:
         raise _error(404, "not_found", "Parts request not found.")
     return row
@@ -141,7 +141,7 @@ def get_parts_request(session: Session, request_id: UUID) -> PartsRequest:
 
 def decide_parts_request(
     session: Session, request_id: UUID, principal: Principal, *, approve: bool
-) -> tuple[PartsRequest, StaffAction]:
+) -> tuple[StaffPartsRequest, StaffAction]:
     row = get_parts_request(session, request_id)
     if row.status != ShopHoistRequestStatus.PENDING:
         raise _error(400, "invalid_transition", "Only a pending parts request can be decided.")
@@ -471,7 +471,7 @@ def read_balance(session: Session, principal: Principal, member_id: UUID) -> tup
 
 def read_open_requests(
     session: Session, principal: Principal
-) -> tuple[list[ShopHoistRequest], list[PartsRequest], list[ToolCribException], StaffAction]:
+) -> tuple[list[ShopHoistRequest], list[StaffPartsRequest], list[ToolCribException], StaffAction]:
     hoist = list(
         session.scalars(
             select(ShopHoistRequest)
@@ -482,9 +482,9 @@ def read_open_requests(
     )
     parts = list(
         session.scalars(
-            select(PartsRequest)
-            .where(PartsRequest.status == ShopHoistRequestStatus.PENDING)
-            .order_by(PartsRequest.created_at)
+            select(StaffPartsRequest)
+            .where(StaffPartsRequest.status == ShopHoistRequestStatus.PENDING)
+            .order_by(StaffPartsRequest.created_at)
         ).all()
     )
     tools = list(

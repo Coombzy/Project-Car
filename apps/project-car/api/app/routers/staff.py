@@ -13,8 +13,8 @@ from app.schemas import (
     ChatDraftCreate,
     FillDraftCreate,
     OpenRequestsOut,
-    PartsRequestCreate,
-    PartsRequestOut,
+    StaffPartsRequestCreate,
+    StaffPartsRequestOut,
     RefundRequestCreate,
     RefundRequestOut,
     ShopHoistRequestOut,
@@ -111,10 +111,10 @@ def staff_deny_shop_hoist(
     return _decision(row, action, balance=row.member.token_balance)
 
 
-@router.post("/parts-requests", response_model=PartsRequestOut, status_code=201)
+@router.post("/parts-requests", response_model=StaffPartsRequestOut, status_code=201)
 def staff_create_parts_request(
-    body: PartsRequestCreate, session: DbSession, principal: Owner
-) -> PartsRequestOut:
+    body: StaffPartsRequestCreate, session: DbSession, principal: Owner
+) -> StaffPartsRequestOut:
     if body.member_id is None:
         raise _member_required("A parts request needs a member.")
     kind, actor_id = actor_of(principal)
@@ -126,7 +126,7 @@ def staff_create_parts_request(
         created_by_kind=kind,
         created_by_id=actor_id,
     )
-    return PartsRequestOut.model_validate(row)
+    return StaffPartsRequestOut.model_validate(row)
 
 
 @router.post("/parts-requests/{request_id}/approve", response_model=StaffDecisionOut)
@@ -264,7 +264,7 @@ def staff_open_requests(session: DbSession, principal: Owner) -> OpenRequestsOut
     hoist, parts, tools, action = read_open_requests(session, principal)
     return OpenRequestsOut(
         shop_hoist=[ShopHoistRequestOut.from_row(row) for row in hoist],
-        parts=[PartsRequestOut.model_validate(row) for row in parts],
+        parts=[StaffPartsRequestOut.model_validate(row) for row in parts],
         tool_crib=[ToolCribExceptionOut.model_validate(row) for row in tools],
         actor_kind=action.actor_kind,
         action_id=action.id,

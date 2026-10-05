@@ -278,8 +278,11 @@ def test_ai_reads_schedule_balance_and_open_requests(client: TestClient) -> None
     assert balance.json()["actor_kind"] == "ai"
     assert _dec(balance.json()["token_balance"]) == _balance(client, member["id"])
 
-    login_member(client, "ada@example.com")
-    parts = client.post("/member/parts-requests", json={"sku": "PT-OIL-5W30-012"})
+    parts = client.post(
+        "/parts-requests",
+        headers=AI,
+        json={"member_id": member["id"], "sku": "PT-OIL-5W30-012"},
+    )
     assert parts.status_code == 201, parts.text
     open_requests = client.get("/staff/requests", headers=AI)
     assert open_requests.status_code == 200, open_requests.text

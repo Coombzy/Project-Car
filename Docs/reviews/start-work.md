@@ -7,7 +7,7 @@ Finish the open local proofs on `Coombzy/pbay` first. When that queue is waiting
 Order:
 
 1. Remove the demo password from the public README. The seed refuses it unless the host is loopback.
-2. Prove two bookings cannot take the same bay hour.
+2. Prove two bookings cannot take the same bay hour. Done: `test_two_bookings_cannot_take_the_same_bay_hour`.
 3. Member login and booking screens in git only. Do not upload the Worker. Do not deploy Doc.
 4. Prove the public pages do not say the shop is open.
 

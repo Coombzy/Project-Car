@@ -15,14 +15,20 @@ from app.models import (
     DraftKind,
     DraftStatus,
     HoistStatus,
+    JobEvent,
+    JobEventKind,
     MemberStatus,
     NotificationChannel,
     NotificationStatus,
     PartsOrderStatus,
+    PartsRequest,
+    PartsRequestStatus,
     ShopHoistRequestStatus,
     ShopJobStatus,
     TodoStatus,
     TokenTransactionKind,
+    ToolCribEvent,
+    ToolCribEventKind,
 )
 
 
@@ -463,6 +469,40 @@ class PartsOrderOut(BaseModel):
     updated_at: datetime
 
 
+class PartsRequestOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    member_id: UUID
+    member_name: str | None = None
+    sku: str
+    note: str | None
+    status: PartsRequestStatus
+    created_at: datetime
+
+    @classmethod
+    def from_row(cls, row: PartsRequest) -> PartsRequestOut:
+        name = row.member.name if row.member is not None else None
+        return cls.model_validate(row).model_copy(update={"member_name": name})
+
+
+class PartsRequestCreate(BaseModel):
+    sku: str = Field(min_length=1, max_length=80)
+    note: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("sku")
+    @classmethod
+    def strip_sku(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("note", mode="before")
+    @classmethod
+    def empty_note(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _blank_to_none(str(value))
+
+
 class CalendarProviderStatusOut(BaseModel):
     connected: bool
     status: str
@@ -669,6 +709,59 @@ class ChatMuteRequest(BaseModel):
     muted: bool
 
 
+class ToolCribEventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    member_id: UUID
+    member_name: str | None = None
+    sku: str
+    kind: ToolCribEventKind
+    note: str | None
+    checkout_id: UUID | None
+    created_at: datetime
+
+    @classmethod
+    def from_row(cls, row: ToolCribEvent) -> ToolCribEventOut:
+        name = row.member.name if row.member is not None else None
+        return cls.model_validate(row).model_copy(update={"member_name": name})
+
+
+class ToolCribCheckoutCreate(BaseModel):
+    member_id: UUID
+    sku: str = Field(min_length=1, max_length=80)
+    note: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("sku")
+    @classmethod
+    def strip_sku(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("note", mode="before")
+    @classmethod
+    def empty_note(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _blank_to_none(str(value))
+
+
+class ToolCribReturnCreate(BaseModel):
+    sku: str = Field(min_length=1, max_length=80)
+    note: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("sku")
+    @classmethod
+    def strip_sku(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("note", mode="before")
+    @classmethod
+    def empty_note(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _blank_to_none(str(value))
+
+
 class ChatMessagePage(BaseModel):
     messages: list[ChatMessageOut]
     cursor: UUID | None = None
@@ -742,13 +835,13 @@ class StaffDecisionOut(BaseModel):
     token_balance: Decimal | None = None
 
 
-class PartsRequestCreate(BaseModel):
+class StaffPartsRequestCreate(BaseModel):
     member_id: UUID | None = None
     sku: str = Field(min_length=1, max_length=80)
     note: str | None = Field(default=None, max_length=2000)
 
 
-class PartsRequestOut(BaseModel):
+class StaffPartsRequestOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
@@ -847,7 +940,7 @@ class StaffBalanceOut(BaseModel):
 
 class OpenRequestsOut(BaseModel):
     shop_hoist: list[ShopHoistRequestOut]
-    parts: list[PartsRequestOut]
+    parts: list[StaffPartsRequestOut]
     tool_crib: list[ToolCribExceptionOut]
     actor_kind: ActorKind
     action_id: UUID
@@ -859,3 +952,56 @@ class StaffShopHoistRequestCreate(BaseModel):
     start_at: datetime
     end_at: datetime
     notes: str | None = Field(default=None, max_length=2000)
+
+
+class JobEventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    member_id: UUID
+    member_name: str | None = None
+    job_key: str
+    title: str
+    kind: JobEventKind
+    note: str | None
+    claim_id: UUID | None
+    created_at: datetime
+
+    @classmethod
+    def from_row(cls, row: JobEvent) -> JobEventOut:
+        name = row.member.name if row.member is not None else None
+        return cls.model_validate(row).model_copy(update={"member_name": name})
+
+
+class JobClaimCreate(BaseModel):
+    job_key: str = Field(min_length=1, max_length=80)
+    note: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("job_key")
+    @classmethod
+    def strip_job_key(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("note", mode="before")
+    @classmethod
+    def empty_note(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _blank_to_none(str(value))
+
+
+class JobDoneCreate(BaseModel):
+    job_key: str = Field(min_length=1, max_length=80)
+    note: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("job_key")
+    @classmethod
+    def strip_job_key(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("note", mode="before")
+    @classmethod
+    def empty_note(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _blank_to_none(str(value))
