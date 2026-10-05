@@ -14,6 +14,7 @@ from app.routers import (
     dashboard,
     fill,
     hoists,
+    jobs,
     member,
     member_chat,
     members,
@@ -32,6 +33,7 @@ def create_app() -> FastAPI:
         description=(
             "Shop OS API. Owner dashboard plus Member self-serve (balance, "
             "book / cancel, schedule quote) and Chat v1 (human / polling). "
+            "A job claim and a job done each store a row. "
             "A crib checkout and a crib return each store a row. "
             "Auth is a v1 session stub (Owner cookie/bearer; Member cookie), "
             "not OIDC. Demo data only — the shop is not open and there is no "
@@ -59,6 +61,7 @@ def create_app() -> FastAPI:
     application.include_router(hoists.router)
     application.include_router(bookings.router)
     application.include_router(fill.router)
+    application.include_router(jobs.router)
     application.include_router(chat.router)
     application.include_router(member_chat.router)
     application.include_router(todos.router)

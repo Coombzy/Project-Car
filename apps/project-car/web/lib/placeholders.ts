@@ -37,7 +37,7 @@ export const SAMPLE_JOBS = [
     area: "Tool wall",
     needed: "This week",
     tokenBounty: 50,
-    note: "Tag any wrench that is out of calibration. Claim / complete is Later.",
+    note: "Tag any wrench that is out of calibration.",
   },
   {
     id: "job-sort-fasteners",

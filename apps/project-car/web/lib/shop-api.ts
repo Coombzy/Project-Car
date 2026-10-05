@@ -13,6 +13,7 @@ import {
   type FillNotifyResult,
   type FillPreview,
   type Hoist,
+  type JobEvent,
   type Member,
   type MemberDashboard,
   type MemberDetail,
@@ -200,6 +201,10 @@ export async function patchTier(name: string, payload: Partial<MembershipTier>):
 
 export async function listMembers(): Promise<Member[]> {
   return shopJson<Member[]>("/members", "Could not load members.");
+}
+
+export async function listJobEvents(): Promise<JobEvent[]> {
+  return shopJson<JobEvent[]>("/jobs/events", "Could not load job rows.");
 }
 
 export async function listToolCribEvents(): Promise<ToolCribEvent[]> {
@@ -591,6 +596,26 @@ export async function confirmMemberBooking(id: string): Promise<Booking> {
 export async function cancelMemberBooking(id: string): Promise<Booking> {
   return memberJson<Booking>(`/member/bookings/${id}/cancel`, "Could not cancel the booking.", {
     method: "POST",
+  });
+}
+
+export async function listMemberJobEvents(): Promise<JobEvent[]> {
+  return memberJson<JobEvent[]>("/member/jobs/events", "Could not load job rows.");
+}
+
+export async function claimJob(payload: { job_key: string; note?: string }): Promise<JobEvent> {
+  return memberJson<JobEvent>("/member/jobs/claims", "Could not store the job claim.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function markJobDone(payload: { job_key: string; note?: string }): Promise<JobEvent> {
+  return memberJson<JobEvent>("/member/jobs/done", "Could not store the job done row.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   });
 }
 

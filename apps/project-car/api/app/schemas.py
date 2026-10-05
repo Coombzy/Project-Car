@@ -11,6 +11,8 @@ from app.models import (
     BookingStatus,
     ChatSenderRole,
     HoistStatus,
+    JobEvent,
+    JobEventKind,
     MemberStatus,
     NotificationChannel,
     NotificationStatus,
@@ -757,3 +759,56 @@ class ToolCribReturnCreate(BaseModel):
 class ChatMessagePage(BaseModel):
     messages: list[ChatMessageOut]
     cursor: UUID | None = None
+
+
+class JobEventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    member_id: UUID
+    member_name: str | None = None
+    job_key: str
+    title: str
+    kind: JobEventKind
+    note: str | None
+    claim_id: UUID | None
+    created_at: datetime
+
+    @classmethod
+    def from_row(cls, row: JobEvent) -> JobEventOut:
+        name = row.member.name if row.member is not None else None
+        return cls.model_validate(row).model_copy(update={"member_name": name})
+
+
+class JobClaimCreate(BaseModel):
+    job_key: str = Field(min_length=1, max_length=80)
+    note: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("job_key")
+    @classmethod
+    def strip_job_key(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("note", mode="before")
+    @classmethod
+    def empty_note(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _blank_to_none(str(value))
+
+
+class JobDoneCreate(BaseModel):
+    job_key: str = Field(min_length=1, max_length=80)
+    note: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("job_key")
+    @classmethod
+    def strip_job_key(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("note", mode="before")
+    @classmethod
+    def empty_note(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _blank_to_none(str(value))
