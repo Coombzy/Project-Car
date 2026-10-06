@@ -6,6 +6,8 @@ A row is done when it is on `main`. An open pull request is not done. A green ch
 
 Skipped facts are in `Docs/later.md`. They are not a stop.
 
+Every queue row states its baseline, its target, and what must not get worse.
+
 ## Now
 
 No open row.

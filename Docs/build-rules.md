@@ -17,3 +17,9 @@ Build leaves `passes` false until Ben has seen the screen. That does not stop th
 One writer on shared files. A second agent only gets a worktree that does not touch the same migration. One migration at a time. Do not add a review note for a pass.
 
 Do not deploy Doc. Do not add Stripe. Do not say the shop is open. This repo is second only while pBay `Docs/queue.md` has an open row.
+
+Every queue row states its baseline, its target, and what must not get worse.
+
+Every pull request that touches the UI carries before and after screenshots in its body. Ben owns taste calls. A feature's `passes` stays false until Ben sees the window.
+
+Agents do not give hour, day, or month estimates. Work is sized in rows.
