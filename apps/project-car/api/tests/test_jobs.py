@@ -322,7 +322,7 @@ def test_job_events_migration_is_a_single_head() -> None:
     from alembic.script import ScriptDirectory
 
     script = ScriptDirectory.from_config(Config(str(ALEMBIC_INI)))
-    assert script.get_heads() == ["20261004_0011"]
+    assert script.get_heads() == ["20261006_0012"]
     job = script.get_revision("20261004_0010")
     assert job is not None
     assert job.down_revision == "20261004_0009"
