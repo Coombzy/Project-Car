@@ -19,8 +19,8 @@ export default async function TiersPage({
         <p className="eyebrow">GET /tiers</p>
         <h1>Tiers / settings</h1>
         <p className="lede">
-          Basic, Pro, and Weekly are placeholders — names and allowances are
-          data. These are not published live prices. The shop is not open.
+          Basic and Premium are seeded placeholders — names and allowances are
+          data. These are not live prices. The shop is not open.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
 
