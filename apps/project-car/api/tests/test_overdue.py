@@ -396,6 +396,73 @@ def test_only_an_active_booking_past_its_end_can_be_overdue(client: TestClient) 
     assert _count(client, Incident) == 0
 
 
+def _shop_booking(client: TestClient, hoist_id: str, start, end) -> dict:
+    response = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "hoist_id": hoist_id,
+            "start_at": start.isoformat(),
+            "end_at": end.isoformat(),
+            "kind": "shop",
+            "notes": "Shop work",
+        },
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def _hoist_status(client: TestClient, hoist_id: str) -> str:
+    rows = client.get("/hoists", headers=AUTH).json()
+    match = next(row for row in rows if row["id"] == hoist_id)
+    return match["status"]
+
+
+def _assert_overdue_still_holds(client: TestClient, booking_id: str, hoist_id: str, tokens: int, billing: int) -> None:
+    assert _hoist_status(client, hoist_id) == "occupied"
+    stored = _booking(client, booking_id)
+    assert stored.status == BookingStatus.OVERDUE
+    incidents = _incidents(client, booking_id)
+    assert len(incidents) == 1
+    assert incidents[0].kind == IncidentKind.LATE_RETURN
+    assert _count(client, TokenTransaction) == tokens
+    assert _count(client, BillingTransaction) == billing
+
+
+def test_overdue_keeps_the_hoist_occupied_when_another_booking_ends(client: TestClient) -> None:
+    """Cancelling or completing a different booking must not free an overdue bay."""
+    shop = create_hoist(client, name="Bay 6", location_label="Shop", is_shop=True)
+    past_start = shop_now() - timedelta(hours=3)
+    past_end = shop_now() - timedelta(hours=1)
+    overdue = _shop_booking(client, shop["id"], past_start, past_end)
+    _activate(client, overdue["id"])
+    marked = client.post(f"/bookings/{overdue['id']}/overdue", headers=AUTH)
+    assert marked.status_code == 200, marked.text
+    tokens = _count(client, TokenTransaction)
+    billing = _count(client, BillingTransaction)
+    _assert_overdue_still_holds(client, overdue["id"], shop["id"], tokens, billing)
+
+    cancel_at = shop_now() + timedelta(hours=5)
+    other = _shop_booking(client, shop["id"], cancel_at, cancel_at + timedelta(hours=1))
+    assert client.post(f"/bookings/{other['id']}/confirm", headers=AUTH).status_code == 200
+    cancelled = client.post(f"/bookings/{other['id']}/cancel", headers=AUTH)
+    assert cancelled.status_code == 200, cancelled.text
+    assert cancelled.json()["status"] == "cancelled"
+    _assert_overdue_still_holds(client, overdue["id"], shop["id"], tokens, billing)
+
+    complete_at = shop_now() + timedelta(hours=9)
+    finished = _shop_booking(client, shop["id"], complete_at, complete_at + timedelta(hours=1))
+    _activate(client, finished["id"])
+    completed = client.post(
+        f"/bookings/{finished['id']}/complete",
+        headers=AUTH,
+        json={"unused_tokens": "0"},
+    )
+    assert completed.status_code == 200, completed.text
+    assert completed.json()["status"] == "completed"
+    _assert_overdue_still_holds(client, overdue["id"], shop["id"], tokens, billing)
+
+
 def _book_raw(client: TestClient, *, member_id: str, hoist_id: str, start, end):
     return client.post(
         "/bookings",
