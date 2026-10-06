@@ -114,13 +114,19 @@ def _open_booking_count(session: Session, member_id: UUID) -> int:
 
 
 def _set_hoist_available_if_idle(session: Session, hoist: Hoist) -> None:
-    active = session.scalars(
+    """Free the bay only when nobody is still on it.
+
+    An overdue booking is a late return: the member has not given the bay
+    back, so cancelling or completing a different booking must not mark it
+    available.
+    """
+    occupying = session.scalars(
         select(Booking.id).where(
             Booking.hoist_id == hoist.id,
-            Booking.status == BookingStatus.ACTIVE,
+            Booking.status.in_((BookingStatus.ACTIVE, BookingStatus.OVERDUE)),
         )
     ).first()
-    if active is None and hoist.status == HoistStatus.OCCUPIED:
+    if occupying is None and hoist.status == HoistStatus.OCCUPIED:
         hoist.status = HoistStatus.AVAILABLE
         session.add(hoist)
 
