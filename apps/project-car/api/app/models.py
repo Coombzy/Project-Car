@@ -127,6 +127,7 @@ class StaffSubject(str, enum.Enum):
     SCHEDULE = "schedule"
     TOKENS = "tokens"
     OPEN_REQUESTS = "open_requests"
+    BOOKING = "booking"
 
 
 class TokenTransactionKind(str, enum.Enum):

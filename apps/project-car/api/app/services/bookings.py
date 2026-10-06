@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import UUID
 
@@ -16,6 +16,9 @@ from app.models import (
     BookingStatus,
     Hoist,
     HoistStatus,
+    Incident,
+    IncidentKind,
+    IncidentSeverity,
     Member,
     MemberStatus,
     TokenTransactionKind,
@@ -26,6 +29,9 @@ from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
 
 OPEN_STATUSES = (BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.ACTIVE)
+# Overdue still occupies a tier slot until the Owner completes it. Cancel stays
+# limited to OPEN_STATUSES: a late return is not a cancellation.
+SIMULTANEOUS_STATUSES = OPEN_STATUSES + (BookingStatus.OVERDUE,)
 # Confirmed, active, and overdue already own the hour. Confirm checks these so a
 # second pending row left from older data can still lose with 409, without two
 # pending rows blocking each other.
@@ -101,7 +107,7 @@ def _open_booking_count(session: Session, member_id: UUID) -> int:
     rows = session.scalars(
         select(Booking.id).where(
             Booking.member_id == member_id,
-            Booking.status.in_(OPEN_STATUSES),
+            Booking.status.in_(SIMULTANEOUS_STATUSES),
         )
     ).all()
     return len(rows)
@@ -331,8 +337,12 @@ def complete_booking(
     unused_tokens: Decimal = Decimal("0"),
 ) -> Booking:
     booking = get_booking(session, booking_id)
-    if booking.status != BookingStatus.ACTIVE:
-        raise _error(400, "invalid_transition", "Only active bookings can be completed.")
+    if booking.status not in (BookingStatus.ACTIVE, BookingStatus.OVERDUE):
+        raise _error(
+            400,
+            "invalid_transition",
+            "Only an active or overdue booking can be completed.",
+        )
 
     unused = Decimal(unused_tokens)
     reserved = Decimal(booking.reserved_tokens)
@@ -369,6 +379,76 @@ def complete_booking(
     session.flush()
     _set_hoist_available_if_idle(session, booking.hoist)
     return get_booking(session, booking.id)
+
+
+def _stored_utc(value: datetime) -> datetime:
+    """UTC instant for a stored timestamp or an aware clock.
+
+    Postgres returns timestamptz as aware. SQLite returns the same UTC instant
+    as a naive datetime. ``as_utc`` treats naive values as shop-local, which
+    would move a past end into the future.
+    """
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def _late_return(session: Session, booking_id: UUID) -> Incident | None:
+    return session.scalars(
+        select(Incident)
+        .where(
+            Incident.booking_id == booking_id,
+            Incident.kind == IncidentKind.LATE_RETURN,
+        )
+        .order_by(Incident.created_at, Incident.id)
+    ).first()
+
+
+def _open_late_return(session: Session, booking: Booking) -> Incident:
+    incident = Incident(
+        member_id=booking.member_id,
+        hoist_id=booking.hoist_id,
+        booking_id=booking.id,
+        kind=IncidentKind.LATE_RETURN,
+        severity=IncidentSeverity.MINOR,
+        description=(
+            "Late return. The booking was still active after its end. "
+            "No money was charged. The Owner reviews this incident."
+        ),
+        photos=[],
+    )
+    session.add(incident)
+    return incident
+
+
+def mark_overdue(session: Session, booking_id: UUID) -> tuple[Booking, bool]:
+    """Flip an active booking past its end to overdue and open one late_return.
+
+    Repeat calls are idempotent. This path does not write a token ledger row
+    or a billing row, and it does not release the hour. Returns the booking
+    and whether this call changed stored state (status or a new incident).
+    """
+    booking = get_booking(session, booking_id)
+    existing = _late_return(session, booking.id)
+    changed = False
+    if booking.status != BookingStatus.OVERDUE:
+        if booking.status != BookingStatus.ACTIVE:
+            raise _error(400, "invalid_transition", "Only an active booking can be marked overdue.")
+        if _stored_utc(booking.end_at) > _stored_utc(shop_now()):
+            raise _error(
+                400,
+                "not_past_end",
+                "An active booking can be marked overdue only after its end.",
+            )
+        booking.status = BookingStatus.OVERDUE
+        session.add(booking)
+        changed = True
+    if existing is None:
+        _open_late_return(session, booking)
+        changed = True
+    if changed:
+        session.flush()
+    return get_booking(session, booking.id), changed
 
 
 def cancel_booking(session: Session, booking_id: UUID) -> Booking:

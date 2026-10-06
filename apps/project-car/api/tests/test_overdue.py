@@ -222,11 +222,17 @@ def test_overdue_stores_one_late_return_and_moves_no_money(client: TestClient) -
     stored = _booking(client, booking_id)
     assert stored.status == BookingStatus.COMPLETED
     assert Decimal(stored.reserved_tokens) == Decimal("0")
-    kinds = [row.kind.value for row in _token_rows(client, booking_id)]
-    assert kinds == ["booking_reserve", "booking_refund", "booking_debit"]
+    settled = _token_rows(client, booking_id)
+    assert sorted(row.kind.value for row in settled) == [
+        "booking_debit",
+        "booking_refund",
+        "booking_reserve",
+    ]
+    debit = next(row for row in settled if row.kind.value == "booking_debit")
+    assert Decimal(debit.amount) == -reserved
     assert _count(client, BillingTransaction) == 0
     assert len(_incidents(client, booking_id)) == 1
-    assert _balance(client, ada["id"]) == balance - reserved
+    assert _balance(client, ada["id"]) == balance
     hoists = {row["name"]: row for row in client.get("/hoists", headers=AUTH).json()}
     assert hoists["Bay 1"]["status"] == "available"
 
@@ -256,6 +262,21 @@ def test_ai_marks_overdue_on_the_same_route_without_money(client: TestClient) ->
     assert incidents[0].kind == IncidentKind.LATE_RETURN
     assert [row.kind.value for row in _token_rows(client, booking_id)] == ["booking_reserve"]
     assert _count(client, BillingTransaction) == 0
+    assert _balance(client, member["id"]) == balance
+    later = shop_now() + timedelta(hours=8)
+    capped = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": bay["id"],
+            "start_at": later.isoformat(),
+            "end_at": (later + timedelta(hours=1)).isoformat(),
+        },
+    )
+    assert capped.status_code == 400
+    assert capped.json()["error"]["code"] == "max_simultaneous_bookings"
+    assert [row.kind.value for row in _token_rows(client, booking_id)] == ["booking_reserve"]
     assert _balance(client, member["id"]) == balance
     actions = _actions(client, booking_id)
     assert len(actions) == 1
@@ -289,6 +310,7 @@ def test_shop_work_overdue_writes_no_ledger_and_bays_stay_direct(client: TestCli
     _activate(client, booking_id)
     assert _token_rows(client, booking_id) == []
     assert _count(client, BillingTransaction) == 0
+    tokens_before = _count(client, TokenTransaction)
 
     marked = client.post(f"/bookings/{booking_id}/overdue", headers=AUTH)
     assert marked.status_code == 200, marked.text
@@ -301,7 +323,7 @@ def test_shop_work_overdue_writes_no_ledger_and_bays_stay_direct(client: TestCli
     assert incidents[0].member_id is None
     assert _token_rows(client, booking_id) == []
     assert _count(client, BillingTransaction) == 0
-    assert _count(client, TokenTransaction) == 0
+    assert _count(client, TokenTransaction) == tokens_before
 
     later = shop_now() + timedelta(hours=6)
     request = client.post(
