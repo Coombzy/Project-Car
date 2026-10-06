@@ -253,6 +253,7 @@ class Member(Base):
     id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     email: Mapped[str] = mapped_column(String(320), nullable=False, unique=True)
+    password_hash: Mapped[Optional[str]] = mapped_column(String(255))
     phone: Mapped[Optional[str]] = mapped_column(String(40))
     tier_name: Mapped[str] = mapped_column(
         ForeignKey("membership_tiers.name", onupdate="CASCADE"),
