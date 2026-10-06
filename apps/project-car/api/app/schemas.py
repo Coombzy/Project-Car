@@ -188,6 +188,10 @@ class MemberCreate(BaseModel):
         return _blank_to_none(str(value))
 
 
+class MemberPasswordSet(BaseModel):
+    password: str = Field(min_length=1, max_length=200)
+
+
 class MemberPatch(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=200)
     phone: str | None = Field(default=None, max_length=40)

@@ -10,6 +10,7 @@ from app.auth import (
     create_member_session_token,
     create_session_token,
     credentials_match,
+    member_password_matches,
     set_member_session_cookie,
     set_session_cookie,
 )
@@ -45,19 +46,20 @@ def member_login(
     settings: AppSettings,
     session: DbSession,
 ) -> PrincipalOut:
-    """Demo Member session. Email must match a member row; password is the demo stub.
+    """Member session. Email must match a member row.
+
+    A stored password hash is checked on its own. The shared demo password is
+    refused for that member. A member with no hash yet still accepts the shared
+    demo password, so existing rows keep working until an owner sets one.
 
     Not OIDC. Staff / Member OIDC can replace this later without rewriting shop tables.
     """
-    if body.password != settings.member_demo_password:
-        raise HTTPException(
-            status_code=401,
-            detail={"code": "invalid_credentials", "message": "Email or password is incorrect."},
-        )
     member = session.scalars(
         select(Member).options(selectinload(Member.tier)).where(Member.email == str(body.email))
     ).first()
-    if member is None:
+    if member is None or not member_password_matches(
+        member.password_hash, body.password, settings.member_demo_password
+    ):
         raise HTTPException(
             status_code=401,
             detail={"code": "invalid_credentials", "message": "Email or password is incorrect."},

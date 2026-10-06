@@ -91,3 +91,16 @@ def test_own_password_refuses_shared_and_is_stored_hashed(client: TestClient) ->
     assert replaced != RESET_PASSWORD
     assert RESET_PASSWORD not in replaced
     assert OWN_PASSWORD not in replaced
+
+
+def test_rejected_password_is_not_returned(client: TestClient) -> None:
+    member = create_member(client, email="sam@example.com")
+    secret = "not-stored-plaintext"
+    rejected = client.post(
+        f"/members/{member['id']}/password",
+        headers=AUTH,
+        json={"note": secret},
+    )
+    assert rejected.status_code == 422
+    assert secret not in rejected.text
+    assert rejected.json()["error"]["message"] == "Password is required."
