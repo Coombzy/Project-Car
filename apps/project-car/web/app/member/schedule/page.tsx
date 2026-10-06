@@ -19,7 +19,7 @@ import {
   slotEnd,
   sortHoists,
 } from "../../../lib/calendar";
-import { parseWeekParam, shopDateTimeLocal } from "../../../lib/time";
+import { parseWeekParam, shopClock, shopDateTimeLocal } from "../../../lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -71,8 +71,8 @@ export default async function MemberSchedulePage({
 
     const ordered = sortHoists(schedule.hoists.filter((hoist) => !hoist.is_shop));
     const returnTo = { view, week: weekStart, month, hoist: hoistId };
-    const defaultStart = slot ?? shopDateTimeLocal(new Date(Date.now() + 72 * 3600 * 1000));
-    const defaultEnd = slot ? slotEnd(slot) : shopDateTimeLocal(new Date(Date.now() + 73 * 3600 * 1000));
+    const defaultStart = slot ?? shopDateTimeLocal(new Date(shopClock().getTime() + 72 * 3600 * 1000));
+    const defaultEnd = slot ? slotEnd(slot) : shopDateTimeLocal(new Date(shopClock().getTime() + 73 * 3600 * 1000));
 
     return (
       <MemberShell email={me.email} current="schedule" wide>
