@@ -4,10 +4,12 @@ from decimal import Decimal
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
+from app.auth import hash_password
 from app.deps import DbSession, Owner
 from app.models import Booking, Member, MembershipTier, TokenTransaction, TokenTransactionKind
 from app.schemas import (
@@ -15,6 +17,7 @@ from app.schemas import (
     MemberCreate,
     MemberDetailOut,
     MemberOut,
+    MemberPasswordSet,
     MemberPatch,
     TokenAdjustment,
     TokenTransactionOut,
@@ -114,6 +117,29 @@ def patch_member(member_id: UUID, body: MemberPatch, session: DbSession, _owner:
         updates["name"] = updates["name"].strip()
     for key, value in updates.items():
         setattr(member, key, value)
+    session.add(member)
+    session.flush()
+    session.refresh(member)
+    return MemberOut.model_validate(member)
+
+
+@router.post("/members/{member_id}/password", response_model=MemberOut)
+def set_member_password(
+    member_id: UUID,
+    body: dict,
+    session: DbSession,
+    _owner: Owner,
+) -> MemberOut:
+    """Store a new scrypt hash. The plaintext is not stored, logged, or returned."""
+    try:
+        password = MemberPasswordSet.model_validate(body).password
+    except ValidationError:
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "validation_error", "message": "Password is required."},
+        ) from None
+    member = _member_or_404(session, member_id)
+    member.password_hash = hash_password(password)
     session.add(member)
     session.flush()
     session.refresh(member)
