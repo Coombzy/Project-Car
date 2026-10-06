@@ -123,6 +123,35 @@ def test_seed_demo_data_on_sqlite(client: TestClient) -> None:
     assert any(row["kind"] == "shop" for row in body_bookings)
 
 
+def test_seeded_waitlist_joined_at_follows_the_frozen_shop_clock(client: TestClient, monkeypatch) -> None:
+    """Visual shots read Joined from created_at. A wall clock makes the PNG drift."""
+    from sqlalchemy import select
+
+    from app.models import WaitlistEntry
+    from app.schemas import WaitlistEntryOut
+    from app.seed import seed
+    from app.shop_time import as_utc, shop_now
+
+    monkeypatch.setenv("SHOP_NOW", "2026-10-06T15:00:00-06:00")
+    session_gen = app_session(client)
+    session = next(session_gen)
+    try:
+        seed(session, reset=True)
+        session.commit()
+        rows = list(session.scalars(select(WaitlistEntry)).all())
+    finally:
+        session_gen.close()
+
+    assert len(rows) == 4
+    expected = as_utc(shop_now())
+    assert expected.isoformat() == "2026-10-06T21:00:00+00:00"
+    for row in rows:
+        assert as_utc(row.created_at) == expected
+        # SQLite keeps the shop wall time and drops the offset. The Owner page
+        # formats that string, so the visual check needs this exact value.
+        assert WaitlistEntryOut.model_validate(row).model_dump(mode="json")["created_at"] == "2026-10-06T15:00:00"
+
+
 def app_session(client: TestClient):
     from app.db import get_db
     from app.main import app

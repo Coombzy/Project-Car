@@ -6,7 +6,7 @@ import re
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
@@ -31,6 +31,26 @@ def _error(status: int, code: str, message: str) -> HTTPException:
 
 def _clean_note(note: str | None) -> str | None:
     return (note or "").strip() or None
+
+
+def _uses_postgres_lock(session: Session) -> bool:
+    return session.get_bind().dialect.name == "postgresql"
+
+
+def _lock_job(session: Session, job_key: str) -> None:
+    """One transaction at a time for this job on Postgres.
+
+    Two claims can both pass the open-claim read. The unique constraint does
+    not cover that, because both claim rows have a null claim_id. The lock is
+    transaction-scoped and releases on commit or rollback. SQLite has no
+    pg_advisory_xact_lock, so the suite forces this branch with a dialect stand-in.
+    """
+    if not _uses_postgres_lock(session):
+        return
+    session.execute(
+        text("SELECT pg_advisory_xact_lock(hashtextextended(:job_key, 0))"),
+        {"job_key": job_key},
+    )
 
 
 def _require_posted_job(job_key: str) -> tuple[str, str]:
@@ -88,6 +108,7 @@ def claim_job(
     note: str | None,
 ) -> JobEvent:
     cleaned, title = _require_posted_job(job_key)
+    _lock_job(session, cleaned)
     if open_claim(session, cleaned) is not None:
         raise _error(
             409,
@@ -113,6 +134,7 @@ def mark_job_done(
     note: str | None,
 ) -> JobEvent:
     cleaned, title = _require_posted_job(job_key)
+    _lock_job(session, cleaned)
     claimed = open_claim(session, cleaned)
     if claimed is None:
         raise _error(
@@ -122,7 +144,7 @@ def mark_job_done(
         )
     if claimed.member_id != member_id:
         raise _error(
-            409,
+            403,
             "not_your_claim",
             "Only the member who claimed the job can mark it done.",
         )
