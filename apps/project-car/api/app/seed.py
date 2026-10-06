@@ -1065,6 +1065,9 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
                 phone=item["phone"],
                 notes=item["notes"],
                 contacted_at=contacted_at,
+                # Joined follows the shop clock. The database default is wall
+                # time, and that moves the waitlist screenshot.
+                created_at=shop_now(),
             )
             session.add(row)
         else:
