@@ -71,7 +71,18 @@ export function calendarDate(iso: string, timeZone: string = CALENDAR_TZ): strin
   }).format(date);
 }
 
-export function calendarTodayIso(now: Date = new Date()): string {
+function calendarClock(): Date {
+  const frozen = process.env.NEXT_PUBLIC_SHOP_NOW || process.env.SHOP_NOW;
+  if (frozen) {
+    const date = new Date(frozen);
+    if (!Number.isNaN(date.getTime())) {
+      return date;
+    }
+  }
+  return new Date();
+}
+
+export function calendarTodayIso(now: Date = calendarClock()): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: CALENDAR_TZ,
     year: "numeric",
