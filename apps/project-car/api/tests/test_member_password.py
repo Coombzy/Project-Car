@@ -7,7 +7,10 @@ from uuid import UUID
 from fastapi.testclient import TestClient
 
 from app.config import settings
+from app.db import get_db
+from app.main import app
 from app.models import Member
+from app.seed import seed
 from tests.conftest import AUTH, create_member
 
 OWN_PASSWORD = "bay-door-4821"
@@ -91,6 +94,35 @@ def test_own_password_refuses_shared_and_is_stored_hashed(client: TestClient) ->
     assert replaced != RESET_PASSWORD
     assert RESET_PASSWORD not in replaced
     assert OWN_PASSWORD not in replaced
+
+
+def _seed_demo(client: TestClient) -> None:
+    override = app.dependency_overrides[get_db]
+    session_gen = override()
+    session = next(session_gen)
+    try:
+        seed(session, reset=True)
+        session.commit()
+    finally:
+        session_gen.close()
+
+
+def test_seed_hashes_configured_member_password(client: TestClient, monkeypatch) -> None:
+    configured = "correct-horse"
+    monkeypatch.setattr(settings, "member_demo_password", configured)
+    _seed_demo(client)
+
+    shared = _login(client, "ada.reyes@example.com", "changeme")
+    assert shared.status_code == 401
+    assert shared.json()["error"] == {
+        "code": "invalid_credentials",
+        "message": "Email or password is incorrect.",
+    }
+
+    signed_in = _login(client, "ada.reyes@example.com", configured)
+    assert signed_in.status_code == 200, signed_in.text
+    assert signed_in.json()["role"] == "member"
+    assert signed_in.json()["email"] == "ada.reyes@example.com"
 
 
 def test_rejected_password_is_not_returned(client: TestClient) -> None:
