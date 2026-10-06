@@ -1,0 +1,9 @@
+name = "projectcar-demo-chat"
+main = "src/worker.js"
+compatibility_date = "2026-10-01"
+
+# No route in git. Zone attaches only these paths after deploy:
+#   projectcar.ca/api/demo-chat
+#   www.projectcar.ca/api/demo-chat
+# Do not attach projectcar.ca/* or www.projectcar.ca/*.
+# Do not put this worker's files in the brochure Direct Upload (apps/website/html).
