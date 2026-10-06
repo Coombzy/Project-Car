@@ -13,8 +13,15 @@ function redirectTo(request: NextRequest, path: string): URL {
   return publicUrl(request.headers, request.url, path);
 }
 
+const PUBLIC_INSTALL_PATHS = new Set(["/manifest.webmanifest"]);
+
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
+
+  // Browsers request the web manifest without a session cookie.
+  if (PUBLIC_INSTALL_PATHS.has(path)) {
+    return NextResponse.next();
+  }
 
   // Customer host is Member-only. Do this before owner-login redirects so
   // `/` and `/login` never render on projectcar.ca / www.
@@ -58,5 +65,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest\\.webmanifest).*)"],
 };
