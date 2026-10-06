@@ -7,8 +7,10 @@ Usage (from apps/project-car/api, venv active, after `alembic upgrade head`):
 
 `--reset` deletes members, hoists, bookings, token ledger rows, waitlist
 entries, job claims, crib checkouts, and related operational rows, then
-inserts the demo set. Job and crib rows are removed before members because
-those foreign keys are RESTRICT. Tiers are refreshed to the two
+inserts the demo set. Rows whose foreign keys are ON DELETE RESTRICT are
+removed first: job claims and crib checkouts (including their self-links),
+shop hoist requests, staff parts requests, tool crib exceptions, and refund
+requests. Tiers are refreshed to the two
 Owner-editable placeholders (Basic / Premium). Leftover
 Weekly or Pro seed rows are dropped (Pro members move to Premium).
 
@@ -59,8 +61,12 @@ from app.models import (
     NotificationOutbox,
     PartsOrder,
     PartsOrderStatus,
+    RefundRequest,
+    ShopHoistRequest,
+    StaffPartsRequest,
     Todo,
     TodoStatus,
+    ToolCribException,
     ToolCribEvent,
     TokenTransaction,
     TokenTransactionKind,
@@ -212,6 +218,11 @@ def _delete_self_linked(session: Session, model, link) -> None:
 
 
 def _reset_shop(session: Session) -> None:
+    # 20261004_0011 RESTRICT children, before bookings, members, and hoists.
+    session.execute(delete(RefundRequest))
+    session.execute(delete(ShopHoistRequest))
+    session.execute(delete(StaffPartsRequest))
+    session.execute(delete(ToolCribException))
     _delete_self_linked(session, JobEvent, JobEvent.claim_id)
     _delete_self_linked(session, ToolCribEvent, ToolCribEvent.checkout_id)
     session.execute(delete(ChatMessage))
