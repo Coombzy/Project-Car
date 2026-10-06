@@ -170,7 +170,7 @@ function loadMiddleware(): { loaded: LoadedMiddleware; cleanup: () => void } {
     getMiddlewareRouteMatcher: (matchers: { regexp: string }[]) => (pathname: string) => boolean;
   };
   const dir = mkdtempSync(join(tmpdir(), "shop-manifest-mw-"));
-  const files = ["lib/config.ts", "lib/request-origin.ts", "middleware.ts"];
+  const files = ["lib/config.ts", "lib/request-origin.ts", "lib/security-headers.ts", "middleware.ts"];
   for (const relative of files) {
     const source = readFileSync(join(webRoot, relative), "utf8");
     let js = ts.transpileModule(source, {
