@@ -8,9 +8,14 @@ import {
   isCustomerShopHost,
   publicUrl,
 } from "./lib/request-origin";
+import { applySecurityHeaders } from "./lib/security-headers";
 
 function redirectTo(request: NextRequest, path: string): URL {
   return publicUrl(request.headers, request.url, path);
+}
+
+function redirect(url: string | URL): NextResponse {
+  return applySecurityHeaders(NextResponse.redirect(url));
 }
 
 const PUBLIC_INSTALL_PATHS = new Set(["/manifest.webmanifest"]);
@@ -26,7 +31,7 @@ export function middleware(request: NextRequest) {
   // Customer host is Member-only. Do this before owner-login redirects so
   // `/` and `/login` never render on projectcar.ca / www.
   if (isCustomerShopHost(request.headers) && !customerHostAllowsPath(path)) {
-    return NextResponse.redirect(CUSTOMER_HOST_OPS_LOGIN);
+    return redirect(CUSTOMER_HOST_OPS_LOGIN);
   }
 
   const ownerSession = request.cookies.get(SESSION_COOKIE)?.value;
@@ -37,7 +42,7 @@ export function middleware(request: NextRequest) {
 
   if (isMemberLogin) {
     if (memberSession) {
-      return NextResponse.redirect(redirectTo(request, "/member"));
+      return redirect(redirectTo(request, "/member"));
     }
     return NextResponse.next();
   }
@@ -46,7 +51,7 @@ export function middleware(request: NextRequest) {
     if (!memberSession) {
       const login = redirectTo(request, "/member/login");
       login.searchParams.set("next", path);
-      return NextResponse.redirect(login);
+      return redirect(login);
     }
     return NextResponse.next();
   }
@@ -54,11 +59,11 @@ export function middleware(request: NextRequest) {
   if (!ownerSession && !isOwnerLogin) {
     const login = redirectTo(request, "/login");
     login.searchParams.set("next", path);
-    return NextResponse.redirect(login);
+    return redirect(login);
   }
 
   if (ownerSession && isOwnerLogin) {
-    return NextResponse.redirect(redirectTo(request, "/"));
+    return redirect(redirectTo(request, "/"));
   }
 
   return NextResponse.next();
