@@ -38,7 +38,8 @@ describe("safeMemberNext", () => {
     assert.equal(safeMemberNext("/members/1"), "/member");
     assert.equal(safeMemberNext("/member/../schedule"), "/member");
     assert.equal(safeMemberNext("/member/%2e%2e/schedule"), "/member");
-    assert.equal(safeMemberNext("/member/%2f%2e%2e%2fschedule"), "/member");
+    assert.equal(safeMemberNext("/member%2f%2e%2e%2fschedule"), "/member");
+    assert.equal(safeMemberNext("/member/schedule%2f%2e%2e%2f%2e%2e%2flogin"), "/member");
     assert.equal(safeMemberNext("//host"), "/member");
     assert.equal(safeMemberNext("/\\evil.example"), "/member");
     assert.equal(safeMemberNext("/\\\\host"), "/member");
