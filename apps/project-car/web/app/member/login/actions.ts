@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { ShopApiError } from "../../../lib/config";
+import { safeMemberNext } from "../../../lib/safe-next";
 import { writeMemberSessionCookie } from "../../../lib/session";
 import { loginMember } from "../../../lib/shop-api";
 
@@ -14,9 +15,7 @@ export async function memberLoginAction(
 ): Promise<MemberLoginState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const nextPath = String(formData.get("next") ?? "/member");
-  const safeNext =
-    nextPath.startsWith("/member") && !nextPath.startsWith("//") ? nextPath : "/member";
+  const safeNext = safeMemberNext(String(formData.get("next") ?? "/member"));
 
   if (!email || !password) {
     return { message: "Email and password are required." };
