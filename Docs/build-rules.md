@@ -23,3 +23,15 @@ Every queue row states its baseline, its target, and what must not get worse.
 Every pull request that touches the UI carries before and after screenshots in its body. Ben owns taste calls. A feature's `passes` stays false until Ben sees the window.
 
 Agents do not give hour, day, or month estimates. Work is sized in rows.
+
+Every launch prompt names the row's baseline, its target, what must not get worse, and the proof expected. The proof is the red sha, the green sha, and before and after screenshots for UI work.
+
+One cloud agent per pull request. Rebases, CI fixes, and re-proofs go to that same agent. A new agent is only for a new row.
+
+Lead opens the proof screenshots itself before merging. A caption, or an image that doesn't show the change, is not proof.
+
+Proof images go in the PR body as hosted files, not committed to the branch. Reference screenshots that a visual check compares against, such as `apps/project-car/web/visual/screenshots/`, are test files and may live in the repo.
+
+Never weaken, skip, or delete a failing check to make it pass. That includes raising the layout-shift or pixel-diff thresholds, or regenerating references to hide a real change, unless Ben has signed off on the visual change.
+
+When the same cause shows up twice in `Docs/later.md`, Lead opens a docs PR that adds a rule here, so it doesn't happen a third time.
