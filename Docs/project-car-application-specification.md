@@ -94,7 +94,7 @@ Identity rules:
 - Tool checkout **hardware** and QR scanning in the UI (Tools **sections** are build-breadth placeholders; hardware is not this lock).
 - Claiming Frigate / camera **feeds are shipped**. Camera **IA** is locked above as a placeholder. Live pages are stubs (ops: every camera + door logs + AI; members: one primary). Flag `pc.cameras` stays off.
 - eBay marketplace, estate-sale app, welding / turbo calculators. Member Parts **placeholder** is in; `pc.marketplace` stays off.
-- Job-board assign. Claim and complete are on `main` at `4488dab`. **Placeholder** board with sample token-paid chores is in.
+- Job-board assign. A `claim` row and a `done` row are on `main` at `4488dab` (hardened `#116` `aedc8a6`); done does not credit the token ledger. **Placeholder** board with sample token-paid chores is in.
 - Fitness, Matrix, n8n.
 - Offline-first mobile client. v1 is a mobile-friendly PWA in the browser.
 - Full member parts purchasing (request desk now; **full Later**). Do not invent member commerce.
