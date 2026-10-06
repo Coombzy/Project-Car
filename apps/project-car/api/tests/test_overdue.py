@@ -12,6 +12,7 @@ from uuid import UUID
 
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import Session
 
 from app.models import (
@@ -461,6 +462,57 @@ def test_overdue_keeps_the_hoist_occupied_when_another_booking_ends(client: Test
     assert completed.status_code == 200, completed.text
     assert completed.json()["status"] == "completed"
     _assert_overdue_still_holds(client, overdue["id"], shop["id"], tokens, billing)
+
+
+def _compiled(statement) -> tuple[str, bool]:
+    sql = str(statement.compile(dialect=postgresql.dialect()))
+    return sql, getattr(statement, "_for_update_arg", None) is not None
+
+
+def _assert_lock_precedes_incident_read(reads: list[tuple[str, bool]]) -> None:
+    lock_at = [
+        index
+        for index, (sql, locked) in enumerate(reads)
+        if locked and "FOR UPDATE" in sql and "FROM bookings" in sql
+    ]
+    incident_at = [index for index, (sql, _) in enumerate(reads) if "FROM incidents" in sql]
+    assert lock_at, reads
+    assert incident_at, reads
+    assert lock_at[0] < incident_at[0]
+
+
+def test_second_mark_overdue_locks_the_booking_and_opens_one_incident(
+    client: TestClient, monkeypatch
+) -> None:
+    member = create_member(client, email="ada@example.com")
+    bay = create_hoist(client, name="Bay 1")
+    start = shop_now() - timedelta(hours=3)
+    end = shop_now() - timedelta(hours=1)
+    created = _book(client, member_id=member["id"], hoist_id=bay["id"], start=start, end=end)
+    booking_id = created["id"]
+    _activate(client, booking_id)
+    reads: list[tuple[str, bool]] = []
+    original = Session.scalars
+
+    def spy(self, statement, *args, **kwargs):
+        reads.append(_compiled(statement))
+        return original(self, statement, *args, **kwargs)
+
+    monkeypatch.setattr(Session, "scalars", spy)
+
+    first = client.post(f"/bookings/{booking_id}/overdue", headers=AUTH)
+    assert first.status_code == 200, first.text
+    _assert_lock_precedes_incident_read(reads)
+    assert len(_incidents(client, booking_id)) == 1
+
+    reads.clear()
+    second = client.post(f"/bookings/{booking_id}/overdue", headers=AUTH)
+    assert second.status_code == 200, second.text
+    _assert_lock_precedes_incident_read(reads)
+    incidents = _incidents(client, booking_id)
+    assert len(incidents) == 1
+    assert incidents[0].kind == IncidentKind.LATE_RETURN
+    assert _booking(client, booking_id).status == BookingStatus.OVERDUE
 
 
 def _book_raw(client: TestClient, *, member_id: str, hoist_id: str, start, end):
