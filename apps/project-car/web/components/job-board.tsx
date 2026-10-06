@@ -47,7 +47,7 @@ export function JobBoard({ audience }: { audience: "member" | "ops" }) {
                   </span>
                 </td>
                 <td className="notes">
-                  +{tokensLabel(job.tokenBounty)} to member ledger (stub)
+                  +{tokensLabel(job.tokenBounty)} token bounty (credit stays later)
                 </td>
                 <td className="notes">{job.note}</td>
                 <td>

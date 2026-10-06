@@ -10,7 +10,7 @@ Every queue row states its baseline, its target, and what must not get worse.
 
 ## Now
 
-No open row.
+Harden job claim and job done. Baseline: claim and done are on main at 4488dab (`job_events`, one open claim, only the claimer marks done, no token or chat writes). Target: `seed --reset` deletes `job_events` and `tool_crib_events` before members; marking someone else's claim done returns 403 `not_your_claim`; the member banner says a claim and a done each store a row and token credit stays later; Postgres takes `pg_advisory_xact_lock` before claim and done; tests cover blank and padded SKUs on both routes, done by an inactive member, done with an unknown key, reclaim by another member, one Alembic head, and `POSTED_JOBS` matching `SAMPLE_JOBS`. Must not get worse: a done still writes no token or chat row, a second open claim stays 409, the shop is not open, `Docs/features.json` `passes` stays false, and shop-api pytest plus shop-web typecheck, test, build, and the layout-shift check stay green.
 
 ## Already on main
 
