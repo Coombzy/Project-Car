@@ -38,6 +38,7 @@ from uuid import UUID, uuid5
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
+import app.config
 from app.auth import hash_password
 from app.db import SessionLocal
 from app.models import (
@@ -81,8 +82,7 @@ from app.shop_time import PRICING_TZ, SHOP_TZ, as_utc, next_24h_bounds, shop_now
 
 SEED_NS = UUID("a11ce000-5e1d-4000-8000-000000000001")
 
-# Localhost demo only. Each seeded member stores a hash of this password.
-DEMO_MEMBER_PASSWORD = "changeme"
+# seed() stores a hash of settings.member_demo_password for each of these emails.
 DEMO_MEMBER_EMAILS = (
     "ada.reyes@example.com",
     "sam.chen@example.com",
@@ -773,8 +773,9 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     session.flush()
 
     demo_members = [ada, sam, riley, jordan, casey, morgan]
+    demo_password = app.config.settings.member_demo_password
     for row in demo_members:
-        row.password_hash = hash_password(DEMO_MEMBER_PASSWORD)
+        row.password_hash = hash_password(demo_password)
     session.flush()
     _retire_extra_tiers(session)
     _clear_member_activity(session, [row.id for row in demo_members])
@@ -1176,11 +1177,11 @@ def main(argv: list[str] | None = None) -> int:
         "(Basic 1000 / Premium 1500).".format(**summary)
     )
     print("  Owner login (localhost demo): owner@projectcar.ca / changeme")
-    print(f"  Member login (localhost demo): ada.reyes@example.com / {DEMO_MEMBER_PASSWORD}")
+    print(f"  Member login (localhost demo): ada.reyes@example.com / {settings.member_demo_password}")
     print(
         "  Demo member passwords (localhost): "
         + ", ".join(DEMO_MEMBER_EMAILS)
-        + f" / {DEMO_MEMBER_PASSWORD}"
+        + f" / {settings.member_demo_password}"
     )
     print("  The shop is not open. This is sample data for walkthroughs.")
     return 0

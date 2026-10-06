@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.auth import (
+    DUMMY_MEMBER_PASSWORD_HASH,
     clear_member_session_cookie,
     clear_session_cookie,
     create_member_session_token,
@@ -13,12 +14,20 @@ from app.auth import (
     member_password_matches,
     set_member_session_cookie,
     set_session_cookie,
+    verify_password,
 )
 from app.deps import AnyPrincipal, AppSettings, DbSession
 from app.models import Member, MemberStatus
 from app.schemas import LoginRequest, PrincipalOut
 
 router = APIRouter(tags=["auth"])
+
+
+def _invalid_credentials() -> HTTPException:
+    return HTTPException(
+        status_code=401,
+        detail={"code": "invalid_credentials", "message": "Email or password is incorrect."},
+    )
 
 
 @router.post("/auth/login", response_model=PrincipalOut)
@@ -57,13 +66,13 @@ def member_login(
     member = session.scalars(
         select(Member).options(selectinload(Member.tier)).where(Member.email == str(body.email))
     ).first()
-    if member is None or not member_password_matches(
+    if member is None:
+        verify_password(body.password, DUMMY_MEMBER_PASSWORD_HASH)
+        raise _invalid_credentials()
+    if not member_password_matches(
         member.password_hash, body.password, settings.member_demo_password
     ):
-        raise HTTPException(
-            status_code=401,
-            detail={"code": "invalid_credentials", "message": "Email or password is incorrect."},
-        )
+        raise _invalid_credentials()
     if member.status != MemberStatus.ACTIVE:
         raise HTTPException(
             status_code=403,

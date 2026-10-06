@@ -11,7 +11,7 @@ from app.db import get_db
 from app.main import app
 from app.models import Member
 from app.seed import seed
-from tests.conftest import AUTH, create_member
+from tests.conftest import AUTH, create_member, login_member
 
 OWN_PASSWORD = "bay-door-4821"
 WRONG_PASSWORD = "not-the-password"
@@ -123,6 +123,40 @@ def test_seed_hashes_configured_member_password(client: TestClient, monkeypatch)
     assert signed_in.status_code == 200, signed_in.text
     assert signed_in.json()["role"] == "member"
     assert signed_in.json()["email"] == "ada.reyes@example.com"
+
+
+def test_unknown_email_keeps_the_invalid_credentials_body(client: TestClient) -> None:
+    missing = _login(client, "nobody@example.com", "correct-horse")
+    assert missing.status_code == 401
+    assert missing.json()["error"] == {
+        "code": "invalid_credentials",
+        "message": "Email or password is incorrect.",
+    }
+
+
+def test_member_session_cannot_set_password(client: TestClient) -> None:
+    member = create_member(client, email="ada@example.com")
+    login_member(client, member["email"])
+    denied = client.post(
+        f"/members/{member['id']}/password",
+        json={"password": OWN_PASSWORD},
+    )
+    assert denied.status_code in {401, 403}
+
+
+def test_personal_password_may_match_shared_demo_password(client: TestClient) -> None:
+    shared = settings.member_demo_password
+    member = create_member(client, email="riley@example.com")
+    saved = client.post(
+        f"/members/{member['id']}/password",
+        headers=AUTH,
+        json={"password": shared},
+    )
+    assert saved.status_code == 200, saved.text
+    assert shared not in saved.text
+    signed_in = _login(client, member["email"], shared)
+    assert signed_in.status_code == 200, signed_in.text
+    assert signed_in.json()["role"] == "member"
 
 
 def test_rejected_password_is_not_returned(client: TestClient) -> None:

@@ -26,6 +26,10 @@ _SCRYPT_MAX_P = 2
 
 OWNER_SALT = "project-car-owner"
 MEMBER_SALT = "project-car-member"
+# Fixed scrypt so a missing member pays the same cost as a wrong password.
+DUMMY_MEMBER_PASSWORD_HASH = (
+    "scrypt$16384$8$1$FeNmoqWBAr3KRneA6j80ng==$uwxOA_jxxH2giYqHXgZwA_8rV14Jas_WtgL8ML9cTMo="
+)
 
 
 @dataclass(frozen=True)
