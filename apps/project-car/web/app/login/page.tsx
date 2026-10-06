@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { safeOwnerNext } from "../../lib/safe-next";
 import { LoginForm } from "./login-form";
 
 export default async function LoginPage({
@@ -8,10 +9,7 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string; reason?: string }>;
 }) {
   const params = await searchParams;
-  const nextPath =
-    params.next && params.next.startsWith("/") && !params.next.startsWith("//")
-      ? params.next
-      : "/";
+  const nextPath = safeOwnerNext(params.next);
 
   return (
     <main>

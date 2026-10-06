@@ -70,14 +70,17 @@ def test_queue_scripts_read_the_fixture_queue(tmp_path: Path) -> None:
 
 def test_next_row_reads_the_shop_queue(tmp_path: Path) -> None:
     real = (ROOT / "Docs" / "queue.md").read_text()
-    assert "No open row." in real
     live = run_script(NEXT, ROOT)
     assert live.returncode == 0
-    assert live.stdout.strip() == "", live.stdout
+    row = live.stdout.strip()
+    assert row.startswith("Harden job claim and job done.")
+    assert "Baseline:" in row
+    assert "Target:" in row
+    assert "Must not get worse:" in row
 
     copy = tmp_path / "shop"
     (copy / "Docs").mkdir(parents=True)
-    (copy / "Docs" / "queue.md").write_text(real.replace("No open row.", "1. Alpha row stays open.", 1))
+    (copy / "Docs" / "queue.md").write_text(real.replace(row, "1. Alpha row stays open.", 1))
     one = run_script(NEXT, copy)
     assert one.returncode == 0 and one.stdout.strip() == "1. Alpha row stays open.", (
         f"next-row did not print the shop row {one.stdout!r}"
