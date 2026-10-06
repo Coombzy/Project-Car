@@ -9,7 +9,15 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.deps import DbSession, Owner
-from app.models import ActorKind, Booking, BookingKind, BookingStatus, Hoist, ShopHoistRequestStatus
+from app.models import (
+    ActorKind,
+    Booking,
+    BookingKind,
+    BookingStatus,
+    Hoist,
+    ShopHoistRequestStatus,
+    StaffSubject,
+)
 from app.schemas import (
     BookingComplete,
     BookingCreate,
@@ -21,7 +29,7 @@ from app.schemas import (
 )
 from app.services import bookings as booking_service
 from app.services.shop_hoist_requests import create_shop_hoist_request, list_shop_hoist_requests
-from app.services.staff import reject_ai
+from app.services.staff import record_action, reject_ai
 from app.shop_time import as_utc
 
 router = APIRouter(tags=["bookings"])
@@ -144,6 +152,21 @@ def confirm_booking(booking_id: UUID, session: DbSession, _owner: Owner) -> Book
 @router.post("/bookings/{booking_id}/check-in", response_model=BookingOut)
 def check_in_booking(booking_id: UUID, session: DbSession, _owner: Owner) -> BookingOut:
     return BookingOut.from_booking(booking_service.check_in_booking(session, booking_id))
+
+
+@router.post("/bookings/{booking_id}/overdue", response_model=BookingOut)
+def mark_booking_overdue(booking_id: UUID, session: DbSession, owner: Owner) -> BookingOut:
+    """Owner or approved bot. No scheduler. Does not move tokens or money."""
+    booking, changed = booking_service.mark_overdue(session, booking_id)
+    if changed:
+        record_action(
+            session,
+            principal=owner,
+            action="overdue",
+            request_id=booking.id,
+            subject=StaffSubject.BOOKING,
+        )
+    return BookingOut.from_booking(booking)
 
 
 @router.post("/bookings/{booking_id}/complete", response_model=BookingOut)
