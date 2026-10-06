@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { safeMemberNext } from "../../../lib/safe-next";
 import { MemberLoginForm } from "./login-form";
 
 export default async function MemberLoginPage({
@@ -8,10 +9,7 @@ export default async function MemberLoginPage({
   searchParams: Promise<{ next?: string; reason?: string }>;
 }) {
   const params = await searchParams;
-  const nextPath =
-    params.next && params.next.startsWith("/member") && !params.next.startsWith("//")
-      ? params.next
-      : "/member";
+  const nextPath = safeMemberNext(params.next);
 
   return (
     <main>
