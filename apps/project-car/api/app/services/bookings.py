@@ -62,6 +62,24 @@ def get_booking(session: Session, booking_id: UUID) -> Booking:
     return booking
 
 
+def _locked_booking(session: Session, booking_id: UUID) -> Booking:
+    """Lock the booking row before a caller reads its incidents.
+
+    On Postgres, ``FOR UPDATE`` holds until commit, so a second mark waits
+    and then sees the incident the first mark inserted. SQLite drops the
+    clause; the suite still checks that the statement asks for the lock.
+    """
+    booking = session.scalars(
+        select(Booking)
+        .options(selectinload(Booking.member), selectinload(Booking.hoist))
+        .where(Booking.id == booking_id)
+        .with_for_update()
+    ).first()
+    if booking is None:
+        raise _error(404, "not_found", "Booking not found.")
+    return booking
+
+
 def hoist_has_overlap(
     session: Session,
     hoist_id: UUID,
@@ -434,7 +452,7 @@ def mark_overdue(session: Session, booking_id: UUID) -> tuple[Booking, bool]:
     or a billing row, and it does not release the hour. Returns the booking
     and whether this call changed stored state (status or a new incident).
     """
-    booking = get_booking(session, booking_id)
+    booking = _locked_booking(session, booking_id)
     existing = _late_return(session, booking.id)
     changed = False
     if booking.status != BookingStatus.OVERDUE:
