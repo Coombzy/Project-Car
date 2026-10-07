@@ -1,129 +1,133 @@
 # Macro Industry Theme Map — Analysis Prompt
 
-**Version:** 1.3 (2026-08-26)  
-**Last edited:** 2026-08-26 18:20 UTC  
-**Supersedes:** v1.2 (rank by upside × conf; prefer single stocks; 3 picks/theme)  
-**v1.3 user edit:** thorough industry / theme analysis **before** naming stocks.  
+**Version:** 1.6 (2026-10-06)  
+**Last edited:** 2026-10-07 00:50 UTC  
+**Supersedes:** v1.5 (expiry clears the tell, pre-haircut floor, shadow block)  
+**v1.6 user edit:** the diesel-plays answer skipped the contract and waived already-priced for a 52-week high. Ad-hoc replies are now bound. Overlay is a row. PLACEHOLDER is replaced once.  
 **Location:** `Project-Car/finance/`
 
 Read `finance/Macro_WRITE_RULES.md` and `finance/Macro_README.md` first. Not financial advice. Selection support only — no position sizes.
 
 ## Goal
 
-Turn the last ~72h of macro / policy / geopolitical news into **at most 3 themes**, each with industry beneficiaries AND hurt side, liquid proxies **and 3 single-stock picks**, **horizon_days**, **% change range**, falsifier, and action. Persist the write-up in the log and append tracker rows for grading.
+Turn the last ~72h of macro / policy / geopolitical news into **at most 3 themes**, each with industry beneficiaries AND hurt side, liquid proxies **and up to 3 single-stock picks**, **horizon_days**, **% change range**, falsifier, and action. Persist the write-up in the log and append tracker rows for grading.
 
-**Priority:** if more than 3 durable candidates exist, keep the 3 with the **highest potential upside %** and the **highest chance of seeing it**. Score each candidate as `(conf / 100) × pct_high` of its best *benefit* name. State the score in the log. Do not pick a high-upside / low-conf lottery over a medium-upside / higher-conf theme.
+**Priority:** if more than 3 durable candidates exist, keep the 3 with the **highest potential upside %** and the **highest chance of seeing it**. Score each candidate as `(conf / 100) × pct_high` of its best *benefit* name. Label that score **expected upside points**, not a probability. State the pre-haircut and post-haircut scores. Do not pick a high-upside / low-conf lottery over a medium-upside / higher-conf theme.
 
-If nothing durable, output **0–1** themes and say so — do not invent.
+Score floor is **pre-haircut**. If the best benefit score is under **5** before any priced-in haircut, do not book that candidate. A haircut changes `action` to `watch` or `ignore`. It does not delete a name that cleared 5. If nothing durable, output **0–1** themes and say so — do not invent. A 0-theme result is still an official run and must be logged.
 
 ## Hard rules
 
-1. Max **3** themes. Overlaps are **overlay proxies or notes**, not a 4th `theme_id`.
+1. Max **3** new `theme_id`s. An inverse still inside the parent horizon is **one overlay row** (`notes` starts with `overlay`), parent ranges frozen, and it does not count toward the cap. A prose note with zero rows cannot be graded.
 2. Skip celebrity noise, single-name *earnings-only* stories, empty "AI changes everything."
-3. **Prefer single stocks with high potential for large % changes.** Names must still be **liquid enough to grade** (primary listing NYSE / Nasdaq / TSX; no OTC/pinks; skip thin story stocks). ETFs remain OK as *hurt-side baskets* or when no clean liquid name exists.
-4. Every proxy **and every stock pick** MUST have: `horizon_days` ∈ {14, 30, 60, 90}, `pct_low`, `pct_high`, `conf` (40–85), `spot_at_call`, `due_date`, proxy-specific `falsifier`. (v1.1 banned 14 — v1.2 restores it to match Macro Alpha. Do **not** use 45.)
+3. **Prefer single stocks with high potential for large % changes.** Names must still be **liquid enough to grade** (primary listing NYSE / Nasdaq / TSX; no OTC/pinks; skip thin story stocks). ETFs remain OK as *hurt-side baskets* or when no clean liquid name exists. Do not widen the venue list to force a country story.
+4. Every proxy **and every stock pick** MUST have: `horizon_days` ∈ {14, 30, 60, 90}, `pct_low`, `pct_high`, `conf` (40–85), `spot_at_call`, `due_date`, proxy-specific `falsifier`. Do **not** use 45 on new rows. Do not rewrite frozen 45-day rows.
 5. % ranges = expected **total return %** over `horizon_days`. Widen when uncertain; do not fake tight precision.
 6. Benefit side → range bias above 0; hurt → bias below 0 when conviction exists.
 7. `theme_id` format: `YYYYMMDD-slug`
 8. `action`: `watch` | `deep-dive` | `ignore`. **At most one `deep-dive` per run.** Default `watch`. Use `ignore` when the move is already priced.
-9. **Do not change** ranges/horizons on already-open tracker rows. New idea = new row.
-10. Per theme: **suggest 3 best stocks** (usually benefit-side convexity; 1 of 3 may be the cleanest hurt-side name). If a pick is also a proxy, **one tracker row** — do not duplicate.
-11. **No tickers until the industry is done.** For each kept theme, complete the **Industry analysis** block (below) *before* listing any stock. Picks must be the output of that analysis, not the starting point. Naming SU/UAL/JPM from memory without the screen is a process miss.
+9. **Do not change** ranges/horizons on already-open tracker rows, including illegal 45-day rows. New idea = new row. Status may change (`open` → `expired-ungraded` or graded). Ranges may not.
+10. Per theme: **suggest up to 3 best stocks**. Same cash-flow line = one ticker. Fewer than 3 with an explicit screen fail is success. Do not add a name to fill the slot. If a pick is also a proxy, **one tracker row**.
+11. **No tickers until the industry is done** for any kept theme. If zero themes are kept, still write a **shadow industry block** for the top dropped candidate, labeled `not booked`, and do not append tracker rows for it.
+12. **Expiry clears the tell.** List open rows with `due_date` < analysis_date. Grade in place if a price is in hand. If not, set `status=expired-ungraded` in the same PR and do not touch ranges. After that flag, a flipped tell **may** be a new `theme_id`. An inverse is an overlay row only while the old row is still inside its horizon (`due_date` >= analysis_date). Chat-only "not edited" is a process miss.
+13. If `main` already has a v1.4+ log header for today, or an open PR for that `analysis_date`, do not start a second official run. A branch-only entry with no open PR is not an official entry. A 0-theme entry counts as that header once it is on `main` or in an open PR.
+14. First line of every official run, and of every chat answer that uses these gates, must cite **Version, ref, and blob SHA actually read**. Do not cite a version you did not re-fetch.
+15. **Two clocks are not one trade.** If one tell has a near-term slug and a residual horizon, each name gets one horizon. State which clock the name is on. Do not present a 14-day cost relief and a 60-day residual long as the same expression.
+16. **Empty tracker is not a screen.** A name at a 52-week high on this tell fails already-priced even if no tracker row exists. The ~150% YTD rule is an extra cut, not the only one.
+
+## Ad-hoc selection answers
+
+If the user asks for the plays, the names, or the best expression and does not ask to book a run:
+
+- Do not append tracker rows and do not prepend the log.
+- Still apply the gates. First line: `Prompt vX.Y | ref | blob <sha> | not booked`.
+- For each name: tell, one source URL, already-priced check (52-week high and YTD or 12-month move), one horizon in {14, 30, 60, 90}, one numeric falsifier.
+- One name per cash-flow line. State the sign of any offset (a fuel-export halt supports the crack; a stock release hurts it).
+- Label the print. NYMEX ULSD futures is not AAA retail diesel. An inventory **level** needs the EIA weekly table URL. A portal draw is not a stock level. If two sources differ by more than 2%, quote both. Do not average.
 
 ## Industry analysis (required, before any stock picks)
 
-For **each** kept theme, research the affected industry (use current news, filings, peer list, prices — do not skip this for speed). Write the block in the log **above** the 3 stocks.
+For **each** kept theme, research the affected industry. Write the block in the log **above** the stocks. If none kept, write the same block once for the top drop and mark it `not booked`.
 
-Cover, compactly:
+1. **Value chain** — who collects the cash.
+2. **Transmission** — how the 72h news hits this industry. Name the **tell**. If the tell moved the wrong way in the 72h window, action = `ignore` and do not book that direction.
+3. **Peer universe** — 5–8 liquid names plus the ETF. One line each: leverage, last print, 52-week high or not, rough YTD or 12-month move.
+4. **Screen** — why these names win. Same cash-flow line = one ticker. Do not force 3. "Not an open row" is not a reason to pick.
+5. **Hurt side** — who loses in the same chain.
+6. **Already priced?** — a 52-week high on this tell fails unless the range is widened and confidence is cut, and action cannot be `deep-dive`. Also show the haircut: `residual_pct_high = pct_high × (1 − f)`, where `f` is the fraction of the thesis the tell has already moved. Worked example: 52 × 12 = 6.2, eligible; f = 0.5 → residual pct_high 6, post score 3.1, action `watch`, not a drop. A name up more than ~150% over 12 months on this tell is already priced on the same terms.
 
-1. **Value chain** — who actually collects the cash (producer / midstream / refiner / OEM / carrier / lender, etc.).
-2. **Transmission** — how the 72h news hits *this* industry: price, volume, spread/differential, cost, FX, policy, multiple. Name the **tell** (e.g. WCS–WTI, crack spread, 30y yield).
-3. **Peer universe** — 5–8 liquid listed names in that chain (plus the obvious ETF basket). One line each: leverage to the driver.
-4. **Screen** — from that universe, why **these 3** win vs the others: operating leverage to the tell, liquidity, not already priced, balance-sheet/survival if the theme is a shock. Drop names that fail the screen; do not force 3 junk picks.
-5. **Hurt side** — who loses in the same chain and why (even if the 3 picks are mostly benefit).
-6. **Already priced?** — if the industry move is in, action = `ignore` and do not invent leftover names.
-
-Only **after** 1–6, output the 3 stocks with ranges.
+Only after 1–6, output stocks with ranges for kept themes.
 
 ## Proxy / pick quality
 
-- **No duplicate beta.** Do not book XLE and USO as two tests of the same oil move. One oil-price expression max per theme (name *or* ETF).
-- **Match the barrel / region.** Global autos (CARZ) is not a NA supply-chain name. Country ETF (EWC) is not Alberta energy (XEG or SU / CNQ).
-- **Mixed sector ETFs** (XLE, XLF) need a one-line why they beat a single name, or pick the name (e.g. SU, CNQ, COP, JPM, KRE).
-- Record **spot_at_call**: last print if known; else the **driver** (e.g. `Brent 86.3`, `WCS-WTI ~16`). Never leave blank.
-- `due_date` = analysis_date + horizon_days (ISO date).
-- In tracker `notes`: `pick` (single stock) or `basket` (ETF).
+- **No duplicate beta.** One expression per cash-flow line (name or ETF, not both).
+- **Match the barrel / region.** Label the print: NYMEX ULSD futures is not AAA retail diesel. Brent is not WCS–WTI.
+- **spot_at_call:** equity last print and the tell, plus source URL and timestamp. If two sources differ by more than 2%, quote both and widen or drop. Do not silently average.
+- An inventory level requires the EIA Weekly Petroleum Status Report table URL. A secondary portal figure is not the level.
+- Falsifier must be a number checkable before `due_date`. No "confidence returns."
+- `due_date` = analysis_date + horizon_days.
+- Tracker `notes` starts with `pick`, `basket`, or `overlay`. `source_note` must include a URL.
 
 ## Overlap / stack scan (required)
 
-After drafting ≤3 themes, check every pair for a **shared industry** that is hit by both mechanisms.
+Check every pair and every candidate against open tracker rows. Same cash-flow line, duty vs political tail, sign if one falsifies. Material stack = overlay row on the primary theme, not a 4th id.
 
-Ask, in the log, for each pair:
+Inverse rule: one overlay row if the prior row is still inside its horizon. If `due_date` < analysis_date, expire it first, then the flip can be a new id. Do not let an ungraded backlog silence the only live catalyst.
 
-1. Same cash-flow line (price, volume, cost, FX, policy)?
-2. Is the second theme actually a **customs duty** on that line, or only a political/cost tail?
-3. Does the stack change **sign** if one theme falsifies?
-
-If the stack is material:
-
-- Attach **overlay proxies / picks** to the **primary** theme (do not create a 4th theme_id).
-- State the **state-dependent sign** (e.g. Hormuz thaw → Alberta hurt; Hormuz fail → Alberta relative benefit vs EWC).
-- Use a **relative pair** when the stack is about underperformance (XEG vs XOP, SU vs COP), not only an absolute long/short.
-
-Worked example (2026-08-26, keep as prior):
-
-- US Section 338 50% list **excludes energy, potash, fish, critical minerals**. Do not claim a 50% tariff on Alberta crude unless that exemption is reversed.
-- Hormuz thaw hits Alberta via (a) lower WTI/Brent **and** (b) returning Gulf heavies widening **WCS–WTI** **and** (c) fading TMX Asia scarcity bid.
-- Canada fight stacks via **oil-as-weapon politics** (Ottawa/Ford withhold risk) and **steel capex costs**, plus CAD FX cushion — not via the 50% crude line.
-- Required tell when oil + Canada are both live: **WCS–WTI differential**, not Brent alone.
-- Industry analysis for that overlay would screen oil-sands (SU, CNQ, CVE, IMO) vs US cokers/refiners (PSX, MPC, VLO) vs airlines (UAL, DAL, AAL) **before** locking 3 picks — only if liquid and not already open with frozen ranges.
+Energy exemption check stays: Section 338 50% list excludes energy, potash, fish, critical minerals. Oil + Canada tell is WCS–WTI, not Brent alone.
 
 ## Required steps (in order)
 
-1. Read WRITE_RULES + this file + newest log entry + **all open** tracker rows + last 5 closed (if any).
-2. Collect ~72h macro/policy/geo news. Cite sources. Record driver spots (Brent, WTI, WCS differential if oil is in play, 10y/30y if fiscal/Fed is in play).
-3. Draft candidate themes. Run **overlap scan**. Attach overlays. **Do not name stocks yet.**
-4. For each kept theme: complete **Industry analysis** (value chain, transmission, 5–8 peer universe, screen, hurt side, already-priced). Research current prices/news for that industry.
-5. **Then** pick ≤3 stocks from the screen + any basket overlay. Score `(conf/100) × pct_high` on the best benefit name; keep the top ≤3 themes. Enforce uniqueness + {14,30,60,90} + snapshots + proxy-specific falsifiers. At most one `deep-dive`.
-6. Quality self-check: industry block present *above* picks? duplicate-beta? illiquid name? already-priced `ignore`? energy exemption checked? ranking scores shown? log will be commitable?
-7. Commit **log first** (prepend one entry). Get SHA immediately before write.
-8. Append tracker rows (`status=open`) for every unique ticker (picks + baskets). Get SHA immediately before write. Retry once on conflict.
-9. Report commit SHA(s) in the chat output.
+1. Read WRITE_RULES + this file + newest log + all open tracker rows + last 5 closed. Refetch log raw if PLACEHOLDER, under ~500 chars, or no `###` header. Record Version, ref, blob SHA.
+2. List past-due open rows. Grade or mark `expired-ungraded` in the same PR. Do not edit ranges. Chat-only is a fail.
+3. Collect ~72h news. Cite URLs. Record driver spots with source and timestamp. Label futures vs retail. Inventory levels need the EIA table URL.
+4. Draft themes. Overlap scan including open rows, after the expiry pass. No stock names yet.
+5. Industry analysis before any ticker. Shadow block if zero kept. Apply the 52-week-high screen.
+6. Pick ≤3 stocks. One horizon per name. Score expected upside points **pre-haircut**. Drop only if pre-haircut < 5. Show haircut arithmetic; it sets action. Horizons in {14,30,60,90}. At most one deep-dive.
+7. Self-check: industry block above picks (or shadow if zero), no duplicate beta, numeric falsifier, URL on every print, 52-week check done, energy exemption if needed.
+8. Commit log first, including a 0-theme entry. If the log body is still `PLACEHOLDER` after the refetch, replace the stub once. Do not prepend onto PLACEHOLDER. SHA immediately before write. Ruleset 409 → one branch, log + tracker status edits, then PR. Retry-once is SHA conflict only.
+9. Append tracker rows for booked names and for overlay rows. Status-only edits on past-due rows are allowed in that same commit. SHA immediately before write.
+10. Report SHA or PR URL, blob cited, and `rows appended: N`. `0` is valid. Do not claim a drafted tracker as committed.
 
 ## Output structure (chat + log)
 
-**Key Takeaway** (one sentence)
+First line: `Prompt vX.Y | ref | blob <sha>`
 
-**Overlap scan** (short; "none" is allowed if true)
+**Key Takeaway**
 
-**Ranking** (one line per candidate: score = conf/100 × pct_high; which 3 kept / which dropped)
+**Driver snapshot** (even on a 0-theme day; futures vs retail labeled; inventory level only with EIA URL)
 
-For each theme:
-- theme_id, title, mechanism (2–4 sentences)
-- horizon_days + why
-- Beneficiaries / Hurt (industries)
-- **Industry analysis** (value chain · transmission/tell · peer universe · screen · hurt · priced?) — **before stocks**
-- **Then** 3 best stocks (ticker · side · why they survived the screen)
-- Proxies / picks table: ticker | side | pct_low | pct_high | conf | action | spot_at_call | pick_or_basket
-- Falsifier (per ticker if they differ)
-- Action (theme-level; deep-dive only if a ticker is deep-dive)
+**Past-due actions** (status written, or "none past due")
 
-Then: Calibration line (from closed rows if any) + Disclaimer.
+**Overlap scan**
+
+**Ranking** (pre-haircut and post-haircut expected upside points; kept / dropped / overlay)
+
+For each kept theme: theme_id, title, mechanism, horizon_days per name, beneficiaries/hurt, **industry analysis before stocks**, then up to 3 stocks, proxies table, numeric falsifier, action.
+
+If none kept: one shadow industry block, labeled `not booked`.
+
+Then calibration line + disclaimer.
+
+Ad-hoc answers use the short form in **Ad-hoc selection answers** and say `not booked`.
 
 ## Tracker row contract
 
 Columns: `analysis_date, theme_id, theme, side, industry, proxy, horizon_days, pct_low, pct_high, conf, falsifier, action, spot_at_call, due_date, source_note, actual_pct, hit_range, hit_dir, status, graded_date, notes`
 
-Fill the first 15 at analysis time; leave actual_* / hit_* / graded_date blank; `status=open`. `proxy` holds the ticker (stock or ETF). `notes` starts with `pick` or `basket`.
+Fill first 15 at analysis; `status=open`. Allowed later status: `closed`, `falsified`, `expired-ungraded`. `source_note` includes a URL. `notes` starts with `pick`, `basket`, or `overlay`.
 
 ## Success criteria
 
-- [ ] WRITE_RULES followed (SHA, prepend log, append tracker, no range edits on open rows)
-- [ ] Prompt file present and version cited (v1.3+)
-- [ ] ≤3 themes; ranking scores in the log; overlap scan in the log
-- [ ] **Industry analysis written before any ticker** for each kept theme
-- [ ] 3 stock picks per kept theme (or explicit reason if fewer) that survive the screen
-- [ ] No duplicate-beta pair; no OTC/thin names
-- [ ] Horizons in {14,30,60,90}; snapshots + due_date filled
-- [ ] ≤1 deep-dive; energy exemption checked if Canada + oil both appear
-- [ ] Commit SHAs reported
+- [ ] WRITE_RULES followed (SHA, log gate, no range edits)
+- [ ] Version, ref, and blob SHA cited from the file just read
+- [ ] ≤3 new theme_ids; scores labeled expected upside points, pre-haircut; haircut shown
+- [ ] Industry analysis before any ticker, or a shadow block if zero kept
+- [ ] 52-week high on this tell fails already-priced even if the tracker is empty
+- [ ] One horizon per name when two clocks share a tell
+- [ ] Past-due rows graded or `expired-ungraded` in the same PR, not chat-only
+- [ ] Inverse inside an open horizon is one overlay row, not a prose note
+- [ ] A 0-theme day is logged; PLACEHOLDER stub replaced once, not prepended
+- [ ] Ad-hoc play answers use the short form and do not book
+- [ ] No duplicate beta; numeric falsifier; equity + tell + URL in spot/source; EIA URL for a stock level
+- [ ] ≤1 deep-dive; commit SHA or PR URL; rows appended count
