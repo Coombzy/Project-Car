@@ -59,7 +59,7 @@ jobs:
           if ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
             git fetch --no-tags origin "${base}"
           fi
-          changed="$(git diff --name-only "${base}" HEAD)"
+          changed="$(git diff --name-only --no-renames "${base}" HEAD)"
           shop=false
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
@@ -127,7 +127,7 @@ jobs:
           if ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
             git fetch --no-tags origin "${base}"
           fi
-          changed="$(git diff --name-only "${base}" HEAD)"
+          changed="$(git diff --name-only --no-renames "${base}" HEAD)"
           shop=false
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
@@ -206,7 +206,7 @@ jobs:
           if ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
             git fetch --no-tags origin "${base}"
           fi
-          changed="$(git diff --name-only "${base}" HEAD)"
+          changed="$(git diff --name-only --no-renames "${base}" HEAD)"
           shop=false
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
