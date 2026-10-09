@@ -3,11 +3,12 @@
 Lightweight tracker for long-term quality of the Analysis Automater and Audit Process.  
 One short line per day. Does **not** replace the main living analysis log.
 
-**Current prompt versions (as of 2026-10-01 audit):** Analysis **v1.17** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
+**Current prompt versions (as of 2026-10-09 audit):** Analysis **v1.18** · Audit **v1.4** · Write rules **v1.1** · **Calibration.md live**  
 See `finance/CCJ_README.md`. Official cadence: Analysis **16:10 ET** weekdays · Audit 16:30 ET weekdays.
 
 | Date       | Analysis Confidence | Audit Score | Top Issue / Note                          | Data Sources OK? |
 |------------|---------------------|-------------|-------------------------------------------|------------------|
+| 2026-10-09 | missed              | 10          | Official EOD Analysis MISSED Oct 2/5/6/7/8/9 (log absent after 156cd0a; last real body 23a71b4 Oct 1 placeholder). Audited Oct 1 EOD 10/10. Four 1w CLOSED hit (Sep 28 C$87.47, Sep 29 C$93.02, Sep 30 C$89.07, Oct 1 C$87.12). Oct 9 Polygon RTH C$88.06 H$88.71 L$86.45 V1.94M. Cal refresh 27/31 1d 22/29 1w. Analysis catch-up required. Prompt v1.18 log-delete hard stop. | Yes (Polygon) |
 | 2026-10-01 | 86                  | 10          | Official EOD C$85.69 Rel 1.54x trend-down; 14th under 50-DMA; rule 7 OFF wick 0.60xATR; Sep 30 1d CLOSED hit C$85.69 pct_error 1.5%; Sep 24 1w CLOSED hit path L$83.80 C$85.69 pct_error 3.7%; Cal 26/30 1d 17/24 1w; Analysis missed tracker+Health (auditor backfill); prompt v1.17 no bump | Yes (Polygon) |
 | 2026-09-30 | 86                  | 10          | Official EOD C$86.69 Rel 0.97x trend-down; 13th under 50-DMA; rule 7 ON wick 1.22xATR; Sep 29 1d CLOSED hit C$86.69 pct_error 0.4%; Cal 25/29; prompt v1.17 no bump | Yes (Polygon) |
 | 2026-09-29 | 86                  | (pending)   | Official EOD catch-up C$86.88 Rel 0.74x trend-down; 12th under 50-DMA; Mon fail gate did not fire; log heading 68df4708; prompt v1.17 | Yes |
