@@ -121,7 +121,7 @@ def _reject_if_bay_hour_taken(
         raise _error(409, "hoist_overlap", BAY_HOUR_TAKEN)
 
 
-def _open_booking_count(session: Session, member_id: UUID) -> int:
+def open_booking_count(session: Session, member_id: UUID) -> int:
     rows = session.scalars(
         select(Booking.id).where(
             Booking.member_id == member_id,
@@ -238,7 +238,7 @@ def create_booking(
             f"Start is outside this member's {member.tier.booking_window_days}-day booking window.",
         )
 
-    if _open_booking_count(session, member.id) >= member.tier.max_simultaneous_bookings:
+    if open_booking_count(session, member.id) >= member.tier.max_simultaneous_bookings:
         raise _error(
             400,
             "max_simultaneous_bookings",
