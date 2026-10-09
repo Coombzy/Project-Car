@@ -22,6 +22,7 @@ HEAVY_COMMANDS = {
 }
 GATE_IF = "steps.shop_changes.outputs.shop == 'true'"
 PUSH_GUARD = 'if [ "${GITHUB_EVENT_NAME}" = "push" ]; then'
+DIFF_COMMAND = 'git diff --name-only --no-renames "${base}" HEAD'
 
 
 def _strip_comment(line: str) -> str:
@@ -266,12 +267,12 @@ def test_shop_os_ci_path_filter_keeps_required_check_names() -> None:
         assert "if" not in steps[1]
         script = steps[1]["run"]
         assert isinstance(script, str)
-        assert "git diff --name-only" in script
+        assert DIFF_COMMAND in script
         assert "apps/project-car/" in script
         assert ".github/workflows/shop-os-ci.yml" in script
         assert PUSH_GUARD in script
-        assert script.index(PUSH_GUARD) < script.index("git diff --name-only")
-        assert "shop=true" in script[: script.index("git diff --name-only")]
+        assert script.index(PUSH_GUARD) < script.index(DIFF_COMMAND)
+        assert "shop=true" in script[: script.index(DIFF_COMMAND)]
         for step in steps[2:]:
             assert step.get("if") == GATE_IF, step.get("name")
         for command in HEAVY_COMMANDS[job["name"]]:
