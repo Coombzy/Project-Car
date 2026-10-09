@@ -6,9 +6,9 @@ One row per `(analysis_date, asset, horizon)`. Update in place. Do not duplicate
 **Status:** `open` · `preliminary` · `closed` · `expired`  
 **Hit:** path high/low and as-of close stayed inside **range** (not only bias). Crypto is 24/7 — grade on horizon window from analysis_date as-of, not NYSE close.
 
-**Last audit:** 2026-10-02T14:40Z (carried; Daily does not regrade). Main was stub blob a07c638f (1671B / 0 rows). Restored inbound 60effde32 (152 rows / 22923B) and inserted 2026-10-04 only. Did not rewrite Oct 3 1d high $87850. Did not invent Sep 17-26 or Sep 28-30. ETH Sep 15/16 still truncated.
+**Last audit:** 2026-10-02T14:40Z (carried; Daily does not regrade). Main blob e3839c7c verified 160 rows / 24010B. Daily 2026-10-09 appends 8 rows only. Did not rewrite Oct 3 BTC 82800-87850, Oct 3 ETH 2575-2765, Oct 4 BTC 84200-89550, Oct 4 ETH 2610-2855. Did not invent Oct 5-8 ETH rows.
 
-**Spot context:** ~14:16Z 4 Oct Yahoo BTC **$85183** Day Range H $85395.30 L $84707.32; ETH **$2696** H $2706.13 L $2686.84. Official UTC close pair Oct 3/Oct 2: BTC $84763.58 / $84497.21 (+0.32%); ETH $2687.26 / $2668.15 (+0.72%). Last 5 weekday TR median ATR-proxy BTC $2402 ETH $83. Last completed ETF 1 Oct BTC +$102.7M / ETH -$55.4M (neither mega). 2 Oct Farside IBIT/ETHA dashes — uncompleted; provisional +$31.7M not used.
+**Spot context:** ~13:17Z 9 Oct Yahoo BTC **$82903** Day Range H $83259.63 L $81602.41; ETH **$2487** H $2507.03 L $2469.69. Official UTC close pair Oct 8/Oct 7: BTC $81676.34 / $83275.93 (-1.92%); ETH $2471.91 / $2573.53 (-3.95%). Weekday-5 TR median ATR-proxy BTC $2823 ETH $122. Last completed ETF 8 Oct BTC -$244.1M / ETH -$72.5M (not mega). Prior 7 Oct BTC -$484.9M / ETH -$160.9M was mega. 2-of-3 BTC 1w MISS HIGH still ON.
 
 **Hit-rate snapshot:** closed 1d **36/40** (BTC 18/21, ETH 18/19); closed 1w **34/36** (BTC 17/19, ETH 17/17); closed 1m **9/9**; 3m n=0 closed. Daily does not regrade.
 
@@ -174,3 +174,11 @@ One row per `(analysis_date, asset, horizon)`. Update in place. Do not duplicate
 | 2026-10-04 | ETH | 1w | 2480 | 2980 | 2580 | 2840 | 52 | digestion | 0.72 |  |  |  |  |  |  | open | clear Oct2 H 2774+1.5xATR |
 | 2026-10-04 | ETH | 1m | 2200 | 3450 | 2500 | 3100 | 48 | digestion | 0.72 |  |  |  |  |  |  | open | Daily insert |
 | 2026-10-04 | ETH | 3m | 1800 | 4100 | 2200 | 3500 | 42 | digestion | 0.72 |  |  |  |  |  |  | open | Daily insert |
+| 2026-10-09 | BTC | 1d | 78450 | 85550 | 81200 | 84200 | 56 | digestion | -1.92 |  |  |  |  |  |  | open | post-up-low 1.0x ATR2823; width 7100=2.52x; green clear 85000/86000 |
+| 2026-10-09 | BTC | 1w | 74850 | 92450 | 79000 | 89000 | 50 | digestion | -1.92 |  |  |  |  |  |  | open | 2-of-3 floor 87364+1.5xATR=91598; CPI 13 Oct in-window |
+| 2026-10-09 | BTC | 1m | 68000 | 104000 | 76000 | 94000 | 46 | digestion | -1.92 |  |  |  |  |  |  | open | Daily insert |
+| 2026-10-09 | BTC | 3m | 56000 | 120000 | 70000 | 104000 | 40 | digestion | -1.92 |  |  |  |  |  |  | open | Daily insert |
+| 2026-10-09 | ETH | 1d | 2345 | 2685 | 2420 | 2580 | 56 | digestion | -3.95 |  |  |  |  |  |  | open | post-up-low 1.0x ATR122; width 340=2.78x |
+| 2026-10-09 | ETH | 1w | 2180 | 2820 | 2360 | 2660 | 50 | digestion | -3.95 |  |  |  |  |  |  | open | CPI in-window; width 640>3.0x ATR |
+| 2026-10-09 | ETH | 1m | 1900 | 3400 | 2200 | 3000 | 46 | digestion | -3.95 |  |  |  |  |  |  | open | Daily insert |
+| 2026-10-09 | ETH | 3m | 1500 | 4000 | 1900 | 3400 | 40 | digestion | -3.95 |  |  |  |  |  |  | open | Daily insert |
