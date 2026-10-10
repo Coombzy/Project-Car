@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -263,6 +263,49 @@ def test_shop_hoist_approval_respects_pending_hold_and_simultaneous_cap(client: 
     ).json()
     assert {row["id"] for row in still} == {overlapping.json()["id"], capped_request.json()["id"]}
     assert all(row["booking_id"] is None for row in still)
+
+
+def test_past_shop_hoist_start_is_rejected(client: TestClient) -> None:
+    """A shop-hoist request whose start is already past is not stored and does not move tokens."""
+    member = create_member(client, email="ada@example.com")
+    shop = create_hoist(client, name="Shop", is_shop=True)
+    past = datetime(2020, 6, 2, 16, 0, tzinfo=timezone.utc)
+    past_end = past + timedelta(hours=1)
+    balance = _balance(client, member["id"])
+    ledger = _ledger(client, member["id"])
+
+    login_member(client, "ada@example.com")
+    member_request = client.post(
+        "/member/shop-hoist-requests",
+        json={
+            "hoist_id": shop["id"],
+            "start_at": past.isoformat(),
+            "end_at": past_end.isoformat(),
+        },
+    )
+    assert member_request.status_code == 400, member_request.text
+    assert member_request.json()["error"]["code"] == "start_in_past"
+    assert client.get("/member/shop-hoist-requests").json() == []
+    assert client.get("/member/bookings").json() == []
+
+    owner_request = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": shop["id"],
+            "start_at": past.isoformat(),
+            "end_at": past_end.isoformat(),
+        },
+    )
+    assert owner_request.status_code == 400, owner_request.text
+    assert owner_request.json()["error"]["code"] == "start_in_past"
+    listed = client.get("/shop-hoist-requests", headers=AUTH)
+    assert listed.status_code == 200, listed.text
+    assert listed.json() == []
+    assert client.get("/bookings", headers=AUTH).json() == []
+    assert _balance(client, member["id"]) == balance
+    assert _ledger(client, member["id"]) == ledger
 
 
 def test_public_pages_do_not_say_the_shop_is_open() -> None:
