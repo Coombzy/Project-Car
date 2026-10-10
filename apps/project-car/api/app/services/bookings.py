@@ -51,6 +51,16 @@ def _error(status: int, code: str, message: str) -> HTTPException:
     return HTTPException(status_code=status, detail={"code": code, "message": message})
 
 
+def reject_start_in_past(start_at: datetime) -> None:
+    """Refuse a new start before shop now.
+
+    Confirm, check-in, complete, and cancel do not use this. A row that
+    already exists, including a seed week slot, keeps its lifecycle.
+    """
+    if as_utc(start_at) < as_utc(shop_now()):
+        raise _error(400, "start_in_past", "Start is in the past.")
+
+
 def get_booking(session: Session, booking_id: UUID) -> Booking:
     booking = session.scalars(
         select(Booking)
@@ -159,6 +169,7 @@ def preview_reserve(
     """Return (quote, token_balance, token_balance_after). Balances are None without a member."""
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
+    reject_start_in_past(start_at)
     fill = resolve_fill_for_slot(session, start_at, end_at)
     try:
         quote = quote_reserve(start_at, end_at, fill=fill)
@@ -185,6 +196,7 @@ def create_booking(
 ) -> Booking:
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
+    reject_start_in_past(start_at)
 
     hoist = session.get(Hoist, hoist_id)
     if hoist is None:
