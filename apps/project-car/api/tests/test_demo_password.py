@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+import app.auth as auth
 from app.config import get_settings
 from app.seed import demo_password_refusal, main
 
@@ -51,7 +52,40 @@ def test_default_api_secrets_refused_off_loopback(client: TestClient, monkeypatc
     loopback = client.get("/me", headers={"Authorization": "Bearer dev-owner-secret"})
     assert loopback.status_code == 200, loopback.text
 
+    owner_login = client.post(
+        "/auth/login",
+        json={"email": "owner@projectcar.ca", "password": "changeme"},
+    )
+    assert owner_login.status_code == 200, owner_login.text
+    created = client.post(
+        "/members",
+        headers={"Authorization": "Bearer dev-owner-secret"},
+        json={"name": "Ada Reyes", "email": "ada@example.com", "tier_name": "premium"},
+    )
+    assert created.status_code == 201, created.text
+    member_loopback = client.post(
+        "/auth/member/login",
+        json={"email": "ada@example.com", "password": "changeme"},
+    )
+    assert member_loopback.status_code == 200, member_loopback.text
+    owner_cookie = client.cookies.get("pc_owner_session")
+    member_cookie = client.cookies.get("pc_member_session")
+    assert owner_cookie
+    assert member_cookie
+
     monkeypatch.setenv("SHOP_HOST", "projectcar.ca")
+    client.cookies.clear()
+    client.cookies.set("pc_owner_session", owner_cookie)
+    replayed_owner = client.get("/me")
+    assert replayed_owner.status_code == 503, replayed_owner.text
+    assert replayed_owner.json()["error"]["code"] == "insecure_default"
+
+    client.cookies.clear()
+    client.cookies.set("pc_member_session", member_cookie)
+    replayed_member = client.get("/me")
+    assert replayed_member.status_code == 503, replayed_member.text
+    assert replayed_member.json()["error"]["code"] == "insecure_default"
+    client.cookies.clear()
 
     owner = client.get("/me", headers={"Authorization": "Bearer dev-owner-secret"})
     assert owner.status_code == 503, owner.text
@@ -97,12 +131,6 @@ def test_default_api_secrets_refused_off_loopback(client: TestClient, monkeypatc
     )
     assert signed_in.status_code == 200, signed_in.text
 
-    created = client.post(
-        "/members",
-        headers={"Authorization": "Bearer real-owner-secret"},
-        json={"name": "Ada Reyes", "email": "ada@example.com", "tier_name": "premium"},
-    )
-    assert created.status_code == 201, created.text
     member_ok = client.post(
         "/auth/member/login",
         json={"email": "ada@example.com", "password": "changeme"},
@@ -137,6 +165,47 @@ def test_login_locks_after_repeated_failures(client: TestClient) -> None:
     )
     assert still_locked.status_code == 429, still_locked.text
     assert still_locked.json()["error"]["code"] == "rate_limited"
+
+
+def test_login_lock_expires_after_fifteen_minutes(monkeypatch) -> None:
+    clock = {"now": 10_000.0}
+    monkeypatch.setattr(auth.time, "monotonic", lambda: clock["now"])
+    ip = "203.0.113.9"
+    for _ in range(8):
+        assert auth.login_failure_limited(ip) is False
+        auth.record_login_failure(ip)
+    assert auth.login_failure_limited(ip) is True
+    assert auth.login_failure_limited("203.0.113.10") is False
+    clock["now"] += 15 * 60
+    assert auth.login_failure_limited(ip) is True
+    clock["now"] += 1
+    assert auth.login_failure_limited(ip) is False
+
+
+def test_inactive_member_login_matches_unknown_email(client: TestClient) -> None:
+    created = client.post(
+        "/members",
+        headers={"Authorization": "Bearer dev-owner-secret"},
+        json={
+            "name": "Jordan",
+            "email": "jordan@example.com",
+            "tier_name": "premium",
+            "status": "suspended",
+        },
+    )
+    assert created.status_code == 201, created.text
+    inactive = client.post(
+        "/auth/member/login",
+        json={"email": "jordan@example.com", "password": "changeme"},
+    )
+    unknown = client.post(
+        "/auth/member/login",
+        json={"email": "nobody@example.com", "password": "changeme"},
+    )
+    assert inactive.status_code == 401, inactive.text
+    assert unknown.status_code == 401, unknown.text
+    assert inactive.json() == unknown.json()
+    assert inactive.json()["error"]["code"] == "invalid_credentials"
 
 
 def test_public_docs_omit_demo_login() -> None:

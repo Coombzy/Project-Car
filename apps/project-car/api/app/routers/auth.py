@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
@@ -11,7 +11,11 @@ from app.auth import (
     create_member_session_token,
     create_session_token,
     credentials_match,
+    login_failure_limited,
     member_password_matches,
+    rate_limited_error,
+    record_login_failure,
+    reject_dev_secret,
     set_member_session_cookie,
     set_session_cookie,
     verify_password,
@@ -30,13 +34,33 @@ def _invalid_credentials() -> HTTPException:
     )
 
 
+def _client_ip(request: Request) -> str:
+    client = request.client
+    if client is None or not client.host:
+        return "unknown"
+    return client.host
+
+
+def _guard_login(request: Request, settings: AppSettings) -> str:
+    """Refuse a dev session secret, then apply the in-process IP lockout."""
+    reject_dev_secret(settings.session_secret)
+    client_ip = _client_ip(request)
+    if login_failure_limited(client_ip):
+        raise rate_limited_error()
+    return client_ip
+
+
 @router.post("/auth/login", response_model=PrincipalOut)
-def login(body: LoginRequest, response: Response, settings: AppSettings) -> PrincipalOut:
+def login(
+    body: LoginRequest,
+    request: Request,
+    response: Response,
+    settings: AppSettings,
+) -> PrincipalOut:
+    client_ip = _guard_login(request, settings)
     if not credentials_match(settings, body.email, body.password):
-        raise HTTPException(
-            status_code=401,
-            detail={"code": "invalid_credentials", "message": "Email or password is incorrect."},
-        )
+        record_login_failure(client_ip)
+        raise _invalid_credentials()
     token = create_session_token(settings, body.email)
     set_session_cookie(response, settings, token)
     return PrincipalOut(role="owner", email=body.email)
@@ -51,6 +75,7 @@ def logout(response: Response, settings: AppSettings) -> PrincipalOut:
 @router.post("/auth/member/login", response_model=PrincipalOut)
 def member_login(
     body: LoginRequest,
+    request: Request,
     response: Response,
     settings: AppSettings,
     session: DbSession,
@@ -61,23 +86,27 @@ def member_login(
     refused for that member. A member with no hash yet still accepts the shared
     demo password, so existing rows keep working until an owner sets one.
 
+    Unknown emails and members who are not active both return invalid
+    credentials. The body does not say which case it was.
+
     Not OIDC. Staff / Member OIDC can replace this later without rewriting shop tables.
     """
+    client_ip = _guard_login(request, settings)
     member = session.scalars(
         select(Member).options(selectinload(Member.tier)).where(Member.email == str(body.email))
     ).first()
     if member is None:
         verify_password(body.password, DUMMY_MEMBER_PASSWORD_HASH)
+        record_login_failure(client_ip)
         raise _invalid_credentials()
     if not member_password_matches(
         member.password_hash, body.password, settings.member_demo_password
     ):
+        record_login_failure(client_ip)
         raise _invalid_credentials()
     if member.status != MemberStatus.ACTIVE:
-        raise HTTPException(
-            status_code=403,
-            detail={"code": "member_not_bookable", "message": "Only active members can sign in."},
-        )
+        record_login_failure(client_ip)
+        raise _invalid_credentials()
     token = create_member_session_token(settings, member.email, member.id)
     set_member_session_cookie(response, settings, token)
     return PrincipalOut(role="member", email=member.email, member_id=member.id)
