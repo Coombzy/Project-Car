@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import os
 import secrets
+import threading
+import time
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
-from fastapi import Response
+from fastapi import HTTPException, Response
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 from app.config import Settings
@@ -30,6 +33,31 @@ MEMBER_SALT = "project-car-member"
 DUMMY_MEMBER_PASSWORD_HASH = (
     "scrypt$16384$8$1$FeNmoqWBAr3KRneA6j80ng==$uwxOA_jxxH2giYqHXgZwA_8rV14Jas_WtgL8ML9cTMo="
 )
+
+# Defaults from app.config.Settings. Refused when SHOP_HOST is not loopback.
+DEFAULT_OWNER_API_SECRET = "dev-owner-secret"
+DEFAULT_AI_API_SECRET = "dev-ai-secret"
+DEFAULT_SESSION_SECRET = "dev-session-secret-change-me"
+# Keep in step with seed.LOOPBACK_HOSTS.
+LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+
+# Eight failures inside this window lock the client IP.
+_LOGIN_FAILURE_LIMIT = 8
+_LOGIN_FAILURE_WINDOW_SECONDS = 15 * 60
+
+
+class _LoginStamp:
+    """One reserved login attempt. Success removes this same object."""
+
+    __slots__ = ("at",)
+
+    def __init__(self, at: float) -> None:
+        self.at = at
+
+
+# Reserved attempts keyed by client IP. One bucket per process.
+_login_failures: dict[str, list[_LoginStamp]] = {}
+_login_failures_lock = threading.Lock()
 
 
 @dataclass(frozen=True)
@@ -147,11 +175,16 @@ def verify_password(password: str, stored: str) -> bool:
     return hmac.compare_digest(derived, expected)
 
 
+def secrets_equal(left: str, right: str) -> bool:
+    """Constant-time compare. Unequal lengths do not match."""
+    return hmac.compare_digest(left.encode("utf-8"), right.encode("utf-8"))
+
+
 def member_password_matches(password_hash: str | None, password: str, shared_password: str) -> bool:
     """Own hash wins. The shared password applies only while the hash is unset."""
     if password_hash:
         return verify_password(password, password_hash)
-    return password == shared_password
+    return secrets_equal(password, shared_password)
 
 
 def _parse_scrypt(stored: str) -> tuple[int, int, int, bytes, bytes] | None:
@@ -174,16 +207,118 @@ def _parse_scrypt(stored: str) -> tuple[int, int, int, bytes, bytes] | None:
 
 
 def credentials_match(settings: Settings, email: str, password: str) -> bool:
-    return email == settings.owner_email and password == settings.owner_password
+    email_ok = secrets_equal(email, settings.owner_email)
+    password_ok = secrets_equal(password, settings.owner_password)
+    return email_ok and password_ok
 
 
 def bearer_matches(settings: Settings, token: str | None) -> bool:
-    if not token or not settings.owner_api_secret:
+    secret = settings.owner_api_secret
+    if not token or not secret:
         return False
-    return token == settings.owner_api_secret
+    return secrets_equal(token, secret)
 
 
 def ai_bearer_matches(settings: Settings, token: str | None) -> bool:
-    if not token or not settings.ai_api_secret:
+    secret = settings.ai_api_secret
+    if not token or not secret:
         return False
-    return token == settings.ai_api_secret
+    return secrets_equal(token, secret)
+
+
+def shop_host() -> str:
+    return os.environ.get("SHOP_HOST", "127.0.0.1")
+
+
+def host_is_loopback(host: str | None = None) -> bool:
+    raw = shop_host() if host is None else host
+    normalized = raw.strip().lower().strip("[]")
+    return normalized in LOOPBACK_HOSTS
+
+
+def default_secret_blocked(secret: str) -> bool:
+    """True when `secret` is a dev default and SHOP_HOST is not loopback."""
+    if host_is_loopback():
+        return False
+    is_owner = secrets_equal(secret, DEFAULT_OWNER_API_SECRET)
+    is_ai = secrets_equal(secret, DEFAULT_AI_API_SECRET)
+    is_session = secrets_equal(secret, DEFAULT_SESSION_SECRET)
+    return is_owner or is_ai or is_session
+
+
+def insecure_default_error() -> HTTPException:
+    return HTTPException(
+        status_code=503,
+        detail={
+            "code": "insecure_default",
+            "message": "Dev secrets are refused when SHOP_HOST is not loopback.",
+        },
+    )
+
+
+def reject_dev_secret(secret: str) -> None:
+    if default_secret_blocked(secret):
+        raise insecure_default_error()
+
+
+def rate_limited_error() -> HTTPException:
+    return HTTPException(
+        status_code=429,
+        detail={
+            "code": "rate_limited",
+            "message": "Too many login attempts. Try again later.",
+        },
+    )
+
+
+def reserve_login_failure(client_ip: str) -> _LoginStamp | None:
+    """Reserve one failure slot before the password check.
+
+    The cap check and the reservation share one lock, so two overlapping
+    attempts cannot both pass when this IP is one failure under the cap.
+    The bucket is in-process. Each API process keeps its own counts.
+    Returns the reserved stamp, or None when the IP is already at the cap.
+    """
+    now = time.monotonic()
+    with _login_failures_lock:
+        stamps = _fresh_failures(client_ip, now)
+        if len(stamps) >= _LOGIN_FAILURE_LIMIT:
+            return None
+        stamp = _LoginStamp(now)
+        stamps.append(stamp)
+        _login_failures[client_ip] = stamps
+        return stamp
+
+
+def release_login_failure(client_ip: str, stamp: object) -> None:
+    """Drop the stamp reserved for a login that succeeded."""
+    with _login_failures_lock:
+        current = _login_failures.get(client_ip)
+        if not current:
+            return
+        kept = [item for item in current if item is not stamp]
+        if len(kept) == len(current):
+            return
+        if kept:
+            _login_failures[client_ip] = kept
+        else:
+            _login_failures.pop(client_ip, None)
+
+
+def clear_login_failures() -> None:
+    """Drop every IP in this process's login-failure bucket."""
+    with _login_failures_lock:
+        _login_failures.clear()
+
+
+def _fresh_failures(client_ip: str, now: float) -> list[_LoginStamp]:
+    fresh = [
+        stamp
+        for stamp in _login_failures.get(client_ip, ())
+        if now - stamp.at <= _LOGIN_FAILURE_WINDOW_SECONDS
+    ]
+    if fresh:
+        _login_failures[client_ip] = fresh
+    else:
+        _login_failures.pop(client_ip, None)
+    return fresh

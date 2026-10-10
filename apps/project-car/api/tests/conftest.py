@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.auth import clear_login_failures
 from app.db import get_db
 from app.main import app
 from app.models import Base, MembershipTier
@@ -40,6 +41,14 @@ def seed_placeholder_tiers(session) -> None:
     ):
         session.add(row)
     session.commit()
+
+
+@pytest.fixture(autouse=True)
+def _clear_login_failures():
+    """Login lockout is one in-process bucket per client IP. Tests share an IP."""
+    clear_login_failures()
+    yield
+    clear_login_failures()
 
 
 @pytest.fixture
