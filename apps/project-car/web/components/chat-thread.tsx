@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
+import { shouldSkipChatPoll } from "../lib/chat-poll";
 import type { ChatMessage, ChatRoom } from "../lib/config";
 import { formatShopDateTime } from "../lib/time";
 
@@ -40,6 +41,7 @@ export function ChatThread({
 
   useEffect(() => {
     let cancelled = false;
+    let inFlight = false;
     const tick = async () => {
       try {
         const page = await pollMessages(room.id, cursorRef.current ?? undefined);
@@ -59,9 +61,15 @@ export function ChatThread({
         if (!cancelled) {
           setError(caught instanceof Error ? caught.message : "Could not poll chat.");
         }
+      } finally {
+        inFlight = false;
       }
     };
     const timer = window.setInterval(() => {
+      if (shouldSkipChatPoll({ inFlight, hidden: document.hidden })) {
+        return;
+      }
+      inFlight = true;
       void tick();
     }, POLL_MS);
     return () => {
