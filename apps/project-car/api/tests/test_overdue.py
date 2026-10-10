@@ -18,13 +18,18 @@ from sqlalchemy.orm import Session
 from app.models import (
     BillingTransaction,
     Booking,
+    BookingKind,
     BookingStatus,
     Incident,
     IncidentKind,
+    Member,
     StaffAction,
     TokenTransaction,
+    TokenTransactionKind,
 )
-from app.shop_time import shop_now
+from app.services.pricing import quote_reserve
+from app.services.tokens import apply_ledger
+from app.shop_time import as_utc, shop_now
 from tests.conftest import AUTH, create_hoist, create_member, login_member
 
 AI = {"Authorization": "Bearer dev-ai-secret"}
@@ -98,6 +103,62 @@ def _balance(client: TestClient, member_id: str) -> Decimal:
     return Decimal(str(response.json()["token_balance"]))
 
 
+def _existing_booking(
+    client: TestClient,
+    *,
+    member_id: str | None,
+    hoist_id: str,
+    start,
+    end,
+    kind: str = "customer",
+    notes: str | None = None,
+) -> dict:
+    """Insert a row the way seed does, so a past start is already stored."""
+    session = _session(client)
+    try:
+        shop = kind == "shop"
+        tokens = Decimal("0")
+        rule = None
+        if not shop:
+            quote = quote_reserve(start, end)
+            tokens = quote.final_reserve_cost
+            rule = quote.as_rule()
+        booking = Booking(
+            member_id=UUID(member_id) if member_id is not None else None,
+            hoist_id=UUID(hoist_id),
+            start_at=as_utc(start),
+            end_at=as_utc(end),
+            kind=BookingKind.SHOP if shop else BookingKind.CUSTOMER,
+            status=BookingStatus.PENDING,
+            reserved_tokens=tokens,
+            pricing_rule=rule,
+            notes=notes,
+        )
+        session.add(booking)
+        session.flush()
+        if not shop and member_id is not None and tokens > 0:
+            member = session.get(Member, UUID(member_id))
+            assert member is not None
+            apply_ledger(
+                session,
+                member,
+                kind=TokenTransactionKind.BOOKING_RESERVE,
+                amount=-tokens,
+                booking_id=booking.id,
+                note="Reserve tokens for booking",
+                meta={"pricing_rule": rule} if rule else None,
+            )
+        session.commit()
+        return {
+            "id": str(booking.id),
+            "reserved_tokens": str(tokens),
+            "status": "pending",
+            "kind": kind,
+        }
+    finally:
+        session.close()
+
+
 def _book(client: TestClient, *, member_id: str, hoist_id: str, start, end) -> dict:
     response = client.post(
         "/bookings",
@@ -129,7 +190,7 @@ def test_overdue_stores_one_late_return_and_moves_no_money(client: TestClient) -
 
     start = shop_now() - timedelta(hours=3)
     end = shop_now() - timedelta(hours=1)
-    created = _book(client, member_id=ada["id"], hoist_id=bay["id"], start=start, end=end)
+    created = _existing_booking(client, member_id=ada["id"], hoist_id=bay["id"], start=start, end=end)
     booking_id = created["id"]
     reserved = Decimal(str(created["reserved_tokens"]))
     assert reserved > 0
@@ -190,9 +251,16 @@ def test_overdue_stores_one_late_return_and_moves_no_money(client: TestClient) -
     assert hoists["Bay 6"]["is_shop"] is True
 
     blocked = _book_raw(client, member_id=casey["id"], hoist_id=bay["id"], start=start, end=end)
-    assert blocked.status_code == 409
-    assert blocked.json()["error"]["code"] == "hoist_overlap"
-    other_bay = _book(client, member_id=casey["id"], hoist_id=other["id"], start=start, end=end)
+    assert blocked.status_code == 400
+    assert blocked.json()["error"]["code"] == "start_in_past"
+    later = shop_now() + timedelta(hours=6)
+    other_bay = _book(
+        client,
+        member_id=casey["id"],
+        hoist_id=other["id"],
+        start=later,
+        end=later + timedelta(hours=1),
+    )
     assert other_bay["status"] == "pending"
 
     refused = client.post(f"/bookings/{booking_id}/cancel", headers=AUTH)
@@ -237,7 +305,14 @@ def test_overdue_stores_one_late_return_and_moves_no_money(client: TestClient) -
     hoists = {row["name"]: row for row in client.get("/hoists", headers=AUTH).json()}
     assert hoists["Bay 1"]["status"] == "available"
 
-    reused = _book(client, member_id=casey["id"], hoist_id=bay["id"], start=start, end=end)
+    free_at = shop_now() + timedelta(hours=12)
+    reused = _book(
+        client,
+        member_id=casey["id"],
+        hoist_id=bay["id"],
+        start=free_at,
+        end=free_at + timedelta(hours=1),
+    )
     assert reused["status"] == "pending"
 
 
@@ -246,7 +321,7 @@ def test_ai_marks_overdue_on_the_same_route_without_money(client: TestClient) ->
     bay = create_hoist(client, name="Bay 3")
     start = shop_now() - timedelta(hours=4)
     end = shop_now() - timedelta(hours=2)
-    created = _book(client, member_id=member["id"], hoist_id=bay["id"], start=start, end=end)
+    created = _existing_booking(client, member_id=member["id"], hoist_id=bay["id"], start=start, end=end)
     booking_id = created["id"]
     _activate(client, booking_id)
     balance = _balance(client, member["id"])
@@ -293,21 +368,18 @@ def test_shop_work_overdue_writes_no_ledger_and_bays_stay_direct(client: TestCli
     shop = create_hoist(client, name="Bay 6", location_label="Shop", is_shop=True)
     start = shop_now() - timedelta(hours=2)
     end = shop_now() - timedelta(minutes=30)
-    shop_booking = client.post(
-        "/bookings",
-        headers=AUTH,
-        json={
-            "hoist_id": shop["id"],
-            "start_at": start.isoformat(),
-            "end_at": end.isoformat(),
-            "kind": "shop",
-            "notes": "Rack inspection",
-        },
+    shop_booking = _existing_booking(
+        client,
+        member_id=None,
+        hoist_id=shop["id"],
+        start=start,
+        end=end,
+        kind="shop",
+        notes="Rack inspection",
     )
-    assert shop_booking.status_code == 201, shop_booking.text
-    booking_id = shop_booking.json()["id"]
-    assert shop_booking.json()["kind"] == "shop"
-    assert Decimal(str(shop_booking.json()["reserved_tokens"])) == Decimal("0")
+    booking_id = shop_booking["id"]
+    assert shop_booking["kind"] == "shop"
+    assert Decimal(str(shop_booking["reserved_tokens"])) == Decimal("0")
     _activate(client, booking_id)
     assert _token_rows(client, booking_id) == []
     assert _count(client, BillingTransaction) == 0
@@ -376,7 +448,7 @@ def test_only_an_active_booking_past_its_end_can_be_overdue(client: TestClient) 
 
     past_start = shop_now() - timedelta(hours=5)
     past_end = shop_now() - timedelta(hours=4)
-    confirmed = _book(
+    confirmed = _existing_booking(
         client,
         member_id=member["id"],
         hoist_id=bay["id"],
@@ -435,7 +507,15 @@ def test_overdue_keeps_the_hoist_occupied_when_another_booking_ends(client: Test
     shop = create_hoist(client, name="Bay 6", location_label="Shop", is_shop=True)
     past_start = shop_now() - timedelta(hours=3)
     past_end = shop_now() - timedelta(hours=1)
-    overdue = _shop_booking(client, shop["id"], past_start, past_end)
+    overdue = _existing_booking(
+        client,
+        member_id=None,
+        hoist_id=shop["id"],
+        start=past_start,
+        end=past_end,
+        kind="shop",
+        notes="Shop work",
+    )
     _activate(client, overdue["id"])
     marked = client.post(f"/bookings/{overdue['id']}/overdue", headers=AUTH)
     assert marked.status_code == 200, marked.text
@@ -488,7 +568,7 @@ def test_second_mark_overdue_locks_the_booking_and_opens_one_incident(
     bay = create_hoist(client, name="Bay 1")
     start = shop_now() - timedelta(hours=3)
     end = shop_now() - timedelta(hours=1)
-    created = _book(client, member_id=member["id"], hoist_id=bay["id"], start=start, end=end)
+    created = _existing_booking(client, member_id=member["id"], hoist_id=bay["id"], start=start, end=end)
     booking_id = created["id"]
     _activate(client, booking_id)
     reads: list[tuple[str, bool]] = []

@@ -35,6 +35,7 @@ from app.services.bookings import (
     hoist_has_overlap,
     open_booking_count,
     preview_reserve,
+    reject_start_in_past,
 )
 from app.services.staff import actor_of, record_action, reject_own_request
 from app.services.tokens import apply_ledger
@@ -95,6 +96,7 @@ def create_shop_hoist_request(
     """Store a pending request. Does not create a booking and does not touch the ledger."""
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
+    reject_start_in_past(start_at)
 
     hoist = session.get(Hoist, hoist_id)
     if hoist is None:
