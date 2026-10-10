@@ -11,10 +11,10 @@ from app.auth import (
     create_member_session_token,
     create_session_token,
     credentials_match,
-    login_failure_limited,
     member_password_matches,
     rate_limited_error,
-    record_login_failure,
+    release_login_failure,
+    reserve_login_failure,
     reject_dev_secret,
     set_member_session_cookie,
     set_session_cookie,
@@ -41,13 +41,14 @@ def _client_ip(request: Request) -> str:
     return client.host
 
 
-def _guard_login(request: Request, settings: AppSettings) -> str:
-    """Refuse a dev session secret, then apply the in-process IP lockout."""
+def _guard_login(request: Request, settings: AppSettings) -> tuple[str, object]:
+    """Refuse a dev session secret, then reserve one in-process failure slot."""
     reject_dev_secret(settings.session_secret)
     client_ip = _client_ip(request)
-    if login_failure_limited(client_ip):
+    stamp = reserve_login_failure(client_ip)
+    if stamp is None:
         raise rate_limited_error()
-    return client_ip
+    return client_ip, stamp
 
 
 @router.post("/auth/login", response_model=PrincipalOut)
@@ -57,12 +58,12 @@ def login(
     response: Response,
     settings: AppSettings,
 ) -> PrincipalOut:
-    client_ip = _guard_login(request, settings)
+    client_ip, stamp = _guard_login(request, settings)
     if not credentials_match(settings, body.email, body.password):
-        record_login_failure(client_ip)
         raise _invalid_credentials()
     token = create_session_token(settings, body.email)
     set_session_cookie(response, settings, token)
+    release_login_failure(client_ip, stamp)
     return PrincipalOut(role="owner", email=body.email)
 
 
@@ -91,24 +92,22 @@ def member_login(
 
     Not OIDC. Staff / Member OIDC can replace this later without rewriting shop tables.
     """
-    client_ip = _guard_login(request, settings)
+    client_ip, stamp = _guard_login(request, settings)
     member = session.scalars(
         select(Member).options(selectinload(Member.tier)).where(Member.email == str(body.email))
     ).first()
     if member is None:
         verify_password(body.password, DUMMY_MEMBER_PASSWORD_HASH)
-        record_login_failure(client_ip)
         raise _invalid_credentials()
     if not member_password_matches(
         member.password_hash, body.password, settings.member_demo_password
     ):
-        record_login_failure(client_ip)
         raise _invalid_credentials()
     if member.status != MemberStatus.ACTIVE:
-        record_login_failure(client_ip)
         raise _invalid_credentials()
     token = create_member_session_token(settings, member.email, member.id)
     set_member_session_cookie(response, settings, token)
+    release_login_failure(client_ip, stamp)
     return PrincipalOut(role="member", email=member.email, member_id=member.id)
 
 

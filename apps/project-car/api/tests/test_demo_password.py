@@ -168,25 +168,38 @@ def test_login_locks_after_repeated_failures(client: TestClient) -> None:
     assert still_locked.json()["error"]["code"] == "rate_limited"
 
 
+def test_correct_password_after_seven_failures_logs_in(client: TestClient) -> None:
+    wrong = {"email": "owner@projectcar.ca", "password": "wrong-guess"}
+    for _ in range(7):
+        denied = client.post("/auth/login", json=wrong)
+        assert denied.status_code == 401, denied.text
+        assert denied.json()["error"]["code"] == "invalid_credentials"
+    signed_in = client.post(
+        "/auth/login",
+        json={"email": "owner@projectcar.ca", "password": "changeme"},
+    )
+    assert signed_in.status_code == 200, signed_in.text
+    assert signed_in.json()["role"] == "owner"
+    still_open = client.post("/auth/login", json=wrong)
+    assert still_open.status_code == 401, still_open.text
+    assert still_open.json()["error"]["code"] == "invalid_credentials"
+
+
 def test_overlapping_attempts_cannot_both_pass_one_under_the_cap() -> None:
     """One slot remains. Overlapping attempts must not both clear the guard."""
     ip = "203.0.113.77"
     for _ in range(7):
-        auth.record_login_failure(ip)
+        assert auth.reserve_login_failure(ip) is not None
 
     start = threading.Barrier(2)
-    observed = threading.Barrier(2)
     admitted: list[bool] = []
     record = threading.Lock()
 
     def attempt() -> None:
         start.wait(timeout=5)
-        limited = auth.login_failure_limited(ip)
-        observed.wait(timeout=5)
-        if not limited:
-            auth.record_login_failure(ip)
+        stamp = auth.reserve_login_failure(ip)
         with record:
-            admitted.append(not limited)
+            admitted.append(stamp is not None)
 
     threads = [threading.Thread(target=attempt) for _ in range(2)]
     for thread in threads:
@@ -204,14 +217,17 @@ def test_login_lock_expires_after_fifteen_minutes(monkeypatch) -> None:
     monkeypatch.setattr(auth.time, "monotonic", lambda: clock["now"])
     ip = "203.0.113.9"
     for _ in range(8):
-        assert auth.login_failure_limited(ip) is False
-        auth.record_login_failure(ip)
-    assert auth.login_failure_limited(ip) is True
-    assert auth.login_failure_limited("203.0.113.10") is False
+        assert auth.reserve_login_failure(ip) is not None
+    assert auth.reserve_login_failure(ip) is None
+    other = auth.reserve_login_failure("203.0.113.10")
+    assert other is not None
+    auth.release_login_failure("203.0.113.10", other)
     clock["now"] += 15 * 60
-    assert auth.login_failure_limited(ip) is True
+    assert auth.reserve_login_failure(ip) is None
     clock["now"] += 1
-    assert auth.login_failure_limited(ip) is False
+    released = auth.reserve_login_failure(ip)
+    assert released is not None
+    auth.release_login_failure(ip, released)
 
 
 def test_inactive_member_login_matches_unknown_email(client: TestClient) -> None:

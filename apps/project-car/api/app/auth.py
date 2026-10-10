@@ -45,8 +45,18 @@ LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 _LOGIN_FAILURE_LIMIT = 8
 _LOGIN_FAILURE_WINDOW_SECONDS = 15 * 60
 
-# Failed-login timestamps keyed by client IP. One bucket per process.
-_login_failures: dict[str, list[float]] = {}
+
+class _LoginStamp:
+    """One reserved login attempt. Success removes this same object."""
+
+    __slots__ = ("at",)
+
+    def __init__(self, at: float) -> None:
+        self.at = at
+
+
+# Reserved attempts keyed by client IP. One bucket per process.
+_login_failures: dict[str, list[_LoginStamp]] = {}
 _login_failures_lock = threading.Lock()
 
 
@@ -261,23 +271,38 @@ def rate_limited_error() -> HTTPException:
     )
 
 
-def login_failure_limited(client_ip: str) -> bool:
-    """True when this IP already has eight failures inside fifteen minutes.
+def reserve_login_failure(client_ip: str) -> _LoginStamp | None:
+    """Reserve one failure slot before the password check.
 
+    The cap check and the reservation share one lock, so two overlapping
+    attempts cannot both pass when this IP is one failure under the cap.
     The bucket is in-process. Each API process keeps its own counts.
+    Returns the reserved stamp, or None when the IP is already at the cap.
     """
     now = time.monotonic()
     with _login_failures_lock:
-        return len(_fresh_failures(client_ip, now)) >= _LOGIN_FAILURE_LIMIT
-
-
-def record_login_failure(client_ip: str) -> None:
-    """Record one failed login for this IP in the in-process bucket."""
-    now = time.monotonic()
-    with _login_failures_lock:
         stamps = _fresh_failures(client_ip, now)
-        stamps.append(now)
+        if len(stamps) >= _LOGIN_FAILURE_LIMIT:
+            return None
+        stamp = _LoginStamp(now)
+        stamps.append(stamp)
         _login_failures[client_ip] = stamps
+        return stamp
+
+
+def release_login_failure(client_ip: str, stamp: object) -> None:
+    """Drop the stamp reserved for a login that succeeded."""
+    with _login_failures_lock:
+        current = _login_failures.get(client_ip)
+        if not current:
+            return
+        kept = [item for item in current if item is not stamp]
+        if len(kept) == len(current):
+            return
+        if kept:
+            _login_failures[client_ip] = kept
+        else:
+            _login_failures.pop(client_ip, None)
 
 
 def clear_login_failures() -> None:
@@ -286,11 +311,11 @@ def clear_login_failures() -> None:
         _login_failures.clear()
 
 
-def _fresh_failures(client_ip: str, now: float) -> list[float]:
+def _fresh_failures(client_ip: str, now: float) -> list[_LoginStamp]:
     fresh = [
         stamp
         for stamp in _login_failures.get(client_ip, ())
-        if now - stamp <= _LOGIN_FAILURE_WINDOW_SECONDS
+        if now - stamp.at <= _LOGIN_FAILURE_WINDOW_SECONDS
     ]
     if fresh:
         _login_failures[client_ip] = fresh
