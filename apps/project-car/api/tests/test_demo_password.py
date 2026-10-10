@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -165,6 +166,37 @@ def test_login_locks_after_repeated_failures(client: TestClient) -> None:
     )
     assert still_locked.status_code == 429, still_locked.text
     assert still_locked.json()["error"]["code"] == "rate_limited"
+
+
+def test_overlapping_attempts_cannot_both_pass_one_under_the_cap() -> None:
+    """One slot remains. Overlapping attempts must not both clear the guard."""
+    ip = "203.0.113.77"
+    for _ in range(7):
+        auth.record_login_failure(ip)
+
+    start = threading.Barrier(2)
+    observed = threading.Barrier(2)
+    admitted: list[bool] = []
+    record = threading.Lock()
+
+    def attempt() -> None:
+        start.wait(timeout=5)
+        limited = auth.login_failure_limited(ip)
+        observed.wait(timeout=5)
+        if not limited:
+            auth.record_login_failure(ip)
+        with record:
+            admitted.append(not limited)
+
+    threads = [threading.Thread(target=attempt) for _ in range(2)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=5)
+        assert not thread.is_alive()
+
+    assert len(admitted) == 2, admitted
+    assert admitted.count(True) == 1, admitted
 
 
 def test_login_lock_expires_after_fifteen_minutes(monkeypatch) -> None:
