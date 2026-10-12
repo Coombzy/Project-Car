@@ -12,6 +12,7 @@ from app.auth import (
     bearer_matches,
     read_member_session_token,
     read_session_token,
+    reject_dev_secret,
 )
 from app.config import Settings, get_settings
 from app.db import get_db
@@ -29,23 +30,41 @@ def _unauthorized(message: str = "Owner authentication required.") -> HTTPExcept
     )
 
 
+def _bearer_principal(settings: Settings, authorization: str | None) -> Principal | None:
+    if not authorization or not authorization.lower().startswith("bearer "):
+        return None
+    token = authorization.split(" ", 1)[1].strip()
+    if ai_bearer_matches(settings, token):
+        reject_dev_secret(settings.ai_api_secret)
+        return Principal(role="ai", email=settings.ai_actor_id)
+    if bearer_matches(settings, token):
+        reject_dev_secret(settings.owner_api_secret)
+        return Principal(role="owner", email=settings.owner_email)
+    return None
+
+
+def _owner_from_cookie(settings: Settings, session_cookie: str | None) -> Principal | None:
+    if not session_cookie:
+        return None
+    payload = read_session_token(settings, session_cookie)
+    if not payload:
+        return None
+    reject_dev_secret(settings.session_secret)
+    return Principal(role="owner", email=str(payload.get("email") or settings.owner_email))
+
+
 def require_owner(
     settings: Annotated[Settings, Depends(current_settings)],
     authorization: Annotated[str | None, Header()] = None,
     session_cookie: Annotated[str | None, Cookie(alias="pc_owner_session")] = None,
 ) -> Principal:
     """Staff stub: human Owner cookie/bearer, or the same routes with the AI bearer."""
-    if authorization and authorization.lower().startswith("bearer "):
-        token = authorization.split(" ", 1)[1].strip()
-        if ai_bearer_matches(settings, token):
-            return Principal(role="ai", email=settings.ai_actor_id)
-        if bearer_matches(settings, token):
-            return Principal(role="owner", email=settings.owner_email)
-
-    payload = read_session_token(settings, session_cookie) if session_cookie else None
-    if payload:
-        return Principal(role="owner", email=str(payload.get("email") or settings.owner_email))
-
+    bearer = _bearer_principal(settings, authorization)
+    if bearer is not None:
+        return bearer
+    owner = _owner_from_cookie(settings, session_cookie)
+    if owner is not None:
+        return owner
     raise _unauthorized()
 
 
@@ -60,6 +79,7 @@ def require_member(
     )
     if not payload:
         raise _unauthorized("Member authentication required.")
+    reject_dev_secret(settings.session_secret)
 
     try:
         member_id = UUID(str(payload.get("member_id")))
@@ -85,21 +105,19 @@ def require_principal(
     member_session_cookie: Annotated[str | None, Cookie(alias="pc_member_session")] = None,
 ) -> Principal:
     """Owner cookie/bearer or Member cookie. Used by GET /me."""
-    if authorization and authorization.lower().startswith("bearer "):
-        token = authorization.split(" ", 1)[1].strip()
-        if ai_bearer_matches(settings, token):
-            return Principal(role="ai", email=settings.ai_actor_id)
-        if bearer_matches(settings, token):
-            return Principal(role="owner", email=settings.owner_email)
+    bearer = _bearer_principal(settings, authorization)
+    if bearer is not None:
+        return bearer
 
-    owner_payload = read_session_token(settings, session_cookie) if session_cookie else None
-    if owner_payload:
-        return Principal(role="owner", email=str(owner_payload.get("email") or settings.owner_email))
+    owner = _owner_from_cookie(settings, session_cookie)
+    if owner is not None:
+        return owner
 
     member_payload = (
         read_member_session_token(settings, member_session_cookie) if member_session_cookie else None
     )
     if member_payload:
+        reject_dev_secret(settings.session_secret)
         try:
             member_id = UUID(str(member_payload.get("member_id")))
         except (TypeError, ValueError):
