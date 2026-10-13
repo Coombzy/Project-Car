@@ -127,7 +127,7 @@ export default async function MemberDetailPage({
             <input type="hidden" name="id" value={member.id} />
             <label>
               Amount
-              <input name="amount" placeholder="2 or -1" required />
+              <input name="amount" placeholder="100 or -1" required />
             </label>
             <label>
               Note
