@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+from uuid import UUID
+
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import PartsRequest
+from app.models import PartsOrder, PartsOrderStatus, PartsRequest
 from tests.conftest import AUTH, create_member, login_member
 
 
@@ -117,3 +120,172 @@ def test_tool_checkout_does_not_store_a_row(client: TestClient) -> None:
 
     assert _count(client) == 0
     assert "tool_checkouts" not in PartsRequest.metadata.tables
+
+
+def _insert_parts_order(
+    client: TestClient,
+    *,
+    po_number: str,
+    status: PartsOrderStatus,
+) -> str:
+    session = _session(client)
+    try:
+        row = PartsOrder(
+            po_number=po_number,
+            sku="PT-OIL-5W30-012",
+            what="Engine oil 5W-30 — 12 jugs",
+            vendor="Uline (sample)",
+            for_label="Shop inventory",
+            status=status,
+            ordered_at=datetime(2026, 10, 1, 15, tzinfo=timezone.utc),
+        )
+        session.add(row)
+        session.commit()
+        return str(row.id)
+    finally:
+        session.close()
+
+
+def _order_status(client: TestClient, order_id: str) -> str:
+    session = _session(client)
+    try:
+        row = session.get(PartsOrder, UUID(order_id))
+        assert row is not None
+        return row.status.value
+    finally:
+        session.close()
+
+
+def test_owner_can_advance_a_stored_parts_order(client: TestClient) -> None:
+    order_id = _insert_parts_order(
+        client,
+        po_number="PT-PO-1045",
+        status=PartsOrderStatus.ORDERED,
+    )
+    assert _order_status(client, order_id) == "ordered"
+
+    shipped = client.patch(
+        f"/parts-orders/{order_id}",
+        headers=AUTH,
+        json={"status": "shipped"},
+    )
+    assert shipped.status_code == 200, shipped.text
+    assert shipped.json()["po_number"] == "PT-PO-1045"
+    assert shipped.json()["status"] == "shipped"
+    assert _order_status(client, order_id) == "shipped"
+
+    anonymous = client.patch(f"/parts-orders/{order_id}", json={"status": "in_transit"})
+    assert anonymous.status_code == 401
+    assert _order_status(client, order_id) == "shipped"
+
+    listed = client.get("/parts-orders", headers=AUTH)
+    assert listed.status_code == 200, listed.text
+    stored = next(row for row in listed.json() if row["id"] == order_id)
+    assert stored["status"] == "shipped"
+    assert stored["po_number"] == "PT-PO-1045"
+
+    in_transit = client.patch(
+        f"/parts-orders/{order_id}",
+        headers=AUTH,
+        json={"status": "in_transit"},
+    )
+    assert in_transit.status_code == 200, in_transit.text
+    assert in_transit.json()["status"] == "in_transit"
+
+    received = client.patch(
+        f"/parts-orders/{order_id}",
+        headers=AUTH,
+        json={"status": "received"},
+    )
+    assert received.status_code == 200, received.text
+    assert received.json()["status"] == "received"
+
+    again = client.get("/parts-orders", headers=AUTH)
+    assert again.status_code == 200, again.text
+    reread = next(row for row in again.json() if row["po_number"] == "PT-PO-1045")
+    assert reread["id"] == order_id
+    assert reread["status"] == "received"
+    assert _order_status(client, order_id) == "received"
+
+    dashboard = client.get("/dashboard", headers=AUTH)
+    assert dashboard.status_code == 200, dashboard.text
+    dash_row = next(row for row in dashboard.json()["parts_orders"] if row["id"] == order_id)
+    assert dash_row["status"] == "received"
+
+    missing = client.patch(
+        "/parts-orders/00000000-0000-0000-0000-000000000000",
+        headers=AUTH,
+        json={"status": "ordered"},
+    )
+    assert missing.status_code == 404
+    assert client.get("/parts-orders").status_code == 401
+
+
+def test_owner_can_fulfill_or_decline_a_member_parts_request(client: TestClient) -> None:
+    ada = create_member(client, email="ada@example.com", name="Ada Reyes")
+    login_member(client, "ada@example.com")
+    created = client.post(
+        "/member/parts-requests",
+        json={"sku": "PT-OIL-5W30-012", "note": "Two jugs for Saturday"},
+    )
+    assert created.status_code == 201, created.text
+    request_id = created.json()["id"]
+    assert created.json()["status"] == "open"
+    assert created.json()["member_id"] == ada["id"]
+
+    fulfilled = client.patch(
+        f"/parts-requests/{request_id}",
+        headers=AUTH,
+        json={"status": "fulfilled"},
+    )
+    assert fulfilled.status_code == 200, fulfilled.text
+    assert fulfilled.json()["status"] == "fulfilled"
+    assert fulfilled.json()["sku"] == "PT-OIL-5W30-012"
+
+    blocked = client.patch(
+        f"/parts-requests/{request_id}",
+        json={"status": "declined"},
+    )
+    assert blocked.status_code == 401
+
+    member_view = client.get("/member/parts-requests")
+    assert member_view.status_code == 200, member_view.text
+    assert member_view.json()[0]["id"] == request_id
+    assert member_view.json()[0]["status"] == "fulfilled"
+
+    second = client.post(
+        "/member/parts-requests",
+        json={"sku": "PT-FLT-001", "note": "One case"},
+    )
+    assert second.status_code == 201, second.text
+    second_id = second.json()["id"]
+
+    declined = client.patch(
+        f"/parts-requests/{second_id}",
+        headers=AUTH,
+        json={"status": "declined"},
+    )
+    assert declined.status_code == 200, declined.text
+    assert declined.json()["status"] == "declined"
+
+    shown = client.get("/member/parts-requests")
+    assert shown.status_code == 200, shown.text
+    by_id = {row["id"]: row["status"] for row in shown.json()}
+    assert by_id[request_id] == "fulfilled"
+    assert by_id[second_id] == "declined"
+
+    owner = client.get("/parts-requests", headers=AUTH)
+    assert owner.status_code == 200, owner.text
+    owner_by_id = {row["id"]: row["status"] for row in owner.json()}
+    assert owner_by_id[request_id] == "fulfilled"
+    assert owner_by_id[second_id] == "declined"
+
+    reopened = client.patch(
+        f"/parts-requests/{request_id}",
+        headers=AUTH,
+        json={"status": "open"},
+    )
+    assert reopened.status_code == 422
+    statuses = {row["id"]: row["status"] for row in client.get("/member/parts-requests").json()}
+    assert statuses[request_id] == "fulfilled"
+    assert statuses[second_id] == "declined"
