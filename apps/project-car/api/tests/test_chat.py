@@ -251,3 +251,73 @@ def test_chat_list_messages_limits_in_sql(client: TestClient, monkeypatch) -> No
     )
     assert missing.status_code == 404
     assert missing.json()["error"]["code"] == "not_found"
+
+
+def test_muted_room_rejects_member_message(client: TestClient) -> None:
+    ada = create_member(client, email="ada@example.com")
+    room = _create_room(client, "Ada — turbo", [ada["id"]])
+    history = client.post(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        json={"body": "History stays."},
+    )
+    assert history.status_code == 201, history.text
+    history_id = history.json()["id"]
+
+    muted = client.post(
+        f"/chat/rooms/{room['id']}/mute",
+        headers=AUTH,
+        json={"muted": True},
+    )
+    assert muted.status_code == 200
+    assert muted.json()["muted"] is True
+
+    login_member(client, "ada@example.com")
+    rejected = client.post(
+        f"/member/chat/rooms/{room['id']}/messages",
+        json={"body": "This should not land."},
+    )
+    assert rejected.status_code == 403, rejected.text
+    assert rejected.json()["error"]["code"] == "room_muted"
+
+    stored = client.get(f"/member/chat/rooms/{room['id']}/messages")
+    assert stored.status_code == 200
+    assert [row["body"] for row in stored.json()["messages"]] == ["History stays."]
+
+    owner_sent = client.post(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        json={"body": "Owner can still write."},
+    )
+    assert owner_sent.status_code == 201, owner_sent.text
+
+    polled = client.get(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        params={"after_id": history_id},
+    )
+    assert polled.status_code == 200
+    assert [row["body"] for row in polled.json()["messages"]] == ["Owner can still write."]
+    assert polled.json()["cursor"] == owner_sent.json()["id"]
+
+    unmuted = client.post(
+        f"/chat/rooms/{room['id']}/mute",
+        headers=AUTH,
+        json={"muted": False},
+    )
+    assert unmuted.status_code == 200
+    assert unmuted.json()["muted"] is False
+
+    sent = client.post(
+        f"/member/chat/rooms/{room['id']}/messages",
+        json={"body": "Unmuted, I can reply."},
+    )
+    assert sent.status_code == 201, sent.text
+
+    final = client.get(f"/member/chat/rooms/{room['id']}/messages")
+    assert final.status_code == 200
+    assert [row["body"] for row in final.json()["messages"]] == [
+        "History stays.",
+        "Owner can still write.",
+        "Unmuted, I can reply.",
+    ]
