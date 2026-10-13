@@ -201,6 +201,8 @@ class ToolCribEventKind(str, enum.Enum):
 
 class PartsRequestStatus(str, enum.Enum):
     OPEN = "open"
+    FULFILLED = "fulfilled"
+    DECLINED = "declined"
 
 
 class CalendarProvider(str, enum.Enum):
