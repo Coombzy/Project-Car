@@ -130,11 +130,15 @@ def set_member_session_cookie(response: Response, settings: Settings, token: str
 
 
 def clear_session_cookie(response: Response, settings: Settings) -> None:
-    response.delete_cookie(key=settings.cookie_name, path="/")
+    response.delete_cookie(key=settings.cookie_name, path="/", secure=settings.cookie_secure)
 
 
 def clear_member_session_cookie(response: Response, settings: Settings) -> None:
-    response.delete_cookie(key=settings.member_cookie_name, path="/")
+    response.delete_cookie(
+        key=settings.member_cookie_name,
+        path="/",
+        secure=settings.cookie_secure,
+    )
 
 
 def hash_password(password: str) -> str:
