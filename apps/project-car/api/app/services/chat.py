@@ -170,6 +170,8 @@ def post_message(
     if principal.role == "member":
         if principal.member_id is None or not _member_in_room(room, principal.member_id):
             raise ChatError(404, "not_found", "Chat room not found.")
+        if room.muted:
+            raise ChatError(403, "room_muted", "This room is muted.")
         member = session.get(Member, principal.member_id)
         if member is None or member.status != MemberStatus.ACTIVE:
             raise ChatError(403, "member_not_bookable", "Only active members can send chat.")

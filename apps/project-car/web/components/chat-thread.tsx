@@ -14,12 +14,14 @@ export function ChatThread({
   initialCursor,
   pollMessages,
   sendMessage,
+  showComposer = true,
 }: {
   room: ChatRoom;
   initialMessages: ChatMessage[];
   initialCursor: string | null;
   pollMessages: (roomId: string, afterId?: string) => Promise<{ messages: ChatMessage[]; cursor: string | null }>;
   sendMessage: (roomId: string, body: string) => Promise<ChatMessage>;
+  showComposer?: boolean;
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [error, setError] = useState<string | null>(null);
@@ -120,24 +122,26 @@ export function ChatThread({
         )}
       </div>
       {error ? <div className="banner error">{error}</div> : null}
-      <form onSubmit={onSubmit} className="chat-compose">
-        <label htmlFor={`chat-body-${room.id}`}>
-          Message
-          <textarea
-            id={`chat-body-${room.id}`}
-            name="body"
-            rows={3}
-            required
-            maxLength={4000}
-            placeholder="Human message — not Matrix, not Grok"
-          />
-        </label>
-        <div className="actions">
-          <button type="submit" disabled={sending}>
-            {sending ? "Sending…" : "Send"}
-          </button>
-        </div>
-      </form>
+      {showComposer ? (
+        <form onSubmit={onSubmit} className="chat-compose">
+          <label htmlFor={`chat-body-${room.id}`}>
+            Message
+            <textarea
+              id={`chat-body-${room.id}`}
+              name="body"
+              rows={3}
+              required
+              maxLength={4000}
+              placeholder="Human message — not Matrix, not Grok"
+            />
+          </label>
+          <div className="actions">
+            <button type="submit" disabled={sending}>
+              {sending ? "Sending…" : "Send"}
+            </button>
+          </div>
+        </form>
+      ) : null}
     </section>
   );
 }
