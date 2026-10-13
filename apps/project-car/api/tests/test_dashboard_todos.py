@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from decimal import Decimal
 
 from fastapi.testclient import TestClient
 
+from app.db import get_db
+from app.main import app
+from app.seed import seed
+from app.services.pricing import BASE_TOKENS_PER_HOUR
 from app.shop_time import pricing_now
 from tests.conftest import AUTH, create_hoist, create_member, login_member
 
@@ -191,6 +196,63 @@ def test_calendar_connect_is_stubbed(client: TestClient) -> None:
     apple = client.get("/calendar/apple/start", headers=AUTH)
     assert apple.status_code == 501
     assert apple.json()["error"]["code"] == "apple_calendar_ics_only"
+
+
+def test_member_below_one_base_hour_is_token_at_risk(client: TestClient) -> None:
+    """Active members under one base hour are token-at-risk. Exactly one base hour is not."""
+    override = app.dependency_overrides[get_db]
+    session_gen = override()
+    session = next(session_gen)
+    try:
+        seed(session, reset=True)
+        session.commit()
+    finally:
+        session_gen.close()
+
+    one_base_hour = BASE_TOKENS_PER_HOUR
+    below = create_member(
+        client,
+        name="Below Hour",
+        email="below.hour@example.com",
+        tier_name="basic",
+        allocate_tokens=False,
+    )
+    exact = create_member(
+        client,
+        name="Exact Hour",
+        email="exact.hour@example.com",
+        tier_name="basic",
+        allocate_tokens=False,
+    )
+    short = client.post(
+        f"/members/{below['id']}/tokens",
+        headers=AUTH,
+        json={"amount": str(one_base_hour - Decimal("1")), "note": "One token under a base hour"},
+    )
+    assert short.status_code == 201, short.text
+    full = client.post(
+        f"/members/{exact['id']}/tokens",
+        headers=AUTH,
+        json={"amount": str(one_base_hour), "note": "Exactly one base hour"},
+    )
+    assert full.status_code == 201, full.text
+
+    below_balance = Decimal(str(client.get(f"/members/{below['id']}", headers=AUTH).json()["token_balance"]))
+    exact_balance = Decimal(str(client.get(f"/members/{exact['id']}", headers=AUTH).json()["token_balance"]))
+    assert below_balance == one_base_hour - Decimal("1")
+    assert exact_balance == one_base_hour
+
+    dash = client.get("/dashboard", headers=AUTH)
+    assert dash.status_code == 200, dash.text
+    at_risk = {
+        row["name"]: Decimal(str(row["token_balance"])) for row in dash.json()["token_at_risk"]
+    }
+    assert "Below Hour" in at_risk, (
+        f"balance {below_balance} should be token-at-risk, got {sorted(at_risk)}"
+    )
+    assert at_risk["Below Hour"] == below_balance
+    assert "Exact Hour" not in at_risk
+    assert at_risk["Morgan Blake"] == Decimal("0")
 
 
 def test_seed_includes_bay6_todos_and_parts_orders(client: TestClient) -> None:
