@@ -339,6 +339,42 @@ export async function cancelBooking(id: string): Promise<Booking> {
   return shopJson<Booking>(`/bookings/${id}/cancel`, "Could not cancel the booking.", { method: "POST" });
 }
 
+export async function listOwnerShopHoistRequests(
+  status?: ShopHoistRequest["status"],
+): Promise<ShopHoistRequest[]> {
+  const query = new URLSearchParams();
+  if (status) query.set("status", status);
+  const suffix = query.size ? `?${query.toString()}` : "";
+  return shopJson<ShopHoistRequest[]>(
+    `/shop-hoist-requests${suffix}`,
+    "Could not load shop hoist requests.",
+  );
+}
+
+type ShopHoistDecision = {
+  request_id: string;
+  status: string;
+  action: string;
+  booking_id: string | null;
+  token_balance: string | null;
+};
+
+export async function approveShopHoistRequest(id: string): Promise<ShopHoistDecision> {
+  return shopJson<ShopHoistDecision>(
+    `/shop-hoist-requests/${id}/approve`,
+    "Could not approve the shop hoist request.",
+    { method: "POST" },
+  );
+}
+
+export async function denyShopHoistRequest(id: string): Promise<ShopHoistDecision> {
+  return shopJson<ShopHoistDecision>(
+    `/shop-hoist-requests/${id}/deny`,
+    "Could not deny the shop hoist request.",
+    { method: "POST" },
+  );
+}
+
 export async function previewFill(discountPct?: string): Promise<FillPreview> {
   const query = new URLSearchParams();
   if (discountPct) query.set("discount_pct", discountPct);
