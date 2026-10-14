@@ -14,6 +14,8 @@ def test_all_models_import() -> None:
     assert "waitlist_entries" in names
     assert names == [
         "membership_tiers",
+        "pricing_bands",
+        "pricing_overlays",
         "members",
         "hoists",
         "tools",
