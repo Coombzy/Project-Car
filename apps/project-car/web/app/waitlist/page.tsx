@@ -25,7 +25,7 @@ function WaitlistMemberControl({
   return (
     <form
       action={convertWaitlistAction}
-      style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", alignItems: "center" }}
+      style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.35rem" }}
     >
       <input type="hidden" name="id" value={entry.id} />
       <label className="sr-only" htmlFor={`tier-${entry.id}`}>
