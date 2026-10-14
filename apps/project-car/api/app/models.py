@@ -726,6 +726,7 @@ class WaitlistEntry(Base):
     __table_args__ = (
         UniqueConstraint("email", name="uq_waitlist_entries_email"),
         Index("ix_waitlist_entries_created_at", "created_at"),
+        Index("ix_waitlist_entries_member_id", "member_id"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
@@ -734,6 +735,9 @@ class WaitlistEntry(Base):
     phone: Mapped[Optional[str]] = mapped_column(String(40))
     notes: Mapped[Optional[str]] = mapped_column(Text)
     contacted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    member_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("members.id", ondelete="SET NULL")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
