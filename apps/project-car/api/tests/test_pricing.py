@@ -173,3 +173,35 @@ def test_owner_can_patch_band_multiplier_and_quote_uses_it(client: TestClient) -
     )
     assert requoted.status_code == 200, requoted.text
     assert Decimal(str(requoted.json()["reserved_tokens"])) == Decimal("99.00")
+
+
+def test_invalid_overlay_does_not_commit_a_valid_band(client: TestClient) -> None:
+    """One save with a valid band and an invalid overlay must change no multiplier row."""
+    patched = client.patch(
+        "/tiers/pricing",
+        headers=AUTH,
+        json={
+            "bands": [{"id": "weekday_day", "multiplier": "1.10"}],
+            "overlays": [{"id": "standard", "multiplier": "0"}],
+        },
+    )
+    assert patched.status_code == 422, patched.text
+
+    listed = client.get("/tiers/pricing", headers=AUTH)
+    assert listed.status_code == 200, listed.text
+    bands = {row["id"]: Decimal(str(row["multiplier"])) for row in listed.json()["bands"]}
+    assert bands["weekday_day"] == Decimal("1.00")
+
+    start = _weekday_day_in_standard_window()
+    end = start + timedelta(hours=1)
+    quoted = client.post(
+        "/bookings/quote",
+        headers=AUTH,
+        json={"start_at": start.isoformat(), "end_at": end.isoformat()},
+    )
+    assert quoted.status_code == 200, quoted.text
+    rule = quoted.json()["pricing_rule"]
+    assert rule["band_id"] == "weekday_day"
+    assert rule["overlay_id"] == "standard"
+    assert Decimal(str(rule["band_multiplier"])) == Decimal("1.00")
+    assert Decimal(str(quoted.json()["reserved_tokens"])) == Decimal("100.00")
