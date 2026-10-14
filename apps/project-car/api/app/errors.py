@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -14,8 +15,26 @@ def error_body(code: str, message: str, **extra: Any) -> dict[str, Any]:
     return {"error": payload}
 
 
+def _json_ready(value: Any) -> Any:
+    """Validation details can carry Decimal and exception objects. JSON cannot."""
+    if isinstance(value, Decimal):
+        return format(value, "f")
+    if isinstance(value, BaseException):
+        return str(value)
+    if isinstance(value, dict):
+        return {str(key): _json_ready(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_ready(item) for item in value]
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
+
+
 def error_response(status_code: int, code: str, message: str, **extra: Any) -> JSONResponse:
-    return JSONResponse(status_code=status_code, content=error_body(code, message, **extra))
+    return JSONResponse(
+        status_code=status_code,
+        content=error_body(code, message, **_json_ready(extra)),
+    )
 
 
 def register_error_handlers(app: FastAPI) -> None:

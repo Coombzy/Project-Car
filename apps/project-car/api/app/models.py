@@ -243,6 +243,34 @@ class MembershipTier(Base):
         return self.display_name
 
 
+class PricingBand(Base):
+    """Time-of-day band. The multiplier is an Owner setting, seeded from the locked table."""
+
+    __tablename__ = "pricing_bands"
+    __table_args__ = (
+        CheckConstraint("multiplier > 0", name="ck_pricing_bands_multiplier_positive"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    label: Mapped[str] = mapped_column(String(120), nullable=False)
+    multiplier: Mapped[Decimal] = mapped_column(Numeric(8, 4), nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class PricingOverlay(Base):
+    """Advance overlay. The multiplier is an Owner setting, seeded from the locked table."""
+
+    __tablename__ = "pricing_overlays"
+    __table_args__ = (
+        CheckConstraint("multiplier > 0", name="ck_pricing_overlays_multiplier_positive"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    label: Mapped[str] = mapped_column(String(120), nullable=False)
+    multiplier: Mapped[Decimal] = mapped_column(Numeric(8, 4), nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
 class Member(Base):
     """Paying customer. Staff/Member OIDC comes later; schema is ready now."""
 
@@ -1209,6 +1237,8 @@ class JobEvent(Base):
 
 ALL_MODELS = [
     MembershipTier,
+    PricingBand,
+    PricingOverlay,
     Member,
     Hoist,
     Tool,
