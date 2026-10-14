@@ -9,7 +9,8 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import PartsRequest, PartsRequestStatus
+from app.models import PartsOrder, PartsOrderStatus, PartsRequest, PartsRequestStatus
+from app.shop_time import shop_now
 
 PARTS_SKU = re.compile(r"^PT-[A-Z0-9]+(?:-[A-Z0-9]+)*-\d{3}$")
 TOOL_CHECKOUT_SKU = re.compile(r"^(?:TC|B[1-6])-[A-Z0-9]+(?:-[A-Z0-9]+)*-\d{3}$")
@@ -71,3 +72,53 @@ def list_parts_requests(session: Session) -> list[PartsRequest]:
         .order_by(PartsRequest.created_at.desc(), PartsRequest.sku)
     )
     return list(session.scalars(stmt).all())
+
+
+def list_parts_orders(session: Session) -> list[PartsOrder]:
+    stmt = select(PartsOrder).order_by(PartsOrder.ordered_at.desc(), PartsOrder.po_number)
+    return list(session.scalars(stmt).all())
+
+
+def set_parts_order_status(
+    session: Session,
+    order_id: UUID,
+    status: PartsOrderStatus,
+) -> PartsOrder:
+    row = session.get(PartsOrder, order_id)
+    if row is None:
+        raise _error(404, "not_found", "Parts order not found.")
+    row.status = status
+    now = shop_now()
+    if status is PartsOrderStatus.SHIPPED and row.shipped_at is None:
+        row.shipped_at = now
+    if status is PartsOrderStatus.RECEIVED and row.received_at is None:
+        row.received_at = now
+    session.add(row)
+    session.flush()
+    session.refresh(row)
+    return row
+
+
+def set_parts_request_status(
+    session: Session,
+    request_id: UUID,
+    status: PartsRequestStatus,
+) -> PartsRequest:
+    if status not in {PartsRequestStatus.FULFILLED, PartsRequestStatus.DECLINED}:
+        raise _error(
+            422,
+            "invalid_parts_request_status",
+            "Owner can set a parts request to fulfilled or declined.",
+        )
+    row = session.scalar(
+        select(PartsRequest)
+        .options(selectinload(PartsRequest.member))
+        .where(PartsRequest.id == request_id)
+    )
+    if row is None:
+        raise _error(404, "not_found", "Parts request not found.")
+    row.status = status
+    session.add(row)
+    session.flush()
+    session.refresh(row)
+    return row
