@@ -3,8 +3,11 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+from fastapi.testclient import TestClient
+
 from app.services.pricing import FillFactor, quote_reserve
-from app.shop_time import PRICING_TZ
+from app.shop_time import PRICING_TZ, shop_now
+from tests.conftest import AUTH
 
 
 def _at(year: int, month: int, day: int, hour: int, minute: int = 0) -> datetime:
@@ -110,3 +113,42 @@ def test_fill_factor_stacks_on_band_and_overlay() -> None:
     unchanged = quote_reserve(start, end, reserved_at=reserved_at)
     assert unchanged.final_reserve_cost == Decimal("312.50")
     assert unchanged.fill.id == "none"
+
+
+def _weekday_day_in_standard_window() -> datetime:
+    """A future Mon–Fri 10:00 whose overlay is standard (48h–7d ahead)."""
+    now = shop_now().astimezone(PRICING_TZ)
+    for ahead in range(2, 7):
+        start = (now + timedelta(days=ahead)).replace(hour=10, minute=0, second=0, microsecond=0)
+        if start.weekday() >= 5:
+            continue
+        delta = start - now
+        if timedelta(hours=48) <= delta < timedelta(days=7):
+            return start
+    raise AssertionError("no weekday-day slot inside the standard overlay window")
+
+
+def test_owner_can_patch_band_multiplier_and_quote_uses_it(client: TestClient) -> None:
+    patched = client.patch(
+        "/tiers/bands/weekday_day",
+        headers=AUTH,
+        json={"multiplier": "1.10"},
+    )
+    assert patched.status_code == 200, patched.text
+    body = patched.json()
+    assert body["id"] == "weekday_day"
+    assert Decimal(str(body["multiplier"])) == Decimal("1.10")
+
+    start = _weekday_day_in_standard_window()
+    end = start + timedelta(hours=1)
+    quoted = client.post(
+        "/bookings/quote",
+        headers=AUTH,
+        json={"start_at": start.isoformat(), "end_at": end.isoformat()},
+    )
+    assert quoted.status_code == 200, quoted.text
+    rule = quoted.json()["pricing_rule"]
+    assert rule["band_id"] == "weekday_day"
+    assert rule["overlay_id"] == "standard"
+    assert Decimal(str(rule["band_multiplier"])) == Decimal("1.10")
+    assert Decimal(str(quoted.json()["reserved_tokens"])) == Decimal("110.00")
