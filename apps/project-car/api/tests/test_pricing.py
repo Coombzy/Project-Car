@@ -205,3 +205,30 @@ def test_invalid_overlay_does_not_commit_a_valid_band(client: TestClient) -> Non
     assert rule["overlay_id"] == "standard"
     assert Decimal(str(rule["band_multiplier"])) == Decimal("1.00")
     assert Decimal(str(quoted.json()["reserved_tokens"])) == Decimal("100.00")
+
+
+def test_owner_can_patch_band_and_overlay_in_one_request(client: TestClient) -> None:
+    patched = client.patch(
+        "/tiers/pricing",
+        headers=AUTH,
+        json={
+            "bands": [{"id": "weekday_day", "multiplier": "1.10"}],
+            "overlays": [{"id": "standard", "multiplier": "0.90"}],
+        },
+    )
+    assert patched.status_code == 200, patched.text
+    body = patched.json()
+    bands = {row["id"]: Decimal(str(row["multiplier"])) for row in body["bands"]}
+    overlays = {row["id"]: Decimal(str(row["multiplier"])) for row in body["overlays"]}
+    assert bands["weekday_day"] == Decimal("1.10")
+    assert overlays["standard"] == Decimal("0.90")
+
+    start = _weekday_day_in_standard_window()
+    end = start + timedelta(hours=1)
+    quoted = client.post(
+        "/bookings/quote",
+        headers=AUTH,
+        json={"start_at": start.isoformat(), "end_at": end.isoformat()},
+    )
+    assert quoted.status_code == 200, quoted.text
+    assert Decimal(str(quoted.json()["reserved_tokens"])) == Decimal("99.00")

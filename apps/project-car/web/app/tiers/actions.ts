@@ -62,13 +62,6 @@ export async function listPricingSettings(): Promise<PricingSettings> {
   return shopJson<PricingSettings>("/tiers/pricing", "Could not load band and overlay multipliers.");
 }
 
-async function patchMultiplier(path: string, multiplier: string): Promise<void> {
-  await shopJson(path, "Could not save the multiplier.", {
-    method: "PATCH",
-    body: JSON.stringify({ multiplier }),
-  });
-}
-
 export async function patchTierAction(formData: FormData): Promise<void> {
   const name = String(formData.get("name") ?? "");
   try {
@@ -89,17 +82,24 @@ export async function patchTierAction(formData: FormData): Promise<void> {
 }
 
 export async function patchPricingAction(formData: FormData): Promise<void> {
-  try {
-    for (const [key, value] of formData.entries()) {
-      if (typeof value !== "string") {
-        continue;
-      }
-      if (key.startsWith("band:")) {
-        await patchMultiplier(`/tiers/bands/${key.slice("band:".length)}`, value.trim());
-      } else if (key.startsWith("overlay:")) {
-        await patchMultiplier(`/tiers/overlays/${key.slice("overlay:".length)}`, value.trim());
-      }
+  const bands: { id: string; multiplier: string }[] = [];
+  const overlays: { id: string; multiplier: string }[] = [];
+  for (const [key, value] of formData.entries()) {
+    if (typeof value !== "string") {
+      continue;
     }
+    const multiplier = value.trim();
+    if (key.startsWith("band:")) {
+      bands.push({ id: key.slice("band:".length), multiplier });
+    } else if (key.startsWith("overlay:")) {
+      overlays.push({ id: key.slice("overlay:".length), multiplier });
+    }
+  }
+  try {
+    await shopJson("/tiers/pricing", "Could not save multipliers.", {
+      method: "PATCH",
+      body: JSON.stringify({ bands, overlays }),
+    });
   } catch (error) {
     const message = error instanceof ShopApiError ? error.message : "Could not save multipliers.";
     redirect(`/tiers?error=${encodeURIComponent(message)}`);

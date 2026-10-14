@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from app.deps import DbSession, Owner
 from app.models import MembershipTier, PricingBand, PricingOverlay
@@ -33,6 +34,16 @@ class MultiplierPatch(BaseModel):
     multiplier: Decimal = Field(gt=0, le=Decimal("9999.9999"))
 
 
+class PricingMultiplierUpdate(BaseModel):
+    id: str = Field(min_length=1, max_length=64)
+    multiplier: Decimal = Field(gt=0, le=Decimal("9999.9999"))
+
+
+class PricingSettingsPatch(BaseModel):
+    bands: list[PricingMultiplierUpdate] = Field(default_factory=list)
+    overlays: list[PricingMultiplierUpdate] = Field(default_factory=list)
+
+
 def _multiplier_or_422(value: Decimal) -> Decimal:
     try:
         return quantize_multiplier(value)
@@ -41,6 +52,35 @@ def _multiplier_or_422(value: Decimal) -> Decimal:
             status_code=422,
             detail={"code": exc.code, "message": exc.message},
         ) from exc
+
+
+def _collect_multiplier_writes(
+    session: Session,
+    model: type[PricingBand] | type[PricingOverlay],
+    updates: list[PricingMultiplierUpdate],
+    missing: str,
+) -> list[tuple[PricingBand | PricingOverlay, Decimal]]:
+    """Resolve every id and multiplier. Nothing is assigned until this returns."""
+    pending: list[tuple[PricingBand | PricingOverlay, Decimal]] = []
+    seen: set[str] = set()
+    for item in updates:
+        if item.id in seen:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "validation_error",
+                    "message": "Each multiplier can be set once.",
+                },
+            )
+        seen.add(item.id)
+        row = session.get(model, item.id)
+        if row is None:
+            raise HTTPException(
+                status_code=404,
+                detail={"code": "not_found", "message": missing},
+            )
+        pending.append((row, _multiplier_or_422(item.multiplier)))
+    return pending
 
 
 @router.get("/tiers/pricing", response_model=PricingSettingsOut)
@@ -54,6 +94,26 @@ def list_pricing_settings(session: DbSession, _owner: Owner) -> PricingSettingsO
         bands=[PricingMultiplierOut.model_validate(row) for row in bands],
         overlays=[PricingMultiplierOut.model_validate(row) for row in overlays],
     )
+
+
+@router.patch("/tiers/pricing", response_model=PricingSettingsOut)
+def patch_pricing_settings(
+    body: PricingSettingsPatch,
+    session: DbSession,
+    _owner: Owner,
+) -> PricingSettingsOut:
+    """Validate every submitted multiplier, then write them in this request's transaction."""
+    ensure_pricing_settings(session)
+    pending = [
+        *_collect_multiplier_writes(session, PricingBand, body.bands, "Band not found."),
+        *_collect_multiplier_writes(session, PricingOverlay, body.overlays, "Overlay not found."),
+    ]
+    for row, multiplier in pending:
+        row.multiplier = multiplier
+        session.add(row)
+    if pending:
+        session.flush()
+    return list_pricing_settings(session, _owner)
 
 
 @router.patch("/tiers/bands/{band_id}", response_model=PricingMultiplierOut)
