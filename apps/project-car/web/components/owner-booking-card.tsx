@@ -46,10 +46,21 @@ export function OwnerBookingCard({
           </form>
         ) : null}
         {booking.status === "active" ? (
-          <form action={completeBookingAction}>
+          <form className="complete-booking" action={completeBookingAction}>
             <ScheduleReturnFields returnTo={returnTo} />
             <input type="hidden" name="id" value={booking.id} />
-            <input type="hidden" name="unused_tokens" value="0" />
+            <label className="unused-tokens">
+              Unused
+              <input
+                type="number"
+                name="unused_tokens"
+                defaultValue={0}
+                min={0}
+                max={booking.reserved_tokens}
+                step="0.01"
+                inputMode="decimal"
+              />
+            </label>
             <button type="submit">Complete</button>
           </form>
         ) : null}
