@@ -129,6 +129,9 @@ def _weekday_day_in_standard_window() -> datetime:
 
 
 def test_owner_can_patch_band_multiplier_and_quote_uses_it(client: TestClient) -> None:
+    denied = client.patch("/tiers/bands/weekday_day", json={"multiplier": "1.10"})
+    assert denied.status_code == 401
+
     patched = client.patch(
         "/tiers/bands/weekday_day",
         headers=AUTH,
@@ -152,3 +155,21 @@ def test_owner_can_patch_band_multiplier_and_quote_uses_it(client: TestClient) -
     assert rule["overlay_id"] == "standard"
     assert Decimal(str(rule["band_multiplier"])) == Decimal("1.10")
     assert Decimal(str(quoted.json()["reserved_tokens"])) == Decimal("110.00")
+    constant = quote_reserve(start, end, reserved_at=start - timedelta(hours=72))
+    assert constant.band.multiplier == Decimal("1.00")
+    assert constant.final_reserve_cost == Decimal("100.00")
+
+    overlay = client.patch(
+        "/tiers/overlays/standard",
+        headers=AUTH,
+        json={"multiplier": "0.90"},
+    )
+    assert overlay.status_code == 200, overlay.text
+    assert Decimal(str(overlay.json()["multiplier"])) == Decimal("0.90")
+    requoted = client.post(
+        "/bookings/quote",
+        headers=AUTH,
+        json={"start_at": start.isoformat(), "end_at": end.isoformat()},
+    )
+    assert requoted.status_code == 200, requoted.text
+    assert Decimal(str(requoted.json()["reserved_tokens"])) == Decimal("99.00")

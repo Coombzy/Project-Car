@@ -172,7 +172,7 @@ def preview_reserve(
     reject_start_in_past(start_at)
     fill = resolve_fill_for_slot(session, start_at, end_at)
     try:
-        quote = quote_reserve(start_at, end_at, fill=fill)
+        quote = quote_reserve(start_at, end_at, fill=fill, session=session)
     except PricingError as exc:
         raise _error(400, exc.code, exc.message) from exc
     if member_id is None:
@@ -219,7 +219,7 @@ def create_booking(
 
     fill = resolve_fill_for_slot(session, start_at, end_at)
     try:
-        quote = quote_reserve(start_at, end_at, fill=fill)
+        quote = quote_reserve(start_at, end_at, fill=fill, session=session)
     except PricingError as exc:
         raise _error(400, exc.code, exc.message) from exc
     tokens = quote.final_reserve_cost
