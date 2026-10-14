@@ -274,7 +274,7 @@ export type PartsRequest = {
   member_name: string | null;
   sku: string;
   note: string | null;
-  status: "open";
+  status: "open" | "fulfilled" | "declined";
   created_at: string;
 };
 

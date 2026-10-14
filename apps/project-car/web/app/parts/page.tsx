@@ -1,39 +1,69 @@
 import { OwnerShell } from "../../components/owner-shell";
 import { PlaceholderNote } from "../../components/placeholder-note";
-import type { PartsRequest } from "../../lib/config";
-import {
-  SAMPLE_INVENTORY_REQUESTS,
-  SAMPLE_OPS_PART_ORDERS,
-  SAMPLE_PARTS_STOCK,
-  partsReorderState,
-} from "../../lib/inventory";
+import type { PartsOrder, PartsRequest } from "../../lib/config";
+import { SAMPLE_INVENTORY_REQUESTS, SAMPLE_PARTS_STOCK, partsReorderState } from "../../lib/inventory";
 import { handlePageError } from "../../lib/page";
-import { getMe, listPartsRequests } from "../../lib/shop-api";
+import { getMe, listPartsOrders, listPartsRequests } from "../../lib/shop-api";
 import { formatShopDateTime } from "../../lib/time";
+import { partsStatusLabel } from "../../lib/todo-calendar";
+import { decidePartsRequestAction, patchPartsOrderAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function OpsPartsPage() {
+const ORDER_STATUSES: PartsOrder["status"][] = ["ordered", "shipped", "in_transit", "received"];
+
+export default async function OpsPartsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ error?: string }>;
+}) {
+  const query = searchParams ? await searchParams : {};
   try {
-    const me = await getMe();
-    const requests = await listPartsRequests();
+    const [me, requests, orders] = await Promise.all([
+      getMe(),
+      listPartsRequests(),
+      listPartsOrders(),
+    ]);
     return (
       <OwnerShell email={me.email} current="parts" wide>
-        <OpsPartsBody requests={requests} />
+        <OpsPartsBody requests={requests} orders={orders} error={query.error} />
       </OwnerShell>
     );
   } catch (error) {
     const message = await handlePageError(error);
     return (
       <OwnerShell current="parts" wide>
-        <OpsPartsBody requests={[]} />
+        <OpsPartsBody requests={[]} orders={[]} />
         <div className="banner error">{message}</div>
       </OwnerShell>
     );
   }
 }
 
-function OpsPartsBody({ requests }: { requests: PartsRequest[] }) {
+function requestStatusLabel(status: PartsRequest["status"]): string {
+  switch (status) {
+    case "open":
+      return "Open";
+    case "fulfilled":
+      return "Fulfilled";
+    case "declined":
+      return "Declined";
+    default: {
+      const neverStatus: never = status;
+      return neverStatus;
+    }
+  }
+}
+
+function OpsPartsBody({
+  requests,
+  orders,
+  error,
+}: {
+  requests: PartsRequest[];
+  orders: PartsOrder[];
+  error?: string;
+}) {
   return (
     <>
       <p className="eyebrow">Ops · placeholder</p>
@@ -45,10 +75,12 @@ function OpsPartsBody({ requests }: { requests: PartsRequest[] }) {
         <code>/member/parts</code>. Full checkout and eBay stay Later. Flag{" "}
         <code>pc.marketplace</code> stays off. No Stripe. The shop is not open.
       </p>
+      {error ? <div className="banner error">{error}</div> : null}
       <PlaceholderNote>
-        Placeholder PT list — not live POs, not a price list, not the member
-        catalog. Member-facing parts stay requests-only on the customer
-        surface. Consumables (<code>CM</code>) stay Later.
+        PT stock qty is a stub — not a price list and not the member catalog.
+        Purchase orders are the stored <code>parts_orders</code> rows, the same
+        rows as the dashboard. Member-facing parts stay requests-only on the
+        customer surface. Consumables (<code>CM</code>) stay Later.
       </PlaceholderNote>
 
       <h2>PT stock</h2>
@@ -99,37 +131,63 @@ function OpsPartsBody({ requests }: { requests: PartsRequest[] }) {
       </div>
 
       <h2>Purchase orders</h2>
-      <div className="card">
-        <table>
-          <thead>
-            <tr>
-              <th>PO</th>
-              <th>SKU</th>
-              <th>What</th>
-              <th>Vendor</th>
-              <th>For</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {SAMPLE_OPS_PART_ORDERS.map((row) => (
-              <tr key={row.id}>
-                <td>{row.id}</td>
-                <td className="sku">{row.sku}</td>
-                <td>{row.what}</td>
-                <td>{row.vendor}</td>
-                <td>{row.for}</td>
-                <td>{row.status}</td>
+      <p className="muted">
+        Stored shop POs, including <code>PT-PO-1045</code> when it is seeded.
+        Same rows as the dashboard parts strip. Set status here — not a live
+        vendor feed, and not a cart.
+      </p>
+      {orders.length === 0 ? (
+        <div className="banner empty">No parts orders stored yet.</div>
+      ) : (
+        <div className="card">
+          <table>
+            <thead>
+              <tr>
+                <th>PO</th>
+                <th>SKU</th>
+                <th>What</th>
+                <th>Vendor</th>
+                <th>For</th>
+                <th>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {orders.map((row) => (
+                <tr key={row.id}>
+                  <td>{row.po_number}</td>
+                  <td className="sku">{row.sku ?? "—"}</td>
+                  <td>{row.what}</td>
+                  <td>{row.vendor || "—"}</td>
+                  <td>{row.for_label || "—"}</td>
+                  <td>
+                    <form className="parts-status-form" action={patchPartsOrderAction}>
+                      <input type="hidden" name="id" value={row.id} />
+                      <select
+                        name="status"
+                        defaultValue={row.status}
+                        aria-label={`Status for ${row.po_number}`}
+                      >
+                        {ORDER_STATUSES.map((status) => (
+                          <option key={status} value={status}>
+                            {partsStatusLabel(status)}
+                          </option>
+                        ))}
+                      </select>
+                      <button type="submit">Save</button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <h2>Stored parts requests</h2>
       <p className="muted">
-        Rows members stored from the request desk. Not a storefront and not a
-        tool checkout. The shop is not open.
+        Rows members stored from the request desk. Fulfill or decline is the
+        status they see. Not a storefront and not a tool checkout. The shop is
+        not open.
       </p>
       {requests.length === 0 ? (
         <div className="banner empty">No parts requests stored yet.</div>
@@ -143,6 +201,7 @@ function OpsPartsBody({ requests }: { requests: PartsRequest[] }) {
                 <th>Note</th>
                 <th>Status</th>
                 <th>Stored</th>
+                <th>Decision</th>
               </tr>
             </thead>
             <tbody>
@@ -151,8 +210,24 @@ function OpsPartsBody({ requests }: { requests: PartsRequest[] }) {
                   <td>{row.member_name ?? "Member"}</td>
                   <td className="sku">{row.sku}</td>
                   <td>{row.note ?? "—"}</td>
-                  <td>{row.status}</td>
+                  <td>{requestStatusLabel(row.status)}</td>
                   <td>{formatShopDateTime(row.created_at)}</td>
+                  <td>
+                    <div className="parts-status-form">
+                      <form action={decidePartsRequestAction}>
+                        <input type="hidden" name="id" value={row.id} />
+                        <input type="hidden" name="status" value="fulfilled" />
+                        <button type="submit">Fulfill</button>
+                      </form>
+                      <form action={decidePartsRequestAction}>
+                        <input type="hidden" name="id" value={row.id} />
+                        <input type="hidden" name="status" value="declined" />
+                        <button type="submit" className="ghost">
+                          Decline
+                        </button>
+                      </form>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

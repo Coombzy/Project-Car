@@ -490,6 +490,14 @@ class PartsRequestOut(BaseModel):
         return cls.model_validate(row).model_copy(update={"member_name": name})
 
 
+class PartsOrderPatch(BaseModel):
+    status: PartsOrderStatus
+
+
+class PartsRequestPatch(BaseModel):
+    status: PartsRequestStatus
+
+
 class PartsRequestCreate(BaseModel):
     sku: str = Field(min_length=1, max_length=80)
     note: str | None = Field(default=None, max_length=2000)

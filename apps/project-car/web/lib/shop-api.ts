@@ -22,6 +22,7 @@ import {
   type MemberSelf,
   type MembershipTier,
   type NotificationOutbox,
+  type PartsOrder,
   type PartsRequest,
   type Principal,
   type Todo,
@@ -122,6 +123,32 @@ export async function getDashboard(): Promise<Dashboard> {
 
 export async function listPartsRequests(): Promise<PartsRequest[]> {
   return shopJson<PartsRequest[]>("/parts-requests", "Could not load parts requests.");
+}
+
+export async function patchPartsRequest(
+  id: string,
+  status: "fulfilled" | "declined",
+): Promise<PartsRequest> {
+  return shopJson<PartsRequest>(`/parts-requests/${id}`, "Could not update the parts request.", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function listPartsOrders(): Promise<PartsOrder[]> {
+  return shopJson<PartsOrder[]>("/parts-orders", "Could not load parts orders.");
+}
+
+export async function patchPartsOrder(
+  id: string,
+  status: PartsOrder["status"],
+): Promise<PartsOrder> {
+  return shopJson<PartsOrder>(`/parts-orders/${id}`, "Could not update the parts order.", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
 }
 
 export async function listTodos(): Promise<Todo[]> {
