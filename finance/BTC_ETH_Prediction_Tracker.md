@@ -144,17 +144,27 @@ One row per `(analysis_date, asset, horizon)`. Update in place. Do not duplicate
 | 2026-09-14 | BTC | 1w | 72000 | 86000 | 74500 | 83000 | 50 | digestion | -0.56 | 74945 | 87364 | 86603 | no | upside vs 78750 | 10.0% | closed | MISS HIGH cap 86000 vs Yahoo H 87363.76 |
 | 2026-09-14 | BTC | 1m | 65000 | 98000 | 72000 | 88000 | 45 | digestion | -0.56 | 74945 | 82300 | 75690 | on-track |  |  | open | |
 | 2026-09-14 | BTC | 3m | 55000 | 112000 | 68000 | 98000 | 40 | digestion | -0.56 | 74945 | 82300 | 75690 | on-track |  |  | open | |
-| 2026-09-14 | ETH | 1d | 2380 | 2750 | 2450 | 2650 | 55 | digestion | -1.94 | 2480 | 2611 | 2493 | yes | fade vs 2550 | 2.2% | closed | 24h 13:31Z Sep14-15; L2480 H2611 C2493 |
-| 2026-09-14 | ETH | 1w | 2200 | 3100 | 2400 | 2900 | 50 | digestion | -1.94 | 2357 | 2611 | 2391 | on-track |  |  | open | |
-| 2026-09-14 | ETH | 1m | 1950 | 3400 | 2250 | 3000 | 45 | digestion | -1.94 | 2357 | 2663 | 2391 | on-track |  |  | open | |
-| 2026-09-14 | ETH | 3m | 1650 | 4000 | 2100 | 3500 | 40 | digestion | -1.94 | 2357 | 2663 | 2391 | on-track |  |  | open | |
-| 2026-09-15 | BTC | 1d | 74800 | 82100 | 75200 | 79000 | 52 | trend-down | 1.73 | 74945 | 78243 | 75690 | yes | fade vs 77100 | 1.8% | closed | recovered email; 24h 14:36Z Sep15-16; construction tight vs 1.0xATR live-impulse-low |
-| 2026-09-15 | BTC | 1w | 70000 | 86000 | 72000 | 82000 | 50 | trend-down | 1.73 | 74945 | 87364 | 86172 | no | upside vs 77000 | 11.9% | closed | MISS HIGH cap 86000 vs Yahoo H 87363.76 |
-| 2026-09-16 | BTC | 1d | 71700 | 83900 | 73000 | 78000 | 55 | trend-down | -3.26 | 74996 | 77079 | 76404 | yes | flat vs 75500 | 1.2% | closed | 24h ~13:41Z Sep16-17 HIT |
-| 2026-09-16 | BTC | 1w | 68000 | 88000 | 71000 | 82000 | 50 | trend-down | -3.26 | 74996 | 87364 | 84383 | yes | upside vs 76500 | 10.3% | closed | H87364<88000 HIT |
-| 2026-09-16 | BTC | 1m | 60000 | 100000 | 68000 | 88000 | 45 | trend-down | -3.26 | 74945 | 82300 | 75690 | on-track |  |  | open | Daily email |
-| 2026-09-16 | BTC | 3m | 50000 | 115000 | 62000 | 98000 | 40 | trend-down | -3.26 | 74945 | 82300 | 75690 | on-track |  |  | open | Daily email |
-| 2026-09-27 | BTC | 1d | 81800 | 87200 | 83800 | 86200 | 58 | digestion | -0.41 | 82571 | 84973 | 83503 | yes | fade vs 85000 | 1.8% | closed | email table HIT |
+| 2026-09-14 | ETH | 1d | 2380 | 2820 | 2450 | 2700 | 55 | digestion | 0.87 | 2463 | 2530 | 2503 | yes | fade vs 2575 | 2.8% | closed | 24h 13:31Z Sep14-15 |
+| 2026-09-14 | ETH | 1w | 2200 | 3100 | 2400 | 2900 | 50 | digestion | 0.87 | 2357 | 2611 | 2391 | on-track |  |  | open | |
+| 2026-09-14 | ETH | 1m | 1950 | 3400 | 2250 | 3000 | 45 | digestion | 0.87 | 2357 | 2663 | 2391 | on-track |  |  | open | |
+| 2026-09-14 | ETH | 3m | 1650 | 4000 | 2100 | 3500 | 40 | digestion | 0.87 | 2357 | 2663 | 2391 | on-track |  |  | open | |
+| 2026-09-15 | BTC | 1d | 74200 | 82000 | 76000 | 80000 | 55 | digestion | -0.56 | 76735 | 79569 | 76525 | yes | fade vs 78000 | 1.9% | closed | placeholder truncated |
+| 2026-09-15 | BTC | 1w | 70000 | 86000 | 74500 | 83000 | 50 | digestion | -0.56 | 74945 | 87364 | 86603 | no | upside vs 78750 | 10.0% | closed | MISS HIGH cap 86000 vs Yahoo H 87363.76 |
+| 2026-09-15 | BTC | 1m | 65000 | 98000 | 72000 | 88000 | 45 | digestion | -0.56 | 74945 | 82300 | 75690 | on-track |  |  | open | |
+| 2026-09-15 | BTC | 3m | 55000 | 112000 | 68000 | 98000 | 40 | digestion | -0.56 | 74945 | 82300 | 75690 | on-track |  |  | open | |
+| 2026-09-15 | ETH | 1d | 2380 | 2820 | 2450 | 2700 | 55 | digestion | 0.87 |  |  |  |  |  |  | open | truncated |
+| 2026-09-15 | ETH | 1w | 2200 | 3100 | 2400 | 2900 | 50 | digestion | 0.87 |  |  |  |  |  |  | open | truncated |
+| 2026-09-15 | ETH | 1m | 1950 | 3400 | 2250 | 3000 | 45 | digestion | 0.87 |  |  |  |  |  |  | open | truncated |
+| 2026-09-15 | ETH | 3m | 1650 | 4000 | 2100 | 3500 | 40 | digestion | 0.87 |  |  |  |  |  |  | open | truncated |
+| 2026-09-16 | BTC | 1d | 74200 | 82000 | 76000 | 80000 | 55 | digestion | -0.56 | 76735 | 79569 | 76525 | yes | fade vs 78000 | 1.9% | closed | |
+| 2026-09-16 | BTC | 1w | 68000 | 88000 | 74500 | 83000 | 50 | digestion | -0.56 | 74945 | 87364 | 86603 | yes |  |  | closed | HIT |
+| 2026-09-16 | BTC | 1m | 65000 | 98000 | 72000 | 88000 | 45 | digestion | -0.56 | 74945 | 82300 | 75690 | on-track |  |  | open | |
+| 2026-09-16 | BTC | 3m | 55000 | 112000 | 68000 | 98000 | 40 | digestion | -0.56 | 74945 | 82300 | 75690 | on-track |  |  | open | |
+| 2026-09-16 | ETH | 1d | 2380 | 2820 | 2450 | 2700 | 55 | digestion | 0.87 |  |  |  |  |  |  | open | truncated |
+| 2026-09-16 | ETH | 1w | 2200 | 3100 | 2400 | 2900 | 50 | digestion | 0.87 |  |  |  |  |  |  | open | truncated |
+| 2026-09-16 | ETH | 1m | 1950 | 3400 | 2250 | 3000 | 45 | digestion | 0.87 |  |  |  |  |  |  | open | truncated |
+| 2026-09-16 | ETH | 3m | 1650 | 4000 | 2100 | 3500 | 40 | digestion | 0.87 |  |  |  |  |  |  | open | truncated |
+| 2026-09-27 | BTC | 1d | 81800 | 87200 | 83000 | 86000 | 58 | digestion | 0.12 | 84121 | 85126 | 84458 | yes | flat vs 84500 | 0.1% | closed | email table HIT |
 | 2026-09-27 | ETH | 1d | 2610 | 2820 | 2660 | 2760 | 58 | digestion | 0.12 | 2635 | 2719 | 2689 | yes | flat vs 2710 | 0.8% | closed | email table HIT |
 | 2026-10-01 | BTC | 1d | 82100 | 86900 | 83200 | 85500 | 58 | digestion | -0.08 | 83133 | 87075 | 86547 | no | upside vs 84350 | 2.6% | closed | MISS HIGH cap 86900 vs H 87075.24 |
 | 2026-10-01 | ETH | 1d | 2630 | 2810 | 2660 | 2750 | 58 | digestion | 0.26 | 2673 | 2766 | 2740 | yes | flat vs 2705 | 1.3% | closed | email table HIT |
@@ -174,3 +184,11 @@ One row per `(analysis_date, asset, horizon)`. Update in place. Do not duplicate
 | 2026-10-04 | ETH | 1w | 2480 | 2980 | 2580 | 2840 | 52 | digestion | 0.72 |  |  |  |  |  |  | open | clear Oct2 H 2774+1.5xATR |
 | 2026-10-04 | ETH | 1m | 2200 | 3450 | 2500 | 3100 | 48 | digestion | 0.72 |  |  |  |  |  |  | open | Daily insert |
 | 2026-10-04 | ETH | 3m | 1800 | 4100 | 2200 | 3500 | 42 | digestion | 0.72 |  |  |  |  |  |  | open | Daily insert |
+| 2026-10-14 | BTC | 1d | 78400 | 86600 | 80500 | 84800 | 55 | digestion | 1.63 |  |  |  |  |  |  | open | post-up 1.0x low; miss-low floor Oct8 80337; ATR 2823 width 2.9x |
+| 2026-10-14 | BTC | 1w | 76000 | 92000 | 80000 | 88000 | 50 | digestion | 1.63 |  |  |  |  |  |  | open | 2-of-3 MISS HIGH floor 87364+1.5xATR; no mega-inflow |
+| 2026-10-14 | BTC | 1m | 70000 | 105000 | 78000 | 95000 | 45 | digestion | 1.63 |  |  |  |  |  |  | open | Daily insert |
+| 2026-10-14 | BTC | 3m | 58000 | 120000 | 72000 | 105000 | 40 | digestion | 1.63 |  |  |  |  |  |  | open | Daily insert |
+| 2026-10-14 | ETH | 1d | 2260 | 2650 | 2380 | 2550 | 55 | digestion | 2.14 |  |  |  |  |  |  | open | post-up 1.0x low; ATR 127 width 2.5x+ |
+| 2026-10-14 | ETH | 1w | 2100 | 2950 | 2300 | 2750 | 50 | digestion | 2.14 |  |  |  |  |  |  | open | no special floor |
+| 2026-10-14 | ETH | 1m | 1900 | 3500 | 2200 | 3100 | 45 | digestion | 2.14 |  |  |  |  |  |  | open | Daily insert |
+| 2026-10-14 | ETH | 3m | 1600 | 4200 | 2000 | 3600 | 40 | digestion | 2.14 |  |  |  |  |  |  | open | Daily insert |
