@@ -4,7 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { ShopApiError } from "../../lib/config";
-import { adjustMemberTokens, createMember, patchMember } from "../../lib/shop-api";
+import {
+  adjustMemberTokens,
+  createMember,
+  patchMember,
+  rebuildMemberTokens,
+} from "../../lib/shop-api";
 
 function bounce(path: string, error: unknown): never {
   const message = error instanceof ShopApiError ? error.message : "Member update failed.";
@@ -60,6 +65,19 @@ export async function adjustTokensAction(formData: FormData): Promise<void> {
     bounce(`/members/${id}`, error);
   }
   revalidatePath(`/members/${id}`);
+  revalidatePath("/");
+  redirect(`/members/${id}`);
+}
+
+export async function rebuildTokensAction(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "");
+  try {
+    await rebuildMemberTokens(id);
+  } catch (error) {
+    bounce(`/members/${id}`, error);
+  }
+  revalidatePath(`/members/${id}`);
+  revalidatePath("/members");
   revalidatePath("/");
   redirect(`/members/${id}`);
 }
