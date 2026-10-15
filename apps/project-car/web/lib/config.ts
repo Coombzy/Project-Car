@@ -26,6 +26,7 @@ export type WaitlistEntry = {
   phone: string | null;
   notes: string | null;
   contacted_at: string | null;
+  member_id: string | null;
   created_at: string;
 };
 

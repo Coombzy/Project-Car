@@ -72,6 +72,7 @@ class WaitlistEntryOut(BaseModel):
     phone: str | None
     notes: str | None
     contacted_at: datetime | None
+    member_id: UUID | None = None
     created_at: datetime
 
 
