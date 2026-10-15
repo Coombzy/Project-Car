@@ -291,6 +291,12 @@ export async function adjustMemberTokens(id: string, amount: string, note: strin
   });
 }
 
+export async function rebuildMemberTokens(id: string): Promise<Member> {
+  return shopJson<Member>(`/members/${id}/tokens/rebuild`, "Could not rebuild the token balance.", {
+    method: "POST",
+  });
+}
+
 export async function listHoists(): Promise<Hoist[]> {
   return shopJson<Hoist[]>("/hoists", "Could not load hoists.");
 }
