@@ -21,6 +21,7 @@ def test_all_models_import() -> None:
         "tools",
         "tool_crib_events",
         "bookings",
+        "booking_hours",
         "token_transactions",
         "waitlist_entries",
         "incidents",
