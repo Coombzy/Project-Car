@@ -481,6 +481,7 @@ class Booking(Base):
 
     member: Mapped[Optional[Member]] = relationship(back_populates="bookings", foreign_keys=[member_id])
     hoist: Mapped[Hoist] = relationship(back_populates="bookings")
+    hours: Mapped[list[BookingHour]] = relationship(back_populates="booking")
     token_transactions: Mapped[list[TokenTransaction]] = relationship(back_populates="booking")
     incidents: Mapped[list[Incident]] = relationship(back_populates="booking")
 
@@ -489,6 +490,34 @@ class Booking(Base):
 
     def __str__(self) -> str:
         return f"Booking {self.id} ({self.status.value})"
+
+
+class BookingHour(Base):
+    """One Regina hour owned by a holding booking. Unique per hoist."""
+
+    __tablename__ = "booking_hours"
+    __table_args__ = (
+        UniqueConstraint("hoist_id", "hour_start", name="uq_booking_hours_hoist_hour"),
+        Index("ix_booking_hours_booking_id", "booking_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
+    booking_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("bookings.id", ondelete="CASCADE"), nullable=False
+    )
+    hoist_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("hoists.id", ondelete="RESTRICT"), nullable=False
+    )
+    hour_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    booking: Mapped[Booking] = relationship(back_populates="hours")
+    hoist: Mapped[Hoist] = relationship()
+
+    def __repr__(self) -> str:
+        return f"<BookingHour(hoist_id={self.hoist_id!r}, hour_start={self.hour_start!r})>"
 
 
 class ShopHoistRequest(Base):
@@ -1248,6 +1277,7 @@ ALL_MODELS = [
     Tool,
     ToolCribEvent,
     Booking,
+    BookingHour,
     TokenTransaction,
     WaitlistEntry,
     Incident,

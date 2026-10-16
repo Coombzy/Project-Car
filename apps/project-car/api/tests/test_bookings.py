@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from unittest.mock import patch
 from uuid import UUID
 
+import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from app.models import Booking, BookingKind, BookingStatus, Member, TokenTransactionKind
 from app.services.pricing import quote_reserve
@@ -271,6 +275,52 @@ def test_two_bookings_cannot_take_the_same_bay_hour(client: TestClient) -> None:
         if row_start < window_end and row_end > window_start:
             holders.append(row["id"])
     assert holders == [freed_body["id"]]
+
+
+def test_second_bay_hour_row_hits_the_unique_index(client: TestClient) -> None:
+    """A second raw claim of the same hoist hour cannot land, even without the SELECT."""
+    ada = create_member(client, email="ada@example.com", tier_name="premium")
+    casey = create_member(client, name="Casey", email="casey@example.com", tier_name="premium")
+    bay = create_hoist(client, name="Bay 1")
+    hour = datetime_in_regina_band()
+    hour_end = hour + timedelta(hours=1)
+    later = hour + timedelta(hours=3)
+
+    first = _book(client, member_id=ada["id"], hoist_id=bay["id"], start=hour, end=hour_end)
+    assert first.status_code == 201, first.text
+    ada_after = _balance(client, ada["id"])
+
+    with patch("app.services.bookings.hoist_has_overlap", return_value=False):
+        second = _book(client, member_id=casey["id"], hoist_id=bay["id"], start=hour, end=hour_end)
+    _assert_bay_hour_taken(second)
+    assert _balance(client, casey["id"]) == Decimal("1500")
+    assert _balance(client, ada["id"]) == ada_after
+
+    other = _book(client, member_id=casey["id"], hoist_id=bay["id"], start=later, end=later + timedelta(hours=1))
+    assert other.status_code == 201, other.text
+
+    from app.models import BookingHour
+
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        owned = list(
+            session.scalars(
+                select(BookingHour).where(BookingHour.booking_id == UUID(first.json()["id"]))
+            ).all()
+        )
+        assert len(owned) == 1
+        session.add(
+            BookingHour(
+                booking_id=UUID(other.json()["id"]),
+                hoist_id=UUID(bay["id"]),
+                hour_start=owned[0].hour_start,
+            )
+        )
+        with pytest.raises(IntegrityError):
+            session.flush()
+    finally:
+        session.rollback()
+        session.close()
 
 
 def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None:

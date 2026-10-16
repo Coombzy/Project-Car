@@ -7,11 +7,13 @@ from decimal import Decimal
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.models import (
     Booking,
+    BookingHour,
     BookingKind,
     BookingStatus,
     Hoist,
@@ -26,7 +28,7 @@ from app.models import (
 from app.services.fill import resolve_fill_for_slot
 from app.services.pricing import PricingError, quote_reserve
 from app.services.tokens import apply_ledger
-from app.shop_time import as_utc, shop_now
+from app.shop_time import as_utc, iter_regina_hours, shop_now
 
 OPEN_STATUSES = (BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.ACTIVE)
 # Overdue still occupies a tier slot until the Owner completes it. Cancel stays
@@ -129,6 +131,42 @@ def _reject_if_bay_hour_taken(
         statuses=statuses,
     ):
         raise _error(409, "hoist_overlap", BAY_HOUR_TAKEN)
+
+
+def claim_booking_hours(session: Session, booking: Booking) -> None:
+    """Insert one row per Regina hour. Unique (hoist_id, hour_start) is the lock.
+
+    A second flush of the same bay hour raises 409 hoist_overlap even when the
+    SELECT overlap check is skipped. Confirm is a no-op when this booking
+    already owns its rows.
+    """
+    owned = session.scalars(
+        select(BookingHour.id).where(BookingHour.booking_id == booking.id)
+    ).first()
+    if owned is not None:
+        return
+    # SQLite returns stored UTC as naive. as_utc would treat that as shop-local.
+    start_at = _stored_utc(booking.start_at)
+    end_at = _stored_utc(booking.end_at)
+    for hour_start, _hour_end in iter_regina_hours(start_at, end_at):
+        session.add(
+            BookingHour(
+                booking_id=booking.id,
+                hoist_id=booking.hoist_id,
+                hour_start=hour_start,
+            )
+        )
+    try:
+        session.flush()
+    except IntegrityError:
+        session.rollback()
+        raise _error(409, "hoist_overlap", BAY_HOUR_TAKEN) from None
+
+
+def release_booking_hours(session: Session, booking: Booking) -> None:
+    """Free cancelled or completed hours so another booking can take them."""
+    session.execute(delete(BookingHour).where(BookingHour.booking_id == booking.id))
+    session.flush()
 
 
 def open_booking_count(session: Session, member_id: UUID) -> int:
@@ -275,6 +313,7 @@ def create_booking(
     )
     session.add(booking)
     session.flush()
+    claim_booking_hours(session, booking)
     apply_ledger(
         session,
         member,
@@ -323,6 +362,7 @@ def _create_shop_booking(
     )
     session.add(booking)
     session.flush()
+    claim_booking_hours(session, booking)
     return get_booking(session, booking.id)
 
 
@@ -348,6 +388,7 @@ def confirm_booking(session: Session, booking_id: UUID) -> Booking:
     )
     booking.status = BookingStatus.CONFIRMED
     session.add(booking)
+    claim_booking_hours(session, booking)
     session.flush()
     return get_booking(session, booking.id)
 
@@ -412,6 +453,7 @@ def complete_booking(
     booking.reserved_tokens = Decimal("0")
     booking.status = BookingStatus.COMPLETED
     session.add(booking)
+    release_booking_hours(session, booking)
     session.flush()
     _set_hoist_available_if_idle(session, booking.hoist)
     return get_booking(session, booking.id)
@@ -508,6 +550,7 @@ def cancel_booking(session: Session, booking_id: UUID) -> Booking:
 
     booking.status = BookingStatus.CANCELLED
     session.add(booking)
+    release_booking_hours(session, booking)
     session.flush()
     _set_hoist_available_if_idle(session, booking.hoist)
     return get_booking(session, booking.id)
