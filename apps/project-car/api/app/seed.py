@@ -6,8 +6,12 @@ Usage (from apps/project-car/api, venv active, after `alembic upgrade head`):
     python -m app.seed --reset
 
 `--reset` deletes members, hoists, bookings, token ledger rows, waitlist
-entries, and related operational rows, then inserts the demo set. Tiers are
-refreshed to the two Owner-editable placeholders (Basic / Premium). Leftover
+entries, job claims, crib checkouts, and related operational rows, then
+inserts the demo set. Rows whose foreign keys are ON DELETE RESTRICT are
+removed first: job claims and crib checkouts (including their self-links),
+shop hoist requests, staff parts requests, tool crib exceptions, and refund
+requests. Tiers are refreshed to the two
+Owner-editable placeholders (Basic / Premium). Leftover
 Weekly or Pro seed rows are dropped (Pro members move to Premium).
 
 Default (no flag) upserts the demo IDs and rebuilds this week's sample
@@ -34,6 +38,8 @@ from uuid import UUID, uuid5
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
+import app.config
+from app.auth import hash_password
 from app.db import SessionLocal
 from app.models import (
     AccessEvent,
@@ -50,25 +56,41 @@ from app.models import (
     Hoist,
     HoistStatus,
     Incident,
+    JobEvent,
     Member,
     MembershipTier,
     MemberStatus,
     NotificationOutbox,
     PartsOrder,
     PartsOrderStatus,
+    RefundRequest,
+    ShopHoistRequest,
+    StaffPartsRequest,
     Todo,
     TodoStatus,
+    ToolCribException,
+    ToolCribEvent,
     TokenTransaction,
     TokenTransactionKind,
     WaitlistEntry,
 )
 from app.services.fill import resolve_fill_for_slot
-from app.services.pricing import BASE_TOKENS_PER_HOUR, quote_reserve
+from app.services.pricing import BASE_TOKENS_PER_HOUR, ensure_pricing_settings, quote_reserve
 from app.services.tokens import apply_ledger, rebuild_token_balance
 from app.services.hours import booking_overlaps_window
 from app.shop_time import PRICING_TZ, SHOP_TZ, as_utc, next_24h_bounds, shop_now
 
 SEED_NS = UUID("a11ce000-5e1d-4000-8000-000000000001")
+
+# seed() stores a hash of settings.member_demo_password for each of these emails.
+DEMO_MEMBER_EMAILS = (
+    "ada.reyes@example.com",
+    "sam.chen@example.com",
+    "riley.park@example.com",
+    "jordan.vale@example.com",
+    "casey.nguyen@example.com",
+    "morgan.blake@example.com",
+)
 
 # Locked demo notes (Docs/token-pricing.md). Not public prices. No Stripe.
 # Reserve cost is duration × 100 × band × overlay — not an Owner-typed amount.
@@ -201,7 +223,20 @@ def _clear_member_activity(session: Session, member_ids: list[UUID]) -> None:
     session.flush()
 
 
+def _delete_self_linked(session: Session, model, link) -> None:
+    """Drop linked rows first so a RESTRICT self-foreign-key can clear the table."""
+    session.execute(delete(model).where(link.is_not(None)))
+    session.execute(delete(model))
+
+
 def _reset_shop(session: Session) -> None:
+    # 20261004_0011 RESTRICT children, before bookings, members, and hoists.
+    session.execute(delete(RefundRequest))
+    session.execute(delete(ShopHoistRequest))
+    session.execute(delete(StaffPartsRequest))
+    session.execute(delete(ToolCribException))
+    _delete_self_linked(session, JobEvent, JobEvent.claim_id)
+    _delete_self_linked(session, ToolCribEvent, ToolCribEvent.checkout_id)
     session.execute(delete(ChatMessage))
     session.execute(delete(ChatParticipant))
     session.execute(delete(ChatRoom))
@@ -241,7 +276,12 @@ def _make_booking(
     else:
         if member is None:
             raise ValueError("Customer demo bookings need a member.")
-        quote = quote_reserve(start, end, fill=resolve_fill_for_slot(session, start, end))
+        quote = quote_reserve(
+            start,
+            end,
+            fill=resolve_fill_for_slot(session, start, end),
+            session=session,
+        )
         tokens = quote.final_reserve_cost
         rule = quote.as_rule()
         meta = quote.ledger_meta()
@@ -637,6 +677,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     for payload in PLACEHOLDER_TIERS:
         _upsert_tier(session, payload)
     session.flush()
+    ensure_pricing_settings(session)
 
     if reset:
         _reset_shop(session)
@@ -738,6 +779,10 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     session.flush()
 
     demo_members = [ada, sam, riley, jordan, casey, morgan]
+    demo_password = app.config.settings.member_demo_password
+    for row in demo_members:
+        row.password_hash = hash_password(demo_password)
+    session.flush()
     _retire_extra_tiers(session)
     _clear_member_activity(session, [row.id for row in demo_members])
     for shop_key in (
@@ -1053,6 +1098,9 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
                 phone=item["phone"],
                 notes=item["notes"],
                 contacted_at=contacted_at,
+                # Joined follows the shop clock. The database default is wall
+                # time, and that moves the waitlist screenshot.
+                created_at=shop_now(),
             )
             session.add(row)
         else:
@@ -1135,7 +1183,12 @@ def main(argv: list[str] | None = None) -> int:
         "(Basic 1000 / Premium 1500).".format(**summary)
     )
     print("  Owner login (localhost demo): owner@projectcar.ca / changeme")
-    print("  Member login (localhost demo): ada.reyes@example.com / changeme")
+    print(f"  Member login (localhost demo): ada.reyes@example.com / {settings.member_demo_password}")
+    print(
+        "  Demo member passwords (localhost): "
+        + ", ".join(DEMO_MEMBER_EMAILS)
+        + f" / {settings.member_demo_password}"
+    )
     print("  The shop is not open. This is sample data for walkthroughs.")
     return 0
 

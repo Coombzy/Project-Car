@@ -4,10 +4,12 @@ from decimal import Decimal
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
+from app.auth import hash_password
 from app.deps import DbSession, Owner
 from app.models import Booking, Member, MembershipTier, TokenTransaction, TokenTransactionKind
 from app.schemas import (
@@ -15,12 +17,13 @@ from app.schemas import (
     MemberCreate,
     MemberDetailOut,
     MemberOut,
+    MemberPasswordSet,
     MemberPatch,
     TokenAdjustment,
     TokenTransactionOut,
 )
 from app.services.staff import reject_ai
-from app.services.tokens import apply_ledger
+from app.services.tokens import apply_ledger, rebuild_token_balance
 
 router = APIRouter(tags=["members"])
 
@@ -120,6 +123,29 @@ def patch_member(member_id: UUID, body: MemberPatch, session: DbSession, _owner:
     return MemberOut.model_validate(member)
 
 
+@router.post("/members/{member_id}/password", response_model=MemberOut)
+def set_member_password(
+    member_id: UUID,
+    body: dict,
+    session: DbSession,
+    _owner: Owner,
+) -> MemberOut:
+    """Store a new scrypt hash. The plaintext is not stored, logged, or returned."""
+    try:
+        password = MemberPasswordSet.model_validate(body).password
+    except ValidationError:
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "validation_error", "message": "Password is required."},
+        ) from None
+    member = _member_or_404(session, member_id)
+    member.password_hash = hash_password(password)
+    session.add(member)
+    session.flush()
+    session.refresh(member)
+    return MemberOut.model_validate(member)
+
+
 @router.get("/members/{member_id}/tokens", response_model=list[TokenTransactionOut])
 def list_member_tokens(member_id: UUID, session: DbSession, _owner: Owner) -> list[TokenTransactionOut]:
     _member_or_404(session, member_id)
@@ -159,3 +185,13 @@ def adjust_member_tokens(
     session.flush()
     session.refresh(row)
     return TokenTransactionOut.model_validate(row)
+
+
+@router.post("/members/{member_id}/tokens/rebuild", response_model=MemberOut)
+def rebuild_member_tokens(member_id: UUID, session: DbSession, _owner: Owner) -> MemberOut:
+    """Set the cached balance from the ledger sum. Inserts no ledger row."""
+    member = _member_or_404(session, member_id)
+    rebuild_token_balance(session, member)
+    session.flush()
+    session.refresh(member)
+    return MemberOut.model_validate(member)

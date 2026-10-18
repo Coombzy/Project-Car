@@ -10,7 +10,7 @@ export const SAMPLE_JOBS = [
     area: "Shop floor",
     needed: "Tonight after last booking",
     tokenBounty: 25,
-    note: "Ops-posted bounty. Credit hits the member ledger on complete — not Stripe.",
+    note: "Ops-posted bounty. Token credit on done stays later — not Stripe.",
   },
   {
     id: "job-empty-oil",

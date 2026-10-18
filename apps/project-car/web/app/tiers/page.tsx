@@ -2,7 +2,12 @@ import { OwnerShell } from "../../components/owner-shell";
 import { handlePageError } from "../../lib/page";
 import { getMe, listTiers } from "../../lib/shop-api";
 import { tokensLabel } from "../../lib/time";
-import { patchTierAction } from "./actions";
+import {
+  listPricingSettings,
+  patchPricingAction,
+  patchTierAction,
+  type PricingMultiplier,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -13,16 +18,42 @@ export default async function TiersPage({
 }) {
   try {
     const params = await searchParams;
-    const [me, tiers] = await Promise.all([getMe(), listTiers()]);
+    const [me, tiers, pricing] = await Promise.all([getMe(), listTiers(), listPricingSettings()]);
     return (
       <OwnerShell email={me.email} current="tiers">
         <p className="eyebrow">GET /tiers</p>
         <h1>Tiers / settings</h1>
         <p className="lede">
-          Basic, Pro, and Weekly are placeholders — names and allowances are
-          data. These are not published live prices. The shop is not open.
+          Basic and Premium are seeded placeholders — names and allowances are
+          data. These are not live prices. The shop is not open.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
+
+        <form action={patchPricingAction} className="card" style={{ marginBottom: "0.9rem" }}>
+          <div className="hoist-card-head">
+            <h2 style={{ marginTop: 0 }}>Band and overlay multipliers</h2>
+          </div>
+          <p className="muted">
+            Seeded placeholders. A quote after an edit uses the stored multiplier.
+            Cancel and complete keep the number locked on the booking. Not live prices.
+            The shop is not open.
+          </p>
+          <p className="eyebrow">Bands</p>
+          <div className="form-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))" }}>
+            {pricing.bands.map((row) => (
+              <MultiplierField key={row.id} prefix="band" row={row} />
+            ))}
+          </div>
+          <p className="eyebrow" style={{ marginTop: "0.85rem" }}>Overlays</p>
+          <div className="form-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))" }}>
+            {pricing.overlays.map((row) => (
+              <MultiplierField key={row.id} prefix="overlay" row={row} />
+            ))}
+          </div>
+          <div className="actions">
+            <button type="submit">Save multipliers</button>
+          </div>
+        </form>
 
         {tiers.length === 0 ? (
           <div className="banner empty">No tiers. Run API migrations, then seed.</div>
@@ -94,4 +125,18 @@ export default async function TiersPage({
       </OwnerShell>
     );
   }
+}
+
+function MultiplierField({ prefix, row }: { prefix: "band" | "overlay"; row: PricingMultiplier }) {
+  return (
+    <label>
+      {row.label}
+      <input
+        name={`${prefix}:${row.id}`}
+        inputMode="decimal"
+        defaultValue={tokensLabel(row.multiplier)}
+        required
+      />
+    </label>
+  );
 }

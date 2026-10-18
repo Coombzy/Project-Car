@@ -7,6 +7,11 @@ Bands are looked up in America/Regina from the booking **start**. Overlay is
 measured at reserve time (now → start). Fill is an explicit next-day factor
 (default 1.0) — it does not change locked band / overlay math. Cancel /
 complete must reuse the locked quote — never re-run this table.
+
+The tuples below are the seeded defaults. `quote_reserve` reads
+`pricing_bands` and `pricing_overlays` when a session is passed. A call
+without a session keeps those same numbers from the tuples, so a unit test
+that never opens the database stays on the locked table.
 """
 
 from __future__ import annotations
@@ -15,6 +20,9 @@ from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
+from sqlalchemy.orm import Session
+
+from app.models import PricingBand, PricingOverlay
 from app.shop_time import PRICING_TZ, as_utc, shop_now
 
 BASE_TOKENS_PER_HOUR = Decimal("100")
@@ -113,6 +121,11 @@ def _money_str(value: Decimal) -> str:
     return format(value.quantize(MONEY_QUANT, rounding=ROUND_HALF_UP), "f")
 
 
+BAND_ROWS = (WEEKDAY_DAY, WEEKDAY_EVE, WEEKEND_FRI_EVE, LATE_NIGHT)
+OVERLAY_ROWS = (ADVANCE, STANDARD, LAST_MINUTE)
+MULTIPLIER_QUANT = Decimal("0.0001")
+
+
 def _as_band(row: tuple[str, str, Decimal]) -> Band:
     return Band(id=row[0], label=row[1], multiplier=row[2])
 
@@ -121,37 +134,86 @@ def _as_overlay(row: tuple[str, str, Decimal]) -> Overlay:
     return Overlay(id=row[0], label=row[1], multiplier=row[2])
 
 
-def resolve_band(start_at: datetime) -> Band:
+def quantize_multiplier(value: Decimal) -> Decimal:
+    quantized = Decimal(value).quantize(MULTIPLIER_QUANT, rounding=ROUND_HALF_UP)
+    if quantized <= 0:
+        raise PricingError("invalid_multiplier", "Multiplier must be greater than zero.")
+    return quantized
+
+
+def ensure_pricing_settings(session: Session) -> None:
+    """Insert any missing band or overlay row at the locked default. Never overwrite."""
+    missing = False
+    for index, row in enumerate(BAND_ROWS):
+        if session.get(PricingBand, row[0]) is None:
+            session.add(
+                PricingBand(id=row[0], label=row[1], multiplier=row[2], sort_order=index)
+            )
+            missing = True
+    for index, row in enumerate(OVERLAY_ROWS):
+        if session.get(PricingOverlay, row[0]) is None:
+            session.add(
+                PricingOverlay(id=row[0], label=row[1], multiplier=row[2], sort_order=index)
+            )
+            missing = True
+    if missing:
+        session.flush()
+
+
+def _stored_band(session: Session | None, row: tuple[str, str, Decimal]) -> Band:
+    if session is None:
+        return _as_band(row)
+    stored = session.get(PricingBand, row[0])
+    if stored is None:
+        return _as_band(row)
+    return Band(id=stored.id, label=stored.label, multiplier=Decimal(stored.multiplier))
+
+
+def _stored_overlay(session: Session | None, row: tuple[str, str, Decimal]) -> Overlay:
+    if session is None:
+        return _as_overlay(row)
+    stored = session.get(PricingOverlay, row[0])
+    if stored is None:
+        return _as_overlay(row)
+    return Overlay(id=stored.id, label=stored.label, multiplier=Decimal(stored.multiplier))
+
+
+def resolve_band(start_at: datetime, *, session: Session | None = None) -> Band:
     """Band that contains the booking start in America/Regina. Half-open intervals."""
     local = as_utc(start_at).astimezone(PRICING_TZ)
     weekday = local.weekday()  # Mon=0
     clock = local.time()
 
     if weekday == 5:
-        return _as_band(WEEKEND_FRI_EVE)
+        return _stored_band(session, WEEKEND_FRI_EVE)
     if weekday == 6:
         if clock < time(21, 0):
-            return _as_band(WEEKEND_FRI_EVE)
-        return _as_band(LATE_NIGHT)
+            return _stored_band(session, WEEKEND_FRI_EVE)
+        return _stored_band(session, LATE_NIGHT)
     if clock < time(8, 0):
-        return _as_band(LATE_NIGHT)
+        return _stored_band(session, LATE_NIGHT)
     if clock < time(16, 0):
-        return _as_band(WEEKDAY_DAY)
+        return _stored_band(session, WEEKDAY_DAY)
     if weekday == 4:
-        return _as_band(WEEKEND_FRI_EVE)
+        return _stored_band(session, WEEKEND_FRI_EVE)
     if clock < time(21, 0):
-        return _as_band(WEEKDAY_EVE)
-    return _as_band(LATE_NIGHT)
+        return _stored_band(session, WEEKDAY_EVE)
+    return _stored_band(session, LATE_NIGHT)
 
 
-def resolve_overlay(*, start_at: datetime, reserved_at: datetime) -> Overlay:
+def resolve_overlay(
+    *,
+    start_at: datetime,
+    reserved_at: datetime,
+    session: Session | None = None,
+) -> Overlay:
     """Advance overlay from reserve time → start. Docs/token-pricing.md boundaries."""
     delta = as_utc(start_at) - as_utc(reserved_at)
     if delta >= timedelta(days=7):
-        return _as_overlay(ADVANCE)
+        return _stored_overlay(session, ADVANCE)
     if delta >= timedelta(hours=48):
-        return _as_overlay(STANDARD)
-    return _as_overlay(LAST_MINUTE)
+        return _stored_overlay(session, STANDARD)
+    return _stored_overlay(session, LAST_MINUTE)
 
 
 def duration_hours(start_at: datetime, end_at: datetime) -> Decimal:
@@ -170,10 +232,17 @@ def quote_reserve(
     *,
     reserved_at: datetime | None = None,
     fill: FillFactor | None = None,
+    session: Session | None = None,
 ) -> ReserveQuote:
+    if session is not None:
+        ensure_pricing_settings(session)
     hours = duration_hours(start_at, end_at)
-    band = resolve_band(start_at)
-    overlay = resolve_overlay(start_at=start_at, reserved_at=reserved_at or shop_now())
+    band = resolve_band(start_at, session=session)
+    overlay = resolve_overlay(
+        start_at=start_at,
+        reserved_at=reserved_at or shop_now(),
+        session=session,
+    )
     fill_factor = fill or NO_FILL
     base = (hours * BASE_TOKENS_PER_HOUR).quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
     final = (base * band.multiplier * overlay.multiplier * fill_factor.multiplier).quantize(

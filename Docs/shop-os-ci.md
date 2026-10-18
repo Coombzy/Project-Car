@@ -17,7 +17,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Git-only** | CI runs on GitHub-hosted runners against this repo. It never SSHs to Doc, never curls production with write tokens, and never uploads Worker `projectcar-brochure`. |
 | **Green CI does not move Doc** | Doc is **unfrozen** at `795f301` / BUILD_ID `vQRsAOI0JtWYZ_ogRUjgG` (was `4cf8924` / `5swmVz-T2CqKEQzTk1ifU`). **#36** / **#69** / **#88** are live on Doc. A green Shop OS CI check is **not** a pull to finance tip `6366d62`. A further checkout move is a new Ben GO (`doc-unfreeze.md`). Lid-restore is process wake only (`doc-lid-restore.md`). |
 | **No production credentials** | Workflow uses public install only (`pip` / `npm ci`). No GitHub Actions secrets. No Doc `.env`, no tunnel tokens, no Cloudflare API tokens, no `GOOGLE_OAUTH_*`, no Stripe. |
-| **Path-filtered** | Jobs run when a PR (or push to `main`) touches `apps/project-car/**` or `.github/workflows/shop-os-ci.yml`. Docs-only / brochure / finance PRs do **not** pay this tax. |
+| **Path-filtered** | On a pull request, heavy steps run when the diff touches `apps/project-car/**` or `.github/workflows/shop-os-ci.yml`. A push to `main` runs every step. Docs-only / brochure / finance PRs do **not** pay this tax, and the required check names still report success. |
 | **Not a live probe** | Lookout `projectcar-api-health-watch` and public `GET /health` stay ops. This workflow does not replace them. |
 
 ---
@@ -30,6 +30,7 @@ A **quality gate on git** for Shop OS while Doc stay-up stays a separate Lead la
 |-----|------|------|
 | **shop-api** | `apps/project-car/api` | `pytest` (SQLite in-memory via `tests/conftest.py` — **no** shop Postgres, **no** Nextcloud MariaDB) |
 | **shop-web** | `apps/project-car/web` | TypeScript lint / typecheck (`tsc --noEmit`) + existing `npm test` + `next build` smoke |
+| **shop-web visual** | `apps/project-car/web` | Layout shift and screenshot comparison. Job name `shop-web layout-shift / screenshots`. Does not rename the two checks above. |
 
 shop-web has **no ESLint** package. `npm run lint` and `npm run typecheck` both run `tsc --noEmit` (tsconfig already `noEmit`). That is the static gate for app sources. `*.test.ts` is excluded from `tsconfig.json` because those files use Node’s `--experimental-strip-types` runner and `.ts` import specifiers — they are covered by `npm test`, not `tsc`. `npm run build` is compile smoke — pages are `force-dynamic`, so build does **not** need a live Shop API.
 
@@ -56,20 +57,16 @@ Workflow file: `.github/workflows/shop-os-ci.yml`.
 ```yaml
 on:
   pull_request:
-    paths:
-      - "apps/project-car/**"
-      - ".github/workflows/shop-os-ci.yml"
   push:
     branches: [main]
-    paths:
-      - "apps/project-car/**"
-      - ".github/workflows/shop-os-ci.yml"
 ```
 
 | Event | When |
 |-------|------|
-| **`pull_request`** | Required. Any PR that touches Shop OS source or this workflow. |
-| **`push` to `main`** | Optional confirm after merge (same path filter). |
+| **`pull_request`** | Required. Heavy steps run when the pull request touches `apps/project-car/**` or this workflow file. |
+| **`push` to `main`** | Optional confirm after merge. Runs every step. |
+
+A `git diff --name-only` step inside each job applies that filter on pull requests, and the job still reports success for `shop-api pytest` and `shop-web lint / typecheck / build` when the heavy steps are skipped.
 
 `workflow_dispatch` is **not** required. Re-run the check from the Actions / PR Checks UI.
 
@@ -79,7 +76,7 @@ Permissions: `contents: read` only. No `pull-requests: write`, no packages, no i
 
 ## Jobs
 
-Two parallel jobs on `ubuntu-latest`. No shared cache of secrets. No service containers (pytest uses in-memory SQLite; `next build` does not boot uvicorn).
+Three jobs on `ubuntu-latest`. No shared cache of secrets. No service containers for pytest (`next build` in the lint job does not boot uvicorn). The visual job boots a loopback API on sqlite for screenshots only. It does not deploy.
 
 ### shop-api
 
@@ -104,6 +101,21 @@ Working directory: `apps/project-car/api`. Defaults from `app/config.py` / `.env
 | Build smoke | `npm run build` (`next build`) |
 
 `SHOP_API_URL` may be set to `http://127.0.0.1:8000` for the build step so the compile-time default is explicit. The API process is **not** started.
+
+### shop-web layout-shift / screenshots
+
+Separate job. The check name is `shop-web layout-shift / screenshots`. `shop-api pytest` and `shop-web lint / typecheck / build` keep those names.
+
+| Step | Command / action |
+|------|------------------|
+| Install | shop-api `pip install -e ".[dev]"` and shop-web `npm ci` |
+| Browser | `npx playwright install --with-deps chromium` |
+| Build | `bash visual/build-web.sh` (bakes `visual/shop-now.txt` into the client bundle) |
+| Check | `npm run visual` (`playwright test`) |
+
+The check covers every shop-web page that exists today, at 390, 768, and 1440 px wide. Reference PNGs live in `apps/project-car/web/visual/screenshots/`. It fails when layout shift goes above 0.1, or when a screenshot differs from its reference by more than 1% of pixels.
+
+Determinism: Liberation Sans and Liberation Mono are vendored and forced through fontconfig. Animations are off. `SHOP_NOW` is `2026-10-06T15:00:00-06:00`. The API is sqlite seeded with `python -m app.seed --reset` on loopback. Quote and ICS download routes are not pages and are not shot.
 
 ---
 
@@ -132,8 +144,9 @@ Read the failed **job** first (`shop-api` vs `shop-web`), then the step.
 | `tsc --noEmit` fail | Type error in shop-web | `cd apps/project-car/web && npm ci && npm run typecheck`. |
 | `npm test` fail | `lib/*.test.ts` assertion | Same directory, `npm test`. |
 | `next build` fail | Compile / Next config / missing types after `tsc` | `npm run build`. Pages are `force-dynamic` — a build fail is **not** “API is down.” |
+| `shop-web layout-shift / screenshots` fail | Layout shift above 0.1, or a screenshot past the 1% pixel ratio | Reproduce with the visual commands below. Update a reference PNG only when the page change is intended. |
 | `npm ci` / pip install fail | Lockfile / PyPI / npm registry | Re-run once. If persistent, pin/lock in git. Still no secrets. |
-| Workflow **skipped** | Path filter | Expected when the PR does not touch `apps/project-car/**` or this workflow file. |
+| Heavy steps **skipped** | Path filter | Expected when the PR does not touch `apps/project-car/**` or this workflow file. The job still finishes green. |
 | Public `api.` / `ops.` 530 / 1033 | Doc lid-close | **Not this workflow.** `doc-lid-restore.md`. |
 
 Do **not**:
@@ -174,6 +187,13 @@ npm ci
 npm run typecheck
 npm test
 npm run build
+
+# shop-web layout-shift / screenshots
+# Needs the shop-api package on PYTHONPATH (`pip install -e ".[dev]"`).
+cd apps/project-car/web
+npx playwright install --with-deps chromium
+bash visual/build-web.sh
+npm run visual
 ```
 
 No Docker, no tunnel, no Doc.

@@ -2,6 +2,36 @@ import type { PartsRequest } from "../lib/config";
 import { SAMPLE_INVENTORY_REQUESTS, SAMPLE_PARTS_STOCK } from "../lib/inventory";
 import { formatShopDateTime } from "../lib/time";
 
+function requestStatusLabel(status: PartsRequest["status"]): string {
+  switch (status) {
+    case "open":
+      return "Open";
+    case "fulfilled":
+      return "Fulfilled";
+    case "declined":
+      return "Declined";
+    default: {
+      const neverStatus: never = status;
+      return neverStatus;
+    }
+  }
+}
+
+function requestStatusClass(status: PartsRequest["status"]): string {
+  switch (status) {
+    case "open":
+      return "pill-pending";
+    case "fulfilled":
+      return "pill-completed";
+    case "declined":
+      return "pill-overdue";
+    default: {
+      const neverStatus: never = status;
+      return neverStatus;
+    }
+  }
+}
+
 export function MemberRequestDesk({
   requests,
   create,
@@ -34,7 +64,11 @@ export function MemberRequestDesk({
                 <tr key={row.id}>
                   <td className="sku">{row.sku}</td>
                   <td>{row.note ?? "—"}</td>
-                  <td>{row.status}</td>
+                  <td>
+                    <span className={`pill ${requestStatusClass(row.status)}`}>
+                      {requestStatusLabel(row.status)}
+                    </span>
+                  </td>
                   <td>{formatShopDateTime(row.created_at)}</td>
                 </tr>
               ))}

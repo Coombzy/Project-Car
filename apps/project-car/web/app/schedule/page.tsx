@@ -5,9 +5,10 @@ import { MonthHeatmap } from "../../components/month-heatmap";
 import { OwnerBookingCard } from "../../components/owner-booking-card";
 import { OwnerShell } from "../../components/owner-shell";
 import { ScheduleToolbar } from "../../components/schedule-toolbar";
+import { ShopHoistRequestQueue } from "../../components/shop-hoist-request-queue";
 import { WeekHoistCalendars } from "../../components/week-hoist-calendars";
 import { handlePageError, shopErrorMessage } from "../../lib/page";
-import { getMe, listBookings, listHoists, listMembers } from "../../lib/shop-api";
+import { getMe, listBookings, listHoists, listMembers, listOwnerShopHoistRequests } from "../../lib/shop-api";
 import {
   addDays,
   calendarTodayIso,
@@ -20,7 +21,7 @@ import {
   slotEnd,
   sortHoists,
 } from "../../lib/calendar";
-import { parseWeekParam, shopDateTimeLocal } from "../../lib/time";
+import { parseWeekParam, shopClock, shopDateTimeLocal } from "../../lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +59,7 @@ export default async function SchedulePage({
     }
 
     let loadError: string | null = null;
-    const [hoists, members, bookings] = await Promise.all([
+    const [hoists, members, bookings, shopHoistRequests] = await Promise.all([
       listHoists().catch((error) => {
         loadError = shopErrorMessage(error, "Could not load hoists.");
         return [];
@@ -74,13 +75,17 @@ export default async function SchedulePage({
         loadError = shopErrorMessage(error, "Could not load bookings.");
         return [];
       }),
+      listOwnerShopHoistRequests("pending").catch((error) => {
+        loadError = shopErrorMessage(error, "Could not load shop hoist requests.");
+        return [];
+      }),
     ]);
 
     const ordered = sortHoists(hoists);
     const activeMembers = members.filter((member) => member.status === "active");
     const returnTo = { view, week: weekStart, month, hoist: hoistId };
-    const defaultStart = slot ?? shopDateTimeLocal(new Date(Date.now() + 72 * 3600 * 1000));
-    const defaultEnd = slot ? slotEnd(slot) : shopDateTimeLocal(new Date(Date.now() + 73 * 3600 * 1000));
+    const defaultStart = slot ?? shopDateTimeLocal(new Date(shopClock().getTime() + 72 * 3600 * 1000));
+    const defaultEnd = slot ? slotEnd(slot) : shopDateTimeLocal(new Date(shopClock().getTime() + 73 * 3600 * 1000));
 
     return (
       <OwnerShell email={me.email} current="schedule" wide>
@@ -97,6 +102,8 @@ export default async function SchedulePage({
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
         {loadError ? <div className="banner error">{loadError}</div> : null}
+
+        <ShopHoistRequestQueue requests={shopHoistRequests} returnTo={returnTo} />
 
         <ScheduleToolbar base="/schedule" view={view} weekStart={weekStart} month={month} hoist={hoistId} />
 

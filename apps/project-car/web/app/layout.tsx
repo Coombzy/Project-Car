@@ -5,6 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Project Car · Shop OS",
   description: "Project Car management demo (app.projectcar.ca alias; intended ops.projectcar.ca). Member /member is a temporary park. Customer app is projectcar.ca.",
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

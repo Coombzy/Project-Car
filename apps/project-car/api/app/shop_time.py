@@ -11,6 +11,7 @@ lookup uses the Regina wall clock of the stored UTC instant.
 
 from __future__ import annotations
 
+import os
 from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -25,8 +26,19 @@ def as_utc(value: datetime) -> datetime:
     return value.astimezone(timezone.utc)
 
 
+def _frozen(zone: ZoneInfo) -> datetime | None:
+    """SHOP_NOW freezes both clocks for the visual check. Unset means the real clock."""
+    raw = os.environ.get("SHOP_NOW", "").strip()
+    if not raw:
+        return None
+    parsed = datetime.fromisoformat(raw)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=zone)
+    return parsed.astimezone(zone)
+
+
 def shop_now() -> datetime:
-    return datetime.now(SHOP_TZ)
+    return _frozen(SHOP_TZ) or datetime.now(SHOP_TZ)
 
 
 def shop_today() -> date:
@@ -35,7 +47,7 @@ def shop_today() -> date:
 
 def pricing_now() -> datetime:
     """Wall clock for fill / band-adjacent calendar math (America/Regina)."""
-    return datetime.now(PRICING_TZ)
+    return _frozen(PRICING_TZ) or datetime.now(PRICING_TZ)
 
 
 def pricing_today() -> date:

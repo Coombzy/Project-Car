@@ -14,6 +14,8 @@ def test_all_models_import() -> None:
     assert "waitlist_entries" in names
     assert names == [
         "membership_tiers",
+        "pricing_bands",
+        "pricing_overlays",
         "members",
         "hoists",
         "tools",
@@ -39,7 +41,16 @@ def test_all_models_import() -> None:
 
 def test_waitlist_columns() -> None:
     columns = set(WaitlistEntry.__table__.columns.keys())
-    assert columns == {"id", "name", "email", "phone", "notes", "contacted_at", "created_at"}
+    assert columns == {
+        "id",
+        "name",
+        "email",
+        "phone",
+        "notes",
+        "contacted_at",
+        "member_id",
+        "created_at",
+    }
 
 
 def test_booking_out_tolerates_stale_rule_and_missing_hoist() -> None:

@@ -121,23 +121,32 @@ def list_messages(
     after_id: UUID | None = None,
     limit: int = 100,
 ) -> tuple[list[ChatMessage], UUID | None]:
-    rows = list(
-        session.scalars(
-            select(ChatMessage)
-            .where(ChatMessage.room_id == room_id)
-            .order_by(ChatMessage.seq.asc(), ChatMessage.created_at.asc())
-        ).all()
-    )
     if after_id is not None:
-        ids = [row.id for row in rows]
-        try:
-            start = ids.index(after_id) + 1
-        except ValueError:
-            raise ChatError(404, "not_found", "Cursor message not found.") from None
-        rows = rows[start:]
-    elif len(rows) > limit:
-        rows = rows[-limit:]
-    rows = rows[:limit]
+        cursor_seq = session.scalar(
+            select(ChatMessage.seq)
+            .where(ChatMessage.room_id == room_id, ChatMessage.id == after_id)
+            .limit(1)
+        )
+        if cursor_seq is None:
+            raise ChatError(404, "not_found", "Cursor message not found.")
+        rows = list(
+            session.scalars(
+                select(ChatMessage)
+                .where(ChatMessage.room_id == room_id, ChatMessage.seq > cursor_seq)
+                .order_by(ChatMessage.seq.asc())
+                .limit(limit)
+            ).all()
+        )
+    else:
+        rows = list(
+            session.scalars(
+                select(ChatMessage)
+                .where(ChatMessage.room_id == room_id)
+                .order_by(ChatMessage.seq.desc())
+                .limit(limit)
+            ).all()
+        )
+        rows.reverse()
     if rows:
         cursor = rows[-1].id
     else:
@@ -161,6 +170,8 @@ def post_message(
     if principal.role == "member":
         if principal.member_id is None or not _member_in_room(room, principal.member_id):
             raise ChatError(404, "not_found", "Chat room not found.")
+        if room.muted:
+            raise ChatError(403, "room_muted", "This room is muted.")
         member = session.get(Member, principal.member_id)
         if member is None or member.status != MemberStatus.ACTIVE:
             raise ChatError(403, "member_not_bookable", "Only active members can send chat.")

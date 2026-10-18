@@ -64,6 +64,63 @@ def test_member_detail_and_admin_tokens(client: TestClient) -> None:
     assert float(refreshed.json()["token_balance"]) == 1498.5
 
 
+def test_rebuild_token_balance_route_matches_ledger(client: TestClient) -> None:
+    """A drifted cache is replaced by the ledger sum, and rebuild inserts no row."""
+    from decimal import Decimal
+    from uuid import UUID
+
+    from app.models import Member
+
+    member = create_member(client)
+    member_id = member["id"]
+    adjusted = client.post(
+        f"/members/{member_id}/tokens",
+        headers=AUTH,
+        json={"amount": "-1.5", "note": "Owner correction"},
+    )
+    assert adjusted.status_code == 201, adjusted.text
+
+    ledger_before = client.get(f"/members/{member_id}/tokens", headers=AUTH)
+    assert ledger_before.status_code == 200, ledger_before.text
+    rows_before = ledger_before.json()
+    ledger_sum = sum((Decimal(str(row["amount"])) for row in rows_before), Decimal("0"))
+    assert ledger_sum == Decimal("1498.5")
+    ledger_ids = [row["id"] for row in rows_before]
+
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        row = session.get(Member, UUID(member_id))
+        assert row is not None
+        row.token_balance = Decimal("1.00")
+        session.commit()
+    finally:
+        session.close()
+
+    drifted = client.get(f"/members/{member_id}", headers=AUTH)
+    assert drifted.status_code == 200, drifted.text
+    assert Decimal(str(drifted.json()["token_balance"])) == Decimal("1.00")
+
+    rebuilt = client.post(f"/members/{member_id}/tokens/rebuild", headers=AUTH)
+    cache_after = client.get(f"/members/{member_id}", headers=AUTH).json()["token_balance"]
+    assert rebuilt.status_code == 200, (
+        f"{rebuilt.status_code} {rebuilt.text}; hand-edited cache stays {cache_after}"
+    )
+    assert Decimal(str(rebuilt.json()["token_balance"])) == ledger_sum
+    assert Decimal(str(cache_after)) == ledger_sum
+
+    ledger_after = client.get(f"/members/{member_id}/tokens", headers=AUTH)
+    assert ledger_after.status_code == 200, ledger_after.text
+    assert [row["id"] for row in ledger_after.json()] == ledger_ids
+
+    again = client.post(f"/members/{member_id}/tokens/rebuild", headers=AUTH)
+    assert again.status_code == 200, again.text
+    assert Decimal(str(again.json()["token_balance"])) == ledger_sum
+    stayed = client.get(f"/members/{member_id}", headers=AUTH)
+    assert Decimal(str(stayed.json()["token_balance"])) == ledger_sum
+    ledger_final = client.get(f"/members/{member_id}/tokens", headers=AUTH)
+    assert [row["id"] for row in ledger_final.json()] == ledger_ids
+
+
 def test_hoist_status_patch(client: TestClient) -> None:
     hoist = create_hoist(client, name="Bay 3")
     patched = client.patch(
@@ -121,6 +178,35 @@ def test_seed_demo_data_on_sqlite(client: TestClient) -> None:
     body_bookings = bookings.json()
     assert len(body_bookings) >= 6
     assert any(row["kind"] == "shop" for row in body_bookings)
+
+
+def test_seeded_waitlist_joined_at_follows_the_frozen_shop_clock(client: TestClient, monkeypatch) -> None:
+    """Visual shots read Joined from created_at. A wall clock makes the PNG drift."""
+    from sqlalchemy import select
+
+    from app.models import WaitlistEntry
+    from app.schemas import WaitlistEntryOut
+    from app.seed import seed
+    from app.shop_time import as_utc, shop_now
+
+    monkeypatch.setenv("SHOP_NOW", "2026-10-06T15:00:00-06:00")
+    session_gen = app_session(client)
+    session = next(session_gen)
+    try:
+        seed(session, reset=True)
+        session.commit()
+        rows = list(session.scalars(select(WaitlistEntry)).all())
+    finally:
+        session_gen.close()
+
+    assert len(rows) == 4
+    expected = as_utc(shop_now())
+    assert expected.isoformat() == "2026-10-06T21:00:00+00:00"
+    for row in rows:
+        assert as_utc(row.created_at) == expected
+        # SQLite keeps the shop wall time and drops the offset. The Owner page
+        # formats that string, so the visual check needs this exact value.
+        assert WaitlistEntryOut.model_validate(row).model_dump(mode="json")["created_at"] == "2026-10-06T15:00:00"
 
 
 def app_session(client: TestClient):

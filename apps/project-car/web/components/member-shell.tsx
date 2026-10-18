@@ -55,9 +55,10 @@ export function MemberShell({
         Home shows your to-dos and only bays you booked in the next 24 hours.
         Customer app is projectcar.ca. Intended management host is
         ops.projectcar.ca. Parts is a request desk (PT / TC SKUs), not
-        checkout. Job board (token bounties) and the primary shop camera are
-        labeled placeholders. Bay 6 is a request until it is approved. The shop is not
-        open. This is not live pricing or Stripe.
+        checkout. A job claim and a done each store a row; token credit stays
+        later. The primary shop camera is a labeled placeholder. Bay 6 is a
+        request until it is approved. The shop is not open. This is not live
+        pricing or Stripe.
       </div>
       <main className={wide ? "wide" : undefined}>{children}</main>
     </div>

@@ -127,6 +127,7 @@ class StaffSubject(str, enum.Enum):
     SCHEDULE = "schedule"
     TOKENS = "tokens"
     OPEN_REQUESTS = "open_requests"
+    BOOKING = "booking"
 
 
 class TokenTransactionKind(str, enum.Enum):
@@ -200,6 +201,8 @@ class ToolCribEventKind(str, enum.Enum):
 
 class PartsRequestStatus(str, enum.Enum):
     OPEN = "open"
+    FULFILLED = "fulfilled"
+    DECLINED = "declined"
 
 
 class CalendarProvider(str, enum.Enum):
@@ -240,6 +243,34 @@ class MembershipTier(Base):
         return self.display_name
 
 
+class PricingBand(Base):
+    """Time-of-day band. The multiplier is an Owner setting, seeded from the locked table."""
+
+    __tablename__ = "pricing_bands"
+    __table_args__ = (
+        CheckConstraint("multiplier > 0", name="ck_pricing_bands_multiplier_positive"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    label: Mapped[str] = mapped_column(String(120), nullable=False)
+    multiplier: Mapped[Decimal] = mapped_column(Numeric(8, 4), nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class PricingOverlay(Base):
+    """Advance overlay. The multiplier is an Owner setting, seeded from the locked table."""
+
+    __tablename__ = "pricing_overlays"
+    __table_args__ = (
+        CheckConstraint("multiplier > 0", name="ck_pricing_overlays_multiplier_positive"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    label: Mapped[str] = mapped_column(String(120), nullable=False)
+    multiplier: Mapped[Decimal] = mapped_column(Numeric(8, 4), nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
 class Member(Base):
     """Paying customer. Staff/Member OIDC comes later; schema is ready now."""
 
@@ -252,6 +283,7 @@ class Member(Base):
     id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     email: Mapped[str] = mapped_column(String(320), nullable=False, unique=True)
+    password_hash: Mapped[Optional[str]] = mapped_column(String(255))
     phone: Mapped[Optional[str]] = mapped_column(String(40))
     tier_name: Mapped[str] = mapped_column(
         ForeignKey("membership_tiers.name", onupdate="CASCADE"),
@@ -694,6 +726,7 @@ class WaitlistEntry(Base):
     __table_args__ = (
         UniqueConstraint("email", name="uq_waitlist_entries_email"),
         Index("ix_waitlist_entries_created_at", "created_at"),
+        Index("ix_waitlist_entries_member_id", "member_id"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
@@ -702,6 +735,9 @@ class WaitlistEntry(Base):
     phone: Mapped[Optional[str]] = mapped_column(String(40))
     notes: Mapped[Optional[str]] = mapped_column(Text)
     contacted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    member_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("members.id", ondelete="SET NULL")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -1205,6 +1241,8 @@ class JobEvent(Base):
 
 ALL_MODELS = [
     MembershipTier,
+    PricingBand,
+    PricingOverlay,
     Member,
     Hoist,
     Tool,

@@ -29,7 +29,9 @@ export default async function MemberChatRoomPage({
         </p>
         <h1>{room.title}</h1>
         <p className="lede">
-          Reply in this Owner-started room. Polls every few seconds while open.
+          {room.muted
+            ? "This room is muted."
+            : "Reply in this Owner-started room. Polls every few seconds while open."}
         </p>
         <div className="banner demo">
           Not live Matrix / demo. Human shop chat. You cannot start rooms.
@@ -40,6 +42,7 @@ export default async function MemberChatRoomPage({
           initialCursor={page.cursor}
           pollMessages={pollMemberMessages}
           sendMessage={sendMemberMessage}
+          showComposer={!room.muted}
         />
       </MemberShell>
     );

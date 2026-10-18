@@ -564,9 +564,34 @@ main.wide {
   margin-top: 0.4rem;
 }
 
+.complete-booking {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+
 .chip-actions button {
   padding: 0.3rem 0.5rem;
   font-size: 0.75rem;
+}
+
+.unused-tokens {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+.unused-tokens input {
+  width: 4.2rem;
+  margin: 0;
+  padding: 0.18rem 0.28rem;
+  font-size: 0.68rem;
 }
 
 .form-grid {
@@ -874,6 +899,11 @@ main.wide {
   font-size: 0.68rem;
 }
 
+.booking-chip-hour .unused-tokens input {
+  width: 3.6rem;
+  padding: 0.12rem 0.2rem;
+}
+
 #create-booking {
   scroll-margin-top: 1rem;
 }
@@ -938,6 +968,24 @@ main.wide {
 
 .request-form textarea {
   min-height: 5.5rem;
+}
+
+.parts-status-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  margin: 0;
+}
+
+.parts-status-form select {
+  width: auto;
+  min-width: 9rem;
+  padding: 0.4rem 0.55rem;
+}
+
+.parts-status-form button {
+  padding: 0.4rem 0.7rem;
 }
 
 /* Placeholder cameras / parts / jobs — not live NVR or purchasing */

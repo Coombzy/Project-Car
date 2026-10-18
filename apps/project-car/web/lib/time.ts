@@ -1,5 +1,16 @@
 const SHOP_TZ = "America/Regina";
 
+export function shopClock(): Date {
+  const frozen = process.env.NEXT_PUBLIC_SHOP_NOW || process.env.SHOP_NOW;
+  if (frozen) {
+    const date = new Date(frozen);
+    if (!Number.isNaN(date.getTime())) {
+      return date;
+    }
+  }
+  return new Date();
+}
+
 export function formatShopDateTime(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) {
@@ -43,7 +54,7 @@ export function shopTodayIso(): string {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(new Date());
+  }).format(shopClock());
 }
 
 export function addDays(isoDate: string, days: number): string {
@@ -103,7 +114,7 @@ export function fillApplies(multiplier: string | number | undefined): boolean {
   return Number(multiplier) !== 1;
 }
 
-export function shopDateTimeLocal(date: Date = new Date()): string {
+export function shopDateTimeLocal(date: Date = shopClock()): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: SHOP_TZ,
     year: "numeric",
