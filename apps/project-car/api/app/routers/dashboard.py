@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import timedelta
-from decimal import Decimal
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -34,12 +33,13 @@ from app.schemas import (
 )
 from app.services.calendar_oauth import calendar_payload
 from app.services.hours import booking_overlaps_window, expand_booked_hours
+from app.services.pricing import BASE_TOKENS_PER_HOUR
 from app.services.todos import list_todos
 from app.shop_time import PRICING_TZ, as_utc, day_bounds, next_24h_bounds, shop_now
 
 router = APIRouter(tags=["dashboard"])
 
-TOKEN_AT_RISK_BELOW = Decimal("2")
+TOKEN_AT_RISK_BELOW = BASE_TOKENS_PER_HOUR
 OPEN_HOUR_STATUSES = (
     BookingStatus.PENDING,
     BookingStatus.CONFIRMED,

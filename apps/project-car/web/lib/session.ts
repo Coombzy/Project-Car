@@ -61,7 +61,11 @@ export async function writeSessionCookie(value: string, maxAge = 86_400): Promis
 
 export async function clearSessionCookie(): Promise<void> {
   const store = await cookies();
-  store.delete(SESSION_COOKIE);
+  store.delete({
+    name: SESSION_COOKIE,
+    path: "/",
+    secure: cookieSecure(),
+  });
 }
 
 export async function readMemberSessionToken(): Promise<string | undefined> {
@@ -83,5 +87,9 @@ export async function writeMemberSessionCookie(value: string, maxAge = 86_400): 
 
 export async function clearMemberSessionCookie(): Promise<void> {
   const store = await cookies();
-  store.delete({ name: MEMBER_SESSION_COOKIE, path: memberCookiePath() });
+  store.delete({
+    name: MEMBER_SESSION_COOKIE,
+    path: memberCookiePath(),
+    secure: cookieSecure(),
+  });
 }
