@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
+from sqlalchemy.dialects import sqlite
+from sqlalchemy.orm import Session
 
 from tests.conftest import AUTH, create_member, login_member
 
@@ -154,3 +156,168 @@ def test_empty_message_rejected(client: TestClient) -> None:
     )
     assert blank.status_code == 400
     assert blank.json()["error"]["code"] == "empty_message"
+
+
+def _message_selects(statements: list) -> list[tuple[str, int | None]]:
+    compiled: list[tuple[str, int | None]] = []
+    for statement in statements:
+        sql = str(statement.compile(dialect=sqlite.dialect()))
+        if "FROM chat_messages" not in sql:
+            continue
+        limit = getattr(statement, "_limit_clause", None)
+        cap = getattr(limit, "effective_value", None) if limit is not None else None
+        compiled.append((sql, cap if isinstance(cap, int) else None))
+    return compiled
+
+
+def _assert_message_selects_are_limited(statements: list, cap: int) -> list[tuple[str, int | None]]:
+    selects = _message_selects(statements)
+    assert selects, "expected a chat_messages SELECT"
+    unlimited = [sql for sql, sql_cap in selects if sql_cap is None or "LIMIT" not in sql]
+    assert not unlimited, f"the SELECT has no SQL LIMIT: {unlimited}"
+    page = [sql for sql, sql_cap in selects if sql_cap == cap and "LIMIT" in sql]
+    assert page, f"the SELECT has no SQL LIMIT at {cap}: {selects}"
+    return selects
+
+
+def test_chat_list_messages_limits_in_sql(client: TestClient, monkeypatch) -> None:
+    ada = create_member(client, email="ada@example.com")
+    room = _create_room(client, "Ada — thread", [ada["id"]])
+    posted: list[dict] = []
+    for index in range(1, 6):
+        response = client.post(
+            f"/chat/rooms/{room['id']}/messages",
+            headers=AUTH,
+            json={"body": f"Note {index}"},
+        )
+        assert response.status_code == 201, response.text
+        posted.append(response.json())
+
+    seen: list = []
+    original = Session.scalars
+
+    def spy(self, statement, *args, **kwargs):
+        seen.append(statement)
+        return original(self, statement, *args, **kwargs)
+
+    monkeypatch.setattr(Session, "scalars", spy)
+
+    page = client.get(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        params={"limit": 2},
+    )
+    assert page.status_code == 200, page.text
+    assert [row["body"] for row in page.json()["messages"]] == ["Note 4", "Note 5"]
+    assert page.json()["cursor"] == posted[4]["id"]
+    _assert_message_selects_are_limited(seen, 2)
+
+    seen.clear()
+    polled = client.get(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        params={"after_id": posted[1]["id"], "limit": 2},
+    )
+    assert polled.status_code == 200, polled.text
+    assert [row["body"] for row in polled.json()["messages"]] == ["Note 3", "Note 4"]
+    assert polled.json()["cursor"] == posted[3]["id"]
+    poll_sql = _assert_message_selects_are_limited(seen, 2)
+    assert any(
+        "chat_messages.seq > ?" in sql and "ORDER BY chat_messages.seq ASC" in sql
+        for sql, sql_cap in poll_sql
+        if sql_cap == 2
+    ), poll_sql
+
+    seen.clear()
+    tail = client.get(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        params={"after_id": posted[4]["id"], "limit": 2},
+    )
+    assert tail.status_code == 200, tail.text
+    assert tail.json()["messages"] == []
+    assert tail.json()["cursor"] == posted[4]["id"]
+    tail_sql = _assert_message_selects_are_limited(seen, 2)
+    assert any(
+        "chat_messages.seq > ?" in sql and "ORDER BY chat_messages.seq ASC" in sql
+        for sql, sql_cap in tail_sql
+        if sql_cap == 2
+    ), tail_sql
+
+    missing = client.get(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        params={"after_id": "00000000-0000-4000-8000-000000000099", "limit": 2},
+    )
+    assert missing.status_code == 404
+    assert missing.json()["error"]["code"] == "not_found"
+
+
+def test_muted_room_rejects_member_message(client: TestClient) -> None:
+    ada = create_member(client, email="ada@example.com")
+    room = _create_room(client, "Ada — turbo", [ada["id"]])
+    history = client.post(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        json={"body": "History stays."},
+    )
+    assert history.status_code == 201, history.text
+    history_id = history.json()["id"]
+
+    muted = client.post(
+        f"/chat/rooms/{room['id']}/mute",
+        headers=AUTH,
+        json={"muted": True},
+    )
+    assert muted.status_code == 200
+    assert muted.json()["muted"] is True
+
+    login_member(client, "ada@example.com")
+    rejected = client.post(
+        f"/member/chat/rooms/{room['id']}/messages",
+        json={"body": "This should not land."},
+    )
+    assert rejected.status_code == 403, rejected.text
+    assert rejected.json()["error"]["code"] == "room_muted"
+
+    stored = client.get(f"/member/chat/rooms/{room['id']}/messages")
+    assert stored.status_code == 200
+    assert [row["body"] for row in stored.json()["messages"]] == ["History stays."]
+
+    owner_sent = client.post(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        json={"body": "Owner can still write."},
+    )
+    assert owner_sent.status_code == 201, owner_sent.text
+
+    polled = client.get(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        params={"after_id": history_id},
+    )
+    assert polled.status_code == 200
+    assert [row["body"] for row in polled.json()["messages"]] == ["Owner can still write."]
+    assert polled.json()["cursor"] == owner_sent.json()["id"]
+
+    unmuted = client.post(
+        f"/chat/rooms/{room['id']}/mute",
+        headers=AUTH,
+        json={"muted": False},
+    )
+    assert unmuted.status_code == 200
+    assert unmuted.json()["muted"] is False
+
+    sent = client.post(
+        f"/member/chat/rooms/{room['id']}/messages",
+        json={"body": "Unmuted, I can reply."},
+    )
+    assert sent.status_code == 201, sent.text
+
+    final = client.get(f"/member/chat/rooms/{room['id']}/messages")
+    assert final.status_code == 200
+    assert [row["body"] for row in final.json()["messages"]] == [
+        "History stays.",
+        "Owner can still write.",
+        "Unmuted, I can reply.",
+    ]

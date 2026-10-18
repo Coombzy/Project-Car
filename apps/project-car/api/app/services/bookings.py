@@ -51,6 +51,16 @@ def _error(status: int, code: str, message: str) -> HTTPException:
     return HTTPException(status_code=status, detail={"code": code, "message": message})
 
 
+def reject_start_in_past(start_at: datetime) -> None:
+    """Refuse a new start before shop now.
+
+    Confirm, check-in, complete, and cancel do not use this. A row that
+    already exists, including a seed week slot, keeps its lifecycle.
+    """
+    if as_utc(start_at) < as_utc(shop_now()):
+        raise _error(400, "start_in_past", "Start is in the past.")
+
+
 def get_booking(session: Session, booking_id: UUID) -> Booking:
     booking = session.scalars(
         select(Booking)
@@ -121,7 +131,7 @@ def _reject_if_bay_hour_taken(
         raise _error(409, "hoist_overlap", BAY_HOUR_TAKEN)
 
 
-def _open_booking_count(session: Session, member_id: UUID) -> int:
+def open_booking_count(session: Session, member_id: UUID) -> int:
     rows = session.scalars(
         select(Booking.id).where(
             Booking.member_id == member_id,
@@ -159,9 +169,10 @@ def preview_reserve(
     """Return (quote, token_balance, token_balance_after). Balances are None without a member."""
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
+    reject_start_in_past(start_at)
     fill = resolve_fill_for_slot(session, start_at, end_at)
     try:
-        quote = quote_reserve(start_at, end_at, fill=fill)
+        quote = quote_reserve(start_at, end_at, fill=fill, session=session)
     except PricingError as exc:
         raise _error(400, exc.code, exc.message) from exc
     if member_id is None:
@@ -185,6 +196,7 @@ def create_booking(
 ) -> Booking:
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
+    reject_start_in_past(start_at)
 
     hoist = session.get(Hoist, hoist_id)
     if hoist is None:
@@ -207,7 +219,7 @@ def create_booking(
 
     fill = resolve_fill_for_slot(session, start_at, end_at)
     try:
-        quote = quote_reserve(start_at, end_at, fill=fill)
+        quote = quote_reserve(start_at, end_at, fill=fill, session=session)
     except PricingError as exc:
         raise _error(400, exc.code, exc.message) from exc
     tokens = quote.final_reserve_cost
@@ -238,7 +250,7 @@ def create_booking(
             f"Start is outside this member's {member.tier.booking_window_days}-day booking window.",
         )
 
-    if _open_booking_count(session, member.id) >= member.tier.max_simultaneous_bookings:
+    if open_booking_count(session, member.id) >= member.tier.max_simultaneous_bookings:
         raise _error(
             400,
             "max_simultaneous_bookings",

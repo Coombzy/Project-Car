@@ -8,7 +8,7 @@ import { ShopApiError } from "../../../lib/config";
 import { handlePageError } from "../../../lib/page";
 import { getMe, getMember, listMemberTokens, listTiers } from "../../../lib/shop-api";
 import { formatShopDateTime, tokensLabel } from "../../../lib/time";
-import { adjustTokensAction, patchMemberAction } from "../actions";
+import { adjustTokensAction, patchMemberAction, rebuildTokensAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +44,10 @@ export default async function MemberDetailPage({
           <div className="metric">
             <span className="eyebrow">Tokens</span>
             <b>{tokensLabel(member.token_balance)}</b>
+            <form action={rebuildTokensAction} className="actions" style={{ marginTop: "0.75rem" }}>
+              <input type="hidden" name="id" value={member.id} />
+              <button type="submit">Rebuild balance</button>
+            </form>
           </div>
           <div className="metric">
             <span className="eyebrow">Deposit</span>
@@ -127,7 +131,7 @@ export default async function MemberDetailPage({
             <input type="hidden" name="id" value={member.id} />
             <label>
               Amount
-              <input name="amount" placeholder="2 or -1" required />
+              <input name="amount" placeholder="100 or -1" required />
             </label>
             <label>
               Note

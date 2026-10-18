@@ -26,6 +26,7 @@ export type WaitlistEntry = {
   phone: string | null;
   notes: string | null;
   contacted_at: string | null;
+  member_id: string | null;
   created_at: string;
 };
 
@@ -274,7 +275,7 @@ export type PartsRequest = {
   member_name: string | null;
   sku: string;
   note: string | null;
-  status: "open";
+  status: "open" | "fulfilled" | "declined";
   created_at: string;
 };
 

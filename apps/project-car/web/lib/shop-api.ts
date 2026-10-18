@@ -22,6 +22,7 @@ import {
   type MemberSelf,
   type MembershipTier,
   type NotificationOutbox,
+  type PartsOrder,
   type PartsRequest,
   type Principal,
   type Todo,
@@ -122,6 +123,32 @@ export async function getDashboard(): Promise<Dashboard> {
 
 export async function listPartsRequests(): Promise<PartsRequest[]> {
   return shopJson<PartsRequest[]>("/parts-requests", "Could not load parts requests.");
+}
+
+export async function patchPartsRequest(
+  id: string,
+  status: "fulfilled" | "declined",
+): Promise<PartsRequest> {
+  return shopJson<PartsRequest>(`/parts-requests/${id}`, "Could not update the parts request.", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function listPartsOrders(): Promise<PartsOrder[]> {
+  return shopJson<PartsOrder[]>("/parts-orders", "Could not load parts orders.");
+}
+
+export async function patchPartsOrder(
+  id: string,
+  status: PartsOrder["status"],
+): Promise<PartsOrder> {
+  return shopJson<PartsOrder>(`/parts-orders/${id}`, "Could not update the parts order.", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
 }
 
 export async function listTodos(): Promise<Todo[]> {
@@ -264,6 +291,12 @@ export async function adjustMemberTokens(id: string, amount: string, note: strin
   });
 }
 
+export async function rebuildMemberTokens(id: string): Promise<Member> {
+  return shopJson<Member>(`/members/${id}/tokens/rebuild`, "Could not rebuild the token balance.", {
+    method: "POST",
+  });
+}
+
 export async function listHoists(): Promise<Hoist[]> {
   return shopJson<Hoist[]>("/hoists", "Could not load hoists.");
 }
@@ -337,6 +370,42 @@ export async function completeBooking(id: string, unusedTokens = "0"): Promise<B
 
 export async function cancelBooking(id: string): Promise<Booking> {
   return shopJson<Booking>(`/bookings/${id}/cancel`, "Could not cancel the booking.", { method: "POST" });
+}
+
+export async function listOwnerShopHoistRequests(
+  status?: ShopHoistRequest["status"],
+): Promise<ShopHoistRequest[]> {
+  const query = new URLSearchParams();
+  if (status) query.set("status", status);
+  const suffix = query.size ? `?${query.toString()}` : "";
+  return shopJson<ShopHoistRequest[]>(
+    `/shop-hoist-requests${suffix}`,
+    "Could not load shop hoist requests.",
+  );
+}
+
+type ShopHoistDecision = {
+  request_id: string;
+  status: string;
+  action: string;
+  booking_id: string | null;
+  token_balance: string | null;
+};
+
+export async function approveShopHoistRequest(id: string): Promise<ShopHoistDecision> {
+  return shopJson<ShopHoistDecision>(
+    `/shop-hoist-requests/${id}/approve`,
+    "Could not approve the shop hoist request.",
+    { method: "POST" },
+  );
+}
+
+export async function denyShopHoistRequest(id: string): Promise<ShopHoistDecision> {
+  return shopJson<ShopHoistDecision>(
+    `/shop-hoist-requests/${id}/deny`,
+    "Could not deny the shop hoist request.",
+    { method: "POST" },
+  );
 }
 
 export async function previewFill(discountPct?: string): Promise<FillPreview> {
