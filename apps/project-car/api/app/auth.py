@@ -38,6 +38,10 @@ DUMMY_MEMBER_PASSWORD_HASH = (
 DEFAULT_OWNER_API_SECRET = "dev-owner-secret"
 DEFAULT_AI_API_SECRET = "dev-ai-secret"
 DEFAULT_SESSION_SECRET = "dev-session-secret-change-me"
+# Shared member password from app.config.Settings. An unhashed member cannot
+# use this value when SHOP_HOST is not loopback. That refusal is a failed
+# login (401), not the 503 insecure_default path used for the secrets above.
+DEFAULT_MEMBER_DEMO_PASSWORD = "changeme"
 # Keep in step with seed.LOOPBACK_HOSTS.
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
@@ -185,9 +189,15 @@ def secrets_equal(left: str, right: str) -> bool:
 
 
 def member_password_matches(password_hash: str | None, password: str, shared_password: str) -> bool:
-    """Own hash wins. The shared password applies only while the hash is unset."""
+    """Own hash wins. The shared password applies only while the hash is unset.
+
+    Off loopback, the default shared password does not match an unhashed member.
+    A non-default shared password still does. A stored hash is unchanged.
+    """
     if password_hash:
         return verify_password(password, password_hash)
+    if not host_is_loopback() and secrets_equal(shared_password, DEFAULT_MEMBER_DEMO_PASSWORD):
+        return False
     return secrets_equal(password, shared_password)
 
 

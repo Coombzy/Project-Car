@@ -132,9 +132,19 @@ def test_default_api_secrets_refused_off_loopback(client: TestClient, monkeypatc
     )
     assert signed_in.status_code == 200, signed_in.text
 
-    member_ok = client.post(
+    # Unhashed member, default shared password: same 401 as a wrong password.
+    # The 503 above was the dev session secret. This request is past that gate.
+    member_refused = client.post(
         "/auth/member/login",
         json={"email": "ada@example.com", "password": "changeme"},
+    )
+    assert member_refused.status_code == 401, member_refused.text
+    assert member_refused.json()["error"]["code"] == "invalid_credentials"
+
+    monkeypatch.setattr(configured, "member_demo_password", "shop-floor-shared")
+    member_ok = client.post(
+        "/auth/member/login",
+        json={"email": "ada@example.com", "password": "shop-floor-shared"},
     )
     assert member_ok.status_code == 200, member_ok.text
     assert member_ok.json()["role"] == "member"
