@@ -8,10 +8,12 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from app.config import get_settings
 from app.shop_time import shop_now
 from tests.conftest import AUTH, create_hoist, create_member, login_member
 
 REPO = Path(__file__).resolve().parents[4]
+AI = {"Authorization": "Bearer dev-ai-secret"}
 
 
 def _window(hours_from_now: int, length_hours: float = 1) -> tuple[str, str]:
@@ -177,6 +179,86 @@ def test_owner_customer_post_is_a_request(client: TestClient) -> None:
     assert created.json()["created_by_kind"] == "human"
     assert _balance(client, member["id"]) == balance
     assert "shop_hoist_owner_only" not in created.text
+
+
+def test_ai_created_shop_hoist_request_cannot_be_self_approved(client: TestClient) -> None:
+    """POST /bookings stores the real actor, so the same AI cannot approve it.
+
+    A human owner create stays human, and that AI can still approve the human request.
+    """
+    member = create_member(client, email="ada@example.com")
+    shop = create_hoist(client, name="Shop", is_shop=True)
+    start, end = _window(11)
+    balance = _balance(client, member["id"])
+    ledger_before = _ledger(client, member["id"])
+    actor_id = get_settings().ai_actor_id
+
+    created = client.post(
+        "/bookings",
+        headers=AI,
+        json={
+            "member_id": member["id"],
+            "hoist_id": shop["id"],
+            "start_at": start,
+            "end_at": end,
+        },
+    )
+    assert created.status_code == 201, created.text
+    body = created.json()
+    assert body["record"] == "shop_hoist_request"
+    assert body["status"] == "pending"
+    assert body["member_id"] == member["id"]
+    assert body["hoist_id"] == shop["id"]
+
+    blocked = client.post(f"/shop-hoist-requests/{body['id']}/approve", headers=AI)
+    reserve_kinds = [
+        row["kind"] for row in _ledger(client, member["id"]) if row["kind"] == "booking_reserve"
+    ]
+    assert blocked.status_code == 403, (
+        f"status={blocked.status_code} reserves={reserve_kinds} body={blocked.text}"
+    )
+    assert blocked.json()["error"]["code"] == "cannot_approve_own_request"
+    assert reserve_kinds == []
+    assert _ledger(client, member["id"]) == ledger_before
+    assert _balance(client, member["id"]) == balance
+    assert client.get("/bookings", headers=AUTH, params={"hoist_id": shop["id"]}).json() == []
+
+    stored = client.get("/shop-hoist-requests", headers=AUTH).json()
+    ai_row = next(row for row in stored if row["id"] == body["id"])
+    assert body["created_by_kind"] == "ai"
+    assert body["created_by_id"] == actor_id
+    assert ai_row["created_by_kind"] == "ai"
+    assert ai_row["created_by_id"] == actor_id
+    assert ai_row["status"] == "pending"
+    assert ai_row["booking_id"] is None
+
+    human_start, human_end = _window(22)
+    human = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": shop["id"],
+            "start_at": human_start,
+            "end_at": human_end,
+        },
+    )
+    assert human.status_code == 201, human.text
+    assert human.json()["record"] == "shop_hoist_request"
+    assert human.json()["created_by_kind"] == "human"
+    assert human.json()["created_by_id"] == get_settings().owner_email
+
+    approved = client.post(f"/shop-hoist-requests/{human.json()['id']}/approve", headers=AI)
+    assert approved.status_code == 200, approved.text
+    assert approved.json()["status"] == "approved"
+    assert approved.json()["actor_kind"] == "ai"
+    assert approved.json()["request_id"] == human.json()["id"]
+    assert [row["kind"] for row in _ledger(client, member["id"]) if row["kind"] == "booking_reserve"] == [
+        "booking_reserve"
+    ]
+    assert _balance(client, member["id"]) == balance - _dec(human.json()["token_quote"])
+    bookings = client.get("/bookings", headers=AUTH, params={"hoist_id": shop["id"]}).json()
+    assert [row["id"] for row in bookings] == [approved.json()["booking_id"]]
 
 
 def test_shop_work_on_the_shop_hoist_stays_a_booking(client: TestClient) -> None:

@@ -10,7 +10,6 @@ from sqlalchemy.orm import selectinload
 
 from app.deps import DbSession, Owner
 from app.models import (
-    ActorKind,
     Booking,
     BookingKind,
     BookingStatus,
@@ -29,7 +28,7 @@ from app.schemas import (
 )
 from app.services import bookings as booking_service
 from app.services.shop_hoist_requests import create_shop_hoist_request, list_shop_hoist_requests
-from app.services.staff import record_action, reject_ai
+from app.services.staff import actor_of, record_action, reject_ai
 from app.shop_time import as_utc
 
 router = APIRouter(tags=["bookings"])
@@ -121,6 +120,7 @@ def create_booking(
                     status_code=400,
                     detail={"code": "member_required", "message": "A shop hoist request needs a member."},
                 )
+            kind, actor_id = actor_of(owner)
             row = create_shop_hoist_request(
                 session,
                 member_id=body.member_id,
@@ -128,8 +128,8 @@ def create_booking(
                 start_at=body.start_at,
                 end_at=body.end_at,
                 notes=body.notes,
-                created_by_kind=ActorKind.HUMAN,
-                created_by_id=owner.email,
+                created_by_kind=kind,
+                created_by_id=actor_id,
             )
             return ShopHoistRequestOut.from_row(row)
     booking = booking_service.create_booking(
