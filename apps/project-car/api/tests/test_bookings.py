@@ -7,10 +7,11 @@ from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 
-from app.models import Booking, BookingKind, BookingStatus, Member, TokenTransactionKind
+from app.models import Booking, BookingHour, BookingKind, BookingStatus, Member, TokenTransactionKind
+from app.services.bookings import backfill_holding_booking_hours
 from app.services.pricing import quote_reserve
 from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
@@ -321,6 +322,61 @@ def test_second_bay_hour_row_hits_the_unique_index(client: TestClient) -> None:
     finally:
         session.rollback()
         session.close()
+
+
+def test_backfill_locks_preexisting_holding_hours(client: TestClient) -> None:
+    """Wipe hour rows, then backfill. Holding statuses own the hour again.
+
+    Cancelled and completed stay empty. A second insert of the overdue hour
+    is 409 hoist_overlap even when the SELECT overlap check is skipped.
+    """
+    ada = create_member(client, email="ada@example.com", tier_name="premium")
+    casey = create_member(client, name="Casey", email="casey@example.com", tier_name="premium")
+    bay = create_hoist(client, name="Bay 1")
+    hour = datetime_in_regina_band()
+    hour_end = hour + timedelta(hours=1)
+
+    first = _book(client, member_id=ada["id"], hoist_id=bay["id"], start=hour, end=hour_end)
+    assert first.status_code == 201, first.text
+    booking_id = UUID(first.json()["id"])
+
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        for status, expect in (
+            (BookingStatus.CANCELLED, 0),
+            (BookingStatus.COMPLETED, 0),
+            (BookingStatus.PENDING, 1),
+            (BookingStatus.CONFIRMED, 1),
+            (BookingStatus.ACTIVE, 1),
+            (BookingStatus.OVERDUE, 1),
+        ):
+            booking = session.get(Booking, booking_id)
+            assert booking is not None
+            booking.status = status
+            session.execute(delete(BookingHour).where(BookingHour.booking_id == booking_id))
+            session.commit()
+            session.expire_all()
+            backfill_holding_booking_hours(session)
+            session.commit()
+            session.expire_all()
+            owned = list(
+                session.scalars(select(BookingHour).where(BookingHour.booking_id == booking_id)).all()
+            )
+            assert len(owned) == expect, status.value
+            backfill_holding_booking_hours(session)
+            session.commit()
+            session.expire_all()
+            owned = list(
+                session.scalars(select(BookingHour).where(BookingHour.booking_id == booking_id)).all()
+            )
+            assert len(owned) == expect, status.value
+    finally:
+        session.close()
+
+    with patch("app.services.bookings.hoist_has_overlap", return_value=False):
+        second = _book(client, member_id=casey["id"], hoist_id=bay["id"], start=hour, end=hour_end)
+    _assert_bay_hour_taken(second)
+    assert _balance(client, casey["id"]) == Decimal("1500")
 
 
 def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None:

@@ -33,6 +33,36 @@ def upgrade() -> None:
         sa.UniqueConstraint("hoist_id", "hour_start", name="uq_booking_hours_hoist_hour"),
     )
     op.create_index("ix_booking_hours_booking_id", "booking_hours", ["booking_id"])
+    _backfill_holding_booking_hours()
+
+
+def _backfill_holding_booking_hours() -> None:
+    """Own the Regina hours of holding bookings that predate this table.
+
+    Runs after the unique constraint exists. Cancelled and completed bookings
+    get no rows. Safe to call again. ``create_all`` does not run this; seed
+    claims its own hours in the seed transaction.
+    """
+    connection = op.get_bind()
+    if connection is None:
+        return
+    from sqlalchemy.orm import Session
+
+    from app.services.bookings import backfill_holding_booking_hours
+
+    session = Session(
+        bind=connection,
+        join_transaction_mode="create_savepoint",
+        autoflush=False,
+    )
+    try:
+        backfill_holding_booking_hours(session)
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 def downgrade() -> None:

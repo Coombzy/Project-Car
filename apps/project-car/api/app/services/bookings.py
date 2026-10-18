@@ -169,6 +169,42 @@ def release_booking_hours(session: Session, booking: Booking) -> None:
     session.flush()
 
 
+def backfill_holding_booking_hours(session: Session) -> None:
+    """Insert missing Regina hour rows for holding bookings that already exist.
+
+    Same ``_stored_utc`` / ``iter_regina_hours`` bounds as ``claim_booking_hours``.
+    Pending, confirmed, active, and overdue bookings get one row per hour.
+    Cancelled and completed bookings are left with no rows. An hour that
+    already has a row is skipped, so a second run does not raise. When two
+    holding bookings already share an hour, the older row keeps it.
+    """
+    bookings = session.scalars(
+        select(Booking)
+        .where(Booking.status.in_(HOLDING_STATUSES))
+        .order_by(Booking.created_at, Booking.id)
+    ).all()
+    for booking in bookings:
+        start_at = _stored_utc(booking.start_at)
+        end_at = _stored_utc(booking.end_at)
+        for hour_start, _hour_end in iter_regina_hours(start_at, end_at):
+            taken = session.scalars(
+                select(BookingHour.id).where(
+                    BookingHour.hoist_id == booking.hoist_id,
+                    BookingHour.hour_start == hour_start,
+                )
+            ).first()
+            if taken is not None:
+                continue
+            session.add(
+                BookingHour(
+                    booking_id=booking.id,
+                    hoist_id=booking.hoist_id,
+                    hour_start=hour_start,
+                )
+            )
+            session.flush()
+
+
 def open_booking_count(session: Session, member_id: UUID) -> int:
     rows = session.scalars(
         select(Booking.id).where(
