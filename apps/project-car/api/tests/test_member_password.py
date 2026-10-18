@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi.testclient import TestClient
 
-from app.config import settings
+from app.config import get_settings, settings
 from app.db import get_db
 from app.main import app
 from app.models import Member
@@ -170,3 +170,76 @@ def test_rejected_password_is_not_returned(client: TestClient) -> None:
     assert rejected.status_code == 422
     assert secret not in rejected.text
     assert rejected.json()["error"]["message"] == "Password is required."
+
+
+def test_unhashed_member_default_password_refused_off_loopback(
+    client: TestClient, monkeypatch
+) -> None:
+    """Off loopback, a new member with no hash cannot sign in with changeme.
+
+    The 401 body matches a wrong password. A non-default shared password still
+    works. Loopback demo login and a member who has their own hash stay as they are.
+    """
+    live = get_settings()
+    monkeypatch.setenv("SHOP_HOST", "127.0.0.1")
+    monkeypatch.setattr(live, "member_demo_password", "changeme")
+    member = create_member(client, email="new.member@example.com")
+    assert _stored_hash(client, member["id"]) is None
+
+    # Real session secret so the login is not refused as an insecure dev default.
+    # Patch the cached Settings object the login route reads. A prior test may
+    # have cleared get_settings(), so the imported settings singleton can differ.
+    monkeypatch.setattr(live, "session_secret", "real-session-secret")
+    monkeypatch.setenv("SHOP_HOST", "projectcar.ca")
+
+    wrong = _login(client, member["email"], WRONG_PASSWORD)
+    assert wrong.status_code == 401, wrong.text
+    assert wrong.json()["error"] == {
+        "code": "invalid_credentials",
+        "message": "Email or password is incorrect.",
+    }
+
+    refused = _login(client, member["email"], "changeme")
+    assert refused.status_code == 401, refused.text
+    assert refused.json() == wrong.json()
+
+    monkeypatch.setattr(live, "member_demo_password", "shop-floor-shared")
+    signed_in = _login(client, member["email"], "shop-floor-shared")
+    assert signed_in.status_code == 200, signed_in.text
+    assert signed_in.json()["role"] == "member"
+    assert signed_in.json()["email"] == member["email"]
+    still_default = _login(client, member["email"], "changeme")
+    assert still_default.status_code == 401, still_default.text
+    assert still_default.json() == wrong.json()
+
+    monkeypatch.setattr(live, "member_demo_password", "changeme")
+    monkeypatch.setenv("SHOP_HOST", "127.0.0.1")
+    loopback = _login(client, member["email"], "changeme")
+    assert loopback.status_code == 200, loopback.text
+    assert loopback.json()["role"] == "member"
+
+    saved = client.post(
+        f"/members/{member['id']}/password",
+        headers=AUTH,
+        json={"password": OWN_PASSWORD},
+    )
+    assert saved.status_code == 200, saved.text
+    monkeypatch.setenv("SHOP_HOST", "ops.projectcar.ca")
+    shared_denied = _login(client, member["email"], "changeme")
+    assert shared_denied.status_code == 401, shared_denied.text
+    assert shared_denied.json()["error"]["code"] == "invalid_credentials"
+    own = _login(client, member["email"], OWN_PASSWORD)
+    assert own.status_code == 200, own.text
+    assert own.json()["role"] == "member"
+
+    monkeypatch.setenv("SHOP_HOST", "127.0.0.1")
+    hashed_default = client.post(
+        f"/members/{member['id']}/password",
+        headers=AUTH,
+        json={"password": "changeme"},
+    )
+    assert hashed_default.status_code == 200, hashed_default.text
+    monkeypatch.setenv("SHOP_HOST", "projectcar.ca")
+    own_default = _login(client, member["email"], "changeme")
+    assert own_default.status_code == 200, own_default.text
+    assert own_default.json()["role"] == "member"

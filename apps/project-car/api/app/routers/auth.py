@@ -84,8 +84,9 @@ def member_login(
     """Member session. Email must match a member row.
 
     A stored password hash is checked on its own. The shared demo password is
-    refused for that member. A member with no hash yet still accepts the shared
-    demo password, so existing rows keep working until an owner sets one.
+    refused for that member. A member with no hash accepts the shared demo
+    password on loopback, and off loopback only when that password is not the
+    default. Off loopback the default is the same 401 as a wrong password.
 
     Unknown emails and members who are not active both return invalid
     credentials. The body does not say which case it was.
