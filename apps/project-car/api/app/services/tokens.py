@@ -1,4 +1,9 @@
-"""Append-only token ledger. Never change member.token_balance without a row."""
+"""Append-only token ledger.
+
+apply_ledger is the writer that inserts a token_transactions row and moves the
+cache by that amount. rebuild_token_balance only sets the cache from the ledger
+sum and inserts no row.
+"""
 
 from __future__ import annotations
 

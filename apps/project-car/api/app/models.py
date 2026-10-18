@@ -201,6 +201,8 @@ class ToolCribEventKind(str, enum.Enum):
 
 class PartsRequestStatus(str, enum.Enum):
     OPEN = "open"
+    FULFILLED = "fulfilled"
+    DECLINED = "declined"
 
 
 class CalendarProvider(str, enum.Enum):
@@ -239,6 +241,34 @@ class MembershipTier(Base):
 
     def __str__(self) -> str:
         return self.display_name
+
+
+class PricingBand(Base):
+    """Time-of-day band. The multiplier is an Owner setting, seeded from the locked table."""
+
+    __tablename__ = "pricing_bands"
+    __table_args__ = (
+        CheckConstraint("multiplier > 0", name="ck_pricing_bands_multiplier_positive"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    label: Mapped[str] = mapped_column(String(120), nullable=False)
+    multiplier: Mapped[Decimal] = mapped_column(Numeric(8, 4), nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
+class PricingOverlay(Base):
+    """Advance overlay. The multiplier is an Owner setting, seeded from the locked table."""
+
+    __tablename__ = "pricing_overlays"
+    __table_args__ = (
+        CheckConstraint("multiplier > 0", name="ck_pricing_overlays_multiplier_positive"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    label: Mapped[str] = mapped_column(String(120), nullable=False)
+    multiplier: Mapped[Decimal] = mapped_column(Numeric(8, 4), nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
 
 class Member(Base):
@@ -696,6 +726,7 @@ class WaitlistEntry(Base):
     __table_args__ = (
         UniqueConstraint("email", name="uq_waitlist_entries_email"),
         Index("ix_waitlist_entries_created_at", "created_at"),
+        Index("ix_waitlist_entries_member_id", "member_id"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
@@ -704,6 +735,9 @@ class WaitlistEntry(Base):
     phone: Mapped[Optional[str]] = mapped_column(String(40))
     notes: Mapped[Optional[str]] = mapped_column(Text)
     contacted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    member_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("members.id", ondelete="SET NULL")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -1207,6 +1241,8 @@ class JobEvent(Base):
 
 ALL_MODELS = [
     MembershipTier,
+    PricingBand,
+    PricingOverlay,
     Member,
     Hoist,
     Tool,

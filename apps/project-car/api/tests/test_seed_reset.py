@@ -53,7 +53,8 @@ def test_seed_reset_clears_restrict_children(client: TestClient) -> None:
         seed(session)
         member_id = seed_id("member", "ada")
         hoist_id = seed_id("hoist", "bay-3")
-        booking_id = seed_id("booking", "wed-ada")
+        # Weekday template slots are skipped when they fall on shop today.
+        booking_id = seed_id("booking", "today-confirmed")
         assert session.get(Member, member_id) is not None
         assert session.get(Hoist, hoist_id) is not None
         assert session.get(Booking, booking_id) is not None

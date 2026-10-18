@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import threading
 from pathlib import Path
 
+from fastapi.testclient import TestClient
+
+import app.auth as auth
+from app.config import get_settings
 from app.seed import demo_password_refusal, main
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -41,6 +46,214 @@ def test_seed_main_refuses_public_host(monkeypatch) -> None:
     get_settings.cache_clear()
     monkeypatch.setattr(config, "settings", get_settings())
     assert main([]) == 1
+
+
+def test_default_api_secrets_refused_off_loopback(client: TestClient, monkeypatch) -> None:
+    monkeypatch.setenv("SHOP_HOST", "127.0.0.1")
+    loopback = client.get("/me", headers={"Authorization": "Bearer dev-owner-secret"})
+    assert loopback.status_code == 200, loopback.text
+
+    owner_login = client.post(
+        "/auth/login",
+        json={"email": "owner@projectcar.ca", "password": "changeme"},
+    )
+    assert owner_login.status_code == 200, owner_login.text
+    created = client.post(
+        "/members",
+        headers={"Authorization": "Bearer dev-owner-secret"},
+        json={"name": "Ada Reyes", "email": "ada@example.com", "tier_name": "premium"},
+    )
+    assert created.status_code == 201, created.text
+    member_loopback = client.post(
+        "/auth/member/login",
+        json={"email": "ada@example.com", "password": "changeme"},
+    )
+    assert member_loopback.status_code == 200, member_loopback.text
+    owner_cookie = client.cookies.get("pc_owner_session")
+    member_cookie = client.cookies.get("pc_member_session")
+    assert owner_cookie
+    assert member_cookie
+
+    monkeypatch.setenv("SHOP_HOST", "projectcar.ca")
+    client.cookies.clear()
+    client.cookies.set("pc_owner_session", owner_cookie)
+    replayed_owner = client.get("/me")
+    assert replayed_owner.status_code == 503, replayed_owner.text
+    assert replayed_owner.json()["error"]["code"] == "insecure_default"
+
+    client.cookies.clear()
+    client.cookies.set("pc_member_session", member_cookie)
+    replayed_member = client.get("/me")
+    assert replayed_member.status_code == 503, replayed_member.text
+    assert replayed_member.json()["error"]["code"] == "insecure_default"
+    client.cookies.clear()
+
+    owner = client.get("/me", headers={"Authorization": "Bearer dev-owner-secret"})
+    assert owner.status_code == 503, owner.text
+    assert owner.json()["error"]["code"] == "insecure_default"
+
+    ai = client.get("/me", headers={"Authorization": "Bearer dev-ai-secret"})
+    assert ai.status_code == 503, ai.text
+    assert ai.json()["error"]["code"] == "insecure_default"
+
+    login = client.post(
+        "/auth/login",
+        json={"email": "owner@projectcar.ca", "password": "changeme"},
+    )
+    assert login.status_code == 503, login.text
+    assert login.json()["error"]["code"] == "insecure_default"
+
+    member_login = client.post(
+        "/auth/member/login",
+        json={"email": "ada@example.com", "password": "changeme"},
+    )
+    assert member_login.status_code == 503, member_login.text
+    assert member_login.json()["error"]["code"] == "insecure_default"
+
+    wrong = client.get("/me", headers={"Authorization": "Bearer not-the-secret"})
+    assert wrong.status_code == 401, wrong.text
+
+    configured = get_settings()
+    monkeypatch.setattr(configured, "owner_api_secret", "real-owner-secret")
+    monkeypatch.setattr(configured, "ai_api_secret", "real-ai-secret")
+    monkeypatch.setattr(configured, "session_secret", "real-session-secret")
+
+    allowed = client.get("/me", headers={"Authorization": "Bearer real-owner-secret"})
+    assert allowed.status_code == 200, allowed.text
+    assert allowed.json()["role"] == "owner"
+
+    ai_ok = client.get("/me", headers={"Authorization": "Bearer real-ai-secret"})
+    assert ai_ok.status_code == 200, ai_ok.text
+    assert ai_ok.json()["role"] == "ai"
+
+    signed_in = client.post(
+        "/auth/login",
+        json={"email": "owner@projectcar.ca", "password": "changeme"},
+    )
+    assert signed_in.status_code == 200, signed_in.text
+
+    member_ok = client.post(
+        "/auth/member/login",
+        json={"email": "ada@example.com", "password": "changeme"},
+    )
+    assert member_ok.status_code == 200, member_ok.text
+    assert member_ok.json()["role"] == "member"
+
+
+def test_login_locks_after_repeated_failures(client: TestClient) -> None:
+    owner = {"email": "owner@projectcar.ca", "password": "wrong-guess"}
+    member = {"email": "nobody@example.com", "password": "wrong-guess"}
+
+    for _ in range(4):
+        member_denied = client.post("/auth/member/login", json=member)
+        assert member_denied.status_code == 401, member_denied.text
+        assert member_denied.json()["error"]["code"] == "invalid_credentials"
+        owner_denied = client.post("/auth/login", json=owner)
+        assert owner_denied.status_code == 401, owner_denied.text
+        assert owner_denied.json()["error"]["code"] == "invalid_credentials"
+
+    locked_owner = client.post("/auth/login", json=owner)
+    assert locked_owner.status_code == 429, locked_owner.text
+    assert locked_owner.json()["error"]["code"] == "rate_limited"
+
+    locked_member = client.post("/auth/member/login", json=member)
+    assert locked_member.status_code == 429, locked_member.text
+    assert locked_member.json()["error"]["code"] == "rate_limited"
+
+    still_locked = client.post(
+        "/auth/login",
+        json={"email": "owner@projectcar.ca", "password": "changeme"},
+    )
+    assert still_locked.status_code == 429, still_locked.text
+    assert still_locked.json()["error"]["code"] == "rate_limited"
+
+
+def test_correct_password_after_seven_failures_logs_in(client: TestClient) -> None:
+    wrong = {"email": "owner@projectcar.ca", "password": "wrong-guess"}
+    for _ in range(7):
+        denied = client.post("/auth/login", json=wrong)
+        assert denied.status_code == 401, denied.text
+        assert denied.json()["error"]["code"] == "invalid_credentials"
+    signed_in = client.post(
+        "/auth/login",
+        json={"email": "owner@projectcar.ca", "password": "changeme"},
+    )
+    assert signed_in.status_code == 200, signed_in.text
+    assert signed_in.json()["role"] == "owner"
+    still_open = client.post("/auth/login", json=wrong)
+    assert still_open.status_code == 401, still_open.text
+    assert still_open.json()["error"]["code"] == "invalid_credentials"
+
+
+def test_overlapping_attempts_cannot_both_pass_one_under_the_cap() -> None:
+    """One slot remains. Overlapping attempts must not both clear the guard."""
+    ip = "203.0.113.77"
+    for _ in range(7):
+        assert auth.reserve_login_failure(ip) is not None
+
+    start = threading.Barrier(2)
+    admitted: list[bool] = []
+    record = threading.Lock()
+
+    def attempt() -> None:
+        start.wait(timeout=5)
+        stamp = auth.reserve_login_failure(ip)
+        with record:
+            admitted.append(stamp is not None)
+
+    threads = [threading.Thread(target=attempt) for _ in range(2)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=5)
+        assert not thread.is_alive()
+
+    assert len(admitted) == 2, admitted
+    assert admitted.count(True) == 1, admitted
+
+
+def test_login_lock_expires_after_fifteen_minutes(monkeypatch) -> None:
+    clock = {"now": 10_000.0}
+    monkeypatch.setattr(auth.time, "monotonic", lambda: clock["now"])
+    ip = "203.0.113.9"
+    for _ in range(8):
+        assert auth.reserve_login_failure(ip) is not None
+    assert auth.reserve_login_failure(ip) is None
+    other = auth.reserve_login_failure("203.0.113.10")
+    assert other is not None
+    auth.release_login_failure("203.0.113.10", other)
+    clock["now"] += 15 * 60
+    assert auth.reserve_login_failure(ip) is None
+    clock["now"] += 1
+    released = auth.reserve_login_failure(ip)
+    assert released is not None
+    auth.release_login_failure(ip, released)
+
+
+def test_inactive_member_login_matches_unknown_email(client: TestClient) -> None:
+    created = client.post(
+        "/members",
+        headers={"Authorization": "Bearer dev-owner-secret"},
+        json={
+            "name": "Jordan",
+            "email": "jordan@example.com",
+            "tier_name": "premium",
+            "status": "suspended",
+        },
+    )
+    assert created.status_code == 201, created.text
+    inactive = client.post(
+        "/auth/member/login",
+        json={"email": "jordan@example.com", "password": "changeme"},
+    )
+    unknown = client.post(
+        "/auth/member/login",
+        json={"email": "nobody@example.com", "password": "changeme"},
+    )
+    assert inactive.status_code == 401, inactive.text
+    assert unknown.status_code == 401, unknown.text
+    assert inactive.json() == unknown.json()
+    assert inactive.json()["error"]["code"] == "invalid_credentials"
 
 
 def test_public_docs_omit_demo_login() -> None:

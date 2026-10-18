@@ -6,11 +6,13 @@ import { redirect } from "next/navigation";
 import { ShopApiError } from "../../lib/config";
 import { scheduleHref, type ScheduleView } from "../../lib/calendar";
 import {
+  approveShopHoistRequest,
   cancelBooking,
   checkInBooking,
   completeBooking,
   confirmBooking,
   createBooking,
+  denyShopHoistRequest,
 } from "../../lib/shop-api";
 
 function scheduleTarget(formData: FormData): string {
@@ -26,8 +28,8 @@ function scheduleTarget(formData: FormData): string {
   });
 }
 
-function fail(formData: FormData, error: unknown): never {
-  const message = error instanceof ShopApiError ? error.message : "Booking action failed.";
+function fail(formData: FormData, error: unknown, fallback = "Booking action failed."): never {
+  const message = error instanceof ShopApiError ? error.message : fallback;
   redirect(scheduleHref("/schedule", {
     view: String(formData.get("view") ?? "") === "week" ? "week" : "month",
     week: String(formData.get("week") ?? "") || undefined,
@@ -84,6 +86,28 @@ export async function completeBookingAction(formData: FormData): Promise<void> {
     await completeBooking(String(formData.get("id") ?? ""), String(formData.get("unused_tokens") ?? "0"));
   } catch (error) {
     fail(formData, error);
+  }
+  revalidatePath("/schedule");
+  revalidatePath("/");
+  redirect(scheduleTarget(formData));
+}
+
+export async function approveShopHoistRequestAction(formData: FormData): Promise<void> {
+  try {
+    await approveShopHoistRequest(String(formData.get("id") ?? ""));
+  } catch (error) {
+    fail(formData, error, "Could not approve the shop hoist request.");
+  }
+  revalidatePath("/schedule");
+  revalidatePath("/");
+  redirect(scheduleTarget(formData));
+}
+
+export async function denyShopHoistRequestAction(formData: FormData): Promise<void> {
+  try {
+    await denyShopHoistRequest(String(formData.get("id") ?? ""));
+  } catch (error) {
+    fail(formData, error, "Could not deny the shop hoist request.");
   }
   revalidatePath("/schedule");
   revalidatePath("/");

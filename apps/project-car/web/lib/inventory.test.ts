@@ -6,7 +6,6 @@ import {
   SAMPLE_BAY_KIT_ITEMS,
   SAMPLE_CRIB_TOOLS,
   SAMPLE_INVENTORY_REQUESTS,
-  SAMPLE_OPS_PART_ORDERS,
   SAMPLE_PARTS_STOCK,
   SAMPLE_TOOL_ORDERS,
   SHOP_HOIST_BAY,
@@ -79,7 +78,6 @@ describe("placeholder demo SKUs", () => {
       ...SAMPLE_CRIB_TOOLS.map((row) => row.sku),
       ...SAMPLE_PARTS_STOCK.map((row) => row.sku),
       ...SAMPLE_INVENTORY_REQUESTS.map((row) => row.sku),
-      ...SAMPLE_OPS_PART_ORDERS.map((row) => row.sku),
       ...SAMPLE_TOOL_ORDERS.map((row) => row.sku).filter(
         (sku): sku is string => sku !== null,
       ),

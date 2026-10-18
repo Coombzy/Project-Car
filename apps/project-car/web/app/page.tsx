@@ -107,7 +107,7 @@ export default async function DashboardPage({
           <section className="dash-risk" id="token-at-risk">
             <h2>Token-at-risk members</h2>
             {dash.token_at_risk.length === 0 ? (
-              <div className="banner empty">No active members under 2 tokens.</div>
+              <div className="banner empty">No active members under 100 tokens.</div>
             ) : (
               <div className="card">
                 <table>
