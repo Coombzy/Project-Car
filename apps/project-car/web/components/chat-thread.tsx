@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
+import { shouldSkipChatPoll } from "../lib/chat-poll";
 import type { ChatMessage, ChatRoom } from "../lib/config";
 import { formatShopDateTime } from "../lib/time";
 
@@ -13,12 +14,14 @@ export function ChatThread({
   initialCursor,
   pollMessages,
   sendMessage,
+  showComposer = true,
 }: {
   room: ChatRoom;
   initialMessages: ChatMessage[];
   initialCursor: string | null;
   pollMessages: (roomId: string, afterId?: string) => Promise<{ messages: ChatMessage[]; cursor: string | null }>;
   sendMessage: (roomId: string, body: string) => Promise<ChatMessage>;
+  showComposer?: boolean;
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +43,7 @@ export function ChatThread({
 
   useEffect(() => {
     let cancelled = false;
+    let inFlight = false;
     const tick = async () => {
       try {
         const page = await pollMessages(room.id, cursorRef.current ?? undefined);
@@ -59,9 +63,15 @@ export function ChatThread({
         if (!cancelled) {
           setError(caught instanceof Error ? caught.message : "Could not poll chat.");
         }
+      } finally {
+        inFlight = false;
       }
     };
     const timer = window.setInterval(() => {
+      if (shouldSkipChatPoll({ inFlight, hidden: document.hidden })) {
+        return;
+      }
+      inFlight = true;
       void tick();
     }, POLL_MS);
     return () => {
@@ -112,24 +122,26 @@ export function ChatThread({
         )}
       </div>
       {error ? <div className="banner error">{error}</div> : null}
-      <form onSubmit={onSubmit} className="chat-compose">
-        <label htmlFor={`chat-body-${room.id}`}>
-          Message
-          <textarea
-            id={`chat-body-${room.id}`}
-            name="body"
-            rows={3}
-            required
-            maxLength={4000}
-            placeholder="Human message — not Matrix, not Grok"
-          />
-        </label>
-        <div className="actions">
-          <button type="submit" disabled={sending}>
-            {sending ? "Sending…" : "Send"}
-          </button>
-        </div>
-      </form>
+      {showComposer ? (
+        <form onSubmit={onSubmit} className="chat-compose">
+          <label htmlFor={`chat-body-${room.id}`}>
+            Message
+            <textarea
+              id={`chat-body-${room.id}`}
+              name="body"
+              rows={3}
+              required
+              maxLength={4000}
+              placeholder="Human message — not Matrix, not Grok"
+            />
+          </label>
+          <div className="actions">
+            <button type="submit" disabled={sending}>
+              {sending ? "Sending…" : "Send"}
+            </button>
+          </div>
+        </form>
+      ) : null}
     </section>
   );
 }

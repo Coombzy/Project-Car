@@ -321,33 +321,6 @@ export const SAMPLE_TOOL_PLANNED: PlannedTool[] = [
   },
 ];
 
-export const SAMPLE_OPS_PART_ORDERS = [
-  {
-    id: "po-1042",
-    sku: "PT-ANF-008",
-    what: "Shop-stock AN fittings restock",
-    vendor: "Summit (sample)",
-    for: "Shop inventory",
-    status: "Ordered (stub)",
-  },
-  {
-    id: "po-1043",
-    sku: "PT-PAD-003",
-    what: "Wilwood bracket — Ada Reyes",
-    vendor: "Local parts (sample)",
-    for: "Member request",
-    status: "Incoming (stub)",
-  },
-  {
-    id: "po-1044",
-    sku: "PT-FLT-001",
-    what: "Oil filter assortment — case",
-    vendor: "Uline (sample)",
-    for: "Shop inventory",
-    status: "Received (stub)",
-  },
-] as const;
-
 export function formatSku(
   prefix: InventoryPrefix,
   category: string,

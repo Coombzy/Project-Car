@@ -23,7 +23,7 @@ from app.schemas import (
     TokenTransactionOut,
 )
 from app.services.staff import reject_ai
-from app.services.tokens import apply_ledger
+from app.services.tokens import apply_ledger, rebuild_token_balance
 
 router = APIRouter(tags=["members"])
 
@@ -185,3 +185,13 @@ def adjust_member_tokens(
     session.flush()
     session.refresh(row)
     return TokenTransactionOut.model_validate(row)
+
+
+@router.post("/members/{member_id}/tokens/rebuild", response_model=MemberOut)
+def rebuild_member_tokens(member_id: UUID, session: DbSession, _owner: Owner) -> MemberOut:
+    """Set the cached balance from the ledger sum. Inserts no ledger row."""
+    member = _member_or_404(session, member_id)
+    rebuild_token_balance(session, member)
+    session.flush()
+    session.refresh(member)
+    return MemberOut.model_validate(member)

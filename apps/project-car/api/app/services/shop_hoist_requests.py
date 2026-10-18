@@ -29,7 +29,14 @@ from app.models import (
     StaffSubject,
     TokenTransactionKind,
 )
-from app.services.bookings import UNAVAILABLE_HOIST, hoist_has_overlap, preview_reserve
+from app.services.bookings import (
+    HOLDING_STATUSES,
+    UNAVAILABLE_HOIST,
+    hoist_has_overlap,
+    open_booking_count,
+    preview_reserve,
+    reject_start_in_past,
+)
 from app.services.staff import actor_of, record_action, reject_own_request
 from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
@@ -89,6 +96,7 @@ def create_shop_hoist_request(
     """Store a pending request. Does not create a booking and does not touch the ledger."""
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
+    reject_start_in_past(start_at)
 
     hoist = session.get(Hoist, hoist_id)
     if hoist is None:
@@ -163,9 +171,21 @@ def approve_shop_hoist_request(
     if member.status != MemberStatus.ACTIVE:
         raise _error(400, "member_not_bookable", "Only active members can hold an approved shop hoist hour.")
     quote = Decimal(row.token_quote)
+    if open_booking_count(session, member.id) >= member.tier.max_simultaneous_bookings:
+        raise _error(
+            400,
+            "max_simultaneous_bookings",
+            "Member is already at the tier's simultaneous booking limit.",
+        )
     if Decimal(member.token_balance) < quote:
         raise _error(400, "insufficient_tokens", "Member does not have enough tokens to reserve.")
-    if hoist_has_overlap(session, row.hoist_id, row.start_at, row.end_at):
+    if hoist_has_overlap(
+        session,
+        row.hoist_id,
+        row.start_at,
+        row.end_at,
+        statuses=HOLDING_STATUSES,
+    ):
         raise _error(
             409,
             "hoist_overlap",
