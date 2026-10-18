@@ -107,3 +107,23 @@ export async function patchPricingAction(formData: FormData): Promise<void> {
   revalidatePath("/tiers");
   redirect("/tiers");
 }
+
+export async function grantPeriodAllocationAction(): Promise<void> {
+  let granted = 0;
+  let skipped = 0;
+  try {
+    const result = await shopJson<{ granted?: unknown; skipped?: unknown }>(
+      "/tiers/period-allocation/grant",
+      "Could not grant this month's allotment.",
+      { method: "POST" },
+    );
+    granted = Array.isArray(result.granted) ? result.granted.length : 0;
+    skipped = typeof result.skipped === "number" ? result.skipped : 0;
+  } catch (error) {
+    const message =
+      error instanceof ShopApiError ? error.message : "Could not grant this month's allotment.";
+    redirect(`/tiers?error=${encodeURIComponent(message)}`);
+  }
+  revalidatePath("/tiers");
+  redirect(`/tiers?granted=${granted}&skipped=${skipped}`);
+}
