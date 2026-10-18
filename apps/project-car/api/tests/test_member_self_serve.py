@@ -194,8 +194,11 @@ def test_inactive_member_cannot_sign_in(client: TestClient) -> None:
         "/auth/member/login",
         json={"email": "jordan@example.com", "password": "changeme"},
     )
-    assert denied.status_code == 403
-    assert denied.json()["error"]["code"] == "member_not_bookable"
+    assert denied.status_code == 401
+    assert denied.json()["error"] == {
+        "code": "invalid_credentials",
+        "message": "Email or password is incorrect.",
+    }
 
 
 def test_member_login_wrong_password(client: TestClient) -> None:

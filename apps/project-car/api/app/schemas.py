@@ -72,6 +72,7 @@ class WaitlistEntryOut(BaseModel):
     phone: str | None
     notes: str | None
     contacted_at: datetime | None
+    member_id: UUID | None = None
     created_at: datetime
 
 
@@ -488,6 +489,14 @@ class PartsRequestOut(BaseModel):
     def from_row(cls, row: PartsRequest) -> PartsRequestOut:
         name = row.member.name if row.member is not None else None
         return cls.model_validate(row).model_copy(update={"member_name": name})
+
+
+class PartsOrderPatch(BaseModel):
+    status: PartsOrderStatus
+
+
+class PartsRequestPatch(BaseModel):
+    status: PartsRequestStatus
 
 
 class PartsRequestCreate(BaseModel):

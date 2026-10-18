@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from uuid import UUID
 
 from fastapi.testclient import TestClient
 
+from app.models import Booking, BookingKind, BookingStatus, Member, TokenTransactionKind
 from app.services.pricing import quote_reserve
+from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
-from tests.conftest import AUTH, create_hoist, create_member
+from tests.conftest import AUTH, create_hoist, create_member, login_member
 
 
 def _window(hours_from_now: int, length_hours: float = 2) -> tuple[str, str]:
@@ -629,3 +632,151 @@ def test_shop_hoist_is_owner_only(client: TestClient) -> None:
     )
     assert second_shop.status_code == 409
     assert second_shop.json()["error"]["code"] == "duplicate_shop_hoist"
+
+
+def _insert_past_pending(
+    client: TestClient,
+    *,
+    member_id: str,
+    hoist_id: str,
+    start: datetime,
+    reserved: Decimal,
+) -> str:
+    """A row that already exists, the way seed writes week slots that are already past."""
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        member = session.get(Member, UUID(member_id))
+        assert member is not None
+        booking = Booking(
+            member_id=member.id,
+            hoist_id=UUID(hoist_id),
+            start_at=as_utc(start),
+            end_at=as_utc(start + timedelta(hours=2)),
+            kind=BookingKind.CUSTOMER,
+            status=BookingStatus.PENDING,
+            reserved_tokens=reserved,
+        )
+        session.add(booking)
+        session.flush()
+        apply_ledger(
+            session,
+            member,
+            kind=TokenTransactionKind.BOOKING_RESERVE,
+            amount=-reserved,
+            booking_id=booking.id,
+            note="Existing reserve",
+        )
+        session.commit()
+        return str(booking.id)
+    finally:
+        session.close()
+
+
+def test_past_start_is_rejected(client: TestClient) -> None:
+    """A start before shop now is not a booking and does not reserve tokens."""
+    member = create_member(client, email="ada@example.com")
+    hoist = create_hoist(client, name="Bay 1")
+    shop = create_hoist(client, name="Shop", location_label="Internal", is_shop=True)
+    past = datetime(2020, 6, 2, 16, 0, tzinfo=timezone.utc)
+    past_end = past + timedelta(hours=2)
+    opening = _balance(client, member["id"])
+    ledger_before = _ledger(client, member["id"])
+
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": past.isoformat(),
+            "end_at": past_end.isoformat(),
+        },
+    )
+    assert created.status_code == 400, created.text
+    assert created.json()["error"]["code"] == "start_in_past"
+    assert client.get("/bookings", headers=AUTH).json() == []
+    assert _ledger(client, member["id"]) == ledger_before
+    assert _balance(client, member["id"]) == opening
+
+    shop_work = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "kind": "shop",
+            "hoist_id": shop["id"],
+            "start_at": past.isoformat(),
+            "end_at": past_end.isoformat(),
+            "notes": "Rack inspection",
+        },
+    )
+    assert shop_work.status_code == 400, shop_work.text
+    assert shop_work.json()["error"]["code"] == "start_in_past"
+    assert client.get("/bookings", headers=AUTH).json() == []
+
+    login_member(client, "ada@example.com")
+    member_created = client.post(
+        "/member/bookings",
+        json={
+            "hoist_id": hoist["id"],
+            "start_at": past.isoformat(),
+            "end_at": past_end.isoformat(),
+        },
+    )
+    assert member_created.status_code == 400, member_created.text
+    assert member_created.json()["error"]["code"] == "start_in_past"
+
+    owner_quote = client.post(
+        "/bookings/quote",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "start_at": past.isoformat(),
+            "end_at": past_end.isoformat(),
+        },
+    )
+    assert owner_quote.status_code == 400, owner_quote.text
+    assert owner_quote.json()["error"]["code"] == "start_in_past"
+    member_quote = client.post(
+        "/member/bookings/quote",
+        json={"start_at": past.isoformat(), "end_at": past_end.isoformat()},
+    )
+    assert member_quote.status_code == 400, member_quote.text
+    assert member_quote.json()["error"]["code"] == "start_in_past"
+
+    assert client.get("/bookings", headers=AUTH).json() == []
+    assert client.get("/member/bookings").json() == []
+    assert _ledger(client, member["id"]) == ledger_before
+    assert _balance(client, member["id"]) == opening
+
+    reserved = Decimal("100")
+    first = _insert_past_pending(
+        client,
+        member_id=member["id"],
+        hoist_id=hoist["id"],
+        start=datetime(2020, 6, 2, 16, 0, tzinfo=timezone.utc),
+        reserved=reserved,
+    )
+    second = _insert_past_pending(
+        client,
+        member_id=member["id"],
+        hoist_id=hoist["id"],
+        start=datetime(2020, 6, 3, 16, 0, tzinfo=timezone.utc),
+        reserved=reserved,
+    )
+    confirmed = client.post(f"/bookings/{first}/confirm", headers=AUTH)
+    assert confirmed.status_code == 200, confirmed.text
+    assert confirmed.json()["status"] == "confirmed"
+    checked = client.post(f"/bookings/{first}/check-in", headers=AUTH)
+    assert checked.status_code == 200, checked.text
+    assert checked.json()["status"] == "active"
+    completed = client.post(
+        f"/bookings/{first}/complete",
+        headers=AUTH,
+        json={"unused_tokens": "0"},
+    )
+    assert completed.status_code == 200, completed.text
+    assert completed.json()["status"] == "completed"
+    cancelled = client.post(f"/bookings/{second}/cancel", headers=AUTH)
+    assert cancelled.status_code == 200, cancelled.text
+    assert cancelled.json()["status"] == "cancelled"
+    assert _balance(client, member["id"]) == opening - reserved

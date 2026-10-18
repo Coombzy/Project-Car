@@ -75,7 +75,7 @@ from app.models import (
     WaitlistEntry,
 )
 from app.services.fill import resolve_fill_for_slot
-from app.services.pricing import BASE_TOKENS_PER_HOUR, quote_reserve
+from app.services.pricing import BASE_TOKENS_PER_HOUR, ensure_pricing_settings, quote_reserve
 from app.services.tokens import apply_ledger, rebuild_token_balance
 from app.services.hours import booking_overlaps_window
 from app.shop_time import PRICING_TZ, SHOP_TZ, as_utc, next_24h_bounds, shop_now
@@ -276,7 +276,12 @@ def _make_booking(
     else:
         if member is None:
             raise ValueError("Customer demo bookings need a member.")
-        quote = quote_reserve(start, end, fill=resolve_fill_for_slot(session, start, end))
+        quote = quote_reserve(
+            start,
+            end,
+            fill=resolve_fill_for_slot(session, start, end),
+            session=session,
+        )
         tokens = quote.final_reserve_cost
         rule = quote.as_rule()
         meta = quote.ledger_meta()
@@ -672,6 +677,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     for payload in PLACEHOLDER_TIERS:
         _upsert_tier(session, payload)
     session.flush()
+    ensure_pricing_settings(session)
 
     if reset:
         _reset_shop(session)
