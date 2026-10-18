@@ -164,9 +164,15 @@ def claim_booking_hours(session: Session, booking: Booking) -> None:
 
 
 def release_booking_hours(session: Session, booking: Booking) -> None:
-    """Free cancelled or completed hours so another booking can take them."""
+    """Free cancelled or completed hours so another booking can take them.
+
+    The caller has already moved this booking out of ``HOLDING_STATUSES``.
+    Backfill runs in this same transaction so the oldest remaining holding
+    booking that covers a freed hour owns that row before commit.
+    """
     session.execute(delete(BookingHour).where(BookingHour.booking_id == booking.id))
     session.flush()
+    backfill_holding_booking_hours(session)
 
 
 def backfill_holding_booking_hours(session: Session) -> None:
