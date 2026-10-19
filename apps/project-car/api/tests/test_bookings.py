@@ -10,8 +10,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 
-from app.models import Booking, BookingHour, BookingKind, BookingStatus, Member, TokenTransactionKind
-from app.services.bookings import backfill_holding_booking_hours, release_booking_hours
+from app.models import Booking, BookingKind, BookingStatus, Member, TokenTransactionKind
 from app.services.pricing import quote_reserve
 from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
@@ -300,6 +299,7 @@ def test_second_bay_hour_row_hits_the_unique_index(client: TestClient) -> None:
     other = _book(client, member_id=casey["id"], hoist_id=bay["id"], start=later, end=later + timedelta(hours=1))
     assert other.status_code == 201, other.text
 
+    # Inside the test so this module collects on main, where BookingHour does not exist.
     from app.models import BookingHour
 
     session = client.session_factory()  # type: ignore[attr-defined]
@@ -329,7 +329,22 @@ def test_backfill_locks_preexisting_holding_hours(client: TestClient) -> None:
 
     Cancelled and completed stay empty. A second insert of the overdue hour
     is 409 hoist_overlap even when the SELECT overlap check is skipped.
+    Two holding bookings that share a Regina hour abort the backfill with no
+    partial rows. Claim fills a missing hour, and 409s instead of returning
+    when that hour is already taken.
     """
+    from fastapi import HTTPException
+
+    from app.models import BookingHour
+    from app.services.bookings import (
+        HoldingHoursConflict,
+        _stored_utc,
+        backfill_holding_booking_hours,
+        claim_booking_hours,
+        release_booking_hours,
+    )
+    from app.shop_time import iter_regina_hours
+
     ada = create_member(client, email="ada@example.com", tier_name="premium")
     casey = create_member(client, name="Casey", email="casey@example.com", tier_name="premium")
     bay = create_hoist(client, name="Bay 1")
@@ -377,25 +392,30 @@ def test_backfill_locks_preexisting_holding_hours(client: TestClient) -> None:
         second = _book(client, member_id=casey["id"], hoist_id=bay["id"], start=hour, end=hour_end)
     _assert_bay_hour_taken(second)
     assert _balance(client, casey["id"]) == Decimal("1500")
-    # Pre-migration pair: two Bay 2 holders, rows wiped, then backfill.
-    # Ada's overdue booking still holds Bay 1 at `hour`, so this pair uses
-    # hour+3 (already bookable in the unique-index test) and Bay 2.
+    # Pre-migration pair on Bay 2. Ada's overdue booking still holds Bay 1
+    # at `hour`. Create them on windows the API will accept, then rewrite
+    # Riley onto Quinn so they share one Regina hour (10:00–12:00 and 11:00–13:00).
     quinn = create_member(client, name="Quinn", email="quinn@example.com", tier_name="premium")
     riley = create_member(client, name="Riley", email="riley@example.com", tier_name="premium")
     sam = create_member(client, name="Sam", email="sam@example.com", tier_name="premium")
     bay_two = create_hoist(client, name="Bay 2")
     shared = hour + timedelta(hours=3)
-    shared_end = shared + timedelta(hours=1)
-    elsewhere = hour
+    elsewhere = shared + timedelta(hours=5)
 
-    older = _book(client, member_id=quinn["id"], hoist_id=bay_two["id"], start=shared, end=shared_end)
+    older = _book(
+        client,
+        member_id=quinn["id"],
+        hoist_id=bay_two["id"],
+        start=shared,
+        end=shared + timedelta(hours=2),
+    )
     assert older.status_code == 201, older.text
     younger = _book(
         client,
         member_id=riley["id"],
         hoist_id=bay_two["id"],
         start=elsewhere,
-        end=elsewhere + timedelta(hours=1),
+        end=elsewhere + timedelta(hours=2),
     )
     assert younger.status_code == 201, younger.text
     older_id = UUID(older.json()["id"])
@@ -409,32 +429,85 @@ def test_backfill_locks_preexisting_holding_hours(client: TestClient) -> None:
         assert younger_row is not None
         session.execute(delete(BookingHour).where(BookingHour.booking_id == older_id))
         session.execute(delete(BookingHour).where(BookingHour.booking_id == younger_id))
-        younger_row.start_at = older_row.start_at
-        younger_row.end_at = older_row.end_at
+        # Store UTC, same as create_booking. A shop-local aware value written
+        # straight through SQLite comes back naive and _stored_utc would shift it.
+        older_row.start_at = as_utc(shared)
+        older_row.end_at = as_utc(shared + timedelta(hours=2))
+        younger_row.start_at = as_utc(shared + timedelta(hours=1))
+        younger_row.end_at = as_utc(shared + timedelta(hours=3))
         older_row.created_at = datetime(2020, 1, 1, tzinfo=timezone.utc)
         younger_row.created_at = datetime(2020, 1, 2, tzinfo=timezone.utc)
         session.commit()
         session.expire_all()
 
-        older_row = session.get(Booking, older_id)
-        younger_row = session.get(Booking, younger_id)
-        assert older_row is not None
-        assert younger_row is not None
-        assert older_row.created_at < younger_row.created_at
-
-        backfill_holding_booking_hours(session)
-        session.commit()
-        session.expire_all()
+        with pytest.raises(HoldingHoursConflict):
+            backfill_holding_booking_hours(session)
         older_hours = list(
             session.scalars(select(BookingHour).where(BookingHour.booking_id == older_id)).all()
         )
         younger_hours = list(
             session.scalars(select(BookingHour).where(BookingHour.booking_id == younger_id)).all()
         )
-        assert len(older_hours) == 1
+        assert older_hours == []
         assert younger_hours == []
-        locked_hoist = older_hours[0].hoist_id
-        locked_hour = older_hours[0].hour_start
+        session.rollback()
+        session.expire_all()
+
+        older_row = session.get(Booking, older_id)
+        younger_row = session.get(Booking, younger_id)
+        assert older_row is not None
+        assert younger_row is not None
+        older_wanted = iter_regina_hours(_stored_utc(older_row.start_at), _stored_utc(older_row.end_at))
+        younger_wanted = iter_regina_hours(
+            _stored_utc(younger_row.start_at), _stored_utc(younger_row.end_at)
+        )
+        assert len(older_wanted) == 2
+        assert len(younger_wanted) == 2
+        contested = older_wanted[1][0]
+        assert _stored_utc(contested) == _stored_utc(younger_wanted[0][0])
+
+        # One owned hour is not a finished claim. The free hour is inserted.
+        session.add(
+            BookingHour(
+                booking_id=older_id,
+                hoist_id=older_row.hoist_id,
+                hour_start=older_wanted[0][0],
+            )
+        )
+        session.commit()
+        session.expire_all()
+        older_row = session.get(Booking, older_id)
+        assert older_row is not None
+        claim_booking_hours(session, older_row)
+        session.commit()
+        session.expire_all()
+        older_hours = list(
+            session.scalars(select(BookingHour).where(BookingHour.booking_id == older_id)).all()
+        )
+        assert len(older_hours) == 2
+
+        # The contested hour is Quinn's. Riley already owns the other hour.
+        # claim must 409, not return because one row exists.
+        session.add(
+            BookingHour(
+                booking_id=younger_id,
+                hoist_id=younger_row.hoist_id,
+                hour_start=younger_wanted[1][0],
+            )
+        )
+        session.commit()
+        session.expire_all()
+        younger_row = session.get(Booking, younger_id)
+        assert younger_row is not None
+        with pytest.raises(HTTPException) as conflict:
+            claim_booking_hours(session, younger_row)
+        assert conflict.value.status_code == 409
+        assert conflict.value.detail["code"] == "hoist_overlap"
+        session.expire_all()
+        younger_hours = list(
+            session.scalars(select(BookingHour).where(BookingHour.booking_id == younger_id)).all()
+        )
+        assert len(younger_hours) == 1
 
         # Same order as cancel_booking / complete_booking: leave HOLDING_STATUSES,
         # then release_booking_hours, before the transaction commits.
@@ -453,32 +526,23 @@ def test_backfill_locks_preexisting_holding_hours(client: TestClient) -> None:
             session.scalars(select(BookingHour).where(BookingHour.booking_id == younger_id)).all()
         )
         assert older_hours == []
-        assert len(younger_hours) == 1
-        assert younger_hours[0].hoist_id == locked_hoist
-        got = younger_hours[0].hour_start
-        want = locked_hour
-        if got.tzinfo is not None:
-            got = got.astimezone(timezone.utc).replace(tzinfo=None)
-        if want.tzinfo is not None:
-            want = want.astimezone(timezone.utc).replace(tzinfo=None)
-        assert got == want
+        assert len(younger_hours) == 2
+        younger_keys = sorted(_stored_utc(row.hour_start) for row in younger_hours)
+        assert younger_keys == sorted(_stored_utc(start) for start, _end in younger_wanted)
     finally:
         session.close()
 
+    contested_start = shared + timedelta(hours=1)
     with patch("app.services.bookings.hoist_has_overlap", return_value=False):
-        third = _book(client, member_id=sam["id"], hoist_id=bay_two["id"], start=shared, end=shared_end)
+        third = _book(
+            client,
+            member_id=sam["id"],
+            hoist_id=bay_two["id"],
+            start=contested_start,
+            end=contested_start + timedelta(hours=1),
+        )
     _assert_bay_hour_taken(third)
     assert _balance(client, sam["id"]) == Decimal("1500")
-
-    session = client.session_factory()  # type: ignore[attr-defined]
-    try:
-        owned = list(
-            session.scalars(select(BookingHour).where(BookingHour.booking_id == younger_id)).all()
-        )
-        assert len(owned) == 1
-        assert owned[0].booking_id == younger_id
-    finally:
-        session.close()
 
 
 def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None:

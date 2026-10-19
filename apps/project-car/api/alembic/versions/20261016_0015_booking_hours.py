@@ -40,8 +40,10 @@ def _backfill_holding_booking_hours() -> None:
     """Own the Regina hours of holding bookings that predate this table.
 
     Runs after the unique constraint exists. Cancelled and completed bookings
-    get no rows. Safe to call again. ``create_all`` does not run this; seed
-    claims its own hours in the seed transaction.
+    get no rows. Safe to call again when every holding booking can own its
+    full hour set. If any holding booking cannot, backfill raises and this
+    upgrade rolls back. ``create_all`` does not run this; seed claims its
+    own hours in the seed transaction.
     """
     connection = op.get_bind()
     if connection is None:

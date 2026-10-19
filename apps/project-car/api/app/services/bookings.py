@@ -133,22 +133,46 @@ def _reject_if_bay_hour_taken(
         raise _error(409, "hoist_overlap", BAY_HOUR_TAKEN)
 
 
+class HoldingHoursConflict(RuntimeError):
+    """A holding booking cannot own every Regina hour it spans.
+
+    Backfill raises this instead of inserting a partial set. The booking-hours
+    migration rolls the upgrade back.
+    """
+
+
+def _hour_key(value: datetime) -> datetime:
+    """Naive UTC instant so SQLite's naive timestamps match aware ones."""
+    if value.tzinfo is None:
+        normalized = value
+    else:
+        normalized = value.astimezone(timezone.utc).replace(tzinfo=None)
+    return normalized.replace(microsecond=0)
+
+
 def claim_booking_hours(session: Session, booking: Booking) -> None:
     """Insert one row per Regina hour. Unique (hoist_id, hour_start) is the lock.
 
     A second flush of the same bay hour raises 409 hoist_overlap even when the
-    SELECT overlap check is skipped. Confirm is a no-op when this booking
-    already owns its rows.
+    SELECT overlap check is skipped. Claim is done only when this booking
+    already owns every Regina hour of this hoist and window. One existing row
+    is not enough: confirm must still insert the hours that are missing.
     """
-    owned = session.scalars(
-        select(BookingHour.id).where(BookingHour.booking_id == booking.id)
-    ).first()
-    if owned is not None:
-        return
     # SQLite returns stored UTC as naive. as_utc would treat that as shop-local.
     start_at = _stored_utc(booking.start_at)
     end_at = _stored_utc(booking.end_at)
-    for hour_start, _hour_end in iter_regina_hours(start_at, end_at):
+    wanted = [hour_start for hour_start, _hour_end in iter_regina_hours(start_at, end_at)]
+    owned_starts = session.scalars(
+        select(BookingHour.hour_start).where(
+            BookingHour.booking_id == booking.id,
+            BookingHour.hoist_id == booking.hoist_id,
+        )
+    ).all()
+    owned = {_hour_key(hour_start) for hour_start in owned_starts}
+    missing = [hour_start for hour_start in wanted if _hour_key(hour_start) not in owned]
+    if not missing:
+        return
+    for hour_start in missing:
         session.add(
             BookingHour(
                 booking_id=booking.id,
@@ -167,8 +191,9 @@ def release_booking_hours(session: Session, booking: Booking) -> None:
     """Free cancelled or completed hours so another booking can take them.
 
     The caller has already moved this booking out of ``HOLDING_STATUSES``.
-    Backfill runs in this same transaction so the oldest remaining holding
-    booking that covers a freed hour owns that row before commit.
+    Backfill runs in this same transaction. It fills freed hours only when
+    every remaining holding booking can own its whole window. A conflict
+    raises ``HoldingHoursConflict`` and the caller rolls back.
     """
     session.execute(delete(BookingHour).where(BookingHour.booking_id == booking.id))
     session.flush()
@@ -180,35 +205,53 @@ def backfill_holding_booking_hours(session: Session) -> None:
 
     Same ``_stored_utc`` / ``iter_regina_hours`` bounds as ``claim_booking_hours``.
     Pending, confirmed, active, and overdue bookings get one row per hour.
-    Cancelled and completed bookings are left with no rows. An hour that
-    already has a row is skipped, so a second run does not raise. When two
-    holding bookings already share an hour, the older row keeps it.
+    Cancelled and completed bookings are left with no rows. A second run is a
+    no-op when every holding booking already owns its full hour set.
+
+    If any holding booking cannot own every Regina hour, raise
+    ``HoldingHoursConflict`` before inserting any row from this call. Do not
+    keep the older booking's hour and leave the newer one with a partial set.
+    The migration rolls that error back.
     """
     bookings = session.scalars(
         select(Booking)
         .where(Booking.status.in_(HOLDING_STATUSES))
         .order_by(Booking.created_at, Booking.id)
     ).all()
+    existing = session.scalars(select(BookingHour)).all()
+    owned_by: dict[tuple[UUID, datetime], UUID] = {}
+    for row in existing:
+        owned_by[(row.hoist_id, _hour_key(row.hour_start))] = row.booking_id
+
+    pending: list[tuple[Booking, datetime]] = []
     for booking in bookings:
         start_at = _stored_utc(booking.start_at)
         end_at = _stored_utc(booking.end_at)
+        missing: list[datetime] = []
         for hour_start, _hour_end in iter_regina_hours(start_at, end_at):
-            taken = session.scalars(
-                select(BookingHour.id).where(
-                    BookingHour.hoist_id == booking.hoist_id,
-                    BookingHour.hour_start == hour_start,
+            key = (booking.hoist_id, _hour_key(hour_start))
+            owner = owned_by.get(key)
+            if owner is None:
+                missing.append(hour_start)
+            elif owner != booking.id:
+                raise HoldingHoursConflict(
+                    f"Holding booking {booking.id} cannot own every Regina hour "
+                    f"on hoist {booking.hoist_id}."
                 )
-            ).first()
-            if taken is not None:
-                continue
-            session.add(
-                BookingHour(
-                    booking_id=booking.id,
-                    hoist_id=booking.hoist_id,
-                    hour_start=hour_start,
-                )
+        for hour_start in missing:
+            owned_by[(booking.hoist_id, _hour_key(hour_start))] = booking.id
+            pending.append((booking, hour_start))
+
+    for booking, hour_start in pending:
+        session.add(
+            BookingHour(
+                booking_id=booking.id,
+                hoist_id=booking.hoist_id,
+                hour_start=hour_start,
             )
-            session.flush()
+        )
+    if pending:
+        session.flush()
 
 
 def open_booking_count(session: Session, member_id: UUID) -> int:
