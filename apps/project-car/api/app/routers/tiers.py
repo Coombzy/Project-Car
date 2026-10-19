@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
@@ -12,6 +13,8 @@ from app.deps import DbSession, Owner
 from app.models import MembershipTier, PricingBand, PricingOverlay
 from app.schemas import TierCreate, TierOut, TierPatch
 from app.services.pricing import PricingError, ensure_pricing_settings, quantize_multiplier
+from app.services.staff import reject_ai
+from app.services.tokens import grant_period_allocations
 
 router = APIRouter(tags=["tiers"])
 
@@ -42,6 +45,19 @@ class PricingMultiplierUpdate(BaseModel):
 class PricingSettingsPatch(BaseModel):
     bands: list[PricingMultiplierUpdate] = Field(default_factory=list)
     overlays: list[PricingMultiplierUpdate] = Field(default_factory=list)
+
+
+class PeriodAllocationGrantOut(BaseModel):
+    member_id: UUID
+    tier_name: str
+    amount: Decimal
+
+
+class PeriodAllocationOut(BaseModel):
+    period: str
+    tz: str
+    granted: list[PeriodAllocationGrantOut]
+    skipped: int
 
 
 def _multiplier_or_422(value: Decimal) -> Decimal:
@@ -200,3 +216,29 @@ def patch_tier(name: str, body: TierPatch, session: DbSession, _owner: Owner) ->
     session.flush()
     session.refresh(row)
     return TierOut.model_validate(row)
+
+
+@router.post("/tiers/period-allocation/grant", response_model=PeriodAllocationOut)
+def grant_period_allocation(session: DbSession, owner: Owner) -> PeriodAllocationOut:
+    """Owner button. One monthly_allocation per active member per Regina month.
+
+    The extra path segment keeps this off PATCH /tiers/{name}, which would
+    answer POST /tiers/period-allocation with 405.
+
+    A second call in the same month inserts nothing. There is no scheduler.
+    """
+    reject_ai(
+        owner,
+        code="allocation_requires_human",
+        message="An AI cannot grant a period allotment on its own.",
+    )
+    result = grant_period_allocations(session)
+    return PeriodAllocationOut(
+        period=result.period,
+        tz=result.tz,
+        granted=[
+            PeriodAllocationGrantOut(member_id=row.member_id, tier_name=row.tier_name, amount=row.amount)
+            for row in result.granted
+        ],
+        skipped=result.skipped,
+    )

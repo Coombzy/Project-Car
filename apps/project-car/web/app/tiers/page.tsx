@@ -3,6 +3,7 @@ import { handlePageError } from "../../lib/page";
 import { getMe, listTiers } from "../../lib/shop-api";
 import { tokensLabel } from "../../lib/time";
 import {
+  grantPeriodAllocationAction,
   listPricingSettings,
   patchPricingAction,
   patchTierAction,
@@ -14,10 +15,11 @@ export const dynamic = "force-dynamic";
 export default async function TiersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; granted?: string; skipped?: string }>;
 }) {
   try {
     const params = await searchParams;
+    const notice = allocationNotice(params.granted, params.skipped);
     const [me, tiers, pricing] = await Promise.all([getMe(), listTiers(), listPricingSettings()]);
     return (
       <OwnerShell email={me.email} current="tiers">
@@ -28,6 +30,22 @@ export default async function TiersPage({
           data. These are not live prices. The shop is not open.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
+        {notice ? <div className="banner">{notice}</div> : null}
+
+        <form action={grantPeriodAllocationAction} className="card" style={{ marginBottom: "0.9rem" }}>
+          <div className="hoist-card-head">
+            <h2 style={{ marginTop: 0 }}>Period allotment</h2>
+          </div>
+          <p className="muted">
+            Grants each active member their tier included tokens once for this
+            calendar month (America/Regina). A second click this month inserts
+            nothing. This button is the trigger. There is no background job. No
+            Stripe. The shop is not open.
+          </p>
+          <div className="actions">
+            <button type="submit">Grant this month</button>
+          </div>
+        </form>
 
         <form action={patchPricingAction} className="card" style={{ marginBottom: "0.9rem" }}>
           <div className="hoist-card-head">
@@ -125,6 +143,14 @@ export default async function TiersPage({
       </OwnerShell>
     );
   }
+}
+
+function allocationNotice(granted: string | undefined, skipped: string | undefined): string | null {
+  if (!granted || !/^\d+$/.test(granted)) {
+    return null;
+  }
+  const skippedCount = skipped && /^\d+$/.test(skipped) ? skipped : "0";
+  return `Granted ${granted} this month. ${skippedCount} already had this month's allotment.`;
 }
 
 function MultiplierField({ prefix, row }: { prefix: "band" | "overlay"; row: PricingMultiplier }) {
