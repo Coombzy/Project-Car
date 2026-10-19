@@ -166,3 +166,34 @@ def test_waitlist_convert_creates_member_and_allocation(client: TestClient) -> N
     after_members = client.get("/members", headers=AUTH).json()
     assert len(after_members) == len(before_members)
     assert sum(1 for item in after_members if item["email"] == "ada@example.com") == 1
+
+
+def test_waitlist_ninth_create_from_one_ip_is_rate_limited(client: TestClient) -> None:
+    """Nine new emails from one IP. The ninth is 429 and is not stored.
+
+    Other waitlist tests share TestClient's default host and already use the
+    eight stored creates. This proof uses its own client address.
+    """
+    transport = client._transport
+    previous = transport.client
+    transport.client = ("203.0.113.28", 50000)
+    emails = [f"r28-cap-{index}@example.com" for index in range(9)]
+    try:
+        for email in emails[:8]:
+            created = client.post("/waitlist", json={"name": "Cap", "email": email})
+            assert created.status_code == 201, created.text
+        blocked = client.post("/waitlist", json={"name": "Cap", "email": emails[8]})
+        assert blocked.status_code == 429, blocked.text
+        assert blocked.json()["error"]["code"] == "rate_limited"
+        # Same IP is at the cap. An email already stored is still a duplicate.
+        duplicate = client.post("/waitlist", json={"name": "Cap Two", "email": emails[0]})
+        assert duplicate.status_code == 409, duplicate.text
+        assert duplicate.json()["error"]["code"] == "duplicate_email"
+    finally:
+        transport.client = previous
+
+    listed = client.get("/waitlist", headers=AUTH)
+    assert listed.status_code == 200, listed.text
+    stored = {row["email"] for row in listed.json()}
+    assert emails[8] not in stored
+    assert set(emails[:8]).issubset(stored)
