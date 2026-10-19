@@ -3,8 +3,10 @@
 apply_ledger is the writer that inserts a token_transactions row and moves the
 cache by that amount. rebuild_token_balance only sets the cache from the ledger
 sum and inserts no row. grant_period_allocations calls apply_ledger for each
-active member who does not already have a monthly_allocation in the current
-America/Regina calendar month. The owner request is the only caller.
+active member who does not already have this America/Regina month's
+monthly_allocation. A row tagged with tz America/Regina and a period counts
+only for that period. A row with no such tag counts when created_at falls in
+the month. The owner request is the only caller.
 """
 
 from __future__ import annotations
@@ -113,20 +115,39 @@ def _tagged_period(meta: dict | None, period: str) -> bool:
     return meta.get("period") == period and meta.get("tz") == PERIOD_TZ
 
 
+def _has_regina_period_tag(meta: dict | None) -> bool:
+    return isinstance(meta, dict) and meta.get("tz") == PERIOD_TZ and "period" in meta
+
+
 def _has_period_allocation(
     rows: list[TokenTransaction],
     start: datetime,
     end: datetime,
     period: str,
 ) -> bool:
-    return any(_tagged_period(row.meta, period) or _in_period(row.created_at, start, end) for row in rows)
+    """A tagged Regina period counts only for that period.
+
+    created_at counts only when meta has no America/Regina period tag.
+    That is the initial member-create grant. A row tagged for month N
+    whose created_at falls in month N+1 must not consume N+1.
+    """
+    for row in rows:
+        if _has_regina_period_tag(row.meta):
+            if _tagged_period(row.meta, period):
+                return True
+            continue
+        if _in_period(row.created_at, start, end):
+            return True
+    return False
 
 
 def grant_period_allocations(session: Session, now: datetime | None = None) -> PeriodAllocationResult:
     """Grant each active member included_tokens once for this Regina month.
 
-    A monthly_allocation already in this month counts, including the initial
-    grant from member create. A second call inserts nothing. No scheduler.
+    A row tagged tz=America/Regina with a period counts only for that period.
+    A row with no such tag counts when created_at is in this month, including
+    the initial grant from member create. A second call inserts nothing.
+    No scheduler.
 
     Active members are locked in name, id order before that ledger read.
     On Postgres the second grant waits for the first commit, then sees its
