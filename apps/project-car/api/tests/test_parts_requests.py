@@ -156,6 +156,16 @@ def _order_status(client: TestClient, order_id: str) -> str:
         session.close()
 
 
+def _request_status(client: TestClient, request_id: str) -> str:
+    session = _session(client)
+    try:
+        row = session.get(PartsRequest, UUID(request_id))
+        assert row is not None
+        return row.status.value
+    finally:
+        session.close()
+
+
 def test_owner_can_advance_a_stored_parts_order(client: TestClient) -> None:
     order_id = _insert_parts_order(
         client,
@@ -289,3 +299,71 @@ def test_owner_can_fulfill_or_decline_a_member_parts_request(client: TestClient)
     statuses = {row["id"]: row["status"] for row in client.get("/member/parts-requests").json()}
     assert statuses[request_id] == "fulfilled"
     assert statuses[second_id] == "declined"
+
+
+def test_closed_parts_request_cannot_be_flipped(client: TestClient) -> None:
+    create_member(client, email="ada@example.com", name="Ada Reyes")
+    login_member(client, "ada@example.com")
+
+    def open_request(sku: str) -> str:
+        created = client.post(
+            "/member/parts-requests",
+            json={"sku": sku, "note": "Saturday"},
+        )
+        assert created.status_code == 201, created.text
+        assert created.json()["status"] == "open"
+        return created.json()["id"]
+
+    def patch_status(request_id: str, status: str):
+        return client.patch(
+            f"/parts-requests/{request_id}",
+            headers=AUTH,
+            json={"status": status},
+        )
+
+    fulfilled_id = open_request("PT-OIL-5W30-012")
+    fulfilled = patch_status(fulfilled_id, "fulfilled")
+    assert fulfilled.status_code == 200, fulfilled.text
+    assert fulfilled.json()["status"] == "fulfilled"
+    assert _request_status(client, fulfilled_id) == "fulfilled"
+
+    flipped = patch_status(fulfilled_id, "declined")
+    assert flipped.status_code == 409, flipped.text
+    assert flipped.json()["error"]["code"] == "parts_request_closed"
+    assert _request_status(client, fulfilled_id) == "fulfilled"
+
+    declined_id = open_request("PT-FLT-001")
+    declined = patch_status(declined_id, "declined")
+    assert declined.status_code == 200, declined.text
+    assert _request_status(client, declined_id) == "declined"
+
+    flipped_back = patch_status(declined_id, "fulfilled")
+    assert flipped_back.status_code == 409, flipped_back.text
+    assert flipped_back.json()["error"]["code"] == "parts_request_closed"
+    assert _request_status(client, declined_id) == "declined"
+
+    same_fulfilled_id = open_request("PT-BRK-002")
+    assert patch_status(same_fulfilled_id, "fulfilled").status_code == 200
+    repeat_fulfilled = patch_status(same_fulfilled_id, "fulfilled")
+    assert repeat_fulfilled.status_code == 409, repeat_fulfilled.text
+    assert repeat_fulfilled.json()["error"]["code"] == "parts_request_closed"
+    assert _request_status(client, same_fulfilled_id) == "fulfilled"
+
+    same_declined_id = open_request("PT-SPK-003")
+    assert patch_status(same_declined_id, "declined").status_code == 200
+    repeat_declined = patch_status(same_declined_id, "declined")
+    assert repeat_declined.status_code == 409, repeat_declined.text
+    assert repeat_declined.json()["error"]["code"] == "parts_request_closed"
+    assert _request_status(client, same_declined_id) == "declined"
+
+    desk = {
+        row["id"]: row["status"] for row in client.get("/member/parts-requests").json()
+    }
+    assert desk[fulfilled_id] == "fulfilled"
+    assert desk[declined_id] == "declined"
+    assert desk[same_fulfilled_id] == "fulfilled"
+    assert desk[same_declined_id] == "declined"
+
+    missing = patch_status("00000000-0000-0000-0000-000000000000", "fulfilled")
+    assert missing.status_code == 404
+    assert missing.json()["error"]["code"] == "not_found"
