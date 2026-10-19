@@ -32,6 +32,7 @@ from app.models import (
 from app.services.bookings import (
     HOLDING_STATUSES,
     UNAVAILABLE_HOIST,
+    claim_booking_hours,
     hoist_has_overlap,
     open_booking_count,
     preview_reserve,
@@ -205,6 +206,7 @@ def approve_shop_hoist_request(
     )
     session.add(booking)
     session.flush()
+    claim_booking_hours(session, booking)
     apply_ledger(
         session,
         member,
