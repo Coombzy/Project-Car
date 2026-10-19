@@ -202,6 +202,36 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Likely files: `apps/project-car/api/app/services/chat.py`, `apps/project-car/api/app/routers/member_chat.py`, `apps/project-car/api/tests/test_chat.py`, `apps/project-car/web/app/member/chat/[id]/page.tsx`, `apps/project-car/web/components/chat-thread.tsx`
 - Depends on: none. Keep off R13 in the same pass.
 
+### R27. A received parts order can be moved back to ordered
+- Category: bug
+- Baseline: `set_parts_order_status` assigns the new status with no read of the current one (`apps/project-car/api/app/services/parts_requests.py:82-99`). `shipped_at`/`received_at` are set only when null and stay when the status moves backward. `set_parts_request_status` already refuses a closed request; orders do not.
+- Target: Order status only moves forward: `ordered` -> `shipped` -> `in_transit` -> `received` (skipping ahead allowed). A backward move, or any move off `received`, is 409 `parts_order_backward` (same `_error` shape as `parts_request_closed`); the stored row is unchanged. Same status again is a no-op 200.
+- Must not get worse: `test_owner_can_advance_a_stored_parts_order` stays green. No migration. Member and request flows unchanged.
+- Proof: new test in `apps/project-car/api/tests/test_parts_requests.py`: set a stored order to `received`, then to `ordered` -> 409 and status still `received`; forward chain still 200; a skip (`ordered` -> `received`) is 200; the same status again is 200 and leaves `shipped_at`/`received_at` unchanged (red on main: backward is 200 and reads `ordered`). RED commit first (tests only), then GREEN; shas and outputs in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/parts_requests.py`, `apps/project-car/api/tests/test_parts_requests.py`
+- Depends on: R23 (#148, merged 2026-10-18) touched the same two files; it is on main. Shares no file with #151 (R26), R28 or R29.
+
+### R28. Public waitlist create has no per-IP cap
+- Category: bug
+- Baseline: `POST /waitlist` is unauthenticated and inserts until the email unique index fires (`apps/project-car/api/app/routers/waitlist.py:32-64`); no rate limit. Login has a per-IP cap returning 429 `rate_limited` (`routers/auth.py:50`, helper in `auth.py:278-282`).
+- Target: Waitlist create is capped per client IP within a window (8 creates per window, same window length as login); the next is 429 `rate_limited` and nothing is stored. Implement the counter inside `routers/waitlist.py` (or reuse the auth helper by import only).
+- Must not get worse: Do not edit `auth.py`, `deps.py` or `routers/auth.py` (R26 / #151 is open on them). First create 201; duplicate email 409. No migration.
+- Proof: new test in `apps/project-car/api/tests/test_waitlist.py`: nine creates from one IP with new emails; ninth is 429 `rate_limited` and that email is absent (red on main: ninth is 201). RED commit first, then GREEN; shas and outputs in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/waitlist.py`, `apps/project-car/api/tests/test_waitlist.py`
+- Depends on: none. Shares no file with #151 (R26), R27 or R29.
+
+### R29. Accepting a refund on a checked-in visit cancels it and returns the whole reserve
+- Category: bug
+- Baseline: `accept_refund_request` calls `cancel_booking` for any pending refund request (`apps/project-car/api/app/services/staff.py:425`). Cancel refunds the full `reserved_tokens` and sets `cancelled`, and an `active` (checked-in) booking is cancellable, so a human accept on a visit in progress returns every reserved token, including time already used. `complete_booking` is the path that refunds the reserve and debits the used part.
+- Target: Accept on a refund request whose booking is `active` is 409 `refund_after_check_in` (existing `_error` shape); the booking stays `active` with the same reserve, the refund request stays pending, and no ledger row is written. Accept on a `pending` or `confirmed` booking still cancels and refunds the reserve once, as today.
+- Must not get worse: `services/bookings.py` is not edited (only `staff.py` changes; it keeps calling `cancel_booking` for pre-check-in visits). AI accept stays rejected (`refund_requires_human`). Existing staff-action tests pass.
+- Proof: new test in `apps/project-car/api/tests/test_staff_actions.py`: check in a booking, file a refund request, owner accepts -> 409, booking still `active`, reserve unchanged, no new `booking_refund` row (red on main: 200, `cancelled`, full `booking_refund`); accept on a pending booking still 200 and refunds once. RED commit first (tests only), then GREEN; shas and outputs in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/staff.py`, `apps/project-car/api/tests/test_staff_actions.py`
+- Depends on: none. Shares no file with #151 (R26), R27 or R28. Not the excluded overdue slice (overdue bookings are untouched).
+
 ## Needs from Ben
 
 | Row | Real value needed | Mock used meanwhile |
