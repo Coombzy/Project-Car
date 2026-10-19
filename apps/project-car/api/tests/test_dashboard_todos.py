@@ -133,7 +133,7 @@ def test_member_dashboard_only_shows_own_next_hours(client: TestClient) -> None:
     bay = create_hoist(client, name="Bay 1")
     shop = create_hoist(client, name="Bay 6", is_shop=True)
     start, end = _window(3)
-    other_start, other_end = _window(5)
+    other_start, other_end = _window(6)
     shop_start, shop_end = _window(4)
     assert (
         client.post(

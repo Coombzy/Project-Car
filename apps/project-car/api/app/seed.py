@@ -45,6 +45,7 @@ from app.models import (
     AccessEvent,
     BillingTransaction,
     Booking,
+    BookingHour,
     BookingKind,
     BookingStatus,
     CalendarConnection,
@@ -77,6 +78,7 @@ from app.models import (
 from app.services.fill import resolve_fill_for_slot
 from app.services.pricing import BASE_TOKENS_PER_HOUR, ensure_pricing_settings, quote_reserve
 from app.services.tokens import apply_ledger, rebuild_token_balance
+from app.services.bookings import HOLDING_STATUSES, claim_booking_hours
 from app.services.hours import booking_overlaps_window
 from app.shop_time import PRICING_TZ, SHOP_TZ, as_utc, next_24h_bounds, shop_now
 
@@ -219,6 +221,7 @@ def _clear_member_activity(session: Session, member_ids: list[UUID]) -> None:
     session.execute(delete(TokenTransaction).where(TokenTransaction.member_id.in_(member_ids)))
     if booking_ids:
         session.execute(delete(Incident).where(Incident.booking_id.in_(booking_ids)))
+        session.execute(delete(BookingHour).where(BookingHour.booking_id.in_(booking_ids)))
         session.execute(delete(Booking).where(Booking.id.in_(booking_ids)))
     session.flush()
 
@@ -249,6 +252,7 @@ def _reset_shop(session: Session) -> None:
     session.execute(delete(AccessEvent))
     session.execute(delete(BillingTransaction))
     session.execute(delete(Incident))
+    session.execute(delete(BookingHour))
     session.execute(delete(Booking))
     session.execute(delete(WaitlistEntry))
     session.execute(delete(Member))
@@ -355,6 +359,8 @@ def _make_booking(
         booking.status = status
 
     session.add(booking)
+    if booking.status in HOLDING_STATUSES:
+        claim_booking_hours(session, booking)
     return booking
 
 
@@ -798,6 +804,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     ):
         leftover = session.get(Booking, seed_id("booking", shop_key))
         if leftover is not None:
+            session.execute(delete(BookingHour).where(BookingHour.booking_id == leftover.id))
             session.delete(leftover)
     session.flush()
     for member in demo_members:
