@@ -205,12 +205,12 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 ### R27. A received parts order can be moved back to ordered
 - Category: bug
 - Baseline: `set_parts_order_status` assigns the new status with no read of the current one (`apps/project-car/api/app/services/parts_requests.py:82-99`). `shipped_at`/`received_at` are set only when null and stay when the status moves backward. `set_parts_request_status` already refuses a closed request; orders do not.
-- Target: Order status only moves forward: `ordered` -> `shipped` -> `in_transit` -> `received` (skipping ahead allowed). A backward move, or any move off `received`, is 409 with the existing error shape; the stored row is unchanged. Same status again is a no-op 200.
+- Target: Order status only moves forward: `ordered` -> `shipped` -> `in_transit` -> `received` (skipping ahead allowed). A backward move, or any move off `received`, is 409 `parts_order_backward` (same `_error` shape as `parts_request_closed`); the stored row is unchanged. Same status again is a no-op 200.
 - Must not get worse: `test_owner_can_advance_a_stored_parts_order` stays green. No migration. Member and request flows unchanged.
-- Proof: new test in `apps/project-car/api/tests/test_parts_requests.py`: set a stored order to `received`, then to `ordered` -> 409 and status still `received`; forward chain still 200 (red on main: backward is 200 and reads `ordered`). RED commit first (tests only), then GREEN; shas and outputs in the PR body.
+- Proof: new test in `apps/project-car/api/tests/test_parts_requests.py`: set a stored order to `received`, then to `ordered` -> 409 and status still `received`; forward chain still 200; a skip (`ordered` -> `received`) is 200; the same status again is 200 and leaves `shipped_at`/`received_at` unchanged (red on main: backward is 200 and reads `ordered`). RED commit first (tests only), then GREEN; shas and outputs in the PR body.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/services/parts_requests.py`, `apps/project-car/api/tests/test_parts_requests.py`
-- Depends on: none. Shares no file with #150 (R25), #151 (R26), R28 or R29.
+- Depends on: R23 (#148, merged 2026-10-18) touched the same two files; it is on main. Shares no file with #151 (R26), R28 or R29.
 
 ### R28. Public waitlist create has no per-IP cap
 - Category: bug
@@ -220,17 +220,17 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Proof: new test in `apps/project-car/api/tests/test_waitlist.py`: nine creates from one IP with new emails; ninth is 429 `rate_limited` and that email is absent (red on main: ninth is 201). RED commit first, then GREEN; shas and outputs in the PR body.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/routers/waitlist.py`, `apps/project-car/api/tests/test_waitlist.py`
-- Depends on: none. Shares no file with #150, #151, R27 or R29.
+- Depends on: none. Shares no file with #151 (R26), R27 or R29.
 
-### R29. An overdue booking cannot be finished from the desk
+### R29. Accepting a refund on a checked-in visit cancels it and returns the whole reserve
 - Category: bug
-- Baseline: `complete_booking` accepts `active` or `overdue` (`apps/project-car/api/app/services/bookings.py:502-506`), but the schedule card renders Complete only for `active` (`apps/project-car/web/components/owner-booking-card.tsx:48`) and Cancel only for pending/confirmed/active (`:67`). After `POST /bookings/{id}/overdue` the owner has no control that releases the bay or the reserve. Member schedule filters `OPEN_STATUSES` (pending, confirmed, active) (`apps/project-car/api/app/routers/member.py:180`), so the overdue row disappears for the member; member home does the same (`apps/project-car/web/app/member/page.tsx:27-29`).
-- Target: The owner card shows Complete (posting `unused_tokens`) for `active` and `overdue`. Member schedule occupancy and member home include `overdue` bookings.
-- Must not get worse: Leave `services/bookings.py` alone unless a test shows the API refusing overdue. Cancel rules unchanged. Visual baselines updated only per Docs/shop-os-ci.md if the UI change is intended.
-- Proof: card test in `apps/project-car/web/lib/booking-complete.test.ts` (overdue card source includes the Complete form; red on main), API test in `apps/project-car/api/tests/test_overdue.py` (complete of an overdue id is 200, reserve 0; `GET /member/schedule` includes it in `occupancy`). Screenshots of `/schedule` and `/member` at 390 and 1440. RED commit first, then GREEN; shas, outputs and screenshots in the PR body.
-- Size: 2 tasks
-- Likely files: `apps/project-car/web/components/owner-booking-card.tsx`, `apps/project-car/web/lib/booking-complete.test.ts`, `apps/project-car/api/app/routers/member.py`, `apps/project-car/web/app/member/page.tsx`, `apps/project-car/api/tests/test_overdue.py`
-- Depends on: none. Shares no file with #150, #151, R27 or R28.
+- Baseline: `accept_refund_request` calls `cancel_booking` for any pending refund request (`apps/project-car/api/app/services/staff.py:425`). Cancel refunds the full `reserved_tokens` and sets `cancelled`, and an `active` (checked-in) booking is cancellable, so a human accept on a visit in progress returns every reserved token, including time already used. `complete_booking` is the path that refunds the reserve and debits the used part.
+- Target: Accept on a refund request whose booking is `active` is 409 `refund_after_check_in` (existing `_error` shape); the booking stays `active` with the same reserve, the refund request stays pending, and no ledger row is written. Accept on a `pending` or `confirmed` booking still cancels and refunds the reserve once, as today.
+- Must not get worse: `services/bookings.py` is not edited (only `staff.py` changes; it keeps calling `cancel_booking` for pre-check-in visits). AI accept stays rejected (`refund_requires_human`). Existing staff-action tests pass.
+- Proof: new test in `apps/project-car/api/tests/test_staff_actions.py`: check in a booking, file a refund request, owner accepts -> 409, booking still `active`, reserve unchanged, no new `booking_refund` row (red on main: 200, `cancelled`, full `booking_refund`); accept on a pending booking still 200 and refunds once. RED commit first (tests only), then GREEN; shas and outputs in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/staff.py`, `apps/project-car/api/tests/test_staff_actions.py`
+- Depends on: none. Shares no file with #151 (R26), R27 or R28. Not the excluded overdue slice (overdue bookings are untouched).
 
 ## Needs from Ben
 
