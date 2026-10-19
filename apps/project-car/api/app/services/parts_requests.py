@@ -104,7 +104,8 @@ def set_parts_request_status(
     request_id: UUID,
     status: PartsRequestStatus,
 ) -> PartsRequest:
-    if status not in {PartsRequestStatus.FULFILLED, PartsRequestStatus.DECLINED}:
+    closed = {PartsRequestStatus.FULFILLED, PartsRequestStatus.DECLINED}
+    if status not in closed:
         raise _error(
             422,
             "invalid_parts_request_status",
@@ -117,6 +118,12 @@ def set_parts_request_status(
     )
     if row is None:
         raise _error(404, "not_found", "Parts request not found.")
+    if row.status in closed:
+        raise _error(
+            409,
+            "parts_request_closed",
+            "A fulfilled or declined parts request stays closed.",
+        )
     row.status = status
     session.add(row)
     session.flush()
