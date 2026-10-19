@@ -10,6 +10,7 @@ from app.auth import (
     Principal,
     ai_bearer_matches,
     bearer_matches,
+    member_password_fingerprint_matches,
     read_member_session_token,
     read_session_token,
     reject_dev_secret,
@@ -89,6 +90,10 @@ def require_member(
     member = session.get(Member, member_id)
     if member is None:
         raise _unauthorized("Member authentication required.")
+    if not member_password_fingerprint_matches(
+        settings, payload.get("pwd_fp"), member.password_hash
+    ):
+        raise _unauthorized("Member authentication required.")
     if member.status != MemberStatus.ACTIVE:
         raise HTTPException(
             status_code=403,
@@ -124,6 +129,10 @@ def require_principal(
             raise _unauthorized("Authentication required.") from None
         member = session.get(Member, member_id)
         if member is None or member.status != MemberStatus.ACTIVE:
+            raise _unauthorized("Authentication required.")
+        if not member_password_fingerprint_matches(
+            settings, member_payload.get("pwd_fp"), member.password_hash
+        ):
             raise _unauthorized("Authentication required.")
         return Principal(role="member", email=member.email, member_id=member.id)
 

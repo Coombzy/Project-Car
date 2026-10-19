@@ -79,9 +79,50 @@ def create_session_token(settings: Settings, email: str) -> str:
     return _serializer(settings, salt=OWNER_SALT).dumps({"role": "owner", "email": email})
 
 
-def create_member_session_token(settings: Settings, email: str, member_id: UUID) -> str:
+# Truncated HMAC hex. Long enough to change when the hash changes, short
+# enough that the cookie does not carry the hash.
+_PASSWORD_FINGERPRINT_HEX = 16
+
+
+def password_fingerprint(settings: Settings, password_hash: str | None) -> str:
+    """Short keyed digest of the stored hash, or ``none`` when unset.
+
+    The digest is not the hash and not the password. Login stores it in the
+    member session so a later password change no longer matches.
+    """
+    if not password_hash:
+        return "none"
+    digest = hmac.new(
+        settings.session_secret.encode("utf-8"),
+        b"member-password-fp\0" + password_hash.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    return digest[:_PASSWORD_FINGERPRINT_HEX]
+
+
+def member_password_fingerprint_matches(
+    settings: Settings, presented: object, password_hash: str | None
+) -> bool:
+    """True when the session value is the member's current hash fingerprint."""
+    expected = password_fingerprint(settings, password_hash)
+    if not isinstance(presented, str) or len(presented) != len(expected):
+        return False
+    return hmac.compare_digest(presented, expected)
+
+
+def create_member_session_token(
+    settings: Settings,
+    email: str,
+    member_id: UUID,
+    password_hash: str | None,
+) -> str:
     return _serializer(settings, salt=MEMBER_SALT).dumps(
-        {"role": "member", "email": email, "member_id": str(member_id)}
+        {
+            "role": "member",
+            "email": email,
+            "member_id": str(member_id),
+            "pwd_fp": password_fingerprint(settings, password_hash),
+        }
     )
 
 
