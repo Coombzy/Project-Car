@@ -79,6 +79,15 @@ def list_parts_orders(session: Session) -> list[PartsOrder]:
     return list(session.scalars(stmt).all())
 
 
+# ordered -> shipped -> in_transit -> received. A later rank may be skipped.
+_PARTS_ORDER_FORWARD = (
+    PartsOrderStatus.ORDERED,
+    PartsOrderStatus.SHIPPED,
+    PartsOrderStatus.IN_TRANSIT,
+    PartsOrderStatus.RECEIVED,
+)
+
+
 def set_parts_order_status(
     session: Session,
     order_id: UUID,
@@ -87,6 +96,16 @@ def set_parts_order_status(
     row = session.get(PartsOrder, order_id)
     if row is None:
         raise _error(404, "not_found", "Parts order not found.")
+    current = _PARTS_ORDER_FORWARD.index(row.status)
+    target = _PARTS_ORDER_FORWARD.index(status)
+    if target < current:
+        raise _error(
+            409,
+            "parts_order_backward",
+            "A parts order only moves forward.",
+        )
+    if target == current:
+        return row
     row.status = status
     now = shop_now()
     if status is PartsOrderStatus.SHIPPED and row.shipped_at is None:
