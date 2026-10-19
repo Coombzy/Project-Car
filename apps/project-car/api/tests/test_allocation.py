@@ -182,3 +182,47 @@ def test_period_allocation_grants_included_tokens_once(client: TestClient) -> No
     assert ai.json()["error"]["code"] == "allocation_requires_human"
     for member_id in ids:
         assert [row["id"] for row in _ledger(client, member_id)] == ledger_ids[member_id]
+
+
+def test_period_allocation_locks_active_members_before_the_ledger_read(client: TestClient, monkeypatch) -> None:
+    """The member SELECT takes FOR UPDATE before the monthly_allocation read.
+
+    Two overlapping grants otherwise both pass the existence check. SQLite
+    drops FOR UPDATE; this checks the statement still asks for the lock, in
+    name, id order, before the ledger read.
+    """
+    from sqlalchemy.dialects import postgresql
+    from sqlalchemy.orm import Session
+
+    create_member(
+        client,
+        name="Eve Lock",
+        email="eve.lock@example.com",
+        tier_name="basic",
+        allocate_tokens=False,
+    )
+    reads: list[tuple[str, bool]] = []
+    original = Session.scalars
+
+    def spy(self, statement, *args, **kwargs):
+        sql = str(statement.compile(dialect=postgresql.dialect()))
+        locked = getattr(statement, "_for_update_arg", None) is not None
+        reads.append((sql, locked))
+        return original(self, statement, *args, **kwargs)
+
+    monkeypatch.setattr(Session, "scalars", spy)
+    response = client.post("/tiers/period-allocation/grant", headers=AUTH)
+    assert response.status_code == 200, response.text
+
+    lock_at = [
+        index
+        for index, (sql, locked) in enumerate(reads)
+        if locked
+        and "FOR UPDATE" in sql
+        and "FROM members" in sql
+        and "ORDER BY members.name, members.id" in sql
+    ]
+    ledger_at = [index for index, (sql, _) in enumerate(reads) if "FROM token_transactions" in sql]
+    assert lock_at, reads
+    assert ledger_at, reads
+    assert lock_at[0] < ledger_at[0]

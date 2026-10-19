@@ -127,6 +127,10 @@ def grant_period_allocations(session: Session, now: datetime | None = None) -> P
 
     A monthly_allocation already in this month counts, including the initial
     grant from member create. A second call inserts nothing. No scheduler.
+
+    Active members are locked in name, id order before that ledger read.
+    On Postgres the second grant waits for the first commit, then sees its
+    monthly_allocation rows. SQLite drops FOR UPDATE.
     """
     start, end, period = regina_period(now)
     members = list(
@@ -135,6 +139,7 @@ def grant_period_allocations(session: Session, now: datetime | None = None) -> P
             .where(Member.status == MemberStatus.ACTIVE)
             .options(selectinload(Member.tier))
             .order_by(Member.name, Member.id)
+            .with_for_update()
         ).all()
     )
     by_member: dict[UUID, list[TokenTransaction]] = {}
