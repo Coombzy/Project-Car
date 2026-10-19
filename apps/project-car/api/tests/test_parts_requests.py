@@ -156,6 +156,18 @@ def _order_status(client: TestClient, order_id: str) -> str:
         session.close()
 
 
+def _order_clock(
+    client: TestClient, order_id: str
+) -> tuple[str, datetime | None, datetime | None]:
+    session = _session(client)
+    try:
+        row = session.get(PartsOrder, UUID(order_id))
+        assert row is not None
+        return (row.status.value, row.shipped_at, row.received_at)
+    finally:
+        session.close()
+
+
 def _request_status(client: TestClient, request_id: str) -> str:
     session = _session(client)
     try:
@@ -229,6 +241,73 @@ def test_owner_can_advance_a_stored_parts_order(client: TestClient) -> None:
     )
     assert missing.status_code == 404
     assert client.get("/parts-orders").status_code == 401
+
+
+def test_received_parts_order_cannot_move_backward(client: TestClient) -> None:
+    def patch_status(order_id: str, status: str):
+        return client.patch(
+            f"/parts-orders/{order_id}",
+            headers=AUTH,
+            json={"status": status},
+        )
+
+    chain_id = _insert_parts_order(
+        client,
+        po_number="PT-PO-2040",
+        status=PartsOrderStatus.ORDERED,
+    )
+    for status in ("shipped", "in_transit", "received"):
+        step = patch_status(chain_id, status)
+        assert step.status_code == 200, step.text
+        assert step.json()["status"] == status
+        assert _order_status(client, chain_id) == status
+
+    received_clock = _order_clock(client, chain_id)
+    assert received_clock[0] == "received"
+    assert received_clock[1] is not None
+    assert received_clock[2] is not None
+
+    same = patch_status(chain_id, "received")
+    assert same.status_code == 200, same.text
+    assert same.json()["status"] == "received"
+    assert _order_clock(client, chain_id) == received_clock
+
+    backward = patch_status(chain_id, "ordered")
+    assert backward.status_code == 409, backward.text
+    assert backward.json()["error"]["code"] == "parts_order_backward"
+    assert _order_clock(client, chain_id) == received_clock
+
+    for status in ("shipped", "in_transit"):
+        move_off = patch_status(chain_id, status)
+        assert move_off.status_code == 409, move_off.text
+        assert move_off.json()["error"]["code"] == "parts_order_backward"
+        assert _order_clock(client, chain_id) == received_clock
+
+    skip_id = _insert_parts_order(
+        client,
+        po_number="PT-PO-2041",
+        status=PartsOrderStatus.ORDERED,
+    )
+    skipped = patch_status(skip_id, "received")
+    assert skipped.status_code == 200, skipped.text
+    assert skipped.json()["status"] == "received"
+    assert _order_status(client, skip_id) == "received"
+
+    mid_id = _insert_parts_order(
+        client,
+        po_number="PT-PO-2042",
+        status=PartsOrderStatus.ORDERED,
+    )
+    shipped = patch_status(mid_id, "shipped")
+    assert shipped.status_code == 200, shipped.text
+    shipped_clock = _order_clock(client, mid_id)
+    assert shipped_clock[0] == "shipped"
+    assert shipped_clock[1] is not None
+    assert shipped_clock[2] is None
+    back_to_ordered = patch_status(mid_id, "ordered")
+    assert back_to_ordered.status_code == 409, back_to_ordered.text
+    assert back_to_ordered.json()["error"]["code"] == "parts_order_backward"
+    assert _order_clock(client, mid_id) == shipped_clock
 
 
 def test_owner_can_fulfill_or_decline_a_member_parts_request(client: TestClient) -> None:
