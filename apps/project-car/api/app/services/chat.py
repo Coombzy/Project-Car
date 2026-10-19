@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.auth import Principal
@@ -17,6 +18,11 @@ from app.models import (
     Member,
     MemberStatus,
 )
+
+
+# Two posts can read the same max seq. The unique index rejects the loser.
+# Retry that insert in a savepoint so the message is kept instead of a 500.
+_SEQ_INSERT_ATTEMPTS = 3
 
 
 class ChatError(Exception):
@@ -192,19 +198,71 @@ def post_message(
     else:
         raise ChatError(403, "forbidden", "Only Owner or a room member can send.")
 
-    next_seq = (session.scalar(select(func.max(ChatMessage.seq)).where(ChatMessage.room_id == room.id)) or 0) + 1
-    row = ChatMessage(
-        room_id=room.id,
+    return _insert_message(
+        session,
+        room,
         sender_role=sender_role,
         sender_member_id=sender_member_id,
         sender_email=sender_email,
         sender_name=sender_name,
         body=cleaned,
-        seq=next_seq,
     )
-    session.add(row)
-    room.updated_at = _now()
-    session.add(room)
-    session.flush()
-    session.refresh(row)
-    return row
+
+
+def _next_seq(session: Session, room_id: UUID) -> int:
+    current = session.scalar(
+        select(func.max(ChatMessage.seq)).where(ChatMessage.room_id == room_id)
+    )
+    return (current or 0) + 1
+
+
+def _is_seq_collision(exc: IntegrityError) -> bool:
+    orig = exc.orig
+    diag = getattr(orig, "diag", None)
+    if getattr(diag, "constraint_name", None) == "ix_chat_messages_room_seq":
+        return True
+    detail = str(orig if orig is not None else exc).lower()
+    if "ix_chat_messages_room_seq" in detail:
+        return True
+    return "unique constraint failed: chat_messages.room_id, chat_messages.seq" in detail
+
+
+def _insert_message(
+    session: Session,
+    room: ChatRoom,
+    *,
+    sender_role: ChatSenderRole,
+    sender_member_id: UUID | None,
+    sender_email: str,
+    sender_name: str,
+    body: str,
+) -> ChatMessage:
+    collision: IntegrityError | None = None
+    for _attempt in range(_SEQ_INSERT_ATTEMPTS):
+        try:
+            with session.begin_nested():
+                row = ChatMessage(
+                    room_id=room.id,
+                    sender_role=sender_role,
+                    sender_member_id=sender_member_id,
+                    sender_email=sender_email,
+                    sender_name=sender_name,
+                    body=body,
+                    seq=_next_seq(session, room.id),
+                )
+                session.add(row)
+                room.updated_at = _now()
+                session.add(room)
+                session.flush()
+        except IntegrityError as exc:
+            if not _is_seq_collision(exc):
+                raise
+            collision = exc
+            continue
+        session.refresh(row)
+        return row
+    raise ChatError(
+        409,
+        "chat_busy",
+        "Chat is busy. Send the message again.",
+    ) from collision
