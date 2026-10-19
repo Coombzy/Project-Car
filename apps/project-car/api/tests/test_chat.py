@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+from uuid import UUID
+
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.orm import Session
 
+from app.models import ChatMessage
 from tests.conftest import AUTH, create_member, login_member
 
 
@@ -321,3 +325,87 @@ def test_muted_room_rejects_member_message(client: TestClient) -> None:
         "Owner can still write.",
         "Unmuted, I can reply.",
     ]
+
+
+def _is_room_seq_max(statement: object) -> bool:
+    sql = str(statement.compile(dialect=sqlite.dialect())).lower()  # type: ignore[attr-defined]
+    return "max(" in sql and "chat_messages.seq" in sql
+
+
+def _room_seqs(client: TestClient, room_id: str) -> list[int]:
+    session: Session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        rows = session.scalars(
+            select(ChatMessage.seq)
+            .where(ChatMessage.room_id == UUID(room_id))
+            .order_by(ChatMessage.seq.asc())
+        ).all()
+        return [int(seq) for seq in rows]
+    finally:
+        session.close()
+
+
+def test_chat_post_retries_on_seq_collision(client: TestClient, monkeypatch) -> None:
+    ada = create_member(client, email="ada@example.com")
+    room = _create_room(client, "Ada — collision", [ada["id"]])
+    first = client.post(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        json={"body": "Already stored."},
+    )
+    assert first.status_code == 201, first.text
+
+    original = Session.scalar
+    max_reads = {"n": 0}
+
+    def first_max_is_already_taken(self, statement, *args, **kwargs):
+        if _is_room_seq_max(statement):
+            max_reads["n"] += 1
+            # Seq 1 is stored. A stale max of 0 makes this post allocate 1 again.
+            if max_reads["n"] == 1:
+                return 0
+        return original(self, statement, *args, **kwargs)
+
+    monkeypatch.setattr(Session, "scalar", first_max_is_already_taken)
+
+    posted = client.post(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        json={"body": "Landed after the collision."},
+    )
+    assert posted.status_code == 201, posted.text
+    assert max_reads["n"] == 2
+
+    page = client.get(f"/chat/rooms/{room['id']}/messages", headers=AUTH)
+    assert page.status_code == 200, page.text
+    assert [row["body"] for row in page.json()["messages"]] == [
+        "Already stored.",
+        "Landed after the collision.",
+    ]
+    assert _room_seqs(client, room["id"]) == [1, 2]
+
+    busy_reads = {"n": 0}
+
+    def every_max_is_already_taken(self, statement, *args, **kwargs):
+        if _is_room_seq_max(statement):
+            busy_reads["n"] += 1
+            return 0
+        return original(self, statement, *args, **kwargs)
+
+    monkeypatch.setattr(Session, "scalar", every_max_is_already_taken)
+    busy = client.post(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        json={"body": "Should not land."},
+    )
+    assert busy.status_code == 409, busy.text
+    assert busy.json()["error"]["code"] == "chat_busy"
+    assert busy_reads["n"] == 3
+
+    kept = client.get(f"/chat/rooms/{room['id']}/messages", headers=AUTH)
+    assert kept.status_code == 200, kept.text
+    assert [row["body"] for row in kept.json()["messages"]] == [
+        "Already stored.",
+        "Landed after the collision.",
+    ]
+    assert _room_seqs(client, room["id"]) == [1, 2]
