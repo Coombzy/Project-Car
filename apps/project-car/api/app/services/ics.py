@@ -10,8 +10,11 @@ from app.shop_time import PRICING_TZ, as_utc
 
 
 def _fold(line: str) -> str:
+    # CRLF and a lone CR are one newline, same as LF. Normalize before
+    # escaping so the inserted "\n" is not doubled and folding sees the escape.
+    normalized = line.replace("\r\n", "\n").replace("\r", "\n")
     escaped = (
-        line.replace("\\", "\\\\")
+        normalized.replace("\\", "\\\\")
         .replace(";", "\\;")
         .replace(",", "\\,")
         .replace("\n", "\\n")

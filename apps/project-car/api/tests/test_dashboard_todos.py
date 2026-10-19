@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from datetime import timedelta
 from decimal import Decimal
+from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
 from app.db import get_db
 from app.main import app
+from app.models import Todo, TodoStatus
 from app.seed import seed
+from app.services.ics import todo_ics
 from app.services.pricing import BASE_TOKENS_PER_HOUR
 from app.shop_time import pricing_now
 from tests.conftest import AUTH, create_hoist, create_member, login_member
@@ -298,3 +301,85 @@ def test_seed_includes_bay6_todos_and_parts_orders(client: TestClient) -> None:
     member = client.get("/member/dashboard")
     assert member.status_code == 200
     assert any(row["title"] for row in member.json()["todos"])
+
+
+def _ics_for(title: str, notes: str | None) -> str:
+    return todo_ics(
+        Todo(
+            id=uuid4(),
+            title=title,
+            notes=notes,
+            status=TodoStatus.OPEN,
+        )
+    )
+
+
+def _ics_property(body: str, name: str) -> str:
+    """One content line, folds included, terminating CRLF excluded."""
+    start = body.index(f"{name}:")
+    i = start
+    while i < len(body):
+        if body.startswith("\r\n", i):
+            nxt = i + 2
+            if nxt < len(body) and body[nxt] in " \t":
+                i = nxt + 1
+                continue
+            return body[start:i]
+        i += 1
+    raise AssertionError(f"{name} property did not end with CRLF")
+
+
+def _bare_cr_offsets(prop: str) -> list[int]:
+    return [
+        i
+        for i, ch in enumerate(prop)
+        if ch == "\r" and (i + 1 >= len(prop) or prop[i + 1] not in "\n ")
+    ]
+
+
+def test_todo_ics_escapes_carriage_return() -> None:
+    """A CR in a to-do title or notes must not start a new ICS line."""
+    body = _ics_for("hello\rX-EXTRA:yes", "para\r\nX-EXTRA:no")
+    summary = _ics_property(body, "SUMMARY")
+    description = _ics_property(body, "DESCRIPTION")
+    bare = _bare_cr_offsets(summary)
+    assert bare == [], (
+        "ICS body has a \\r not followed by \\n or a space inside the SUMMARY property "
+        f"at {bare}: {summary!r}"
+    )
+    assert _bare_cr_offsets(description) == [], description
+
+    assert summary == "SUMMARY:hello\\nX-EXTRA:yes"
+    assert description == "DESCRIPTION:para\\nX-EXTRA:no"
+    assert "SUMMARY:hello\\nX-EXTRA:yes\r\nDESCRIPTION:para\\nX-EXTRA:no\r\n" in body
+    assert "X-EXTRA:yes" not in body.splitlines()
+    assert "X-EXTRA:no" not in body.splitlines()
+
+    same_as_newline = _ics_property(_ics_for("hello\nX-EXTRA:yes", None), "SUMMARY")
+    assert same_as_newline == "SUMMARY:hello\\nX-EXTRA:yes"
+    crlf_title = _ics_property(_ics_for("hello\r\nX-EXTRA:yes", None), "SUMMARY")
+    assert crlf_title == same_as_newline
+    assert summary == same_as_newline
+
+    slash = _ics_property(_ics_for("a\\b\rX", None), "SUMMARY")
+    assert slash == "SUMMARY:a\\\\b\\nX"
+
+    plain = _ics_for("Bring turbo parts", "Waitlist follow-up")
+    assert plain.startswith("BEGIN:VCALENDAR\r\n")
+    assert plain.endswith("END:VCALENDAR\r\n")
+    assert "SUMMARY:Bring turbo parts\r\nDESCRIPTION:Waitlist follow-up\r\n" in plain
+
+    special = _ics_for("a\\b;c,d\nline", "comma, semi; slash\\")
+    assert _ics_property(special, "SUMMARY") == "SUMMARY:a\\\\b\\;c\\,d\\nline"
+    assert _ics_property(special, "DESCRIPTION") == "DESCRIPTION:comma\\, semi\\; slash\\\\"
+
+    long_body = _ics_for("N" * 146, None)
+    folded = ("N" * 73) + "\r\n " + ("N" * 72) + "\r\n " + "N"
+    assert _ics_property(long_body, "SUMMARY") == "SUMMARY:" + folded
+    assert "DESCRIPTION:Shop OS to-do\r\n" in long_body
+
+    wide = ("A" * 70) + "\r" + ("B" * 20)
+    escaped = ("A" * 70) + "\\n" + ("B" * 20)
+    wide_summary = _ics_property(_ics_for(wide, None), "SUMMARY")
+    assert wide_summary == "SUMMARY:" + escaped[:73] + "\r\n " + escaped[73:]
+    assert _bare_cr_offsets(wide_summary) == []
