@@ -39,6 +39,17 @@ def _month_open_still_previous_regina_month() -> datetime:
     return datetime(local.year, local.month, 1, 2, 0)
 
 
+def _current_month_naive_utc() -> datetime:
+    """Noon on the 15th of this Regina month, stored as naive UTC.
+
+    Ledger created_at with no tzinfo is read as UTC. The 15th stays inside
+    the Regina month, which opens at 06:00 UTC on the 1st.
+    """
+    local = pricing_now().astimezone(PRICING_TZ)
+    wall = datetime(local.year, local.month, 15, 12, 0, tzinfo=PRICING_TZ)
+    return wall.astimezone(timezone.utc).replace(tzinfo=None)
+
+
 def _ledger(client: TestClient, member_id: str) -> list[dict]:
     response = client.get(f"/members/{member_id}/tokens", headers=AUTH)
     assert response.status_code == 200, response.text
@@ -73,6 +84,28 @@ def _set_created_at(client: TestClient, member_id: str, created_at: datetime) ->
             ).all()
         )
         assert len(rows) == 1
+        rows[0].created_at = created_at
+        session.commit()
+    finally:
+        session.close()
+
+
+def _retag_only_allocation(
+    client: TestClient,
+    member_id: str,
+    *,
+    period: str,
+    created_at: datetime,
+) -> None:
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        rows = list(
+            session.scalars(
+                select(TokenTransaction).where(TokenTransaction.member_id == UUID(member_id))
+            ).all()
+        )
+        assert len(rows) == 1
+        rows[0].meta = {"period": period, "tz": "America/Regina"}
         rows[0].created_at = created_at
         session.commit()
     finally:
@@ -226,3 +259,53 @@ def test_period_allocation_locks_active_members_before_the_ledger_read(client: T
     assert lock_at, reads
     assert ledger_at, reads
     assert lock_at[0] < ledger_at[0]
+
+
+def test_previous_period_tag_inside_this_month_still_grants(client: TestClient) -> None:
+    """A previous-period tag does not consume this month when created_at is in it.
+
+    A click near midnight can store meta.period as the previous YYYY-MM while
+    created_at falls in the next America/Regina month. That row must not skip
+    this month's included_tokens.
+    """
+    period = _period_now()
+    previous = _previous_month_naive_utc().strftime("%Y-%m")
+    created_at = _current_month_naive_utc()
+    member = create_member(
+        client,
+        name="Fay Tagged",
+        email="fay.tagged@example.com",
+        tier_name="premium",
+    )
+    assert _balance(client, member["id"]) == Decimal("1500")
+    _retag_only_allocation(client, member["id"], period=previous, created_at=created_at)
+
+    before = _monthly(_ledger(client, member["id"]))
+    assert len(before) == 1
+    assert before[0]["meta"]["period"] == previous
+    assert before[0]["meta"]["tz"] == "America/Regina"
+    assert str(before[0]["created_at"]).startswith(created_at.strftime("%Y-%m-%dT%H:%M"))
+
+    first = client.post("/tiers/period-allocation/grant", headers=AUTH)
+    assert first.status_code == 200, first.text
+    body = first.json()
+    assert body["period"] == period
+    assert body["tz"] == "America/Regina"
+    assert body["skipped"] == 0
+    amounts = {row["member_id"]: Decimal(str(row["amount"])) for row in body["granted"]}
+    assert amounts == {member["id"]: Decimal("1500")}
+
+    rows = _monthly(_ledger(client, member["id"]))
+    assert len(rows) == 2
+    current_rows = _period_rows(rows, period)
+    assert len(current_rows) == 1
+    assert Decimal(str(current_rows[0]["amount"])) == Decimal("1500")
+    assert len(_period_rows(rows, previous)) == 1
+    assert _balance(client, member["id"]) == Decimal("3000")
+
+    second = client.post("/tiers/period-allocation/grant", headers=AUTH)
+    assert second.status_code == 200, second.text
+    assert second.json()["granted"] == []
+    assert second.json()["skipped"] == 1
+    assert len(_monthly(_ledger(client, member["id"]))) == 2
+    assert _balance(client, member["id"]) == Decimal("3000")
