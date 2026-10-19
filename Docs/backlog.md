@@ -202,6 +202,36 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Likely files: `apps/project-car/api/app/services/chat.py`, `apps/project-car/api/app/routers/member_chat.py`, `apps/project-car/api/tests/test_chat.py`, `apps/project-car/web/app/member/chat/[id]/page.tsx`, `apps/project-car/web/components/chat-thread.tsx`
 - Depends on: none. Keep off R13 in the same pass.
 
+### R27. A received parts order can be moved back to ordered
+- Category: bug
+- Baseline: `set_parts_order_status` assigns the new status with no read of the current one (`apps/project-car/api/app/services/parts_requests.py:82-99`). `shipped_at`/`received_at` are set only when null and stay when the status moves backward. `set_parts_request_status` already refuses a closed request; orders do not.
+- Target: Order status only moves forward: `ordered` -> `shipped` -> `in_transit` -> `received` (skipping ahead allowed). A backward move, or any move off `received`, is 409 with the existing error shape; the stored row is unchanged. Same status again is a no-op 200.
+- Must not get worse: `test_owner_can_advance_a_stored_parts_order` stays green. No migration. Member and request flows unchanged.
+- Proof: new test in `apps/project-car/api/tests/test_parts_requests.py`: set a stored order to `received`, then to `ordered` -> 409 and status still `received`; forward chain still 200 (red on main: backward is 200 and reads `ordered`). RED commit first (tests only), then GREEN; shas and outputs in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/parts_requests.py`, `apps/project-car/api/tests/test_parts_requests.py`
+- Depends on: none. Shares no file with #150 (R25), #151 (R26), R28 or R29.
+
+### R28. Public waitlist create has no per-IP cap
+- Category: bug
+- Baseline: `POST /waitlist` is unauthenticated and inserts until the email unique index fires (`apps/project-car/api/app/routers/waitlist.py:32-64`); no rate limit. Login has a per-IP cap returning 429 `rate_limited` (`routers/auth.py:50`, helper in `auth.py:278-282`).
+- Target: Waitlist create is capped per client IP within a window (8 creates per window, same window length as login); the next is 429 `rate_limited` and nothing is stored. Implement the counter inside `routers/waitlist.py` (or reuse the auth helper by import only).
+- Must not get worse: Do not edit `auth.py`, `deps.py` or `routers/auth.py` (R26 / #151 is open on them). First create 201; duplicate email 409. No migration.
+- Proof: new test in `apps/project-car/api/tests/test_waitlist.py`: nine creates from one IP with new emails; ninth is 429 `rate_limited` and that email is absent (red on main: ninth is 201). RED commit first, then GREEN; shas and outputs in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/waitlist.py`, `apps/project-car/api/tests/test_waitlist.py`
+- Depends on: none. Shares no file with #150, #151, R27 or R29.
+
+### R29. An overdue booking cannot be finished from the desk
+- Category: bug
+- Baseline: `complete_booking` accepts `active` or `overdue` (`apps/project-car/api/app/services/bookings.py:502-506`), but the schedule card renders Complete only for `active` (`apps/project-car/web/components/owner-booking-card.tsx:48`) and Cancel only for pending/confirmed/active (`:67`). After `POST /bookings/{id}/overdue` the owner has no control that releases the bay or the reserve. Member schedule filters `OPEN_STATUSES` (pending, confirmed, active) (`apps/project-car/api/app/routers/member.py:180`), so the overdue row disappears for the member; member home does the same (`apps/project-car/web/app/member/page.tsx:27-29`).
+- Target: The owner card shows Complete (posting `unused_tokens`) for `active` and `overdue`. Member schedule occupancy and member home include `overdue` bookings.
+- Must not get worse: Leave `services/bookings.py` alone unless a test shows the API refusing overdue. Cancel rules unchanged. Visual baselines updated only per Docs/shop-os-ci.md if the UI change is intended.
+- Proof: card test in `apps/project-car/web/lib/booking-complete.test.ts` (overdue card source includes the Complete form; red on main), API test in `apps/project-car/api/tests/test_overdue.py` (complete of an overdue id is 200, reserve 0; `GET /member/schedule` includes it in `occupancy`). Screenshots of `/schedule` and `/member` at 390 and 1440. RED commit first, then GREEN; shas, outputs and screenshots in the PR body.
+- Size: 2 tasks
+- Likely files: `apps/project-car/web/components/owner-booking-card.tsx`, `apps/project-car/web/lib/booking-complete.test.ts`, `apps/project-car/api/app/routers/member.py`, `apps/project-car/web/app/member/page.tsx`, `apps/project-car/api/tests/test_overdue.py`
+- Depends on: none. Shares no file with #150, #151, R27 or R28.
+
 ## Needs from Ben
 
 | Row | Real value needed | Mock used meanwhile |
