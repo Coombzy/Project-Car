@@ -5,7 +5,9 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi.testclient import TestClient
+from itsdangerous import URLSafeTimedSerializer
 
+from app.auth import MEMBER_SALT
 from app.config import get_settings, settings
 from app.db import get_db
 from app.main import app
@@ -243,3 +245,103 @@ def test_unhashed_member_default_password_refused_off_loopback(
     own_default = _login(client, member["email"], "changeme")
     assert own_default.status_code == 200, own_default.text
     assert own_default.json()["role"] == "member"
+
+
+def _member_session_claims(token: str) -> dict:
+    claims = URLSafeTimedSerializer(settings.session_secret, salt=MEMBER_SALT).loads(token)
+    assert isinstance(claims, dict)
+    return claims
+
+
+def _replay_member_cookie(client: TestClient, token: str) -> None:
+    client.cookies.clear()
+    client.cookies.set("pc_member_session", token)
+
+
+def test_password_change_revokes_old_member_session(client: TestClient) -> None:
+    """A cookie from before the password change is 401. A new login works.
+
+    Covers an unset hash and a later reset. The cookie may carry a short
+    fingerprint. It must not carry the password or the stored hash.
+    """
+    member = create_member(client, email="ada@example.com")
+    signed_in = _login(client, member["email"], settings.member_demo_password)
+    assert signed_in.status_code == 200, signed_in.text
+    assert client.get("/member/me").status_code == 200
+
+    old_cookie = client.cookies.get("pc_member_session")
+    assert old_cookie
+    owner = client.post(
+        "/auth/login",
+        json={"email": settings.owner_email, "password": settings.owner_password},
+    )
+    assert owner.status_code == 200, owner.text
+    owner_cookie = client.cookies.get("pc_owner_session")
+    assert owner_cookie
+
+    saved = client.post(
+        f"/members/{member['id']}/password",
+        headers=AUTH,
+        json={"password": OWN_PASSWORD},
+    )
+    assert saved.status_code == 200, saved.text
+    assert OWN_PASSWORD not in saved.text
+
+    _replay_member_cookie(client, old_cookie)
+    stale = client.get("/member/me")
+    assert stale.status_code == 401, stale.text
+    assert stale.json()["error"] == {
+        "code": "unauthorized",
+        "message": "Member authentication required.",
+    }
+    stale_me = client.get("/me")
+    assert stale_me.status_code == 401, stale_me.text
+
+    client.cookies.clear()
+    client.cookies.set("pc_owner_session", owner_cookie)
+    owner_still = client.get("/me")
+    assert owner_still.status_code == 200, owner_still.text
+    assert owner_still.json()["role"] == "owner"
+
+    client.cookies.clear()
+    fresh = _login(client, member["email"], OWN_PASSWORD)
+    assert fresh.status_code == 200, fresh.text
+    current = client.get("/member/me")
+    assert current.status_code == 200, current.text
+    assert current.json()["id"] == member["id"]
+
+    stored = _stored_hash(client, member["id"])
+    assert stored
+    fresh_cookie = client.cookies.get("pc_member_session")
+    assert fresh_cookie
+    assert fresh_cookie != old_cookie
+    assert OWN_PASSWORD not in fresh_cookie
+    assert stored not in fresh_cookie
+    fingerprint = _member_session_claims(fresh_cookie)["pwd_fp"]
+    assert isinstance(fingerprint, str)
+    assert fingerprint != "none"
+    assert fingerprint != stored
+    assert stored not in fingerprint
+    assert "scrypt" not in fingerprint
+    assert OWN_PASSWORD not in fingerprint
+    assert len(fingerprint) <= 16
+
+    reset_cookie = fresh_cookie
+    reset = client.post(
+        f"/members/{member['id']}/password",
+        headers=AUTH,
+        json={"password": RESET_PASSWORD},
+    )
+    assert reset.status_code == 200, reset.text
+    assert RESET_PASSWORD not in reset.text
+    _replay_member_cookie(client, reset_cookie)
+    reset_stale = client.get("/member/me")
+    assert reset_stale.status_code == 401, reset_stale.text
+    assert reset_stale.json()["error"]["message"] == "Member authentication required."
+
+    client.cookies.clear()
+    again = _login(client, member["email"], RESET_PASSWORD)
+    assert again.status_code == 200, again.text
+    restored = client.get("/member/me")
+    assert restored.status_code == 200, restored.text
+    assert restored.json()["id"] == member["id"]

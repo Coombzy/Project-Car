@@ -91,6 +91,9 @@ def member_login(
     Unknown emails and members who are not active both return invalid
     credentials. The body does not say which case it was.
 
+    The session payload includes a short fingerprint of the current password
+    hash, or ``none`` when the member has no hash. It is not the hash.
+
     Not OIDC. Staff / Member OIDC can replace this later without rewriting shop tables.
     """
     client_ip, stamp = _guard_login(request, settings)
@@ -106,7 +109,7 @@ def member_login(
         raise _invalid_credentials()
     if member.status != MemberStatus.ACTIVE:
         raise _invalid_credentials()
-    token = create_member_session_token(settings, member.email, member.id)
+    token = create_member_session_token(settings, member.email, member.id, member.password_hash)
     set_member_session_cookie(response, settings, token)
     release_login_failure(client_ip, stamp)
     return PrincipalOut(role="member", email=member.email, member_id=member.id)
