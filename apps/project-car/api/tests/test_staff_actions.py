@@ -31,8 +31,17 @@ def _balance(client: TestClient, member_id: str) -> Decimal:
     return _dec(response.json()["token_balance"])
 
 
-def _owner_booking(client: TestClient, member_id: str, hoist_id: str, hours_from_now: int) -> dict:
-    start, end = _window(hours_from_now)
+def _owner_booking(
+    client: TestClient,
+    member_id: str,
+    hoist_id: str,
+    hours_from_now: int = 0,
+    *,
+    minutes_from_now: int = 0,
+) -> dict:
+    start_dt = shop_now() + timedelta(hours=hours_from_now, minutes=minutes_from_now)
+    end_dt = start_dt + timedelta(hours=1)
+    start, end = start_dt.isoformat(), end_dt.isoformat()
     created = client.post(
         "/bookings",
         headers=AUTH,
@@ -389,7 +398,8 @@ def test_accept_refund_on_checked_in_visit_does_not_cancel(client: TestClient) -
     bay = create_hoist(client, name="Bay 1")
     opening = _balance(client, member["id"])
 
-    active = _owner_booking(client, member["id"], bay["id"], 4)
+    # Inside the check-in window so this visit can be checked in.
+    active = _owner_booking(client, member["id"], bay["id"], minutes_from_now=10)
     assert client.post(f"/bookings/{active['id']}/confirm", headers=AUTH).status_code == 200
     checked = client.post(f"/bookings/{active['id']}/check-in", headers=AUTH)
     assert checked.status_code == 200, checked.text
