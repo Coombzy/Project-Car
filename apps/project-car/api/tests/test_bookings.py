@@ -23,6 +23,13 @@ def _window(hours_from_now: int, length_hours: float = 2) -> tuple[str, str]:
     return start.isoformat(), end.isoformat()
 
 
+def _window_inside_check_in(length_hours: float = 2) -> tuple[str, str]:
+    """Start 10 minutes out, inside the 15-minute check-in window."""
+    start = shop_now() + timedelta(minutes=10)
+    end = start + timedelta(hours=length_hours)
+    return start.isoformat(), end.isoformat()
+
+
 def _expected_reserve(client: TestClient, start: str, end: str, member_id: str | None = None) -> Decimal:
     payload = {"start_at": start, "end_at": end}
     if member_id:
@@ -185,7 +192,8 @@ def test_two_bookings_cannot_take_the_same_bay_hour(client: TestClient) -> None:
     hour_end = hour + timedelta(hours=1)
     partial = hour + timedelta(minutes=30)
     next_hour = hour_end
-    later = hour + timedelta(hours=3)
+    # Inside the check-in window so complete can still release this hour.
+    later = shop_now() + timedelta(minutes=10)
 
     first = _book(client, member_id=ada["id"], hoist_id=bay["id"], start=hour, end=hour_end)
     assert first.status_code == 201, first.text
@@ -548,7 +556,7 @@ def test_backfill_locks_preexisting_holding_hours(client: TestClient) -> None:
 def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None:
     member = create_member(client)
     hoist = create_hoist(client)
-    start, end = _window(3)
+    start, end = _window_inside_check_in()
     expected = _expected_reserve(client, start, end, member["id"])
     booking = client.post(
         "/bookings",
@@ -603,6 +611,66 @@ def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None
     assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == Decimal("1500") - used
 
 
+def _confirmed_from_now(client: TestClient, *, hours: float) -> tuple[dict, str]:
+    member = create_member(client)
+    hoist = create_hoist(client)
+    start = shop_now() + timedelta(hours=hours)
+    end = start + timedelta(hours=2)
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start.isoformat(),
+            "end_at": end.isoformat(),
+        },
+    )
+    assert created.status_code == 201, created.text
+    confirmed = client.post(f"/bookings/{created.json()['id']}/confirm", headers=AUTH)
+    assert confirmed.status_code == 200, confirmed.text
+    assert confirmed.json()["status"] == "confirmed"
+    return confirmed.json(), hoist["id"]
+
+
+def _stored_booking(client: TestClient, booking_id: str) -> dict:
+    rows = client.get("/bookings", headers=AUTH).json()
+    return next(item for item in rows if item["id"] == booking_id)
+
+
+def _hoist_status(client: TestClient, hoist_id: str) -> str:
+    hoists = client.get("/hoists", headers=AUTH).json()
+    return next(item for item in hoists if item["id"] == hoist_id)["status"]
+
+
+def test_check_in_three_hours_early_is_refused(client: TestClient) -> None:
+    """Check-in more than 15 minutes before start is 400 and changes nothing.
+
+    Red on main: the same call is 200 and the hoist becomes occupied.
+    """
+    booking, hoist_id = _confirmed_from_now(client, hours=3)
+    checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)
+    stored = _stored_booking(client, booking["id"])
+    hoist_status = _hoist_status(client, hoist_id)
+    assert checked.status_code == 400 and stored["status"] == "confirmed" and hoist_status != "occupied", (
+        f"status={checked.status_code} booking={stored['status']} hoist={hoist_status} body={checked.text}"
+    )
+    assert checked.json()["error"]["code"] == "check_in_too_early"
+    from app.services.bookings import CHECK_IN_EARLY_MINUTES
+
+    assert CHECK_IN_EARLY_MINUTES == 15
+
+
+def test_check_in_ten_minutes_early_is_allowed(client: TestClient) -> None:
+    """Inside the 15-minute window, check-in still activates the booking."""
+    booking, hoist_id = _confirmed_from_now(client, hours=10 / 60)
+    checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)
+    assert checked.status_code == 200, checked.text
+    assert checked.json()["status"] == "active"
+    assert _stored_booking(client, booking["id"])["status"] == "active"
+    assert _hoist_status(client, hoist_id) == "occupied"
+
+
 def test_booking_debits_tokens_and_cancel_returns_them(client: TestClient) -> None:
     member = create_member(client)
     hoist = create_hoist(client)
@@ -648,7 +716,7 @@ def test_booking_debits_tokens_and_cancel_returns_them(client: TestClient) -> No
     assert len(_rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=open_id)) == 1
     assert _balance(client, member["id"]) == opening
 
-    spent_start, spent_end = _window(30)
+    spent_start, spent_end = _window_inside_check_in()
     reserved = _expected_reserve(client, spent_start, spent_end, member["id"])
     unused = Decimal("1")
     assert reserved > unused
