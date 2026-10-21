@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from app.models import Booking, BookingKind, BookingStatus, Member, TokenTransactionKind
 from app.services.pricing import quote_reserve
 from app.services.tokens import apply_ledger
-from app.shop_time import as_utc, shop_now
+from app.shop_time import PRICING_TZ, as_utc, shop_now
 from tests.conftest import AUTH, create_hoist, create_member, login_member
 
 
@@ -1052,3 +1052,166 @@ def test_past_start_is_rejected(client: TestClient) -> None:
     assert cancelled.status_code == 200, cancelled.text
     assert cancelled.json()["status"] == "cancelled"
     assert _balance(client, member["id"]) == opening - reserved
+
+
+def _record_scalars(monkeypatch, reads: list[tuple[str, bool]]) -> None:
+    """Compile each ORM read on the postgresql dialect.
+
+    SQLite drops FOR UPDATE at execution. The statement still carries the
+    lock, which is what Postgres will take.
+    """
+    from sqlalchemy.dialects import postgresql
+    from sqlalchemy.orm import Session
+
+    original = Session.scalars
+
+    def spy(self, statement, *args, **kwargs):
+        sql = str(statement.compile(dialect=postgresql.dialect()))
+        locked = getattr(statement, "_for_update_arg", None) is not None
+        reads.append((sql, locked))
+        return original(self, statement, *args, **kwargs)
+
+    monkeypatch.setattr(Session, "scalars", spy)
+
+
+def _member_for_update_sql(reads: list[tuple[str, bool]]) -> list[str]:
+    return [
+        sql
+        for sql, locked in reads
+        if locked and "FOR UPDATE" in sql and "FROM members" in sql and "WHERE members.id" in sql
+    ]
+
+
+def _one_base_hour() -> tuple[datetime, datetime]:
+    """Weekday 10:00 inside the standard overlay: one hour quotes at 100 tokens."""
+    now = shop_now().astimezone(PRICING_TZ)
+    for ahead in range(2, 7):
+        start = (now + timedelta(days=ahead)).replace(hour=10, minute=0, second=0, microsecond=0)
+        if start.weekday() >= 5:
+            continue
+        delta = start - now
+        if timedelta(hours=48) <= delta < timedelta(days=7):
+            return start, start + timedelta(hours=1)
+    raise AssertionError("no weekday-day hour inside the standard overlay window")
+
+
+def test_create_booking_locks_member_for_update(client: TestClient, monkeypatch) -> None:
+    """create_booking selects the member FOR UPDATE before it spends the cache.
+
+    Red on main: that select has no FOR UPDATE. Two parallel creates can both
+    pass the balance check.
+    """
+    member = create_member(client, email="ada.lock@example.com")
+    bay = create_hoist(client, name="Bay 1")
+    start, end = _window(6, length_hours=1)
+    reads: list[tuple[str, bool]] = []
+    _record_scalars(monkeypatch, reads)
+
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": bay["id"],
+            "start_at": start,
+            "end_at": end,
+        },
+    )
+    assert created.status_code == 201, created.text
+    assert created.json()["kind"] == "customer"
+    locked = _member_for_update_sql(reads)
+    assert locked, "create_booking member select has no FOR UPDATE on the postgresql dialect"
+
+
+def test_shop_hoist_approve_locks_member_for_update(client: TestClient, monkeypatch) -> None:
+    """Shop-hoist approval selects the member FOR UPDATE before the balance check.
+
+    Red on main: the approve path reads member.token_balance with no FOR UPDATE.
+    """
+    member = create_member(client, email="ada.approve-lock@example.com")
+    shop = create_hoist(client, name="Shop", is_shop=True)
+    start, end = _window(8, length_hours=1)
+    requested = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": shop["id"],
+            "start_at": start,
+            "end_at": end,
+        },
+    )
+    assert requested.status_code == 201, requested.text
+    assert requested.json()["record"] == "shop_hoist_request"
+    request_id = requested.json()["id"]
+
+    reads: list[tuple[str, bool]] = []
+    _record_scalars(monkeypatch, reads)
+    approved = client.post(f"/shop-hoist-requests/{request_id}/approve", headers=AUTH)
+    assert approved.status_code == 200, approved.text
+    assert approved.json()["status"] == "approved"
+    locked = _member_for_update_sql(reads)
+    assert locked, "shop-hoist approve member select has no FOR UPDATE on the postgresql dialect"
+
+
+def test_second_one_hour_create_stops_at_one_base_hour(client: TestClient) -> None:
+    """One base hour (100 tokens) covers one 1-hour quote. The next create is 400.
+
+    The cached balance stays at or above zero.
+    """
+    member = create_member(
+        client,
+        name="Casey One Hour",
+        email="casey.onehour@example.com",
+        tier_name="premium",
+    )
+    assert _balance(client, member["id"]) == Decimal("1500")
+    adjusted = client.post(
+        f"/members/{member['id']}/tokens",
+        headers=AUTH,
+        json={"amount": "-1400", "note": "leave one base hour"},
+    )
+    assert adjusted.status_code == 201, adjusted.text
+    assert _balance(client, member["id"]) == Decimal("100")
+
+    start, end = _one_base_hour()
+    quoted = client.post(
+        "/bookings/quote",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "start_at": start.isoformat(),
+            "end_at": end.isoformat(),
+        },
+    )
+    assert quoted.status_code == 200, quoted.text
+    rule = quoted.json()["pricing_rule"]
+    assert rule["hours"] == "1"
+    assert rule["base_tokens"] == "100"
+    assert rule["band_id"] == "weekday_day"
+    assert rule["overlay_id"] == "standard"
+    assert rule["fill_id"] == "none"
+    assert _dec(rule["final_reserve_cost"]) == Decimal("100.00")
+
+    bay_a = create_hoist(client, name="Bay 1")
+    bay_b = create_hoist(client, name="Bay 2")
+    payload = {
+        "member_id": member["id"],
+        "start_at": start.isoformat(),
+        "end_at": end.isoformat(),
+    }
+    first = client.post("/bookings", headers=AUTH, json={**payload, "hoist_id": bay_a["id"]})
+    assert first.status_code == 201, first.text
+    assert _dec(first.json()["reserved_tokens"]) == Decimal("100.00")
+    after_first = _balance(client, member["id"])
+    assert after_first == Decimal("0")
+
+    second = client.post("/bookings", headers=AUTH, json={**payload, "hoist_id": bay_b["id"]})
+    assert second.status_code == 400, second.text
+    assert second.json()["error"]["code"] == "insufficient_tokens"
+    assert second.json()["error"]["message"] == "Member does not have enough tokens to reserve."
+    after_second = _balance(client, member["id"])
+    assert after_second == Decimal("0")
+    reserves = [row for row in _ledger(client, member["id"]) if row["kind"] == "booking_reserve"]
+    assert len(reserves) == 1
+    assert _dec(reserves[0]["amount"]) == Decimal("-100")

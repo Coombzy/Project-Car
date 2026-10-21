@@ -92,6 +92,28 @@ def _locked_booking(session: Session, booking_id: UUID) -> Booking:
     return booking
 
 
+def lock_member(session: Session, member_id: UUID) -> Member:
+    """Lock the member row before a token-cache check.
+
+    On Postgres, ``FOR UPDATE`` holds until commit, so a second create or
+    shop-hoist approval waits and then sees the cache the first writer
+    stored. SQLite drops the clause; the suite still checks that the
+    statement asks for the lock. ``populate_existing`` refreshes a member
+    this session already loaded (shop-hoist approval loads it with the
+    request) so the balance check is not the pre-lock copy.
+    """
+    member = session.scalars(
+        select(Member)
+        .options(selectinload(Member.tier))
+        .where(Member.id == member_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).first()
+    if member is None:
+        raise _error(404, "not_found", "Member not found.")
+    return member
+
+
 def hoist_has_overlap(
     session: Session,
     hoist_id: UUID,
@@ -349,11 +371,7 @@ def create_booking(
     rule = quote.as_rule()
     meta = quote.ledger_meta()
 
-    member = session.scalars(
-        select(Member).options(selectinload(Member.tier)).where(Member.id == member_id)
-    ).first()
-    if member is None:
-        raise _error(404, "not_found", "Member not found.")
+    member = lock_member(session, member_id)
 
     if member.status != MemberStatus.ACTIVE:
         raise _error(400, "member_not_bookable", "Only active members can book a hoist.")
