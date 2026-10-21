@@ -232,11 +232,42 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Likely files: `apps/project-car/api/app/services/staff.py`, `apps/project-car/api/tests/test_staff_actions.py`
 - Depends on: none. Shares no file with #151 (R26), R27 or R28. Not the excluded overdue slice (overdue bookings are untouched).
 
+### R30. Two overlapping booking creates can overspend the token cache
+- Category: hardening
+- Baseline: `create_booking` reads `member.token_balance`, checks it against the reserve, then inserts the booking with no row lock on the member (`apps/project-car/api/app/services/bookings.py:383`). Shop-hoist approval does the same unlocked read (`apps/project-car/api/app/services/shop_hoist_requests.py:181`). `with_for_update` is used only for the overdue path (`bookings.py:88`) and period allocation. On Postgres, two parallel creates that each cost the member's whole balance can both return 201. That is a lost update: both transactions read the same balance, `apply_ledger` assigns `balance + amount` (`apps/project-car/api/app/services/tokens.py:48`), so the cache is left at the first debit while two reserve rows are stored and the ledger sum falls below the cache.
+- Target: Both paths load the member row `with_for_update()` before the balance check, so the second create waits, re-reads the debited balance and gets 400 `insufficient_tokens`. The cache always equals the ledger sum and never goes below zero.
+- Must not get worse: Existing `test_bookings.py` and `test_shop_hoist_request.py` stay green. Error codes and messages are unchanged. No migration. `services/staff.py` is not edited (R29 and R32 own it).
+- Proof: new tests in `apps/project-car/api/tests/test_bookings.py`. (a) A SQLAlchemy `before_cursor_execute` listener (or compiled-statement check) shows the member select in `create_booking` and in shop-hoist approve carries `FOR UPDATE` on the postgresql dialect. Red on main: no `FOR UPDATE`. (b) Guard: fund a member with exactly one quoted `final_reserve_cost` for a chosen slot (read the quote from the pricing service; do not assume 100 per hour, since band, overlay and fill multipliers apply). Two creates for that slot length: the first is 201, the second is 400 `insufficient_tokens`, and the cache equals the ledger sum. The red assertion is (a); (b) guards the sequential path. RED commit first (tests only), then GREEN. Put the shas and outputs in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/bookings.py`, `apps/project-car/api/app/services/shop_hoist_requests.py`, `apps/project-car/api/tests/test_bookings.py`
+- Depends on: none. Keep apart from R31 (`bookings.py`, `test_bookings.py`). Shares no file with R29 or R32.
+
+### R31. A confirmed booking can be checked in hours before its start
+- Category: bug + UX
+- Baseline: `check_in_booking` only requires `CONFIRMED` and a usable hoist. It never compares `start_at` with `shop_now()`, and it sets the hoist `OCCUPIED` at once (`apps/project-car/api/app/services/bookings.py:481-492`). The owner `/schedule` card shows Check in on every confirmed chip, including one that starts tomorrow (`apps/project-car/web/components/owner-booking-card.tsx:41-46`). `test_bookings.py` checks in a window 3 hours away and expects 200.
+- Target: Check-in more than `CHECK_IN_EARLY_MINUTES` before `start_at` is 400 `check_in_too_early` (existing `_error` shape). The stand-in value is 15 minutes, kept as a module constant next to the other booking limits and listed in Needs from Ben. The booking stays `confirmed` and the hoist status is unchanged. Inside the window, check-in works as today. The owner card disables Check in with the hint "Opens 15 min before start" until the window opens.
+- Must not get worse: Complete, cancel and overdue paths are unchanged. Update the existing 3-hours-away check-in test to use a start inside the window. Do not delete it. No migration.
+- Proof: new tests in `apps/project-car/api/tests/test_bookings.py`: check-in 3 hours early is 400 `check_in_too_early`, the booking stays `confirmed` and the hoist is not `occupied`; check-in 10 minutes early is 200. Red on main: 200 and occupied. A web unit test next to `apps/project-car/web/lib/booking-complete.test.ts` covers the button state. Before and after screenshots of `/schedule` with a far-future confirmed chip at 390 and 1440. RED commit first, then GREEN. Put the shas and outputs in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/bookings.py`, `apps/project-car/api/tests/test_bookings.py`, `apps/project-car/web/components/owner-booking-card.tsx`, one new `apps/project-car/web/lib/*.test.ts`
+- Depends on: R30 (same `bookings.py` and `test_bookings.py`), so run it after R30 merges.
+
+### R32. A refund request is taken on a finished visit, and one visit can hold two pending requests
+- Category: bug
+- Baseline: `create_refund_request` only calls `get_booking` (`apps/project-car/api/app/services/staff.py:395-413`). `RefundRequest.booking_id` has no unique constraint (`apps/project-car/api/app/models.py:676-697`). A request on a `completed` or `overdue` visit returns 201, then accept hits `cancel_booking` `invalid_transition` and the request stays pending forever. Filing twice on a pending visit stores two pending rows: the first accept cancels, the second accept is 400, and a pending row is left over. Tests cover only the happy path (`test_staff_actions.py:325-335`).
+- Target: Create is 409 `refund_not_open` when the booking is `completed`, `cancelled` or `overdue` (the statuses `cancel_booking` refuses, `bookings.py:619-620`), so accept can never be left stuck on `invalid_transition`, and 409 `refund_already_pending` when the booking already has a pending request (existing `_error` shape). Nothing is stored. A request on a `pending`, `confirmed` or `active` visit is still 201. Accept on `active` is R29's rule and is unchanged here.
+- Must not get worse: No migration; the check lives in the service. AI accept stays `refund_requires_human`. `services/bookings.py` is not edited. Existing staff-action tests pass.
+- Proof: new tests in `apps/project-car/api/tests/test_staff_actions.py`: a refund request on a completed booking is 409 `refund_not_open` with no row; a second request on one pending booking is 409 `refund_already_pending` with one row. Red on main: both 201. RED commit first (tests only), then GREEN. Put the shas and outputs in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/staff.py`, `apps/project-car/api/tests/test_staff_actions.py`
+- Depends on: R29 (same two files), so run it after R29 merges. Shares no file with R30 or R31.
+
 ## Needs from Ben
 
 | Row | Real value needed | Mock used meanwhile |
 | --- | --- | --- |
 | R1 | Balance below which a member is "token-at-risk" | 100 tokens, one base hour (`BASE_TOKENS_PER_HOUR` in `apps/project-car/api/app/services/pricing.py`) |
+| R31 | How early before start a member may check in | 15 minutes (`CHECK_IN_EARLY_MINUTES` in `apps/project-car/api/app/services/bookings.py`) |
 | R11 | What starts a new allotment period | Calendar month in `America/Regina`. Owner button grants it. One `monthly_allocation` per active member per period. |
 
 ## Skipped / excluded
