@@ -394,7 +394,29 @@ def accept_chat_draft(
 
 
 def create_refund_request(session: Session, booking_id: UUID, principal: Principal) -> RefundRequest:
-    get_booking(session, booking_id)
+    booking = get_booking(session, booking_id)
+    if booking.status in (
+        BookingStatus.COMPLETED,
+        BookingStatus.CANCELLED,
+        BookingStatus.OVERDUE,
+    ):
+        raise _error(
+            409,
+            "refund_not_open",
+            "A completed, cancelled, or overdue visit cannot take a refund request.",
+        )
+    pending = session.scalars(
+        select(RefundRequest.id).where(
+            RefundRequest.booking_id == booking.id,
+            RefundRequest.status == ShopHoistRequestStatus.PENDING,
+        )
+    ).first()
+    if pending is not None:
+        raise _error(
+            409,
+            "refund_already_pending",
+            "This visit already has a pending refund request.",
+        )
     kind, actor_id = actor_of(principal)
     row = RefundRequest(
         booking_id=booking_id,
