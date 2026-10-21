@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from datetime import timedelta
 from decimal import Decimal
+from uuid import UUID
 
 from fastapi.testclient import TestClient
 
+from app.models import RefundRequest
 from app.shop_time import shop_now
 from tests.conftest import AUTH, create_hoist, create_member, login_member
 
@@ -27,6 +29,48 @@ def _balance(client: TestClient, member_id: str) -> Decimal:
     response = client.get(f"/members/{member_id}", headers=AUTH)
     assert response.status_code == 200, response.text
     return _dec(response.json()["token_balance"])
+
+
+def _owner_booking(client: TestClient, member_id: str, hoist_id: str, hours_from_now: int) -> dict:
+    start, end = _window(hours_from_now)
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={"member_id": member_id, "hoist_id": hoist_id, "start_at": start, "end_at": end},
+    )
+    assert created.status_code == 201, created.text
+    body = created.json()
+    assert body["status"] == "pending"
+    assert _dec(body["reserved_tokens"]) > 0
+    return body
+
+
+def _stored_booking(client: TestClient, booking_id: str) -> dict:
+    rows = client.get("/bookings", headers=AUTH).json()
+    match = [row for row in rows if row["id"] == booking_id]
+    assert len(match) == 1
+    return match[0]
+
+
+def _booking_ledger(client: TestClient, member_id: str, booking_id: str) -> list[dict]:
+    response = client.get(f"/members/{member_id}/tokens", headers=AUTH)
+    assert response.status_code == 200, response.text
+    return [row for row in response.json() if row["booking_id"] == booking_id]
+
+
+def _refund_request(client: TestClient, request_id: str) -> dict:
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        row = session.get(RefundRequest, UUID(request_id))
+        assert row is not None
+        decided = row.decided_by_kind.value if row.decided_by_kind is not None else None
+        return {
+            "status": row.status.value,
+            "decided_by_kind": decided,
+            "decided_at": row.decided_at,
+        }
+    finally:
+        session.close()
 
 
 def _request_hoist(client: TestClient, email: str, hoist_id: str, start: str, end: str) -> dict:
@@ -338,3 +382,128 @@ def test_ai_cannot_refund_charge_or_say_the_shop_is_open(client: TestClient) -> 
         missing = client.post(path, headers=AI, json={})
         assert missing.status_code == 404
         assert "shop is open" not in missing.text.lower()
+
+
+def test_accept_refund_on_checked_in_visit_does_not_cancel(client: TestClient) -> None:
+    member = create_member(client, email="ada@example.com")
+    bay = create_hoist(client, name="Bay 1")
+    opening = _balance(client, member["id"])
+
+    active = _owner_booking(client, member["id"], bay["id"], 4)
+    assert client.post(f"/bookings/{active['id']}/confirm", headers=AUTH).status_code == 200
+    checked = client.post(f"/bookings/{active['id']}/check-in", headers=AUTH)
+    assert checked.status_code == 200, checked.text
+    assert checked.json()["status"] == "active"
+    reserved = _dec(checked.json()["reserved_tokens"])
+    assert reserved > 0
+    held = _balance(client, member["id"])
+    assert held == opening - reserved
+    ledger_before = _booking_ledger(client, member["id"], active["id"])
+    assert [row["kind"] for row in ledger_before] == ["booking_reserve"]
+
+    filed = client.post("/refund-requests", headers=AUTH, json={"booking_id": active["id"]})
+    assert filed.status_code == 201, filed.text
+    assert filed.json()["status"] == "pending"
+    request_id = filed.json()["id"]
+
+    ai_accept = client.post(f"/refund-requests/{request_id}/accept", headers=AI)
+    assert ai_accept.status_code == 403
+    assert ai_accept.json()["error"]["code"] == "refund_requires_human"
+    assert _balance(client, member["id"]) == held
+    assert [row["id"] for row in _booking_ledger(client, member["id"], active["id"])] == [
+        row["id"] for row in ledger_before
+    ]
+
+    accepted = client.post(f"/refund-requests/{request_id}/accept", headers=AUTH)
+    stored = _stored_booking(client, active["id"])
+    ledger_after = _booking_ledger(client, member["id"], active["id"])
+    refund_amounts = [row["amount"] for row in ledger_after if row["kind"] == "booking_refund"]
+    request = _refund_request(client, request_id)
+    payload = accepted.json()
+    code = payload.get("error", {}).get("code")
+    assert accepted.status_code == 409, (
+        f"accept={accepted.status_code} code={code} booking={stored['status']} "
+        f"reserve={stored['reserved_tokens']} was={reserved} "
+        f"booking_refund={refund_amounts} request={request['status']} "
+        f"ledger={len(ledger_after)} was={len(ledger_before)}"
+    )
+    error = payload["error"]
+    assert set(error) == {"code", "message"}
+    assert error["code"] == "refund_after_check_in"
+    assert error["message"]
+    assert stored["status"] == "active"
+    assert _dec(stored["reserved_tokens"]) == reserved
+    assert refund_amounts == []
+    assert [row["id"] for row in ledger_after] == [row["id"] for row in ledger_before]
+    assert request["status"] == "pending"
+    assert request["decided_by_kind"] is None
+    assert request["decided_at"] is None
+    assert _balance(client, member["id"]) == held
+
+    pending = _owner_booking(client, member["id"], bay["id"], 10)
+    pending_reserved = _dec(pending["reserved_tokens"])
+    pending_refund = client.post(
+        "/refund-requests", headers=AUTH, json={"booking_id": pending["id"]}
+    )
+    assert pending_refund.status_code == 201, pending_refund.text
+    pending_accept = client.post(
+        f"/refund-requests/{pending_refund.json()['id']}/accept", headers=AUTH
+    )
+    assert pending_accept.status_code == 200, pending_accept.text
+    pending_stored = _stored_booking(client, pending["id"])
+    assert pending_stored["status"] == "cancelled"
+    assert _dec(pending_stored["reserved_tokens"]) == Decimal("0")
+    pending_rows = [
+        row
+        for row in _booking_ledger(client, member["id"], pending["id"])
+        if row["kind"] == "booking_refund"
+    ]
+    assert len(pending_rows) == 1
+    assert _dec(pending_rows[0]["amount"]) == pending_reserved
+    again = client.post(
+        f"/refund-requests/{pending_refund.json()['id']}/accept", headers=AUTH
+    )
+    assert again.status_code == 400
+    assert again.json()["error"]["code"] == "invalid_transition"
+    still_one = [
+        row
+        for row in _booking_ledger(client, member["id"], pending["id"])
+        if row["kind"] == "booking_refund"
+    ]
+    assert len(still_one) == 1
+    assert _dec(still_one[0]["amount"]) == pending_reserved
+    assert _balance(client, member["id"]) == held
+    still_active = _stored_booking(client, active["id"])
+    assert still_active["status"] == "active"
+    assert _dec(still_active["reserved_tokens"]) == reserved
+
+    confirmed = _owner_booking(client, member["id"], bay["id"], 16)
+    confirmed_reserved = _dec(confirmed["reserved_tokens"])
+    assert client.post(f"/bookings/{confirmed['id']}/confirm", headers=AUTH).status_code == 200
+    assert _stored_booking(client, confirmed["id"])["status"] == "confirmed"
+    confirmed_refund = client.post(
+        "/refund-requests", headers=AUTH, json={"booking_id": confirmed["id"]}
+    )
+    assert confirmed_refund.status_code == 201, confirmed_refund.text
+    confirmed_accept = client.post(
+        f"/refund-requests/{confirmed_refund.json()['id']}/accept", headers=AUTH
+    )
+    assert confirmed_accept.status_code == 200, confirmed_accept.text
+    confirmed_stored = _stored_booking(client, confirmed["id"])
+    assert confirmed_stored["status"] == "cancelled"
+    assert _dec(confirmed_stored["reserved_tokens"]) == Decimal("0")
+    confirmed_rows = [
+        row
+        for row in _booking_ledger(client, member["id"], confirmed["id"])
+        if row["kind"] == "booking_refund"
+    ]
+    assert len(confirmed_rows) == 1
+    assert _dec(confirmed_rows[0]["amount"]) == confirmed_reserved
+    assert _balance(client, member["id"]) == held
+    untouched = _stored_booking(client, active["id"])
+    assert untouched["status"] == "active"
+    assert _dec(untouched["reserved_tokens"]) == reserved
+    assert [
+        row["kind"] for row in _booking_ledger(client, member["id"], active["id"])
+    ] == ["booking_reserve"]
+    assert _refund_request(client, request_id)["status"] == "pending"
