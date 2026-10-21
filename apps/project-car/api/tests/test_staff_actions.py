@@ -7,9 +7,10 @@ from decimal import Decimal
 from uuid import UUID
 
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
-from app.models import RefundRequest
-from app.shop_time import shop_now
+from app.models import Booking, RefundRequest
+from app.shop_time import as_utc, shop_now
 from tests.conftest import AUTH, create_hoist, create_member, login_member
 
 AI = {"Authorization": "Bearer dev-ai-secret"}
@@ -56,6 +57,33 @@ def _booking_ledger(client: TestClient, member_id: str, booking_id: str) -> list
     response = client.get(f"/members/{member_id}/tokens", headers=AUTH)
     assert response.status_code == 200, response.text
     return [row for row in response.json() if row["booking_id"] == booking_id]
+
+
+def _refund_ids(client: TestClient, booking_id: str) -> list[tuple[str, str]]:
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        rows = session.scalars(
+            select(RefundRequest)
+            .where(RefundRequest.booking_id == UUID(booking_id))
+            .order_by(RefundRequest.created_at, RefundRequest.id)
+        ).all()
+        return [(str(row.id), row.status.value) for row in rows]
+    finally:
+        session.close()
+
+
+def _move_into_the_past(client: TestClient, booking_id: str) -> None:
+    """Store a UTC end already behind shop now so overdue can flip an active visit."""
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        row = session.get(Booking, UUID(booking_id))
+        assert row is not None
+        end = as_utc(shop_now() - timedelta(minutes=1))
+        row.start_at = end - timedelta(hours=1)
+        row.end_at = end
+        session.commit()
+    finally:
+        session.close()
 
 
 def _refund_request(client: TestClient, request_id: str) -> dict:
@@ -507,3 +535,92 @@ def test_accept_refund_on_checked_in_visit_does_not_cancel(client: TestClient) -
         row["kind"] for row in _booking_ledger(client, member["id"], active["id"])
     ] == ["booking_reserve"]
     assert _refund_request(client, request_id)["status"] == "pending"
+
+
+def _assert_refund_refused(client: TestClient, booking_id: str, code: str) -> None:
+    refused = client.post("/refund-requests", headers=AUTH, json={"booking_id": booking_id})
+    assert refused.status_code == 409, refused.text
+    assert refused.json()["error"]["code"] == code
+    assert set(refused.json()["error"]) == {"code", "message"}
+
+
+def test_refund_request_on_completed_booking_stores_nothing(client: TestClient) -> None:
+    member = create_member(client, email="ada@example.com")
+    bay = create_hoist(client, name="Bay 1")
+    booking = _owner_booking(client, member["id"], bay["id"], 4)
+    assert client.post(f"/bookings/{booking['id']}/confirm", headers=AUTH).status_code == 200
+    checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)
+    assert checked.status_code == 200, checked.text
+    completed = client.post(
+        f"/bookings/{booking['id']}/complete",
+        headers=AUTH,
+        json={"unused_tokens": "0"},
+    )
+    assert completed.status_code == 200, completed.text
+    assert completed.json()["status"] == "completed"
+
+    _assert_refund_refused(client, booking["id"], "refund_not_open")
+    assert _refund_ids(client, booking["id"]) == []
+    assert _stored_booking(client, booking["id"])["status"] == "completed"
+
+
+def test_refund_request_on_cancelled_booking_stores_nothing(client: TestClient) -> None:
+    member = create_member(client, email="ada@example.com")
+    bay = create_hoist(client, name="Bay 1")
+    booking = _owner_booking(client, member["id"], bay["id"], 5)
+    cancelled = client.post(f"/bookings/{booking['id']}/cancel", headers=AUTH)
+    assert cancelled.status_code == 200, cancelled.text
+    assert cancelled.json()["status"] == "cancelled"
+
+    _assert_refund_refused(client, booking["id"], "refund_not_open")
+    assert _refund_ids(client, booking["id"]) == []
+    assert _stored_booking(client, booking["id"])["status"] == "cancelled"
+
+
+def test_refund_request_on_overdue_booking_stores_nothing(client: TestClient) -> None:
+    member = create_member(client, email="ada@example.com")
+    bay = create_hoist(client, name="Bay 1")
+    booking = _owner_booking(client, member["id"], bay["id"], 6)
+    assert client.post(f"/bookings/{booking['id']}/confirm", headers=AUTH).status_code == 200
+    checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)
+    assert checked.status_code == 200, checked.text
+    _move_into_the_past(client, booking["id"])
+    overdue = client.post(f"/bookings/{booking['id']}/overdue", headers=AUTH)
+    assert overdue.status_code == 200, overdue.text
+    assert overdue.json()["status"] == "overdue"
+
+    _assert_refund_refused(client, booking["id"], "refund_not_open")
+    assert _refund_ids(client, booking["id"]) == []
+    assert _stored_booking(client, booking["id"])["status"] == "overdue"
+
+
+def test_second_refund_request_on_pending_booking_stores_nothing(client: TestClient) -> None:
+    member = create_member(client, email="ada@example.com")
+    bay = create_hoist(client, name="Bay 1")
+    booking = _owner_booking(client, member["id"], bay["id"], 7)
+    first = client.post("/refund-requests", headers=AUTH, json={"booking_id": booking["id"]})
+    assert first.status_code == 201, first.text
+
+    _assert_refund_refused(client, booking["id"], "refund_already_pending")
+    assert _refund_ids(client, booking["id"]) == [(first.json()["id"], "pending")]
+    assert _stored_booking(client, booking["id"])["status"] == "pending"
+
+
+def test_refund_request_on_pending_confirmed_or_active_is_created(client: TestClient) -> None:
+    bay = create_hoist(client, name="Bay 1")
+    for email, hours_from_now, status in (
+        ("ada@example.com", 4, "pending"),
+        ("sam@example.com", 8, "confirmed"),
+        ("riley@example.com", 12, "active"),
+    ):
+        member = create_member(client, email=email)
+        booking = _owner_booking(client, member["id"], bay["id"], hours_from_now)
+        if status in ("confirmed", "active"):
+            assert client.post(f"/bookings/{booking['id']}/confirm", headers=AUTH).status_code == 200
+        if status == "active":
+            checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)
+            assert checked.status_code == 200, checked.text
+            assert checked.json()["status"] == "active"
+        created = client.post("/refund-requests", headers=AUTH, json={"booking_id": booking["id"]})
+        assert created.status_code == 201, created.text
+        assert _refund_ids(client, booking["id"]) == [(created.json()["id"], "pending")]
