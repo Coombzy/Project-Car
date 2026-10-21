@@ -34,6 +34,7 @@ from app.services.bookings import (
     UNAVAILABLE_HOIST,
     claim_booking_hours,
     hoist_has_overlap,
+    lock_member,
     open_booking_count,
     preview_reserve,
     reject_start_in_past,
@@ -168,7 +169,7 @@ def approve_shop_hoist_request(
     reject_own_request(principal, row.created_by_kind, row.created_by_id)
     if row.hoist.status in UNAVAILABLE_HOIST:
         raise _error(400, "hoist_unavailable", "That hoist is in maintenance or locked.")
-    member = row.member
+    member = lock_member(session, row.member_id)
     if member.status != MemberStatus.ACTIVE:
         raise _error(400, "member_not_bookable", "Only active members can hold an approved shop hoist hour.")
     quote = Decimal(row.token_quote)
