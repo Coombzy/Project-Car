@@ -557,7 +557,8 @@ def _assert_refund_refused(client: TestClient, booking_id: str, code: str) -> No
 def test_refund_request_on_completed_booking_stores_nothing(client: TestClient) -> None:
     member = create_member(client, email="ada@example.com")
     bay = create_hoist(client, name="Bay 1")
-    booking = _owner_booking(client, member["id"], bay["id"], 4)
+    # Inside the check-in window so this visit can be checked in, then completed.
+    booking = _owner_booking(client, member["id"], bay["id"], minutes_from_now=10)
     assert client.post(f"/bookings/{booking['id']}/confirm", headers=AUTH).status_code == 200
     checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)
     assert checked.status_code == 200, checked.text
@@ -590,7 +591,8 @@ def test_refund_request_on_cancelled_booking_stores_nothing(client: TestClient) 
 def test_refund_request_on_overdue_booking_stores_nothing(client: TestClient) -> None:
     member = create_member(client, email="ada@example.com")
     bay = create_hoist(client, name="Bay 1")
-    booking = _owner_booking(client, member["id"], bay["id"], 6)
+    # Inside the check-in window. The visit is moved into the past before overdue.
+    booking = _owner_booking(client, member["id"], bay["id"], minutes_from_now=10)
     assert client.post(f"/bookings/{booking['id']}/confirm", headers=AUTH).status_code == 200
     checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)
     assert checked.status_code == 200, checked.text
@@ -618,13 +620,21 @@ def test_second_refund_request_on_pending_booking_stores_nothing(client: TestCli
 
 def test_refund_request_on_pending_confirmed_or_active_is_created(client: TestClient) -> None:
     bay = create_hoist(client, name="Bay 1")
-    for email, hours_from_now, status in (
-        ("ada@example.com", 4, "pending"),
-        ("sam@example.com", 8, "confirmed"),
-        ("riley@example.com", 12, "active"),
+    # Active starts 10 minutes out so check-in is inside the window. The other
+    # two are not checked in and stay hours apart on this bay.
+    for email, hours_from_now, minutes_from_now, status in (
+        ("ada@example.com", 4, 0, "pending"),
+        ("sam@example.com", 8, 0, "confirmed"),
+        ("riley@example.com", 0, 10, "active"),
     ):
         member = create_member(client, email=email)
-        booking = _owner_booking(client, member["id"], bay["id"], hours_from_now)
+        booking = _owner_booking(
+            client,
+            member["id"],
+            bay["id"],
+            hours_from_now,
+            minutes_from_now=minutes_from_now,
+        )
         if status in ("confirmed", "active"):
             assert client.post(f"/bookings/{booking['id']}/confirm", headers=AUTH).status_code == 200
         if status == "active":
