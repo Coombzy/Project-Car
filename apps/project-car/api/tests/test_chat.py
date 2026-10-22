@@ -3,11 +3,11 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.orm import Session
 
-from app.models import ChatMessage
+from app.models import ChatMessage, ChatRoom
 from tests.conftest import AUTH, create_member, login_member
 
 
@@ -158,8 +158,125 @@ def test_empty_message_rejected(client: TestClient) -> None:
         headers=AUTH,
         json={"body": "   "},
     )
-    assert blank.status_code == 400
-    assert blank.json()["error"]["code"] == "empty_message"
+    assert blank.status_code == 422, blank.text
+    assert blank.json()["error"]["code"] == "validation_error"
+
+
+def _count_rows(client: TestClient, model: type) -> int:
+    session: Session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        return int(session.scalar(select(func.count()).select_from(model)) or 0)
+    finally:
+        session.close()
+
+
+def _validation_types(response) -> list[str]:
+    return [row["type"] for row in response.json()["error"]["details"]]
+
+
+def test_owner_whitespace_message_is_422_and_stores_nothing(client: TestClient) -> None:
+    ada = create_member(client, email="ada@example.com")
+    room = _create_room(client, "Ada", [ada["id"]])
+    before = _count_rows(client, ChatMessage)
+    spaces = client.post(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        json={"body": "   "},
+    )
+    assert spaces.status_code == 422, spaces.text
+    assert spaces.json()["error"]["code"] == "validation_error"
+    empty = client.post(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        json={"body": ""},
+    )
+    assert empty.status_code == 422, empty.text
+    assert _validation_types(spaces) == _validation_types(empty)
+    page = client.get(f"/chat/rooms/{room['id']}/messages", headers=AUTH)
+    assert page.status_code == 200, page.text
+    assert page.json()["messages"] == []
+    assert _count_rows(client, ChatMessage) == before
+
+    posted = client.post(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        json={"body": "  Bring the kit  "},
+    )
+    assert posted.status_code == 201, posted.text
+    assert posted.json()["body"] == "Bring the kit"
+    assert _count_rows(client, ChatMessage) == before + 1
+
+    too_long = client.post(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        json={"body": "x" * 4001},
+    )
+    assert too_long.status_code == 422, too_long.text
+    padded = client.post(
+        f"/chat/rooms/{room['id']}/messages",
+        headers=AUTH,
+        json={"body": " " + ("x" * 4000)},
+    )
+    assert padded.status_code == 422, padded.text
+    assert _count_rows(client, ChatMessage) == before + 1
+
+
+def test_member_whitespace_message_is_422(client: TestClient) -> None:
+    ada = create_member(client, email="ada@example.com")
+    room = _create_room(client, "Ada", [ada["id"]])
+    login_member(client, "ada@example.com")
+    before = _count_rows(client, ChatMessage)
+    spaces = client.post(
+        f"/member/chat/rooms/{room['id']}/messages",
+        json={"body": "   "},
+    )
+    assert spaces.status_code == 422, spaces.text
+    assert spaces.json()["error"]["code"] == "validation_error"
+    empty = client.post(
+        f"/member/chat/rooms/{room['id']}/messages",
+        json={"body": ""},
+    )
+    assert empty.status_code == 422, empty.text
+    assert _validation_types(spaces) == _validation_types(empty)
+    assert _count_rows(client, ChatMessage) == before
+
+
+def test_owner_whitespace_room_title_is_422(client: TestClient) -> None:
+    ada = create_member(client, email="ada@example.com")
+    before = _count_rows(client, ChatRoom)
+    spaces = client.post(
+        "/chat/rooms",
+        headers=AUTH,
+        json={"title": "  ", "member_ids": [ada["id"]]},
+    )
+    assert spaces.status_code == 422, spaces.text
+    assert spaces.json()["error"]["code"] == "validation_error"
+    empty = client.post(
+        "/chat/rooms",
+        headers=AUTH,
+        json={"title": "", "member_ids": [ada["id"]]},
+    )
+    assert empty.status_code == 422, empty.text
+    assert _validation_types(spaces) == _validation_types(empty)
+    assert _count_rows(client, ChatRoom) == before
+
+    created = _create_room(client, "  Ada — turbo  ", [ada["id"]])
+    assert created["title"] == "Ada — turbo"
+    assert _count_rows(client, ChatRoom) == before + 1
+
+    too_long = client.post(
+        "/chat/rooms",
+        headers=AUTH,
+        json={"title": "t" * 201, "member_ids": [ada["id"]]},
+    )
+    assert too_long.status_code == 422, too_long.text
+    padded = client.post(
+        "/chat/rooms",
+        headers=AUTH,
+        json={"title": " " + ("t" * 200), "member_ids": [ada["id"]]},
+    )
+    assert padded.status_code == 422, padded.text
+    assert _count_rows(client, ChatRoom) == before + 1
 
 
 def _message_selects(statements: list) -> list[tuple[str, int | None]]:
