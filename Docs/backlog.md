@@ -262,6 +262,36 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Likely files: `apps/project-car/api/app/services/staff.py`, `apps/project-car/api/tests/test_staff_actions.py`
 - Depends on: R29 (same two files), so run it after R29 merges. Shares no file with R30 or R31.
 
+### R33. A chat message or room title of only spaces is stored blank
+- Category: bug
+- Baseline: `ChatMessageCreate.body` and `ChatRoomCreate.title` check `min_length=1` before their `strip_*` validators run (`apps/project-car/api/app/schemas.py:702-719`). Pydantic runs the length check on the raw value, so `"   "` passes and is stored as `""`. Owner (`apps/project-car/api/app/routers/chat.py:48`, `:106`) and member (`apps/project-car/api/app/routers/member_chat.py:71`) posts both accept it, leaving empty bubbles and nameless rooms.
+- Target: A body or title that is empty after trimming is 422 (FastAPI validation shape, same as an empty string today). Text with real characters is still trimmed and stored as today.
+- Must not get worse: `test_chat.py` stays green. Max lengths are unchanged. No migration. Only the two chat schemas change.
+- Proof: new tests in `apps/project-car/api/tests/test_chat.py`: owner post of `"   "` is 422 and no message row is added; member post of `"   "` is 422; owner create-room with title `"  "` is 422. Red on main: 201 with `body == ""`. RED commit first (tests only), then GREEN. Put the shas and outputs in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/schemas.py` (chat classes only), `apps/project-car/api/tests/test_chat.py`
+- Depends on: none. Shares no file with R31. Shares `schemas.py` with R34 and R35, so run R33, R34 and R35 one at a time.
+
+### R34. A to-do title or parts SKU of only spaces is stored blank
+- Category: bug
+- Baseline: Same order problem as R33. `TodoCreate.title` (`apps/project-car/api/app/schemas.py:431-439`), `TodoPatch.title` (`schemas.py:447`), `PartsRequestCreate.sku` (`schemas.py:502-508`) and the tool-crib `ToolCribCheckoutCreate.sku` / `ToolCribReturnCreate.sku` (`schemas.py:743-770`) check `min_length=1`, then strip. `"   "` is stored as `""`, so a blank to-do lands in the calendar export and a blank SKU lands in parts and crib lists.
+- Target: Each of those fields is 422 when empty after trimming. Real values are still trimmed and stored as today.
+- Must not get worse: `test_dashboard_todos.py`, `test_parts_requests.py` and `test_tool_crib.py` stay green. No migration. Chat schemas (R33) and staff schemas (R35) are not edited here.
+- Proof: new tests: to-do create and patch with title `"   "` are 422 (`test_dashboard_todos.py`); parts request with sku `"  "` is 422 (`test_parts_requests.py`); crib checkout and return with sku `"  "` are 422 (`test_tool_crib.py`). Red on main: 201/200 with an empty stored value. RED commit first (tests only), then GREEN. Put the shas and outputs in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/schemas.py` (todo, parts and crib classes only), `apps/project-car/api/tests/test_dashboard_todos.py`, `apps/project-car/api/tests/test_parts_requests.py`, `apps/project-car/api/tests/test_tool_crib.py`
+- Depends on: run after R33 (shared `schemas.py`). Shares no file with R31.
+
+### R35. Staff parts requests, tool exceptions and shop jobs keep untrimmed or blank text
+- Category: bug
+- Baseline: `StaffPartsRequestCreate.sku` (`apps/project-car/api/app/schemas.py:851-854`), `ToolCribExceptionCreate.tool_code` (`schemas.py:871-874`, used by owner `routers/staff.py:146` and member `routers/member.py:323`) and `ShopJobCreate.title` (`schemas.py:891-894`) have no strip at all. `"  "` is stored as two spaces, and `" PT-100 "` does not match the `PT-100` SKU the member path stores.
+- Target: Those three fields are trimmed like the member-side schemas, and are 422 when empty after trimming. Optional `note` / `reason` / `notes` that are only spaces become `null`, as the other schemas already do with `_blank_to_none`.
+- Must not get worse: Existing staff tests stay green. Error shapes and routes are unchanged. No migration. `test_staff_actions.py` is not edited (R31 and R32 own it); put the new tests in a new file.
+- Proof: new `apps/project-car/api/tests/test_staff_input_trim.py`: owner staff parts request with sku `"  "` is 422; with `" PT-100 "` it is 201 and stores `PT-100`; tool exception with tool_code `" "` is 422 on both owner and member routes; shop job with title `"  "` is 422. Red on main: 201 with the raw value. RED commit first (tests only), then GREEN. Put the shas and outputs in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/schemas.py` (staff classes only), new `apps/project-car/api/tests/test_staff_input_trim.py`
+- Depends on: run after R34 (shared `schemas.py`). Shares no file with R31.
+
 ## Needs from Ben
 
 | Row | Real value needed | Mock used meanwhile |
