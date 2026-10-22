@@ -703,6 +703,14 @@ class ChatRoomCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     member_ids: list[UUID] = Field(min_length=1)
 
+    @field_validator("title", mode="before")
+    @classmethod
+    def blank_title(cls, value: object) -> object:
+        # Whitespace-only becomes "" before min_length. Other values stay raw so max_length is unchanged.
+        if isinstance(value, str) and not value.strip():
+            return ""
+        return value
+
     @field_validator("title")
     @classmethod
     def strip_title(cls, value: str) -> str:
@@ -711,6 +719,14 @@ class ChatRoomCreate(BaseModel):
 
 class ChatMessageCreate(BaseModel):
     body: str = Field(min_length=1, max_length=4000)
+
+    @field_validator("body", mode="before")
+    @classmethod
+    def blank_body(cls, value: object) -> object:
+        # Whitespace-only becomes "" before min_length. Other values stay raw so max_length is unchanged.
+        if isinstance(value, str) and not value.strip():
+            return ""
+        return value
 
     @field_validator("body")
     @classmethod
