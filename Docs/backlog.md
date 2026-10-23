@@ -309,8 +309,8 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Must not get worse: every test in `test_member_password.py` and `test_session_cookie.py` stays green (update fixtures that use short passwords to 12+ chars). R26 session revocation on password change still happens on success and does not happen on a 422.
 - Proof: new tests in `apps/project-car/api/tests/test_member_password.py`: `"a"`, 11 chars, and 12 spaces are 422 and the old password still logs in; 12 chars is 200. Red on main (200). RED commit first, then GREEN.
 - Size: 1 task
-- Likely files: `apps/project-car/api/app/routers/members.py` (`set_member_password` only), `apps/project-car/api/tests/test_member_password.py`
-- Depends on: none. Run before R39 (both edit `routers/members.py`).
+- Likely files: `apps/project-car/api/app/routers/members.py` (`set_member_password` only), `apps/project-car/api/tests/test_member_password.py`, `apps/project-car/api/tests/test_session_cookie.py` (short-password fixtures only)
+- Depends on: R10 and R15 (merged, #141 and #136). Run before R39 (both edit `routers/members.py`). No other open row edits `routers/members.py`, `test_member_password.py` or `test_session_cookie.py`.
 
 ### R38. Member, hoist, waitlist and tier names of only spaces are stored blank
 - Category: bug
@@ -320,7 +320,7 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Proof: new `apps/project-car/api/tests/test_name_trim.py` covering each field above (422 for `"   "`, trimmed value stored for `"  Bay 2  "`). Red on main. RED commit first, then GREEN.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/schemas.py` (member, hoist, tier, waitlist classes only), `apps/project-car/api/tests/test_name_trim.py` (new)
-- Depends on: after R33–R35 (shared `schemas.py`; all three merged as #163, #165, #164 on main `e289950`). Only one open row may edit `schemas.py` at a time. Shares no file with R36, R37, R39 or R40.
+- Depends on: after R33–R35 (shared `schemas.py`; R7 also merged as #139; all three merged as #163, #165, #164 on main `e289950`). Only one open row may edit `schemas.py` at a time. Shares no file with R36, R37, R39 or R40.
 
 ### R39. An Owner token adjustment of a fraction of a cent writes a zero ledger row
 - Category: bug
@@ -330,7 +330,7 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Proof: new tests in `apps/project-car/api/tests/test_token_adjustment.py` (new): `"0.0001"`, `"1.005"`, `"1000000"` and `"-1000000"` are 400 with no new row; `"-1.50"` and `"100"` are 201. Red on main. RED commit first, then GREEN.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/routers/members.py` (`adjust_member_tokens` only), `apps/project-car/api/tests/test_token_adjustment.py` (new)
-- Depends on: after R37 (shared `routers/members.py`). The member's resulting balance going below zero is out of scope (see Needs from Ben); a negative adjustment at or past the cap is still 400.
+- Depends on: after R37 (shared `routers/members.py`); R10 is merged (#141). The member's resulting balance going below zero is out of scope (see Needs from Ben); a negative adjustment at or past the cap is still 400.
 
 ### R40. The token adjustment box takes any text and says nothing about the format
 - Category: UX
@@ -340,7 +340,7 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Proof: a web test that renders the page's amount input and asserts `inputMode="decimal"`, the hint text, and the pattern (accepts `100`, `-1.50`; rejects `abc`, `1.005`), red on main. Before/after screenshots of `/members/{id}` at 390 and 1440 hosted in the PR body; update that page's refs only. UI row: Cortana opens the shots before merge.
 - Size: 2 tasks
 - Likely files: `apps/project-car/web/app/members/[id]/page.tsx`, a new test beside it, `apps/project-car/web/visual/screenshots/` (member detail only)
-- Depends on: none. Shares no file with R36–R39.
+- Depends on: R1 and R10 (merged, #138 and #141; they also touched `members/[id]/page.tsx`). Shares no file with R36–R39.
 
 ## Needs from Ben
 
@@ -357,7 +357,7 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Job claim/done hardening already in flight: seed `--reset` not clearing `job_events`, 403 `not_your_claim`, member-shell banner copy, the double-claim Postgres row lock, and job claim tests. The same `_reset_shop` (`apps/project-car/api/app/seed.py`) also skips `shop_hoist_requests`, `tool_crib_events`, `refund_requests`, `staff_parts_requests`, `tool_crib_exceptions`, `staff_drafts`, and `shop_jobs`. Those FKs are `ON DELETE RESTRICT` (`20261004_0009`, `20261004_0011`). Fold them into that in-flight reset. This backlog does not open a second seed row. `parts_requests.member_id` is `ON DELETE CASCADE` (`20261004_0008`).
 - Overdue booking flagged to a `late_return` incident. Nothing assigns `BookingStatus.OVERDUE` except the enum and the hold tuples. `fill.py` `OCCUPYING` and member schedule `OPEN_STATUSES` omit overdue. Leave that with the excluded slice.
 - `Docs/STATUS.md` Reality refresh.
-- Per-member passwords. R17 keeps the shared member password.
+- Per-member passwords beyond what is on main. R17 keeps the shared member password rule. The Owner-set member password length is R37 (stand-in 12, `MEMBER_PASSWORD_MIN_LENGTH`).
 - Garage brochure and Zone: projectcar.ca pages, Worker, DNS, the `app.` cut, member-host path split. `Docs/later.md` says leave the member path until Ben GO and leave the `app.` alias until Ben cuts it.
 - Finance tracker files and PRs #107–#111.
 - `Docs/later.md` leave-alone rows: demo password (seed already refuses the default demo owner password off loopback; login pages still show it), Stripe, shop opening, staff OIDC, home-machine tunnel, camera feed.
@@ -381,4 +381,4 @@ After that wave, keep these apart:
 - R15 and R17 both edit `auth.py`.
 - R4 and R5 both edit the schedule screen. R4 can start while R2 is in review. R1, R7, R9, R10, and R19 each have their own files and can fill a free agent once the four above are running.
 
-Rows R36–R40 (2026-10-23): R36, R38 and R40 share no files and can run together; R38 is the only open row on `schemas.py` (R33–R35 are merged). R37 then R39, one at a time (both edit `routers/members.py`).
+Rows R36–R40 (2026-10-23): R1–R15 and R17–R35 are merged (see the merged-PR ledger), so the waves above are history and no earlier row shares a file with R36–R40. R36, R38 and R40 share no files and can run together; R38 is the only open row on `schemas.py` (R33–R35 are merged). R37 then R39, one at a time (both edit `routers/members.py`).
