@@ -292,6 +292,56 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Likely files: `apps/project-car/api/app/schemas.py` (staff classes only), new `apps/project-car/api/tests/test_staff_input_trim.py`
 - Depends on: run after R34 (shared `schemas.py`). Shares no file with R31.
 
+### R36. A long to-do title with accented letters breaks the ICS line limit
+- Category: bug
+- Baseline: `_fold` in `apps/project-car/api/app/services/ics.py` cuts lines by character count (73, then 72). RFC 5545 §3.1 limits a content line to 75 octets. A title of 60 `é` comes out as one 120-octet line (checked on main `e289950`), so strict calendar clients can reject or mangle the export.
+- Target: Every physical line of `todo_ics` output is at most 75 octets in UTF-8, folds never split a multi-byte character, and unfolding gives back the escaped text exactly. ASCII output is unchanged byte-for-byte.
+- Must not get worse: the R25 carriage-return test and the existing ICS tests in `test_dashboard_todos.py` stay green. Escaping of `\`, `;`, `,` and newlines is unchanged.
+- Proof: new `apps/project-car/api/tests/test_ics_fold.py`: 60 `é`, a mixed emoji title, and a 200-char ASCII title; assert each line ≤ 75 octets, decodes as UTF-8, and unfolds to the escaped input, and assert the 200-char ASCII `todo_ics` output is byte-for-byte equal to main's (a guard that is green before and after). Red on main (120-octet line). RED commit first (tests only), then GREEN. Shas and outputs in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/ics.py`, `apps/project-car/api/tests/test_ics_fold.py` (new)
+- Depends on: none. Shares no file with R37–R40.
+
+### R37. The Owner can set a one-character member password
+- Category: hardening
+- Baseline: `set_member_password` in `apps/project-car/api/app/routers/members.py` validates with `MemberPasswordSet` (`password: min_length=1`). `POST /members/{id}/password` with `"a"` is 200 and stores a hash (checked on main `e289950`).
+- Target: A password shorter than `MEMBER_PASSWORD_MIN_LENGTH` (stand-in: 12, see Needs from Ben) or made only of spaces is 422 `password_too_short` and the stored hash is unchanged. The check lives in the router so `schemas.py` is not edited. The plaintext is still never logged or returned.
+- Must not get worse: every test in `test_member_password.py` and `test_session_cookie.py` stays green (update fixtures that use short passwords to 12+ chars). R26 session revocation on password change still happens on success and does not happen on a 422.
+- Proof: new tests in `apps/project-car/api/tests/test_member_password.py`: `"a"`, 11 chars, and 12 spaces are 422 and the old password still logs in; 12 chars is 200. Red on main (200). RED commit first, then GREEN.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/members.py` (`set_member_password` only), `apps/project-car/api/tests/test_member_password.py`, `apps/project-car/api/tests/test_session_cookie.py` (short-password fixtures only)
+- Depends on: R10 and R15 (merged, #141 and #136). Run before R39 (both edit `routers/members.py`). No other open row edits `routers/members.py`, `test_member_password.py` or `test_session_cookie.py`.
+
+### R38. Member, hoist, waitlist and tier names of only spaces are stored blank
+- Category: bug
+- Baseline: Same trim-after-length order fixed for chat, to-dos and staff forms in R33–R35. On main `e289950`: `POST /members` and `PATCH /members/{id}` with name `"   "` are 201/200 and store `""`; `POST /hoists` with name `"   "` is 201; `POST /tiers` with display_name `"   "` is 201; the public `POST /waitlist` with name `"   "` is 201 and stores `""`.
+- Target: `MemberCreate.name`, `MemberPatch.name`, `HoistCreate.name`, `HoistPatch.name`, `TierCreate.display_name`, `TierPatch.display_name` and `WaitlistCreate.name` are 422 when empty after trimming. Real values are trimmed and stored as today.
+- Must not get worse: `test_shop_os.py`, `test_waitlist.py`, `test_cors_waitlist.py`, `test_allocation.py` stay green. The R28 per-IP waitlist cap still counts only stored creates. No migration. Classes edited in R33–R35 are not touched.
+- Proof: new `apps/project-car/api/tests/test_name_trim.py` covering each field above (422 for `"   "`, trimmed value stored for `"  Bay 2  "`). Red on main. RED commit first, then GREEN.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/schemas.py` (member, hoist, tier, waitlist classes only), `apps/project-car/api/tests/test_name_trim.py` (new)
+- Depends on: after R33–R35 (shared `schemas.py`; R7 also merged as #139; all three merged as #163, #165, #164 on main `e289950`). Only one open row may edit `schemas.py` at a time. Shares no file with R36, R37, R39 or R40.
+
+### R39. An Owner token adjustment of a fraction of a cent writes a zero ledger row
+- Category: bug
+- Baseline: `TokenAdjustment.amount` is an unbounded `Decimal`. `adjust_member_tokens` (`apps/project-car/api/app/routers/members.py`) refuses exactly 0, but the ledger column is `Numeric(12, 2)`. `amount: "0.0001"` is 201 on main `e289950` and stores a `0.00` `admin_adjustment` row. An amount past the column's range (e.g. `"1e12"`) is accepted by validation and fails at the database instead of with a clear 4xx.
+- Target: An adjustment with more than 2 decimal places, or with absolute value of 1,000,000 tokens or more (stand-in cap, see Needs from Ben), is 400 `invalid_tokens` and writes no ledger row. Valid amounts behave as today.
+- Must not get worse: `test_shop_os.py` adjustment tests and R10 rebuild-from-ledger tests stay green. The AI refusal (`token_change_requires_human`) still comes first. The ledger stays append-only.
+- Proof: new tests in `apps/project-car/api/tests/test_token_adjustment.py` (new): `"0.0001"`, `"1.005"`, `"1000000"` and `"-1000000"` are 400 with no new row; `"-1.50"` and `"100"` are 201. Red on main. RED commit first, then GREEN.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/members.py` (`adjust_member_tokens` only), `apps/project-car/api/tests/test_token_adjustment.py` (new)
+- Depends on: after R37 (shared `routers/members.py`); R10 is merged (#141). The member's resulting balance going below zero is out of scope (see Needs from Ben); a negative adjustment at or past the cap is still 400.
+
+### R40. The token adjustment box takes any text and says nothing about the format
+- Category: UX
+- Baseline: On Owner `/members/{id}`, the adjustment field is `<input name="amount" placeholder="100 or -1" required />` (`apps/project-car/web/app/members/[id]/page.tsx`). Phones open a full text keyboard, letters and `1.005` are sent to the API, and the only feedback is the top error banner after a round trip.
+- Target: The field uses `inputMode="decimal"` and a pattern for an optional minus and up to 2 decimals, with a one-line hint under it ("Whole or cents, e.g. 100 or -1.50"). An invalid value is stopped in the browser with that hint. Valid submissions work as today.
+- Must not get worse: the member detail page layout at 390 and 1440 apart from the hint line; web typecheck and tests; the 0.1 layout-shift cap and 1% pixel cap (`Docs/shop-os-ci.md`).
+- Proof: a web test that renders the page's amount input and asserts `inputMode="decimal"`, the hint text, and the pattern (accepts `100`, `-1.50`; rejects `abc`, `1.005`), red on main. Before/after screenshots of `/members/{id}` at 390 and 1440 hosted in the PR body; update that page's refs only. UI row: Cortana opens the shots before merge.
+- Size: 2 tasks
+- Likely files: `apps/project-car/web/app/members/[id]/page.tsx`, a new test beside it, `apps/project-car/web/visual/screenshots/` (member detail only)
+- Depends on: R1 and R10 (merged, #138 and #141; they also touched `members/[id]/page.tsx`). Shares no file with R36–R39.
+
 ## Needs from Ben
 
 | Row | Real value needed | Mock used meanwhile |
@@ -299,13 +349,15 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 | R1 | Balance below which a member is "token-at-risk" | 100 tokens, one base hour (`BASE_TOKENS_PER_HOUR` in `apps/project-car/api/app/services/pricing.py`) |
 | R31 | How early before start a member may check in | 15 minutes (`CHECK_IN_EARLY_MINUTES` in `apps/project-car/api/app/services/bookings.py`) |
 | R11 | What starts a new allotment period | Calendar month in `America/Regina`. Owner button grants it. One `monthly_allocation` per active member per period. |
+| R37 | Minimum length for an Owner-set member password | 12 characters (`MEMBER_PASSWORD_MIN_LENGTH`) |
+| R39 | Largest single Owner token adjustment; whether a balance may go below zero | Under 1,000,000 tokens per adjustment; negative balances left as today |
 
 ## Skipped / excluded
 
 - Job claim/done hardening already in flight: seed `--reset` not clearing `job_events`, 403 `not_your_claim`, member-shell banner copy, the double-claim Postgres row lock, and job claim tests. The same `_reset_shop` (`apps/project-car/api/app/seed.py`) also skips `shop_hoist_requests`, `tool_crib_events`, `refund_requests`, `staff_parts_requests`, `tool_crib_exceptions`, `staff_drafts`, and `shop_jobs`. Those FKs are `ON DELETE RESTRICT` (`20261004_0009`, `20261004_0011`). Fold them into that in-flight reset. This backlog does not open a second seed row. `parts_requests.member_id` is `ON DELETE CASCADE` (`20261004_0008`).
 - Overdue booking flagged to a `late_return` incident. Nothing assigns `BookingStatus.OVERDUE` except the enum and the hold tuples. `fill.py` `OCCUPYING` and member schedule `OPEN_STATUSES` omit overdue. Leave that with the excluded slice.
 - `Docs/STATUS.md` Reality refresh.
-- Per-member passwords. R17 keeps the shared member password.
+- Per-member passwords beyond what is on main. R17 keeps the shared member password rule. The Owner-set member password length is R37 (stand-in 12, `MEMBER_PASSWORD_MIN_LENGTH`).
 - Garage brochure and Zone: projectcar.ca pages, Worker, DNS, the `app.` cut, member-host path split. `Docs/later.md` says leave the member path until Ben GO and leave the `app.` alias until Ben cuts it.
 - Finance tracker files and PRs #107–#111.
 - `Docs/later.md` leave-alone rows: demo password (seed already refuses the default demo owner password off loopback; login pages still show it), Stripe, shop opening, staff OIDC, home-machine tunnel, camera feed.
@@ -328,3 +380,5 @@ After that wave, keep these apart:
 - R13 and R20 both edit `chat.py` and `chat-thread.tsx`.
 - R15 and R17 both edit `auth.py`.
 - R4 and R5 both edit the schedule screen. R4 can start while R2 is in review. R1, R7, R9, R10, and R19 each have their own files and can fill a free agent once the four above are running.
+
+Rows R36–R40 (2026-10-23): R1–R15 and R17–R35 are merged (see the merged-PR ledger), so the waves above are history and no earlier row shares a file with R36–R40. R36, R38 and R40 share no files and can run together; R38 is the only open row on `schemas.py` (R33–R35 are merged). R37 then R39, one at a time (both edit `routers/members.py`).
