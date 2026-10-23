@@ -3,6 +3,8 @@ import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fie
 import { StatusPill } from "./status-pill";
 import type { Booking } from "../lib/config";
 import { formatCalendarTime } from "../lib/calendar";
+import { checkInButtonState } from "../lib/check-in-window";
+import { shopClock } from "../lib/time";
 import {
   cancelBookingAction,
   checkInBookingAction,
@@ -19,6 +21,8 @@ export function OwnerBookingCard({
   returnTo: ScheduleReturn;
   compact?: boolean;
 }) {
+  const checkIn =
+    booking.status === "confirmed" ? checkInButtonState(booking.start_at, shopClock()) : null;
   return (
     <article
       className={`booking-chip status-${booking.status}${booking.kind === "shop" ? " booking-chip-shop" : ""}${compact ? " booking-chip-hour" : ""}`}
@@ -38,11 +42,14 @@ export function OwnerBookingCard({
             <button type="submit">Confirm</button>
           </form>
         ) : null}
-        {booking.status === "confirmed" ? (
+        {checkIn ? (
           <form action={checkInBookingAction}>
             <ScheduleReturnFields returnTo={returnTo} />
             <input type="hidden" name="id" value={booking.id} />
-            <button type="submit">Check in</button>
+            <button type="submit" disabled={checkIn.disabled}>
+              Check in
+            </button>
+            {checkIn.hint ? <span className="check-in-hint">{checkIn.hint}</span> : null}
           </form>
         ) : null}
         {booking.status === "active" ? (

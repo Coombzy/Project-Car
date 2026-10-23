@@ -47,6 +47,8 @@ HOLDING_STATUSES = (
 )
 BAY_HOUR_TAKEN = "That bay already has a booking on this hour."
 UNAVAILABLE_HOIST = (HoistStatus.MAINTENANCE, HoistStatus.LOCKED)
+# Stand-in until Ben sets how early check-in may open. Needs from Ben.
+CHECK_IN_EARLY_MINUTES = 15
 
 
 def _error(status: int, code: str, message: str) -> HTTPException:
@@ -502,6 +504,13 @@ def check_in_booking(session: Session, booking_id: UUID) -> Booking:
         raise _error(400, "invalid_transition", "Only confirmed bookings can be checked in.")
     if booking.hoist.status in UNAVAILABLE_HOIST:
         raise _error(400, "hoist_unavailable", "That hoist is in maintenance or locked.")
+    opens_at = _stored_utc(booking.start_at) - timedelta(minutes=CHECK_IN_EARLY_MINUTES)
+    if _stored_utc(shop_now()) < opens_at:
+        raise _error(
+            400,
+            "check_in_too_early",
+            f"Check-in opens {CHECK_IN_EARLY_MINUTES} minutes before the start.",
+        )
     booking.status = BookingStatus.ACTIVE
     booking.hoist.status = HoistStatus.OCCUPIED
     session.add(booking)

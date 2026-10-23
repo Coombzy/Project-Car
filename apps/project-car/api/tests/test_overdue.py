@@ -429,7 +429,8 @@ def test_shop_work_overdue_writes_no_ledger_and_bays_stay_direct(client: TestCli
 def test_only_an_active_booking_past_its_end_can_be_overdue(client: TestClient) -> None:
     member = create_member(client, email="ada@example.com", tier_name="premium")
     bay = create_hoist(client, name="Bay 5")
-    future_start = shop_now() + timedelta(hours=2)
+    # Inside the check-in window. The end is still ahead, so overdue stays not_past_end.
+    future_start = shop_now() + timedelta(minutes=10)
     future_end = future_start + timedelta(hours=1)
     future = _book(
         client,
@@ -531,7 +532,8 @@ def test_overdue_keeps_the_hoist_occupied_when_another_booking_ends(client: Test
     assert cancelled.json()["status"] == "cancelled"
     _assert_overdue_still_holds(client, overdue["id"], shop["id"], tokens, billing)
 
-    complete_at = shop_now() + timedelta(hours=9)
+    # Inside the check-in window. This visit is not the overdue booking.
+    complete_at = shop_now() + timedelta(minutes=10)
     finished = _shop_booking(client, shop["id"], complete_at, complete_at + timedelta(hours=1))
     _activate(client, finished["id"])
     completed = client.post(
