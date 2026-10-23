@@ -45,6 +45,14 @@ class WaitlistCreate(BaseModel):
     phone: str | None = Field(default=None, max_length=40)
     notes: str | None = Field(default=None, max_length=2000)
 
+    @field_validator("name", mode="before")
+    @classmethod
+    def blank_name(cls, value: object) -> object:
+        # Whitespace-only becomes "" before min_length. Other values stay raw so max_length is unchanged.
+        if isinstance(value, str) and not value.strip():
+            return ""
+        return value
+
     @field_validator("name")
     @classmethod
     def strip_name(cls, value: str) -> str:
@@ -120,6 +128,14 @@ class TierCreate(BaseModel):
     def normalize_name(cls, value: str) -> str:
         return value.strip().lower()
 
+    @field_validator("display_name", mode="before")
+    @classmethod
+    def blank_display(cls, value: object) -> object:
+        # Whitespace-only becomes "" before min_length. Other values stay raw so max_length is unchanged.
+        if isinstance(value, str) and not value.strip():
+            return ""
+        return value
+
     @field_validator("display_name")
     @classmethod
     def strip_display(cls, value: str) -> str:
@@ -133,6 +149,21 @@ class TierPatch(BaseModel):
     booking_window_days: int | None = Field(default=None, ge=1)
     max_simultaneous_bookings: int | None = Field(default=None, ge=1)
     notes: str | None = None
+
+    @field_validator("display_name", mode="before")
+    @classmethod
+    def blank_display(cls, value: object) -> object:
+        # Whitespace-only becomes "" before min_length. Other values stay raw so max_length is unchanged.
+        if isinstance(value, str) and not value.strip():
+            return ""
+        return value
+
+    @field_validator("display_name")
+    @classmethod
+    def strip_display(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return value.strip()
 
 
 class MemberOut(BaseModel):
@@ -165,6 +196,14 @@ class MemberCreate(BaseModel):
     emergency_contact_name: str | None = Field(default=None, max_length=200)
     emergency_contact_phone: str | None = Field(default=None, max_length=40)
     allocate_tokens: bool = True
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def blank_name(cls, value: object) -> object:
+        # Whitespace-only becomes "" before min_length. Other values stay raw so max_length is unchanged.
+        if isinstance(value, str) and not value.strip():
+            return ""
+        return value
 
     @field_validator("name")
     @classmethod
@@ -203,6 +242,21 @@ class MemberPatch(BaseModel):
     emergency_contact_name: str | None = Field(default=None, max_length=200)
     emergency_contact_phone: str | None = Field(default=None, max_length=40)
 
+    @field_validator("name", mode="before")
+    @classmethod
+    def blank_name(cls, value: object) -> object:
+        # Whitespace-only becomes "" before min_length. Other values stay raw so max_length is unchanged.
+        if isinstance(value, str) and not value.strip():
+            return ""
+        return value
+
+    @field_validator("name")
+    @classmethod
+    def strip_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return value.strip()
+
 
 class TokenAdjustment(BaseModel):
     amount: Decimal
@@ -240,6 +294,14 @@ class HoistCreate(BaseModel):
     status: HoistStatus = HoistStatus.AVAILABLE
     is_shop: bool = False
 
+    @field_validator("name", mode="before")
+    @classmethod
+    def blank_name(cls, value: object) -> object:
+        # Whitespace-only becomes "" before min_length. Other values stay raw so max_length is unchanged.
+        if isinstance(value, str) and not value.strip():
+            return ""
+        return value
+
     @field_validator("name", "location_label")
     @classmethod
     def strip_text(cls, value: str) -> str:
@@ -251,6 +313,21 @@ class HoistPatch(BaseModel):
     location_label: str | None = Field(default=None, max_length=120)
     status: HoistStatus | None = None
     is_shop: bool | None = None
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def blank_name(cls, value: object) -> object:
+        # Whitespace-only becomes "" before min_length. Other values stay raw so max_length is unchanged.
+        if isinstance(value, str) and not value.strip():
+            return ""
+        return value
+
+    @field_validator("name")
+    @classmethod
+    def strip_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return value.strip()
 
 
 class PricingRuleOut(BaseModel):
