@@ -433,6 +433,14 @@ class TodoCreate(BaseModel):
     notes: str | None = Field(default=None, max_length=2000)
     due_at: datetime | None = None
 
+    @field_validator("title", mode="before")
+    @classmethod
+    def blank_title(cls, value: object) -> object:
+        # Whitespace-only becomes "" before min_length. Other values stay raw so max_length is unchanged.
+        if isinstance(value, str) and not value.strip():
+            return ""
+        return value
+
     @field_validator("title")
     @classmethod
     def strip_title(cls, value: str) -> str:
@@ -452,6 +460,14 @@ class TodoPatch(BaseModel):
     due_at: datetime | None = None
     clear_due: bool = False
     status: TodoStatus | None = None
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def blank_title(cls, value: object) -> object:
+        # Whitespace-only becomes "" before min_length. Other values stay raw so max_length is unchanged.
+        if isinstance(value, str) and not value.strip():
+            return ""
+        return value
 
 
 class PartsOrderOut(BaseModel):
@@ -502,6 +518,14 @@ class PartsRequestPatch(BaseModel):
 class PartsRequestCreate(BaseModel):
     sku: str = Field(min_length=1, max_length=80)
     note: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("sku", mode="before")
+    @classmethod
+    def blank_sku(cls, value: object) -> object:
+        # Whitespace-only becomes "" before min_length. Other values stay raw so max_length is unchanged.
+        if isinstance(value, str) and not value.strip():
+            return ""
+        return value
 
     @field_validator("sku")
     @classmethod
@@ -761,6 +785,14 @@ class ToolCribCheckoutCreate(BaseModel):
     sku: str = Field(min_length=1, max_length=80)
     note: str | None = Field(default=None, max_length=2000)
 
+    @field_validator("sku", mode="before")
+    @classmethod
+    def blank_sku(cls, value: object) -> object:
+        # Whitespace-only becomes "" before min_length. Other values stay raw so max_length is unchanged.
+        if isinstance(value, str) and not value.strip():
+            return ""
+        return value
+
     @field_validator("sku")
     @classmethod
     def strip_sku(cls, value: str) -> str:
@@ -777,6 +809,14 @@ class ToolCribCheckoutCreate(BaseModel):
 class ToolCribReturnCreate(BaseModel):
     sku: str = Field(min_length=1, max_length=80)
     note: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("sku", mode="before")
+    @classmethod
+    def blank_sku(cls, value: object) -> object:
+        # Whitespace-only becomes "" before min_length. Other values stay raw so max_length is unchanged.
+        if isinstance(value, str) and not value.strip():
+            return ""
+        return value
 
     @field_validator("sku")
     @classmethod
