@@ -869,6 +869,22 @@ class StaffPartsRequestCreate(BaseModel):
     sku: str = Field(min_length=1, max_length=80)
     note: str | None = Field(default=None, max_length=2000)
 
+    @field_validator("sku", mode="before")
+    @classmethod
+    def strip_sku(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+    @field_validator("note", mode="before")
+    @classmethod
+    def empty_note(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if not isinstance(value, str):
+            return value
+        return _blank_to_none(value)
+
 
 class StaffPartsRequestOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -889,6 +905,22 @@ class ToolCribExceptionCreate(BaseModel):
     tool_code: str = Field(min_length=1, max_length=80)
     reason: str | None = Field(default=None, max_length=2000)
 
+    @field_validator("tool_code", mode="before")
+    @classmethod
+    def strip_tool_code(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+    @field_validator("reason", mode="before")
+    @classmethod
+    def empty_reason(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if not isinstance(value, str):
+            return value
+        return _blank_to_none(value)
+
 
 class ToolCribExceptionOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -908,6 +940,22 @@ class ShopJobCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     notes: str | None = Field(default=None, max_length=2000)
     token_bounty: Decimal = Field(default=Decimal("0"), ge=0)
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def strip_title(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+    @field_validator("notes", mode="before")
+    @classmethod
+    def empty_notes(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if not isinstance(value, str):
+            return value
+        return _blank_to_none(value)
 
 
 class ShopJobOut(BaseModel):
