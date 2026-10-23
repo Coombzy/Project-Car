@@ -383,3 +383,47 @@ def test_todo_ics_escapes_carriage_return() -> None:
     wide_summary = _ics_property(_ics_for(wide, None), "SUMMARY")
     assert wide_summary == "SUMMARY:" + escaped[:73] + "\r\n " + escaped[73:]
     assert _bare_cr_offsets(wide_summary) == []
+
+
+def test_whitespace_todo_create_title_is_422(client: TestClient) -> None:
+    empty = client.post("/todos", headers=AUTH, json={"title": ""})
+    spaces = client.post("/todos", headers=AUTH, json={"title": "   "})
+    assert spaces.status_code == 422, spaces.text
+    assert spaces.json() == empty.json()
+    assert client.get("/todos", headers=AUTH).json() == []
+
+    kept = client.post("/todos", headers=AUTH, json={"title": "  Call Priya  "})
+    assert kept.status_code == 201, kept.text
+    assert kept.json()["title"] == "Call Priya"
+
+    too_long = client.post("/todos", headers=AUTH, json={"title": "t" * 201})
+    assert too_long.status_code == 422, too_long.text
+    padded = client.post("/todos", headers=AUTH, json={"title": " " + ("t" * 200)})
+    assert padded.status_code == 422, padded.text
+    assert [row["title"] for row in client.get("/todos", headers=AUTH).json()] == ["Call Priya"]
+
+
+def test_whitespace_todo_patch_title_is_422(client: TestClient) -> None:
+    created = client.post("/todos", headers=AUTH, json={"title": "Call Priya"})
+    assert created.status_code == 201, created.text
+    todo_id = created.json()["id"]
+
+    empty = client.patch(f"/todos/{todo_id}", headers=AUTH, json={"title": ""})
+    spaces = client.patch(f"/todos/{todo_id}", headers=AUTH, json={"title": "   "})
+    assert spaces.status_code == 422, spaces.text
+    assert spaces.json() == empty.json()
+
+    current = client.get(f"/todos/{todo_id}", headers=AUTH)
+    assert current.status_code == 200, current.text
+    assert current.json()["title"] == "Call Priya"
+    ics = client.get(f"/todos/{todo_id}/ics", headers=AUTH)
+    assert ics.status_code == 200, ics.text
+    assert "SUMMARY:Call Priya" in ics.text
+
+    renamed = client.patch(f"/todos/{todo_id}", headers=AUTH, json={"title": "  Order oil  "})
+    assert renamed.status_code == 200, renamed.text
+    assert renamed.json()["title"] == "Order oil"
+
+    padded = client.patch(f"/todos/{todo_id}", headers=AUTH, json={"title": " " + ("t" * 200)})
+    assert padded.status_code == 422, padded.text
+    assert client.get(f"/todos/{todo_id}", headers=AUTH).json()["title"] == "Order oil"
