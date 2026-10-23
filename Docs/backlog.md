@@ -297,7 +297,7 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Baseline: `_fold` in `apps/project-car/api/app/services/ics.py` cuts lines by character count (73, then 72). RFC 5545 §3.1 limits a content line to 75 octets. A title of 60 `é` comes out as one 120-octet line (checked on main `e289950`), so strict calendar clients can reject or mangle the export.
 - Target: Every physical line of `todo_ics` output is at most 75 octets in UTF-8, folds never split a multi-byte character, and unfolding gives back the escaped text exactly. ASCII output is unchanged byte-for-byte.
 - Must not get worse: the R25 carriage-return test and the existing ICS tests in `test_dashboard_todos.py` stay green. Escaping of `\`, `;`, `,` and newlines is unchanged.
-- Proof: new `apps/project-car/api/tests/test_ics_fold.py`: 60 `é`, a mixed emoji title, and a 200-char ASCII title; assert each line ≤ 75 octets, decodes as UTF-8, and unfolds to the escaped input. Red on main (120-octet line). RED commit first (tests only), then GREEN. Shas and outputs in the PR body.
+- Proof: new `apps/project-car/api/tests/test_ics_fold.py`: 60 `é`, a mixed emoji title, and a 200-char ASCII title; assert each line ≤ 75 octets, decodes as UTF-8, and unfolds to the escaped input, and assert the 200-char ASCII `todo_ics` output is byte-for-byte equal to main's (a guard that is green before and after). Red on main (120-octet line). RED commit first (tests only), then GREEN. Shas and outputs in the PR body.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/services/ics.py`, `apps/project-car/api/tests/test_ics_fold.py` (new)
 - Depends on: none. Shares no file with R37–R40.
@@ -327,17 +327,17 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Baseline: `TokenAdjustment.amount` is an unbounded `Decimal`. `adjust_member_tokens` (`apps/project-car/api/app/routers/members.py`) refuses exactly 0, but the ledger column is `Numeric(12, 2)`. `amount: "0.0001"` is 201 on main `e289950` and stores a `0.00` `admin_adjustment` row. An amount past the column's range (e.g. `"1e12"`) is accepted by validation and fails at the database instead of with a clear 4xx.
 - Target: An adjustment with more than 2 decimal places, or with absolute value of 1,000,000 tokens or more (stand-in cap, see Needs from Ben), is 400 `invalid_tokens` and writes no ledger row. Valid amounts behave as today.
 - Must not get worse: `test_shop_os.py` adjustment tests and R10 rebuild-from-ledger tests stay green. The AI refusal (`token_change_requires_human`) still comes first. The ledger stays append-only.
-- Proof: new tests in `apps/project-car/api/tests/test_token_adjustment.py` (new): `"0.0001"`, `"1.005"` and `"1000000"` are 400 with no new row; `"-1.50"` and `"100"` are 201. Red on main. RED commit first, then GREEN.
+- Proof: new tests in `apps/project-car/api/tests/test_token_adjustment.py` (new): `"0.0001"`, `"1.005"`, `"1000000"` and `"-1000000"` are 400 with no new row; `"-1.50"` and `"100"` are 201. Red on main. RED commit first, then GREEN.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/routers/members.py` (`adjust_member_tokens` only), `apps/project-car/api/tests/test_token_adjustment.py` (new)
-- Depends on: after R37 (shared `routers/members.py`). Negative balances are out of scope: see Needs from Ben.
+- Depends on: after R37 (shared `routers/members.py`). The member's resulting balance going below zero is out of scope (see Needs from Ben); a negative adjustment at or past the cap is still 400.
 
 ### R40. The token adjustment box takes any text and says nothing about the format
 - Category: UX
 - Baseline: On Owner `/members/{id}`, the adjustment field is `<input name="amount" placeholder="100 or -1" required />` (`apps/project-car/web/app/members/[id]/page.tsx`). Phones open a full text keyboard, letters and `1.005` are sent to the API, and the only feedback is the top error banner after a round trip.
 - Target: The field uses `inputMode="decimal"` and a pattern for an optional minus and up to 2 decimals, with a one-line hint under it ("Whole or cents, e.g. 100 or -1.50"). An invalid value is stopped in the browser with that hint. Valid submissions work as today.
 - Must not get worse: the member detail page layout at 390 and 1440 apart from the hint line; web typecheck and tests; the 0.1 layout-shift cap and 1% pixel cap (`Docs/shop-os-ci.md`).
-- Proof: a web test for the pattern (accepts `100`, `-1.50`; rejects `abc`, `1.005`), red on main. Before/after screenshots of `/members/{id}` at 390 and 1440 hosted in the PR body; update that page's refs only. UI row: Cortana opens the shots before merge.
+- Proof: a web test that renders the page's amount input and asserts `inputMode="decimal"`, the hint text, and the pattern (accepts `100`, `-1.50`; rejects `abc`, `1.005`), red on main. Before/after screenshots of `/members/{id}` at 390 and 1440 hosted in the PR body; update that page's refs only. UI row: Cortana opens the shots before merge.
 - Size: 2 tasks
 - Likely files: `apps/project-car/web/app/members/[id]/page.tsx`, a new test beside it, `apps/project-car/web/visual/screenshots/` (member detail only)
 - Depends on: none. Shares no file with R36–R39.
