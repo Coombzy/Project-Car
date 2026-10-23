@@ -446,3 +446,33 @@ def test_closed_parts_request_cannot_be_flipped(client: TestClient) -> None:
     missing = patch_status("00000000-0000-0000-0000-000000000000", "fulfilled")
     assert missing.status_code == 404
     assert missing.json()["error"]["code"] == "not_found"
+
+
+def test_whitespace_parts_sku_is_422(client: TestClient) -> None:
+    create_member(client, email="ada@example.com", name="Ada Reyes")
+    login_member(client, "ada@example.com")
+
+    empty = client.post("/member/parts-requests", json={"sku": ""})
+    spaces = client.post("/member/parts-requests", json={"sku": "  "})
+    assert spaces.status_code == 422, spaces.text
+    assert spaces.json() == empty.json()
+    assert _count(client) == 0
+
+    created = client.post(
+        "/member/parts-requests",
+        json={"sku": "  pt-oil-5w30-012  ", "note": "  Two jugs  "},
+    )
+    assert created.status_code == 201, created.text
+    assert created.json()["sku"] == "PT-OIL-5W30-012"
+    assert created.json()["note"] == "Two jugs"
+    stored = _stored(client)
+    assert len(stored) == 1
+    assert stored[0].sku == "PT-OIL-5W30-012"
+    assert stored[0].note == "Two jugs"
+
+    padded = client.post(
+        "/member/parts-requests",
+        json={"sku": " " + "pt-oil-5w30-012" + (" " * 65)},
+    )
+    assert padded.status_code == 422, padded.text
+    assert _count(client) == 1

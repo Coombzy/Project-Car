@@ -232,3 +232,75 @@ def test_inactive_member_and_member_session_do_not_store_a_row(client: TestClien
     member_return = client.post("/tool-crib/returns", json={"sku": "TC-FL-001"})
     assert member_return.status_code == 401
     assert _count(client) == 0
+
+
+def test_whitespace_crib_checkout_sku_is_422(client: TestClient) -> None:
+    ada = create_member(client, email="ada@example.com", name="Ada Reyes")
+    empty = client.post(
+        "/tool-crib/checkouts",
+        headers=AUTH,
+        json={"member_id": ada["id"], "sku": ""},
+    )
+    spaces = client.post(
+        "/tool-crib/checkouts",
+        headers=AUTH,
+        json={"member_id": ada["id"], "sku": "  "},
+    )
+    assert spaces.status_code == 422, spaces.text
+    assert spaces.json() == empty.json()
+    assert _count(client) == 0
+
+    created = client.post(
+        "/tool-crib/checkouts",
+        headers=AUTH,
+        json={"member_id": ada["id"], "sku": "  tc-fl-001  ", "note": "  Saturday job  "},
+    )
+    assert created.status_code == 201, created.text
+    assert created.json()["sku"] == "TC-FL-001"
+    assert created.json()["note"] == "Saturday job"
+    assert _count(client, ToolCribEventKind.CHECKOUT) == 1
+
+    padded = client.post(
+        "/tool-crib/checkouts",
+        headers=AUTH,
+        json={"member_id": ada["id"], "sku": " " + "tc-fl-001" + (" " * 71)},
+    )
+    assert padded.status_code == 422, padded.text
+    assert _count(client, ToolCribEventKind.CHECKOUT) == 1
+
+
+def test_whitespace_crib_return_sku_is_422(client: TestClient) -> None:
+    ada = create_member(client, email="ada@example.com", name="Ada Reyes")
+    opened = client.post(
+        "/tool-crib/checkouts",
+        headers=AUTH,
+        json={"member_id": ada["id"], "sku": "TC-FL-001"},
+    )
+    assert opened.status_code == 201, opened.text
+
+    empty = client.post("/tool-crib/returns", headers=AUTH, json={"sku": ""})
+    spaces = client.post("/tool-crib/returns", headers=AUTH, json={"sku": "  "})
+    assert spaces.status_code == 422, spaces.text
+    assert spaces.json() == empty.json()
+    assert _count(client, ToolCribEventKind.RETURN) == 0
+    assert _count(client, ToolCribEventKind.CHECKOUT) == 1
+
+    returned = client.post(
+        "/tool-crib/returns",
+        headers=AUTH,
+        json={"sku": "  tc-fl-001  ", "note": "  Back on the hook  "},
+    )
+    assert returned.status_code == 201, returned.text
+    assert returned.json()["sku"] == "TC-FL-001"
+    assert returned.json()["kind"] == "return"
+    assert returned.json()["note"] == "Back on the hook"
+    assert returned.json()["checkout_id"] == opened.json()["id"]
+    assert _count(client, ToolCribEventKind.RETURN) == 1
+
+    padded = client.post(
+        "/tool-crib/returns",
+        headers=AUTH,
+        json={"sku": " " + "tc-fl-001" + (" " * 71)},
+    )
+    assert padded.status_code == 422, padded.text
+    assert _count(client, ToolCribEventKind.RETURN) == 1
