@@ -449,12 +449,34 @@ def accept_refund_request(session: Session, request_id: UUID, principal: Princip
         raise _error(400, "invalid_transition", "Only a pending refund request can be accepted.")
     booking = get_booking(session, row.booking_id)
     # Checked-in time is already in use. Cancel would return the whole reserve.
-    # Overdue stays on cancel_booking; that slice is untouched.
     if booking.status == BookingStatus.ACTIVE:
         raise _error(
             409,
             "refund_after_check_in",
             "A checked-in visit is not cancelled to refund the reserve.",
+        )
+    if booking.status in (
+        BookingStatus.COMPLETED,
+        BookingStatus.CANCELLED,
+        BookingStatus.OVERDUE,
+    ):
+        # Accept cannot cancel these. Deny the request so it leaves pending,
+        # and do not write a ledger row. Commit before the raise: get_db rolls
+        # the session back on HTTPException, which would leave it pending.
+        _stamp_decision(row, principal, status=ShopHoistRequestStatus.DENIED)
+        session.add(row)
+        record_action(
+            session,
+            principal=principal,
+            action="deny",
+            request_id=row.id,
+            subject=StaffSubject.REFUND,
+        )
+        session.commit()
+        raise _error(
+            409,
+            "refund_visit_closed",
+            "A completed, cancelled, or overdue visit is closed. This refund request is denied.",
         )
     cancel_booking(session, row.booking_id)
     _stamp_decision(row, principal, status=ShopHoistRequestStatus.APPROVED)
