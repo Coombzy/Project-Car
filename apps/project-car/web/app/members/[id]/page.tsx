@@ -129,10 +129,20 @@ export default async function MemberDetailPage({
           <p className="lede">Writes an append-only ledger row. Never edits history.</p>
           <form action={adjustTokensAction} className="form-grid">
             <input type="hidden" name="id" value={member.id} />
-            <label>
-              Amount
-              <input name="amount" placeholder="100 or -1" required />
-            </label>
+            <div>
+              <label>
+                Amount
+                <input
+                  name="amount"
+                  placeholder="100 or -1"
+                  inputMode="decimal"
+                  pattern="-?[0-9]+([.][0-9]{1,2})?"
+                  title="Whole or cents, e.g. 100 or -1.50"
+                  required
+                />
+              </label>
+              <div className="muted">Whole or cents, e.g. 100 or -1.50</div>
+            </div>
             <label>
               Note
               <input name="note" defaultValue="Owner adjustment" />
