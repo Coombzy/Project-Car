@@ -18,6 +18,13 @@ from tests.conftest import AUTH, create_member, login_member
 OWN_PASSWORD = "bay-door-4821"
 WRONG_PASSWORD = "not-the-password"
 RESET_PASSWORD = "garage-key-991"
+# Owner-set passwords shorter than 12 are rejected. The shared default "changeme" is 8.
+SHARED_MATCH_PASSWORD = "shared-demo-12"
+HASHED_OWN_PASSWORD = "own-hash-12ch"
+PASSWORD_TOO_SHORT = {
+    "code": "password_too_short",
+    "message": "Password must be at least 12 characters and cannot be only spaces.",
+}
 
 
 def _login(client: TestClient, email: str, password: str):
@@ -146,8 +153,10 @@ def test_member_session_cannot_set_password(client: TestClient) -> None:
     assert denied.status_code in {401, 403}
 
 
-def test_personal_password_may_match_shared_demo_password(client: TestClient) -> None:
-    shared = settings.member_demo_password
+def test_personal_password_may_match_shared_demo_password(client: TestClient, monkeypatch) -> None:
+    shared = SHARED_MATCH_PASSWORD
+    assert len(shared) >= 12
+    monkeypatch.setattr(settings, "member_demo_password", shared)
     member = create_member(client, email="riley@example.com")
     saved = client.post(
         f"/members/{member['id']}/password",
@@ -235,16 +244,18 @@ def test_unhashed_member_default_password_refused_off_loopback(
     assert own.json()["role"] == "member"
 
     monkeypatch.setenv("SHOP_HOST", "127.0.0.1")
-    hashed_default = client.post(
+    # "changeme" is shorter than the owner-set minimum, so this fixture is 12+.
+    assert len(HASHED_OWN_PASSWORD) >= 12
+    hashed_own = client.post(
         f"/members/{member['id']}/password",
         headers=AUTH,
-        json={"password": "changeme"},
+        json={"password": HASHED_OWN_PASSWORD},
     )
-    assert hashed_default.status_code == 200, hashed_default.text
+    assert hashed_own.status_code == 200, hashed_own.text
     monkeypatch.setenv("SHOP_HOST", "projectcar.ca")
-    own_default = _login(client, member["email"], "changeme")
-    assert own_default.status_code == 200, own_default.text
-    assert own_default.json()["role"] == "member"
+    own_hash = _login(client, member["email"], HASHED_OWN_PASSWORD)
+    assert own_hash.status_code == 200, own_hash.text
+    assert own_hash.json()["role"] == "member"
 
 
 def _member_session_claims(token: str) -> dict:
@@ -345,3 +356,101 @@ def test_password_change_revokes_old_member_session(client: TestClient) -> None:
     restored = client.get("/member/me")
     assert restored.status_code == 200, restored.text
     assert restored.json()["id"] == member["id"]
+
+
+def _set_own_password(client: TestClient, email: str) -> tuple[dict, str, str]:
+    """Member with a 12+ password, the stored hash, and a live session cookie."""
+    member = create_member(client, email=email)
+    saved = client.post(
+        f"/members/{member['id']}/password",
+        headers=AUTH,
+        json={"password": OWN_PASSWORD},
+    )
+    assert saved.status_code == 200, saved.text
+    assert OWN_PASSWORD not in saved.text
+    stored = _stored_hash(client, member["id"])
+    assert stored
+    signed_in = _login(client, member["email"], OWN_PASSWORD)
+    assert signed_in.status_code == 200, signed_in.text
+    cookie = client.cookies.get("pc_member_session")
+    assert cookie
+    return member, stored, cookie
+
+
+def _assert_short_password_rejected(
+    client: TestClient,
+    member: dict,
+    old_hash: str,
+    old_cookie: str,
+    password: str,
+) -> None:
+    rejected = client.post(
+        f"/members/{member['id']}/password",
+        headers=AUTH,
+        json={"password": password},
+    )
+    assert rejected.status_code == 422, rejected.status_code
+    assert rejected.json()["error"] == PASSWORD_TOO_SHORT
+    if len(password) > 1:
+        assert password not in rejected.text
+    assert _stored_hash(client, member["id"]) == old_hash
+    still = _login(client, member["email"], OWN_PASSWORD)
+    assert still.status_code == 200, still.text
+    denied = _login(client, member["email"], password)
+    assert denied.status_code == 401, denied.text
+    _replay_member_cookie(client, old_cookie)
+    kept = client.get("/member/me")
+    assert kept.status_code == 200, kept.text
+    assert kept.json()["id"] == member["id"]
+
+
+def test_password_one_character_is_rejected(client: TestClient) -> None:
+    """POST /members/{id}/password with "a" is 422 and the old password still works."""
+    member, old_hash, old_cookie = _set_own_password(client, "one.char@example.com")
+    _assert_short_password_rejected(client, member, old_hash, old_cookie, "a")
+
+
+def test_password_eleven_characters_is_rejected(client: TestClient) -> None:
+    """Eleven characters is under the stand-in minimum of 12."""
+    password = "elevenchars"
+    assert len(password) == 11
+    member, old_hash, old_cookie = _set_own_password(client, "eleven@example.com")
+    _assert_short_password_rejected(client, member, old_hash, old_cookie, password)
+
+
+def test_password_of_twelve_spaces_is_rejected(client: TestClient) -> None:
+    """Twelve spaces meets the count and is still password_too_short."""
+    password = " " * 12
+    assert len(password) == 12
+    assert password.isspace()
+    member, old_hash, old_cookie = _set_own_password(client, "spaces@example.com")
+    _assert_short_password_rejected(client, member, old_hash, old_cookie, password)
+
+
+def test_password_of_twelve_characters_is_stored(client: TestClient) -> None:
+    """Twelve non-space characters is 200 and revokes the previous session."""
+    password = "twelve-chars"
+    assert len(password) == 12
+    assert not password.isspace()
+    member, old_hash, old_cookie = _set_own_password(client, "twelve@example.com")
+    saved = client.post(
+        f"/members/{member['id']}/password",
+        headers=AUTH,
+        json={"password": password},
+    )
+    assert saved.status_code == 200, saved.text
+    assert password not in saved.text
+    assert "password_hash" not in saved.json()
+    replaced = _stored_hash(client, member["id"])
+    assert replaced
+    assert replaced != old_hash
+    assert password not in replaced
+    _replay_member_cookie(client, old_cookie)
+    stale = client.get("/member/me")
+    assert stale.status_code == 401, stale.text
+    assert stale.json()["error"]["code"] == "unauthorized"
+    assert _login(client, member["email"], OWN_PASSWORD).status_code == 401
+    fresh = _login(client, member["email"], password)
+    assert fresh.status_code == 200, fresh.text
+    assert fresh.json()["role"] == "member"
+    assert fresh.json()["email"] == member["email"]
