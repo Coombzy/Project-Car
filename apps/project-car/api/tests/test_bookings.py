@@ -1283,3 +1283,150 @@ def test_second_one_hour_create_stops_at_one_base_hour(client: TestClient) -> No
     reserves = [row for row in _ledger(client, member["id"]) if row["kind"] == "booking_reserve"]
     assert len(reserves) == 1
     assert _dec(reserves[0]["amount"]) == Decimal("-100")
+
+
+def _watch_refund_loads(monkeypatch, events: list[tuple[str, str, bool]]) -> None:
+    """Record postgresql SQL for each read, and each booking_refund insert.
+
+    SQLite drops FOR UPDATE at execution. The statement still carries the lock.
+    """
+    from sqlalchemy.dialects import postgresql
+    from sqlalchemy.orm import Session
+
+    from app.models import TokenTransaction
+
+    original_scalars = Session.scalars
+    original_add = Session.add
+
+    def spy_scalars(self, statement, *args, **kwargs):
+        sql = str(statement.compile(dialect=postgresql.dialect()))
+        locked = getattr(statement, "_for_update_arg", None) is not None
+        events.append(("read", sql, locked))
+        return original_scalars(self, statement, *args, **kwargs)
+
+    def spy_add(self, instance, *args, **kwargs):
+        if isinstance(instance, TokenTransaction) and instance.kind == TokenTransactionKind.BOOKING_REFUND:
+            events.append(("refund", "", False))
+        return original_add(self, instance, *args, **kwargs)
+
+    monkeypatch.setattr(Session, "scalars", spy_scalars)
+    monkeypatch.setattr(Session, "add", spy_add)
+
+
+def _for_update_at(events: list[tuple[str, str, bool]], table: str) -> list[int]:
+    needle_from = f"FROM {table}"
+    needle_where = f"WHERE {table}.id"
+    return [
+        index
+        for index, (kind, sql, locked) in enumerate(events)
+        if kind == "read" and locked and "FOR UPDATE" in sql and needle_from in sql and needle_where in sql
+    ]
+
+
+def _assert_locks_before_refund(events: list[tuple[str, str, bool]], caller: str) -> None:
+    booking_at = _for_update_at(events, "bookings")
+    member_at = _for_update_at(events, "members")
+    refund_at = [index for index, (kind, _sql, _locked) in enumerate(events) if kind == "refund"]
+    assert booking_at, f"{caller} booking select has no FOR UPDATE on the postgresql dialect"
+    assert member_at, f"{caller} member select has no FOR UPDATE on the postgresql dialect"
+    assert refund_at, f"{caller} wrote no booking_refund"
+    assert booking_at[0] < member_at[0] < refund_at[0], (
+        f"{caller} locks must precede the refund "
+        f"(booking={booking_at[0]} member={member_at[0]} refund={refund_at[0]})"
+    )
+
+
+def test_second_cancel_locks_then_refunds_once(client: TestClient, monkeypatch) -> None:
+    """Cancel locks the booking and the member before the refund.
+
+    A second cancel is 400 invalid_transition and the ledger keeps one refund.
+    Red on main: both loads use get_booking / the relationship, with no FOR UPDATE,
+    so two overlapping cancels can each insert booking_refund.
+    """
+    member = create_member(client, email="ada.cancel-lock@example.com")
+    hoist = create_hoist(client, name="Bay 1")
+    start, end = _window(6)
+    expected = _expected_reserve(client, start, end, member["id"])
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start,
+            "end_at": end,
+        },
+    )
+    assert created.status_code == 201, created.text
+    booking_id = created.json()["id"]
+    opening = Decimal("1500")
+    assert _balance(client, member["id"]) == opening - expected
+
+    events: list[tuple[str, str, bool]] = []
+    _watch_refund_loads(monkeypatch, events)
+    cancelled = client.post(f"/bookings/{booking_id}/cancel", headers=AUTH)
+    assert cancelled.status_code == 200, cancelled.text
+    assert cancelled.json()["status"] == "cancelled"
+    _assert_locks_before_refund(events, "cancel_booking")
+
+    again = client.post(f"/bookings/{booking_id}/cancel", headers=AUTH)
+    assert again.status_code == 400, again.text
+    assert again.json()["error"]["code"] == "invalid_transition"
+    refunds = _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=booking_id)
+    assert len(refunds) == 1
+    assert _dec(refunds[0]["amount"]) == expected
+    assert _balance(client, member["id"]) == opening
+
+
+def test_second_complete_locks_then_refunds_once(client: TestClient, monkeypatch) -> None:
+    """Complete locks the booking and the member before the unused-token refund.
+
+    A second complete is 400 invalid_transition and the ledger keeps one refund.
+    Red on main: the load has no FOR UPDATE, so two overlapping completes with
+    unused_tokens can each insert booking_refund.
+    """
+    member = create_member(client, email="ada.complete-lock@example.com")
+    hoist = create_hoist(client, name="Bay 1")
+    start, end = _window_inside_check_in()
+    reserved = _expected_reserve(client, start, end, member["id"])
+    unused = Decimal("1")
+    assert reserved > unused
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start,
+            "end_at": end,
+        },
+    )
+    assert created.status_code == 201, created.text
+    booking_id = created.json()["id"]
+    assert client.post(f"/bookings/{booking_id}/confirm", headers=AUTH).status_code == 200
+    assert client.post(f"/bookings/{booking_id}/check-in", headers=AUTH).status_code == 200
+    opening = Decimal("1500")
+    used = reserved - unused
+
+    events: list[tuple[str, str, bool]] = []
+    _watch_refund_loads(monkeypatch, events)
+    completed = client.post(
+        f"/bookings/{booking_id}/complete",
+        headers=AUTH,
+        json={"unused_tokens": str(unused)},
+    )
+    assert completed.status_code == 200, completed.text
+    assert completed.json()["status"] == "completed"
+    _assert_locks_before_refund(events, "complete_booking")
+
+    again = client.post(
+        f"/bookings/{booking_id}/complete",
+        headers=AUTH,
+        json={"unused_tokens": str(unused)},
+    )
+    assert again.status_code == 400, again.text
+    assert again.json()["error"]["code"] == "invalid_transition"
+    refunds = _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=booking_id)
+    assert len(refunds) == 1
+    assert _dec(refunds[0]["amount"]) == reserved
+    assert _balance(client, member["id"]) == opening - used

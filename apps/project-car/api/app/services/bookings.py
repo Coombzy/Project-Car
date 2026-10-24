@@ -525,7 +525,11 @@ def complete_booking(
     *,
     unused_tokens: Decimal = Decimal("0"),
 ) -> Booking:
-    booking = get_booking(session, booking_id)
+    # Lock the booking, then the member, before the status check. A second
+    # complete waits, sees the new status, and does not write another refund.
+    # Shop work can have no member and no reserve.
+    booking = _locked_booking(session, booking_id)
+    member = lock_member(session, booking.member_id) if booking.member_id is not None else None
     if booking.status not in (BookingStatus.ACTIVE, BookingStatus.OVERDUE):
         raise _error(
             400,
@@ -539,7 +543,6 @@ def complete_booking(
         raise _error(400, "invalid_refund", "Unused tokens must be between 0 and the reserved amount.")
 
     used = reserved - unused
-    member = booking.member
     meta = {"pricing_rule": booking.pricing_rule} if booking.pricing_rule else None
     if reserved > 0:
         apply_ledger(
@@ -642,7 +645,11 @@ def mark_overdue(session: Session, booking_id: UUID) -> tuple[Booking, bool]:
 
 
 def cancel_booking(session: Session, booking_id: UUID) -> Booking:
-    booking = get_booking(session, booking_id)
+    # Lock the booking, then the member, before the status check. A second
+    # cancel waits, sees the new status, and does not write another refund.
+    # Shop work can have no member and no reserve.
+    booking = _locked_booking(session, booking_id)
+    member = lock_member(session, booking.member_id) if booking.member_id is not None else None
     if booking.status not in OPEN_STATUSES:
         raise _error(400, "invalid_transition", "Completed, overdue, or cancelled bookings cannot be cancelled.")
 
@@ -651,7 +658,7 @@ def cancel_booking(session: Session, booking_id: UUID) -> Booking:
     if reserved > 0:
         apply_ledger(
             session,
-            booking.member,
+            member,
             kind=TokenTransactionKind.BOOKING_REFUND,
             amount=reserved,
             booking_id=booking.id,
