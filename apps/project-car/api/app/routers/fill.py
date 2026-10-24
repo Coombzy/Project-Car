@@ -9,7 +9,13 @@ from fastapi import APIRouter, HTTPException, Query
 from app.deps import DbSession, Owner
 from app.schemas import FillNotifyOut, FillNotifyRequest, FillPreviewOut, NotificationOutboxOut
 from app.services.fill import FillError, snapshot_next_day, upsert_published_offer
-from app.services.notify import NotifyError, enqueue_fill_campaign, list_outbox, parse_channels
+from app.services.notify import (
+    NotifyError,
+    enqueue_fill_campaign,
+    list_outbox,
+    parse_channels,
+    refuse_repeat_fill_campaign,
+)
 from app.services.staff import reject_ai
 
 router = APIRouter(tags=["fill"])
@@ -55,6 +61,10 @@ def notify_fill(body: FillNotifyRequest, session: DbSession, owner: Owner) -> Fi
         offer = None
         published = False
         if not body.dry_run:
+            # Before publish, so a repeat does not rewrite today's offer.
+            # A day with no openings still raises no_openings from the upsert.
+            if snapshot.applies:
+                refuse_repeat_fill_campaign(session, snapshot.target_date, channels)
             offer = upsert_published_offer(session, snapshot)
             published = True
         rows = enqueue_fill_campaign(
@@ -65,7 +75,8 @@ def notify_fill(body: FillNotifyRequest, session: DbSession, owner: Owner) -> Fi
             offer=offer,
         )
     except (FillError, NotifyError) as exc:
-        raise _error(400, exc.code, exc.message) from exc
+        status = 409 if exc.code == "already_notified" else 400
+        raise _error(status, exc.code, exc.message) from exc
     return FillNotifyOut(
         preview=FillPreviewOut.from_snapshot(snapshot),
         dry_run=body.dry_run,
