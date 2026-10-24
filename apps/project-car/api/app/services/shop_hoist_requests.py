@@ -48,12 +48,26 @@ def _error(status: int, code: str, message: str) -> HTTPException:
     return HTTPException(status_code=status, detail={"code": code, "message": message})
 
 
-def get_shop_hoist_request(session: Session, request_id: UUID) -> ShopHoistRequest:
-    row = session.scalars(
+def get_shop_hoist_request(
+    session: Session, request_id: UUID, *, for_update: bool = False
+) -> ShopHoistRequest:
+    """Load one shop hoist request.
+
+    Approve passes ``for_update`` so the pending check reads the locked row.
+    On Postgres, ``FOR UPDATE`` holds until commit, so a second approval waits
+    and then sees the status the first approval stored. SQLite drops the
+    clause; the suite still checks that the statement asks for the lock.
+    ``populate_existing`` refreshes a request this session already loaded so
+    the pending check is not the pre-lock copy.
+    """
+    stmt = (
         select(ShopHoistRequest)
         .options(selectinload(ShopHoistRequest.member), selectinload(ShopHoistRequest.hoist))
         .where(ShopHoistRequest.id == request_id)
-    ).first()
+    )
+    if for_update:
+        stmt = stmt.with_for_update().execution_options(populate_existing=True)
+    row = session.scalars(stmt).first()
     if row is None:
         raise _error(404, "not_found", "Shop hoist request not found.")
     return row
@@ -163,7 +177,7 @@ def approve_shop_hoist_request(
     session: Session, request_id: UUID, principal: Principal
 ) -> tuple[ShopHoistRequest, StaffAction]:
     """Turn a pending request into a confirmed booking and reserve tokens."""
-    row = get_shop_hoist_request(session, request_id)
+    row = get_shop_hoist_request(session, request_id, for_update=True)
     if row.status != ShopHoistRequestStatus.PENDING:
         raise _error(400, "invalid_transition", "Only a pending shop hoist request can be approved.")
     reject_own_request(principal, row.created_by_kind, row.created_by_id)
