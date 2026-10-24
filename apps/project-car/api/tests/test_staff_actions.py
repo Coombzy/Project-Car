@@ -9,7 +9,7 @@ from uuid import UUID
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
-from app.models import Booking, RefundRequest
+from app.models import Booking, RefundRequest, StaffAction
 from app.shop_time import as_utc, shop_now
 from tests.conftest import AUTH, create_hoist, create_member, login_member
 
@@ -644,3 +644,150 @@ def test_refund_request_on_pending_confirmed_or_active_is_created(client: TestCl
         created = client.post("/refund-requests", headers=AUTH, json={"booking_id": booking["id"]})
         assert created.status_code == 201, created.text
         assert _refund_ids(client, booking["id"]) == [(created.json()["id"], "pending")]
+
+
+_VISIT_CLOSED_NOTE = (
+    "A completed, cancelled, or overdue visit is closed. This refund request is denied."
+)
+
+
+def _checked_in_with_refund(client: TestClient, email: str) -> tuple[dict, dict, str]:
+    member = create_member(client, email=email)
+    bay = create_hoist(client, name="Bay 1")
+    booking = _owner_booking(client, member["id"], bay["id"], minutes_from_now=10)
+    assert client.post(f"/bookings/{booking['id']}/confirm", headers=AUTH).status_code == 200
+    checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)
+    assert checked.status_code == 200, checked.text
+    assert checked.json()["status"] == "active"
+    filed = client.post("/refund-requests", headers=AUTH, json={"booking_id": booking["id"]})
+    assert filed.status_code == 201, filed.text
+    assert filed.json()["status"] == "pending"
+    return member, booking, filed.json()["id"]
+
+
+def _refund_actions(client: TestClient, request_id: str) -> list[tuple[str, str]]:
+    """(action, actor_kind) for this request, with no created_at or id order.
+
+    SQLite now() is whole seconds, so the draft row and the deny row share a
+    timestamp, and uuid4 is not insert order.
+    """
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        rows = session.scalars(
+            select(StaffAction).where(StaffAction.request_id == UUID(request_id))
+        ).all()
+        return [(row.action, row.actor_kind.value) for row in rows]
+    finally:
+        session.close()
+
+
+def _assert_closed_visit_accept_denies(
+    client: TestClient,
+    *,
+    member_id: str,
+    booking_id: str,
+    request_id: str,
+    booking_status: str,
+) -> None:
+    ledger_before = _booking_ledger(client, member_id, booking_id)
+    balance_before = _balance(client, member_id)
+    reserved_before = _dec(_stored_booking(client, booking_id)["reserved_tokens"])
+    accepted = client.post(f"/refund-requests/{request_id}/accept", headers=AUTH)
+    stored = _stored_booking(client, booking_id)
+    request = _refund_request(client, request_id)
+    ledger_after = _booking_ledger(client, member_id, booking_id)
+    payload = accepted.json()
+    code = payload.get("error", {}).get("code")
+    assert accepted.status_code == 409, (
+        f"accept={accepted.status_code} code={code} booking={stored['status']} "
+        f"request={request['status']} ledger={len(ledger_after)} was={len(ledger_before)}"
+    )
+    error = payload["error"]
+    assert set(error) == {"code", "message"}
+    assert error["code"] == "refund_visit_closed"
+    assert error["message"] == _VISIT_CLOSED_NOTE
+    # RefundRequest.status is ShopHoistRequestStatus. The decline is stored as denied.
+    assert request["status"] == "denied"
+    assert request["decided_by_kind"] == "human"
+    assert request["decided_at"] is not None
+    assert stored["status"] == booking_status
+    assert _dec(stored["reserved_tokens"]) == reserved_before
+    assert {row["id"] for row in ledger_after} == {row["id"] for row in ledger_before}
+    assert len(ledger_after) == len(ledger_before)
+    assert _balance(client, member_id) == balance_before
+    actions = _refund_actions(client, request_id)
+    assert sorted(action for action, _actor in actions) == ["deny", "draft"]
+    assert ("deny", "human") in actions
+    again = client.post(f"/refund-requests/{request_id}/accept", headers=AUTH)
+    assert again.status_code == 400
+    assert again.json()["error"]["code"] == "invalid_transition"
+    assert _refund_request(client, request_id)["status"] == "denied"
+    assert {row["id"] for row in _booking_ledger(client, member_id, booking_id)} == {
+        row["id"] for row in ledger_before
+    }
+    assert sorted(action for action, _actor in _refund_actions(client, request_id)) == [
+        "deny",
+        "draft",
+    ]
+
+
+def test_accept_refund_after_complete_denies_the_request(client: TestClient) -> None:
+    member, booking, request_id = _checked_in_with_refund(client, "ada@example.com")
+    completed = client.post(
+        f"/bookings/{booking['id']}/complete",
+        headers=AUTH,
+        json={"unused_tokens": "0"},
+    )
+    assert completed.status_code == 200, completed.text
+    assert completed.json()["status"] == "completed"
+
+    # AI refusal still runs first and writes nothing. The request stays pending.
+    ledger_before_ai = _booking_ledger(client, member["id"], booking["id"])
+    ai_accept = client.post(f"/refund-requests/{request_id}/accept", headers=AI)
+    assert ai_accept.status_code == 403
+    assert ai_accept.json()["error"]["code"] == "refund_requires_human"
+    ai_request = _refund_request(client, request_id)
+    assert ai_request["status"] == "pending"
+    assert ai_request["decided_by_kind"] is None
+    assert sorted(action for action, _actor in _refund_actions(client, request_id)) == ["draft"]
+    assert {row["id"] for row in _booking_ledger(client, member["id"], booking["id"])} == {
+        row["id"] for row in ledger_before_ai
+    }
+
+    _assert_closed_visit_accept_denies(
+        client,
+        member_id=member["id"],
+        booking_id=booking["id"],
+        request_id=request_id,
+        booking_status="completed",
+    )
+
+
+def test_accept_refund_after_overdue_denies_the_request(client: TestClient) -> None:
+    member, booking, request_id = _checked_in_with_refund(client, "ada@example.com")
+    _move_into_the_past(client, booking["id"])
+    # POST /bookings/{id}/overdue calls mark_overdue.
+    overdue = client.post(f"/bookings/{booking['id']}/overdue", headers=AUTH)
+    assert overdue.status_code == 200, overdue.text
+    assert overdue.json()["status"] == "overdue"
+    _assert_closed_visit_accept_denies(
+        client,
+        member_id=member["id"],
+        booking_id=booking["id"],
+        request_id=request_id,
+        booking_status="overdue",
+    )
+
+
+def test_accept_refund_after_cancel_denies_the_request(client: TestClient) -> None:
+    member, booking, request_id = _checked_in_with_refund(client, "ada@example.com")
+    cancelled = client.post(f"/bookings/{booking['id']}/cancel", headers=AUTH)
+    assert cancelled.status_code == 200, cancelled.text
+    assert cancelled.json()["status"] == "cancelled"
+    _assert_closed_visit_accept_denies(
+        client,
+        member_id=member["id"],
+        booking_id=booking["id"],
+        request_id=request_id,
+        booking_status="cancelled",
+    )
