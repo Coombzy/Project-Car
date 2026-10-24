@@ -342,6 +342,86 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Likely files: `apps/project-car/web/app/members/[id]/page.tsx`, a new test beside it, `apps/project-car/web/visual/screenshots/` (member detail only)
 - Depends on: R1 and R10 (merged, #138 and #141; they also touched `members/[id]/page.tsx`). Shares no file with R36–R39.
 
+### R41. Overlapping cancels or completes of one booking can refund the reserve twice
+- Category: bug
+- Baseline: `create_booking` locks the member (`lock_member`, `apps/project-car/api/app/services/bookings.py`). `complete_booking` and `cancel_booking` load the booking with `get_booking` (no row lock) and `apply_ledger` adds to the member balance on that copy. Two overlapping cancels, or two overlapping completes with `unused_tokens`, can both see an open status and both insert a `booking_refund`, minting tokens (checked on main `429b59d`).
+- Target: `complete_booking` and `cancel_booking` take the booking with `_locked_booking` and the member with `lock_member` before the status check, so the second caller sees the new status and gets 400 `invalid_transition` with no second ledger row.
+- Must not get worse: all of `test_bookings.py`, `test_overdue.py`, `test_staff_actions.py` stay green. R29/R30/R32 behaviour unchanged. No migration.
+- Proof: new tests in `apps/project-car/api/tests/test_bookings.py`. (a) Red on main: on the postgresql dialect the booking select inside `cancel_booking` and `complete_booking` compiles with `FOR UPDATE`, and `lock_member` runs before the status check. (b) Regression guard, green on main and after: a second sequential cancel/complete is 400 `invalid_transition` and the ledger has exactly one refund. RED commit (a) first, then GREEN.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/bookings.py` (`complete_booking`, `cancel_booking` only), `apps/project-car/api/tests/test_bookings.py`
+- Depends on: none. Run before R47 (same files). Shares no file with R42–R46 or R48.
+
+### R42. Two overlapping shop-hoist approvals can both reserve tokens
+- Category: bug
+- Baseline: `approve_shop_hoist_request` (`apps/project-car/api/app/services/shop_hoist_requests.py`) reads the request with no row lock, then locks the member. The pending check is not repeated after the lock, so an overlapping second approval creates a second confirmed booking and a second `booking_reserve`.
+- Target: the request row is loaded `FOR UPDATE` (postgresql) before the pending check; the losing caller gets 400 `invalid_transition` and writes no booking or ledger row.
+- Must not get worse: `test_shop_hoist_request.py` and `test_staff_actions.py` stay green; staff cannot approve their own request (unchanged).
+- Proof: new tests in `apps/project-car/api/tests/test_shop_hoist_request.py`. (a) Red on main: the request select used by `approve_shop_hoist_request` compiles with `FOR UPDATE` on postgresql, and the pending check runs after the member lock. (b) Regression guard, green on main and after: a second sequential approval is 400 `invalid_transition` with one booking and one reserve row. RED commit (a) first, then GREEN.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/shop_hoist_requests.py` (`approve_shop_hoist_request`, request loader), `apps/project-car/api/tests/test_shop_hoist_request.py`
+- Depends on: none. Run before R43 (same files).
+
+### R43. Approving a shop-hoist request after its window has passed still books and charges it
+- Category: bug
+- Baseline: `create_shop_hoist_request` rejects a start in the past (`reject_start_in_past`), but `approve_shop_hoist_request` does not re-check. A request created for a future window and approved after the window has started (or ended) becomes a confirmed booking and debits `token_quote`.
+- Target: approval of a request whose `start_at` is already past `shop_now()` is 400 `start_in_past`, the request stays pending (staff can still decline it), and no booking or ledger row is written.
+- Must not get worse: `test_shop_hoist_request.py` stays green; approval of a future request is unchanged.
+- Proof: new test in `apps/project-car/api/tests/test_shop_hoist_request.py` using the shop clock override: create the request with a future `start_at` (201), move the shop clock past `start_at`, then approve is 400 `start_in_past` with no booking and no ledger row; decline still works; a request approved before its start still works. Red on main (approve is 201). RED commit first, then GREEN.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/shop_hoist_requests.py` (`approve_shop_hoist_request` only), `apps/project-car/api/tests/test_shop_hoist_request.py`
+- Depends on: after R42 (same files).
+
+### R44. Accepting a refund request after the visit has moved on fails and leaves it pending forever
+- Category: bug
+- Baseline: a refund request can be created on an `active` visit (`apps/project-car/api/app/services/staff.py`). If the visit is then completed or marked overdue, accept falls through to `cancel_booking`, which is 400 `invalid_transition`, and the request stays `pending` with no way to clear it except decline.
+- Target: the `refund_requires_human` AI refusal still runs first, before any status write. Only a human accept of a request whose booking is completed, cancelled or overdue is 409 `refund_visit_closed`, sets the request status to `denied` (`ShopHoistRequestStatus`; there is no `declined` and `refund_requests` has no note column, so record a `deny` staff action instead and add no migration), and writes no ledger row. Active stays 409 `refund_after_check_in` with the request still pending, as today.
+- Must not get worse: `test_staff_actions.py` stays green (R29, R32 tests). `bookings.py` is not edited.
+- Proof: new tests in `apps/project-car/api/tests/test_staff_actions.py`: request on an active visit, then (1) complete the visit, (2) cancel the booking, (3) mark it overdue (`mark_overdue`); for each, a human accept is 409 `refund_visit_closed`, the request status is exactly `denied`, a `deny` staff action exists, and the ledger has no new row (assert the staff actions as a set or by action name, not by `created_at`/uuid order: SQLite `now()` is whole seconds); an AI accept of the completed case is `refund_requires_human` and the request is still pending. Red on main (400, still pending). RED commit first, then GREEN.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/staff.py` (refund accept only), `apps/project-car/api/tests/test_staff_actions.py`
+- Depends on: none. Shares no file with any other open row.
+
+### R45. Two open crib checkouts of one SKU can both be stored
+- Category: bug
+- Baseline: `checkout_tool` (`apps/project-car/api/app/services/tool_crib.py`) selects for an open checkout, then inserts. Nothing locks the SKU, and an open checkout stores `checkout_id` NULL, so the unique constraint on `checkout_id` does not stop two overlapping checkouts.
+- Target: one alembic revision adds a nullable `open_sku` column on `tool_crib_events` with a unique index. A checkout sets it to the SKU; the matching return clears it (backfilled for any open checkout today). An overlapping second checkout is 409 `tool_already_out`, not a 500.
+- Must not get worse: `test_tool_crib.py` stays green; existing data with at most one open checkout per SKU migrates cleanly; downgrade drops the unique index and the column so downgrade then upgrade reapplies. Do not unique `sku` itself: a returned tool must be checkout-able again.
+- Proof: new tests in `apps/project-car/api/tests/test_tool_crib.py`: (a) two raw inserts with `open_sku='TC-1'` raise `IntegrityError` (red on main: the column is absent); (b) two rows with the same `sku` and `open_sku` NULL do not raise; (c) checkout `TC-1`, return it (clears `open_sku`), checkout `TC-1` again succeeds; (d) the service maps the collision to 409 `tool_already_out`. RED commit first, then GREEN.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/models.py` (`ToolCribEvent` only), one new revision under `apps/project-car/api/alembic/versions/`, `apps/project-car/api/app/services/tool_crib.py`, `apps/project-car/api/tests/test_tool_crib.py`
+- Depends on: none. The only open row adding an alembic revision or editing `models.py`.
+
+### R46. A second fill notify for the same day queues a second campaign to every member
+- Category: bug
+- Baseline: `POST /fill/notify` with `dry_run: false` (`apps/project-car/api/app/routers/fill.py`) publishes and calls `enqueue_fill_campaign` (`apps/project-car/api/app/services/notify.py`), one outbox row per active member per channel. Nothing checks whether that `target_date` was already sent; with SMTP set every member gets a second email.
+- Target: a non-dry-run notify for a `target_date` and channel that already has outbox rows is 409 `already_notified` and queues nothing (stand-in rule: one campaign per day per channel, see Needs from Ben). Dry runs are unchanged.
+- Must not get worse: `test_fill.py` stays green; the AI `draft_required` refusal still comes first.
+- Proof: new tests in `apps/project-car/api/tests/test_fill.py`: second real notify is 409 with the outbox count unchanged; a second `target_date` still sends (red on main: the second same-day call is 201 and doubles the rows; keep the second-date arm as the guard that the fix is per day). No second channel is invented. Red on main. RED commit first, then GREEN.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/notify.py` (`enqueue_fill_campaign`), `apps/project-car/api/app/routers/fill.py` (`notify_fill`), `apps/project-car/api/tests/test_fill.py`
+- Depends on: none. Shares no file with any other open row.
+
+### R47. A confirmed visit can be checked in after its window has ended
+- Category: bug
+- Baseline: `check_in_booking` (`apps/project-car/api/app/services/bookings.py`) checks the early bound (R31) but never `end_at`. A no-show whose window ended can still become `active` and mark the hoist occupied.
+- Target: check-in at or after `end_at` is 400 `check_in_too_late` and changes nothing. Inside the window it works as today.
+- Must not get worse: `test_bookings.py` (including `test_check_in_three_hours_early_is_refused`) and `test_overdue.py` stay green. Open-booking counting for no-shows is out of scope.
+- Proof: new test in `apps/project-car/api/tests/test_bookings.py` with the shop clock past `end_at`: 400, booking still confirmed, hoist status unchanged. Red on main. RED commit first, then GREEN.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/bookings.py` (`check_in_booking` only), `apps/project-car/api/tests/test_bookings.py`
+- Depends on: after R41 (same files).
+
+### R48. The Owner booking card still offers Check in after the visit's window has ended
+- Category: UX
+- Baseline: `apps/project-car/web/components/owner-booking-card.tsx` calls `checkInButtonState(booking.start_at, shopClock())` (`apps/project-car/web/lib/check-in-window.ts`). It only knows the start, so a confirmed no-show from hours ago still shows an enabled Check in button.
+- Target: `checkInButtonState` also takes `end_at`; at or after the end the button is disabled with the hint "Window ended". Before the end it behaves as today.
+- Must not get worse: web typecheck, lint, build and tests; `check-in-window.test.ts` existing cases; the 0.1 layout-shift and 1% pixel caps (`Docs/shop-os-ci.md`).
+- Proof: new cases in `apps/project-car/web/lib/check-in-window.test.ts` (after end: disabled, hint "Window ended"), red on main. UI row: before/after screenshots of the Owner schedule card at 390 and 1440 hosted in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/web/lib/check-in-window.ts`, `apps/project-car/web/lib/check-in-window.test.ts`, `apps/project-car/web/components/owner-booking-card.tsx`
+- Depends on: none (web only; R47 is the API side). Shares no file with any other open row.
+
 ## Needs from Ben
 
 | Row | Real value needed | Mock used meanwhile |
@@ -351,11 +431,13 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 | R11 | What starts a new allotment period | Calendar month in `America/Regina`. Owner button grants it. One `monthly_allocation` per active member per period. |
 | R37 | Minimum length for an Owner-set member password | 12 characters (`MEMBER_PASSWORD_MIN_LENGTH`) |
 | R39 | Largest single Owner token adjustment; whether a balance may go below zero | Under 1,000,000 tokens per adjustment; negative balances left as today |
+| R46 | Whether a fill notice may ever be re-sent for the same day | Never: one campaign per target date per channel, second is 409 `already_notified` |
+| (no row) | Which header Cloudflare Tunnel sets with the real client IP for login and waitlist caps | Not built; caps still key on the TCP peer |
 
 ## Skipped / excluded
 
 - Job claim/done hardening already in flight: seed `--reset` not clearing `job_events`, 403 `not_your_claim`, member-shell banner copy, the double-claim Postgres row lock, and job claim tests. The same `_reset_shop` (`apps/project-car/api/app/seed.py`) also skips `shop_hoist_requests`, `tool_crib_events`, `refund_requests`, `staff_parts_requests`, `tool_crib_exceptions`, `staff_drafts`, and `shop_jobs`. Those FKs are `ON DELETE RESTRICT` (`20261004_0009`, `20261004_0011`). Fold them into that in-flight reset. This backlog does not open a second seed row. `parts_requests.member_id` is `ON DELETE CASCADE` (`20261004_0008`).
-- Overdue booking flagged to a `late_return` incident. Nothing assigns `BookingStatus.OVERDUE` except the enum and the hold tuples. `fill.py` `OCCUPYING` and member schedule `OPEN_STATUSES` omit overdue. Leave that with the excluded slice.
+- Overdue booking flagged to a `late_return` incident. `BookingStatus.OVERDUE` is assigned by `mark_overdue` in `bookings.py` (#117) (route `mark_booking_overdue`) but nothing files a `late_return` incident for it. `fill.py` `OCCUPYING` and member schedule `OPEN_STATUSES` omit overdue. Leave that with the excluded slice.
 - `Docs/STATUS.md` Reality refresh.
 - Per-member passwords beyond what is on main. R17 keeps the shared member password rule. The Owner-set member password length is R37 (stand-in 12, `MEMBER_PASSWORD_MIN_LENGTH`).
 - Garage brochure and Zone: projectcar.ca pages, Worker, DNS, the `app.` cut, member-host path split. `Docs/later.md` says leave the member path until Ben GO and leave the `app.` alias until Ben cuts it.
@@ -382,3 +464,5 @@ After that wave, keep these apart:
 - R4 and R5 both edit the schedule screen. R4 can start while R2 is in review. R1, R7, R9, R10, and R19 each have their own files and can fill a free agent once the four above are running.
 
 Rows R36–R40 (2026-10-23): R1–R15 and R17–R35 are merged (see the merged-PR ledger), so the waves above are history and no earlier row shares a file with R36–R40. R36, R38 and R40 share no files and can run together; R38 is the only open row on `schemas.py` (R33–R35 are merged). R37 then R39, one at a time (both edit `routers/members.py`).
+
+Rows R41–R48 (2026-10-23): three can start together with no shared file: R41 (`bookings.py`), R42 (`shop_hoist_requests.py`), R44 (`staff.py`); R45, R46 and R48 also share no file with those. Then R43 after R42, and R47 after R41. R45 is the only open row adding an alembic revision.
