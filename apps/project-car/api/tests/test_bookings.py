@@ -1136,6 +1136,22 @@ def test_past_start_is_rejected(client: TestClient) -> None:
     confirmed = client.post(f"/bookings/{first}/confirm", headers=AUTH)
     assert confirmed.status_code == 200, confirmed.text
     assert confirmed.json()["status"] == "confirmed"
+    # This row's window ended in 2020. Check-in stays closed; the reserve is untouched.
+    late = client.post(f"/bookings/{first}/check-in", headers=AUTH)
+    assert late.status_code == 400, late.text
+    assert late.json()["error"]["code"] == "check_in_too_late"
+    assert _stored_booking(client, first)["status"] == "confirmed"
+    assert _hoist_status(client, hoist["id"]) != "occupied"
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        row = session.get(Booking, UUID(first))
+        assert row is not None
+        open_start = as_utc(shop_now() + timedelta(minutes=10))
+        row.start_at = open_start
+        row.end_at = open_start + timedelta(hours=2)
+        session.commit()
+    finally:
+        session.close()
     checked = client.post(f"/bookings/{first}/check-in", headers=AUTH)
     assert checked.status_code == 200, checked.text
     assert checked.json()["status"] == "active"
