@@ -3,12 +3,18 @@ export const CHECK_IN_EARLY_MINUTES = 15;
 
 export const CHECK_IN_EARLY_HINT = "Opens 15 min before start";
 
+export const CHECK_IN_ENDED_HINT = "Window ended";
+
 export type CheckInButtonState = {
   disabled: boolean;
   hint: string | null;
 };
 
-export function checkInButtonState(startAt: string, now: Date): CheckInButtonState {
+export function checkInButtonState(startAt: string, now: Date, endAt: string): CheckInButtonState {
+  const endMs = new Date(endAt).getTime();
+  if (Number.isFinite(endMs) && now.getTime() >= endMs) {
+    return { disabled: true, hint: CHECK_IN_ENDED_HINT };
+  }
   const startMs = new Date(startAt).getTime();
   const tooEarly =
     Number.isFinite(startMs) && startMs - now.getTime() > CHECK_IN_EARLY_MINUTES * 60 * 1000;
