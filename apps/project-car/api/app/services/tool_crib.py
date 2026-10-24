@@ -79,17 +79,19 @@ def open_checkout(session: Session, sku: str) -> ToolCribEvent | None:
     return session.scalars(stmt).first()
 
 
-def _store(session: Session, row: ToolCribEvent) -> ToolCribEvent:
+def _store(
+    session: Session,
+    row: ToolCribEvent,
+    *,
+    conflict_code: str,
+    conflict_message: str,
+) -> ToolCribEvent:
     session.add(row)
     try:
         session.flush()
     except IntegrityError:
         session.rollback()
-        raise _error(
-            409,
-            "already_returned",
-            "That checkout already has a return row.",
-        ) from None
+        raise _error(409, conflict_code, conflict_message) from None
     session.refresh(row)
     return row
 
@@ -115,8 +117,14 @@ def checkout_tool(
         kind=ToolCribEventKind.CHECKOUT,
         note=_clean_note(note),
         checkout_id=None,
+        open_sku=cleaned,
     )
-    return _store(session, row)
+    return _store(
+        session,
+        row,
+        conflict_code="tool_already_out",
+        conflict_message="That crib tool is already checked out.",
+    )
 
 
 def return_tool(session: Session, *, sku: str, note: str | None) -> ToolCribEvent:
@@ -128,14 +136,21 @@ def return_tool(session: Session, *, sku: str, note: str | None) -> ToolCribEven
             "not_checked_out",
             "That crib tool has no open checkout to return.",
         )
+    checked_out.open_sku = None
     row = ToolCribEvent(
         member_id=checked_out.member_id,
         sku=checked_out.sku,
         kind=ToolCribEventKind.RETURN,
         note=_clean_note(note),
         checkout_id=checked_out.id,
+        open_sku=None,
     )
-    return _store(session, row)
+    return _store(
+        session,
+        row,
+        conflict_code="already_returned",
+        conflict_message="That checkout already has a return row.",
+    )
 
 
 def list_events(session: Session) -> list[ToolCribEvent]:
