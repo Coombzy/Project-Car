@@ -22,7 +22,7 @@ export function OwnerBookingCard({
   compact?: boolean;
 }) {
   const checkIn =
-    booking.status === "confirmed" ? checkInButtonState(booking.start_at, shopClock()) : null;
+    booking.status === "confirmed" ? checkInButtonState(booking.start_at, shopClock(), booking.end_at) : null;
   return (
     <article
       className={`booking-chip status-${booking.status}${booking.kind === "shop" ? " booking-chip-shop" : ""}${compact ? " booking-chip-hour" : ""}`}
