@@ -390,6 +390,87 @@ def test_past_shop_hoist_start_is_rejected(client: TestClient) -> None:
     assert _ledger(client, member["id"]) == ledger
 
 
+def test_approve_after_the_start_has_passed_does_not_book(client: TestClient, monkeypatch) -> None:
+    """Approving once shop now is past start_at does not book or charge.
+
+    The window has started and has not ended. The request stays pending, so
+    staff can still decline it. A request whose start is still ahead still
+    approves. Red on main: that approve returns 200 and writes a booking.
+    """
+    monkeypatch.setenv("SHOP_NOW", "2026-10-06T15:00:00-06:00")
+    member = create_member(client, email="ada.past-window@example.com")
+    shop = create_hoist(client, name="Shop", is_shop=True)
+    soon_start, soon_end = _window(2)
+    later_start, later_end = _window(24 * 10)
+    opened = datetime.fromisoformat(soon_start) + timedelta(minutes=30)
+    assert datetime.fromisoformat(soon_start) < opened < datetime.fromisoformat(soon_end)
+
+    soon = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": shop["id"],
+            "start_at": soon_start,
+            "end_at": soon_end,
+        },
+    )
+    assert soon.status_code == 201, soon.text
+    assert soon.json()["record"] == "shop_hoist_request"
+    assert soon.json()["status"] == "pending"
+    later = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": shop["id"],
+            "start_at": later_start,
+            "end_at": later_end,
+        },
+    )
+    assert later.status_code == 201, later.text
+    assert later.json()["status"] == "pending"
+    ledger = _ledger(client, member["id"])
+    balance = _balance(client, member["id"])
+    assert client.get("/bookings", headers=AUTH, params={"hoist_id": shop["id"]}).json() == []
+
+    monkeypatch.setenv("SHOP_NOW", opened.isoformat())
+    approved = client.post(f"/shop-hoist-requests/{soon.json()['id']}/approve", headers=AUTH)
+    assert approved.status_code == 400, approved.text
+    assert approved.json()["error"]["code"] == "start_in_past"
+
+    pending = client.get("/shop-hoist-requests", headers=AUTH, params={"status": "pending"}).json()
+    assert {row["id"] for row in pending} == {soon.json()["id"], later.json()["id"]}
+    assert all(row["status"] == "pending" and row["booking_id"] is None for row in pending)
+    assert client.get("/bookings", headers=AUTH, params={"hoist_id": shop["id"]}).json() == []
+    assert _ledger(client, member["id"]) == ledger
+    assert _balance(client, member["id"]) == balance
+
+    denied = client.post(f"/shop-hoist-requests/{soon.json()['id']}/deny", headers=AUTH)
+    assert denied.status_code == 200, denied.text
+    assert denied.json()["status"] == "denied"
+    assert denied.json()["booking_id"] is None
+    assert denied.json()["request_id"] == soon.json()["id"]
+    listed = client.get("/shop-hoist-requests", headers=AUTH).json()
+    soon_row = next(row for row in listed if row["id"] == soon.json()["id"])
+    assert soon_row["status"] == "denied"
+    assert soon_row["booking_id"] is None
+    assert client.get("/bookings", headers=AUTH, params={"hoist_id": shop["id"]}).json() == []
+    assert _ledger(client, member["id"]) == ledger
+    assert _balance(client, member["id"]) == balance
+
+    still_open = client.post(f"/shop-hoist-requests/{later.json()['id']}/approve", headers=AUTH)
+    assert still_open.status_code == 200, still_open.text
+    assert still_open.json()["status"] == "approved"
+    assert still_open.json()["booking_id"]
+    bookings = client.get("/bookings", headers=AUTH, params={"hoist_id": shop["id"]}).json()
+    assert [row["id"] for row in bookings] == [still_open.json()["booking_id"]]
+    assert bookings[0]["status"] == "confirmed"
+    reserves = [row for row in _ledger(client, member["id"]) if row["kind"] == "booking_reserve"]
+    assert len(reserves) == 1
+    assert _balance(client, member["id"]) == balance - _dec(later.json()["token_quote"])
+
+
 def _record_scalars(monkeypatch, reads: list[tuple[str, bool]]) -> None:
     """Compile each ORM read on the postgresql dialect.
 
