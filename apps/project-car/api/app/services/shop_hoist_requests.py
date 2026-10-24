@@ -32,6 +32,7 @@ from app.models import (
 from app.services.bookings import (
     HOLDING_STATUSES,
     UNAVAILABLE_HOIST,
+    _stored_utc,
     claim_booking_hours,
     hoist_has_overlap,
     lock_member,
@@ -180,6 +181,10 @@ def approve_shop_hoist_request(
     row = get_shop_hoist_request(session, request_id, for_update=True)
     if row.status != ShopHoistRequestStatus.PENDING:
         raise _error(400, "invalid_transition", "Only a pending shop hoist request can be approved.")
+    # Create checked this start against shop now. The clock can pass it before
+    # staff approve. SQLite returns that UTC instant naive; as_utc would treat
+    # it as shop-local and miss a start that has already passed.
+    reject_start_in_past(_stored_utc(row.start_at))
     reject_own_request(principal, row.created_by_kind, row.created_by_id)
     if row.hoist.status in UNAVAILABLE_HOIST:
         raise _error(400, "hoist_unavailable", "That hoist is in maintenance or locked.")
