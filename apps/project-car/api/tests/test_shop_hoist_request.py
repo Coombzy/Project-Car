@@ -390,6 +390,111 @@ def test_past_shop_hoist_start_is_rejected(client: TestClient) -> None:
     assert _ledger(client, member["id"]) == ledger
 
 
+def _record_scalars(monkeypatch, reads: list[tuple[str, bool]]) -> None:
+    """Compile each ORM read on the postgresql dialect.
+
+    SQLite drops FOR UPDATE at execution. The statement still carries the
+    lock, which is what Postgres will take.
+    """
+    from sqlalchemy.dialects import postgresql
+    from sqlalchemy.orm import Session
+
+    original = Session.scalars
+
+    def spy(self, statement, *args, **kwargs):
+        sql = str(statement.compile(dialect=postgresql.dialect()))
+        locked = getattr(statement, "_for_update_arg", None) is not None
+        reads.append((sql, locked))
+        return original(self, statement, *args, **kwargs)
+
+    monkeypatch.setattr(Session, "scalars", spy)
+
+
+def test_overlapping_shop_hoist_approval_locks_the_request(client: TestClient, monkeypatch) -> None:
+    """Approve selects the request FOR UPDATE before the pending check.
+
+    Two overlapping approvals otherwise both read pending, then both insert a
+    confirmed booking and a booking_reserve. The loser is 400 invalid_transition
+    and leaves the one booking and the one reserve. SQLite drops FOR UPDATE;
+    this checks the statement still asks for the lock, before the member lock
+    and before any booking read. Red on main: that request select has no FOR UPDATE.
+    """
+    member = create_member(client, email="ada.overlap@example.com")
+    shop = create_hoist(client, name="Shop", is_shop=True)
+    start, end = _window(12)
+    requested = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": shop["id"],
+            "start_at": start,
+            "end_at": end,
+        },
+    )
+    assert requested.status_code == 201, requested.text
+    assert requested.json()["record"] == "shop_hoist_request"
+    assert requested.json()["status"] == "pending"
+    request_id = requested.json()["id"]
+
+    reads: list[tuple[str, bool]] = []
+    _record_scalars(monkeypatch, reads)
+    approved = client.post(f"/shop-hoist-requests/{request_id}/approve", headers=AUTH)
+    assert approved.status_code == 200, approved.text
+    assert approved.json()["status"] == "approved"
+    assert approved.json()["booking_id"]
+    approve_reads = list(reads)
+
+    bookings = client.get("/bookings", headers=AUTH, params={"hoist_id": shop["id"]}).json()
+    assert len(bookings) == 1
+    assert bookings[0]["id"] == approved.json()["booking_id"]
+    assert bookings[0]["status"] == "confirmed"
+    ledger = _ledger(client, member["id"])
+    reserves = [row for row in ledger if row["kind"] == "booking_reserve"]
+    assert len(reserves) == 1
+    balance = _balance(client, member["id"])
+
+    reads.clear()
+    second = client.post(f"/shop-hoist-requests/{request_id}/approve", headers=AUTH)
+    second_reads = list(reads)
+    assert second.status_code == 400, second.text
+    assert second.json()["error"]["code"] == "invalid_transition"
+    assert client.get("/bookings", headers=AUTH, params={"hoist_id": shop["id"]}).json() == bookings
+    assert _ledger(client, member["id"]) == ledger
+    assert _balance(client, member["id"]) == balance
+
+    request_selects = [
+        (index, sql, locked)
+        for index, (sql, locked) in enumerate(approve_reads)
+        if "FROM shop_hoist_requests" in sql and "shop_hoist_requests.id" in sql
+    ]
+    assert request_selects, "approve did not select the shop hoist request"
+    first_index, first_sql, first_locked = request_selects[0]
+    assert first_locked and "FOR UPDATE" in first_sql, (
+        "approve request select has no FOR UPDATE on the postgresql dialect"
+    )
+    member_locks = [
+        index
+        for index, (sql, locked) in enumerate(approve_reads)
+        if locked and "FOR UPDATE" in sql and "FROM members" in sql and "WHERE members.id" in sql
+    ]
+    assert member_locks, "shop-hoist approve member select has no FOR UPDATE on the postgresql dialect"
+    assert first_index < member_locks[0]
+    booking_reads = [index for index, (sql, _) in enumerate(approve_reads) if "FROM bookings" in sql]
+    assert booking_reads and first_index < booking_reads[0]
+    loser_selects = [
+        (sql, locked)
+        for sql, locked in second_reads
+        if "FROM shop_hoist_requests" in sql and "shop_hoist_requests.id" in sql
+    ]
+    assert loser_selects, "second approve did not select the shop hoist request"
+    loser_sql, loser_locked = loser_selects[0]
+    assert loser_locked and "FOR UPDATE" in loser_sql, (
+        "approve request select has no FOR UPDATE on the postgresql dialect"
+    )
+    assert not any("FROM bookings" in sql for sql, _locked in second_reads)
+
+
 def test_public_pages_do_not_say_the_shop_is_open() -> None:
     roots = [REPO / "apps" / "website" / "html", REPO / "apps" / "project-car" / "web"]
     hits: list[str] = []
