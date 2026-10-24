@@ -27,6 +27,7 @@ from app.models import (
     TokenTransaction,
     TokenTransactionKind,
 )
+from app.services.bookings import _stored_utc
 from app.services.pricing import quote_reserve
 from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
@@ -175,10 +176,42 @@ def _book(client: TestClient, *, member_id: str, hoist_id: str, start, end) -> d
 
 
 def _activate(client: TestClient, booking_id: str) -> None:
+    """Confirm and check in.
+
+    Check-in at or after end_at is refused. A fixture that is already past its
+    end is moved into the open window for check-in, then put back so overdue
+    still sees that ended visit.
+    """
     assert client.post(f"/bookings/{booking_id}/confirm", headers=AUTH).status_code == 200
+    session = _session(client)
+    saved_start = None
+    saved_end = None
+    try:
+        row = session.get(Booking, UUID(booking_id))
+        assert row is not None
+        if _stored_utc(row.end_at) <= _stored_utc(shop_now()):
+            saved_start = row.start_at
+            saved_end = row.end_at
+            open_start = as_utc(shop_now() + timedelta(minutes=10))
+            row.start_at = open_start
+            row.end_at = open_start + timedelta(hours=1)
+            session.commit()
+    finally:
+        session.close()
     checked = client.post(f"/bookings/{booking_id}/check-in", headers=AUTH)
     assert checked.status_code == 200, checked.text
     assert checked.json()["status"] == "active"
+    if saved_start is None:
+        return
+    session = _session(client)
+    try:
+        row = session.get(Booking, UUID(booking_id))
+        assert row is not None
+        row.start_at = saved_start
+        row.end_at = saved_end
+        session.commit()
+    finally:
+        session.close()
 
 
 def test_overdue_stores_one_late_return_and_moves_no_money(client: TestClient) -> None:
