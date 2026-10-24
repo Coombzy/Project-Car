@@ -267,6 +267,12 @@ def _notify(
     return client.post("/fill/notify", headers=headers or AUTH, json=payload)
 
 
+def _set_hoist_status(client: TestClient, hoist_id: str, status: str) -> None:
+    updated = client.patch(f"/hoists/{hoist_id}", headers=AUTH, json={"status": status})
+    assert updated.status_code == 200, updated.text
+    assert updated.json()["status"] == status
+
+
 def test_second_real_fill_notify_for_the_same_channel_is_refused(client: TestClient) -> None:
     create_member(client, email="ada@example.com", phone="403-555-0100")
     create_hoist(client, name="Bay 1")
@@ -332,6 +338,57 @@ def test_second_real_fill_notify_for_the_same_channel_is_refused(client: TestCli
     assert ai.status_code == 403, ai.text
     assert ai.json()["error"]["code"] == "draft_required"
     assert _outbox_count(client) == after_second_dry
+
+
+def test_second_real_notify_is_refused_when_the_day_has_no_openings(client: TestClient) -> None:
+    # Same target_date once that day has no openings. The only customer bay
+    # is in maintenance, so snapshot.applies is false. Skipping refuse_repeat
+    # on that path turns the second call into 400 no_openings.
+    create_member(client, email="ada@example.com", phone="403-555-0100")
+    hoist = create_hoist(client, name="Bay 1")
+    target = pricing_next_day()
+
+    _set_hoist_status(client, hoist["id"], "maintenance")
+    closed = client.get("/fill/preview", headers=AUTH)
+    assert closed.status_code == 200, closed.text
+    assert closed.json()["target_date"] == target.isoformat()
+    assert closed.json()["applies"] is False
+    assert Decimal(str(closed.json()["open_hours"])) == Decimal("0")
+
+    before = _outbox_count(client)
+    first_closed = _notify(client, dry_run=False, channels=["email"])
+    assert first_closed.status_code == 400, first_closed.text
+    assert first_closed.json()["error"]["code"] == "no_openings"
+    assert _outbox_count(client) == before
+
+    _set_hoist_status(client, hoist["id"], "available")
+    opened = client.get("/fill/preview", headers=AUTH)
+    assert opened.status_code == 200, opened.text
+    assert opened.json()["target_date"] == target.isoformat()
+    assert opened.json()["applies"] is True
+
+    sent = _notify(client, dry_run=False, channels=["email"])
+    assert sent.status_code == 200, sent.text
+    assert sent.json()["published"] is True
+    assert sent.json()["dry_run"] is False
+    assert sent.json()["queued"] == 1
+    assert sent.json()["notifications"][0]["channel"] == "email"
+    assert sent.json()["notifications"][0]["dry_run"] is False
+    assert sent.json()["preview"]["target_date"] == target.isoformat()
+    after_sent = _outbox_count(client)
+    assert after_sent == before + 1
+
+    _set_hoist_status(client, hoist["id"], "maintenance")
+    shut = client.get("/fill/preview", headers=AUTH)
+    assert shut.status_code == 200, shut.text
+    assert shut.json()["target_date"] == target.isoformat()
+    assert shut.json()["applies"] is False
+    assert Decimal(str(shut.json()["open_hours"])) == Decimal("0")
+
+    again = _notify(client, dry_run=False, channels=["email"])
+    assert again.status_code == 409, again.text
+    assert again.json()["error"]["code"] == "already_notified"
+    assert _outbox_count(client) == after_sent
 
 
 def test_real_fill_notify_on_the_next_regina_day_still_sends(client: TestClient, monkeypatch) -> None:

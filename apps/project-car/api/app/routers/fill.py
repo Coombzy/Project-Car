@@ -61,10 +61,10 @@ def notify_fill(body: FillNotifyRequest, session: DbSession, owner: Owner) -> Fi
         offer = None
         published = False
         if not body.dry_run:
-            # Before publish, so a repeat does not rewrite today's offer.
-            # A day with no openings still raises no_openings from the upsert.
-            if snapshot.applies:
-                refuse_repeat_fill_campaign(session, snapshot.target_date, channels)
+            # Before publish, including when this snapshot does not apply.
+            # A repeat is 409 even if the day now has no openings. A day that
+            # was never notified still raises no_openings from the upsert.
+            refuse_repeat_fill_campaign(session, snapshot.target_date, channels)
             offer = upsert_published_offer(session, snapshot)
             published = True
         rows = enqueue_fill_campaign(
