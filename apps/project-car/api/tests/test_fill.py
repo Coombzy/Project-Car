@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -332,3 +332,34 @@ def test_second_real_fill_notify_for_the_same_channel_is_refused(client: TestCli
     assert ai.status_code == 403, ai.text
     assert ai.json()["error"]["code"] == "draft_required"
     assert _outbox_count(client) == after_second_dry
+
+
+def test_real_fill_notify_on_the_next_regina_day_still_sends(client: TestClient, monkeypatch) -> None:
+    # Per target_date. Same-day 409 stays in the test above, including its sms arms.
+    # Dropping FillOffer.target_date from the already-notified lookup turns this into 409.
+    create_member(client, email="ada@example.com", phone="403-555-0100")
+    create_hoist(client, name="Bay 1")
+
+    first = _notify(client, dry_run=False, channels=["email"])
+    assert first.status_code == 200, first.text
+    assert first.json()["queued"] == 1
+    first_day = date.fromisoformat(first.json()["preview"]["target_date"])
+    after_first = _outbox_count(client)
+
+    # Noon on the Regina day just notified. The next snapshot is the day after that.
+    advanced = datetime.combine(first_day, time(12, 0), tzinfo=PRICING_TZ)
+    monkeypatch.setenv("SHOP_NOW", advanced.isoformat())
+
+    second = _notify(client, dry_run=False, channels=["email"])
+    assert second.status_code == 200, second.text
+    body = second.json()
+    assert body["dry_run"] is False
+    assert body["published"] is True
+    assert body["queued"] == 1
+    expected = (first_day + timedelta(days=1)).isoformat()
+    assert body["preview"]["target_date"] == expected
+    note = body["notifications"][0]
+    assert note["channel"] == "email"
+    assert note["dry_run"] is False
+    assert note["payload"]["target_date"] == expected
+    assert _outbox_count(client) == after_first + 1
