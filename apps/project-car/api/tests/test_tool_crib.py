@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+import importlib.util
+from pathlib import Path
+from uuid import UUID
+
+import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import func, select
+from sqlalchemy import create_engine, func, select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models import ToolCribEvent, ToolCribEventKind
@@ -304,3 +310,282 @@ def test_whitespace_crib_return_sku_is_422(client: TestClient) -> None:
     )
     assert padded.status_code == 422, padded.text
     assert _count(client, ToolCribEventKind.RETURN) == 1
+
+
+def _member_id(ada: dict) -> UUID:
+    return UUID(ada["id"])
+
+
+def test_two_raw_open_sku_rows_raise_integrity_error(client: TestClient) -> None:
+    """(a) Two raw inserts with open_sku TC-1. Red on main: the column is absent."""
+    ada = create_member(client, email="ada@example.com")
+    session = _session(client)
+    try:
+        session.add(
+            ToolCribEvent(
+                member_id=_member_id(ada),
+                sku="TC-1",
+                kind=ToolCribEventKind.CHECKOUT,
+                open_sku="TC-1",
+            )
+        )
+        session.flush()
+        session.add(
+            ToolCribEvent(
+                member_id=_member_id(ada),
+                sku="TC-1",
+                kind=ToolCribEventKind.CHECKOUT,
+                open_sku="TC-1",
+            )
+        )
+        with pytest.raises(IntegrityError):
+            session.flush()
+    finally:
+        session.rollback()
+        session.close()
+
+
+def test_same_sku_with_null_open_sku_does_not_raise(client: TestClient) -> None:
+    """(b) The unique index is on open_sku, not sku. NULL does not collide."""
+    ada = create_member(client, email="ada@example.com")
+    session = _session(client)
+    try:
+        session.add(
+            ToolCribEvent(
+                member_id=_member_id(ada),
+                sku="TC-1",
+                kind=ToolCribEventKind.CHECKOUT,
+                open_sku=None,
+            )
+        )
+        session.add(
+            ToolCribEvent(
+                member_id=_member_id(ada),
+                sku="TC-1",
+                kind=ToolCribEventKind.CHECKOUT,
+                open_sku=None,
+            )
+        )
+        session.flush()
+        stored = list(session.scalars(select(ToolCribEvent)).all())
+        assert len(stored) == 2
+        assert {row.sku for row in stored} == {"TC-1"}
+        assert {row.open_sku for row in stored} == {None}
+    finally:
+        session.rollback()
+        session.close()
+
+
+def test_return_clears_open_sku_and_checkout_can_repeat(client: TestClient) -> None:
+    """(c) Checkout TC-1, return clears open_sku, checkout TC-1 again.
+
+    TC-1 is the raw column value. checkout_tool still rejects it as invalid_crib_sku.
+    The service round-trip uses a real crib SKU and must clear open_sku on return.
+    """
+    ada = create_member(client, email="ada@example.com")
+    session = _session(client)
+    try:
+        first = ToolCribEvent(
+            member_id=_member_id(ada),
+            sku="TC-1",
+            kind=ToolCribEventKind.CHECKOUT,
+            open_sku="TC-1",
+        )
+        session.add(first)
+        session.flush()
+        first.open_sku = None
+        session.add(
+            ToolCribEvent(
+                member_id=_member_id(ada),
+                sku="TC-1",
+                kind=ToolCribEventKind.RETURN,
+                checkout_id=first.id,
+                open_sku=None,
+            )
+        )
+        session.flush()
+        session.add(
+            ToolCribEvent(
+                member_id=_member_id(ada),
+                sku="TC-1",
+                kind=ToolCribEventKind.CHECKOUT,
+                open_sku="TC-1",
+            )
+        )
+        session.flush()
+        assert first.open_sku is None
+        open_again = list(
+            session.scalars(
+                select(ToolCribEvent).where(
+                    ToolCribEvent.sku == "TC-1",
+                    ToolCribEvent.kind == ToolCribEventKind.CHECKOUT,
+                    ToolCribEvent.open_sku == "TC-1",
+                )
+            ).all()
+        )
+        assert len(open_again) == 1
+
+        from app.services.tool_crib import checkout_tool, return_tool
+
+        opened = checkout_tool(
+            session, member_id=_member_id(ada), sku="TC-FL-001", note=None
+        )
+        assert opened.open_sku == "TC-FL-001"
+        returned = return_tool(session, sku="TC-FL-001", note=None)
+        session.refresh(opened)
+        assert opened.open_sku is None
+        assert returned.open_sku is None
+        again = checkout_tool(
+            session, member_id=_member_id(ada), sku="TC-FL-001", note=None
+        )
+        assert again.open_sku == "TC-FL-001"
+        assert again.id != opened.id
+    finally:
+        session.rollback()
+        session.close()
+
+
+def test_overlapping_checkout_is_409_tool_already_out(client: TestClient, monkeypatch) -> None:
+    """(d) When the open-checkout read misses, the unique index is 409 tool_already_out."""
+    from app.services import tool_crib as crib
+
+    ada = create_member(client, email="ada@example.com")
+    first = client.post(
+        "/tool-crib/checkouts",
+        headers=AUTH,
+        json={"member_id": ada["id"], "sku": "TC-FL-001"},
+    )
+    assert first.status_code == 201, first.text
+
+    monkeypatch.setattr(crib, "open_checkout", lambda _session, _sku: None)
+    second = client.post(
+        "/tool-crib/checkouts",
+        headers=AUTH,
+        json={"member_id": ada["id"], "sku": "TC-FL-001"},
+    )
+    assert second.status_code == 409, second.text
+    assert second.json()["error"]["code"] == "tool_already_out"
+    assert _count(client, ToolCribEventKind.CHECKOUT) == 1
+
+
+def test_open_sku_migration_backfills_and_downgrade_reapplies() -> None:
+    """One open checkout per SKU backfills. Downgrade drops the index and the column."""
+    path = (
+        Path(__file__).resolve().parents[1]
+        / "alembic"
+        / "versions"
+        / "20261023_0016_tool_crib_open_sku.py"
+    )
+    spec = importlib.util.spec_from_file_location("tool_crib_open_sku_20261023_0016", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.revision == "20261023_0016"
+    assert module.down_revision == "20261016_0015"
+
+    from alembic.operations import Operations
+    from alembic.runtime.migration import MigrationContext
+
+    engine = create_engine("sqlite://")
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE tool_crib_events (
+                    id TEXT PRIMARY KEY,
+                    member_id TEXT NOT NULL,
+                    sku VARCHAR(80) NOT NULL,
+                    kind VARCHAR(32) NOT NULL,
+                    note TEXT,
+                    checkout_id TEXT,
+                    created_at DATETIME NOT NULL
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO tool_crib_events
+                    (id, member_id, sku, kind, note, checkout_id, created_at)
+                VALUES
+                    ('open-fl', 'member', 'TC-FL-001', 'checkout', NULL, NULL, '2026-10-01'),
+                    ('closed-tq', 'member', 'TC-TQ-003', 'checkout', NULL, NULL, '2026-10-02'),
+                    ('return-tq', 'member', 'TC-TQ-003', 'return', NULL, 'closed-tq', '2026-10-03'),
+                    ('open-pr', 'member', 'TC-PR-001', 'checkout', NULL, NULL, '2026-10-04')
+                """
+            )
+        )
+
+        def _apply(fn) -> None:
+            ctx = MigrationContext.configure(connection)
+            with Operations.context(ctx):
+                fn()
+
+        def _open_skus() -> dict[str, str | None]:
+            return dict(
+                connection.execute(text("SELECT id, open_sku FROM tool_crib_events")).all()
+            )
+
+        _apply(module.upgrade)
+        assert _open_skus() == {
+            "open-fl": "TC-FL-001",
+            "closed-tq": None,
+            "return-tq": None,
+            "open-pr": "TC-PR-001",
+        }
+        index = connection.execute(
+            text(
+                "SELECT name FROM sqlite_master "
+                "WHERE type = 'index' AND name = 'uq_tool_crib_events_open_sku'"
+            )
+        ).all()
+        assert index
+
+        connection.execute(
+            text(
+                """
+                INSERT INTO tool_crib_events
+                    (id, member_id, sku, kind, note, checkout_id, open_sku, created_at)
+                VALUES
+                    ('again-tq', 'member', 'TC-TQ-003', 'checkout', NULL, NULL, 'TC-TQ-003', '2026-10-05')
+                """
+            )
+        )
+        with pytest.raises(IntegrityError):
+            nested = connection.begin_nested()
+            try:
+                connection.execute(
+                    text(
+                        """
+                        INSERT INTO tool_crib_events
+                            (id, member_id, sku, kind, note, checkout_id, open_sku, created_at)
+                        VALUES
+                            ('second-fl', 'member', 'TC-FL-001', 'checkout', NULL, NULL, 'TC-FL-001', '2026-10-06')
+                        """
+                    )
+                )
+                nested.commit()
+            except Exception:
+                nested.rollback()
+                raise
+        connection.execute(text("DELETE FROM tool_crib_events WHERE id = 'again-tq'"))
+
+        _apply(module.downgrade)
+        columns = [row[1] for row in connection.execute(text("PRAGMA table_info(tool_crib_events)"))]
+        assert "open_sku" not in columns
+        index = connection.execute(
+            text(
+                "SELECT name FROM sqlite_master "
+                "WHERE type = 'index' AND name = 'uq_tool_crib_events_open_sku'"
+            )
+        ).all()
+        assert index == []
+
+        _apply(module.upgrade)
+        assert _open_skus() == {
+            "open-fl": "TC-FL-001",
+            "closed-tq": None,
+            "return-tq": None,
+            "open-pr": "TC-PR-001",
+        }
