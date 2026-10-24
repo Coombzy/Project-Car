@@ -30,6 +30,9 @@ router = APIRouter(tags=["members"])
 # Stand-in until Ben sets the real minimum. A spaces-only value still fails at this length.
 MEMBER_PASSWORD_MIN_LENGTH = 12
 
+# Stand-in until Ben sets the real cap. Absolute value at or above this is refused.
+MAX_TOKEN_ADJUSTMENT = Decimal("1000000")
+
 
 def _member_or_404(session, member_id: UUID) -> Member:
     member = session.get(Member, member_id)
@@ -185,7 +188,26 @@ def adjust_member_tokens(
         message="An AI cannot change a token balance on its own.",
     )
     member = _member_or_404(session, member_id)
-    if body.amount == 0:
+    amount = body.amount
+    # Refuse the posted scale. Rounding to cents would store 0.00 for 0.0001.
+    exponent = amount.as_tuple().exponent
+    if not isinstance(exponent, int) or exponent < -2:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "invalid_tokens",
+                "message": "Adjustment amount must have at most 2 decimal places.",
+            },
+        )
+    if abs(amount) >= MAX_TOKEN_ADJUSTMENT:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "invalid_tokens",
+                "message": "Adjustment amount must be under 1,000,000 tokens.",
+            },
+        )
+    if amount == 0:
         raise HTTPException(
             status_code=400,
             detail={"code": "invalid_tokens", "message": "Adjustment amount cannot be zero."},
@@ -194,7 +216,7 @@ def adjust_member_tokens(
         session,
         member,
         kind=TokenTransactionKind.ADMIN_ADJUSTMENT,
-        amount=body.amount,
+        amount=amount,
         note=body.note or "Owner adjustment",
     )
     session.flush()
