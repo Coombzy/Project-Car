@@ -1,16 +1,19 @@
 from __future__ import annotations
 
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
+from sqlalchemy import func, select
 
-from app.models import Booking, BookingStatus, Hoist, HoistStatus
+from app.models import Booking, BookingStatus, Hoist, HoistStatus, NotificationOutbox
 from app.services.fill import detect_openings, select_discount_pct
 from app.services.pricing import quote_reserve
 from app.shop_time import PRICING_TZ, pricing_clock_window, pricing_next_day, pricing_now
 from tests.conftest import AUTH, create_hoist, create_member, login_member
+
+AI = {"Authorization": "Bearer dev-ai-secret"}
 
 
 def _regina(year: int, month: int, day: int, hour: int, minute: int = 0) -> datetime:
@@ -240,3 +243,123 @@ def test_same_day_slot_does_not_take_fill(client: TestClient) -> None:
     assert quoted.status_code == 200, quoted.text
     assert quoted.json()["pricing_rule"]["fill_id"] == "none"
     assert quoted.json()["pricing_rule"]["fill_multiplier"] == "1"
+
+
+def _outbox_count(client: TestClient) -> int:
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        return int(session.scalar(select(func.count()).select_from(NotificationOutbox)) or 0)
+    finally:
+        session.close()
+
+
+def _notify(
+    client: TestClient,
+    *,
+    dry_run: bool,
+    channels: list[str],
+    discount_pct: str | None = None,
+    headers: dict | None = None,
+):
+    payload: dict = {"dry_run": dry_run, "channels": channels}
+    if discount_pct is not None:
+        payload["discount_pct"] = discount_pct
+    return client.post("/fill/notify", headers=headers or AUTH, json=payload)
+
+
+def test_second_real_fill_notify_for_the_same_channel_is_refused(client: TestClient) -> None:
+    create_member(client, email="ada@example.com", phone="403-555-0100")
+    create_hoist(client, name="Bay 1")
+
+    dry = _notify(client, dry_run=True, channels=["email"])
+    assert dry.status_code == 200, dry.text
+    assert dry.json()["dry_run"] is True
+    assert dry.json()["published"] is False
+    after_dry = _outbox_count(client)
+    assert after_dry == dry.json()["queued"]
+
+    first = _notify(client, dry_run=False, channels=["email"], discount_pct="15")
+    assert first.status_code == 200, first.text
+    assert first.json()["published"] is True
+    assert first.json()["queued"] == 1
+    assert first.json()["notifications"][0]["channel"] == "email"
+    assert first.json()["notifications"][0]["dry_run"] is False
+    after_first = _outbox_count(client)
+    assert after_first == after_dry + 1
+    preview = client.get("/fill/preview", headers=AUTH)
+    assert preview.status_code == 200, preview.text
+    assert Decimal(str(preview.json()["discount_pct"])) == Decimal("15.00")
+
+    second = _notify(client, dry_run=False, channels=["email"], discount_pct="20")
+    assert second.status_code == 409, second.text
+    assert second.json()["error"]["code"] == "already_notified"
+    assert _outbox_count(client) == after_first
+    preview_again = client.get("/fill/preview", headers=AUTH)
+    assert Decimal(str(preview_again.json()["discount_pct"])) == Decimal("15.00")
+
+    mixed = _notify(client, dry_run=False, channels=["email", "sms"])
+    assert mixed.status_code == 409, mixed.text
+    assert mixed.json()["error"]["code"] == "already_notified"
+    assert _outbox_count(client) == after_first
+
+    other = _notify(client, dry_run=False, channels=["sms"])
+    assert other.status_code == 200, other.text
+    assert other.json()["dry_run"] is False
+    assert other.json()["queued"] == 1
+    assert other.json()["notifications"][0]["channel"] == "sms"
+    assert other.json()["notifications"][0]["dry_run"] is False
+    after_sms = _outbox_count(client)
+    assert after_sms == after_first + 1
+
+    sms_again = _notify(client, dry_run=False, channels=["sms"])
+    assert sms_again.status_code == 409, sms_again.text
+    assert sms_again.json()["error"]["code"] == "already_notified"
+    assert _outbox_count(client) == after_sms
+
+    dry_again = _notify(client, dry_run=True, channels=["email"])
+    assert dry_again.status_code == 200, dry_again.text
+    assert dry_again.json()["dry_run"] is True
+    assert dry_again.json()["published"] is False
+    after_second_dry = _outbox_count(client)
+    assert after_second_dry == after_sms + dry_again.json()["queued"]
+
+    third = _notify(client, dry_run=False, channels=["email"])
+    assert third.status_code == 409, third.text
+    assert third.json()["error"]["code"] == "already_notified"
+    assert _outbox_count(client) == after_second_dry
+
+    ai = _notify(client, dry_run=False, channels=["email"], headers=AI)
+    assert ai.status_code == 403, ai.text
+    assert ai.json()["error"]["code"] == "draft_required"
+    assert _outbox_count(client) == after_second_dry
+
+
+def test_real_fill_notify_on_the_next_regina_day_still_sends(client: TestClient, monkeypatch) -> None:
+    # Per target_date. Same-day 409 stays in the test above, including its sms arms.
+    # Dropping FillOffer.target_date from the already-notified lookup turns this into 409.
+    create_member(client, email="ada@example.com", phone="403-555-0100")
+    create_hoist(client, name="Bay 1")
+
+    first = _notify(client, dry_run=False, channels=["email"])
+    assert first.status_code == 200, first.text
+    assert first.json()["queued"] == 1
+    first_day = date.fromisoformat(first.json()["preview"]["target_date"])
+    after_first = _outbox_count(client)
+
+    # Noon on the Regina day just notified. The next snapshot is the day after that.
+    advanced = datetime.combine(first_day, time(12, 0), tzinfo=PRICING_TZ)
+    monkeypatch.setenv("SHOP_NOW", advanced.isoformat())
+
+    second = _notify(client, dry_run=False, channels=["email"])
+    assert second.status_code == 200, second.text
+    body = second.json()
+    assert body["dry_run"] is False
+    assert body["published"] is True
+    assert body["queued"] == 1
+    expected = (first_day + timedelta(days=1)).isoformat()
+    assert body["preview"]["target_date"] == expected
+    note = body["notifications"][0]
+    assert note["channel"] == "email"
+    assert note["dry_run"] is False
+    assert note["payload"]["target_date"] == expected
+    assert _outbox_count(client) == after_first + 1
