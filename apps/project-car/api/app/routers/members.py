@@ -27,6 +27,9 @@ from app.services.tokens import apply_ledger, rebuild_token_balance
 
 router = APIRouter(tags=["members"])
 
+# Stand-in until Ben sets the real minimum. A spaces-only value still fails at this length.
+MEMBER_PASSWORD_MIN_LENGTH = 12
+
 
 def _member_or_404(session, member_id: UUID) -> Member:
     member = session.get(Member, member_id)
@@ -138,6 +141,18 @@ def set_member_password(
             status_code=422,
             detail={"code": "validation_error", "message": "Password is required."},
         ) from None
+    # Length is the raw string. Spaces-only is rejected even when it meets the count.
+    if len(password) < MEMBER_PASSWORD_MIN_LENGTH or password.isspace():
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "password_too_short",
+                "message": (
+                    f"Password must be at least {MEMBER_PASSWORD_MIN_LENGTH} characters"
+                    " and cannot be only spaces."
+                ),
+            },
+        )
     member = _member_or_404(session, member_id)
     member.password_hash = hash_password(password)
     session.add(member)
