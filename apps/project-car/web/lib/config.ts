@@ -2,8 +2,9 @@ export const SESSION_COOKIE = "pc_owner_session";
 export const MEMBER_SESSION_COOKIE = "pc_member_session";
 
 export function shopApiUrl(): string {
-  const raw = process.env.SHOP_API_URL ?? "http://127.0.0.1:8000";
-  return raw.replace(/\/$/, "");
+  const fallback = "http://127.0.0.1:8000";
+  const trimmed = (process.env.SHOP_API_URL ?? fallback).trim().replace(/\/+$/, "");
+  return trimmed === "" ? fallback : trimmed;
 }
 
 export type ApiErrorBody = {
