@@ -253,8 +253,13 @@ def approve_shop_hoist_request(
 def deny_shop_hoist_request(
     session: Session, request_id: UUID, principal: Principal
 ) -> tuple[ShopHoistRequest, StaffAction]:
-    """Refuse a pending request. Tokens stay where they are."""
-    row = get_shop_hoist_request(session, request_id)
+    """Refuse a pending request. Tokens stay where they are.
+
+    Lock the row before the pending check, same as approve. A deny that loses
+    the race then sees approved and answers 400 invalid_transition instead of
+    writing denied over a confirmed booking and a booking_reserve.
+    """
+    row = get_shop_hoist_request(session, request_id, for_update=True)
     if row.status != ShopHoistRequestStatus.PENDING:
         raise _error(400, "invalid_transition", "Only a pending shop hoist request can be denied.")
     _decide(row, principal, status=ShopHoistRequestStatus.DENIED)

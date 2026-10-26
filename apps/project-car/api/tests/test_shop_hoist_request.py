@@ -576,6 +576,115 @@ def test_overlapping_shop_hoist_approval_locks_the_request(client: TestClient, m
     assert not any("FROM bookings" in sql for sql, _locked in second_reads)
 
 
+def test_deny_shop_hoist_request_locks_the_request(client: TestClient, monkeypatch) -> None:
+    """Deny selects the request FOR UPDATE before the pending check.
+
+    A deny that starts while an approve holds the row otherwise reads pending,
+    waits on the later UPDATE, and stores denied over a confirmed booking and
+    a booking_reserve. The loser is 400 invalid_transition. SQLite drops
+    FOR UPDATE; this checks the statement still asks for the lock. The reload
+    after the decision is not the gate. Red on main: that request select has
+    no FOR UPDATE.
+    """
+    member = create_member(client, email="ada.deny-lock@example.com")
+    shop = create_hoist(client, name="Shop", is_shop=True)
+    start, end = _window(13)
+    requested = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": shop["id"],
+            "start_at": start,
+            "end_at": end,
+        },
+    )
+    assert requested.status_code == 201, requested.text
+    assert requested.json()["record"] == "shop_hoist_request"
+    assert requested.json()["status"] == "pending"
+    request_id = requested.json()["id"]
+    balance = _balance(client, member["id"])
+    ledger = _ledger(client, member["id"])
+
+    reads: list[tuple[str, bool]] = []
+    _record_scalars(monkeypatch, reads)
+    denied = client.post(f"/shop-hoist-requests/{request_id}/deny", headers=AUTH)
+    deny_reads = list(reads)
+    assert denied.status_code == 200, denied.text
+    body = denied.json()
+    assert body["request_id"] == request_id
+    assert body["status"] == "denied"
+    assert body["action"] == "deny"
+    assert body["actor_kind"] == "human"
+    assert body["booking_id"] is None
+    assert body["action_id"]
+    assert client.get("/bookings", headers=AUTH, params={"hoist_id": shop["id"]}).json() == []
+    assert _ledger(client, member["id"]) == ledger
+    assert _balance(client, member["id"]) == balance
+
+    request_selects = [
+        (sql, locked)
+        for sql, locked in deny_reads
+        if "FROM shop_hoist_requests" in sql and "shop_hoist_requests.id" in sql
+    ]
+    assert request_selects, "deny did not select the shop hoist request"
+    first_sql, first_locked = request_selects[0]
+    assert first_locked and "FOR UPDATE" in first_sql, (
+        "deny request select has no FOR UPDATE on the postgresql dialect"
+    )
+
+
+def test_deny_after_approve_keeps_the_booking_and_reserve(client: TestClient) -> None:
+    """A deny after a finished approve is 400 invalid_transition.
+
+    The confirmed booking and the booking_reserve stay, and the request stays
+    approved.
+    """
+    member = create_member(client, email="ada.deny-after@example.com")
+    shop = create_hoist(client, name="Shop", is_shop=True)
+    start, end = _window(15)
+    requested = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": shop["id"],
+            "start_at": start,
+            "end_at": end,
+        },
+    )
+    assert requested.status_code == 201, requested.text
+    request_id = requested.json()["id"]
+
+    approved = client.post(f"/shop-hoist-requests/{request_id}/approve", headers=AUTH)
+    assert approved.status_code == 200, approved.text
+    assert approved.json()["status"] == "approved"
+    booking_id = approved.json()["booking_id"]
+    assert booking_id
+    bookings = client.get("/bookings", headers=AUTH, params={"hoist_id": shop["id"]}).json()
+    assert [row["id"] for row in bookings] == [booking_id]
+    assert bookings[0]["status"] == "confirmed"
+    ledger = _ledger(client, member["id"])
+    reserves = [row for row in ledger if row["kind"] == "booking_reserve"]
+    assert len(reserves) == 1
+    assert reserves[0]["booking_id"] == booking_id
+    balance = _balance(client, member["id"])
+
+    denied = client.post(f"/shop-hoist-requests/{request_id}/deny", headers=AUTH)
+    assert denied.status_code == 400, denied.text
+    assert denied.json()["error"]["code"] == "invalid_transition"
+    assert denied.json()["error"]["message"] == (
+        "Only a pending shop hoist request can be denied."
+    )
+    assert client.get("/bookings", headers=AUTH, params={"hoist_id": shop["id"]}).json() == bookings
+    assert _ledger(client, member["id"]) == ledger
+    assert _balance(client, member["id"]) == balance
+    listed = client.get("/shop-hoist-requests", headers=AUTH).json()
+    stored = next(row for row in listed if row["id"] == request_id)
+    assert stored["status"] == "approved"
+    assert stored["booking_id"] == booking_id
+
+
 def test_public_pages_do_not_say_the_shop_is_open() -> None:
     roots = [REPO / "apps" / "website" / "html", REPO / "apps" / "project-car" / "web"]
     hits: list[str] = []
