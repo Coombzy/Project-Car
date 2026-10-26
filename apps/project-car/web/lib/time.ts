@@ -74,8 +74,21 @@ export function mondayOf(isoDate: string): string {
   return addDays(isoDate, offset);
 }
 
+function isRealCalendarDate(isoDate: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  if (!match) {
+    return false;
+  }
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  // Date.UTC rolls 2026-02-31 to 3 March. A real date survives that round trip.
+  const utc = new Date(Date.UTC(year, month - 1, day));
+  return utc.getUTCFullYear() === year && utc.getUTCMonth() === month - 1 && utc.getUTCDate() === day;
+}
+
 export function parseWeekParam(week?: string): string {
-  if (week && /^\d{4}-\d{2}-\d{2}$/.test(week)) {
+  if (week && isRealCalendarDate(week)) {
     return mondayOf(week);
   }
   return mondayOf(shopTodayIso());
