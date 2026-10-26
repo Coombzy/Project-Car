@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     # Not OIDC. Staff OIDC can replace this later without rewriting shop tables.
     member_demo_password: str = "changeme"
     cookie_secure: bool = False
+    # Header that carries the real client address for the login and waitlist caps.
+    # Empty: key on the TCP peer. No header name is hard-coded.
+    client_ip_header: str = ""
     # Explicit allowlist only. Never "*". Public waitlist POSTs need the brochure origins.
     cors_origins: str = (
         "http://localhost:3000,http://127.0.0.1:3000,"

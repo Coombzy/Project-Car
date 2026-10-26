@@ -11,6 +11,8 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+from app.client_ip import client_ip
+from app.config import get_settings
 from app.deps import AppSettings, DbSession, Owner
 from app.models import Member, MemberStatus, MembershipTier, TokenTransactionKind, WaitlistEntry
 from app.schemas import WaitlistCreate, WaitlistEntryOut
@@ -51,10 +53,7 @@ class WaitlistConvert(BaseModel):
 
 
 def _client_ip(request: Request) -> str:
-    client = request.client
-    if client is None or not client.host:
-        return "unknown"
-    return client.host
+    return client_ip(request, get_settings().client_ip_header)
 
 
 def _duplicate_email() -> HTTPException:
