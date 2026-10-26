@@ -482,6 +482,86 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Likely files: `apps/project-car/api/app/routers/dashboard.py`, `apps/project-car/api/tests/test_dashboard_waitlist.py`
 - Depends on: none. Shares no file with any other open row.
 
+### R55. Login and waitlist caps key on the tunnel's address, so the whole internet shares one bucket
+- Category: Hardening
+- Baseline: both caps read `request.client.host`: `_client_ip` in `apps/project-car/api/app/routers/auth.py` (login and member login, eight failures) and `_client_ip` in `apps/project-car/api/app/routers/waitlist.py` (waitlist creates). `app/config.py` has no client-IP setting. `api.projectcar.ca` reaches the API through a Cloudflare Tunnel on the same host, so every public client has the same peer address. Eight bad logins or eight waitlist signups from anyone lock everyone out for the window.
+- Target: a new setting `client_ip_header` (env `CLIENT_IP_HEADER`, default empty) names the request header that carries the real client address. With it set and the header present and parseable as an IP address, both caps key on that address. Empty setting, missing header or unparseable value: key on the TCP peer exactly as today. One shared helper replaces the two copies. No header name is hard-coded. The stand-in is in Needs from Ben.
+- Must not get worse: `pytest` for the API (`test_session_cookie.py`, `test_waitlist.py`, `test_member_self_serve.py`, `test_cors_waitlist.py`); the 401 `invalid_credentials` and 429 `rate_limited` answers and their bodies; the in-process bucket and its window in `app/auth.py`.
+- Proof: new `apps/project-car/api/tests/test_client_ip.py` with the setting pointed at `X-Test-Client-IP`. Same TCP peer, header value A: eight bad logins then 429 on the ninth. Header value B on the same peer: still 401. Setting empty: A and B share one bucket (429 for both). Same split for waitlist creates. A garbage header value falls back to the peer. Red on main (value B is 429 there).
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/config.py` (one setting), `apps/project-car/api/app/routers/auth.py` (`_client_ip` only), `apps/project-car/api/app/routers/waitlist.py` (`_client_ip` only), `apps/project-car/api/tests/test_client_ip.py`
+- Depends on: none. Shares no file with any other open row.
+
+### R56. Denying a shop-hoist request does not lock the request row
+- Category: Hardening
+- Baseline: `approve_shop_hoist_request` in `apps/project-car/api/app/services/shop_hoist_requests.py` loads the request with `for_update=True` (R42). `deny_shop_hoist_request` calls `get_shop_hoist_request(session, request_id)` with no lock. On Postgres a deny that starts while an approve is running reads `pending`, waits on the row at the `UPDATE`, then overwrites the approved request with `denied`, leaving a confirmed booking and a `booking_reserve` for a request that says denied. SQLite hides it because it drops `FOR UPDATE`. A deny after a finished approve already answers 400 `invalid_transition`.
+- Target: deny loads the request `FOR UPDATE` before the pending check, so a deny that loses the race sees `approved` and answers 400 `invalid_transition`. Sequential behaviour is unchanged.
+- Must not get worse: `pytest` for the API (`test_shop_hoist_request.py`, `test_staff_actions.py`); the deny response shape and the `StaffAction` row it records; approve behaviour from R42 and R43.
+- Proof: new case in `apps/project-car/api/tests/test_shop_hoist_request.py`, written like `test_overlapping_shop_hoist_approval_locks_the_request` (spy on `Session.scalars`, compile on the postgresql dialect): the request select made by deny carries `FOR UPDATE`. Red on main (no lock). A second case checks deny after approve is still 400 `invalid_transition` and the booking and reserve are intact.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/shop_hoist_requests.py` (`deny_shop_hoist_request` only), `apps/project-car/api/tests/test_shop_hoist_request.py`
+- Depends on: none. Shares no file with any other open row.
+
+### R57. An AI caller can create a to-do that nobody can ever see
+- Category: Bug
+- Baseline: `POST /todos` in `apps/project-car/api/app/routers/todos.py` takes `AnyPrincipal`, and the AI bearer is accepted there (`require_principal` returns role `ai`). `create_todo` in `apps/project-car/api/app/services/todos.py` sets `owner_email` only for role `owner` and `member_id` only for role `member`, so an AI to-do is stored with both null. `_scope` then matches it for nobody: the Owner list filters on `owner_email`, a member list on `member_id`, and an AI read answers 401. The 201 hides a row that is lost.
+- Target: an AI principal on `POST /todos` answers 403 `todo_requires_person` and stores nothing. Owner and member creates, and every read and patch path, are unchanged. The stand-in is in Needs from Ben.
+- Must not get worse: `pytest` for the API (`test_dashboard_todos.py`, owner-versus-member isolation); the to-do ICS export; the 422 blank-title answer.
+- Proof: new case in `apps/project-car/api/tests/test_dashboard_todos.py`: AI bearer `POST /todos` is 403 and the `todos` count is unchanged; owner create is 201; a member create is 201 and invisible to the Owner list. Red on main (AI create is 201 and the row exists with both owners null).
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/todos.py` (`create_todo` only), `apps/project-car/api/tests/test_dashboard_todos.py`
+- Depends on: none. Shares no file with any other open row.
+
+### R58. A hoist can be set Available under a visit, or lose its shop flag
+- Category: Bug
+- Baseline: `patch_hoist` in `apps/project-car/api/app/routers/hoists.py` writes `status` straight from `HoistPatch` with no look at bookings, so an Owner (or an AI bearer, which `Owner` accepts) can set `available` on a hoist that holds an `active` booking. The bay then shows free while a car is on it. `_ensure_single_shop_hoist` returns at once when `is_shop` is false, so `{"is_shop": false}` on the one shop hoist is 200 and the shop is left with no shop hoist, against the spec (`Docs/project-car-application-specification.md`, Hoists: seed 6 hoists, "exactly one is the shop hoist"). Neither path is covered by R49, which only handles explicit nulls.
+- Target: `status` set to `available` while a booking on that hoist is `active` or `overdue` (both cases tested) answers 409 `hoist_occupied` and leaves the hoist unchanged. Clearing `is_shop` on the only shop hoist answers 409 `last_shop_hoist` and leaves it set. Setting `is_shop` true on a second hoist while one exists still answers 409 `duplicate_shop_hoist` (unchanged). One rule for the flag: it cannot be moved with this endpoint, and moving it is outside this row. After the visit completes, `available` is 200. Stand-ins are in Needs from Ben.
+- Must not get worse: `pytest` for the API (`test_hoist_patch_null.py`, `test_shop_os.py`, booking and shop-hoist tests); the PATCH response shape; maintenance and locked still settable on an idle hoist.
+- Proof: new `apps/project-car/api/tests/test_hoist_guards.py` (check a booking in, PATCH `available` is 409 and the hoist stays `occupied`; complete, PATCH `available` is 200; an `overdue` booking gives the same 409; PATCH `is_shop: false` on the seeded shop hoist is 409 `last_shop_hoist` and the flag stays; `is_shop: true` on a second hoist is still 409 `duplicate_shop_hoist`; a non-shop hoist can still be edited), red on main.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/hoists.py` (`patch_hoist` and one helper), `apps/project-car/api/tests/test_hoist_guards.py`
+- Depends on: none. R49 is merged. Shares no file with any other open row.
+
+### R59. The web API client has no tests, and an empty `SHOP_API_URL` breaks every call
+- Category: Test gap + Bug
+- Baseline: `apps/project-car/web/lib/config.ts` has no test file. `shopApiUrl()` reads `process.env.SHOP_API_URL ?? "http://127.0.0.1:8000"`, so an empty value (a blank line in `.env.local`) gives `""` and every `fetch` goes to a bare path that throws `ERR_INVALID_URL`. Only one trailing slash is stripped, so `http://host:8000//` still produces `//hoists`. `parseApiError` (reads `error.code` and `error.message`, the API envelope in `app/errors.py`) and `ShopApiError` are used by every page and are untested.
+- Target: an empty or whitespace-only `SHOP_API_URL` falls back to the default; trailing slashes (any number) and surrounding spaces are trimmed; a real value is unchanged. Tests also pin `parseApiError` for the envelope, for a body with no `error`, for `null`, and for a non-object body, and `ShopApiError` fields.
+- Must not get worse: web typecheck, lint, build and tests; the CI value `http://127.0.0.1:8000`; no page change, so no screenshots.
+- Proof: new `apps/project-car/web/lib/config.test.ts` (each case above, env set and restored per test), red on main for the empty, whitespace and double-slash cases.
+- Size: 1 task
+- Likely files: `apps/project-car/web/lib/config.ts` (`shopApiUrl` only), `apps/project-car/web/lib/config.test.ts`
+- Depends on: none. R53 touched only `lib/time.ts`. Shares no file with any other open row.
+
+### R60. Member token and booking lists return every row ever stored
+- Category: Performance
+- Baseline: `member_tokens` in `apps/project-car/api/app/routers/member.py` returns the member's whole ledger, and `member_bookings` returns every booking the member ever made unless the caller passes the optional window, both with no limit. Every allocation, reserve, refund and visit adds a row, so the answer and the memory it takes grow without bound. The shop web only POSTs to `/member/bookings` and never GETs either list (`lib/shop-api.ts`), so this is a hardening gap for the API that Member devices and the AI will call.
+- Target: both routes take `limit` (default 200, 1 to 500; 422 outside that range). `/member/tokens` returns the newest `limit` rows, newest first, as today. `/member/bookings` (with or without a window) returns the latest `limit` by start time, still oldest first. Under the cap the answers are identical to today.
+- Must not get worse: `pytest` for the API (`test_member_self_serve.py`, `test_allocation.py`); the response shapes; the owner `/members/{id}/tokens` list (not changed here).
+- Proof: new `apps/project-car/api/tests/test_member_list_limits.py` (a member with 205 ledger rows and 205 bookings inserted straight into the test DB: no `limit` returns 200 of each, the newest tokens and the latest bookings; `limit=2` returns the 2 newest tokens and the 2 latest bookings in order; a member with 5 rows gets all 5; `limit=0` and `limit=501` are 422), red on main.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/member.py` (`member_tokens` and `member_bookings` only), `apps/project-car/api/tests/test_member_list_limits.py`
+- Depends on: none. Shares no file with any other open row.
+
+### R61. A member or the Owner can cancel a visit that has already started and get the whole reserve back
+- Category: Product gap (spec rule) + UX
+- Baseline: `cancel_booking` in `apps/project-car/api/app/services/bookings.py` accepts `active` (it is in `OPEN_STATUSES`) and refunds all of `reserved_tokens`. Complete is the only path that charges for time used. So check in, then cancel, uses the bay for free. Both cards offer it: `apps/project-car/web/components/owner-booking-card.tsx` shows Cancel for `pending`, `confirmed` and `active`, and `apps/project-car/web/components/member-booking-card.tsx` shows Cancel for `confirmed` and `active`. R29 only closed this for refund requests. Spec rule 6 says a cancel refunds "any remaining reserve", which says nothing about a visit in progress. The stand-in is in Needs from Ben.
+- Target: cancel on an `active` booking answers 400 `cancel_after_check_in` ("Complete the visit instead."), the booking stays `active`, no `booking_refund` row is written and the hoist stays occupied. Pending and confirmed cancels refund once as today. Both cards stop showing Cancel on an active booking (the Owner card keeps Complete).
+- Must not get worse: `pytest` for the API (`test_bookings.py`, `test_overdue.py`, R41 double-cancel tests); web typecheck, lint, build and tests; the 0.1 layout-shift and 1% pixel caps (`Docs/shop-os-ci.md`); the member and Owner schedule layout for non-active bookings.
+- Proof: new cases in `apps/project-car/api/tests/test_bookings.py` (check in, then cancel: 400, status `active`, ledger unchanged; pending and confirmed cancels still refund once), red on main. New `apps/project-car/web/lib/booking-cancel.test.ts` next to `booking-complete.test.ts` (neither card source offers Cancel inside an `active` branch). UI row: before/after `/schedule` and `/member/schedule` at 390 and 1440 hosted in the PR body.
+- Size: 2 tasks
+- Likely files: `apps/project-car/api/app/services/bookings.py` (`cancel_booking` only), `apps/project-car/api/tests/test_bookings.py`, `apps/project-car/web/components/owner-booking-card.tsx`, `apps/project-car/web/components/member-booking-card.tsx`, `apps/project-car/web/lib/booking-cancel.test.ts`
+- Depends on: none. Needs the screenshots before merge. It is the only open row on `bookings.py`.
+
+### R62. An unknown page or a server error shows the framework's bare default
+- Category: UX gap
+- Baseline: `apps/project-car/web/app` has no `not-found.tsx`, `error.tsx` or `loading.tsx` anywhere. A mistyped Owner URL (`/schedul`) or a render that throws shows the unstyled Next.js default page with no shop header, no way back and no hint. Only `app/members/[id]/page.tsx` calls `notFound()`, and it lands on that default too.
+- Target: a root `not-found.tsx` with the Owner shell's look, a short line ("That page is not here.") and a link to the dashboard (to `/member` under `/member/...`); a root `error.tsx` (client component) with the shop look, a "Try again" button wired to `reset`, and no stack or message text from the error. Wording is a stand-in, see Needs from Ben. No existing page changes.
+- Must not get worse: web typecheck, lint, build and tests; the middleware redirects (an unknown path without a session still goes to `/login`); security headers; the 0.1 layout-shift and 1% pixel caps and every existing reference image.
+- Proof: new `apps/project-car/web/lib/error-pages.test.ts` (both files exist; `error.tsx` starts with `"use client"`, takes `reset` and calls it from a button, and never renders `error.message` or `error.stack`; the 404 file links to `/` and to `/member`), red on main. UI row: add one Owner page `{ name: "not-found", path: "/no-such-page" }` to `OWNER_PAGES` in `apps/project-car/web/visual/pages.spec.ts`, generate only the new reference images (390 and 1440, the two projects in `playwright.config.ts`), and host before shots (default page) and after shots in the PR body.
+- Size: 1 task
+- Likely files: `apps/project-car/web/app/not-found.tsx`, `apps/project-car/web/app/error.tsx`, `apps/project-car/web/app/globals.css` (additive classes only), `apps/project-car/web/visual/pages.spec.ts` (one row), new reference images, `apps/project-car/web/lib/error-pages.test.ts`
+- Depends on: none. Shares no file with any other open row.
+
 ## Needs from Ben
 
 | Row | Real value needed | Mock used meanwhile |
@@ -495,10 +575,16 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 | R51 | Whether a member may have more than one open request for the same SKU | One open request per member per SKU (SKU compared trimmed and upper-cased); the second is 409 `already_requested` |
 | R52 | Largest tier price, token allowance, booking window and simultaneous bookings | 9,999.99 price (2 decimals), 100,000 tokens, 365 days, 20 bookings |
 | R54 | Whether a contacted but not yet converted waitlist person still counts as waiting | Yes, they count; only converted people drop out |
-| (no row) | Which header Cloudflare Tunnel sets with the real client IP for login and waitlist caps | Not built; caps still key on the TCP peer |
+| R55 | Which header Cloudflare Tunnel sets with the real client IP for login and waitlist caps | Setting `CLIENT_IP_HEADER`, default empty (caps key on the TCP peer as today). Tests use `X-Test-Client-IP`. No header name is hard-coded, so Ben or Zone sets the real one at the cutover. |
+| R57 | Whether an AI may keep its own to-do list | No. AI `POST /todos` is 403 `todo_requires_person`. Owner and member to-dos are unchanged. |
+| R58 | Whether the Owner may force a hoist to Available under a visit; whether the shop flag may ever be cleared | No to both for now: 409 `hoist_occupied` while a booking is active or overdue, and 409 `last_shop_hoist` on the only shop hoist. The flag then cannot be moved through PATCH at all (a second `is_shop` is already 409 `duplicate_shop_hoist`); say if you want a move action as its own row. |
+| R60 | Largest page of member tokens or bookings | Default 200, maximum 500 |
+| R61 | Whether a visit already checked in may be cancelled for a full refund | No. 400 `cancel_after_check_in`; Complete is the path and charges for use. |
+| R62 | Wording of the 404 and error pages | "That page is not here." and "Something went wrong. Try again." |
 
 ## Skipped / excluded
 
+- Verified on main 2026-10-26 and parked (real, not yet rows; take them next, one writer per file): `confirm_booking` has no `reject_start_in_past` (a pending booking whose start has passed can still be confirmed), and `check_in_booking` only refuses maintenance or locked hoists, so two non-overlapping confirmed bookings on one hoist can both be checked in. Both are in `bookings.py`, so they wait for R61. `adjust_member_tokens` in `routers/members.py` loads the member with no `FOR UPDATE` (two overlapping adjustments read the same balance). `create_room` in `services/chat.py` accepts suspended, banned and churned members. Owner `GET /members/{id}/tokens`, `GET /bookings` with no window and `GET /waitlist` are unbounded (the Owner web uses them whole, so a cap needs a paging UI first).
 - Job claim/done hardening already in flight: seed `--reset` not clearing `job_events`, 403 `not_your_claim`, member-shell banner copy, the double-claim Postgres row lock, and job claim tests. The same `_reset_shop` (`apps/project-car/api/app/seed.py`) also skips `shop_hoist_requests`, `tool_crib_events`, `refund_requests`, `staff_parts_requests`, `tool_crib_exceptions`, `staff_drafts`, and `shop_jobs`. Those FKs are `ON DELETE RESTRICT` (`20261004_0009`, `20261004_0011`). Fold them into that in-flight reset. This backlog does not open a second seed row. `parts_requests.member_id` is `ON DELETE CASCADE` (`20261004_0008`).
 - Overdue booking flagged to a `late_return` incident. `BookingStatus.OVERDUE` is assigned by `mark_overdue` in `bookings.py` (#117) (route `mark_booking_overdue`) but nothing files a `late_return` incident for it. `fill.py` `OCCUPYING` and member schedule `OPEN_STATUSES` omit overdue. Leave that with the excluded slice.
 - `Docs/STATUS.md` Reality refresh.
@@ -531,3 +617,5 @@ Rows R36–R40 (2026-10-23): R1–R15 and R17–R35 are merged (see the merged-P
 Rows R41–R48 (2026-10-23): three can start together with no shared file: R41 (`bookings.py`), R42 (`shop_hoist_requests.py`), R44 (`staff.py`); R45, R46 and R48 also share no file with those. Then R43 after R42, and R47 after R41. R45 is the only open row adding an alembic revision.
 
 Rows R49–R54 (2026-10-25): this paragraph replaces the earlier ones for anything still open. R1–R44, R46 (#174), R47 and R48 are merged (see the merged-PR ledger), so the R36–R40 and R41–R48 waves above are history, including the `routers/members.py` order (R37, R39 merged) and the `schemas.py` note (R38 merged). R45 (tool crib: `models.py`, `services/tool_crib.py`, one alembic revision, `tests/test_tool_crib.py`) is the only open row from those waves. Open rows from this wave all use different files and can run together: R49 (`routers/hoists.py`), R50 (`routers/members.py`), R51 (`services/parts_requests.py`), R52 (`schemas.py`), R53 (web `lib/time.ts`), R54 (`routers/dashboard.py`). None shares a file with R45. Start R49, R50 and R54 first.
+
+Rows R55–R62 (2026-10-26): this paragraph replaces the earlier ones for anything still open. R45, R49, R50, R53 and R54 are merged (R45 is #178). R51 (`services/parts_requests.py`) and R52 (`schemas.py`) are the only open rows from the R49–R54 wave and share no file with these. Every R55–R62 row uses its own files, so any three can run together: R55 (`config.py`, `routers/auth.py`, `routers/waitlist.py`), R56 (`services/shop_hoist_requests.py`), R57 (`services/todos.py`), R58 (`routers/hoists.py`), R59 (web `lib/config.ts`), R60 (`routers/member.py`), R61 (`services/bookings.py` and the two booking cards, UI), R62 (web `app/not-found.tsx`, `app/error.tsx`, `visual/pages.spec.ts`, UI). Start R55, R56 and R57 first; they are API only and need no screenshots. Do R61 and R62 only with the screenshot hosting ready. No alembic revision in any of them.
