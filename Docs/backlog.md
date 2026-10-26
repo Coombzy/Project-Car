@@ -435,9 +435,9 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 ### R50. PATCH a member with an explicit null name or status crashes with a 500
 - Category: Bug
 - Baseline: `patch_member` in `apps/project-car/api/app/routers/members.py` copies every set field of `MemberPatch` onto the row. `{"name": null}` or `{"status": null}` writes `None` into a NOT NULL column, the flush raises an unhandled `IntegrityError`, and the Owner gets a 500 with no error envelope. Measured on main with the test client (the exception propagates out of the client).
-- Target: an explicit null for `name` or `status` answers 422 `validation_error` and leaves the member unchanged. Nullable fields (`phone`, `emergency_contact`, `waiver_signed_at` and the like) can still be cleared with null and answer 200. `tier_name: null` keeps its current 400 `unknown_tier`.
+- Target: an explicit null for `name` or `status` answers 422 `validation_error` and leaves the member unchanged. Nullable fields (`phone`, `emergency_contact_name`, `waiver_signed_at` and the like) can still be cleared with null and answer 200 (the test clears `phone`, `emergency_contact_name` and `waiver_signed_at`). `tier_name: null` keeps its current 400 `unknown_tier`.
 - Must not get worse: `pytest` for the API (member, token, password and seed tests); the member PATCH response shape; R37 password rules and R38 name trimming.
-- Proof: new `apps/project-car/api/tests/test_member_patch_null.py` (name null and status null: 422 and unchanged; phone null: 200 and cleared; tier_name null: 400), red on main.
+- Proof: new `apps/project-car/api/tests/test_member_patch_null.py` (name null and status null: 422 and unchanged; phone, emergency_contact_name and waiver_signed_at null: 200 and cleared; tier_name null: 400), red on main.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/routers/members.py` (`patch_member` only), `apps/project-car/api/tests/test_member_patch_null.py`
 - Depends on: none. Shares no file with R49 or any other open row.
@@ -445,7 +445,7 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 ### R51. A member can file the same open parts request for one SKU again and again
 - Category: Product gap
 - Baseline: `create_parts_request` in `apps/project-car/api/app/services/parts_requests.py` validates the SKU and inserts a row each call. One member who taps twice, or retries after a slow network, leaves several open `PT-` requests for the same SKU in the Owner parts list. Nothing dedupes them.
-- Target: while a member already has an `open` request for a SKU, a second request for that SKU answers 409 `already_requested` and creates no row. After the earlier request is `fulfilled` or `declined`, a new one is allowed. Another member asking for the same SKU is allowed. Stand-in rule, see Needs from Ben.
+- Target: while a member already has an `open` request for a SKU, a second request for that SKU answers 409 `already_requested` and creates no row. After the earlier request is `fulfilled` or `declined`, a new one is allowed. Another member asking for the same SKU is allowed. SKUs compare after the existing trim and upper-casing, so `pt-oil-5w30-012 ` and `PT-OIL-5W30-012` are the same request. Stand-in rule, see Needs from Ben.
 - Must not get worse: `pytest` for the API (`test_parts_requests.py` existing cases, staff parts requests); the 422 `invalid_parts_sku` and `tool_checkout_not_started` answers; the Owner list order.
 - Proof: new `apps/project-car/api/tests/test_parts_request_dupes.py` (second open request for the same SKU is 409 and the count stays 1; after declined it is allowed; another member allowed; case and whitespace variants of the SKU count as the same), red on main.
 - Size: 1 task
@@ -492,7 +492,7 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 | R37 | Minimum length for an Owner-set member password | 12 characters (`MEMBER_PASSWORD_MIN_LENGTH`) |
 | R39 | Largest single Owner token adjustment; whether a balance may go below zero | Under 1,000,000 tokens per adjustment; negative balances left as today |
 | R46 | Whether a fill notice may ever be re-sent for the same day | Never: one campaign per target date per channel, second is 409 `already_notified` |
-| R51 | Whether a member may have more than one open request for the same SKU | One open request per member per SKU; the second is 409 `already_requested` |
+| R51 | Whether a member may have more than one open request for the same SKU | One open request per member per SKU (SKU compared trimmed and upper-cased); the second is 409 `already_requested` |
 | R52 | Largest tier price, token allowance, booking window and simultaneous bookings | 9,999.99 price (2 decimals), 100,000 tokens, 365 days, 20 bookings |
 | R54 | Whether a contacted but not yet converted waitlist person still counts as waiting | Yes, they count; only converted people drop out |
 | (no row) | Which header Cloudflare Tunnel sets with the real client IP for login and waitlist caps | Not built; caps still key on the TCP peer |
@@ -530,4 +530,4 @@ Rows R36–R40 (2026-10-23): R1–R15 and R17–R35 are merged (see the merged-P
 
 Rows R41–R48 (2026-10-23): three can start together with no shared file: R41 (`bookings.py`), R42 (`shop_hoist_requests.py`), R44 (`staff.py`); R45, R46 and R48 also share no file with those. Then R43 after R42, and R47 after R41. R45 is the only open row adding an alembic revision.
 
-Rows R49–R54 (2026-10-25): all six use different files and can run together. R49 (`routers/hoists.py`), R50 (`routers/members.py`), R51 (`services/parts_requests.py`), R52 (`schemas.py`), R53 (web `lib/time.ts`) and R54 (`routers/dashboard.py`) share nothing with each other or with the open R45 (`models.py`, tool crib, alembic) and R46 (fill notices) rows. Start R49, R50 and R54 first.
+Rows R49–R54 (2026-10-25): this paragraph replaces the earlier ones for anything still open. R1–R44, R46 (#174), R47 and R48 are merged (see the merged-PR ledger), so the R36–R40 and R41–R48 waves above are history, including the `routers/members.py` order (R37, R39 merged) and the `schemas.py` note (R38 merged). R45 (tool crib: `models.py`, `services/tool_crib.py`, one alembic revision, `tests/test_tool_crib.py`) is the only open row from those waves. Open rows from this wave all use different files and can run together: R49 (`routers/hoists.py`), R50 (`routers/members.py`), R51 (`services/parts_requests.py`), R52 (`schemas.py`), R53 (web `lib/time.ts`), R54 (`routers/dashboard.py`). None shares a file with R45. Start R49, R50 and R54 first.
