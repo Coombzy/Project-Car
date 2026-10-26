@@ -51,6 +51,13 @@ def create_todo(
     notes: str | None,
     due_at: datetime | None,
 ) -> Todo:
+    # An AI principal has no owner email and no member id, so the row would match nobody.
+    if principal.role == "ai":
+        raise _error(
+            403,
+            "todo_requires_person",
+            "An AI cannot keep its own to-do list.",
+        )
     cleaned = title.strip()
     if not cleaned:
         raise _error(422, "validation_error", "Title is required.")
