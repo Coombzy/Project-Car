@@ -408,6 +408,7 @@ class ToolCribEvent(Base):
             name="ck_tool_crib_events_kind",
         ),
         UniqueConstraint("checkout_id", name="uq_tool_crib_events_checkout_id"),
+        Index("uq_tool_crib_events_open_sku", "open_sku", unique=True),
         Index("ix_tool_crib_events_sku_created", "sku", "created_at"),
         Index("ix_tool_crib_events_member_created", "member_id", "created_at"),
     )
@@ -417,6 +418,9 @@ class ToolCribEvent(Base):
         ForeignKey("members.id", ondelete="RESTRICT"), nullable=False
     )
     sku: Mapped[str] = mapped_column(String(80), nullable=False)
+    # Set only while this checkout is still out. A return clears it. NULL does not collide,
+    # so sku itself stays reusable after the tool comes back.
+    open_sku: Mapped[Optional[str]] = mapped_column(String(80), nullable=True)
     kind: Mapped[ToolCribEventKind] = mapped_column(
         _enum_column(ToolCribEventKind),
         nullable=False,
