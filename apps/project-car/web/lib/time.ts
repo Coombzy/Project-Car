@@ -82,8 +82,10 @@ function isRealCalendarDate(isoDate: string): boolean {
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
-  // Date.UTC rolls 2026-02-31 to 3 March. A real date survives that round trip.
+  // Date.UTC rolls 2026-02-31 to 3 March, and maps years 0-99 to 1900-1999.
+  // setUTCFullYear pins the parsed year (it does not remap 0-99) before the round trip.
   const utc = new Date(Date.UTC(year, month - 1, day));
+  utc.setUTCFullYear(year, month - 1, day);
   return utc.getUTCFullYear() === year && utc.getUTCMonth() === month - 1 && utc.getUTCDate() === day;
 }
 

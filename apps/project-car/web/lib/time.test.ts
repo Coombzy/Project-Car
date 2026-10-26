@@ -34,6 +34,9 @@ describe("parseWeekParam", () => {
     assert.equal(parseWeekParam("2026-06-21"), "2026-06-15");
     assert.equal(parseWeekParam("2026-02-28"), "2026-02-23");
     assert.equal(parseWeekParam("2024-02-29"), "2024-02-26");
+    // 0099 is a real date. Date.UTC would treat it as 1999 and fall back to the shop week.
+    assert.equal(parseWeekParam("0099-06-15"), mondayOf("0099-06-15"));
+    assert.notEqual(parseWeekParam("0099-06-15"), CURRENT_SHOP_WEEK);
   });
 
   it("test_parse_week_param_missing_value_is_the_current_shop_week", () => {
