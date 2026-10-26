@@ -13,6 +13,24 @@ from app.schemas import HoistCreate, HoistOut, HoistPatch
 router = APIRouter(tags=["hoists"])
 
 
+# These columns are NOT NULL. An explicit null is not a clear.
+# Writing None flushed IntegrityError and answered 409 duplicate_hoist.
+_PATCH_NOT_NULL = ("name", "status", "is_shop", "location_label")
+
+
+def _reject_explicit_nulls(updates: dict[str, object]) -> None:
+    blocked = [field for field in _PATCH_NOT_NULL if field in updates and updates[field] is None]
+    if not blocked:
+        return
+    raise HTTPException(
+        status_code=422,
+        detail={
+            "code": "validation_error",
+            "message": f"{', '.join(blocked)} cannot be null.",
+        },
+    )
+
+
 def _ensure_single_shop_hoist(session, *, is_shop: bool, exclude_id: UUID | None = None) -> None:
     if not is_shop:
         return
@@ -63,6 +81,7 @@ def patch_hoist(hoist_id: UUID, body: HoistPatch, session: DbSession, _owner: Ow
     if row is None:
         raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Hoist not found."})
     updates = body.model_dump(exclude_unset=True)
+    _reject_explicit_nulls(updates)
     if "name" in updates and updates["name"]:
         updates["name"] = updates["name"].strip()
     if "location_label" in updates and updates["location_label"] is not None:
