@@ -119,6 +119,20 @@ def patch_member(member_id: UUID, body: MemberPatch, session: DbSession, _owner:
         updates["tier_name"] = str(updates["tier_name"]).strip().lower()
         if session.get(MembershipTier, updates["tier_name"]) is None:
             raise HTTPException(status_code=400, detail={"code": "unknown_tier", "message": "Unknown membership tier."})
+    # name and status are NOT NULL. An explicit null flushes as IntegrityError (500).
+    # tier_name null stays the 400 unknown_tier path above.
+    null_required = [key for key in ("name", "status") if key in updates and updates[key] is None]
+    if null_required:
+        if null_required == ["name", "status"]:
+            message = "Name and status cannot be null."
+        elif null_required == ["name"]:
+            message = "Name cannot be null."
+        else:
+            message = "Status cannot be null."
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "validation_error", "message": message},
+        )
     if "name" in updates and updates["name"]:
         updates["name"] = updates["name"].strip()
     for key, value in updates.items():
