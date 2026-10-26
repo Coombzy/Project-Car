@@ -150,7 +150,13 @@ def get_dashboard(session: DbSession, owner: Owner) -> DashboardOut:
     }
     hour_rows = expand_booked_hours(_window_bookings(session, window_start, window_end), window_start, window_end)
 
-    waitlist_count = session.scalar(select(func.count()).select_from(WaitlistEntry)) or 0
+    # Converted rows stay in waitlist_entries with member_id set. They are not waiting.
+    # A contacted row whose member_id is still null still counts.
+    waitlist_count = session.scalar(
+        select(func.count())
+        .select_from(WaitlistEntry)
+        .where(WaitlistEntry.member_id.is_(None))
+    ) or 0
     at_risk_rows = session.scalars(
         select(Member)
         .where(
