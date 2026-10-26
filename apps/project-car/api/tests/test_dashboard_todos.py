@@ -5,6 +5,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
+from sqlalchemy import func, select
 
 from app.db import get_db
 from app.main import app
@@ -427,3 +428,52 @@ def test_whitespace_todo_patch_title_is_422(client: TestClient) -> None:
     padded = client.patch(f"/todos/{todo_id}", headers=AUTH, json={"title": " " + ("t" * 200)})
     assert padded.status_code == 422, padded.text
     assert client.get(f"/todos/{todo_id}", headers=AUTH).json()["title"] == "Order oil"
+
+
+def _todo_count(client: TestClient) -> int:
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        return int(session.scalar(select(func.count()).select_from(Todo)) or 0)
+    finally:
+        session.close()
+
+
+def _todo_owners(client: TestClient) -> list[tuple[str | None, str | None, str]]:
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        rows = session.scalars(select(Todo).order_by(Todo.created_at)).all()
+        return [
+            (row.owner_email, str(row.member_id) if row.member_id is not None else None, row.title)
+            for row in rows
+        ]
+    finally:
+        session.close()
+
+
+def test_ai_post_todo_is_403_and_stores_nothing(client: TestClient) -> None:
+    """AI POST /todos is 403 todo_requires_person and leaves the table unchanged.
+
+    Owner and member creates still return 201. The member row stays off the Owner list.
+    """
+    ai = {"Authorization": "Bearer dev-ai-secret"}
+    before = _todo_count(client)
+    created = client.post("/todos", headers=ai, json={"title": "AI-only note"})
+    stored = _todo_owners(client)
+    assert created.status_code == 403, (
+        f"{created.text} stored={stored} count {before} -> {_todo_count(client)}"
+    )
+    assert created.json()["error"]["code"] == "todo_requires_person"
+    assert _todo_count(client) == before
+    assert stored == []
+
+    owner_created = client.post("/todos", headers=AUTH, json={"title": "Call Priya"})
+    assert owner_created.status_code == 201, owner_created.text
+
+    create_member(client, email="ada@example.com")
+    login_member(client, "ada@example.com")
+    member_created = client.post("/todos", json={"title": "Bring turbo parts"})
+    assert member_created.status_code == 201, member_created.text
+
+    owner_list = client.get("/todos", headers=AUTH)
+    assert owner_list.status_code == 200, owner_list.text
+    assert [row["title"] for row in owner_list.json()] == ["Call Priya"]
