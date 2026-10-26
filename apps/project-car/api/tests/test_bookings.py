@@ -671,6 +671,36 @@ def test_check_in_ten_minutes_early_is_allowed(client: TestClient) -> None:
     assert _hoist_status(client, hoist_id) == "occupied"
 
 
+def test_check_in_at_or_after_end_is_refused(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Check-in at or after end_at is 400 and changes nothing.
+
+    Red on main: the same call is 200 and the hoist becomes occupied.
+    """
+    booking, hoist_id = _confirmed_from_now(client, hours=10 / 60)
+    from app.services.bookings import _stored_utc
+
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        row = session.get(Booking, UUID(booking["id"]))
+        assert row is not None
+        end_at = _stored_utc(row.end_at)
+    finally:
+        session.close()
+    hoist_before = _hoist_status(client, hoist_id)
+
+    # Past the end first, so the red failure is the ended window, then exactly end_at.
+    for clock in (end_at + timedelta(minutes=1), end_at):
+        monkeypatch.setenv("SHOP_NOW", clock.isoformat())
+        checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)
+        stored = _stored_booking(client, booking["id"])
+        hoist_status = _hoist_status(client, hoist_id)
+        assert checked.status_code == 400 and stored["status"] == "confirmed" and hoist_status == hoist_before, (
+            f"clock={clock.isoformat()} status={checked.status_code} booking={stored['status']} "
+            f"hoist={hoist_status} before={hoist_before} body={checked.text}"
+        )
+        assert checked.json()["error"]["code"] == "check_in_too_late"
+
+
 def test_booking_debits_tokens_and_cancel_returns_them(client: TestClient) -> None:
     member = create_member(client)
     hoist = create_hoist(client)
@@ -1106,6 +1136,22 @@ def test_past_start_is_rejected(client: TestClient) -> None:
     confirmed = client.post(f"/bookings/{first}/confirm", headers=AUTH)
     assert confirmed.status_code == 200, confirmed.text
     assert confirmed.json()["status"] == "confirmed"
+    # This row's window ended in 2020. Check-in stays closed; the reserve is untouched.
+    late = client.post(f"/bookings/{first}/check-in", headers=AUTH)
+    assert late.status_code == 400, late.text
+    assert late.json()["error"]["code"] == "check_in_too_late"
+    assert _stored_booking(client, first)["status"] == "confirmed"
+    assert _hoist_status(client, hoist["id"]) != "occupied"
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        row = session.get(Booking, UUID(first))
+        assert row is not None
+        open_start = as_utc(shop_now() + timedelta(minutes=10))
+        row.start_at = open_start
+        row.end_at = open_start + timedelta(hours=2)
+        session.commit()
+    finally:
+        session.close()
     checked = client.post(f"/bookings/{first}/check-in", headers=AUTH)
     assert checked.status_code == 200, checked.text
     assert checked.json()["status"] == "active"

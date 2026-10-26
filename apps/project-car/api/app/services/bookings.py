@@ -511,6 +511,13 @@ def check_in_booking(session: Session, booking_id: UUID) -> Booking:
             "check_in_too_early",
             f"Check-in opens {CHECK_IN_EARLY_MINUTES} minutes before the start.",
         )
+    # Closed at end_at. The open window is [opens_at, end_at).
+    if _stored_utc(shop_now()) >= _stored_utc(booking.end_at):
+        raise _error(
+            400,
+            "check_in_too_late",
+            "Check-in closes when the visit ends.",
+        )
     booking.status = BookingStatus.ACTIVE
     booking.hoist.status = HoistStatus.OCCUPIED
     session.add(booking)
