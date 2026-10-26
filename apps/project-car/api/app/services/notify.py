@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import smtplib
 from dataclasses import dataclass
+from datetime import date
 from email.message import EmailMessage
 from typing import Protocol
 
@@ -214,6 +215,55 @@ def campaign_copy(member: Member, snapshot: FillSnapshot) -> tuple[str, str]:
     return subject, body
 
 
+def notified_fill_channels(
+    session: Session,
+    target_date: date,
+    channels: list[NotificationChannel],
+) -> list[NotificationChannel]:
+    """Non-dry-run outbox channels already queued for this fill day.
+
+    Dry-run rows are not a campaign. Rows are tied to the day's fill offer,
+    which is the record `enqueue_fill_campaign` writes for a real notify.
+    """
+    if not channels:
+        return []
+    found = session.scalars(
+        select(NotificationOutbox.channel)
+        .join(FillOffer, NotificationOutbox.fill_offer_id == FillOffer.id)
+        .where(
+            FillOffer.target_date == target_date,
+            NotificationOutbox.dry_run.is_(False),
+            NotificationOutbox.channel.in_(channels),
+        )
+        .distinct()
+    ).all()
+    order = {channel: index for index, channel in enumerate(channels)}
+    taken = {_as_channel(channel) for channel in found}
+    return sorted(taken, key=lambda channel: order.get(channel, len(order)))
+
+
+def _as_channel(value: NotificationChannel | str) -> NotificationChannel:
+    if isinstance(value, NotificationChannel):
+        return value
+    return NotificationChannel(value)
+
+
+def refuse_repeat_fill_campaign(
+    session: Session,
+    target_date: date,
+    channels: list[NotificationChannel],
+) -> None:
+    """One non-dry-run campaign per target day per channel."""
+    taken = notified_fill_channels(session, target_date, channels)
+    if not taken:
+        return
+    names = ", ".join(channel.value for channel in taken)
+    raise NotifyError(
+        "already_notified",
+        f"A fill notice for {target_date.isoformat()} was already queued on {names}.",
+    )
+
+
 def enqueue_fill_campaign(
     session: Session,
     snapshot: FillSnapshot,
@@ -228,6 +278,8 @@ def enqueue_fill_campaign(
     members = active_members(session)
     if not members:
         raise NotifyError("no_members", "No active members to notify.")
+    if not dry_run:
+        refuse_repeat_fill_campaign(session, snapshot.target_date, channels)
     cfg = settings or get_settings()
     rows: list[NotificationOutbox] = []
     for member in members:
