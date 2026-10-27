@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.deps import DbSession, Owner
-from app.models import Hoist
+from app.models import Booking, BookingStatus, Hoist, HoistStatus
 from app.schemas import HoistCreate, HoistOut, HoistPatch
 
 router = APIRouter(tags=["hoists"])
@@ -31,8 +31,40 @@ def _reject_explicit_nulls(updates: dict[str, object]) -> None:
     )
 
 
+def _reject_available_while_occupied(session, hoist_id: UUID, *, status: object) -> None:
+    if status != HoistStatus.AVAILABLE:
+        return
+    occupying = session.scalars(
+        select(Booking.id).where(
+            Booking.hoist_id == hoist_id,
+            Booking.status.in_((BookingStatus.ACTIVE, BookingStatus.OVERDUE)),
+        )
+    ).first()
+    if occupying is None:
+        return
+    raise HTTPException(
+        status_code=409,
+        detail={
+            "code": "hoist_occupied",
+            "message": "That hoist still has an active or overdue visit.",
+        },
+    )
+
+
 def _ensure_single_shop_hoist(session, *, is_shop: bool, exclude_id: UUID | None = None) -> None:
     if not is_shop:
+        # Spec: exactly one shop hoist. Clearing the flag on this endpoint
+        # would leave zero, or would move it; moving is outside this row.
+        if exclude_id is not None:
+            current = session.get(Hoist, exclude_id)
+            if current is not None and current.is_shop:
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "code": "last_shop_hoist",
+                        "message": "The shop must keep exactly one shop hoist.",
+                    },
+                )
         return
     stmt = select(Hoist.id).where(Hoist.is_shop.is_(True))
     if exclude_id is not None:
@@ -86,6 +118,8 @@ def patch_hoist(hoist_id: UUID, body: HoistPatch, session: DbSession, _owner: Ow
         updates["name"] = updates["name"].strip()
     if "location_label" in updates and updates["location_label"] is not None:
         updates["location_label"] = updates["location_label"].strip()
+    if "status" in updates:
+        _reject_available_while_occupied(session, row.id, status=updates["status"])
     if "is_shop" in updates:
         _ensure_single_shop_hoist(session, is_shop=bool(updates["is_shop"]), exclude_id=row.id)
     for key, value in updates.items():
