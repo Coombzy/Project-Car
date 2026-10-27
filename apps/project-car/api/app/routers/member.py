@@ -125,11 +125,16 @@ def member_dashboard(session: DbSession, principal: MemberUser) -> MemberDashboa
 
 
 @router.get("/tokens", response_model=list[TokenTransactionOut])
-def member_tokens(session: DbSession, principal: MemberUser) -> list[TokenTransactionOut]:
+def member_tokens(
+    session: DbSession,
+    principal: MemberUser,
+    limit: int = Query(default=200, ge=1, le=500),
+) -> list[TokenTransactionOut]:
     rows = session.scalars(
         select(TokenTransaction)
         .where(TokenTransaction.member_id == principal.member_id)
         .order_by(TokenTransaction.created_at.desc())
+        .limit(limit)
     ).all()
     return [TokenTransactionOut.model_validate(row) for row in rows]
 
@@ -146,12 +151,12 @@ def member_bookings(
     hoist_id: UUID | None = None,
     window_start: datetime | None = Query(default=None),
     window_end: datetime | None = Query(default=None),
+    limit: int = Query(default=200, ge=1, le=500),
 ) -> list[BookingOut]:
     stmt = (
         select(Booking)
         .options(selectinload(Booking.member), selectinload(Booking.hoist))
         .where(Booking.member_id == principal.member_id)
-        .order_by(Booking.start_at)
     )
     if hoist_id is not None:
         stmt = stmt.where(Booking.hoist_id == hoist_id)
@@ -159,7 +164,10 @@ def member_bookings(
         stmt = stmt.where(Booking.end_at > as_utc(window_start))
     if window_end is not None:
         stmt = stmt.where(Booking.start_at < as_utc(window_end))
-    return [BookingOut.from_booking(row) for row in session.scalars(stmt).all()]
+    # Latest `limit` by start, then oldest-first so a short list matches today's order.
+    latest = list(session.scalars(stmt.order_by(Booking.start_at.desc()).limit(limit)).all())
+    latest.reverse()
+    return [BookingOut.from_booking(row) for row in latest]
 
 
 @router.get("/schedule", response_model=MemberScheduleOut)
