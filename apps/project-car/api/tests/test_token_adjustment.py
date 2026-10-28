@@ -99,3 +99,94 @@ def test_ai_refusal_precedes_invalid_token_amount(client: TestClient) -> None:
     assert response.json()["error"]["code"] == "token_change_requires_human"
     assert sorted(row["id"] for row in _ledger(client, member_id)) == before_ids
     assert _balance(client, member_id) == before_balance
+
+
+def _record_scalars(monkeypatch, reads: list[tuple[str, bool]]) -> None:
+    """Compile each ORM read on the postgresql dialect.
+
+    SQLite drops FOR UPDATE at execution. The statement still carries the
+    lock, which is what Postgres will take. Same spy as test_allocation.py.
+    """
+    from sqlalchemy.dialects import postgresql
+    from sqlalchemy.orm import Session
+
+    original = Session.scalars
+
+    def spy(self, statement, *args, **kwargs):
+        sql = str(statement.compile(dialect=postgresql.dialect()))
+        locked = getattr(statement, "_for_update_arg", None) is not None
+        reads.append((sql, locked))
+        return original(self, statement, *args, **kwargs)
+
+    monkeypatch.setattr(Session, "scalars", spy)
+
+
+def _member_for_update_sql(reads: list[tuple[str, bool]]) -> list[str]:
+    return [
+        sql
+        for sql, locked in reads
+        if locked and "FOR UPDATE" in sql and "FROM members" in sql and "WHERE members.id" in sql
+    ]
+
+
+def test_adjust_member_tokens_locks_the_member_for_update(client: TestClient, monkeypatch) -> None:
+    """The adjust route selects that member FOR UPDATE before it reads the cache.
+
+    Red on main: adjust_member_tokens loads through session.get, so this select
+    has no FOR UPDATE. Two overlapping adjustments can both add to the old
+    token_balance and the second write drops the first from the cache.
+    """
+    member = create_member(client, email="adjust-lock@example.com")
+    reads: list[tuple[str, bool]] = []
+    _record_scalars(monkeypatch, reads)
+
+    response = client.post(
+        f"/members/{member['id']}/tokens",
+        headers=AUTH,
+        json={"amount": "10.00", "note": "lock check"},
+    )
+    assert response.status_code == 201, response.text
+    assert response.json()["kind"] == "admin_adjustment"
+    locked = _member_for_update_sql(reads)
+    assert locked, "adjust_member_tokens member select has no FOR UPDATE on the postgresql dialect"
+
+
+def test_two_adjustments_in_a_row_match_the_ledger_sum(client: TestClient) -> None:
+    """Two sequential adjustments both land, and the cache equals the ledger sum."""
+    member = create_member(client, email="adjust-sum@example.com")
+    member_id = member["id"]
+    opening = _balance(client, member_id)
+    posted = (Decimal("40.25"), Decimal("-15.00"))
+
+    for amount in posted:
+        response = client.post(
+            f"/members/{member_id}/tokens",
+            headers=AUTH,
+            json={"amount": format(amount, "f"), "note": "sequential"},
+        )
+        assert response.status_code == 201, response.text
+        assert response.json()["kind"] == "admin_adjustment"
+        assert Decimal(str(response.json()["amount"])) == amount
+
+    rows = _ledger(client, member_id)
+    ledger_sum = sum((Decimal(str(row["amount"])) for row in rows), Decimal("0"))
+    adjustments = [
+        Decimal(str(row["amount"])) for row in rows if row["kind"] == "admin_adjustment"
+    ]
+    assert sorted(adjustments) == sorted(posted)
+    assert _balance(client, member_id) == opening + sum(posted, Decimal("0"))
+    assert _balance(client, member_id) == ledger_sum
+
+
+def test_unknown_member_adjustment_is_still_404(client: TestClient) -> None:
+    """A missing member is 404 not_found. The lock does not change that answer."""
+    missing = "00000000-0000-4000-8000-000000000065"
+    response = client.post(
+        f"/members/{missing}/tokens",
+        headers=AUTH,
+        json={"amount": "1.00", "note": "missing"},
+    )
+    assert response.status_code == 404, response.text
+    body = response.json()
+    assert body["error"]["code"] == "not_found"
+    assert body["error"]["message"] == "Member not found."
