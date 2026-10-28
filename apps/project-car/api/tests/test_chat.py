@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from uuid import UUID
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.orm import Session
 
-from app.models import ChatMessage, ChatRoom
+from app.models import ChatMessage, ChatParticipant, ChatRoom
 from tests.conftest import AUTH, create_member, login_member
 
 
@@ -526,3 +527,67 @@ def test_chat_post_retries_on_seq_collision(client: TestClient, monkeypatch) -> 
         "Landed after the collision.",
     ]
     assert _room_seqs(client, room["id"]) == [1, 2]
+
+
+_INACTIVE_ROOM_MESSAGE = "Only active members can be added to a chat room."
+
+
+def _chat_counts(client: TestClient) -> tuple[int, int, int]:
+    # A seeded database already has demo threads, so compare with the count before the call.
+    return (
+        _count_rows(client, ChatRoom),
+        _count_rows(client, ChatParticipant),
+        _count_rows(client, ChatMessage),
+    )
+
+
+def _assert_room_refused(response, before: tuple[int, int, int], client: TestClient) -> None:
+    assert response.status_code == 400, response.text
+    assert response.json()["error"]["code"] == "member_not_active"
+    assert response.json()["error"]["message"] == _INACTIVE_ROOM_MESSAGE
+    assert _chat_counts(client) == before
+
+
+@pytest.mark.parametrize("status", ["suspended", "banned", "churned"])
+def test_owner_create_room_rejects_inactive_member(client: TestClient, status: str) -> None:
+    ada = create_member(client, email="ada@example.com")
+    patched = client.patch(f"/members/{ada['id']}", headers=AUTH, json={"status": status})
+    assert patched.status_code == 200, patched.text
+    assert patched.json()["status"] == status
+    before = _chat_counts(client)
+    denied = client.post(
+        "/chat/rooms",
+        headers=AUTH,
+        json={"title": "Closed", "member_ids": [ada["id"]]},
+    )
+    _assert_room_refused(denied, before, client)
+
+
+def test_owner_create_room_with_one_banned_member_writes_nothing(client: TestClient) -> None:
+    ada = create_member(client, email="ada@example.com")
+    casey = create_member(client, name="Casey", email="casey@example.com", tier_name="basic")
+    patched = client.patch(f"/members/{casey['id']}", headers=AUTH, json={"status": "banned"})
+    assert patched.status_code == 200, patched.text
+    before = _chat_counts(client)
+    denied = client.post(
+        "/chat/rooms",
+        headers=AUTH,
+        json={"title": "Ada and Casey", "member_ids": [ada["id"], casey["id"]]},
+    )
+    _assert_room_refused(denied, before, client)
+
+
+def test_owner_create_room_with_active_members_is_201(client: TestClient) -> None:
+    ada = create_member(client, email="ada@example.com")
+    casey = create_member(client, name="Casey", email="casey@example.com", tier_name="basic")
+    before_rooms, before_participants, before_messages = _chat_counts(client)
+    room = _create_room(client, "Ada and Casey", [casey["id"], ada["id"]])
+    assert room["title"] == "Ada and Casey"
+    assert [(row["name"], row["email"]) for row in room["participants"]] == [
+        ("Ada Reyes", "ada@example.com"),
+        ("Casey", "casey@example.com"),
+    ]
+    rooms, participants, messages = _chat_counts(client)
+    assert rooms == before_rooms + 1
+    assert participants == before_participants + 2
+    assert messages == before_messages

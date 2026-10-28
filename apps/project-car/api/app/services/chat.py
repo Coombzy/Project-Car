@@ -96,6 +96,13 @@ def create_room(
     missing = [str(item) for item in unique_ids if item not in found]
     if missing:
         raise ChatError(400, "unknown_member", "One or more members were not found.")
+    # New rooms only. An existing room is left alone if a member is later not active.
+    if any(row.status != MemberStatus.ACTIVE for row in members):
+        raise ChatError(
+            400,
+            "member_not_active",
+            "Only active members can be added to a chat room.",
+        )
 
     room = ChatRoom(
         title=cleaned[:200],
