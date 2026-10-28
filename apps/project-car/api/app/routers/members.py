@@ -22,6 +22,7 @@ from app.schemas import (
     TokenAdjustment,
     TokenTransactionOut,
 )
+from app.services.bookings import lock_member
 from app.services.staff import reject_ai
 from app.services.tokens import apply_ledger, rebuild_token_balance
 
@@ -201,7 +202,9 @@ def adjust_member_tokens(
         code="token_change_requires_human",
         message="An AI cannot change a token balance on its own.",
     )
-    member = _member_or_404(session, member_id)
+    # Lock before apply_ledger reads token_balance. Two adjustments otherwise
+    # both add to the same cached balance and the second write drops the first.
+    member = lock_member(session, member_id)
     amount = body.amount
     # Refuse the posted scale. Rounding to cents would store 0.00 for 0.0001.
     exponent = amount.as_tuple().exponent
