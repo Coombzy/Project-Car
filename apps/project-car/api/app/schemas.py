@@ -114,13 +114,21 @@ class TierOut(BaseModel):
     updated_at: datetime
 
 
+# Stand-in caps until Ben locks real ones. Two decimal places, and small enough
+# that Postgres Numeric(10, 2) and the integer columns cannot overflow.
+_TIER_PRICE_MAX = Decimal("9999.99")
+_TIER_INCLUDED_TOKENS_MAX = 100_000
+_TIER_BOOKING_WINDOW_DAYS_MAX = 365
+_TIER_MAX_SIMULTANEOUS_BOOKINGS_MAX = 20
+
+
 class TierCreate(BaseModel):
     name: str = Field(min_length=1, max_length=64)
     display_name: str = Field(min_length=1, max_length=120)
-    price: Decimal = Field(ge=0)
-    included_tokens: int = Field(ge=0)
-    booking_window_days: int = Field(ge=1)
-    max_simultaneous_bookings: int = Field(ge=1)
+    price: Decimal = Field(ge=0, le=_TIER_PRICE_MAX, max_digits=6, decimal_places=2)
+    included_tokens: int = Field(ge=0, le=_TIER_INCLUDED_TOKENS_MAX)
+    booking_window_days: int = Field(ge=1, le=_TIER_BOOKING_WINDOW_DAYS_MAX)
+    max_simultaneous_bookings: int = Field(ge=1, le=_TIER_MAX_SIMULTANEOUS_BOOKINGS_MAX)
     notes: str | None = None
 
     @field_validator("name")
@@ -144,10 +152,14 @@ class TierCreate(BaseModel):
 
 class TierPatch(BaseModel):
     display_name: str | None = Field(default=None, min_length=1, max_length=120)
-    price: Decimal | None = Field(default=None, ge=0)
-    included_tokens: int | None = Field(default=None, ge=0)
-    booking_window_days: int | None = Field(default=None, ge=1)
-    max_simultaneous_bookings: int | None = Field(default=None, ge=1)
+    price: Decimal | None = Field(
+        default=None, ge=0, le=_TIER_PRICE_MAX, max_digits=6, decimal_places=2
+    )
+    included_tokens: int | None = Field(default=None, ge=0, le=_TIER_INCLUDED_TOKENS_MAX)
+    booking_window_days: int | None = Field(default=None, ge=1, le=_TIER_BOOKING_WINDOW_DAYS_MAX)
+    max_simultaneous_bookings: int | None = Field(
+        default=None, ge=1, le=_TIER_MAX_SIMULTANEOUS_BOOKINGS_MAX
+    )
     notes: str | None = None
 
     @field_validator("display_name", mode="before")
