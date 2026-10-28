@@ -210,6 +210,27 @@ def patch_tier(name: str, body: TierPatch, session: DbSession, _owner: Owner) ->
     if row is None:
         raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Tier not found."})
     updates = body.model_dump(exclude_unset=True)
+    # These columns are NOT NULL. An explicit null is not a clear.
+    # Writing None flushed IntegrityError out of the route (500).
+    blocked = [
+        field
+        for field in (
+            "display_name",
+            "price",
+            "included_tokens",
+            "booking_window_days",
+            "max_simultaneous_bookings",
+        )
+        if field in updates and updates[field] is None
+    ]
+    if blocked:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "validation_error",
+                "message": f"{', '.join(blocked)} cannot be null.",
+            },
+        )
     for key, value in updates.items():
         setattr(row, key, value)
     session.add(row)
