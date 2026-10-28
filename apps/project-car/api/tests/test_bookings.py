@@ -1476,3 +1476,163 @@ def test_second_complete_locks_then_refunds_once(client: TestClient, monkeypatch
     assert len(refunds) == 1
     assert _dec(refunds[0]["amount"]) == reserved
     assert _balance(client, member["id"]) == opening - used
+
+
+def _assert_cancel_refunds_once(
+    client: TestClient,
+    *,
+    member_id: str,
+    booking_id: str,
+    reserved: Decimal,
+    balance_after: Decimal,
+) -> None:
+    cancelled = client.post(f"/bookings/{booking_id}/cancel", headers=AUTH)
+    assert cancelled.status_code == 200, cancelled.text
+    assert cancelled.json()["status"] == "cancelled"
+    assert _dec(cancelled.json()["reserved_tokens"]) == Decimal("0")
+    refunds = _rows(_ledger(client, member_id), kind="booking_refund", booking_id=booking_id)
+    assert len(refunds) == 1
+    assert _dec(refunds[0]["amount"]) == reserved
+    assert refunds[0]["meta"]["pricing_rule"]["final_reserve_cost"] == str(reserved)
+    assert _balance(client, member_id) == balance_after
+    again = client.post(f"/bookings/{booking_id}/cancel", headers=AUTH)
+    assert again.status_code == 400, again.text
+    assert again.json()["error"]["code"] == "invalid_transition"
+    assert len(_rows(_ledger(client, member_id), kind="booking_refund", booking_id=booking_id)) == 1
+    assert _balance(client, member_id) == balance_after
+
+
+def test_cancel_after_check_in_keeps_the_reserve(client: TestClient) -> None:
+    """Check-in, then cancel, is 400 and leaves the visit active.
+
+    The Owner route and the member route both answer cancel_after_check_in.
+    No booking_refund is written and the hoist stays occupied. A pending
+    cancel and a confirmed cancel still refund once.
+
+    Red on main: cancel of the active visit is 200, the status is cancelled,
+    the hoist is free, and the reserve comes back as booking_refund.
+    """
+    member = create_member(client, email="ada.cancel-active@example.com")
+    hoist = create_hoist(client, name="Bay 1")
+    opening = Decimal("1500")
+
+    active_start, active_end = _window_inside_check_in()
+    active_reserved = _expected_reserve(client, active_start, active_end, member["id"])
+    assert active_reserved > 0
+    active = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": active_start,
+            "end_at": active_end,
+        },
+    )
+    assert active.status_code == 201, active.text
+    active_id = active.json()["id"]
+    assert client.post(f"/bookings/{active_id}/confirm", headers=AUTH).status_code == 200
+    checked = client.post(f"/bookings/{active_id}/check-in", headers=AUTH)
+    assert checked.status_code == 200, checked.text
+    assert checked.json()["status"] == "active"
+    assert _hoist_status(client, hoist["id"]) == "occupied"
+
+    pending_start, pending_end = _window(6)
+    pending_reserved = _expected_reserve(client, pending_start, pending_end, member["id"])
+    pending = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": pending_start,
+            "end_at": pending_end,
+        },
+    )
+    assert pending.status_code == 201, pending.text
+    pending_id = pending.json()["id"]
+    assert pending.json()["status"] == "pending"
+
+    ledger_before = _ledger(client, member["id"])
+    balance_before = _balance(client, member["id"])
+    assert balance_before == opening - active_reserved - pending_reserved
+    assert _rows(ledger_before, kind="booking_refund", booking_id=active_id) == []
+    reserved_before = _dec(_stored_booking(client, active_id)["reserved_tokens"])
+    assert reserved_before == active_reserved
+
+    owner_cancel = client.post(f"/bookings/{active_id}/cancel", headers=AUTH)
+    stored = _stored_booking(client, active_id)
+    owner_refunds = _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=active_id)
+    hoist_after_owner = _hoist_status(client, hoist["id"])
+    assert (
+        owner_cancel.status_code == 400
+        and stored["status"] == "active"
+        and owner_refunds == []
+        and hoist_after_owner == "occupied"
+    ), (
+        f"status={owner_cancel.status_code} booking={stored['status']} hoist={hoist_after_owner} "
+        f"refunds={len(owner_refunds)} body={owner_cancel.text}"
+    )
+    assert owner_cancel.json()["error"]["code"] == "cancel_after_check_in"
+    assert owner_cancel.json()["error"]["message"] == "Complete the visit instead."
+    assert set(owner_cancel.json()["error"]) == {"code", "message"}
+
+    login_member(client, "ada.cancel-active@example.com")
+    member_cancel = client.post(f"/member/bookings/{active_id}/cancel")
+    stored = _stored_booking(client, active_id)
+    member_refunds = _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=active_id)
+    hoist_after_member = _hoist_status(client, hoist["id"])
+    assert (
+        member_cancel.status_code == 400
+        and stored["status"] == "active"
+        and member_refunds == []
+        and hoist_after_member == "occupied"
+    ), (
+        f"status={member_cancel.status_code} booking={stored['status']} hoist={hoist_after_member} "
+        f"refunds={len(member_refunds)} body={member_cancel.text}"
+    )
+    assert member_cancel.json()["error"]["code"] == "cancel_after_check_in"
+    assert member_cancel.json()["error"]["message"] == "Complete the visit instead."
+    assert _ledger(client, member["id"]) == ledger_before
+    assert _balance(client, member["id"]) == balance_before
+    assert _dec(stored["reserved_tokens"]) == reserved_before
+
+    _assert_cancel_refunds_once(
+        client,
+        member_id=member["id"],
+        booking_id=pending_id,
+        reserved=pending_reserved,
+        balance_after=opening - active_reserved,
+    )
+    assert _stored_booking(client, active_id)["status"] == "active"
+    assert _hoist_status(client, hoist["id"]) == "occupied"
+    assert _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=active_id) == []
+
+    confirmed_start, confirmed_end = _window(12)
+    confirmed_reserved = _expected_reserve(client, confirmed_start, confirmed_end, member["id"])
+    confirmed = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": confirmed_start,
+            "end_at": confirmed_end,
+        },
+    )
+    assert confirmed.status_code == 201, confirmed.text
+    confirmed_id = confirmed.json()["id"]
+    confirmed_ok = client.post(f"/bookings/{confirmed_id}/confirm", headers=AUTH)
+    assert confirmed_ok.status_code == 200, confirmed_ok.text
+    assert confirmed_ok.json()["status"] == "confirmed"
+    _assert_cancel_refunds_once(
+        client,
+        member_id=member["id"],
+        booking_id=confirmed_id,
+        reserved=confirmed_reserved,
+        balance_after=opening - active_reserved,
+    )
+    assert _stored_booking(client, active_id)["status"] == "active"
+    assert _dec(_stored_booking(client, active_id)["reserved_tokens"]) == active_reserved
+    assert _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=active_id) == []
+    assert _hoist_status(client, hoist["id"]) == "occupied"
