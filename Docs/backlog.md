@@ -562,6 +562,86 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Likely files: `apps/project-car/web/app/not-found.tsx`, `apps/project-car/web/app/error.tsx`, `apps/project-car/web/app/globals.css` (additive classes only), `apps/project-car/web/visual/pages.spec.ts` (one row), new reference images, `apps/project-car/web/lib/error-pages.test.ts`
 - Depends on: none. Shares no file with any other open row.
 
+### R63. A pending visit whose time has already ended can still be confirmed and take hours
+- Category: Bug (verified on main 2026-10-27)
+- Baseline: `confirm_booking` in `apps/project-car/api/app/services/bookings.py` (line 474) refuses a maintenance or locked hoist and then flips `pending` to `confirmed`. It never looks at the clock. `reject_start_in_past` guards create and the shop-hoist request only (its docstring leaves confirm out on purpose so a row that already exists keeps its lifecycle). So a pending visit whose window ended yesterday confirms, claims its hours and sits in `OVERLAP_STATUSES`, blocking a real booking on that bay. R47 already refuses check-in once the window has ended; confirm is the matching gap.
+- Target: confirm on a `pending` booking whose `end_at` is at or before shop now answers 400 `booking_window_ended` ("This visit's time has already passed."), the booking stays `pending` and no hour rows are written. A start in the past with an end still ahead keeps working (late confirm, then check in, as the check-in window allows today). Wording and the end-not-start rule are a stand-in, see Needs from Ben.
+- Must not get worse: `pytest` for the API (`test_bookings.py`, `test_overdue.py`, `test_staff_actions.py`, `test_hoist_guards.py`); any test that moves the clock past the end before it confirms gets its setup order fixed (confirm first, then move the clock). Do not loosen an assertion; the seed week slots confirm inside their window.
+- Proof: new cases in `apps/project-car/api/tests/test_bookings.py`: a pending booking whose end has passed (clock moved with the suite's `shop_now` patch) gets 400 `booking_window_ended` and no `booking_hours` rows; a pending booking with a past start and a future end confirms; a future booking confirms. Red on main for the first.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/bookings.py` (`confirm_booking` only), `apps/project-car/api/tests/test_bookings.py`
+- Depends on: R61 (same file). R64 follows this row.
+
+### R64. Two confirmed visits on one bay can both be checked in
+- Category: Bug (verified on main 2026-10-27)
+- Baseline: `check_in_booking` in `apps/project-car/api/app/services/bookings.py` (line 501) refuses a maintenance or locked hoist and a booking that is not `confirmed`, then marks the booking `active` and the hoist occupied. It never asks whether another booking on that hoist is already `active` or `overdue`. Two back-to-back confirmed visits (10:00 to 11:00 and 11:00 to 12:00) can both be checked in when the first has not been completed, so two cars share one lift in the books. R58 blocks the Owner from forcing the hoist Available under a visit with 409 `hoist_occupied`; check-in is the other door.
+- Target: check-in answers 409 `hoist_occupied` ("Another visit is still on this bay. Complete it first.") when a different booking on the same hoist is `active` or `overdue`; the booking stays `confirmed` and the hoist status is unchanged. Check-in on a free bay, and the same booking checked in twice (existing error), behave as today.
+- Must not get worse: `pytest` for the API (`test_bookings.py`, `test_overdue.py`, `test_hoist_guards.py`, `test_member_self_serve.py`); the R31 early check-in window and the R47 after-end refusal.
+- Proof: new cases in `apps/project-car/api/tests/test_bookings.py` (check in A, then B on the same hoist: 409 `hoist_occupied`, B still `confirmed`; complete A, then B checks in; an overdue A also blocks B; a different hoist is unaffected), red on main.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/bookings.py` (`check_in_booking` only), `apps/project-car/api/tests/test_bookings.py`
+- Depends on: R63 (same two files). Do not run beside R63.
+
+### R65. Two overlapping Owner token adjustments read the same balance
+- Category: Hardening (verified on main 2026-10-27)
+- Baseline: `adjust_member_tokens` in `apps/project-car/api/app/routers/members.py` (line 193) loads the member through `_member_or_404` (`session.get`, no lock) and then calls `apply_ledger`. Two adjustments in flight both read the old cache, and the second write overwrites the first, so a ledger row can exist that the `token_balance` cache never included. Create, check-in and shop-hoist approval already take the row lock through `lock_member` (`services/bookings.py` line 97). SQLite drops `FOR UPDATE`, so the suite proves the statement asks for the lock by compiling it on the `postgresql` dialect (the pattern in `tests/test_allocation.py` and `tests/test_bookings.py`).
+- Target: `adjust_member_tokens` loads the member with `FOR UPDATE` (call the existing `lock_member`; do not edit `bookings.py`) before it reads the balance. Answers, status codes and the R39 amount limits are unchanged; two sequential adjustments still add up.
+- Must not get worse: `pytest` for the API (`test_token_adjustment.py`, `test_member_self_serve.py`, `test_allocation.py`); the R39 400s and the AI 403.
+- Proof: new cases in `apps/project-car/api/tests/test_token_adjustment.py`: the member SELECT issued by the adjust route compiles on `postgresql.dialect()` with `FOR UPDATE` (spy on `Session.scalars`, as `test_allocation.py` does), red on main; two adjustments in a row leave balance equal to the ledger sum; an unknown member is still 404.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/members.py` (`adjust_member_tokens` only), `apps/project-car/api/tests/test_token_adjustment.py`
+- Depends on: none. R68 follows this row (same router).
+
+### R66. An Owner can open a chat room with a suspended, banned or churned member
+- Category: Bug (verified on main 2026-10-27)
+- Baseline: `create_room` in `apps/project-car/api/app/services/chat.py` (line 80) looks the members up by id and never checks `Member.status`. `MemberStatus` has `ACTIVE`, `SUSPENDED`, `BANNED` and `CHURNED`. A room with a banned member shows in that member's list the next time the ban is lifted, and the Owner's "new room" picker gives no hint. The route `owner_create_room` in `routers/chat.py` already turns a `ChatError` into the API error envelope.
+- Target: any listed member who is not `active` makes `create_room` fail with 400 `member_not_active` ("Only active members can be added to a chat room."); no room, participant or message row is written. Active members work as today; an unknown id keeps its existing error.
+- Must not get worse: `pytest` for the API (`test_chat.py`); member chat access rules; room titles and the participant order.
+- Proof: new cases in `apps/project-car/api/tests/test_chat.py` (one case per status: suspended, banned, churned, each 400 and zero `chat_rooms` rows; a mixed list with one banned member writes nothing; all-active still 201), red on main.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/chat.py` (`create_room` only), `apps/project-car/api/tests/test_chat.py`
+- Depends on: none. Shares no file with any other open row.
+
+### R67. Two members can claim the same shop job at once
+- Category: Hardening (verified on main 2026-10-27)
+- Baseline: `claim_job` in `apps/project-car/api/app/services/staff.py` (line 235) reads the job with `get_job` (`session.get`, no lock), checks `status` is `open` or `sent_back` and sets `claimed_by_member_id`. On Postgres two claims in flight both see `open`, and the later commit wins, so the first member believes they hold the job. (This is the staff `ShopJob`, not the member job-board claims in `job_events`.) `complete_job` and the send-back path read the job the same way.
+- Target: `claim_job` reads the job with `FOR UPDATE` (a locked select inside `claim_job`; `get_job` stays as it is for the other callers). The second claim after the first commits is 400 `job_not_open` as today. Nothing else changes.
+- Must not get worse: `pytest` for the API (`test_staff_actions.py`, `test_shop_os.py`); the claim, complete and send-back status codes.
+- Proof: new case in `apps/project-car/api/tests/test_staff_actions.py`: the job SELECT issued by claim compiles on `postgresql.dialect()` with `FOR UPDATE` (spy on `Session.scalars`), red on main; claim twice in sequence is 200 then 400 `job_not_open`; an unknown job is 404.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/staff.py` (`claim_job` only), `apps/project-car/api/tests/test_staff_actions.py`
+- Depends on: none. Shares no file with any other open row.
+
+### R68. An AI can set a member's login password
+- Category: Hardening (verified on main 2026-10-27)
+- Baseline: `set_member_password` in `apps/project-car/api/app/routers/members.py` (line 147) takes the `Owner` dependency, which also admits the AI bearer (`require_owner` returns `Principal(role="ai")`). It never calls `reject_ai`. The route in the same file that changes a token balance does (`adjust_member_tokens` refuses an AI with 403 "An AI cannot change a token balance on its own."). A password is a credential for a member's account, so the same stand-in applies: a person does it.
+- Target: an AI principal on `POST /members/{id}/password` answers 403 `ai_cannot_set_password` ("An AI cannot set a member's password on its own.") before the body is validated, with no hash written. The human Owner path, the R37 length rule and the response shape are unchanged. See Needs from Ben.
+- Must not get worse: `pytest` for the API (`test_member_password.py`, `test_demo_password.py`); the password never appears in logs or responses.
+- Proof: new cases in `apps/project-car/api/tests/test_member_password.py` (AI bearer with a valid password: 403 and `password_hash` unchanged; AI bearer with an invalid body: still 403, not 422; Owner unchanged), red on main.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/members.py` (`set_member_password` only), `apps/project-car/api/tests/test_member_password.py`
+- Depends on: R65 (same router file).
+
+### R69. A hung shop API hangs every web page until the platform kills it
+- Category: Performance / hardening (verified on main 2026-10-27)
+- Baseline: every fetch in `apps/project-car/web/lib/shop-api.ts` (`shopFetch`, `memberFetch`, `loginOwner`, `loginMember`) is a bare `fetch` with no `AbortSignal`. If the API accepts the connection and then stalls (a Postgres lock, a restart), the Owner page render waits with it. The existing `catch` that turns a failed fetch into 503 "Cannot reach shop API" never fires, so the person sees a spinner instead of the message. There is no test of the request helpers.
+- Target: a new pure helper in `apps/project-car/web/lib/fetch-timeout.ts` returns an `AbortSignal` that fires after `SHOP_API_TIMEOUT_MS` (default 10000, a bad or non-positive value falls back to the default). The four fetches pass it, merged with any signal the caller already gave, so an abort lands in the existing 503 branch. No page or copy changes.
+- Must not get worse: web typecheck, lint, build and tests; the CI API URL; no visible change, so no screenshots.
+- Proof: new `apps/project-car/web/lib/fetch-timeout.test.ts` (default, valid, empty, zero, negative and non-numeric env values; a signal from a stalled promise aborts after the timeout using a short override; a caller signal that aborts first wins), red on main because the file does not exist. Plus a source check in the same test that no bare `fetch(` without `signal` remains in `shop-api.ts`.
+- Size: 1 task
+- Likely files: `apps/project-car/web/lib/fetch-timeout.ts`, `apps/project-car/web/lib/fetch-timeout.test.ts`, `apps/project-car/web/lib/shop-api.ts` (the four fetch calls only)
+- Depends on: none. R59 touched only `lib/config.ts`.
+
+### R70. The session cookie parser has no test and cannot be imported without Next
+- Category: Test gap
+- Baseline: `extractSessionValue` and `extractMemberSessionValue` (via `extractNamedCookie`) in `apps/project-car/web/lib/session.ts` turn the API's `Set-Cookie` headers into the token the web stores. Login depends on them. The file imports `next/headers`, so `node --test lib/*.test.ts` cannot load it and nothing covers them: not the percent-decoded value, not a malformed escape (falls back to the raw text), not two cookies in one response, not the other cookie name.
+- Target: move `extractNamedCookie`, `extractSessionValue` and `extractMemberSessionValue` unchanged into a new `apps/project-car/web/lib/session-cookie.ts` (no Next import) and re-export them from `session.ts` so `shop-api.ts` and every caller keep working. No behaviour change.
+- Must not get worse: web typecheck, lint, build and tests; login for the Owner and the member; no page change, so no screenshots.
+- Proof: new `apps/project-car/web/lib/session-cookie.test.ts` (owner cookie found among several; member cookie not confused with owner; percent-encoded value decoded; a bad escape like `%E0%A4%A` returned raw; header with no `=` skipped; empty array and no match give `null`; attributes after `;` ignored). The test file cannot import on main (`next/headers`), so it is red there.
+- Size: 1 task
+- Likely files: `apps/project-car/web/lib/session-cookie.ts`, `apps/project-car/web/lib/session.ts` (move and re-export only), `apps/project-car/web/lib/session-cookie.test.ts`
+- Depends on: none. R69 edits `shop-api.ts`, not `session.ts`.
+
 ## Needs from Ben
 
 | Row | Real value needed | Mock used meanwhile |
@@ -581,10 +661,15 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 | R60 | Largest page of member tokens or bookings | Default 200, maximum 500 |
 | R61 | Whether a visit already checked in may be cancelled for a full refund | No. 400 `cancel_after_check_in`; Complete is the path and charges for use. |
 | R62 | Wording of the 404 and error pages | "That page is not here." and "Something went wrong. Try again." |
+| R63 | Whether a pending visit may be confirmed after its start has passed | Yes until its end. Only a visit whose time has fully ended is refused: 400 `booking_window_ended`. (This is narrower than the parked "no past start" idea, because check-in is allowed in a window that can start before the start time.) |
+| R64 | Whether two visits may ever share a bay at once (a hand-off or a lift with two cars) | No: 409 `hoist_occupied` on check-in while another visit on that bay is active or overdue |
+| R66 | Whether a banned or suspended member may keep an old chat room | New rooms only active members; existing rooms are left alone |
+| R68 | Whether an AI may ever set a member password | No. 403 `ai_cannot_set_password`; only a person sets it |
+| R69 | How long the web waits for the shop API before it shows "Cannot reach shop API" | 10 seconds (`SHOP_API_TIMEOUT_MS`) |
 
 ## Skipped / excluded
 
-- Verified on main 2026-10-26 and parked (real, not yet rows; take them next, one writer per file): `confirm_booking` has no `reject_start_in_past` (a pending booking whose start has passed can still be confirmed), and `check_in_booking` only refuses maintenance or locked hoists, so two non-overlapping confirmed bookings on one hoist can both be checked in. Both are in `bookings.py`, so they wait for R61. `adjust_member_tokens` in `routers/members.py` loads the member with no `FOR UPDATE` (two overlapping adjustments read the same balance). `create_room` in `services/chat.py` accepts suspended, banned and churned members. Owner `GET /members/{id}/tokens`, `GET /bookings` with no window and `GET /waitlist` are unbounded (the Owner web uses them whole, so a cap needs a paging UI first).
+- Verified on main 2026-10-26 and 2026-10-27, now rows: `confirm_booking` (R63), `check_in_booking` (R64), `adjust_member_tokens` lock (R65), `create_room` status filter (R66), and two more found on the way: `claim_job` lock (R67) and AI-set member password (R68). Still parked: Owner `GET /members/{id}/tokens`, `GET /bookings` with no window and `GET /waitlist` are unbounded (the Owner web uses them whole, so a cap needs a paging UI first). `accept_fill_draft` reads its draft without a lock (two accepts could each write a notice batch); it shares `staff.py` with R67, so take it after R67.
 - Job claim/done hardening already in flight: seed `--reset` not clearing `job_events`, 403 `not_your_claim`, member-shell banner copy, the double-claim Postgres row lock, and job claim tests. The same `_reset_shop` (`apps/project-car/api/app/seed.py`) also skips `shop_hoist_requests`, `tool_crib_events`, `refund_requests`, `staff_parts_requests`, `tool_crib_exceptions`, `staff_drafts`, and `shop_jobs`. Those FKs are `ON DELETE RESTRICT` (`20261004_0009`, `20261004_0011`). Fold them into that in-flight reset. This backlog does not open a second seed row. `parts_requests.member_id` is `ON DELETE CASCADE` (`20261004_0008`).
 - Overdue booking flagged to a `late_return` incident. `BookingStatus.OVERDUE` is assigned by `mark_overdue` in `bookings.py` (#117) (route `mark_booking_overdue`) but nothing files a `late_return` incident for it. `fill.py` `OCCUPYING` and member schedule `OPEN_STATUSES` omit overdue. Leave that with the excluded slice.
 - `Docs/STATUS.md` Reality refresh.
@@ -617,5 +702,7 @@ Rows R36–R40 (2026-10-23): R1–R15 and R17–R35 are merged (see the merged-P
 Rows R41–R48 (2026-10-23): three can start together with no shared file: R41 (`bookings.py`), R42 (`shop_hoist_requests.py`), R44 (`staff.py`); R45, R46 and R48 also share no file with those. Then R43 after R42, and R47 after R41. R45 is the only open row adding an alembic revision.
 
 Rows R49–R54 (2026-10-25): this paragraph replaces the earlier ones for anything still open. R1–R44, R46 (#174), R47 and R48 are merged (see the merged-PR ledger), so the R36–R40 and R41–R48 waves above are history, including the `routers/members.py` order (R37, R39 merged) and the `schemas.py` note (R38 merged). R45 (tool crib: `models.py`, `services/tool_crib.py`, one alembic revision, `tests/test_tool_crib.py`) is the only open row from those waves. Open rows from this wave all use different files and can run together: R49 (`routers/hoists.py`), R50 (`routers/members.py`), R51 (`services/parts_requests.py`), R52 (`schemas.py`), R53 (web `lib/time.ts`), R54 (`routers/dashboard.py`). None shares a file with R45. Start R49, R50 and R54 first.
+
+Rows R63–R70 (2026-10-27): this paragraph is the newest. Open from before: R51 (`services/parts_requests.py`), R52 (`schemas.py`), R55 (#193, `config.py`, `routers/auth.py`, `routers/waitlist.py`), and R56–R62 as listed above. Files for R63–R70: R63 and R64 (`services/bookings.py` and `tests/test_bookings.py`, in that order, after R61), R65 and R68 (`routers/members.py`, in that order), R66 (`services/chat.py`), R67 (`services/staff.py`), R69 (web `lib/fetch-timeout.ts`, `lib/shop-api.ts`), R70 (web `lib/session-cookie.ts`, `lib/session.ts`). Any three of R65, R66, R67, R69 and R70 share no file and can run together; start with R65, R66 and R67 (API only, no screenshots). None of the eight changes a page, adds an alembic revision, or needs screenshots.
 
 Rows R55–R62 (2026-10-26): this paragraph replaces the earlier ones for anything still open. R45, R49, R50, R53 and R54 are merged (R45 is #178). R51 (`services/parts_requests.py`) and R52 (`schemas.py`) are the only open rows from the R49–R54 wave and share no file with these. Every R55–R62 row uses its own files, so any three can run together: R55 (`config.py`, `routers/auth.py`, `routers/waitlist.py`), R56 (`services/shop_hoist_requests.py`), R57 (`services/todos.py`), R58 (`routers/hoists.py`), R59 (web `lib/config.ts`), R60 (`routers/member.py`), R61 (`services/bookings.py` and the two booking cards, UI), R62 (web `app/not-found.tsx`, `app/error.tsx`, `visual/pages.spec.ts`, UI). Start R55, R56 and R57 first; they are API only and need no screenshots. Do R61 and R62 only with the screenshot hosting ready. No alembic revision in any of them.
