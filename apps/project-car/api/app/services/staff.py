@@ -233,8 +233,23 @@ def get_job(session: Session, job_id: UUID) -> ShopJob:
 
 
 def claim_job(session: Session, job_id: UUID, member_id: UUID) -> ShopJob:
+    """Lock the job row, then claim it if it is open or sent back.
+
+    On Postgres, ``FOR UPDATE`` holds until commit, so a second claim waits
+    and then sees the status the first claim stored. SQLite drops the clause.
+    ``get_job`` stays unlocked for complete and send-back. ``populate_existing``
+    refreshes a job this session already loaded so the status check is not
+    the pre-lock copy.
+    """
     _active_member(session, member_id)
-    job = get_job(session, job_id)
+    job = session.scalars(
+        select(ShopJob)
+        .where(ShopJob.id == job_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).first()
+    if job is None:
+        raise _error(404, "not_found", "Job not found.")
     if job.status not in (ShopJobStatus.OPEN, ShopJobStatus.SENT_BACK):
         raise _error(400, "job_not_open", "Only an open job can be claimed.")
     job.status = ShopJobStatus.CLAIMED
