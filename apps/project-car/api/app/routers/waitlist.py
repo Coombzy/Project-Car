@@ -190,7 +190,17 @@ def list_waitlist_entries(
 
 
 @router.post("/waitlist/{entry_id}/contacted", response_model=WaitlistEntryOut)
-def mark_waitlist_contacted(entry_id: UUID, session: DbSession, _owner: Owner) -> WaitlistEntryOut:
+def mark_waitlist_contacted(
+    entry_id: UUID,
+    session: DbSession,
+    _owner: Owner,
+    settings: AppSettings,
+) -> WaitlistEntryOut:
+    if not settings.pc_waitlist:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "waitlist_disabled", "message": "Waitlist is not enabled."},
+        )
     entry = session.get(WaitlistEntry, entry_id)
     if entry is None:
         raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Waitlist entry not found."})
@@ -208,8 +218,14 @@ def convert_waitlist_entry(
     body: WaitlistConvert,
     session: DbSession,
     _owner: Owner,
+    settings: AppSettings,
 ) -> WaitlistEntryOut:
     """Owner. One waitlist row becomes one active member and one initial grant."""
+    if not settings.pc_waitlist:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "waitlist_disabled", "message": "Waitlist is not enabled."},
+        )
     entry = session.get(WaitlistEntry, entry_id)
     if entry is None:
         raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Waitlist entry not found."})
