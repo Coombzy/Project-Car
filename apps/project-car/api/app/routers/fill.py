@@ -29,7 +29,7 @@ def _error(status: int, code: str, message: str) -> HTTPException:
 def preview_fill(
     session: DbSession,
     _owner: Owner,
-    discount_pct: Decimal | None = Query(default=None),
+    discount_pct: Decimal | None = Query(default=None, ge=0, le=100),
 ) -> FillPreviewOut:
     snapshot = snapshot_next_day(session, discount_override=discount_pct, prefer_published=discount_pct is None)
     return FillPreviewOut.from_snapshot(snapshot)
