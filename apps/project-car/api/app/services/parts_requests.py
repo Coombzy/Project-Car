@@ -1,4 +1,4 @@
-"""Member parts requests. A PT ask stores one row. Tool checkout stays unstarted."""
+"""Member parts requests. One open PT row per member per SKU. Tool checkout stays unstarted."""
 
 from __future__ import annotations
 
@@ -43,6 +43,23 @@ def create_parts_request(
             422,
             "invalid_parts_sku",
             "A parts request uses a PT SKU such as PT-OIL-5W30-012.",
+        )
+    # Stand-in: one open request per member per cleaned SKU. Fulfilled and
+    # declined rows do not block. Another member's open row does not block.
+    open_id = session.scalar(
+        select(PartsRequest.id)
+        .where(
+            PartsRequest.member_id == member_id,
+            PartsRequest.sku == cleaned,
+            PartsRequest.status == PartsRequestStatus.OPEN,
+        )
+        .limit(1)
+    )
+    if open_id is not None:
+        raise _error(
+            409,
+            "already_requested",
+            "This member already has an open request for that SKU.",
         )
     row = PartsRequest(
         member_id=member_id,
