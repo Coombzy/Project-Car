@@ -42,7 +42,7 @@ export function MemberBookingCard({
           </form>
         </div>
       ) : null}
-      {own && (own.status === "confirmed" || own.status === "active") ? (
+      {own && own.status === "confirmed" ? (
         <div className="chip-actions">
           <form action={memberCancelBookingAction}>
             <ScheduleReturnFields returnTo={returnTo} />

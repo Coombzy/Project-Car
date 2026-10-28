@@ -657,6 +657,10 @@ def cancel_booking(session: Session, booking_id: UUID) -> Booking:
     # Shop work can have no member and no reserve.
     booking = _locked_booking(session, booking_id)
     member = lock_member(session, booking.member_id) if booking.member_id is not None else None
+    # Checked-in time is already in use. Cancel would return the whole reserve.
+    # Complete is the path that charges for the time used.
+    if booking.status == BookingStatus.ACTIVE:
+        raise _error(400, "cancel_after_check_in", "Complete the visit instead.")
     if booking.status not in OPEN_STATUSES:
         raise _error(400, "invalid_transition", "Completed, overdue, or cancelled bookings cannot be cancelled.")
 
