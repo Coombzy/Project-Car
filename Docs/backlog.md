@@ -642,6 +642,96 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Likely files: `apps/project-car/web/lib/session-cookie.ts`, `apps/project-car/web/lib/session.ts` (move and re-export only), `apps/project-car/web/lib/session-cookie.test.ts`
 - Depends on: none. R69 edits `shop-api.ts`, not `session.ts`.
 
+### R71. A tier patch with an explicit null answers 500
+- Category: Bug (verified on main 2026-10-28)
+- Baseline: `TierPatch` (`apps/project-car/api/app/schemas.py`) types every field `X | None = None`, and `patch_tier` in `apps/project-car/api/app/routers/tiers.py` applies `body.model_dump(exclude_unset=True)` with `setattr`. So `PATCH /tiers/basic` with `{"price": null}`, `{"display_name": null}`, `{"included_tokens": null}`, `{"booking_window_days": null}` or `{"max_simultaneous_bookings": null}` passes validation and writes NULL to a NOT NULL column. On main each one raises `IntegrityError` out of the route (a 500; the test client re-raises it). Hoists and members already refuse this (`_PATCH_NOT_NULL` in `routers/hoists.py`, `test_hoist_patch_null.py`, `test_member_patch_null.py`); tiers do not.
+- Target: in `patch_tier`, an explicit null for any of those five fields answers 422 `validation_error` ("<field> cannot be null.") before any write, and the row is unchanged. `notes: null` still clears the notes. Omitted fields, real values and the 404 for an unknown tier are unchanged.
+- Must not get worse: `pytest` for the API; the `/tiers` page patch (`apps/project-car/web/app/tiers/actions.ts` never sends null).
+- Proof: new `apps/project-car/api/tests/test_tier_patch_null.py`, modelled on `test_member_patch_null.py` (each of the five fields set to null: 422 and the tier reads back the same; `notes: null` clears; a valid patch still 200), red on main (`IntegrityError`).
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/tiers.py` (`patch_tier` only), `apps/project-car/api/tests/test_tier_patch_null.py`
+- Depends on: none. R52 edits `schemas.py`, not this router.
+
+### R72. A tier can be created with a name that cannot be patched or that shadows another route
+- Category: Bug (verified on main 2026-10-28)
+- Baseline: `TierCreate.name` in `apps/project-car/api/app/schemas.py` only strips and lower-cases (1 to 64 characters). On main `POST /tiers` accepts `a/b` (201), then `PATCH /tiers/a/b` is 404 because the slash splits the path, so the tier can never be edited. It accepts `pricing` (201), then `PATCH /tiers/pricing` is answered by the pricing-settings route (`PATCH /tiers/pricing`, 200, bands and overlays) and never reaches the tier. It also accepts `has space`, which web then sends unencoded.
+- Target: a tier name is a slug: lower-case letters, digits, hyphen and underscore, starting with a letter or digit, 1 to 64 characters, and not `pricing`. Anything else answers 422 `validation_error` on create. `period-allocation`, `bands` and `overlays` are valid names (they differ by HTTP method or path depth). Existing rows and `TierPatch` are untouched; `basic` and `premium` stay valid. The rule is a stand-in, see Needs from Ben.
+- Must not get worse: `pytest` for the API (tier tests, seed, member create with a tier); the `member_tier` normalisation in `MemberCreate` and `MemberPatch` stays as is.
+- Proof: new `apps/project-car/api/tests/test_tier_names.py` (`a/b`, `pricing`, `has space`, `-x` and a 65-character name: 422; `UPPER` is lower-cased to `upper` and accepted; `gold_2` and `silver-plus`: 201 and `PATCH` 200), red on main for `a/b`, `pricing` and `has space`.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/schemas.py` (`TierCreate.normalize_name` only), `apps/project-car/api/tests/test_tier_names.py`
+- Depends on: R52 (same file; one `schemas.py` row at a time).
+
+### R73. A blank phone or emergency contact is stored as spaces
+- Category: Bug (verified on main 2026-10-28)
+- Baseline: `MemberCreate` and `MemberPatch` in `apps/project-car/api/app/schemas.py` trim `name` only. `PATCH /members/{id}` with `{"phone": "   ", "emergency_contact_name": "  ", "waiver_version": " "}` answers 200 and stores and returns `"   "` (the response shows `"phone":"   "`). The Owner page then shows an empty-looking value that counts as present, and a later `{"phone": null}` is the only way to clear it. `name` and the new-hoist and to-do fields already strip (`test_name_trim.py`, `test_staff_input_trim.py`).
+- Target: on both models, `phone`, `waiver_version`, `emergency_contact_name` and `emergency_contact_phone` are stripped, and a value that is blank after stripping becomes `null`. A real value keeps its inner spaces. `max_length` is unchanged (applied to the raw string, as the name fields do).
+- Must not get worse: `pytest` for the API; `test_member_patch_null.py`; member self-serve profile edits (`test_member_self_serve.py`).
+- Proof: new `apps/project-car/api/tests/test_member_blank_text.py` (create and patch with `"   "`: response and a fresh `GET /members/{id}` show null; `" 306 555 0101 "` stored as `"306 555 0101"`), red on main.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/schemas.py` (`MemberCreate`, `MemberPatch` only), `apps/project-car/api/tests/test_member_blank_text.py`
+- Depends on: R72 (same file; one `schemas.py` row at a time).
+
+### R74. The fill preview takes a discount the notify call refuses
+- Category: Bug (verified on main 2026-10-28)
+- Baseline: `POST /fill/notify` takes `discount_pct` as `Field(ge=0, le=100)` (`FillNotifyRequest` in `apps/project-car/api/app/schemas.py`). `GET /fill/preview` in `apps/project-car/api/app/routers/fill.py` takes the same value as a bare `Decimal | None = Query(default=None)`. On main `GET /fill/preview?discount_pct=500` and `?discount_pct=-50` both answer 200 and price the openings with that discount; only NaN and Infinity are refused. The Owner `/fill` page shows that preview before it sends a notice, so the page can show a rate the send then rejects.
+- Target: `GET /fill/preview` takes `discount_pct` with `ge=0, le=100` (the same bounds as notify): 422 `validation_error` outside them, 200 at 0 and at 100. No other change.
+- Must not get worse: `pytest` for the API (`test_fill.py`); the web `/fill` page and `previewFill` (no change, so no screenshots).
+- Proof: new `apps/project-car/api/tests/test_fill_preview_bounds.py` (500 and -50: 422; 0, 100 and 12.5: 200; the same values on notify give the same split), red on main for 500 and -50.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/fill.py` (`preview_fill` query parameter only), `apps/project-car/api/tests/test_fill_preview_bounds.py`
+- Depends on: none. `schemas.py` is not touched.
+
+### R75. A shop job bounty has no upper bound
+- Category: Hardening (verified on main 2026-10-28)
+- Baseline: `ShopJobCreate.token_bounty` is `Decimal` with `ge=0` only (`apps/project-car/api/app/schemas.py`), and `create_job` in `apps/project-car/api/app/services/staff.py` stores it as given in a `Numeric(12, 2)` column (`ShopJob.token_bounty`, `models.py`). On main `POST /jobs` with `99999999999` or `1e30` answers 201 on SQLite, which does not enforce the column. Postgres overflows `Numeric(12, 2)` at 10,000,000,000 and answers 500, and a value with more than two decimals is rounded silently. The Owner token adjustment is capped (R39); a job bounty is not.
+- Target: `create_job` refuses a bounty above 10,000 tokens or with more than two decimals with 422 `invalid_bounty` ("A job bounty is 0 to 10,000 tokens, with at most two decimals."), writing no row. 0 and 10,000 are accepted. The cap is a stand-in, see Needs from Ben.
+- Must not get worse: `pytest` for the API (`test_staff_actions.py`, `test_staff_input_trim.py`); the AI path, which still creates jobs through the same route.
+- Proof: new `apps/project-car/api/tests/test_job_bounty.py` (10,000.01, 99999999999 and 1e30: 422 and no `shop_jobs` row; 10000 and 0 and 2.50: 201; 1.234: 422), red on main.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/staff.py` (`create_job` only), `apps/project-car/api/tests/test_job_bounty.py`
+- Depends on: R67 is merged (it edited `claim_job` only). Do the `accept_fill_draft` lock row after this one, not at the same time.
+
+### R76. A member's job history has no page size
+- Category: Performance / hardening (verified on main 2026-10-28)
+- Baseline: `list_member_events` in `apps/project-car/api/app/services/jobs.py` returns every `job_events` row for the member, and `GET /member/jobs/events` in `apps/project-car/api/app/routers/jobs.py` has no `limit`. The member's own token list and booking list got a page size in R60 (`limit` default 200, maximum 500, in `routers/member.py`); the job list was not part of it. Every claim and done adds a row for good (the ledger is append-only), so a regular member's response only grows. The Owner list (`GET /jobs/events`) is left alone: the Owner web reads it whole.
+- Target: `GET /member/jobs/events` takes `limit` (default 200, `ge=1`, `le=500`) and returns the newest `limit` rows in the same order as today (newest first). A `limit` of 0 or 501 is 422. Rows, fields and order under the limit are unchanged.
+- Must not get worse: `pytest` for the API (`test_jobs.py`); the member jobs page (`apps/project-car/web/app/member/jobs/page.tsx` calls it with no argument, so it gets the default).
+- Proof: new `apps/project-car/api/tests/test_member_job_events_limit.py` (205 events for one member via claim and done pairs inserted through the service: default returns 200 and they are the newest; `limit=3` returns 3; 0 and 501: 422; another member's rows never appear), red on main (205 returned).
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/jobs.py` (`list_my_job_events` only), `apps/project-car/api/app/services/jobs.py` (`list_member_events` only), `apps/project-car/api/tests/test_member_job_events_limit.py`
+- Depends on: none.
+
+### R77. The Owner can still mark a waitlist row contacted or convert it when the waitlist is switched off
+- Category: Bug (verified on main 2026-10-28)
+- Baseline: `create_waitlist_entry` and `list_waitlist_entries` in `apps/project-car/api/app/routers/waitlist.py` answer 404 `waitlist_disabled` when `PC_WAITLIST` is false. `mark_waitlist_contacted` and `convert_waitlist_entry` in the same file never read the setting. On main, with `PC_WAITLIST=false`, `GET /waitlist` is 404, while `POST /waitlist/{id}/contacted` is 200 and `POST /waitlist/{id}/convert` is 200 and creates an active member with an initial token grant, for a list the Owner cannot see.
+- Target: both routes answer 404 `waitlist_disabled` when the setting is false, before looking up the row. With the setting on (the default) nothing changes, including the 409s and the 404 for an unknown id.
+- Must not get worse: `pytest` for the API (`test_waitlist.py`, `test_dashboard_waitlist.py`, `test_cors_waitlist.py`); the dashboard waitlist count.
+- Proof: new `apps/project-car/api/tests/test_waitlist_disabled.py` (create a row, set `PC_WAITLIST=false` with `get_settings.cache_clear()` as `test_cors_waitlist.py` does: list, contacted and convert are all 404 `waitlist_disabled` and no member exists; setting restored: contacted 200; an unknown id with `PC_WAITLIST=false` is also 404 `waitlist_disabled`, so a check placed after the row lookup fails), red on main for contacted and convert.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/waitlist.py` (`mark_waitlist_contacted`, `convert_waitlist_entry` only), `apps/project-car/api/tests/test_waitlist_disabled.py`
+- Depends on: none. R55 (merged) was the last row to edit this router.
+
+### R78. The web puts a tier name and ids into API paths unencoded
+- Category: Hardening (verified on main 2026-10-28)
+- Baseline: `apps/project-car/web/lib/shop-api.ts` builds 18 request paths with a template string and no `encodeURIComponent` (for example `/tiers/${name}` in `patchTier`, `/members/${id}`, `/hoists/${id}`, `/bookings/${id}/cancel`). The only two `encodeURIComponent` calls in the file are for the session cookie. The id and the tier name come from a form field in a server action (`app/tiers/actions.ts` reads `name` with `formData.get`). A tier name with `?`, `#` or `%` cuts or changes the path, and a tampered hidden id such as `../tiers` reaches a different route with the Owner's cookie.
+- Target: a new pure `pathSegment(value)` in `apps/project-car/web/lib/shop-path.ts` returns `encodeURIComponent(value)` and throws a plain `Error("Bad path segment.")` for an empty value, `.` and `..`. Every `${id}` and `${name}` in a `shop-api.ts` path (Owner and member helpers) goes through it. Normal UUIDs and tier names give the same URL as today. Together with R72 the tier name rule is also the web rule.
+- Must not get worse: web typecheck, lint, build and tests; no page or copy change, so no screenshots.
+- Proof: new `apps/project-car/web/lib/shop-path.test.ts` (UUID unchanged; `a b`, `a/b`, `a?b`, `a#b`, `100%` encoded; `../x` encoded so it is one segment; empty, `.` and `..` throw). Plus a source check in the same test that reads `shop-api.ts` and fails if a path template still holds a raw `${id}` or `${name}`, red on main (18 raw uses).
+- Size: 1 task
+- Likely files: `apps/project-car/web/lib/shop-path.ts`, `apps/project-car/web/lib/shop-path.test.ts`, `apps/project-car/web/lib/shop-api.ts` (path templates only)
+- Depends on: R69 (same file, `shop-api.ts`; take it after R69 lands).
+
+### R79. The web error helpers have no test and cannot be imported without Next
+- Category: Test gap
+- Baseline: `shopErrorMessage`, `handlePageError` and `handleMemberPageError` in `apps/project-car/web/lib/page.ts` are used by 23 pages and actions and decide when a 401 or 403 sends a person back to login. There is no `page.test.ts`. The file imports `next/navigation` and `./session` (which imports `next/headers`), so `node --test lib/*.test.ts` cannot load it. Nothing covers that a 401 clears the cookie and redirects with `reason=session`, that a member 403 does the same, or that a 500 keeps the message.
+- Target: move the pure part into a new `apps/project-car/web/lib/shop-error.ts` (no Next import): `shopErrorMessage` unchanged, plus `isOwnerSessionError(error)` (a `ShopApiError` with status 401) and `isMemberSessionError(error)` (status 401 or 403). `page.ts` imports and re-exports them and uses the two predicates, so every caller keeps working. No behaviour change.
+- Must not get worse: web typecheck, lint, build and tests; Owner and member login redirects; no page change, so no screenshots.
+- Proof: new `apps/project-car/web/lib/shop-error.test.ts` (a `ShopApiError` message returned as is; a plain `Error` and a string give the default text; a custom fallback is used; 401 is an Owner session error and 403 is not; 401 and 403 are member session errors and 404 and 500 are not; a non-`ShopApiError` never is). It imports `./shop-error.ts` and never `page.ts`; red on main is the missing module.
+- Size: 1 task
+- Likely files: `apps/project-car/web/lib/shop-error.ts`, `apps/project-car/web/lib/page.ts` (move and re-export only), `apps/project-car/web/lib/shop-error.test.ts`
+- Depends on: none. R70 and R69 do not touch `page.ts`.
+
 ## Needs from Ben
 
 | Row | Real value needed | Mock used meanwhile |
@@ -666,10 +756,13 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 | R66 | Whether a banned or suspended member may keep an old chat room | New rooms only active members; existing rooms are left alone |
 | R68 | Whether an AI may ever set a member password | No. 403 `ai_cannot_set_password`; only a person sets it |
 | R69 | How long the web waits for the shop API before it shows "Cannot reach shop API" | 10 seconds (`SHOP_API_TIMEOUT_MS`) |
+| R72 | Shape of a tier name | Slug: `a-z`, `0-9`, `-`, `_`, starts with a letter or digit, 1 to 64 characters, and not `pricing` |
+| R75 | Largest shop job bounty | 10,000 tokens, 2 decimals |
+| R76 | Largest page of a member's job history | Default 200, maximum 500 (same as R60) |
 
 ## Skipped / excluded
 
-- Verified on main 2026-10-26 and 2026-10-27, now rows: `confirm_booking` (R63), `check_in_booking` (R64), `adjust_member_tokens` lock (R65), `create_room` status filter (R66), and two more found on the way: `claim_job` lock (R67) and AI-set member password (R68). Still parked: Owner `GET /members/{id}/tokens`, `GET /bookings` with no window and `GET /waitlist` are unbounded (the Owner web uses them whole, so a cap needs a paging UI first). `accept_fill_draft` reads its draft without a lock (two accepts could each write a notice batch); it shares `staff.py` with R67, so take it after R67.
+- Verified on main 2026-10-26 and 2026-10-27, now rows: `confirm_booking` (R63), `check_in_booking` (R64), `adjust_member_tokens` lock (R65), `create_room` status filter (R66), and two more found on the way: `claim_job` lock (R67) and AI-set member password (R68). Still parked: Owner `GET /members/{id}/tokens`, `GET /bookings` with no window and `GET /waitlist` are unbounded (the Owner web uses them whole, so a cap needs a paging UI first). `accept_fill_draft` reads its draft without a lock (two accepts could each write a notice batch); it shares `staff.py` with R67 and R75, so take it after R75 has merged.
 - Job claim/done hardening already in flight: seed `--reset` not clearing `job_events`, 403 `not_your_claim`, member-shell banner copy, the double-claim Postgres row lock, and job claim tests. The same `_reset_shop` (`apps/project-car/api/app/seed.py`) also skips `shop_hoist_requests`, `tool_crib_events`, `refund_requests`, `staff_parts_requests`, `tool_crib_exceptions`, `staff_drafts`, and `shop_jobs`. Those FKs are `ON DELETE RESTRICT` (`20261004_0009`, `20261004_0011`). Fold them into that in-flight reset. This backlog does not open a second seed row. `parts_requests.member_id` is `ON DELETE CASCADE` (`20261004_0008`).
 - Overdue booking flagged to a `late_return` incident. `BookingStatus.OVERDUE` is assigned by `mark_overdue` in `bookings.py` (#117) (route `mark_booking_overdue`) but nothing files a `late_return` incident for it. `fill.py` `OCCUPYING` and member schedule `OPEN_STATUSES` omit overdue. Leave that with the excluded slice.
 - `Docs/STATUS.md` Reality refresh.
@@ -706,3 +799,5 @@ Rows R49–R54 (2026-10-25): this paragraph replaces the earlier ones for anythi
 Rows R55–R62 (2026-10-26): this paragraph replaces the earlier ones for anything still open. R45, R49, R50, R53 and R54 are merged (R45 is #178). R51 (`services/parts_requests.py`) and R52 (`schemas.py`) are the only open rows from the R49–R54 wave and share no file with these. Every R55–R62 row uses its own files, so any three can run together: R55 (`config.py`, `routers/auth.py`, `routers/waitlist.py`), R56 (`services/shop_hoist_requests.py`), R57 (`services/todos.py`), R58 (`routers/hoists.py`), R59 (web `lib/config.ts`), R60 (`routers/member.py`), R61 (`services/bookings.py` and the two booking cards, UI), R62 (web `app/not-found.tsx`, `app/error.tsx`, `visual/pages.spec.ts`, UI). Start R55, R56 and R57 first; they are API only and need no screenshots. Do R61 and R62 only with the screenshot hosting ready. No alembic revision in any of them.
 
 Rows R63–R70 (2026-10-27): this paragraph replaces the earlier ones for anything still open. Merged since that paragraph: R55 (#193), R56 (#191), R57 (#192), R58 (#195), R59 (#194) and R60 (#196). Open from before: R51 (`services/parts_requests.py`), R52 (`schemas.py`), R61 (`services/bookings.py`, two booking cards) and R62 (web `app/not-found.tsx`, `app/error.tsx`, `visual/pages.spec.ts`). Files for R63–R70: R63 and R64 (`services/bookings.py` and `tests/test_bookings.py`, in that order, after R61), R65 and R68 (`routers/members.py`, in that order), R66 (`services/chat.py`), R67 (`services/staff.py`), R69 (web `lib/fetch-timeout.ts`, `lib/shop-api.ts`), R70 (web `lib/session-cookie.ts`, `lib/session.ts`). Any three of R65, R66, R67, R69 and R70 share no file and can run together; start with R65, R66 and R67 (API only, no screenshots). None of the eight changes a page, adds an alembic revision, or needs screenshots.
+
+Rows R71–R79 (2026-10-28): this paragraph replaces the earlier ones for anything still open. R70 (#202) is the last merged row. Still open from before: R51 (`services/parts_requests.py`), R52 (`schemas.py`), R61 then R63 then R64 (`services/bookings.py`), R62 (web `app/not-found.tsx`, `app/error.tsx`), R68 (`routers/members.py`) and R69 (web `lib/fetch-timeout.ts`, `lib/shop-api.ts`). Files for R71–R79: R71 (`routers/tiers.py`), R72 then R73 (`schemas.py`, after R52, one at a time), R74 (`routers/fill.py`), R75 (`services/staff.py`), R76 (`routers/jobs.py`, `services/jobs.py`), R77 (`routers/waitlist.py`), R78 (web `lib/shop-path.ts`, `lib/shop-api.ts`, after R69), R79 (web `lib/shop-error.ts`, `lib/page.ts`). Any three of R71, R74, R75, R76, R77 and R79 share no file and can run together, and none of them touches a page, adds an alembic revision or needs screenshots. Start R71, R74 and R77, then R51, R68 and R75.
