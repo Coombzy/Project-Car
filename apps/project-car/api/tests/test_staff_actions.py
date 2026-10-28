@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 from decimal import Decimal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
-from app.models import Booking, RefundRequest, StaffAction
+from app.models import Booking, RefundRequest, ShopJob, ShopJobStatus, StaffAction
 from app.shop_time import as_utc, shop_now
 from tests.conftest import AUTH, create_hoist, create_member, login_member
 
@@ -279,6 +279,84 @@ def test_ai_can_finish_or_send_back_a_claimed_job(client: TestClient) -> None:
     assert sent.json()["status"] == "sent_back"
     assert sent.json()["action"] == "job_send_back"
     assert _balance(client, member["id"]) == before
+
+
+def _record_scalars(monkeypatch, reads: list[tuple[str, bool]]) -> None:
+    """Compile each ORM read on the postgresql dialect.
+
+    SQLite drops FOR UPDATE at execution. The statement still carries the
+    lock, which is what Postgres will take.
+    """
+    from sqlalchemy.dialects import postgresql
+    from sqlalchemy.orm import Session
+
+    original = Session.scalars
+
+    def spy(self, statement, *args, **kwargs):
+        sql = str(statement.compile(dialect=postgresql.dialect()))
+        locked = getattr(statement, "_for_update_arg", None) is not None
+        reads.append((sql, locked))
+        return original(self, statement, *args, **kwargs)
+
+    monkeypatch.setattr(Session, "scalars", spy)
+
+
+def test_claim_job_locks_the_job_row(client: TestClient, monkeypatch) -> None:
+    """claim_job selects the shop job FOR UPDATE before the open check.
+
+    Two claims in flight otherwise both read open, and the later commit
+    wins, so the first member believes they hold the job. The second claim
+    after the first commits is 400 job_not_open. An unknown job is 404.
+    SQLite drops FOR UPDATE; this checks the statement still asks for the
+    lock. Red on main: that job select has no FOR UPDATE.
+    """
+    ada = create_member(client, name="Ada Reyes", email="ada.claim-lock@example.com")
+    create_member(client, name="Ben Cole", email="ben.claim-lock@example.com")
+    created = client.post(
+        "/jobs",
+        headers=AUTH,
+        json={"title": "Sweep the bay", "token_bounty": "25"},
+    )
+    assert created.status_code == 201, created.text
+    job_id = created.json()["id"]
+
+    login_member(client, "ada.claim-lock@example.com")
+    reads: list[tuple[str, bool]] = []
+    _record_scalars(monkeypatch, reads)
+    first = client.post(f"/member/jobs/{job_id}/claim")
+    claim_reads = list(reads)
+    assert first.status_code == 200, first.text
+    assert first.json()["status"] == "claimed"
+    assert first.json()["claimed_by_member_id"] == ada["id"]
+
+    login_member(client, "ben.claim-lock@example.com")
+    second = client.post(f"/member/jobs/{job_id}/claim")
+    assert second.status_code == 400, second.text
+    assert second.json()["error"]["code"] == "job_not_open"
+
+    missing = client.post(f"/member/jobs/{uuid4()}/claim")
+    assert missing.status_code == 404, missing.text
+    assert missing.json()["error"]["code"] == "not_found"
+    assert missing.json()["error"]["message"] == "Job not found."
+
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        row = session.get(ShopJob, UUID(job_id))
+        assert row is not None
+        assert row.status == ShopJobStatus.CLAIMED
+        assert str(row.claimed_by_member_id) == ada["id"]
+    finally:
+        session.close()
+
+    job_selects = [
+        (sql, is_locked)
+        for sql, is_locked in claim_reads
+        if "FROM shop_jobs" in sql and "shop_jobs.id" in sql
+    ]
+    first_sql, first_locked = job_selects[0] if job_selects else ("", False)
+    assert first_locked and "FOR UPDATE" in first_sql, (
+        "claim job select has no FOR UPDATE on the postgresql dialect"
+    )
 
 
 def test_drafts_wait_for_accept(client: TestClient) -> None:
