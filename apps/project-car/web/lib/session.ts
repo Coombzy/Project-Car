@@ -4,34 +4,11 @@ import { cookieSecure } from "./cookie-secure";
 import { MEMBER_SESSION_COOKIE, SESSION_COOKIE } from "./config";
 import { memberCookiePath } from "./member-cookie-path";
 
-function extractNamedCookie(setCookieHeaders: string[], cookieName: string): string | null {
-  for (const header of setCookieHeaders) {
-    const pair = header.split(";", 1)[0] ?? "";
-    const eq = pair.indexOf("=");
-    if (eq === -1) {
-      continue;
-    }
-    const name = pair.slice(0, eq).trim();
-    if (name !== cookieName) {
-      continue;
-    }
-    const raw = pair.slice(eq + 1).trim();
-    try {
-      return decodeURIComponent(raw);
-    } catch {
-      return raw;
-    }
-  }
-  return null;
-}
-
-export function extractSessionValue(setCookieHeaders: string[]): string | null {
-  return extractNamedCookie(setCookieHeaders, SESSION_COOKIE);
-}
-
-export function extractMemberSessionValue(setCookieHeaders: string[]): string | null {
-  return extractNamedCookie(setCookieHeaders, MEMBER_SESSION_COOKIE);
-}
+export {
+  extractNamedCookie,
+  extractSessionValue,
+  extractMemberSessionValue,
+} from "./session-cookie";
 
 async function readCookie(name: string): Promise<string | undefined> {
   const store = await cookies();
