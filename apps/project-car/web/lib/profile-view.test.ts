@@ -18,8 +18,8 @@ type ProfileSource = {
   waiver_version: string | null;
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
-  token_balance: string;
-  deposit_balance: string;
+  token_balance: string | null | undefined;
+  deposit_balance: string | null | undefined;
 };
 
 function filled(overrides: Partial<ProfileSource> = {}): ProfileSource {
@@ -143,6 +143,68 @@ describe("member profile view", () => {
       filled({ emergency_contact_name: null, emergency_contact_phone: "403-555-0111" }),
     );
     assert.equal(valueOf(phoneOnly.rows, "Emergency contact"), "403-555-0111");
+  });
+
+  it("test_profile_rows_missing_balance_shows_not_on_file", async () => {
+    const missing = await loadRows(filled({ token_balance: null, deposit_balance: null }));
+    assert.equal(
+      valueOf(missing.rows, "Token balance"),
+      "Not on file",
+      because(missing.error, "null token balance shows Not on file"),
+    );
+    assert.equal(
+      valueOf(missing.rows, "Deposit balance"),
+      "Not on file",
+      because(missing.error, "null deposit balance shows Not on file"),
+    );
+
+    const absent = await loadRows(
+      filled({ token_balance: undefined, deposit_balance: undefined }),
+    );
+    assert.equal(
+      valueOf(absent.rows, "Token balance"),
+      "Not on file",
+      because(absent.error, "missing token balance shows Not on file"),
+    );
+    assert.equal(
+      valueOf(absent.rows, "Deposit balance"),
+      "Not on file",
+      because(absent.error, "missing deposit balance shows Not on file"),
+    );
+
+    const blank = await loadRows(filled({ token_balance: "", deposit_balance: "" }));
+    assert.equal(
+      valueOf(blank.rows, "Token balance"),
+      "Not on file",
+      because(blank.error, "blank token balance shows Not on file"),
+    );
+    assert.equal(
+      valueOf(blank.rows, "Deposit balance"),
+      "Not on file",
+      because(blank.error, "blank deposit balance shows Not on file"),
+    );
+
+    const whitespace = await loadRows(
+      filled({ token_balance: "   ", deposit_balance: "   " }),
+    );
+    assert.equal(
+      valueOf(whitespace.rows, "Token balance"),
+      "Not on file",
+      because(whitespace.error, "whitespace token balance shows Not on file"),
+    );
+    assert.equal(
+      valueOf(whitespace.rows, "Deposit balance"),
+      "Not on file",
+      because(whitespace.error, "whitespace deposit balance shows Not on file"),
+    );
+
+    const zero = await loadRows(filled({ token_balance: "0.00", deposit_balance: "0" }));
+    assert.equal(valueOf(zero.rows, "Token balance"), "0");
+    assert.equal(valueOf(zero.rows, "Deposit balance"), "0");
+
+    const zeroSwapped = await loadRows(filled({ token_balance: "0", deposit_balance: "0.00" }));
+    assert.equal(valueOf(zeroSwapped.rows, "Token balance"), "0");
+    assert.equal(valueOf(zeroSwapped.rows, "Deposit balance"), "0");
   });
 
   it("test_member_profile_page_is_read_only_and_points_at_chat", () => {

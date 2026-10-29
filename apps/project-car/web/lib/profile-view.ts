@@ -13,8 +13,8 @@ export type ProfileSource = {
   waiver_version?: string | null;
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
-  token_balance: string;
-  deposit_balance: string;
+  token_balance: string | null | undefined;
+  deposit_balance: string | null | undefined;
 };
 
 export type ProfileRow = {
@@ -30,11 +30,16 @@ function present(value: string | null | undefined): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
-/** Same digits as `tokensLabel` in time.ts. Local so this file has no extension import. */
-function balanceLabel(value: string): string {
-  const amount = Number(value);
+/** Numeric digits match `tokensLabel` in time.ts. Local so this file has no extension import. */
+function balanceLabel(value: string | null | undefined): string {
+  // Number("") and Number("   ") are 0. A missing balance must not render as a fake zero.
+  const shown = present(value);
+  if (shown == null) {
+    return PROFILE_MISSING;
+  }
+  const amount = Number(shown);
   if (Number.isNaN(amount)) {
-    return value;
+    return shown;
   }
   return Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
 }
