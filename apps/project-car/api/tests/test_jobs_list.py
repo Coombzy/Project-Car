@@ -1,9 +1,9 @@
 """GET /jobs and GET /member/jobs list stored shop jobs.
 
 Owner sees every job, newest first, with status, bounty, claimer id, and
-timestamps. A member sees open jobs and jobs they claimed. Another member's
-claimed or finished job is absent. `limit` defaults to 50 and maxes at 200
-(201 is 422). Logged out is 401.
+timestamps. A member sees open and sent_back jobs, plus jobs they claimed.
+Another member's claimed or finished job is absent. `limit` defaults to 50
+and maxes at 200 (201 is 422). Logged out is 401.
 
 Red on main: GET /jobs is 405 (POST /jobs already exists) and GET /member/jobs is 404.
 """
@@ -137,6 +137,74 @@ def test_member_sees_open_and_own_claim_not_another_members(client: TestClient) 
     assert _titles(other) == [EMPTY, SWEEP]
     assert RESTOCK not in other.text
     assert ada["id"] not in other.text
+
+
+TORQUE = "Torque the hoist bolts"
+RESET = "Reset the hoist pins"
+BLEED = "Bleed the lift brakes"
+BAG = "Bag the shop rags"
+
+
+def test_member_sees_sent_back_with_null_or_other_claimer(client: TestClient) -> None:
+    """sent_back is claimable, so a member sees it when the claimer is null or someone else.
+
+    Another member's claimed and done rows stay out: their titles are absent, and
+    that member's id is not the claimer on any claimed or done row in the list.
+    Red before the member filter includes sent_back: both sent_back titles are missing.
+    """
+    create_member(client, name="Ada Reyes", email="ada.sentback@example.com")
+    casey = create_member(client, name="Casey Ng", email="casey.sentback@example.com")
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        seeded = (
+            (TORQUE, ShopJobStatus.SENT_BACK, None, 4),
+            (RESET, ShopJobStatus.SENT_BACK, UUID(casey["id"]), 3),
+            (BLEED, ShopJobStatus.CLAIMED, UUID(casey["id"]), 2),
+            (BAG, ShopJobStatus.DONE, UUID(casey["id"]), 1),
+        )
+        for title, status, claimer, hours in seeded:
+            created = _BASE + timedelta(hours=hours)
+            session.add(
+                ShopJob(
+                    title=title,
+                    token_bounty=Decimal("10"),
+                    status=status,
+                    claimed_by_member_id=claimer,
+                    created_at=created,
+                    updated_at=created,
+                )
+            )
+        session.commit()
+    finally:
+        session.close()
+
+    login_member(client, "ada.sentback@example.com")
+    listed = client.get("/member/jobs")
+    assert listed.status_code == 200, listed.text
+    body = listed.json()
+    assert [row["title"] for row in body] == [TORQUE, RESET]
+    by_title = {row["title"]: row for row in body}
+    assert by_title[TORQUE]["status"] == "sent_back"
+    assert by_title[TORQUE]["claimed_by_member_id"] is None
+    assert _bounty(by_title[TORQUE]) == Decimal("10")
+    assert by_title[RESET]["status"] == "sent_back"
+    assert by_title[RESET]["claimed_by_member_id"] == casey["id"]
+    assert BLEED not in listed.text
+    assert BAG not in listed.text
+    assert casey["id"] not in [
+        row["claimed_by_member_id"]
+        for row in body
+        if row["status"] in ("claimed", "done")
+    ]
+
+    login_member(client, "casey.sentback@example.com")
+    own = client.get("/member/jobs")
+    assert _titles(own) == [TORQUE, RESET, BLEED, BAG]
+    own_body = {row["title"]: row for row in own.json()}
+    assert own_body[BLEED]["status"] == "claimed"
+    assert own_body[BLEED]["claimed_by_member_id"] == casey["id"]
+    assert own_body[BAG]["status"] == "done"
+    assert own_body[BAG]["claimed_by_member_id"] == casey["id"]
 
 
 def test_limit_201_is_422(client: TestClient) -> None:

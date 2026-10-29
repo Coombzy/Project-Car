@@ -76,12 +76,12 @@ def _page_jobs(
     offset: int,
     member_id: UUID | None = None,
 ) -> list[ShopJobOut]:
-    """Newest first. A member sees open jobs and jobs they claimed, nothing else."""
+    """Newest first. A member sees open and sent_back jobs, plus any job they claimed."""
     stmt = select(ShopJob)
     if member_id is not None:
         stmt = stmt.where(
             or_(
-                ShopJob.status == ShopJobStatus.OPEN,
+                ShopJob.status.in_((ShopJobStatus.OPEN, ShopJobStatus.SENT_BACK)),
                 ShopJob.claimed_by_member_id == member_id,
             )
         )
