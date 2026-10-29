@@ -3,11 +3,12 @@ import Link from "next/link";
 import { BookingCost } from "../../components/booking-cost";
 import { HoistHourStrip } from "../../components/hoist-hour-strip";
 import { MemberShell } from "../../components/member-shell";
+import { NextVisitCard } from "../../components/next-visit-card";
 import { StatusPill } from "../../components/status-pill";
 import { TodoPanel } from "../../components/todo-panel";
 import { handleMemberPageError } from "../../lib/page";
 import { getMemberDashboard, getMemberMe } from "../../lib/shop-api";
-import { formatShopDateTime, tokensLabel } from "../../lib/time";
+import { formatShopDateTime, shopClock, tokensLabel } from "../../lib/time";
 import {
   createMemberTodoAction,
   deleteMemberTodoAction,
@@ -57,6 +58,8 @@ export default async function MemberHomePage({
             <b>{dash.hoists.reduce((sum, hoist) => sum + hoist.next_hours.length, 0)}</b>
           </div>
         </div>
+
+        <NextVisitCard bookings={me.bookings} now={shopClock()} />
 
         <p>
           <Link href="/member/schedule">Book a customer bay →</Link>
