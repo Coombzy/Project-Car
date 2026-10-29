@@ -25,6 +25,11 @@ function pathStrings(source: string): string[] {
   return paths;
 }
 
+/** Bare `${id}`, `${name}`, `${job_id}`, or `${jobId}`. `${pathSegment(...)}` is not bare. */
+function hasBarePathInterpolation(path: string): boolean {
+  return /\$\{(?:job_id|jobId|name|id)\}/.test(path);
+}
+
 describe("parseJobForm", () => {
   it("refuses a blank title", () => {
     for (const title of ["", "   ", "\n\t"]) {
@@ -97,7 +102,7 @@ describe("parseJobForm", () => {
     });
   });
 
-  it("jobs-api.ts path strings have no raw ${", () => {
+  it("jobs-api.ts paths reject a bare ${id}, ${name}, ${job_id} or ${jobId}", () => {
     const source = readFileSync(jobsApiPath, "utf8");
     const paths = pathStrings(source);
     assert.ok(
@@ -105,12 +110,37 @@ describe("parseJobForm", () => {
       `createShopJob must post a constant /jobs, saw ${paths.join(", ") || "(none)"}`,
     );
     for (const path of paths) {
-      assert.equal(path.includes("${"), false, `path interpolates: ${path}`);
+      assert.equal(hasBarePathInterpolation(path), false, `path interpolates a bare id: ${path}`);
     }
-    const interpolated = pathStrings('shopJson<ShopJob>(`/jobs/${id}`, "Could not post the job.")');
-    assert.ok(
-      interpolated.some((path) => path.includes("${")),
-      "the path check must fail when a path string contains ${",
-    );
+
+    const bareSamples = [
+      'shopJson<ShopJob>(`/jobs/${id}`, "Could not post the job.")',
+      "shopJson<ShopJob>(`/jobs/${name}`)",
+      "shopJson<ShopJob>(`/member/jobs/${job_id}`)",
+      "shopJson<ShopJob>(`/jobs/${jobId}/done`)",
+      "shopJson<ShopJob>(`/jobs/${pathSegment(id)}/notes/${name}`)",
+    ];
+    for (const sample of bareSamples) {
+      const found = pathStrings(sample);
+      assert.ok(
+        found.some((path) => hasBarePathInterpolation(path)),
+        `bare interpolation must fail: ${sample}`,
+      );
+    }
+
+    const allowedSamples = [
+      'shopJson<ShopJob>("/jobs", "Could not post the job.")',
+      "shopJson<ShopJob>(`/member/jobs/${pathSegment(jobId)}/claim`)",
+      "shopJson<ShopJob>(`/jobs/${pathSegment(id)}`)",
+      "shopJson<ShopJob>(`/jobs/${pathSegment(name)}`)",
+      "shopJson<ShopJob>(`/jobs/${pathSegment(job_id)}`)",
+    ];
+    for (const sample of allowedSamples) {
+      const found = pathStrings(sample);
+      assert.ok(found.length > 0, `no path in ${sample}`);
+      for (const path of found) {
+        assert.equal(hasBarePathInterpolation(path), false, `pathSegment path must pass: ${path}`);
+      }
+    }
   });
 });
