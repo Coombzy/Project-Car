@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
+from sqlalchemy import select
 
 from app.deps import DbSession, Owner
-from app.models import DraftKind
+from app.models import DraftKind, DraftStatus, StaffDraft
 from app.schemas import (
     BookingOut,
     ChatDraftCreate,
@@ -228,6 +229,23 @@ def staff_accept_chat(draft_id: UUID, session: DbSession, principal: Owner) -> S
     except ChatError as exc:
         raise _chat_error(exc) from exc
     return _decision(draft, action)
+
+
+@router.get("/staff/drafts", response_model=list[StaffDraftOut])
+def staff_list_drafts(
+    session: DbSession,
+    _principal: Owner,
+    kind: DraftKind | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=200),
+) -> list[StaffDraftOut]:
+    """Pending fill and chat drafts, newest first. Accepted rows stay stored and are omitted."""
+    stmt = select(StaffDraft).where(StaffDraft.status == DraftStatus.DRAFT)
+    if kind is not None:
+        stmt = stmt.where(StaffDraft.kind == kind)
+    rows = session.scalars(
+        stmt.order_by(StaffDraft.created_at.desc(), StaffDraft.id.desc()).limit(limit)
+    ).all()
+    return [StaffDraftOut.model_validate(row) for row in rows]
 
 
 @router.post("/refund-requests", response_model=RefundRequestOut, status_code=201)
