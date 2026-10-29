@@ -6,8 +6,8 @@ export function PostJobForm() {
     <section className="card">
       <h2 style={{ marginTop: 0 }}>Post a job</h2>
       <p className="muted">
-        Stores a shop job for members to claim. Above 0 tokens, at most {JOB_BOUNTY_CAP}, up to two
-        decimals. Done does not credit the token ledger. The shop is not open.
+        Stores a shop job for members to claim. 0 to {JOB_BOUNTY_CAP} tokens, up to two decimals.
+        Done does not credit the token ledger. The shop is not open.
       </p>
       <form action={postJobAction} className="stack-form">
         <label>
@@ -24,7 +24,7 @@ export function PostJobForm() {
             name="bounty"
             required
             inputMode="decimal"
-            min="0.01"
+            min="0"
             max={JOB_BOUNTY_CAP}
             step="0.01"
             placeholder="25"
