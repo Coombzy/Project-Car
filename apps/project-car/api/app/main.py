@@ -14,6 +14,7 @@ from app.routers import (
     dashboard,
     fill,
     hoists,
+    incidents,
     jobs,
     member,
     member_chat,
@@ -70,6 +71,7 @@ def create_app() -> FastAPI:
     application.include_router(parts_requests.router)
     application.include_router(tool_crib.router)
     application.include_router(calendar.router)
+    application.include_router(incidents.router)
     return application
 
 
