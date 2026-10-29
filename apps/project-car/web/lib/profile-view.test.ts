@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -166,6 +166,14 @@ describe("member profile view", () => {
   });
 
   it("test_visual_member_pages_include_profile", () => {
+    for (const width of ["390", "768", "1440"]) {
+      const png = join(libDir, "../visual/screenshots", width, "member-profile.png");
+      const info = statSync(png, { throwIfNoEntry: false });
+      assert.ok(
+        info?.isFile() && info.size > 0,
+        `member profile baseline is missing at ${width}`,
+      );
+    }
     const spec = readFileSync(join(libDir, "../visual/pages.spec.ts"), "utf8");
     const list = spec.match(/const MEMBER_PAGES: Shot\[\] = \[([\s\S]*?)\];/);
     assert.ok(list, "MEMBER_PAGES list is missing");
