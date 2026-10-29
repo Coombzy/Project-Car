@@ -732,40 +732,40 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Likely files: `apps/project-car/web/lib/shop-error.ts`, `apps/project-car/web/lib/page.ts` (move and re-export only), `apps/project-car/web/lib/shop-error.test.ts`
 - Depends on: none. R70 and R69 do not touch `page.ts`.
 
-## Feature rows R80–R94 (2026-10-29)
+## Feature rows R80–R91, R94 (2026-10-29)
 
-These rows build user-facing screens and flows the spec names and the API mostly already serves. Earlier rows were hardening. `Docs/ship-mvp-cut.md` lists the job board past claim/done as DEFER; the API for post, done and send-back is already on main, so these rows only put it on a screen. Ben can pull any row (see Needs from Ben).
+These rows build user-facing screens and flows the spec names and the API mostly already serves. Earlier rows were hardening. `Docs/ship-mvp-cut.md` lists the job board past claim/done as DEFER; the API for post, done and send-back is already on main, so R80, R82 and R83 only put it on a screen; R81 adds two list routes. A general incident desk stays excluded (see Skipped), so there is no R92 or R93. Ben can pull any row (see Needs from Ben).
 
-File rule for web rows: `lib/shop-api.ts` keeps `shopJson` and `memberJson` private today, so every new client would edit that one file. R80 exports both helpers once. Every later web row puts its client functions in its own new `lib/<area>-api.ts` and does not edit `lib/shop-api.ts`.
+File rule for web rows: `lib/shop-api.ts` keeps `shopJson` and `memberJson` private today, so every new client would edit that one file. R80 exports both helpers once. Every later web row puts its client functions in its own new `lib/<area>-api.ts` and does not edit `lib/shop-api.ts`. Every id or name placed in a path in a new `lib/*-api.ts` goes through R78's `pathSegment`; each such row's test reads its own `lib/*-api.ts` source and fails on a raw `${id}` or `${name}` inside a path string.
 
 ### R80. The Owner cannot post a shop job from the job board
 - Category: Feature
 - Baseline: `POST /jobs` (`staff_create_job` in `apps/project-car/api/app/routers/staff.py`) stores a job with title, notes and a token bounty, Owner only. The ops `/jobs` page (`apps/project-car/web/app/jobs/page.tsx`) says "Posting a new job stays later" and shows only a sample board. No web client calls `POST /jobs`. `shopJson` and `memberJson` in `apps/project-car/web/lib/shop-api.ts` are not exported.
-- Target: `/jobs` has a "Post a job" form (title, optional notes, bounty in tokens). A server action posts it and redirects back with a notice; API errors show in the page banner. `shopJson` and `memberJson` are exported from `lib/shop-api.ts` with no other change there. The client function lives in new `lib/jobs-api.ts`. A pure `parseJobForm` in `lib/job-form.ts` trims the title, refuses a blank title, and refuses a bounty that is not above 0, has more than 2 decimal places, or is above the API's 10,000-token cap (the R75 rule).
+- Target: `/jobs` has a "Post a job" form (title, optional notes, bounty in tokens). A server action posts it and redirects back with a notice; API errors show in the page banner. `shopJson` and `memberJson` are exported from `lib/shop-api.ts` with no other change there. The client function lives in new `lib/jobs-api.ts`. A pure `parseJobForm` in `lib/job-form.ts` trims the title, refuses a blank title, and accepts a bounty from 0 to 10,000 tokens with at most 2 decimal places and refuses anything else (the R75 rule).
 - Must not get worse: web `npm test`, typecheck, build; the job ledger and sample board render as today; screenshots of pages other than `/jobs`.
-- Proof: new `apps/project-car/web/lib/job-form.test.ts` (blank title refused, bounty 0, 1.555 and 10000.01 refused, 1.5 and 10000 parsed, good form parsed), red on main because the module does not exist. Before/after `/jobs` screenshots at 390 and 1440; refresh only the `/jobs` refs.
+- Proof: new `apps/project-car/web/lib/job-form.test.ts` (blank title refused, bounty -1, 1.555 and 10000.01 refused; 0, 1.5 and 10000 parsed; good form parsed; `jobs-api.ts` source has no raw `${` inside a path), red on main because the module does not exist. Before/after `/jobs` screenshots at 390 and 1440; refresh only the `/jobs` refs.
 - Size: 2 tasks
 - Likely files: `apps/project-car/web/app/jobs/page.tsx`, new `apps/project-car/web/app/jobs/actions.ts`, new `apps/project-car/web/components/post-job-form.tsx`, new `apps/project-car/web/lib/job-form.ts`, new `apps/project-car/web/lib/job-form.test.ts`, new `apps/project-car/web/lib/jobs-api.ts`, `apps/project-car/web/lib/shop-api.ts` (two `export` keywords only)
-- Depends on: none.
+- Depends on: R75 (bounty cap) and R78 (`pathSegment`, `lib/shop-api.ts`) merged.
 
 ### R81. Nothing lists the shop jobs that are posted
 - Category: Feature
 - Baseline: `shop_jobs` rows (`ShopJob` in `apps/project-car/api/app/models.py`) are written by `POST /jobs`, but `apps/project-car/api/app/routers/jobs.py` only has `GET /jobs/events`, `GET /member/jobs/events` and the claim/done posts. A member cannot see which jobs exist to claim; the boards show samples.
-- Target: `GET /jobs` (Owner) returns every job newest first with status, bounty, claimer id and timestamps. `GET /member/jobs` returns open jobs plus the jobs this member claimed, never jobs another member claimed (those are left out). Both take `limit` (default 50, max 200) and `offset`.
+- Target: `GET /jobs` (Owner) returns one page of jobs, newest first, with status, bounty, claimer id and timestamps. `GET /member/jobs` returns jobs with status `open` or `sent_back` (both claimable, as `claim_job` allows) plus the jobs this member claimed, never jobs another member claimed (those are left out). Both take `limit` (default 50, max 200) and `offset`.
 - Must not get worse: `pytest` for the API (`test_jobs*.py`, `test_shop_os.py`); existing job routes unchanged.
-- Proof: new `apps/project-car/api/tests/test_jobs_list.py` (Owner sees 3 seeded jobs in order; member sees open + own claimed, not another member's; limit 201 is 422; logged out is 401), red on main (404).
+- Proof: new `apps/project-car/api/tests/test_jobs_list.py` (Owner sees seeded jobs newest first; with 60 jobs the default page is 50 and `offset=50` gives the last 10; member sees open, sent_back and own claimed, not another member's; limit 201 is 422; logged out is 401), red on main (404).
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/routers/jobs.py`, new `apps/project-car/api/tests/test_jobs_list.py`
-- Depends on: none. `schemas.py` only if `ShopJobOut` lacks a field; say so in the PR.
+- Depends on: R76 merged (`routers/jobs.py`). Does not edit `schemas.py`; if `ShopJobOut` lacks a field, stop and add a Needs row.
 
 ### R82. The member job board shows samples, not real jobs to claim
 - Category: Feature
-- Baseline: `/member/jobs` (`apps/project-car/web/app/member/jobs/page.tsx`) renders the sample `JobBoard`; `claimJob` exists in `lib/shop-api.ts` but members can only claim through it from sample ids.
-- Target: the page lists stored jobs from `GET /member/jobs` (R81) with title, bounty and a Claim button on open jobs; a claimed-by-me job shows "Mark done". The sample board is removed from the member page. Empty state: "No shop jobs are posted right now."
+- Baseline: `/member/jobs` (`apps/project-car/web/app/member/jobs/page.tsx`) renders the sample `JobBoard` and the `job_events` history from `GET /member/jobs/events`. `claimJob` in `lib/shop-api.ts` posts `/member/jobs/claims` (the `job_events` board), not a `shop_jobs` row. The ShopJob claim route is `POST /member/jobs/{job_id}/claim` (`routers/member.py`); no web client calls it. Members do not mark a ShopJob done; the Owner does (R83).
+- Target: the page lists stored jobs from `GET /member/jobs` (R81) with title, bounty and a Claim button on `open` and `sent_back` jobs; a claimed-by-me job shows "Waiting for the Owner". Claim calls new `claimShopJob(id)` in `jobs-api.ts` (`POST /member/jobs/{id}/claim` via `pathSegment`), not `claimJob`. The sample board is removed; the `job_events` history stays on the page. Empty state: "No shop jobs are posted right now."
 - Must not get worse: web tests, typecheck, build; ops `/jobs`; screenshots of other pages.
-- Proof: new `apps/project-car/web/lib/member-jobs-view.test.ts` for a pure `memberJobRows` (open job gets Claim, own claim gets Mark done, a done job gets neither), red on main. Before/after `/member/jobs` at 390 and 1440.
+- Proof: new `apps/project-car/web/lib/member-jobs-view.test.ts` for a pure `memberJobRows` (open and sent_back get Claim; own claim gets the waiting label; done gets nothing) and `jobs-api.ts` source has no raw `${` in a path, red on main. Before/after `/member/jobs` at 390 and 1440.
 - Size: 2 tasks
-- Likely files: `apps/project-car/web/app/member/jobs/page.tsx`, new `apps/project-car/web/components/member-job-list.tsx`, new `apps/project-car/web/lib/member-jobs-view.ts` (+ test), `apps/project-car/web/lib/jobs-api.ts` (add `listMemberJobs`)
+- Likely files: `apps/project-car/web/app/member/jobs/page.tsx`, new `apps/project-car/web/components/member-job-list.tsx`, new `apps/project-car/web/lib/member-jobs-view.ts` (+ test), `apps/project-car/web/lib/jobs-api.ts` (add `listMemberJobs`, `claimShopJob`)
 - Depends on: R80 (helpers, `jobs-api.ts`), R81 (route).
 
 ### R83. The Owner cannot mark a claimed job done or send it back
@@ -773,7 +773,7 @@ File rule for web rows: `lib/shop-api.ts` keeps `shopJson` and `memberJson` priv
 - Baseline: `POST /jobs/{id}/done` and `POST /jobs/{id}/send-back` exist in `routers/staff.py`; no web control calls them.
 - Target: on ops `/jobs`, each claimed job from `GET /jobs` shows "Done" and "Send back" buttons; each posts and redirects with a notice. A done job shows its bounty and that the ledger credit follows the existing API rule.
 - Must not get worse: web tests, typecheck, build; the post form from R80.
-- Proof: new `apps/project-car/web/lib/ops-jobs-view.test.ts` for a pure `opsJobActions(job)` (claimed gets both; open and done get none), red on main. Before/after `/jobs` screenshots at 390 and 1440.
+- Proof: new `apps/project-car/web/lib/ops-jobs-view.test.ts` for a pure `opsJobActions(job)` (claimed gets both; open, sent_back and done get none) and `jobs-api.ts` has no raw `${` in a path, red on main. Before/after `/jobs` screenshots at 390 and 1440.
 - Size: 2 tasks
 - Likely files: `apps/project-car/web/app/jobs/page.tsx`, `apps/project-car/web/app/jobs/actions.ts`, new `apps/project-car/web/components/ops-job-list.tsx`, new `apps/project-car/web/lib/ops-jobs-view.ts` (+ test), `apps/project-car/web/lib/jobs-api.ts`
 - Depends on: R80, R81. Runs after R82 merges (both edit `jobs-api.ts`).
@@ -786,7 +786,7 @@ File rule for web rows: `lib/shop-api.ts` keeps `shopJson` and `memberJson` priv
 - Proof: new `apps/project-car/web/lib/requests-view.test.ts` for a pure `groupRequests` (three kinds grouped, oldest first, unknown kind dropped), red on main. Before/after `/requests` at 390 and 1440.
 - Size: 3 tasks
 - Likely files: new `apps/project-car/web/app/requests/page.tsx`, new `apps/project-car/web/app/requests/actions.ts`, new `apps/project-car/web/lib/requests-api.ts`, new `apps/project-car/web/lib/requests-view.ts` (+ test), `apps/project-car/web/components/owner-shell.tsx`
-- Depends on: R80 (helpers).
+- Depends on: R80 (helpers), R87 (the Drafts link), R61 and R62 merged (header refs).
 
 ### R85. AI refund requests cannot be seen or accepted on a screen
 - Category: Feature
@@ -858,37 +858,18 @@ File rule for web rows: `lib/shop-api.ts` keeps `shopJson` and `memberJson` priv
 - Likely files: `apps/project-car/web/app/member/page.tsx`, new `apps/project-car/web/components/next-visit-card.tsx`, new `apps/project-car/web/lib/next-visit.ts` (+ test)
 - Depends on: none.
 
-### R92. Incidents have a table and no API
-- Category: Feature
-- Baseline: `Incident` exists in `apps/project-car/api/app/models.py` with no router. An Owner cannot log a damage, injury or late-return note.
-- Target: new `apps/project-car/api/app/routers/incidents.py`: `POST /incidents` (Owner: kind, member id optional, booking id optional, note) and `GET /incidents` (Owner, newest first, `limit`/`offset`), plus `include_router` in `main.py`. No ledger row, no automatic filing from overdue (that stays with the excluded overdue slice).
-- Must not get worse: `pytest`; no alembic revision if the table already exists (say so in the PR; if a column is missing, stop and report instead of adding one).
-- Proof: new `apps/project-car/api/tests/test_incidents.py` (create then list; unknown kind 422; member 403; ledger row count unchanged), red on main (404).
-- Size: 2 tasks
-- Likely files: new `apps/project-car/api/app/routers/incidents.py`, `apps/project-car/api/app/main.py` (one include line), new `apps/project-car/api/tests/test_incidents.py`
-- Depends on: none.
-
-### R93. The Owner has no incident log page
-- Category: Feature
-- Baseline: no ops page lists or logs incidents; after R92 the API can.
-- Target: new ops `/incidents` page lists incidents from R92 and has a "Log an incident" form (kind, member, optional booking, note). From `/members/{id}`, a link opens the form with the member chosen.
-- Must not get worse: web tests, typecheck, build; `/members/{id}` beyond the one link.
-- Proof: new `apps/project-car/web/lib/incident-form.test.ts` for `parseIncidentForm` (blank note refused, unknown kind refused), red on main. Before/after `/incidents` screenshots at 390 and 1440.
-- Size: 2 tasks
-- Likely files: new `apps/project-car/web/app/incidents/page.tsx`, new `apps/project-car/web/app/incidents/actions.ts`, new `apps/project-car/web/lib/incidents-api.ts`, new `apps/project-car/web/lib/incident-form.ts` (+ test), `apps/project-car/web/app/members/[id]/page.tsx` (one link)
-- Depends on: R80, R92.
-
 ### R94. The member booking card has no "Add to calendar"
 - Category: Feature
+- Baseline: `apps/project-car/web/components/member-booking-card.tsx` shows time, bay and status for a booking on `/member/schedule`; it has no calendar link, and no web route serves a booking ICS.
 - Target: each confirmed or pending booking on `/member/schedule` shows "Add to calendar", served by a new route handler `apps/project-car/web/app/member/bookings/[id]/ics/route.ts` that proxies R89's ICS with the member cookie.
 - Must not get worse: web tests, typecheck, build; booking card layout beyond one link.
 - Proof: new `apps/project-car/web/lib/booking-ics-link.test.ts` for a pure `icsHref(booking)` (cancelled gets none; id is URL-encoded), red on main. Before/after `/member/schedule` week view screenshots at 390 and 1440.
 - Size: 2 tasks
 - Likely files: `apps/project-car/web/components/member-booking-card.tsx`, new `apps/project-car/web/app/member/bookings/[id]/ics/route.ts`, new `apps/project-car/web/lib/booking-ics-link.ts` (+ test)
-- Depends on: R80 (helpers), R89.
+- Depends on: R80 (helpers), R89, and R61 merged (`member-booking-card.tsx`).
 
-### Order for R80–R94
-Start together (no shared files): R80, R81, R86, R88, R89, R91, R92. After R80: R90, and R85 (not beside R86). After R80 and R81: R82, then R83. After R80 and R86: R87, then R84 (its nav adds the Drafts link). After R92: R93. After R89: R94.
+### Order for R80–R91, R94
+This adds to the R71–R79 paragraph under Skipped for anything still open. Start now (no shared file with each other or an open row): R86, R88, R89. Then R91 after R88 merges (both refresh `/member` shots). R80 after R75 and R78 merge. R81 after R76 merges. After R80: R90, and R85 (not beside R86, both `routers/staff.py`). After R80 and R81: R82, then R83 (both `jobs-api.ts`). After R80 and R86: R87, then R84 (R84's nav adds the Drafts link and refreshes every ops header ref, so it also waits for R61 and R62). After R80, R89 and R61: R94.
 
 ## Needs from Ben
 
@@ -917,9 +898,8 @@ Start together (no shared files): R80, R81, R86, R88, R89, R91, R92. After R80: 
 | R72 | Shape of a tier name | Slug: `a-z`, `0-9`, `-`, `_`, starts with a letter or digit, 1 to 64 characters, and not `pricing` |
 | R75 | Largest shop job bounty | 10,000 tokens, 2 decimals |
 | R76 | Largest page of a member's job history | Default 200, maximum 500 (same as R60) |
-| R80–R83 | Whether the job board may go past KEEP-thin (post, list, done, send-back on screens) before the member host cutover | Yes; the API is already on main, these rows only add screens |
+| R80–R83 | Whether the job board may go past KEEP-thin (post, list, done, send-back on screens) before the member host cutover | Yes; R80, R82 and R83 only add screens over routes on main; R81 adds two list routes |
 | R85 | Whether AI refund requests should be visible on `/payments` | Yes, Owner only, accept only, no money path |
-| R92 | Incident kinds | `damage`, `injury`, `late_return`, `other` |
 | R91 | Check-in early window | 15 minutes (R31 stand-in) |
 
 ## Skipped / excluded
