@@ -18,7 +18,9 @@ function dashboardHref(pathname: string): "/" | "/member" {
 }
 
 export default function NotFound() {
-  const [pathname, setPathname] = useState("");
+  // Null until the effect stores window.location.pathname. An empty string is
+  // still a string, so the first render would ship Dashboard href="/" for /member/...
+  const [pathname, setPathname] = useState<string | null>(null);
   useEffect(() => {
     setPathname(window.location.pathname);
   }, []);
@@ -26,9 +28,11 @@ export default function NotFound() {
   return (
     <OwnerShell current={NO_SECTION}>
       <h1>That page is not here.</h1>
-      <p className="lede">
-        <Link href={dashboardHref(pathname)}>Dashboard</Link>
-      </p>
+      {typeof pathname === "string" ? (
+        <p className="lede">
+          <Link href={dashboardHref(pathname)}>Dashboard</Link>
+        </p>
+      ) : null}
     </OwnerShell>
   );
 }

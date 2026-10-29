@@ -31,6 +31,28 @@ describe("shop error pages", () => {
     assert.match(notFound, /OwnerShell/);
     assert.match(notFound, /window\.location\.pathname/);
     assert.match(notFound, /<Link href=\{dashboardHref\(pathname\)\}>Dashboard<\/Link>/);
+    // Server HTML and the first client render must not ship the link. useState("")
+    // makes dashboardHref return "/" for /member and /member/... until the effect.
+    assert.match(
+      notFound,
+      /useState<string \| null>\(null\)/,
+      "pathname stays unset until window.location.pathname is stored",
+    );
+    assert.doesNotMatch(
+      notFound,
+      /useState\(\s*""\s*\)/,
+      'useState("") renders Dashboard href="/" before the effect',
+    );
+    assert.doesNotMatch(
+      notFound,
+      /<h1>That page is not here\.<\/h1>\s*<p className="lede">\s*<Link href=\{dashboardHref\(pathname\)\}>Dashboard<\/Link>/,
+      "Dashboard link is in the first render",
+    );
+    assert.match(
+      notFound,
+      /\{typeof pathname === "string" \? \([\s\S]*?<Link href=\{dashboardHref\(pathname\)\}>Dashboard<\/Link>[\s\S]*?\) : null\}/,
+      "Dashboard link renders only after pathname is a string",
+    );
     assert.doesNotMatch(notFound, /error\.message|error\.stack/);
 
     const dashboardHref = dashboardHrefFrom(notFound);
