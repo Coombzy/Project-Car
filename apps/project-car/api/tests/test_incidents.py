@@ -6,14 +6,14 @@ assertion fails. The same assertions pass once the router is mounted.
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import BillingTransaction, Incident, TokenTransaction
+from app.models import BillingTransaction, Incident, IncidentKind, IncidentSeverity, TokenTransaction
 from app.shop_time import shop_now
 from tests.conftest import AUTH, create_hoist, create_member, login_member
 
@@ -139,3 +139,49 @@ def test_owner_creates_an_incident_and_lists_newest_first(client: TestClient) ->
     assert _count(client, Incident) == 2
     assert _count(client, TokenTransaction) == ledger_before
     assert _count(client, BillingTransaction) == billing_before
+
+
+def _store_incidents(client: TestClient, count: int) -> list[str]:
+    """Insert `count` incidents, oldest first. Notes come back newest first."""
+    session = _session(client)
+    try:
+        base = datetime(2026, 6, 1, tzinfo=timezone.utc)
+        for index in range(count):
+            created = base + timedelta(minutes=index)
+            session.add(
+                Incident(
+                    kind=IncidentKind.OTHER,
+                    severity=IncidentSeverity.MINOR,
+                    description=f"note-{index:03d}",
+                    photos=[],
+                    created_at=created,
+                    updated_at=created,
+                )
+            )
+        session.commit()
+    finally:
+        session.close()
+    return [f"note-{index:03d}" for index in range(count - 1, -1, -1)]
+
+
+def test_list_limit_defaults_to_200_and_rejects_501(client: TestClient) -> None:
+    """201 stored rows: the default page is the 200 newest.
+
+    `limit=500` is accepted and returns every row. `limit=501` is 422 and
+    inserts nothing. A cap of 200 rejects `limit=500`.
+    """
+    newest_first = _store_incidents(client, 201)
+    assert _count(client, Incident) == 201
+
+    listed = client.get("/incidents", headers=AUTH)
+    assert listed.status_code == 200, listed.text
+    assert [row["note"] for row in listed.json()] == newest_first[:200]
+
+    wide = client.get("/incidents", headers=AUTH, params={"limit": 500})
+    assert wide.status_code == 200, wide.text
+    assert [row["note"] for row in wide.json()] == newest_first
+
+    rejected = client.get("/incidents", headers=AUTH, params={"limit": 501})
+    assert rejected.status_code == 422, rejected.text
+    assert rejected.json()["error"]["code"] == "validation_error"
+    assert _count(client, Incident) == 201

@@ -97,7 +97,7 @@ def create_incident(
 def list_incidents(
     session: DbSession,
     principal: AnyPrincipal,
-    limit: int = Query(default=50, ge=1, le=200),
+    limit: int = Query(default=200, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
 ) -> list[IncidentOut]:
     _owner_only(principal)
