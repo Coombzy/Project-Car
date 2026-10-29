@@ -146,8 +146,6 @@ class IncidentSeverity(str, enum.Enum):
 
 
 class IncidentKind(str, enum.Enum):
-    DAMAGE = "damage"
-    INJURY = "injury"
     LATE_RETURN = "late_return"
     OTHER = "other"
 
