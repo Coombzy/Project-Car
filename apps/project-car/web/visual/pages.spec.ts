@@ -51,6 +51,7 @@ const MEMBER_PAGES: Shot[] = [
   { name: "member-chat", path: "/member/chat" },
   { name: "member-jobs", path: "/member/jobs" },
   { name: "member-parts", path: "/member/parts" },
+  { name: "member-profile", path: "/member/profile" },
   { name: "member-schedule", path: "/member/schedule" },
 ];
 

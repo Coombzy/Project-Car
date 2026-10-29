@@ -164,4 +164,15 @@ describe("member profile view", () => {
     const shell = readFileSync(join(libDir, "../components/member-shell.tsx"), "utf8");
     assert.match(shell, /href: "\/member\/profile", current: "profile", label: "Profile"/);
   });
+
+  it("test_visual_member_pages_include_profile", () => {
+    const spec = readFileSync(join(libDir, "../visual/pages.spec.ts"), "utf8");
+    const list = spec.match(/const MEMBER_PAGES: Shot\[\] = \[([\s\S]*?)\];/);
+    assert.ok(list, "MEMBER_PAGES list is missing");
+    assert.match(
+      list[1],
+      /\{ name: "member-profile", path: "\/member\/profile" \}/,
+      "screenshot job must walk /member/profile",
+    );
+  });
 });
