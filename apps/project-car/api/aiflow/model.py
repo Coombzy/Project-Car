@@ -15,6 +15,7 @@ message includes the status and never the API key or the response body.
 
 from __future__ import annotations
 
+import copy
 import json
 from collections.abc import Callable
 from typing import Protocol
@@ -39,7 +40,8 @@ class MockModel:
     """Scripted replies, in order.
 
     ``prompts`` is every ``messages`` list passed to ``complete``, including
-    a call that finds no reply left. The caller's lists are not stored.
+    a call that finds no reply left. Each recorded prompt is a deep copy:
+    later changes to the caller's lists or dicts do not change it.
     """
 
     def __init__(self, replies: list[str]) -> None:
@@ -47,7 +49,7 @@ class MockModel:
         self.prompts: list[list[dict]] = []
 
     def complete(self, messages: list[dict]) -> str:
-        self.prompts.append([dict(message) for message in messages])
+        self.prompts.append([copy.deepcopy(dict(message)) for message in messages])
         if not self._replies:
             raise IndexError("MockModel ran out of scripted replies")
         return self._replies.pop(0)
