@@ -7,7 +7,8 @@ assertion fails. The same assertions pass once the router is mounted.
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from uuid import UUID
+from pathlib import Path
+from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
@@ -185,3 +186,69 @@ def test_list_limit_defaults_to_200_and_rejects_501(client: TestClient) -> None:
     assert rejected.status_code == 422, rejected.text
     assert rejected.json()["error"]["code"] == "validation_error"
     assert _count(client, Incident) == 201
+
+
+def test_refused_incident_writes_nothing_and_backlog_lists_r92(client: TestClient) -> None:
+    """Refusals write no incident and no ledger row.
+
+    Blank note is 422, an unknown member or booking is 404, and no session
+    is 401. Those checks already hold once the router is mounted. The backlog
+    check fails while Skipped still says the desk has no router, and passes
+    once that bullet is gone and R92 names POST /incidents and GET /incidents.
+    """
+    ledger_before = _count(client, TokenTransaction)
+    billing_before = _count(client, BillingTransaction)
+
+    for note in ("", "   "):
+        blank = client.post(
+            "/incidents",
+            headers=AUTH,
+            json={"kind": "damage", "note": note},
+        )
+        assert blank.status_code == 422, blank.text
+        assert blank.json()["error"]["code"] == "validation_error"
+
+    missing_member = client.post(
+        "/incidents",
+        headers=AUTH,
+        json={"kind": "damage", "member_id": str(uuid4()), "note": "No such member"},
+    )
+    assert missing_member.status_code == 404, missing_member.text
+    assert missing_member.json()["error"]["code"] == "not_found"
+    assert missing_member.json()["error"]["message"] == "Member not found."
+
+    missing_booking = client.post(
+        "/incidents",
+        headers=AUTH,
+        json={"kind": "injury", "booking_id": str(uuid4()), "note": "No such booking"},
+    )
+    assert missing_booking.status_code == 404, missing_booking.text
+    assert missing_booking.json()["error"]["code"] == "not_found"
+    assert missing_booking.json()["error"]["message"] == "Booking not found."
+
+    logged_out = client.post(
+        "/incidents",
+        json={"kind": "other", "note": "No session"},
+    )
+    assert logged_out.status_code == 401, logged_out.text
+    assert logged_out.json()["error"]["code"] == "unauthorized"
+    logged_out_list = client.get("/incidents")
+    assert logged_out_list.status_code == 401, logged_out_list.text
+    assert logged_out_list.json()["error"]["code"] == "unauthorized"
+
+    assert _count(client, Incident) == 0
+    assert _count(client, TokenTransaction) == ledger_before
+    assert _count(client, BillingTransaction) == billing_before
+
+    backlog = Path(__file__).resolve().parents[4].joinpath("Docs", "backlog.md").read_text(
+        encoding="utf-8"
+    )
+    start = backlog.find("### R92. Incidents have a table and no API")
+    assert start != -1
+    section = backlog[start:]
+    next_heading = section.find("\n## ")
+    if next_heading != -1:
+        section = section[:next_heading]
+    assert "POST /incidents" in section
+    assert "GET /incidents" in section
+    assert "- A general incident desk. `Incident` has a model and no router." not in backlog
