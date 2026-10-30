@@ -732,6 +732,16 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Likely files: `apps/project-car/web/lib/shop-error.ts`, `apps/project-car/web/lib/page.ts` (move and re-export only), `apps/project-car/web/lib/shop-error.test.ts`
 - Depends on: none. R70 and R69 do not touch `page.ts`.
 
+### R92. Incidents have a table and no API
+- Category: Feature
+- Baseline: `Incident` exists on `apps/project-car/api/app/models.py` with kinds `late_return` and `other`. Skipped kept a general desk closed so it would not open a second lane beside the overdue slice. This row does not edit `mark_overdue`.
+- Target: new `apps/project-car/api/app/routers/incidents.py`, mounted from `apps/project-car/api/app/main.py`. `POST /incidents` (Owner or AI: `kind`, optional `member_id`, optional `booking_id`, `note`) stores the stripped note in `description`, answers 201, and writes no `TokenTransaction` and no `BillingTransaction`. `note` length is 1–2000 after strip; a blank note is 422 `validation_error`. An unknown member id or booking id is 404 `not_found` before insert. A member is 403 `forbidden`. No credentials is 401 `unauthorized`. `GET /incidents` is the same callers, newest first (`created_at` desc, `id` desc), `limit` default 200 (`ge=1`, `le=500`) and `offset` default 0. `IncidentKind` gains `damage` and `injury`. Severity is not an input; every filed row is `minor`. This router does not call `mark_overdue`.
+- Must not get worse: API `pytest`, including `tests/test_incidents.py`. No alembic revision (`incidents.kind` stays a string). `bookings.py` stays as it is. Finance and tracker files stay untouched.
+- Proof: `test_owner_creates_an_incident_and_lists_newest_first` and `test_list_limit_defaults_to_200_and_rejects_501` in `apps/project-car/api/tests/test_incidents.py`, plus `test_refused_incident_writes_nothing_and_backlog_lists_r92` (blank note 422, unknown member 404, unknown booking 404, no session 401, and no incident or ledger row). That third test fails while the Skipped incident-desk bullet is still present or this heading is missing.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/incidents.py`, `apps/project-car/api/app/main.py`, `apps/project-car/api/app/models.py` (`IncidentKind` only), `apps/project-car/api/tests/test_incidents.py`, `Docs/backlog.md`
+- Depends on: none. One writer for `main.py` and `models.py`. Leave PRs #107–#111 alone.
+
 ## Needs from Ben
 
 | Row | Real value needed | Mock used meanwhile |
@@ -771,7 +781,6 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Finance tracker files and PRs #107–#111.
 - `Docs/later.md` leave-alone rows: demo password (seed already refuses the default demo owner password off loopback; login pages still show it), Stripe, shop opening, staff OIDC, home-machine tunnel, camera feed.
 - Spec / `Docs/ship-mvp-cut.md` deferrals with no row here: full parts checkout, live Frigate, `CM` consumables desk, QR/NFC readers, chat Grok / websockets / staff notes, member booking assistant, hoist trades, marketplace and eBay, waiver capture, Mission Control cockpit, push/SMS fill channels. Google calendar stays the 501 scaffold (`google_callback` in `apps/project-car/api/app/routers/calendar.py`); two-way sync is STATUS Next #6 and ship-MVP says leave it.
-- A general incident desk. `Incident` has a model and no router. Filing incidents stays with the excluded overdue slice so two lanes do not open.
 
 ## AI flow test runner (R95–R98, added 2026-10-29)
 
