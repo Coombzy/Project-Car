@@ -46,6 +46,22 @@ def test_mock_raises_index_error_when_replies_run_out() -> None:
     ]
 
 
+def test_mock_records_the_prompt_when_content_is_a_list() -> None:
+    model = MockModel(["ok"])
+    part = {"type": "text", "text": "original"}
+    content = [part]
+    messages = [{"role": "user", "content": content}]
+
+    assert model.complete(messages) == "ok"
+    part["text"] = "changed"
+    content.append({"type": "text", "text": "extra"})
+    messages.append({"role": "user", "content": "later"})
+
+    assert model.prompts == [
+        [{"role": "user", "content": [{"type": "text", "text": "original"}]}]
+    ]
+
+
 def _capture(status: int, body: object):
     seen: dict = {}
 
