@@ -7,7 +7,9 @@ a cloud host. A trailing slash is stripped so the path is not ``//v1``.
 
 ``transport(url, body, headers, timeout) -> (status, body)`` is injectable.
 Tests pass a fake and never open a socket. The default calls
-``urllib.request.urlopen``.
+``urllib.request.urlopen``. ``Authorization`` is an unredirected header:
+urllib copies ``Request.headers`` onto a 301, 302, or 303 and does not copy
+unredirected headers, so the bearer stays on the first host.
 
 A non-200, or a 200 body with no ``choices``, raises ``ModelError``. The
 message includes the status and never the API key or the response body.
@@ -61,7 +63,17 @@ def _urllib_transport(
     headers: dict[str, str],
     timeout: float,
 ) -> tuple[int, bytes]:
-    req = request.Request(url, data=body, headers=headers, method="POST")
+    # urllib.request.HTTPRedirectHandler.redirect_request copies Request.headers
+    # onto a POST 301/302/303 and leaves out unredirected_hdrs. The bearer
+    # must not be sent to that second host.
+    forward = {
+        key: value
+        for key, value in headers.items()
+        if key.lower() != "authorization"
+    }
+    req = request.Request(url, data=body, headers=forward, method="POST")
+    if "Authorization" in headers:
+        req.add_unredirected_header("Authorization", headers["Authorization"])
     try:
         with request.urlopen(req, timeout=timeout) as resp:
             return int(resp.status), resp.read()
