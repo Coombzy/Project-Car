@@ -74,3 +74,30 @@ describe("booking cancel on an active visit", () => {
     assert.doesNotMatch(active, /cancelBookingAction/);
   });
 });
+
+describe("seeded active visit on the week grid", () => {
+  it("test_week_schedule_spec_checks_the_seeded_active_card", () => {
+    const specPath = join(webRoot, "visual/pages.spec.ts");
+    const spec = readFileSync(specPath, "utf8");
+    const name = 'test("test_active_visit_hides_cancel_keeps_complete"';
+    const at = spec.indexOf(name);
+    assert.notEqual(
+      at,
+      -1,
+      "visual/pages.spec.ts does not check the seeded active card on the week grid",
+    );
+    const body = spec.slice(at);
+    assert.match(body, /\/schedule\?view=week/);
+    assert.match(body, /\/member\/schedule\?view=week/);
+    assert.match(body, /Riley Park/);
+    assert.match(body, /riley\.park@example\.com/);
+    assert.match(body, /Ada Reyes/);
+    assert.match(body, /hasText: "Cancel"/);
+    assert.match(body, /hasText: "Complete"/);
+    assert.match(body, /toHaveCount\(0\)/);
+    assert.match(body, /toHaveCount\(1\)/);
+    assert.match(body, /\.pill-confirmed/);
+    assert.doesNotMatch(body, /toHaveScreenshot/);
+    assert.doesNotMatch(body, /maxDiffPixelRatio/);
+  });
+});
