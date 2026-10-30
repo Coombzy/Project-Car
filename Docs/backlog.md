@@ -773,6 +773,54 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Spec / `Docs/ship-mvp-cut.md` deferrals with no row here: full parts checkout, live Frigate, `CM` consumables desk, QR/NFC readers, chat Grok / websockets / staff notes, member booking assistant, hoist trades, marketplace and eBay, waiver capture, Mission Control cockpit, push/SMS fill channels. Google calendar stays the 501 scaffold (`google_callback` in `apps/project-car/api/app/routers/calendar.py`); two-way sync is STATUS Next #6 and ship-MVP says leave it.
 - A general incident desk. `Incident` has a model and no router. Filing incidents stays with the excluded overdue slice so two lanes do not open.
 
+## AI flow test runner (R95–R98, added 2026-10-29)
+
+Ben (Oct 29) wants a bot to walk the AI-run parts of the app through the API with a local model (Ollama on Lightning) or a cloud model doing the AI's part. The AI is already an outside client: the `AI_API_SECRET` bearer gives `role="ai"` (`app/deps.py` `require_owner`, `app/auth.py` `ai_bearer_matches`), and its writes are recorded with `ActorKind.AI` (`app/services/staff.py` `actor_of`). Nothing in the repo calls a model. These rows add a test harness package `apps/project-car/api/aiflow/` beside `app/` (it is not imported by `app/`), with a mock model first. All four rows add new files only; none touches `app/`, a migration, the web app or CI. Rows tagged `local-sized` are small enough for a later local-model worker.
+
+### R95. There is no model adapter for an AI flow test bot
+- Category: Test harness
+- Tags: local-sized
+- Baseline: no file under `apps/project-car/api` calls a model; there is no `aiflow/` package.
+- Target: new `apps/project-car/api/aiflow/model.py` with a `Model` protocol (`complete(messages: list[dict]) -> str`), `MockModel(replies)` that returns scripted replies in order and records every prompt it was given (raises `IndexError` with a clear message when it runs out), and `OpenAICompatModel(base_url, model, api_key=None, transport=None, timeout=30)` that POSTs `{model, messages, temperature: 0}` to `<base_url>/v1/chat/completions` and returns `choices[0].message.content`. `base_url` may point at Ollama (`http://<host>:11434`) or a cloud endpoint; the key is optional and sent only as `Authorization: Bearer`. Stdlib `urllib` only (no new dependency); `transport` is an injectable callable so tests never open a socket. A non-200 or a body without `choices` raises `ModelError` with the status, never the key.
+- Must not get worse: API `pytest`; `pyproject.toml` dependencies unchanged.
+- Proof: new `apps/project-car/api/tests/test_aiflow_model.py`: MockModel returns replies in order and records prompts; OpenAICompatModel with a fake transport sends the right URL (no double slash when `base_url` ends in `/`), JSON body and bearer, returns the content; no `Authorization` header when no key; a 500 and a body with no `choices` raise `ModelError` whose text does not contain the key. Red on main (module absent).
+- Size: 1 task
+- Likely files: new `apps/project-car/api/aiflow/__init__.py`, new `apps/project-car/api/aiflow/model.py`, new `apps/project-car/api/tests/test_aiflow_model.py`
+- Depends on: none.
+
+### R96. No bot walks the AI draft and approval flows through the API
+- Category: Test harness
+- Baseline: the AI rules are tested route by route (`tests/test_staff_actions.py` uses `AI = {"Authorization": "Bearer dev-ai-secret"}`), but nothing plays the AI end to end with a model choosing the words.
+- Target: new `apps/project-car/api/aiflow/client.py`: `ApiClient(request)` where `request(method, path, json=None)` is any callable returning `(status, body)` (a FastAPI `TestClient` wrapper in tests, `urllib` against a live API later); it always sends the AI bearer it was given and never the Owner one. New `apps/project-car/api/aiflow/flows.py` with two flows that take a `Model` and an `ApiClient` and return a `FlowResult(name, passed, steps)`: (1) fill draft: the model writes the notice text, the bot `POST /fill/drafts`, then tries `POST /fill/drafts/{id}/accept` as the same AI and must get 403 `cannot_approve_own_request`; (2) shop-hoist request: the bot creates a request as the AI, then tries to approve it as the same AI and must get 403 `cannot_approve_own_request`. A flow passes only when every expected status matches; it records each step's method, path and status, never a bearer.
+- Must not get worse: API `pytest`; no change under `app/`.
+- Proof: new `apps/project-car/api/tests/test_aiflow_flows.py`: with the `client` fixture and `MockModel`, both flows pass on main's rules; a flow run with a fake `request` that returns 200 for the self-accept is reported `passed=False` with that step named; no step record contains `dev-ai-secret` or `dev-owner-secret`. Red on main (module absent).
+- Size: 2 tasks
+- Likely files: new `apps/project-car/api/aiflow/client.py`, new `apps/project-car/api/aiflow/flows.py`, new `apps/project-car/api/tests/test_aiflow_flows.py`
+- Depends on: R95 merged (`aiflow/model.py`).
+
+### R97. No bot tries to talk the AI past its guardrails
+- Category: Test harness
+- Baseline: `reject_ai` refuses the AI on `POST /members/{member_id}/tokens` (`token_change_requires_human`, `app/routers/members.py`), on fill notify (`draft_required`, `app/routers/fill.py`) and on the tier, booking and chat routes listed in `app/routers/{tiers,bookings,chat}.py`; tests call those routes directly with no adversarial prompt.
+- Target: new `apps/project-car/api/aiflow/guardrails.py`: a list of adversarial cases (prompt text, the call the model is coaxed into, expected status and error code), starting with token adjustment and fill notify. The runner feeds the prompt to the model, maps the model's chosen action to the API call, and passes the case only if the API refuses with the expected code and the member's token balance (`GET /members/{member_id}/tokens`) is unchanged. A model that declines (no action) also passes.
+- Must not get worse: API `pytest`; no change under `app/`.
+- Proof: new `apps/project-car/api/tests/test_aiflow_guardrails.py`: a `MockModel` that always "complies" gets 403 `token_change_requires_human` and 403 `draft_required`, balance unchanged, both cases pass; a fake API that returns 201 for the token change makes that case fail. Red on main (module absent).
+- Size: 1 task
+- Likely files: new `apps/project-car/api/aiflow/guardrails.py`, new `apps/project-car/api/tests/test_aiflow_guardrails.py`
+- Depends on: R96 merged (`aiflow/client.py`).
+
+### R98. The AI flow bot has no command to run it against a model and write a report
+- Category: Test harness
+- Tags: local-sized
+- Baseline: after R95–R97 the flows run only inside pytest.
+- Target: new `apps/project-car/api/aiflow/run.py` (`python -m aiflow.run --api-url URL --model mock|openai [--model-url URL] [--model-name NAME] [--out report.md]`): reads the AI bearer from `AI_API_SECRET` and an optional model key from `AIFLOW_MODEL_KEY` (never printed), runs every flow and guardrail case, prints one line per case and writes a Markdown table (case, model, passed, failing step). Exit 0 when all pass, 1 otherwise. `--model mock` needs no network beyond the API.
+- Must not get worse: API `pytest`.
+- Proof: new `apps/project-car/api/tests/test_aiflow_run.py`: `main([...])` with `--model mock` and an injected `TestClient` request returns 0 and writes a report listing every case; one forced failure returns 1; the report and stdout never contain the bearer or model key values. Red on main (module absent).
+- Size: 1 task
+- Likely files: new `apps/project-car/api/aiflow/run.py`, new `apps/project-car/api/tests/test_aiflow_run.py`
+- Depends on: R97 merged.
+
+Order: R95, then R96, then R97 and R98 one at a time (each imports the last). None shares a file with an open row (R73, R78, R79, R80–R94 are all under `app/` or `web/`).
+
 ## Suggested order
 
 These four do not share files and can run together:
