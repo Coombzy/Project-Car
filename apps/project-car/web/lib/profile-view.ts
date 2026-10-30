@@ -13,8 +13,8 @@ export type ProfileSource = {
   waiver_version?: string | null;
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
-  token_balance: string | null | undefined;
-  deposit_balance: string | null | undefined;
+  token_balance: string | number | null | undefined;
+  deposit_balance: string | number | null | undefined;
 };
 
 export type ProfileRow = {
@@ -30,18 +30,25 @@ function present(value: string | null | undefined): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
-/** Numeric digits match `tokensLabel` in time.ts. Local so this file has no extension import. */
-function balanceLabel(value: string | null | undefined): string {
-  // Number("") and Number("   ") are 0. A missing balance must not render as a fake zero.
+/** Same digits as `tokensLabel` in time.ts. Local so this file has no extension import. */
+function formatBalanceDigits(value: string | number): string {
+  const amount = typeof value === "number" ? value : Number(value);
+  if (Number.isNaN(amount)) {
+    return String(value);
+  }
+  return Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
+}
+
+function balanceLabel(value: string | number | null | undefined): string {
+  // A JSON number must render. present() only trims strings, and Number("") is 0.
+  if (typeof value === "number") {
+    return formatBalanceDigits(value);
+  }
   const shown = present(value);
   if (shown == null) {
     return PROFILE_MISSING;
   }
-  const amount = Number(shown);
-  if (Number.isNaN(amount)) {
-    return shown;
-  }
-  return Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
+  return formatBalanceDigits(shown);
 }
 
 function waiverValue(signedAt: string | null, version: string | null | undefined): string {
