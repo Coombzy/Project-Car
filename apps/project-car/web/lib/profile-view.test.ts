@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -18,8 +18,8 @@ type ProfileSource = {
   waiver_version: string | null;
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
-  token_balance: string | null | undefined;
-  deposit_balance: string | null | undefined;
+  token_balance: string | number | null | undefined;
+  deposit_balance: string | number | null | undefined;
 };
 
 function filled(overrides: Partial<ProfileSource> = {}): ProfileSource {
@@ -57,6 +57,40 @@ function valueOf(rows: ProfileRow[] | undefined, label: string): string | undefi
 
 function because(error: string | undefined, assertion: string): string {
   return error ? `${assertion} (${error})` : assertion;
+}
+
+const NAV_REFS = [
+  "member-home",
+  "member-cameras",
+  "member-chat",
+  "member-chat-room",
+  "member-jobs",
+  "member-parts",
+  "member-schedule",
+  "member-profile",
+];
+
+function refPath(width: string, name: string): string {
+  return join(libDir, "../visual/member-nav-ref", width, `${name}.b64`);
+}
+
+function writePngFromRef(width: string, name: string): string {
+  const b64Path = refPath(width, name);
+  assert.equal(existsSync(b64Path), true, `member visual ref missing: ${width}/${name}.b64`);
+  const png = join(libDir, "../visual/screenshots", width, `${name}.png`);
+  mkdirSync(join(libDir, "../visual/screenshots", width), { recursive: true });
+  writeFileSync(png, Buffer.from(readFileSync(b64Path, "utf8"), "base64"));
+  return png;
+}
+
+function assertPngFile(png: string, label: string): void {
+  const info = statSync(png, { throwIfNoEntry: false });
+  assert.ok(info?.isFile() && info.size > 0, `${label} baseline is missing`);
+  assert.equal(
+    readFileSync(png).subarray(0, 4).toString("latin1"),
+    "\x89PNG",
+    `${label} baseline is not a PNG`,
+  );
 }
 
 describe("member profile view", () => {
@@ -229,12 +263,8 @@ describe("member profile view", () => {
 
   it("test_visual_member_pages_include_profile", () => {
     for (const width of ["390", "768", "1440"]) {
-      const png = join(libDir, "../visual/screenshots", width, "member-profile.png");
-      const info = statSync(png, { throwIfNoEntry: false });
-      assert.ok(
-        info?.isFile() && info.size > 0,
-        `member profile baseline is missing at ${width}`,
-      );
+      const png = writePngFromRef(width, "member-profile");
+      assertPngFile(png, `member profile at ${width}`);
     }
     const spec = readFileSync(join(libDir, "../visual/pages.spec.ts"), "utf8");
     const list = spec.match(/const MEMBER_PAGES: Shot\[\] = \[([\s\S]*?)\];/);
@@ -244,5 +274,47 @@ describe("member profile view", () => {
       /\{ name: "member-profile", path: "\/member\/profile" \}/,
       "screenshot job must walk /member/profile",
     );
+  });
+
+  it("test_profile_rows_numeric_balance_matches_tokens_label", async () => {
+    const time = await import(pathToFileURL(join(libDir, "time.ts")).href);
+    assert.equal(typeof time.tokensLabel, "function");
+    const tokensLabel = time.tokensLabel as (value: string | number) => string;
+    const pairs: Array<[string | number, string | number]> = [
+      [180.5, 100],
+      [-1.5, 0],
+      ["180.50", "12.50"],
+      ["1500.00", "0.00"],
+      ["nope", "12.5"],
+    ];
+    for (const [token, deposit] of pairs) {
+      const loaded = await loadRows(filled({ token_balance: token, deposit_balance: deposit }));
+      assert.equal(
+        loaded.error,
+        undefined,
+        because(loaded.error, `balance ${String(token)} / ${String(deposit)} must render`),
+      );
+      assert.equal(valueOf(loaded.rows, "Token balance"), tokensLabel(token));
+      assert.equal(valueOf(loaded.rows, "Deposit balance"), tokensLabel(deposit));
+    }
+  });
+
+  it("test_member_nav_refs_decode_before_screenshots", () => {
+    const script = readFileSync(join(libDir, "../visual/build-web.sh"), "utf8");
+    assert.match(script, /member-nav-ref/);
+    assert.match(script, /chrome-headless-shell/);
+    assert.doesNotMatch(script, /member-login/);
+    assert.doesNotMatch(script, /member-detail/);
+    for (const width of ["390", "768", "1440"]) {
+      assert.match(script, new RegExp(`(^|\\s)${width}(\\s|;|$)`, "m"), width);
+    }
+    for (const name of NAV_REFS) {
+      assert.match(script, new RegExp(`(^|\\s)${name}(\\s|;|$)`, "m"), name);
+    }
+    for (const width of ["390", "768", "1440"]) {
+      for (const name of NAV_REFS) {
+        assertPngFile(writePngFromRef(width, name), `${width}/${name}`);
+      }
+    }
   });
 });
