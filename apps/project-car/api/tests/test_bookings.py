@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from pathlib import Path
 from unittest.mock import patch
 from uuid import UUID
 
@@ -1636,3 +1637,26 @@ def test_cancel_after_check_in_keeps_the_reserve(client: TestClient) -> None:
     assert _dec(_stored_booking(client, active_id)["reserved_tokens"]) == active_reserved
     assert _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=active_id) == []
     assert _hoist_status(client, hoist["id"]) == "occupied"
+
+
+def test_r61_does_not_own_the_visual_spec() -> None:
+    """R62 owns visual/pages.spec.ts. R61 must not append a week-grid test there.
+
+    Red on head 46b893c5a3ac: that spec still defines
+    test_active_visit_hides_cancel_keeps_complete, and booking-cancel.test.ts
+    still string-matches the spec. The schedule proof is the cancel case above
+    and the card test, plus hosted week-grid screenshots. This lock is what
+    fails until those two additions are gone.
+    """
+    web = Path(__file__).resolve().parents[2] / "web"
+    spec = (web / "visual" / "pages.spec.ts").read_text(encoding="utf-8")
+    unit = (web / "lib" / "booking-cancel.test.ts").read_text(encoding="utf-8")
+    assert "test_active_visit_hides_cancel_keeps_complete" not in spec, (
+        "R62 owns visual/pages.spec.ts; remove test_active_visit_hides_cancel_keeps_complete"
+    )
+    assert "test_week_schedule_spec_checks_the_seeded_active_card" not in unit, (
+        "booking-cancel.test.ts must not string-match visual/pages.spec.ts"
+    )
+    assert 'it("test_active_cards_do_not_offer_cancel"' in unit
+    assert '{ name: "schedule", path: "/schedule" }' in spec
+    assert '{ name: "member-schedule", path: "/member/schedule" }' in spec
