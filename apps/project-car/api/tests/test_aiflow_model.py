@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import io
 import json
-from urllib import error
+from urllib import error, request
 
 import pytest
 
@@ -243,3 +243,50 @@ def test_default_transport_http_error_hides_the_key(
     text = f"{caught.value} {caught.value!r}"
     assert "500" in text
     assert SECRET not in text
+
+
+def test_default_transport_does_not_forward_the_bearer_on_redirect(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = []
+
+    class _Resp:
+        status = 200
+
+        def read(self) -> bytes:
+            return b'{"choices":[{"message":{"content":"from-urllib"}}]}'
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args: object) -> bool:
+            return False
+
+    def fake_urlopen(req, timeout=None):
+        calls.append(req)
+        return _Resp()
+
+    monkeypatch.setattr("aiflow.model.request.urlopen", fake_urlopen)
+    model = OpenAICompatModel(
+        "http://127.0.0.1:11434/",
+        "local-model",
+        api_key=SECRET,
+    )
+
+    assert model.complete([{"role": "user", "content": "q"}]) == "from-urllib"
+    assert len(calls) == 1
+    req = calls[0]
+    assert req.full_url == "http://127.0.0.1:11434/v1/chat/completions"
+    assert req.get_method() == "POST"
+    assert req.get_header("Authorization") == f"Bearer {SECRET}"
+
+    redirected = request.HTTPRedirectHandler().redirect_request(
+        req, None, 302, "Found", {}, "http://evil.example/steal"
+    )
+    assert redirected is not None
+    assert redirected.get_method() == "GET"
+    assert redirected.full_url == "http://evil.example/steal"
+    assert redirected.get_header("Authorization") is None
+    forwarded = " ".join(value for _key, value in redirected.header_items())
+    assert SECRET not in forwarded
+    assert SECRET not in redirected.full_url
