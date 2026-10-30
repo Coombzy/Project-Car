@@ -7,15 +7,24 @@ a pending request until a person or an AI approves it.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.deps import DbSession, MemberUser
-from app.models import ActorKind, Booking, BookingKind, Hoist, Member, TokenTransaction
+from app.models import (
+    ActorKind,
+    Booking,
+    BookingKind,
+    BookingStatus,
+    Hoist,
+    Member,
+    TokenTransaction,
+)
 from app.schemas import (
     BookingOut,
     BookingQuoteOut,
@@ -75,6 +84,78 @@ def _customer_hoists(session) -> list[Hoist]:
     return list(
         session.scalars(select(Hoist).where(Hoist.is_shop.is_(False)).order_by(Hoist.name)).all()
     )
+
+
+def _ics_escape(value: str) -> str:
+    normalized = value.replace("\r\n", "\n").replace("\r", "\n")
+    return (
+        normalized.replace("\\", "\\\\")
+        .replace(";", "\\;")
+        .replace(",", "\\,")
+        .replace("\n", "\\n")
+    )
+
+
+def _ics_utc(value: datetime) -> str:
+    return as_utc(value).strftime("%Y%m%dT%H%M%SZ")
+
+
+def _ics_utf8_prefix(text: str, max_octets: int) -> str:
+    """Longest prefix whose UTF-8 encoding is at most max_octets."""
+    encoded = text.encode("utf-8")
+    if max_octets <= 0 or not encoded:
+        return ""
+    if len(encoded) <= max_octets:
+        return text
+    cut = max_octets
+    # Walk off a trailing continuation byte so the cut is not mid-character.
+    while cut > 0 and (encoded[cut] & 0xC0) == 0x80:
+        cut -= 1
+    return encoded[:cut].decode("utf-8")
+
+
+def _fold_ics_line(content: str) -> str:
+    """Fold one content line to at most 75 UTF-8 octets (RFC 5545 §3.1).
+
+    A continuation starts with one space, and that space counts toward 75.
+    The cut is never inside a multibyte character. ASCII folds the same way:
+    the to-do exporter's character fold can leave an 81-octet first line.
+    """
+    if len(content.encode("utf-8")) <= 75:
+        return content
+    parts: list[str] = []
+    rest = content
+    limit = 75
+    while rest:
+        piece = _ics_utf8_prefix(rest, limit)
+        if not piece:
+            piece = rest[0]
+        parts.append(piece)
+        rest = rest[len(piece):]
+        limit = 74
+    return "\r\n ".join(parts)
+
+
+def _booking_ics(booking: Booking) -> str:
+    """One VEVENT. Start and end are UTC. America/Regina is the shop clock."""
+    lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Project Car//Shop OS//EN",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        "X-WR-TIMEZONE:America/Regina",
+        "BEGIN:VEVENT",
+        f"UID:{booking.id}",
+        f"DTSTAMP:{_ics_utc(datetime.now(timezone.utc))}",
+        f"DTSTART:{_ics_utc(booking.start_at)}",
+        f"DTEND:{_ics_utc(booking.end_at)}",
+        f"SUMMARY:{_ics_escape(booking.hoist.name)}",
+        "COMMENT:Times are UTC. Shop local time is America/Regina.",
+        "END:VEVENT",
+        "END:VCALENDAR",
+    ]
+    return "\r\n".join(_fold_ics_line(line) for line in lines) + "\r\n"
 
 
 @router.get("/me", response_model=MemberSelfOut)
@@ -324,6 +405,39 @@ def member_cancel_booking(
 ) -> BookingOut:
     _own_booking(session, principal, booking_id)
     return BookingOut.from_booking(booking_service.cancel_booking(session, booking_id))
+
+
+@router.get("/bookings/{booking_id}/ics")
+def member_booking_ics(
+    booking_id: UUID, session: DbSession, principal: MemberUser
+) -> Response:
+    booking = booking_service.get_booking(session, booking_id)
+    # 404, not the 403 used by confirm/cancel, so the URL does not confirm
+    # that another member's booking id exists.
+    if booking.member_id != principal.member_id:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "not_found", "message": "Booking not found."},
+        )
+    if booking.status == BookingStatus.CANCELLED:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "booking_cancelled",
+                "message": "A cancelled booking cannot be added to a calendar.",
+            },
+        )
+    payload = _booking_ics(booking)
+    return Response(
+        content=payload,
+        media_type="text/calendar; charset=utf-8",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="project-car-booking-{booking.id}.ics"'
+            ),
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @router.post("/tool-crib-exceptions", response_model=ToolCribExceptionOut, status_code=201)
