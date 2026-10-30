@@ -4,12 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { ShopApiError } from "../../lib/config";
-import { parseJobForm } from "../../lib/job-form";
+import { JOB_POST_FAILURE, jobErrorHref, jobPostedHref, parseJobForm } from "../../lib/job-form";
 import { createShopJob } from "../../lib/jobs-api";
 
 function bounce(error: unknown): never {
-  const message = error instanceof ShopApiError ? error.message : "Could not post the job.";
-  redirect(`/jobs?error=${encodeURIComponent(message)}`);
+  const message = error instanceof ShopApiError ? error.message : JOB_POST_FAILURE;
+  redirect(jobErrorHref(message));
 }
 
 export async function postJobAction(formData: FormData): Promise<void> {
@@ -19,7 +19,7 @@ export async function postJobAction(formData: FormData): Promise<void> {
     bounty: formData.get("bounty"),
   });
   if (!parsed.ok) {
-    redirect(`/jobs?error=${encodeURIComponent(parsed.error)}`);
+    redirect(jobErrorHref(parsed.error));
   }
   try {
     await createShopJob({
@@ -31,5 +31,5 @@ export async function postJobAction(formData: FormData): Promise<void> {
     bounce(error);
   }
   revalidatePath("/jobs");
-  redirect(`/jobs?notice=${encodeURIComponent("Job posted.")}`);
+  redirect(jobPostedHref());
 }

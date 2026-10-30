@@ -59,3 +59,14 @@ export function parseJobForm(input: {
   const notes = notesRaw === null ? null : notesRaw.trim() || null;
   return { ok: true, title: titleRaw.trim(), notes, token_bounty: tokenBounty };
 }
+
+export const JOB_POSTED_NOTICE = "Job posted.";
+export const JOB_POST_FAILURE = "Could not post the job.";
+
+export function jobPostedHref(): string {
+  return `/jobs?notice=${encodeURIComponent(JOB_POSTED_NOTICE)}`;
+}
+
+export function jobErrorHref(message: string): string {
+  return `/jobs?error=${encodeURIComponent(message)}`;
+}
