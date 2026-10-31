@@ -34,7 +34,7 @@ MEMBER_PASSWORD_MIN_LENGTH = 12
 
 # Stand-in until Ben sets the real cap. Absolute value at or above this is refused.
 MAX_TOKEN_ADJUSTMENT = Decimal("1000000")
-# Ben, D11: every Owner balance override says why.
+# D11 default until Ben decides: every Owner balance override says why.
 OVERRIDE_REASON_MIN = 3
 OVERRIDE_REASON_MAX = 500
 
