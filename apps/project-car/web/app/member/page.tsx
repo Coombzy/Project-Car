@@ -66,7 +66,7 @@ export default async function MemberHomePage({
         <h2>Your bays · next 24 hours</h2>
         <p className="muted">
           Window {formatShopDateTime(dash.window_start)} – {formatShopDateTime(dash.window_end)}{" "}
-          ({dash.tz}). Only bays with your bookings.
+          · Mountain Time. Only bays with your bookings.
         </p>
         {dash.hoists.length === 0 ? (
           <div className="banner empty">

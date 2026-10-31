@@ -16,7 +16,7 @@ export function CalendarConnect({ calendar }: { calendar: CalendarStatus | null 
       </div>
       <p className="muted">
         Two-way Google sync is not configured. Apple Calendar imports an ICS.
-        Time zone is America/Regina.
+        Time zone is Mountain Time.
       </p>
       <div className="actions">
         <button type="button" disabled title={calendar.next}>

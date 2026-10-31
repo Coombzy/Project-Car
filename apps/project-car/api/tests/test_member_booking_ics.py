@@ -87,7 +87,8 @@ def test_member_booking_ics_own_other_and_cancelled(client: TestClient) -> None:
     assert f"DTEND:{_ics_utc(booking['end_at'])}\r\n" in body
     assert f"UID:{booking['id']}\r\n" in body
     assert f"SUMMARY:{hoist['name']}\r\n" in body
-    assert "America/Regina" in body
+    assert "Mountain Time" in body
+    assert "America/Regina" not in body
     assert "DTSTART;TZID=" not in body
 
     login_member(client, "casey@example.com")
