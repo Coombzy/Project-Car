@@ -292,6 +292,25 @@ export async function listMemberTokens(id: string): Promise<TokenTransaction[]> 
   return shopJson<TokenTransaction[]>(`/members/${id}/tokens`, "Could not load the token ledger.");
 }
 
+export async function setMemberPassword(id: string, password: string): Promise<Member> {
+  return shopJson<Member>(`/members/${id}/password`, "Could not set the sign-in password.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+}
+
+export async function recordTokenPurchase(
+  id: string,
+  payload: { payment_id: string; tokens: string; subtotal_cad: string },
+): Promise<TokenTransaction> {
+  return shopJson<TokenTransaction>(`/members/${id}/token-purchases`, "Could not record the token purchase.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function adjustMemberTokens(id: string, amount: string, reason: string): Promise<TokenTransaction> {
   return shopJson<TokenTransaction>(`/members/${id}/tokens`, "Could not adjust tokens.", {
     method: "POST",
