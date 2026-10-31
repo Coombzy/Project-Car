@@ -173,6 +173,7 @@ def member_rates(session: DbSession, _principal: MemberUser) -> MemberRateChartO
 
 @router.get("/me", response_model=MemberSelfOut)
 def member_me(session: DbSession, principal: MemberUser) -> MemberSelfOut:
+    booking_service.settle_elapsed_no_shows(session)
     member = session.scalars(
         select(Member)
         .options(
@@ -217,6 +218,7 @@ def member_me(session: DbSession, principal: MemberUser) -> MemberSelfOut:
 
 @router.get("/dashboard", response_model=MemberDashboardOut)
 def member_dashboard(session: DbSession, principal: MemberUser) -> MemberDashboardOut:
+    booking_service.settle_elapsed_no_shows(session)
     return member_dashboard_payload(session, principal)
 
 
@@ -249,6 +251,7 @@ def member_bookings(
     window_end: datetime | None = Query(default=None),
     limit: int = Query(default=200, ge=1, le=500),
 ) -> list[BookingOut]:
+    booking_service.settle_elapsed_no_shows(session)
     stmt = (
         select(Booking)
         .options(selectinload(Booking.member), selectinload(Booking.hoist))
@@ -273,6 +276,7 @@ def member_schedule(
     window_start: datetime | None = Query(default=None),
     window_end: datetime | None = Query(default=None),
 ) -> MemberScheduleOut:
+    booking_service.settle_elapsed_no_shows(session)
     hoists = _customer_hoists(session)
     hoist_ids = [row.id for row in hoists]
     stmt = (
