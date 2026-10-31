@@ -180,6 +180,7 @@ export type TokenTransaction = {
       gst_rate?: string;
       total_cad?: string;
     };
+    pricing?: string;
   } | null;
   created_at: string;
 };
