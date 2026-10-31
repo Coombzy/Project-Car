@@ -1,6 +1,6 @@
 """One new member walks through v1.
 
-Public signup, a stand-in token purchase with GST, one booked hour, a cancel
+Self-serve signup, a stand-in token purchase with GST, one booked hour, a cancel
 inside 24 hours, a missed hour the member can see, then the owner closes a
 bay with a reason, adjusts tokens with a reason, and finishes a visit that
 ran past its end.
@@ -57,32 +57,26 @@ def test_v1_walkthrough(client: TestClient) -> None:
     bay = create_hoist(client, name="Bay 1")
     other = create_hoist(client, name="Bay 2")
 
-    # Other waitlist tests share TestClient's default host and its eight-signup cap.
+    # Signup keeps its own address so it does not spend the shared waitlist cap.
     transport = client._transport
     previous = transport.client
     transport.client = ("203.0.113.44", 50000)
     try:
         signed = client.post(
-            "/waitlist",
-            json={"name": "Nova Hale", "email": EMAIL, "phone": "403-555-0142", "notes": "Basic"},
+            "/signup",
+            json={
+                "name": "Nova Hale",
+                "email": EMAIL,
+                "phone": "403-555-0142",
+                "password": PASSWORD,
+                "tier_name": "basic",
+            },
         )
     finally:
         transport.client = previous
     assert signed.status_code == 201, signed.text
-    converted = client.post(
-        f"/waitlist/{signed.json()['id']}/convert",
-        headers=AUTH,
-        json={"tier_name": "basic"},
-    )
-    assert converted.status_code == 200, converted.text
-    member_id = converted.json()["member_id"]
-
-    password = client.post(
-        f"/members/{member_id}/password",
-        headers=AUTH,
-        json={"password": PASSWORD},
-    )
-    assert password.status_code == 200, password.text
+    assert signed.json()["mode"] == "self_serve"
+    member_id = signed.json()["member_id"]
     bought = client.post(
         f"/members/{member_id}/token-purchases",
         headers=AUTH,
