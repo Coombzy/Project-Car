@@ -382,6 +382,7 @@ def create_booking(
 ) -> Booking:
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
+    settle_elapsed_no_shows(session)
     reject_start_in_past(start_at)
     reject_off_grid(start_at, end_at)
 
@@ -698,60 +699,16 @@ def _member_cancel_terms(booking: Booking) -> tuple[Decimal, dict]:
     }
 
 
-def cancel_booking(
-    session: Session,
-    booking_id: UUID,
-    *,
-    by_member: bool = False,
-    refund_meta: dict | None = None,
-    refund_note: str = "Refund reserve on cancel",
-) -> Booking:
-    """Cancel an open booking and refund its reserve.
-
-    ``by_member`` applies the member cancel window. Owner cancels, accepted
-    refund requests and bay closures refund in full.
-    """
-    # Lock the booking, then the member, before the status check. A second
-    # cancel waits, sees the new status, and does not write another refund.
-    # Shop work can have no member and no reserve.
-    booking = _locked_booking(session, booking_id)
-    member = lock_member(session, booking.member_id) if booking.member_id is not None else None
-    if booking.status not in OPEN_STATUSES:
-        raise _error(400, "invalid_transition", "Completed, overdue, or cancelled bookings cannot be cancelled.")
-
-    reserved = Decimal(booking.reserved_tokens)
-    meta = {"pricing_rule": booking.pricing_rule} if booking.pricing_rule else {}
-    kept = Decimal("0")
-    if by_member:
-        kept, terms = _member_cancel_terms(booking)
-        meta.update(terms)
-    meta.update(refund_meta or {})
-    refund = reserved - kept
-    if refund > 0:
-        apply_ledger(
-            session,
-            member,
-            kind=TokenTransactionKind.BOOKING_REFUND,
-            amount=refund,
-            booking_id=booking.id,
-            note=refund_note if kept == 0 else f"Late cancel: refund {refund}, keep {kept}",
-            meta=meta or None,
-        )
-    booking.reserved_tokens = Decimal("0")
-
-    booking.status = BookingStatus.CANCELLED
-    session.add(booking)
-    release_booking_hours(session, booking)
-    session.flush()
-    _set_hoist_available_if_idle(session, booking.hoist)
-    return get_booking(session, booking.id)
+REASON_MIN = 3
+REASON_MAX = 500
 
 
-def sweep_no_shows(session: Session) -> list[Booking]:
-    """Mark confirmed member bookings that ended without a check-in as no-shows.
+def settle_elapsed_no_shows(session: Session) -> list[Booking]:
+    """Turn a confirmed visit whose end has passed into a no-show.
 
-    The shop keeps NO_SHOW_KEEP_PCT of the reserve; any remainder is refunded.
-    Repeat sweeps find nothing new.
+    The hour is freed in this save and the reserve stays with the shop.
+    A second call finds nothing new. Sweep is the same rule, kept as a
+    catch-up button.
     """
     now = _stored_utc(shop_now())
     candidates = session.scalars(
@@ -788,3 +745,80 @@ def sweep_no_shows(session: Session) -> list[Booking]:
         _set_hoist_available_if_idle(session, booking.hoist)
         swept.append(get_booking(session, booking.id))
     return swept
+
+
+def cancel_booking(
+    session: Session,
+    booking_id: UUID,
+    *,
+    by_member: bool = False,
+    refund_meta: dict | None = None,
+    refund_note: str = "Refund reserve on cancel",
+    reason: str | None = None,
+    require_reason: bool = False,
+    actor: str | None = None,
+) -> Booking:
+    """Cancel an open booking and refund its reserve.
+
+    ``by_member`` applies the member cancel window. Owner cancels before the
+    start refund in full and need a written reason. Once the visit is checked
+    in, or the start has passed, nothing is refunded.
+    """
+    # A confirmed visit that already ended is a no-show before anyone can
+    # cancel it back to a refund.
+    settle_elapsed_no_shows(session)
+    # Lock the booking, then the member, before the status check. A second
+    # cancel waits, sees the new status, and does not write another refund.
+    # Shop work can have no member and no reserve.
+    booking = _locked_booking(session, booking_id)
+    member = lock_member(session, booking.member_id) if booking.member_id is not None else None
+    if booking.status not in OPEN_STATUSES:
+        raise _error(400, "invalid_transition", "Completed, overdue, or cancelled bookings cannot be cancelled.")
+    if booking.status == BookingStatus.ACTIVE:
+        raise _error(400, "cancel_after_check_in", "A checked-in visit cannot be cancelled.")
+    if _stored_utc(booking.start_at) <= _stored_utc(shop_now()):
+        raise _error(400, "cancel_after_start", "A booking cannot be cancelled once it has started.")
+
+    reserved = Decimal(booking.reserved_tokens)
+    meta = {"pricing_rule": booking.pricing_rule} if booking.pricing_rule else {}
+    kept = Decimal("0")
+    if by_member:
+        kept, terms = _member_cancel_terms(booking)
+        meta.update(terms)
+    elif require_reason:
+        text = (reason or "").strip()
+        if not REASON_MIN <= len(text) <= REASON_MAX:
+            raise _error(
+                422,
+                "reason_required",
+                f"Cancelling a visit needs a reason of {REASON_MIN}-{REASON_MAX} characters.",
+            )
+        meta["override"] = {"reason": text, "by": actor or "owner"}
+    meta.update(refund_meta or {})
+    refund = reserved - kept
+    if refund > 0:
+        apply_ledger(
+            session,
+            member,
+            kind=TokenTransactionKind.BOOKING_REFUND,
+            amount=refund,
+            booking_id=booking.id,
+            note=refund_note if kept == 0 else f"Late cancel: refund {refund}, keep {kept}",
+            meta=meta or None,
+        )
+    booking.reserved_tokens = Decimal("0")
+
+    booking.status = BookingStatus.CANCELLED
+    session.add(booking)
+    release_booking_hours(session, booking)
+    session.flush()
+    _set_hoist_available_if_idle(session, booking.hoist)
+    return get_booking(session, booking.id)
+
+
+def sweep_no_shows(session: Session) -> list[Booking]:
+    """Catch-up for confirmed member visits that ended without a check-in.
+
+    The same save as ``settle_elapsed_no_shows``. A second sweep does nothing.
+    """
+    return settle_elapsed_no_shows(session)

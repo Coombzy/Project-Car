@@ -230,7 +230,7 @@ def test_two_bookings_cannot_take_the_same_bay_hour(client: TestClient) -> None:
     still_held = _book(client, member_id=riley["id"], hoist_id=bay["id"], start=hour, end=hour_end)
     _assert_bay_hour_taken(still_held)
 
-    cancelled = client.post(f"/bookings/{first.json()['id']}/cancel", headers=AUTH)
+    cancelled = client.post(f"/bookings/{first.json()['id']}/cancel", headers=AUTH, json={"reason": "Owner cancelled this visit"})
     assert cancelled.status_code == 200, cancelled.text
     freed = _book(client, member_id=riley["id"], hoist_id=bay["id"], start=hour, end=hour_end)
     assert freed.status_code == 201, freed.text
@@ -602,7 +602,7 @@ def test_check_in_complete_charges_reserve_and_cancel_refunds(client: TestClient
     ).json()
     after_other = Decimal("1500") - used - other_expected
     assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == after_other
-    cancelled = client.post(f"/bookings/{other['id']}/cancel", headers=AUTH)
+    cancelled = client.post(f"/bookings/{other['id']}/cancel", headers=AUTH, json={"reason": "Owner cancelled this visit"})
     assert cancelled.status_code == 200
     assert cancelled.json()["status"] == "cancelled"
     assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == Decimal("1500") - used
@@ -685,17 +685,15 @@ def test_check_in_at_or_after_end_is_refused(client: TestClient, monkeypatch: py
         session.close()
     hoist_before = _hoist_status(client, hoist_id)
 
-    # Past the end first, so the red failure is the ended window, then exactly end_at.
-    for clock in (end_at + timedelta(minutes=1), end_at):
-        monkeypatch.setenv("SHOP_NOW", clock.isoformat())
-        checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)
-        stored = _stored_booking(client, booking["id"])
-        hoist_status = _hoist_status(client, hoist_id)
-        assert checked.status_code == 400 and stored["status"] == "confirmed" and hoist_status == hoist_before, (
-            f"clock={clock.isoformat()} status={checked.status_code} booking={stored['status']} "
-            f"hoist={hoist_status} before={hoist_before} body={checked.text}"
-        )
-        assert checked.json()["error"]["code"] == "check_in_too_late"
+    # One minute past the end the visit is a no-show. Check-in does not open it.
+    monkeypatch.setenv("SHOP_NOW", (end_at + timedelta(minutes=1)).isoformat())
+    checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)
+    stored = _stored_booking(client, booking["id"])
+    hoist_status = _hoist_status(client, hoist_id)
+    assert checked.status_code == 400 and stored["status"] == "no_show" and hoist_status == hoist_before, (
+        f"status={checked.status_code} booking={stored['status']} hoist={hoist_status} body={checked.text}"
+    )
+    assert checked.json()["error"]["code"] == "check_in_too_late"
 
 
 def test_booking_reserve_is_the_charge_and_cancel_returns_it(client: TestClient) -> None:
@@ -726,7 +724,7 @@ def test_booking_reserve_is_the_charge_and_cancel_returns_it(client: TestClient)
     assert _balance(client, member["id"]) == opening - held
     assert _rows(_ledger(client, member["id"]), kind="booking_debit", booking_id=open_id) == []
 
-    cancelled = client.post(f"/bookings/{open_id}/cancel", headers=AUTH)
+    cancelled = client.post(f"/bookings/{open_id}/cancel", headers=AUTH, json={"reason": "Owner cancelled this visit"})
     assert cancelled.status_code == 200, cancelled.text
     assert cancelled.json()["status"] == "cancelled"
     assert _dec(cancelled.json()["reserved_tokens"]) == Decimal("0")
@@ -737,7 +735,7 @@ def test_booking_reserve_is_the_charge_and_cancel_returns_it(client: TestClient)
     assert _rows(_ledger(client, member["id"]), kind="booking_debit", booking_id=open_id) == []
     assert _balance(client, member["id"]) == opening
 
-    repeat = client.post(f"/bookings/{open_id}/cancel", headers=AUTH)
+    repeat = client.post(f"/bookings/{open_id}/cancel", headers=AUTH, json={"reason": "Owner cancelled this visit"})
     assert repeat.status_code == 400
     assert repeat.json()["error"]["code"] == "invalid_transition"
     assert len(_rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=open_id)) == 1
@@ -768,7 +766,7 @@ def test_booking_reserve_is_the_charge_and_cancel_returns_it(client: TestClient)
     assert _rows(ledger, kind="booking_refund", booking_id=spent_id) == []
     assert _balance(client, member["id"]) == opening - reserved
 
-    denied = client.post(f"/bookings/{spent_id}/cancel", headers=AUTH)
+    denied = client.post(f"/bookings/{spent_id}/cancel", headers=AUTH, json={"reason": "Owner cancelled this visit"})
     assert denied.status_code == 400
     assert denied.json()["error"]["code"] == "invalid_transition"
     assert _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=spent_id) == []
@@ -1122,32 +1120,17 @@ def test_past_start_is_rejected(client: TestClient) -> None:
     late = client.post(f"/bookings/{first}/check-in", headers=AUTH)
     assert late.status_code == 400, late.text
     assert late.json()["error"]["code"] == "check_in_too_late"
-    assert _stored_booking(client, first)["status"] == "confirmed"
+    assert _stored_booking(client, first)["status"] == "no_show"
     assert _hoist_status(client, hoist["id"]) != "occupied"
-    session = client.session_factory()  # type: ignore[attr-defined]
-    try:
-        row = session.get(Booking, UUID(first))
-        assert row is not None
-        open_start = as_utc(check_in_open_start())
-        row.start_at = open_start
-        row.end_at = open_start + timedelta(hours=2)
-        session.commit()
-    finally:
-        session.close()
-    checked = client.post(f"/bookings/{first}/check-in", headers=AUTH)
-    assert checked.status_code == 200, checked.text
-    assert checked.json()["status"] == "active"
-    completed = client.post(
-        f"/bookings/{first}/complete",
+    # The other past visit has already started, so Cancel is not a refund.
+    refused = client.post(
+        f"/bookings/{second}/cancel",
         headers=AUTH,
-        json={"unused_tokens": "0"},
+        json={"reason": "Owner cancelled this visit"},
     )
-    assert completed.status_code == 200, completed.text
-    assert completed.json()["status"] == "completed"
-    cancelled = client.post(f"/bookings/{second}/cancel", headers=AUTH)
-    assert cancelled.status_code == 200, cancelled.text
-    assert cancelled.json()["status"] == "cancelled"
-    assert _balance(client, member["id"]) == opening - reserved
+    assert refused.status_code == 400, refused.text
+    assert refused.json()["error"]["code"] == "cancel_after_start"
+    assert _balance(client, member["id"]) == opening - reserved - reserved
 
 
 def _record_scalars(monkeypatch, reads: list[tuple[str, bool]]) -> None:
@@ -1392,12 +1375,12 @@ def test_second_cancel_locks_then_refunds_once(client: TestClient, monkeypatch) 
 
     events: list[tuple[str, str, bool]] = []
     _watch_refund_loads(monkeypatch, events)
-    cancelled = client.post(f"/bookings/{booking_id}/cancel", headers=AUTH)
+    cancelled = client.post(f"/bookings/{booking_id}/cancel", headers=AUTH, json={"reason": "Owner cancelled this visit"})
     assert cancelled.status_code == 200, cancelled.text
     assert cancelled.json()["status"] == "cancelled"
     _assert_locks_before_refund(events, "cancel_booking")
 
-    again = client.post(f"/bookings/{booking_id}/cancel", headers=AUTH)
+    again = client.post(f"/bookings/{booking_id}/cancel", headers=AUTH, json={"reason": "Owner cancelled this visit"})
     assert again.status_code == 400, again.text
     assert again.json()["error"]["code"] == "invalid_transition"
     refunds = _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=booking_id)

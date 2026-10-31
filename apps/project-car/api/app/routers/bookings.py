@@ -18,6 +18,7 @@ from app.models import (
     StaffSubject,
 )
 from app.schemas import (
+    BookingCancel,
     BookingComplete,
     BookingCreate,
     BookingOut,
@@ -70,6 +71,7 @@ def list_bookings(
     window_start: datetime | None = Query(default=None),
     window_end: datetime | None = Query(default=None),
 ) -> list[BookingOut]:
+    booking_service.settle_elapsed_no_shows(session)
     rows = session.scalars(
         _list_query(
             hoist_id=hoist_id,
@@ -208,10 +210,23 @@ def complete_booking(
 
 
 @router.post("/bookings/{booking_id}/cancel", response_model=BookingOut)
-def cancel_booking(booking_id: UUID, session: DbSession, owner: Owner) -> BookingOut:
+def cancel_booking(
+    booking_id: UUID,
+    session: DbSession,
+    owner: Owner,
+    body: BookingCancel | None = None,
+) -> BookingOut:
     reject_ai(
         owner,
         code="refund_requires_human",
         message="A refund is not applied until a human accepts it.",
     )
-    return BookingOut.from_booking(booking_service.cancel_booking(session, booking_id))
+    return BookingOut.from_booking(
+        booking_service.cancel_booking(
+            session,
+            booking_id,
+            reason=body.reason if body is not None else None,
+            require_reason=True,
+            actor=owner.email,
+        )
+    )

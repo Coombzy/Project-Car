@@ -465,6 +465,12 @@ class BookingQuoteOut(BaseModel):
     token_balance_after: Decimal | None = None
 
 
+class BookingCancel(BaseModel):
+    """Owner cancel. A written reason is required when the cancel refunds."""
+
+    reason: str | None = None
+
+
 class BookingComplete(BaseModel):
     # Only 0 is accepted: unused time is never refunded once a visit has
     # started (Ben, D16). The Owner web form still posts 0.

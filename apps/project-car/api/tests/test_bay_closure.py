@@ -175,7 +175,7 @@ def test_close_leaves_active_visits_and_past_rows_alone(client: TestClient) -> N
     assert client.post(f"/bookings/{active_id}/confirm", headers=AUTH).status_code == 200
     assert client.post(f"/bookings/{active_id}/check-in", headers=AUTH).status_code == 200
     cancelled = _book(client, member, hoist, hours_ahead=30)
-    assert client.post(f"/bookings/{cancelled['id']}/cancel", headers=AUTH).status_code == 200
+    assert client.post(f"/bookings/{cancelled['id']}/cancel", headers=AUTH, json={"reason": "Owner cancelled this visit"}).status_code == 200
 
     response = client.patch(f"/hoists/{hoist['id']}", headers=AUTH, json={"status": "locked"})
 

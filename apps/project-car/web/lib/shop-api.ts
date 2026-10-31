@@ -368,8 +368,12 @@ export async function completeBooking(id: string, unusedTokens = "0"): Promise<B
   });
 }
 
-export async function cancelBooking(id: string): Promise<Booking> {
-  return shopJson<Booking>(`/bookings/${id}/cancel`, "Could not cancel the booking.", { method: "POST" });
+export async function cancelBooking(id: string, reason: string): Promise<Booking> {
+  return shopJson<Booking>(`/bookings/${id}/cancel`, "Could not cancel the booking.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reason }),
+  });
 }
 
 export async function listOwnerShopHoistRequests(
