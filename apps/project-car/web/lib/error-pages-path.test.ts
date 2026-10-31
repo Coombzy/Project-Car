@@ -57,4 +57,38 @@ describe("dashboard href path normalization", () => {
     assert.equal(dashboardHref("/member/../schedule"), "/");
     assert.equal(dashboardHref("/no-such-page"), "/");
   });
+
+  it("test_backslash_parse_base_stays_on_the_owner_dashboard", () => {
+    // `/\shop.invalid\member\nope` starts with one slash, so the `//` guard misses it.
+    // new URL rewrites `\` to `/` and the host stays the parse base shop.invalid,
+    // so a host check still follows the path to /member. A raw backslash is not
+    // window.location.pathname.
+    assert.equal(dashboardHref("/\\shop.invalid\\member\\nope"), "/");
+    assert.equal(dashboardHref("/\\SHOP.INVALID\\member\\nope"), "/");
+    assert.equal(dashboardHref("/\\user@shop.invalid\\member\\nope"), "/");
+    assert.equal(dashboardHref("/\\shop.invalid:443\\member\\nope"), "/");
+
+    assert.equal(dashboardHref("/member/nope"), "/member");
+    assert.equal(dashboardHref("/member/../schedule"), "/");
+    assert.equal(dashboardHref("/no-such-page"), "/");
+  });
+
+  it("test_control_character_pathname_stays_on_the_owner_dashboard", () => {
+    // window.location.pathname percent-encodes controls. A raw tab, newline,
+    // CR, NUL, or DEL is not that pathname. The URL parser deletes the
+    // C0 controls, so these strings look like /member/... and would link
+    // to the member dashboard.
+    assert.equal(dashboardHref("/member\u0009/nope"), "/");
+    assert.equal(dashboardHref("/member\u000a/nope"), "/");
+    assert.equal(dashboardHref("/member\u000d/schedule"), "/");
+    assert.equal(dashboardHref("/\u0009member/nope"), "/");
+    assert.equal(dashboardHref("/member/nope\u0000"), "/");
+    assert.equal(dashboardHref("/member/nope\u007f"), "/");
+
+    assert.equal(dashboardHref("/member/nope"), "/member");
+    assert.equal(dashboardHref("/member/schedule"), "/member");
+    assert.equal(dashboardHref("/member/../schedule"), "/");
+    assert.equal(dashboardHref("/no-such-page"), "/");
+    assert.equal(dashboardHref("/%09/member/nope"), "/");
+  });
 });
