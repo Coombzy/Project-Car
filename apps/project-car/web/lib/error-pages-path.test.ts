@@ -28,4 +28,20 @@ describe("dashboard href path normalization", () => {
     assert.equal(dashboardHref("/_not-found"), "/");
     assert.equal(dashboardHref(""), "/");
   });
+
+  it("test_non_path_strings_stay_on_the_owner_dashboard", () => {
+    // new URL(pathname, base) follows a scheme or a protocol-relative prefix
+    // and resolves a relative string against that base. Neither is
+    // window.location.pathname. Those strings must not become /member.
+    assert.equal(dashboardHref("https://shop.example/member/nope"), "/");
+    assert.equal(dashboardHref("http://shop.invalid/member/schedule"), "/");
+    assert.equal(dashboardHref("//shop.example/member/nope"), "/");
+    assert.equal(dashboardHref("//member/nope"), "/");
+    assert.equal(dashboardHref("member/nope"), "/");
+    assert.equal(dashboardHref("\\member\\nope"), "/");
+
+    assert.equal(dashboardHref("/member/nope"), "/member");
+    assert.equal(dashboardHref("/member/../schedule"), "/");
+    assert.equal(dashboardHref("/no-such-page"), "/");
+  });
 });
