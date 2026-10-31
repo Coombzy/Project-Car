@@ -1639,6 +1639,103 @@ def test_cancel_after_check_in_keeps_the_reserve(client: TestClient) -> None:
     assert _hoist_status(client, hoist["id"]) == "occupied"
 
 
+def test_preloaded_cancel_after_check_in_keeps_the_reserve(client: TestClient) -> None:
+    """Cancel on a session that already loaded the visit as confirmed.
+
+    Member cancel loads the row (_own_booking) and then calls cancel_booking
+    on that same session. A check-in can commit between those reads. The lock
+    select returns the identity-map copy, which still says confirmed, and
+    cancel refunds a visit that is already active.
+
+    Red on head 895f86e0f053: cancel returns, the status is 200, the booking
+    is cancelled, and one booking_refund is written. The hoist stays occupied:
+    the in-memory hoist is still the pre-check-in copy, so cancel does not
+    write available.
+    """
+    from fastapi import HTTPException
+    from sqlalchemy import func
+
+    from app.models import BookingHour
+    from app.services.bookings import cancel_booking, get_booking
+
+    member = create_member(client, email="ada.preloaded-cancel@example.com")
+    hoist = create_hoist(client, name="Bay 1")
+    start, end = _window_inside_check_in()
+    reserved = _expected_reserve(client, start, end, member["id"])
+    assert reserved > 0
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start,
+            "end_at": end,
+        },
+    )
+    assert created.status_code == 201, created.text
+    active_id = created.json()["id"]
+    confirmed = client.post(f"/bookings/{active_id}/confirm", headers=AUTH)
+    assert confirmed.status_code == 200, confirmed.text
+
+    def hour_count() -> int:
+        counter = client.session_factory()  # type: ignore[attr-defined]
+        try:
+            found = counter.scalar(
+                select(func.count())
+                .select_from(BookingHour)
+                .where(BookingHour.booking_id == UUID(active_id))
+            )
+            return int(found or 0)
+        finally:
+            counter.close()
+
+    hours_before = hour_count()
+    assert hours_before > 0
+    balance_before = _balance(client, member["id"])
+    assert balance_before == Decimal("1500") - reserved
+
+    session = client.session_factory()  # type: ignore[attr-defined]
+    raised: HTTPException | None = None
+    try:
+        loaded = get_booking(session, UUID(active_id))
+        assert loaded.status == BookingStatus.CONFIRMED
+        checked = client.post(f"/bookings/{active_id}/check-in", headers=AUTH)
+        assert checked.status_code == 200, checked.text
+        assert checked.json()["status"] == "active"
+        assert _hoist_status(client, hoist["id"]) == "occupied"
+        # The identity map still says confirmed. Do not refresh this object here.
+        assert loaded.status == BookingStatus.CONFIRMED
+        try:
+            cancel_booking(session, UUID(active_id))
+            session.commit()
+        except HTTPException as exc:
+            raised = exc
+            session.rollback()
+    finally:
+        session.close()
+
+    stored = _stored_booking(client, active_id)
+    refunds = _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=active_id)
+    hoist_after = _hoist_status(client, hoist["id"])
+    code = 200 if raised is None else raised.status_code
+    assert (
+        code == 400
+        and stored["status"] == "active"
+        and refunds == []
+        and hoist_after == "occupied"
+    ), (
+        f"status={code} booking={stored['status']} hoist={hoist_after} refunds={len(refunds)}"
+    )
+    assert raised is not None
+    assert raised.detail["code"] == "cancel_after_check_in"
+    assert raised.detail["message"] == "Complete the visit instead."
+    assert set(raised.detail) == {"code", "message"}
+    assert hour_count() == hours_before
+    assert _balance(client, member["id"]) == balance_before
+    assert _dec(stored["reserved_tokens"]) == reserved
+
+
 def test_r61_does_not_own_the_visual_spec() -> None:
     """R62 owns visual/pages.spec.ts. R61 must not append a week-grid test there.
 
