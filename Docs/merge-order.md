@@ -16,7 +16,7 @@ Other open pull requests (finance trackers, backlog docs, and older `gb/` rows s
 
 | PR | Branch | Why it stays closed |
 |----|--------|---------------------|
-| [#222](https://github.com/Coombzy/Project-Car/pull/222) | `gb/r99-20261030213706` (base `main`) | Prices a booking from the start minute, so a longer booking can cost less. [#226](https://github.com/Coombzy/Project-Car/pull/226) prices each held hour and replaces that approach. Close #222. Do not merge it. |
+| [#222](https://github.com/Coombzy/Project-Car/pull/222) | `gb/r99-20261030213706` (base `main`) | Closed 2026-10-31. Prices a booking from the start minute, so a longer booking can cost less. [#226](https://github.com/Coombzy/Project-Car/pull/226) prices each held hour and replaces that approach. Do not reopen it. |
 
 ## Booking and token chain (bottom up)
 
@@ -65,3 +65,19 @@ Other open pull requests (finance trackers, backlog docs, and older `gb/` rows s
 |----|------|---------|------|
 | [#233](https://github.com/Coombzy/Project-Car/pull/233) | `main` | Shop OS colours use the brochure purple and orange. | Independent of booking math. It recolours screens the calendar rows also touch, so landing it changes the look of every later UI branch until they rebase. |
 | [#236](https://github.com/Coombzy/Project-Car/pull/236) | `main` | Review of the booking calendar and token plan, including the #225-then-#226–#232 order and the note to close #222. | Docs only. The written order goes stale if a later row retargets its base. |
+
+## Review, 2026-10-31
+
+Read bottom-up from #225 through #263. The tip's shop API, web lint, and layout checks were green. There were no open review threads. #222 is closed. No new feature row was added. Three defects were fixed on the pull request that owned them, and every child above that pull request was restacked.
+
+| PR | What was wrong | What changed |
+|----|----------------|--------------|
+| [#245](https://github.com/Coombzy/Project-Car/pull/245) | The booking line used the seeded band table. Book charged the server quote. A published fill showed two totals. | The line is built from the quote, including the fill label. The button still charges that same total. |
+| [#248](https://github.com/Coombzy/Project-Car/pull/248) | Any-bay skipped a bay whose status was occupied, even when the requested hour was free. The form also sent the preview bay id, so the server never tried the next bay. | Occupied bays stay eligible. Maintenance and locked bays stay out. Any bay submits no hoist id. |
+| [#258](https://github.com/Coombzy/Project-Car/pull/258) | SQLite returns a stored UTC instant with no offset. The dashboard strip read that as shop wall time, so a 2 p.m. booking showed at 8 p.m. Seed rows were the other way around: wall time read as UTC. | The strip reads a naive timestamp as UTC. Seed bookings are stored as the same UTC instant the API writes. |
+
+Left as they are:
+
+- Open cells on the calendar, and the "Peak hours this week" line, still use the seeded multipliers. The rate chart, the quote, and the cap use the saved bands. Those three agree. The cells disagree only after an owner edits a band. The charge is the quote.
+- Two members taking the same any-bay hour at once is still not proven on Postgres. No workflow file was edited.
+- Cancel keep, no-show, piles, GST, the stand-in processor, extra-hour charges, and signup were read against the product rules and not changed.
