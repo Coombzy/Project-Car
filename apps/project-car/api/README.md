@@ -83,7 +83,7 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `PATCH` | `/tiers/{name}` | Owner | Edit allowances |
 | `GET/POST` | `/members` | Owner | List / create |
 | `GET/PATCH` | `/members/{id}` | Owner | Detail / update |
-| `GET/POST` | `/members/{id}/tokens` | Owner | Ledger / admin adjustment |
+| `GET/POST` | `/members/{id}/tokens` | Owner | Ledger / admin adjustment (`reason` required; never below a 0 balance → 409 `would_go_negative`) |
 | `POST` | `/members/{id}/token-purchases` | Owner (human) | Credit paid tokens once per PayPal payment id, with GST |
 | `GET/POST` | `/hoists` | Owner | List / create |
 | `PATCH` | `/hoists/{id}` | Owner | Status, labels |
@@ -94,7 +94,7 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `GET/POST` | `/bookings` | Owner | List (hoist/member/window) / create (server computes reserve) |
 | `POST` | `/bookings/{id}/confirm` | Owner | Pending → confirmed (overlap → 409) |
 | `POST` | `/bookings/{id}/check-in` | Owner | → active |
-| `POST` | `/bookings/{id}/complete` | Owner | Debit used tokens, refund unused reserve |
+| `POST` | `/bookings/{id}/complete` | Owner | The reserve is the charge; no refund of unused time (`unused_tokens` > 0 → 400) |
 | `POST` | `/bookings/{id}/cancel` | Owner | Refund remaining reserve |
 | `GET` | `/member/me` | Member | Own profile, balance, ledger, bookings |
 | `GET` | `/member/tokens` | Member | Own ledger |
@@ -164,7 +164,7 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 
 1. A bay hour belongs to at most one booking. **Pending**, **confirmed**, **active**, and **overdue** bookings hold that hour on that hoist. A second booking that overlaps the hour returns `409 hoist_overlap` and does not reserve tokens. **Cancelled** and **completed** release the hour. The same hour on another bay, and the next hour on the same bay, stay available. Confirm still rejects a window that overlaps a confirmed, active, or overdue booking.
 2. Creating a **customer** booking **reserves** tokens (`booking_reserve`, negative) and starts `pending`. The API computes `reserved_tokens` per held Regina hour (`Σ(100 × that hour's band) × overlay × fill`), lists one `pricing_rule.segments` entry per hour, and ignores a client `tokens` field. A partial hour is charged as the whole hour it holds. The quote is stored on `booking.pricing_rule` and ledger `meta`. Shop work (`kind=shop`) skips the ledger. Fill applies only to next-day customer-bay openings (`token-pricing.md`).
-3. Completing an active or overdue booking releases the reserve, then **debits** used tokens (`booking_debit`) and **refunds** any unused reserve (`booking_refund`). `POST /bookings/{id}/overdue` (Owner or the approved bot, no scheduler) flips an active booking past its end to `overdue`, opens one `late_return` incident, and writes no ledger or billing row. Repeat calls stay on that one incident. Cancel still refuses overdue. The Owner completes it later to settle tokens and release the hour. An AI cannot complete, because that path can refund.
+3. Completing an active or overdue booking keeps the whole reserve as the charge and writes no ledger row. Unused time is never refunded once a visit has started (`unused_tokens` > 0 → 400 `unused_refund_not_allowed`). No ledger write may take a balance below 0 (`TOKEN_BALANCE_FLOOR`). `POST /bookings/{id}/overdue` (Owner or the approved bot, no scheduler) flips an active booking past its end to `overdue`, opens one `late_return` incident, and writes no ledger or billing row. Repeat calls stay on that one incident. Cancel still refuses overdue. The Owner completes it later to release the hour. An AI cannot complete.
 4. Cancel refunds remaining reserve. `member.token_balance` is a cached ledger sum — never changed without a row.
 5. Tier `included_tokens`, `booking_window_days`, and `max_simultaneous_bookings` are enforced in the API.
 6. Exactly one hoist may be `is_shop`. A member request for that hoist stays pending until a person or an AI approves it. Bays 1–5 stay a direct booking. (B) bumpable is a later tweak.

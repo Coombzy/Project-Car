@@ -29,6 +29,8 @@ PERIOD_TZ = "America/Regina"
 # accountant confirms it.
 GST_RATE = Decimal("0.05")
 CENTS = Decimal("0.01")
+# Ben, D10: no balance goes below zero, ever. There is no Owner allow path.
+TOKEN_BALANCE_FLOOR = Decimal("0")
 
 
 def apply_ledger(
@@ -43,6 +45,17 @@ def apply_ledger(
     payment_ref: str | None = None,
 ) -> TokenTransaction:
     amount = Decimal(amount)
+    balance = Decimal(member.token_balance)
+    if amount < 0 and balance + amount < TOKEN_BALANCE_FLOOR:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "would_go_negative",
+                "message": "That would take the balance below zero.",
+                "balance": str(balance),
+                "amount": str(amount),
+            },
+        )
     row = TokenTransaction(
         member_id=member.id,
         booking_id=booking_id,
@@ -53,7 +66,7 @@ def apply_ledger(
         payment_ref=payment_ref,
     )
     session.add(row)
-    member.token_balance = Decimal(member.token_balance) + amount
+    member.token_balance = balance + amount
     session.add(member)
     try:
         session.flush()

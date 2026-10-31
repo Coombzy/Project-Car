@@ -230,13 +230,13 @@ def test_member_below_one_base_hour_is_token_at_risk(client: TestClient) -> None
     short = client.post(
         f"/members/{below['id']}/tokens",
         headers=AUTH,
-        json={"amount": str(one_base_hour - Decimal("1")), "note": "One token under a base hour"},
+        json={"amount": str(one_base_hour - Decimal("1")), "note": "One token under a base hour", "reason": "One token under a base hour"},
     )
     assert short.status_code == 201, short.text
     full = client.post(
         f"/members/{exact['id']}/tokens",
         headers=AUTH,
-        json={"amount": str(one_base_hour), "note": "Exactly one base hour"},
+        json={"amount": str(one_base_hour), "note": "Exactly one base hour", "reason": "Exactly one base hour"},
     )
     assert full.status_code == 201, full.text
 

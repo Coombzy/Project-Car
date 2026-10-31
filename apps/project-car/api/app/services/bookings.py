@@ -555,52 +555,21 @@ def check_in_booking(session: Session, booking_id: UUID) -> Booking:
     return get_booking(session, booking.id)
 
 
-def complete_booking(
-    session: Session,
-    booking_id: UUID,
-    *,
-    unused_tokens: Decimal = Decimal("0"),
-) -> Booking:
-    # Lock the booking, then the member, before the status check. A second
-    # complete waits, sees the new status, and does not write another refund.
-    # Shop work can have no member and no reserve.
+def complete_booking(session: Session, booking_id: UUID) -> Booking:
+    """Close an active or overdue visit. The reserve stands as the charge.
+
+    Unused time is never refunded once a visit has started (Ben, D16), so
+    completion writes no ledger row.
+    """
+    # Lock the booking before the status check. A second complete waits and
+    # sees the new status.
     booking = _locked_booking(session, booking_id)
-    member = lock_member(session, booking.member_id) if booking.member_id is not None else None
     if booking.status not in (BookingStatus.ACTIVE, BookingStatus.OVERDUE):
         raise _error(
             400,
             "invalid_transition",
             "Only an active or overdue booking can be completed.",
         )
-
-    unused = Decimal(unused_tokens)
-    reserved = Decimal(booking.reserved_tokens)
-    if unused < 0 or unused > reserved:
-        raise _error(400, "invalid_refund", "Unused tokens must be between 0 and the reserved amount.")
-
-    used = reserved - unused
-    meta = {"pricing_rule": booking.pricing_rule} if booking.pricing_rule else None
-    if reserved > 0:
-        apply_ledger(
-            session,
-            member,
-            kind=TokenTransactionKind.BOOKING_REFUND,
-            amount=reserved,
-            booking_id=booking.id,
-            note="Release reserved tokens",
-            meta=meta,
-        )
-        if used > 0:
-            apply_ledger(
-                session,
-                member,
-                kind=TokenTransactionKind.BOOKING_DEBIT,
-                amount=-used,
-                booking_id=booking.id,
-                note="Debit used tokens",
-                meta=meta,
-            )
-
     booking.reserved_tokens = Decimal("0")
     booking.status = BookingStatus.COMPLETED
     session.add(booking)

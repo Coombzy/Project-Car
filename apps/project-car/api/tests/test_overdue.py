@@ -325,13 +325,8 @@ def test_overdue_stores_one_late_return_and_moves_no_money(client: TestClient) -
     assert stored.status == BookingStatus.COMPLETED
     assert Decimal(stored.reserved_tokens) == Decimal("0")
     settled = _token_rows(client, booking_id)
-    assert sorted(row.kind.value for row in settled) == [
-        "booking_debit",
-        "booking_refund",
-        "booking_reserve",
-    ]
-    debit = next(row for row in settled if row.kind.value == "booking_debit")
-    assert Decimal(debit.amount) == -reserved
+    assert [row.kind.value for row in settled] == ["booking_reserve"]
+    assert Decimal(settled[0].amount) == -reserved
     assert _count(client, BillingTransaction) == 0
     assert len(_incidents(client, booking_id)) == 1
     assert _balance(client, ada["id"]) == balance

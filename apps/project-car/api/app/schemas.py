@@ -272,6 +272,8 @@ class MemberPatch(BaseModel):
 
 class TokenAdjustment(BaseModel):
     amount: Decimal
+    # Required; checked in the router so a missing reason is 422 reason_required.
+    reason: str | None = None
     note: str | None = Field(default=None, max_length=2000)
 
 
@@ -461,6 +463,8 @@ class BookingQuoteOut(BaseModel):
 
 
 class BookingComplete(BaseModel):
+    # Only 0 is accepted: unused time is never refunded once a visit has
+    # started (Ben, D16). The Owner web form still posts 0.
     unused_tokens: Decimal = Field(default=Decimal("0"), ge=0)
 
 
