@@ -37,6 +37,7 @@ const OWNER_PAGES: Shot[] = [
   { name: "hoists", path: "/hoists" },
   { name: "jobs", path: "/jobs" },
   { name: "members", path: "/members" },
+  { name: "not-found", path: "/no-such-page" },
   { name: "parts", path: "/parts" },
   { name: "payments", path: "/payments" },
   { name: "schedule", path: "/schedule" },
@@ -126,12 +127,21 @@ async function apiGet<T>(path: string, cookieName: string, token: string): Promi
 async function shoot(page: Page, path: string, name: string, auth: Auth): Promise<void> {
   const response = await page.goto(path, { waitUntil: "load" });
   expect(response, path).not.toBeNull();
-  expect(response?.status(), path).toBeLessThan(400);
+  if (path === "/no-such-page") {
+    expect(response?.status(), path).toBe(404);
+  } else {
+    expect(response?.status(), path).toBeLessThan(400);
+  }
   assertAuth(auth, page.url());
   await page.evaluate(() => document.fonts.ready);
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(SETTLE_MS);
   await expect(page.getByText("Cannot reach shop API")).toHaveCount(0);
+  if (path === "/no-such-page") {
+    await expect(page.getByText("This page could not be found.")).toHaveCount(0);
+    await expect(page.locator("main").getByRole("heading", { name: "That page is not here." })).toBeVisible();
+    await expect(page.locator("main").getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/");
+  }
   const cls = await page.evaluate(() => {
     const measured = (window as Window & { __cls?: number }).__cls;
     return typeof measured === "number" ? measured : 0;
@@ -225,5 +235,19 @@ test.describe("member pages", () => {
 
   test("member-chat-room", async ({ page }) => {
     await shoot(page, `/member/chat/${memberRoomId}`, "member-chat-room", "member");
+  });
+
+  test("member-not-found", async ({ page }) => {
+    const response = await page.goto("/member/nope", { waitUntil: "load" });
+    expect(response, "/member/nope").not.toBeNull();
+    expect(response?.status(), "/member/nope").toBe(404);
+    assertAuth("member", page.url());
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(SETTLE_MS);
+    await expect(page.getByText("Cannot reach shop API")).toHaveCount(0);
+    await expect(page.getByText("This page could not be found.")).toHaveCount(0);
+    await expect(page.locator("main").getByRole("heading", { name: "That page is not here." })).toBeVisible();
+    await expect(page.locator("main").getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/member");
   });
 });
