@@ -1,4 +1,4 @@
-/** R75 rule: a bounty is 0 to 10,000 tokens, at most two decimal places.
+/** A posted bounty is above 0 and at most 10,000 tokens, with at most two decimal places.
  * `ShopJobCreate.token_bounty` on origin/main is still `ge=0` with no upper bound (`schemas.py`). */
 export const JOB_BOUNTY_CAP = 10_000;
 
@@ -32,11 +32,8 @@ function parseBounty(raw: string): string | null {
     return null;
   }
   const cents = wholeNum * 100 + fracCents;
-  if (!Number.isSafeInteger(cents) || cents < 0 || cents > CAP_CENTS) {
+  if (!Number.isSafeInteger(cents) || cents <= 0 || cents > CAP_CENTS) {
     return null;
-  }
-  if (whole === "0" && significant.length === 0) {
-    return "0";
   }
   return significant.length === 0 ? whole : `${whole}.${significant}`;
 }
