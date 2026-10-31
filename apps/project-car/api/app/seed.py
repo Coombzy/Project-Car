@@ -17,8 +17,8 @@ Weekly or Pro seed rows are dropped (Pro members move to Premium).
 Default (no flag) upserts the demo IDs and rebuilds this week's sample
 bookings so a fresh or existing demo DB is never an empty shell.
 
-Reserve cost is computed from duration (`Docs/token-pricing.md`):
-`final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier × fill_multiplier`.
+Reserve cost is computed per held hour (`app/services/pricing.py`):
+`final_reserve_cost = Σ(100 × hour band_multiplier) × advance_multiplier × fill_multiplier`.
 Demo bookings use that engine. Not live prices.
 
 This is sample data for localhost prospect walkthroughs. The shop is not
