@@ -1736,6 +1736,86 @@ def test_preloaded_cancel_after_check_in_keeps_the_reserve(client: TestClient) -
     assert _dec(stored["reserved_tokens"]) == reserved
 
 
+def test_cancel_reread_holds_the_booking_row_lock(client: TestClient, monkeypatch) -> None:
+    """The re-read inside cancel_booking asks for the booking row lock.
+
+    _locked_booking selects FOR UPDATE, then returns the identity-map copy.
+    session.refresh is the SELECT that loads the status committed by check-in.
+    That SELECT has to ask for the same row lock. populate_existing stays off
+    _locked_booking because check-in, complete, and overdue share that helper.
+
+    Red on head a3eb1ba4ed76: refresh runs with with_for_update left unset,
+    so the recorded flag is None. The visit must still stay active with no
+    refund. This does not replace test_cancel_after_check_in_keeps_the_reserve
+    or test_preloaded_cancel_after_check_in_keeps_the_reserve.
+    """
+    from sqlalchemy.orm import Session
+
+    from app.models import Booking
+
+    flags: list[object] = []
+    armed = False
+    real_refresh = Session.refresh
+
+    def spy_refresh(self, instance, attribute_names=None, with_for_update=None):
+        nonlocal armed
+        if armed and isinstance(instance, Booking):
+            flags.append(with_for_update)
+        return real_refresh(
+            self,
+            instance,
+            attribute_names=attribute_names,
+            with_for_update=with_for_update,
+        )
+
+    monkeypatch.setattr(Session, "refresh", spy_refresh)
+
+    member = create_member(client, email="ada.cancel-reread@example.com")
+    hoist = create_hoist(client, name="Bay 1")
+    start, end = _window_inside_check_in()
+    reserved = _expected_reserve(client, start, end, member["id"])
+    assert reserved > 0
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start,
+            "end_at": end,
+        },
+    )
+    assert created.status_code == 201, created.text
+    active_id = created.json()["id"]
+    assert client.post(f"/bookings/{active_id}/confirm", headers=AUTH).status_code == 200
+    checked = client.post(f"/bookings/{active_id}/check-in", headers=AUTH)
+    assert checked.status_code == 200, checked.text
+    assert checked.json()["status"] == "active"
+
+    balance_before = _balance(client, member["id"])
+    armed = True
+    owner_cancel = client.post(f"/bookings/{active_id}/cancel", headers=AUTH)
+    armed = False
+    stored = _stored_booking(client, active_id)
+    refunds = _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=active_id)
+    hoist_after = _hoist_status(client, hoist["id"])
+    assert (
+        owner_cancel.status_code == 400
+        and stored["status"] == "active"
+        and refunds == []
+        and hoist_after == "occupied"
+    ), (
+        f"status={owner_cancel.status_code} booking={stored['status']} hoist={hoist_after} "
+        f"refunds={len(refunds)} body={owner_cancel.text}"
+    )
+    assert owner_cancel.json()["error"]["code"] == "cancel_after_check_in"
+    assert owner_cancel.json()["error"]["message"] == "Complete the visit instead."
+    assert _balance(client, member["id"]) == balance_before
+    assert _dec(stored["reserved_tokens"]) == reserved
+    assert flags, "cancel_booking did not refresh the booking"
+    assert flags[0] is True, f"cancel re-read did not take the row lock: {flags[0]!r}"
+
+
 def test_r61_does_not_own_the_visual_spec() -> None:
     """R62 owns visual/pages.spec.ts. R61 must not append a week-grid test there.
 
