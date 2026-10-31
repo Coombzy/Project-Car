@@ -292,11 +292,11 @@ export async function listMemberTokens(id: string): Promise<TokenTransaction[]> 
   return shopJson<TokenTransaction[]>(`/members/${id}/tokens`, "Could not load the token ledger.");
 }
 
-export async function adjustMemberTokens(id: string, amount: string, note: string): Promise<TokenTransaction> {
+export async function adjustMemberTokens(id: string, amount: string, reason: string): Promise<TokenTransaction> {
   return shopJson<TokenTransaction>(`/members/${id}/tokens`, "Could not adjust tokens.", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ amount, note }),
+    body: JSON.stringify({ amount, reason }),
   });
 }
 
