@@ -38,12 +38,17 @@ export function middleware(request: NextRequest) {
   const memberSession = request.cookies.get(MEMBER_SESSION_COOKIE)?.value;
   const isOwnerLogin = path.startsWith("/login");
   const isMemberLogin = path.startsWith("/member/login");
+  const isSignup = path === "/signup" || path.startsWith("/signup/");
   const isMemberArea = path === "/member" || path.startsWith("/member/");
 
   if (isMemberLogin) {
     if (memberSession) {
       return redirect(redirectTo(request, "/member"));
     }
+    return NextResponse.next();
+  }
+
+  if (isSignup) {
     return NextResponse.next();
   }
 

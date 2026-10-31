@@ -147,6 +147,10 @@ describe("shop web security headers", () => {
     assert.equal(customerHost.headers.get("location"), CUSTOMER_HOST_OPS_LOGIN);
     assertSecurityHeaders(customerHost.headers, "customer host redirect");
 
+    const signup = middleware(request("http://localhost:3000/signup", "localhost:3000"));
+    assert.equal(signup.status, 200);
+    assert.equal(signup.headers.get("location"), null);
+
     const manifest = middleware(request("http://localhost:3000/manifest.webmanifest", "localhost:3000"));
     assert.equal(manifest.status, 200);
     assert.equal(manifest.headers.get("location"), null);
