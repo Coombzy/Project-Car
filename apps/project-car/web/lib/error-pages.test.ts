@@ -16,7 +16,7 @@ function dashboardHrefFrom(source: string): (pathname: string) => string {
   const match = source.match(
     /function dashboardHref\(pathname: string\): "\/" \| "\/member" \{[\s\S]*?\n\}/,
   );
-  assert.ok(match, "not-found.tsx is missing dashboardHref");
+  assert.ok(match, "dashboardHref is missing");
   const js = match[0].replace("pathname: string", "pathname").replace(': "/" | "/member"', "");
   return new Function(`${js}\nreturn dashboardHref;`)() as (pathname: string) => string;
 }
@@ -55,7 +55,7 @@ describe("shop error pages", () => {
     );
     assert.doesNotMatch(notFound, /error\.message|error\.stack/);
 
-    const dashboardHref = dashboardHrefFrom(notFound);
+    const dashboardHref = dashboardHrefFrom(readSource("lib/error-pages.ts"));
     assert.equal(dashboardHref("/schedul"), "/");
     assert.equal(dashboardHref("/_not-found"), "/");
     assert.equal(dashboardHref("/members/missing"), "/");
