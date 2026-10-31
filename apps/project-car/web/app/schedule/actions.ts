@@ -121,7 +121,7 @@ export async function denyShopHoistRequestAction(formData: FormData): Promise<vo
 
 export async function cancelBookingAction(formData: FormData): Promise<void> {
   try {
-    await cancelBooking(String(formData.get("id") ?? ""));
+    await cancelBooking(String(formData.get("id") ?? ""), String(formData.get("reason") ?? ""));
   } catch (error) {
     fail(formData, error);
   }

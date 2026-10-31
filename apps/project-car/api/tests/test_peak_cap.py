@@ -99,7 +99,7 @@ def test_cancelled_hours_free_the_cap(setup) -> None:
     client, member, hoist = setup
     first = _book(client, member, hoist, _at(7, 10), _at(7, 14))
     assert first.status_code == 201, first.text
-    assert client.post(f"/bookings/{first.json()['id']}/cancel", headers=AUTH).status_code == 200
+    assert client.post(f"/bookings/{first.json()['id']}/cancel", headers=AUTH, json={"reason": "Owner cancelled this visit"}).status_code == 200
 
     again = _book(client, member, hoist, _at(7, 15), _at(7, 19))
 

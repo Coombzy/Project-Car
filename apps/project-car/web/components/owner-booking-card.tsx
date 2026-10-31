@@ -63,6 +63,10 @@ export function OwnerBookingCard({
           <form action={cancelBookingAction}>
             <ScheduleReturnFields returnTo={returnTo} />
             <input type="hidden" name="id" value={booking.id} />
+            <label>
+              Reason
+              <input type="text" name="reason" required minLength={3} maxLength={500} />
+            </label>
             <button className="ghost" type="submit">
               Cancel
             </button>

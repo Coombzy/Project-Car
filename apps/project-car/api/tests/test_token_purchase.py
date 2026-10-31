@@ -152,7 +152,7 @@ def _cancelled_booking(client: TestClient) -> tuple[dict, dict]:
         },
     )
     assert created.status_code == 201, created.text
-    cancelled = client.post(f"/bookings/{created.json()['id']}/cancel", headers=AUTH)
+    cancelled = client.post(f"/bookings/{created.json()['id']}/cancel", headers=AUTH, json={"reason": "Owner cancelled this visit"})
     assert cancelled.status_code == 200, cancelled.text
     return member, created.json()
 

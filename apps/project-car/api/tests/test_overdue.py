@@ -296,7 +296,7 @@ def test_overdue_stores_one_late_return_and_moves_no_money(client: TestClient) -
     )
     assert other_bay["status"] == "pending"
 
-    refused = client.post(f"/bookings/{booking_id}/cancel", headers=AUTH)
+    refused = client.post(f"/bookings/{booking_id}/cancel", headers=AUTH, json={"reason": "Owner cancelled this visit"})
     assert refused.status_code == 400
     assert refused.json()["error"]["code"] == "invalid_transition"
     assert _booking(client, booking_id).status == BookingStatus.OVERDUE
@@ -555,7 +555,7 @@ def test_overdue_keeps_the_hoist_occupied_when_another_booking_ends(client: Test
     cancel_at = next_hour(5)
     other = _shop_booking(client, shop["id"], cancel_at, cancel_at + timedelta(hours=1))
     assert client.post(f"/bookings/{other['id']}/confirm", headers=AUTH).status_code == 200
-    cancelled = client.post(f"/bookings/{other['id']}/cancel", headers=AUTH)
+    cancelled = client.post(f"/bookings/{other['id']}/cancel", headers=AUTH, json={"reason": "Owner cancelled this visit"})
     assert cancelled.status_code == 200, cancelled.text
     assert cancelled.json()["status"] == "cancelled"
     _assert_overdue_still_holds(client, overdue["id"], shop["id"], tokens, billing)
