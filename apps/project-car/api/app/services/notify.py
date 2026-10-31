@@ -9,16 +9,20 @@ from __future__ import annotations
 
 import smtplib
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timezone
+from decimal import Decimal
 from email.message import EmailMessage
 from typing import Protocol
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
 from app.models import (
+    Booking,
     FillOffer,
+    Hoist,
     Member,
     MemberStatus,
     NotificationChannel,
@@ -26,7 +30,7 @@ from app.models import (
     NotificationStatus,
 )
 from app.services.fill import FillSnapshot, discount_label
-from app.shop_time import PRICING_TZ, pricing_now
+from app.shop_time import PRICING_TZ, SHOP_TZ, pricing_now
 
 
 class NotifyError(ValueError):
@@ -355,3 +359,72 @@ def list_outbox(session: Session, *, limit: int = 50) -> list[NotificationOutbox
         select(NotificationOutbox).order_by(NotificationOutbox.created_at.desc()).limit(limit)
     ).all()
     return list(rows)
+
+
+def _mountain_span(booking: Booking) -> str:
+    start = booking.start_at
+    end = booking.end_at
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=timezone.utc)
+    if end.tzinfo is None:
+        end = end.replace(tzinfo=timezone.utc)
+    start = start.astimezone(SHOP_TZ)
+    end = end.astimezone(SHOP_TZ)
+    return f"{start:%a %b %d, %H:%M}-{end:%H:%M} Mountain Time"
+
+
+def enqueue_bay_closed_notices(
+    session: Session,
+    hoist: Hoist,
+    cancelled: list[Booking],
+    *,
+    refunds: dict[UUID, Decimal],
+    reason: str,
+    settings: Settings | None = None,
+) -> list[NotificationOutbox]:
+    """One email per member whose bookings were cancelled by a bay closing.
+
+    ``refunds`` maps booking id to the tokens returned for it.
+    """
+    by_member: dict[UUID, tuple[Member, list[Booking]]] = {}
+    for booking in cancelled:
+        if booking.member is None:
+            continue
+        by_member.setdefault(booking.member.id, (booking.member, []))[1].append(booking)
+    cfg = settings or get_settings()
+    rows: list[NotificationOutbox] = []
+    for member, bookings in by_member.values():
+        refunded = sum((refunds.get(row.id, Decimal("0")) for row in bookings), Decimal("0"))
+        lines = "\n".join(f"- {_mountain_span(row)}" for row in bookings)
+        body = (
+            f"Hi {member.name},\n\n"
+            f"{hoist.name} is closed, so we cancelled your booking(s):\n{lines}\n\n"
+            f"Reason: {reason}\n"
+            f"{refunded} tokens are back in your balance. Book another bay any time."
+        )
+        row = NotificationOutbox(
+            channel=NotificationChannel.EMAIL,
+            member_id=member.id,
+            to_address=member.email,
+            subject=f"{hoist.name} is closed - your booking was cancelled",
+            body=body,
+            payload={
+                "kind": "bay_closed",
+                "hoist_id": str(hoist.id),
+                "booking_ids": [str(row.id) for row in bookings],
+                "refunded_tokens": str(refunded),
+                "reason": reason,
+            },
+            status=NotificationStatus.PENDING,
+            dry_run=False,
+        )
+        if not member.email:
+            row.status = NotificationStatus.SKIPPED
+            row.last_error = "missing_recipient"
+        session.add(row)
+        rows.append(row)
+    session.flush()
+    for row in rows:
+        if row.status == NotificationStatus.PENDING:
+            _deliver_row(session, row, settings=cfg)
+    return rows

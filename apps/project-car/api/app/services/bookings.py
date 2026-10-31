@@ -47,6 +47,9 @@ HOLDING_STATUSES = (
 )
 BAY_HOUR_TAKEN = "That bay already has a booking on this hour."
 UNAVAILABLE_HOIST = (HoistStatus.MAINTENANCE, HoistStatus.LOCKED)
+# A bay cannot close over these until they are cancelled. Active and overdue
+# visits are already on the bay and are left for the Owner to finish.
+CLOSE_BLOCKING_STATUSES = (BookingStatus.PENDING, BookingStatus.CONFIRMED)
 # Stand-in until Ben sets how early check-in may open. Needs from Ben.
 CHECK_IN_EARLY_MINUTES = 15
 # Ben, D2: bookings start and end on the Regina hour and last at least an hour.
@@ -649,7 +652,27 @@ def mark_overdue(session: Session, booking_id: UUID) -> tuple[Booking, bool]:
     return get_booking(session, booking.id), changed
 
 
-def cancel_booking(session: Session, booking_id: UUID) -> Booking:
+def future_bookings_on_hoist(session: Session, hoist_id: UUID) -> list[Booking]:
+    """Pending or confirmed bookings on this bay that have not ended yet."""
+    now = _stored_utc(shop_now())
+    rows = session.scalars(
+        select(Booking)
+        .where(
+            Booking.hoist_id == hoist_id,
+            Booking.status.in_(CLOSE_BLOCKING_STATUSES),
+        )
+        .order_by(Booking.start_at, Booking.id)
+    ).all()
+    return [row for row in rows if _stored_utc(row.end_at) > now]
+
+
+def cancel_booking(
+    session: Session,
+    booking_id: UUID,
+    *,
+    refund_meta: dict | None = None,
+    refund_note: str = "Refund reserve on cancel",
+) -> Booking:
     # Lock the booking, then the member, before the status check. A second
     # cancel waits, sees the new status, and does not write another refund.
     # Shop work can have no member and no reserve.
@@ -659,7 +682,8 @@ def cancel_booking(session: Session, booking_id: UUID) -> Booking:
         raise _error(400, "invalid_transition", "Completed, overdue, or cancelled bookings cannot be cancelled.")
 
     reserved = Decimal(booking.reserved_tokens)
-    meta = {"pricing_rule": booking.pricing_rule} if booking.pricing_rule else None
+    meta = {"pricing_rule": booking.pricing_rule} if booking.pricing_rule else {}
+    meta.update(refund_meta or {})
     if reserved > 0:
         apply_ledger(
             session,
@@ -667,8 +691,8 @@ def cancel_booking(session: Session, booking_id: UUID) -> Booking:
             kind=TokenTransactionKind.BOOKING_REFUND,
             amount=reserved,
             booking_id=booking.id,
-            note="Refund reserve on cancel",
-            meta=meta,
+            note=refund_note,
+            meta=meta or None,
         )
         booking.reserved_tokens = Decimal("0")
 

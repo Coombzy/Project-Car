@@ -17,7 +17,13 @@ from decimal import Decimal
 import pytest
 from fastapi.testclient import TestClient
 
-from tests.conftest import AUTH, check_in_open_start, create_hoist, create_member, next_hour
+from tests.conftest import (
+    AUTH,
+    check_in_open_start,
+    create_hoist,
+    create_member,
+    next_hour,
+)
 
 AI = {"Authorization": "Bearer dev-ai-secret"}
 REASON = "Hydraulic leak on the lift ram"
