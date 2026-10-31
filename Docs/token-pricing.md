@@ -95,32 +95,29 @@ Member self-serve UI is **live on Doc demo, `https://ops.projectcar.ca/member`, 
 
 ---
 
-## Default bands (Owner-editable placeholders)
+## Default bands (Owner-editable)
 
-Hours are **approximate defaults**. Multipliers are placeholders Ben can edit in the settings table. Do not treat them as public prices.
+Base is **100 tokens per hour**. Each band is one named row the owner can edit. Do not treat these multipliers as a public price list.
 
-**Fri-evening ambiguity (resolved for the default table):** “after ~16:00 or ~18:00” — default is **Fri 16:00–24:00** at weekend/Fri-eve premium **1.5×**, not the weekday-eve **1.25×**.
+Intervals are half-open `[start, end)` in Mountain Time (the shop clock, permanent UTC−6). Each held hour uses the band that contains that hour.
 
-Intervals are half-open `[start, end)` in `America/Regina`. Price a booking from the band that contains its **start**. Spanning bands does not split the slot in v1.
+| Band id | When (Mountain Time) | × | Tokens/hr | Label |
+|---------|----------------------|---|-----------|-------|
+| `late_night` | Every day 21:00–08:00 | **0.75** | 75 | Off-peak |
+| `weekday_day` | Mon–Fri 08:00–16:00 | **1.00** | 100 | Normal |
+| `weekday_eve` | Every day 16:00–21:00, including Fri, Sat, and Sun | **1.25** | 125 | Evening |
+| `weekend_fri_eve` | Sat–Sun 08:00–16:00 only | **1.50** | 150 | Peak |
 
-| Band id | When (`America/Regina`) | × | Label |
-|---------|-------------------------|---|-------|
-| `weekday_day` | Mon–Fri 08:00–16:00 | **1.0** | Weekday day (base) |
-| `weekday_eve` | Mon–Thu 16:00–21:00 | **1.25** | Weekday evening |
-| `weekend_fri_eve` | Fri 16:00–24:00; Sat all day; Sun 00:00–21:00 | **1.5** | Weekend / Fri eve |
-| `late_night` | Mon–Thu 21:00–08:00 next day; Sun 21:00–Mon 08:00 | **0.75** | Late night / early morning |
+Only **Peak** counts toward the 4-hour weekly peak cap.
 
 Week grid (same defaults):
 
 | | 00:00–08:00 | 08:00–16:00 | 16:00–21:00 | 21:00–24:00 |
 |---|---|---|---|---|
-| Mon | 0.75 (`late_night`, Sun→Mon) | 1.0 | 1.25 | 0.75 |
-| Tue–Thu | 0.75 | 1.0 | 1.25 | 0.75 |
-| Fri | 0.75 (Thu night) | 1.0 | **1.5** | **1.5** |
-| Sat | 1.5 | 1.5 | 1.5 | 1.5 |
-| Sun | 1.5 | 1.5 | 1.5 | 0.75 (Sun→Mon) |
+| Mon–Fri | 0.75 Off-peak | 1.00 Normal | 1.25 Evening | 0.75 Off-peak |
+| Sat–Sun | 0.75 Off-peak | **1.50 Peak** | 1.25 Evening | 0.75 Off-peak |
 
-Shop OS month/week calendars label days and hour slots in `America/Regina`. Naive `datetime-local` values still use the existing `shop_time` helper `SHOP_TZ` = `America/Edmonton` so create/quote stay honest with the API. Band and overlay math use `PRICING_TZ` = `America/Regina`. During Mountain Daylight both are UTC−6, so clock times match. In winter Edmonton is UTC−7 and Regina stays UTC−6 — the engine converts the stored UTC instant to Regina before picking a band.
+Screens, emails, and calendar files say Mountain Time. The clock itself is `America/Regina` so Alberta stays UTC−6 year-round.
 
 ---
 

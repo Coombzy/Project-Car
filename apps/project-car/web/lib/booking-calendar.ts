@@ -88,19 +88,13 @@ function weekdayIndex(isoDate: string): number {
 
 export function bandAt(isoDate: string, hour: number): BandAt {
   const weekday = weekdayIndex(isoDate);
-  let id: BandId = "late_night";
-  if (weekday === 5) {
-    id = "weekend_fri_eve";
-  } else if (weekday === 6) {
-    id = hour < 21 ? "weekend_fri_eve" : "late_night";
-  } else if (hour < 8) {
+  let id: BandId = "weekday_day";
+  if (hour >= 21 || hour < 8) {
     id = "late_night";
-  } else if (hour < 16) {
-    id = "weekday_day";
-  } else if (weekday === 4) {
-    id = "weekend_fri_eve";
-  } else if (hour < 21) {
+  } else if (hour >= 16) {
     id = "weekday_eve";
+  } else if (weekday >= 5) {
+    id = "weekend_fri_eve";
   }
   const tokens = BASE_TOKENS * BAND_MULTIPLIER[id];
   const short = BAND_SHORT[id];

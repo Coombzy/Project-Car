@@ -47,15 +47,15 @@ def test_band_crossing_booking_charges_each_hour_at_its_band() -> None:
 def test_friday_afternoon_into_evening_is_split_by_band() -> None:
     start = _at(2026, 11, 6, 15)
     quote = quote_reserve(start, start + timedelta(hours=2), reserved_at=_standard(start))
-    assert quote.final_reserve_cost == Decimal("250.00")
+    assert quote.final_reserve_cost == Decimal("225.00")
     rule = quote.as_rule()
     assert [segment["band_id"] for segment in rule["segments"]] == [
         "weekday_day",
-        "weekend_fri_eve",
+        "weekday_eve",
     ]
-    assert [segment["band_tokens"] for segment in rule["segments"]] == ["100", "150"]
+    assert [segment["band_tokens"] for segment in rule["segments"]] == ["100", "125"]
     assert rule["band_id"] == "mixed"
-    assert rule["banded_tokens"] == "250"
+    assert rule["banded_tokens"] == "225"
 
 
 def test_reserve_covers_every_held_hour() -> None:
@@ -65,7 +65,7 @@ def test_reserve_covers_every_held_hour() -> None:
     quote = quote_reserve(start, end, reserved_at=_standard(start))
     segments = quote.as_rule()["segments"]
     assert len(segments) == 2
-    assert quote.final_reserve_cost == Decimal("300.00")
+    assert quote.final_reserve_cost == Decimal("250.00")
 
 
 @pytest.mark.parametrize(

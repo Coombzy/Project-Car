@@ -33,7 +33,10 @@ describe("hour bands", () => {
     assert.equal(bandAt("2026-11-05", 15).gutter, "Day 100");
     assert.equal(bandAt("2026-11-05", 17).gutter, "Eve 125");
     assert.equal(bandAt("2026-11-05", 2).gutter, "Night 75");
-    assert.equal(bandAt("2026-11-06", 17).gutter, "Peak 150");
+    assert.equal(bandAt("2026-11-06", 17).gutter, "Eve 125");
+    assert.equal(bandAt("2026-11-07", 10).gutter, "Peak 150");
+    assert.equal(bandAt("2026-11-07", 17).gutter, "Eve 125");
+    assert.equal(bandAt("2026-11-07", 2).gutter, "Night 75");
   });
 });
 
@@ -136,13 +139,13 @@ describe("cancel, peak, gst, and the taken message", () => {
       [
         {
           status: "confirmed",
-          startAt: "2026-11-06T17:00:00",
-          endAt: "2026-11-06T19:00:00",
+          startAt: "2026-11-07T10:00:00",
+          endAt: "2026-11-07T12:00:00",
         },
         {
           status: "cancelled",
-          startAt: "2026-11-07T17:00:00",
-          endAt: "2026-11-07T19:00:00",
+          startAt: "2026-11-08T10:00:00",
+          endAt: "2026-11-08T12:00:00",
         },
       ],
       "2026-11-02",
