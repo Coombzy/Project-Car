@@ -123,6 +123,20 @@ async function apiGet<T>(path: string, cookieName: string, token: string): Promi
   return (await response.json()) as T;
 }
 
+function memberHomeShot(name: string): string {
+  // The Next visit card is inside the 768 and 1440 folds. Against the pre-card
+  // member-home.png that is 10383 px (768) and 18822 px (1440), over the 1% cap.
+  // Those widths keep the cap and compare to a reference that includes the card.
+  // 390 stays on member-home.png: the card is below that fold.
+  if (name === "member-home") {
+    const project = test.info().project.name;
+    if (project === "768" || project === "1440") {
+      return "member-home-next-visit";
+    }
+  }
+  return name;
+}
+
 async function shoot(page: Page, path: string, name: string, auth: Auth): Promise<void> {
   const response = await page.goto(path, { waitUntil: "load" });
   expect(response, path).not.toBeNull();
@@ -137,7 +151,7 @@ async function shoot(page: Page, path: string, name: string, auth: Auth): Promis
     return typeof measured === "number" ? measured : 0;
   });
   expect(cls, `${path} layout shift ${cls}`).toBeLessThanOrEqual(MAX_LAYOUT_SHIFT);
-  await expect(page).toHaveScreenshot(`${name}.png`);
+  await expect(page).toHaveScreenshot(`${memberHomeShot(name)}.png`);
 }
 
 test.beforeAll(async () => {
