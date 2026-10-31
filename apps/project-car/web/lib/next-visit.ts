@@ -63,6 +63,10 @@ function hourMinute(date: Date): string {
   return `${hour}:${minute}`;
 }
 
+export function checkInOpensAt(startAt: string, earlyMinutes: number = NEXT_VISIT_EARLY_MINUTES): Date {
+  return new Date(instant(startAt) - earlyMinutes * 60 * 1000);
+}
+
 export function nextVisit(bookings: readonly NextVisitBooking[], now: Date): NextVisit | null {
   const nowMs = now.getTime();
   const eligible = bookings.filter((booking) => {
@@ -99,7 +103,7 @@ export function nextVisit(bookings: readonly NextVisitBooking[], now: Date): Nex
   }
   const start = new Date(instant(booking.start_at));
   const end = new Date(instant(booking.end_at));
-  const opens = new Date(start.getTime() - NEXT_VISIT_EARLY_MINUTES * 60 * 1000);
+  const opens = checkInOpensAt(booking.start_at);
   return {
     id: booking.id,
     bay: booking.hoist_name,
