@@ -270,7 +270,6 @@ def _make_booking(
     end: datetime,
     status: BookingStatus,
     notes: str,
-    unused: Decimal = Decimal("0"),
     kind: BookingKind = BookingKind.CUSTOMER,
 ) -> Booking:
     if kind == BookingKind.SHOP:
@@ -304,6 +303,18 @@ def _make_booking(
     session.add(booking)
     session.flush()
     if kind == BookingKind.CUSTOMER and member is not None and tokens > 0:
+        # Balances never go below zero. How many sample hours land depends on
+        # the clock, so cover any shortfall instead of skipping the booking.
+        shortfall = tokens - Decimal(member.token_balance)
+        if shortfall > 0:
+            apply_ledger(
+                session,
+                member,
+                kind=TokenTransactionKind.ADMIN_ADJUSTMENT,
+                amount=shortfall,
+                note="Demo top-up so the sample reserve fits",
+                meta={"override": {"reason": "Demo seed top-up", "by": "seed"}},
+            )
         apply_ledger(
             session,
             member,
@@ -319,27 +330,7 @@ def _make_booking(
         hoist.status = HoistStatus.OCCUPIED
         session.add(hoist)
     elif status == BookingStatus.COMPLETED:
-        used = tokens - unused
-        if kind == BookingKind.CUSTOMER and member is not None and tokens > 0:
-            apply_ledger(
-                session,
-                member,
-                kind=TokenTransactionKind.BOOKING_REFUND,
-                amount=tokens,
-                booking_id=booking.id,
-                note="Demo release reserve",
-                meta=meta,
-            )
-            if used > 0:
-                apply_ledger(
-                    session,
-                    member,
-                    kind=TokenTransactionKind.BOOKING_DEBIT,
-                    amount=-used,
-                    booking_id=booking.id,
-                    note="Demo debit",
-                    meta=meta,
-                )
+        # The reserve stands as the charge (D16); completion writes no row.
         booking.reserved_tokens = Decimal("0")
         booking.status = BookingStatus.COMPLETED
     elif status == BookingStatus.CANCELLED:
@@ -837,7 +828,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     monday = today - timedelta(days=today.weekday())
 
     # Fill this calendar week so the Owner schedule is never an empty grid.
-    # Past days are completed/cancelled (reserve released). Today and future hold reserve.
+    # Past days are completed (reserve charged) or cancelled (reserve refunded). Today and future hold reserve.
     # reserved_tokens come from quote_reserve (hours × 100 × band × overlay × fill).
     week_slots = [
         {

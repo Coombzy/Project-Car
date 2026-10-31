@@ -181,10 +181,15 @@ def complete_booking(
         code="refund_requires_human",
         message="A refund is not applied until a human accepts it.",
     )
-    unused = body.unused_tokens if body is not None else Decimal("0")
-    return BookingOut.from_booking(
-        booking_service.complete_booking(session, booking_id, unused_tokens=unused)
-    )
+    if body is not None and body.unused_tokens > 0:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "unused_refund_not_allowed",
+                "message": "Completing a visit charges the full reserve. Unused time is not refunded.",
+            },
+        )
+    return BookingOut.from_booking(booking_service.complete_booking(session, booking_id))
 
 
 @router.post("/bookings/{booking_id}/cancel", response_model=BookingOut)

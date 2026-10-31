@@ -34,6 +34,9 @@ MEMBER_PASSWORD_MIN_LENGTH = 12
 
 # Stand-in until Ben sets the real cap. Absolute value at or above this is refused.
 MAX_TOKEN_ADJUSTMENT = Decimal("1000000")
+# Ben, D11: every Owner balance override says why.
+OVERRIDE_REASON_MIN = 3
+OVERRIDE_REASON_MAX = 500
 
 
 def _member_or_404(session, member_id: UUID) -> Member:
@@ -203,6 +206,18 @@ def adjust_member_tokens(
         code="token_change_requires_human",
         message="An AI cannot change a token balance on its own.",
     )
+    reason = (body.reason or "").strip()
+    if not OVERRIDE_REASON_MIN <= len(reason) <= OVERRIDE_REASON_MAX:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "reason_required",
+                "message": (
+                    f"An adjustment needs a reason of {OVERRIDE_REASON_MIN}-"
+                    f"{OVERRIDE_REASON_MAX} characters."
+                ),
+            },
+        )
     # Lock before apply_ledger reads token_balance. Two adjustments otherwise
     # both add to the same cached balance and the second write drops the first.
     member = lock_member(session, member_id)
@@ -235,7 +250,8 @@ def adjust_member_tokens(
         member,
         kind=TokenTransactionKind.ADMIN_ADJUSTMENT,
         amount=amount,
-        note=body.note or "Owner adjustment",
+        note=body.note or reason,
+        meta={"override": {"reason": reason, "by": owner.email}},
     )
     session.flush()
     session.refresh(row)
