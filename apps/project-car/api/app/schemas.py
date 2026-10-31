@@ -384,6 +384,22 @@ class TokenPurchaseCreate(BaseModel):
         return stripped
 
 
+class MemberTokenPurchaseCreate(BaseModel):
+    """A member buying tokens. The payment adapter collects the stand-in id."""
+
+    payment_id: str | None = Field(default=None, max_length=120)
+    tokens: Decimal = Field(gt=0, decimal_places=2)
+    subtotal_cad: Decimal = Field(gt=0, decimal_places=2)
+
+    @field_validator("payment_id")
+    @classmethod
+    def strip_member_payment_id(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        return stripped or None
+
+
 class TokenTransactionOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

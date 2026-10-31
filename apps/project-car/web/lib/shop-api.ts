@@ -314,6 +314,22 @@ export async function setMemberPassword(id: string, password: string): Promise<M
   });
 }
 
+export async function buyMemberTokens(payload: {
+  payment_id: string;
+  tokens: string;
+  subtotal_cad: string;
+}): Promise<TokenTransaction> {
+  return memberJson<TokenTransaction>("/member/token-purchases", "Could not buy tokens.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      payment_id: payload.payment_id || null,
+      tokens: payload.tokens,
+      subtotal_cad: payload.subtotal_cad,
+    }),
+  });
+}
+
 export async function recordTokenPurchase(
   id: string,
   payload: { payment_id: string; tokens: string; subtotal_cad: string },

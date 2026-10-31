@@ -162,6 +162,7 @@ def record_token_purchase(
     subtotal_cad: Decimal,
     recorded_by: str,
     note: str | None = None,
+    processor: str | None = None,
 ) -> TokenTransaction:
     """Credit paid tokens once per payment id, with GST on the CAD subtotal."""
     already = session.scalar(
@@ -180,6 +181,8 @@ def record_token_purchase(
         "total_cad": str(total),
         "by": recorded_by,
     }
+    if processor:
+        purchase["processor"] = processor
     session.add(
         BillingTransaction(
             member_id=member.id,

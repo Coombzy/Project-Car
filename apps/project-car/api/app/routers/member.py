@@ -42,11 +42,14 @@ from app.schemas import (
     ShopJobOut,
     ToolCribExceptionCreate,
     ToolCribExceptionOut,
+    MemberTokenPurchaseCreate,
     TokenTransactionOut,
 )
 from app.routers.dashboard import member_dashboard_payload
+from app.routers.members import MAX_TOKEN_ADJUSTMENT
 from app.services import bookings as booking_service
 from app.services.fill import snapshot_next_day
+from app.services.payments import get_payment_processor
 from app.services.peak_cap import PEAK_BAND_IDS, PEAK_HOURS_PER_WEEK
 from app.services.pricing import weekly_rate_chart
 from app.services.shop_hoist_requests import (
@@ -55,6 +58,7 @@ from app.services.shop_hoist_requests import (
     list_shop_hoist_requests,
 )
 from app.services.staff import claim_job, create_tool_crib_exception
+from app.services.tokens import record_token_purchase
 from app.shop_time import as_utc
 
 router = APIRouter(prefix="/member", tags=["member"])
@@ -492,3 +496,36 @@ def member_create_tool_crib_exception(
 @router.post("/jobs/{job_id}/claim", response_model=ShopJobOut)
 def member_claim_job(job_id: UUID, session: DbSession, principal: MemberUser) -> ShopJobOut:
     return ShopJobOut.model_validate(claim_job(session, job_id, principal.member_id))
+
+
+@router.post("/token-purchases", response_model=TokenTransactionOut, status_code=201)
+def member_buy_tokens(
+    body: MemberTokenPurchaseCreate,
+    session: DbSession,
+    principal: MemberUser,
+) -> TokenTransactionOut:
+    """Collect through the payment adapter, then credit the purchased pile."""
+    if body.tokens >= MAX_TOKEN_ADJUSTMENT:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "invalid_tokens", "message": "A purchase must be under 1,000,000 tokens."},
+        )
+    processor = get_payment_processor()
+    receipt = processor.collect(
+        member_id=principal.member_id,
+        tokens=body.tokens,
+        subtotal_cad=body.subtotal_cad,
+        payment_id=body.payment_id,
+    )
+    member = booking_service.lock_member(session, principal.member_id)
+    row = record_token_purchase(
+        session,
+        member,
+        payment_id=receipt.payment_id,
+        tokens=body.tokens,
+        subtotal_cad=receipt.subtotal_cad,
+        recorded_by=member.email,
+        processor=receipt.processor,
+    )
+    session.refresh(row)
+    return TokenTransactionOut.model_validate(row)

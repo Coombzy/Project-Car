@@ -41,6 +41,8 @@ class Settings(BaseSettings):
         "https://projectcar.ca,https://www.projectcar.ca"
     )
     pc_waitlist: bool = True
+    # Name of the PaymentProcessor implementation. "stand-in" mints STANDIN- ids.
+    payment_processor: str = "stand-in"
     # Next-day fill-the-gaps defaults (America/Regina). Owner can override per send.
     fill_min_discount_pct: float = 10
     fill_max_discount_pct: float = 25
