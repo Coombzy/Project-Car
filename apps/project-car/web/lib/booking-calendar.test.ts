@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { TIME_LABEL, bookingStatusLabel } from "./booking-words.ts";
 import {
@@ -8,6 +11,7 @@ import {
   calendarViewForWidth,
   gstLine,
   lowestFreeBay,
+  memberBalanceCopy,
   memberCancelOffer,
   submittedHoistId,
   peakWeek,
@@ -234,6 +238,34 @@ describe("cancel, peak, gst, and the taken message", () => {
       "That hour was just taken. Pick another time.",
     );
     assert.equal(bookingErrorCopy("other", "Try again."), "Try again.");
+  });
+
+  it("splits allowance from purchased tokens and counts peak hours this week", () => {
+    const copy = memberBalanceCopy(
+      "1500.00",
+      "500",
+      [
+        {
+          status: "confirmed",
+          startAt: "2026-11-07T10:00:00",
+          endAt: "2026-11-07T12:00:00",
+        },
+      ],
+      "2026-11-02",
+    );
+    assert.equal(copy.allowance, "1500");
+    assert.equal(copy.purchased, "500");
+    assert.equal(copy.total, "2000");
+    assert.match(copy.peak, /Peak hours this week/);
+    assert.match(copy.peak, /2 used/);
+  });
+
+  it("shows allowance, purchased tokens, and peak hours on the member home", () => {
+    const page = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../app/member/page.tsx"), "utf8");
+    assert.match(page, /memberBalanceCopy/);
+    assert.match(page, /Allowance/);
+    assert.match(page, /Purchased/);
+    assert.match(page, /Peak this week/);
   });
 
   it("uses a day grid on a phone and a week grid on a desktop", () => {
