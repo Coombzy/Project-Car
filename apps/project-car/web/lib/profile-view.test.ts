@@ -425,4 +425,54 @@ describe("member profile view", () => {
       );
     }
   });
+
+  it("test_member_profile_proof_does_not_use_screenshot_sidecar", () => {
+    const self = readFileSync(fileURLToPath(import.meta.url), "utf8");
+    const kept = [
+      "test_profile_rows_missing_phone_shows_not_on_file",
+      "test_profile_rows_unsigned_waiver_shows_not_signed",
+      "test_profile_rows_shows_the_member_record",
+      "test_profile_rows_missing_emergency_contact_shows_not_on_file",
+      "test_profile_rows_missing_balance_shows_not_on_file",
+      "test_member_profile_page_is_read_only_and_points_at_chat",
+      "test_member_nav_has_profile_link",
+      "test_screenshot_walk_includes_member_profile",
+      "test_profile_rows_numeric_balance_matches_tokens_label",
+    ];
+    for (const name of kept) {
+      assert.equal(self.includes(`it("${name}"`), true, `${name} must stay`);
+    }
+    const removed = [
+      "test_member_nav_refs_are_complete_pngs",
+      "test_member_nav_refs_survive_unified_diff",
+      "test_visual_build_does_not_install_chromium",
+      "test_visual_build_compares_committed_member_screenshots",
+    ];
+    for (const name of removed) {
+      assert.equal(self.includes(`it("${name}"`), false, `${name} must be deleted`);
+    }
+    assert.equal(
+      existsSync(join(libDir, "../visual/screenshots")),
+      true,
+      "keep the visual/screenshots refresh",
+    );
+    assert.equal(
+      existsSync(join(libDir, "../visual/member-nav-ref")),
+      false,
+      "delete visual/member-nav-ref; screenshot proof is visual/screenshots",
+    );
+    const attributesPath = join(libDir, "../../../../.gitattributes");
+    const attributes = existsSync(attributesPath) ? readFileSync(attributesPath, "utf8") : "";
+    assert.doesNotMatch(
+      attributes,
+      /^apps\/project-car\/web\/visual\/screenshots\/\*\/member-.*\.png diff$/m,
+      "delete .gitattributes rules that mark member screenshots as a text diff",
+    );
+    const pages = readFileSync(join(libDir, "../visual/pages.spec.ts"), "utf8");
+    assert.match(pages, /const MAX_LAYOUT_SHIFT = 0\.1/);
+    assert.doesNotMatch(pages, /maxDiffPixelRatio/);
+    const config = readFileSync(join(libDir, "../playwright.config.ts"), "utf8");
+    assert.match(config, /maxDiffPixelRatio:\s*0\.01/);
+  });
+
 });
