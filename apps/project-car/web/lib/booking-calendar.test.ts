@@ -290,6 +290,19 @@ describe("cancel, peak, gst, and the taken message", () => {
     assert.match(page, /Peak this week/);
   });
 
+  it("states the 24-hour cancel rule on the sticky bar and tucks night only on a phone", () => {
+    const source = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "../components/booking-calendar.tsx"),
+      "utf8",
+    );
+    assert.match(source, /Free until 24 hours before the start/);
+    assert.match(source, /Inside that, half is kept/);
+    const phoneOnly = source.slice(source.indexOf("@media (max-width: 767px)"));
+    assert.match(phoneOnly, /\.booking-cal \.night \{ display: none; \}/);
+    const beforePhone = source.slice(0, source.indexOf("@media (max-width: 767px)"));
+    assert.equal(beforePhone.includes(".booking-cal .night { display: none; }"), false);
+  });
+
   it("uses a day grid on a phone and a week grid on a desktop", () => {
     assert.equal(calendarViewForWidth(390), "day");
     assert.equal(calendarViewForWidth(767), "day");
