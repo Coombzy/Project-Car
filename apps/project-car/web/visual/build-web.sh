@@ -7,5 +7,6 @@ SHOP_NOW="$(tr -d '[:space:]' < "$VISUAL/shop-now.txt")"
 export SHOP_NOW
 export NEXT_PUBLIC_SHOP_NOW="$SHOP_NOW"
 export SHOP_API_URL="${SHOP_API_URL:-http://127.0.0.1:8000}"
+export SHOP_DEMO_LOGIN_HINTS="${SHOP_DEMO_LOGIN_HINTS:-true}"
 cd "$WEB"
 npm run build

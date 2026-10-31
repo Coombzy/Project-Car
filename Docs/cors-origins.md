@@ -10,17 +10,20 @@ Browser waitlist from https://projectcar.ca must be allowed to call the Shop API
 
 ## What the API uses
 
-Env var: **`CORS_ORIGINS`** (Pydantic `Settings.cors_origins` in `apps/project-car/api/app/config.py`).
+Two lists in `apps/project-car/api/app/config.py`. `*` is **dropped** — never set `*` for production.
 
-Comma-separated Origin allowlist. `*` is **dropped** in code — never set `*` for production, and do not rely on a wildcard “just this once.”
-
-Must include **`https://projectcar.ca`**. Live allowlist also includes `https://www.projectcar.ca`, localhost Owner-UI ports, **`https://ops.projectcar.ca`** (LIVE management origin, 2026-09-06 ~12:55), and the temporary alias **`https://app.projectcar.ca`** (still live until Ben cuts that DNS). Do **not** drop `app.` from a docs PR — plan only: `app-alias-cut.md` (after ops-only smoke). **`ops.` stays.**
+| Env | Who | Credentials |
+|-----|-----|-------------|
+| `CORS_PUBLIC_ORIGINS` | Brochure (`https://projectcar.ca`, `https://www.projectcar.ca`) | **No.** Only `POST /waitlist` and its preflight. |
+| `CORS_CREDENTIALED_ORIGINS` | Shop UI: localhost, **`https://ops.projectcar.ca`**, temporary **`https://app.projectcar.ca`** | **Yes.** Do **not** drop `app.` from a docs PR — plan only: `app-alias-cut.md`. **`ops.` stays.** |
+| `CORS_ORIGINS` | Legacy public list, merged into the brochure origins | **No.** |
 
 ```
-CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,https://projectcar.ca,https://www.projectcar.ca,https://ops.projectcar.ca,https://app.projectcar.ca
+CORS_PUBLIC_ORIGINS=https://projectcar.ca,https://www.projectcar.ca
+CORS_CREDENTIALED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,https://ops.projectcar.ca,https://app.projectcar.ca
 ```
 
-Empty `CORS_ORIGINS` → no CORS middleware (browser waitlist will fail).
+A brochure origin does not receive `Access-Control-Allow-Credentials`. An ops origin still does.
 
 Live file on Doc: `apps/project-car/api/.env` (copy of `.env.example`; do not commit secrets).
 

@@ -38,6 +38,7 @@ def test_all_models_import() -> None:
         "calendar_connections",
         "job_events",
         "shop_settings",
+        "owner_session_epoch",
     ]
 
 

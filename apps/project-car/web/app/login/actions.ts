@@ -1,8 +1,10 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { ShopApiError } from "../../lib/config";
+import { loginForwardHeaders } from "../../lib/login-forward";
 import { safeOwnerNext } from "../../lib/safe-next";
 import { writeSessionCookie } from "../../lib/session";
 import { loginOwner } from "../../lib/shop-api";
@@ -19,7 +21,7 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
   }
 
   try {
-    const token = await loginOwner(email, password);
+    const token = await loginOwner(email, password, loginForwardHeaders(await headers()));
     await writeSessionCookie(token);
   } catch (error) {
     if (error instanceof ShopApiError) {

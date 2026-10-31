@@ -2,9 +2,15 @@
 
 import { useActionState } from "react";
 
+import {
+  demoMemberEmail,
+  demoMemberPassword,
+  showDemoLoginHints,
+} from "../../../lib/demo-login";
 import { memberLoginAction, type MemberLoginState } from "./actions";
 
-export function MemberLoginForm({ nextPath }: { nextPath: string }) {
+export function MemberLoginForm({ nextPath, hints }: { nextPath: string; hints?: boolean }) {
+  const showHints = hints ?? showDemoLoginHints();
   const [state, action, pending] = useActionState<MemberLoginState, FormData>(
     memberLoginAction,
     null,
@@ -20,7 +26,7 @@ export function MemberLoginForm({ nextPath }: { nextPath: string }) {
         type="email"
         autoComplete="username"
         required
-        defaultValue="ada.reyes@example.com"
+        defaultValue={showHints ? demoMemberEmail() : ""}
       />
       <label htmlFor="password">Password</label>
       <input
@@ -29,7 +35,7 @@ export function MemberLoginForm({ nextPath }: { nextPath: string }) {
         type="password"
         autoComplete="current-password"
         required
-        defaultValue="changeme"
+        defaultValue={showHints ? demoMemberPassword() : ""}
       />
       {state?.message ? <p className="banner error">{state.message}</p> : null}
       <div className="actions">

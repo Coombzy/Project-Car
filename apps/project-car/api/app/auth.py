@@ -13,8 +13,10 @@ from uuid import UUID
 
 from fastapi import HTTPException, Response
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
+from sqlalchemy.orm import Session
 
 from app.config import Settings
+from app.models import OwnerSessionEpoch
 
 # Interactive scrypt (RFC 7914). N=2**14 stays under OpenSSL's default memory cap.
 _SCRYPT_N = 2**14
@@ -34,10 +36,14 @@ DUMMY_MEMBER_PASSWORD_HASH = (
     "scrypt$16384$8$1$FeNmoqWBAr3KRneA6j80ng==$uwxOA_jxxH2giYqHXgZwA_8rV14Jas_WtgL8ML9cTMo="
 )
 
-# Defaults from app.config.Settings. Refused when SHOP_HOST is not loopback.
+# Defaults a dev env used to ship. Refused unless SHOP_DEV_MODE is on.
+# Binding loopback does not make them safe: production sits on 127.0.0.1.
 DEFAULT_OWNER_API_SECRET = "dev-owner-secret"
 DEFAULT_AI_API_SECRET = "dev-ai-secret"
 DEFAULT_SESSION_SECRET = "dev-session-secret-change-me"
+DEFAULT_PROXY_SECRET = "dev-proxy-secret"
+_SECRET_MIN_LENGTH = 32
+_PASSWORD_MIN_LENGTH = 12
 # Shared member password from app.config.Settings. An unhashed member cannot
 # use this value when SHOP_HOST is not loopback. That refusal is a failed
 # login (401), not the 503 insecure_default path used for the secrets above.
@@ -45,22 +51,28 @@ DEFAULT_MEMBER_DEMO_PASSWORD = "changeme"
 # Keep in step with seed.LOOPBACK_HOSTS.
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
-# Eight failures inside this window lock the client IP.
+# Eight failures inside this window lock one realm on one client IP.
 _LOGIN_FAILURE_LIMIT = 8
 _LOGIN_FAILURE_WINDOW_SECONDS = 15 * 60
+# After this many failures of one account, from any IPs, wait 1, 2, 4… minutes.
+_ACCOUNT_FAILURE_LIMIT = 5
+_ACCOUNT_BACKOFF_CAP_SECONDS = 15 * 60
 
 
 class _LoginStamp:
     """One reserved login attempt. Success removes this same object."""
 
-    __slots__ = ("at",)
+    __slots__ = ("at", "realm", "account")
 
-    def __init__(self, at: float) -> None:
+    def __init__(self, at: float, realm: str, account: str) -> None:
         self.at = at
+        self.realm = realm
+        self.account = account
 
 
-# Reserved attempts keyed by client IP. One bucket per process.
-_login_failures: dict[str, list[_LoginStamp]] = {}
+# IP buckets are (realm, client IP). Account buckets are (realm, email).
+_ip_failures: dict[tuple[str, str], list[_LoginStamp]] = {}
+_account_failures: dict[tuple[str, str], list[_LoginStamp]] = {}
 _login_failures_lock = threading.Lock()
 
 
@@ -75,8 +87,59 @@ def _serializer(settings: Settings, *, salt: str) -> URLSafeTimedSerializer:
     return URLSafeTimedSerializer(settings.session_secret, salt=salt)
 
 
-def create_session_token(settings: Settings, email: str) -> str:
-    return _serializer(settings, salt=OWNER_SALT).dumps({"role": "owner", "email": email})
+def create_session_token(settings: Settings, email: str, *, epoch: int) -> str:
+    return _serializer(settings, salt=OWNER_SALT).dumps(
+        {
+            "role": "owner",
+            "email": email,
+            "pwd_fp": owner_password_fingerprint(settings, settings.owner_password),
+            "epoch": epoch,
+        }
+    )
+
+
+def owner_password_fingerprint(settings: Settings, password: str) -> str:
+    """Short keyed digest of the owner password. Not the password."""
+    digest = hmac.new(
+        settings.session_secret.encode("utf-8"),
+        b"owner-password-fp\0" + password.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    return digest[:_PASSWORD_FINGERPRINT_HEX]
+
+
+def current_owner_epoch(session: Session) -> int:
+    """Epoch 1 until a row exists. Logout stores the next value."""
+    row = session.get(OwnerSessionEpoch, 1)
+    if row is None:
+        return 1
+    return int(row.epoch)
+
+
+def bump_owner_epoch(session: Session) -> int:
+    """Invalidate every owner cookie. The bearer secret is not a session."""
+    row = session.get(OwnerSessionEpoch, 1)
+    if row is None:
+        row = OwnerSessionEpoch(id=1, epoch=2)
+        session.add(row)
+    else:
+        row.epoch = int(row.epoch) + 1
+    session.flush()
+    return int(row.epoch)
+
+
+def owner_session_current(settings: Settings, session: Session, payload: dict[str, Any]) -> bool:
+    """False after logout (epoch) or after the owner password changes (pwd_fp)."""
+    expected = owner_password_fingerprint(settings, settings.owner_password)
+    presented = payload.get("pwd_fp")
+    if not isinstance(presented, str) or len(presented) != len(expected):
+        return False
+    if not hmac.compare_digest(presented, expected):
+        return False
+    token_epoch = payload.get("epoch")
+    if isinstance(token_epoch, bool) or not isinstance(token_epoch, int):
+        return False
+    return token_epoch == current_owner_epoch(session)
 
 
 # Truncated HMAC hex. Long enough to change when the hash changes, short
@@ -150,6 +213,15 @@ def read_member_session_token(settings: Settings, token: str) -> dict[str, Any] 
     return payload
 
 
+def resolved_cookie_secure(settings: Settings) -> bool:
+    """Secure by default. An explicit bool, or dev mode, opts out."""
+    if settings.cookie_secure is not None:
+        return bool(settings.cookie_secure)
+    if shop_dev_mode():
+        return False
+    return True
+
+
 def set_session_cookie(response: Response, settings: Settings, token: str) -> None:
     response.set_cookie(
         key=settings.cookie_name,
@@ -157,7 +229,7 @@ def set_session_cookie(response: Response, settings: Settings, token: str) -> No
         max_age=settings.session_ttl_seconds,
         httponly=True,
         samesite="lax",
-        secure=settings.cookie_secure,
+        secure=resolved_cookie_secure(settings),
         path="/",
     )
 
@@ -169,20 +241,24 @@ def set_member_session_cookie(response: Response, settings: Settings, token: str
         max_age=settings.session_ttl_seconds,
         httponly=True,
         samesite="lax",
-        secure=settings.cookie_secure,
+        secure=resolved_cookie_secure(settings),
         path="/",
     )
 
 
 def clear_session_cookie(response: Response, settings: Settings) -> None:
-    response.delete_cookie(key=settings.cookie_name, path="/", secure=settings.cookie_secure)
+    response.delete_cookie(
+        key=settings.cookie_name,
+        path="/",
+        secure=resolved_cookie_secure(settings),
+    )
 
 
 def clear_member_session_cookie(response: Response, settings: Settings) -> None:
     response.delete_cookie(
         key=settings.member_cookie_name,
         path="/",
-        secure=settings.cookie_secure,
+        secure=resolved_cookie_secure(settings),
     )
 
 
@@ -262,6 +338,10 @@ def _parse_scrypt(stored: str) -> tuple[int, int, int, bytes, bytes] | None:
 
 
 def credentials_match(settings: Settings, email: str, password: str) -> bool:
+    # The demo owner password is never a login, including on loopback, unless
+    # this process was started with SHOP_DEV_MODE.
+    if not shop_dev_mode() and secrets_equal(password, DEFAULT_MEMBER_DEMO_PASSWORD):
+        return False
     email_ok = secrets_equal(email, settings.owner_email)
     password_ok = secrets_equal(password, settings.owner_password)
     return email_ok and password_ok
@@ -291,10 +371,18 @@ def host_is_loopback(host: str | None = None) -> bool:
     return normalized in LOOPBACK_HOSTS
 
 
+def shop_dev_mode() -> bool:
+    """True only when SHOP_DEV_MODE is explicitly on. The bind address is ignored."""
+    raw = os.environ.get("SHOP_DEV_MODE", "")
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def default_secret_blocked(secret: str) -> bool:
-    """True when `secret` is a dev default and SHOP_HOST is not loopback."""
-    if host_is_loopback():
+    """True when `secret` is a dev default and SHOP_DEV_MODE is not set."""
+    if shop_dev_mode():
         return False
+    if not secret:
+        return True
     is_owner = secrets_equal(secret, DEFAULT_OWNER_API_SECRET)
     is_ai = secrets_equal(secret, DEFAULT_AI_API_SECRET)
     is_session = secrets_equal(secret, DEFAULT_SESSION_SECRET)
@@ -306,9 +394,63 @@ def insecure_default_error() -> HTTPException:
         status_code=503,
         detail={
             "code": "insecure_default",
-            "message": "Dev secrets are refused when SHOP_HOST is not loopback.",
+            "message": "Dev secrets are refused unless SHOP_DEV_MODE is set.",
         },
     )
+
+
+def assert_runtime_secrets(settings: Settings) -> None:
+    """Refuse a forwarded-for client IP header, and weak secrets outside dev mode.
+
+    The error names the setting. It does not include the value.
+    """
+    header = settings.client_ip_header.strip()
+    if header.lower() == "x-forwarded-for":
+        raise RuntimeError("CLIENT_IP_HEADER must not be X-Forwarded-For")
+    if shop_dev_mode():
+        return
+    _require_secret(
+        "owner_api_secret",
+        settings.owner_api_secret,
+        _SECRET_MIN_LENGTH,
+        (DEFAULT_OWNER_API_SECRET,),
+    )
+    _require_secret(
+        "ai_api_secret",
+        settings.ai_api_secret,
+        _SECRET_MIN_LENGTH,
+        (DEFAULT_AI_API_SECRET,),
+    )
+    _require_secret(
+        "session_secret",
+        settings.session_secret,
+        _SECRET_MIN_LENGTH,
+        (DEFAULT_SESSION_SECRET,),
+    )
+    _require_secret(
+        "owner_password",
+        settings.owner_password,
+        _PASSWORD_MIN_LENGTH,
+        (DEFAULT_MEMBER_DEMO_PASSWORD,),
+    )
+    if settings.shop_proxy_secret:
+        _require_secret(
+            "shop_proxy_secret",
+            settings.shop_proxy_secret,
+            _SECRET_MIN_LENGTH,
+            (DEFAULT_PROXY_SECRET,),
+        )
+
+
+def _require_secret(name: str, value: str, minimum: int, defaults: tuple[str, ...]) -> None:
+    refused = len(value) < minimum or value.startswith("CHANGE_ME")
+    if not refused:
+        for default in defaults:
+            if secrets_equal(value, default):
+                refused = True
+                break
+    if refused:
+        raise RuntimeError(f"insecure default secret: {name}")
 
 
 def reject_dev_secret(secret: str) -> None:
@@ -326,54 +468,99 @@ def rate_limited_error() -> HTTPException:
     )
 
 
-def reserve_login_failure(client_ip: str) -> _LoginStamp | None:
+def reserve_login_failure(
+    client_ip: str, realm: str = "owner", account: str | None = None
+) -> _LoginStamp | None:
     """Reserve one failure slot before the password check.
 
     The cap check and the reservation share one lock, so two overlapping
     attempts cannot both pass when this IP is one failure under the cap.
-    The bucket is in-process. Each API process keeps its own counts.
-    Returns the reserved stamp, or None when the IP is already at the cap.
+    Realm is owner or member, so one realm cannot fill the other's IP bucket.
+    A non-empty account also counts across IPs and backs off after five
+    failures. The buckets are in-process. Each API process keeps its own counts.
+    Returns the reserved stamp, or None when the attempt is limited.
     """
+    normalized = (account or "").strip().lower()
     now = time.monotonic()
     with _login_failures_lock:
-        stamps = _fresh_failures(client_ip, now)
+        if normalized and _account_is_blocked(realm, normalized, now):
+            return None
+        stamps = _fresh_ip(realm, client_ip, now)
         if len(stamps) >= _LOGIN_FAILURE_LIMIT:
             return None
-        stamp = _LoginStamp(now)
+        stamp = _LoginStamp(now, realm, normalized)
         stamps.append(stamp)
-        _login_failures[client_ip] = stamps
+        _ip_failures[(realm, client_ip)] = stamps
+        if normalized:
+            account_stamps = _fresh_account(realm, normalized, now)
+            account_stamps.append(stamp)
+            _account_failures[(realm, normalized)] = account_stamps
         return stamp
 
 
 def release_login_failure(client_ip: str, stamp: object) -> None:
     """Drop the stamp reserved for a login that succeeded."""
+    if not isinstance(stamp, _LoginStamp):
+        return
     with _login_failures_lock:
-        current = _login_failures.get(client_ip)
-        if not current:
-            return
-        kept = [item for item in current if item is not stamp]
-        if len(kept) == len(current):
-            return
-        if kept:
-            _login_failures[client_ip] = kept
-        else:
-            _login_failures.pop(client_ip, None)
+        key = (stamp.realm, client_ip)
+        current = _ip_failures.get(key)
+        if current:
+            kept = [item for item in current if item is not stamp]
+            if len(kept) == len(current):
+                pass
+            elif kept:
+                _ip_failures[key] = kept
+            else:
+                _ip_failures.pop(key, None)
+        if stamp.account:
+            _account_failures.pop((stamp.realm, stamp.account), None)
 
 
 def clear_login_failures() -> None:
-    """Drop every IP in this process's login-failure bucket."""
+    """Drop every login-failure bucket in this process."""
     with _login_failures_lock:
-        _login_failures.clear()
+        _ip_failures.clear()
+        _account_failures.clear()
 
 
-def _fresh_failures(client_ip: str, now: float) -> list[_LoginStamp]:
+def _fresh_ip(realm: str, client_ip: str, now: float) -> list[_LoginStamp]:
+    return _fresh_bucket(_ip_failures, (realm, client_ip), now)
+
+
+def _fresh_account(realm: str, account: str, now: float) -> list[_LoginStamp]:
+    return _fresh_bucket(_account_failures, (realm, account), now)
+
+
+def _fresh_bucket(
+    store: dict[tuple[str, str], list[_LoginStamp]],
+    key: tuple[str, str],
+    now: float,
+) -> list[_LoginStamp]:
     fresh = [
         stamp
-        for stamp in _login_failures.get(client_ip, ())
+        for stamp in store.get(key, ())
         if now - stamp.at <= _LOGIN_FAILURE_WINDOW_SECONDS
     ]
     if fresh:
-        _login_failures[client_ip] = fresh
+        store[key] = fresh
     else:
-        _login_failures.pop(client_ip, None)
+        store.pop(key, None)
     return fresh
+
+
+def _account_backoff_seconds(failure_count: int) -> float:
+    """1, 2, 4… minutes after five failures, capped at 15 minutes."""
+    if failure_count < _ACCOUNT_FAILURE_LIMIT:
+        return 0
+    seconds = 60 * (2 ** (failure_count - _ACCOUNT_FAILURE_LIMIT))
+    return min(float(seconds), float(_ACCOUNT_BACKOFF_CAP_SECONDS))
+
+
+def _account_is_blocked(realm: str, account: str, now: float) -> bool:
+    stamps = _fresh_account(realm, account, now)
+    if len(stamps) < _ACCOUNT_FAILURE_LIMIT:
+        return False
+    wait = _account_backoff_seconds(len(stamps))
+    latest = max(stamp.at for stamp in stamps)
+    return now - latest < wait

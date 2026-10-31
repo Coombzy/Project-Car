@@ -40,6 +40,8 @@ const serverEnv = {
   NEXT_PUBLIC_SHOP_NOW: shopNow,
   SHOP_API_URL: "http://127.0.0.1:8000",
   FONTCONFIG_FILE: fontconfigPath,
+  SHOP_DEV_MODE: "1",
+  SHOP_DEMO_LOGIN_HINTS: "true",
 };
 
 export default defineConfig({

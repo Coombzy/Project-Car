@@ -1,6 +1,15 @@
 from __future__ import annotations
 
 import os
+
+# Tests run as local dev. Production refuses these defaults even on loopback.
+os.environ.setdefault("SHOP_DEV_MODE", "1")
+os.environ.setdefault("OWNER_PASSWORD", "changeme")
+os.environ.setdefault("OWNER_API_SECRET", "dev-owner-secret")
+os.environ.setdefault("AI_API_SECRET", "dev-ai-secret")
+os.environ.setdefault("SESSION_SECRET", "dev-session-secret-change-me")
+os.environ.setdefault("MEMBER_DEMO_PASSWORD", "changeme")
+
 from datetime import datetime, timedelta
 
 import pytest

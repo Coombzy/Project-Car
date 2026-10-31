@@ -8,6 +8,24 @@ This file is **not** a runbook. Use the living docs below.
 
 ---
 
+## Required secrets
+
+The API refuses to start unless `SHOP_DEV_MODE=1` when any of these is a dev placeholder, empty, or too short. Binding `127.0.0.1` does not count as dev. The startup error names the setting and does not print the value.
+
+| Setting | Production rule |
+|---------|-----------------|
+| `OWNER_API_SECRET` | 32+ characters |
+| `AI_API_SECRET` | 32+ characters |
+| `SESSION_SECRET` | 32+ characters |
+| `OWNER_PASSWORD` | 12+ characters, not the demo default |
+| `SHOP_PROXY_SECRET` | 32+ characters when set (shared with the shop UI). Empty disables `X-Shop-Client-IP`. |
+| `COOKIE_SECURE` | Leave unset so the session cookie is `Secure`. Set `false` only for local HTTP. `SHOP_DEV_MODE=1` also leaves it unset-by-default off. |
+| `CLIENT_IP_HEADER` | Supported production value: `CF-Connecting-IP`. `X-Forwarded-For` is refused. The header is trusted only for peers in `TRUSTED_PROXIES` (default loopback). |
+| `CORS_PUBLIC_ORIGINS` | Brochure hosts. `POST /waitlist` only, no credentials. |
+| `CORS_CREDENTIALED_ORIGINS` | Shop UI hosts that may send cookies. |
+
+`SHOP_DEV_MODE=1` is local dev only. A copy of `.env.example` with that line removed does not boot.
+
 ## Stay-up / deploy
 
 | Need | Doc |
