@@ -1,5 +1,6 @@
 import { addDays, calendarDate, parseShopInstant, zonedDateTime } from "./calendar";
 import type { RateHour } from "./rate-chart";
+import { tokensLabel } from "./time";
 import {
   AFTER_START_MESSAGE,
   BAND_SHORT,
@@ -331,6 +332,23 @@ export function peakWeek(
     used,
     remaining,
     line: `Peak hours this week: ${used} used · ${remaining} left`,
+  };
+}
+
+export function memberBalanceCopy(
+  allowance: string,
+  purchased: string,
+  bookings: { status: string; startAt: string; endAt: string }[],
+  weekStart: string,
+  saved?: SavedBands,
+): { allowance: string; purchased: string; total: string; peak: string } {
+  const allowanceAmount = Number(allowance);
+  const purchasedAmount = Number(purchased);
+  return {
+    allowance: tokensLabel(allowanceAmount),
+    purchased: tokensLabel(purchasedAmount),
+    total: tokensLabel(allowanceAmount + purchasedAmount),
+    peak: peakWeek(bookings, weekStart, saved).line,
   };
 }
 

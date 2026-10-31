@@ -61,6 +61,8 @@ export type Member = {
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
   token_balance: string;
+  allowance_balance: string;
+  purchased_balance: string;
   deposit_balance: string;
   created_at: string;
   updated_at: string;
