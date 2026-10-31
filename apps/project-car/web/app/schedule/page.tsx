@@ -7,7 +7,7 @@ import { OwnerShell } from "../../components/owner-shell";
 import { ScheduleToolbar } from "../../components/schedule-toolbar";
 import { ShopHoistRequestQueue } from "../../components/shop-hoist-request-queue";
 import { handlePageError, shopErrorMessage } from "../../lib/page";
-import { getMe, listBookings, listHoists, listMembers, listOwnerShopHoistRequests } from "../../lib/shop-api";
+import { getMe, getOwnerRateChart, listBookings, listHoists, listMembers, listOwnerShopHoistRequests } from "../../lib/shop-api";
 import {
   addDays,
   calendarTodayIso,
@@ -58,7 +58,7 @@ export default async function SchedulePage({
     }
 
     let loadError: string | null = null;
-    const [hoists, members, bookings, shopHoistRequests] = await Promise.all([
+    const [hoists, members, bookings, shopHoistRequests, rates] = await Promise.all([
       listHoists().catch((error) => {
         loadError = shopErrorMessage(error, "Could not load hoists.");
         return [];
@@ -78,6 +78,7 @@ export default async function SchedulePage({
         loadError = shopErrorMessage(error, "Could not load shop hoist requests.");
         return [];
       }),
+      getOwnerRateChart().catch(() => null),
     ]);
 
     const ordered = sortHoists(hoists);
@@ -125,6 +126,7 @@ export default async function SchedulePage({
             focusDay={params.day && days.includes(params.day) ? params.day : days.includes(today) ? today : days[0]}
             hoists={ordered}
             bookings={bookings}
+            saved={rates?.hours}
             returnTo={returnTo}
             weekStart={weekStart}
             month={month}

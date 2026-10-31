@@ -38,6 +38,45 @@ describe("hour bands", () => {
     assert.equal(bandAt("2026-11-07", 17).gutter, "Eve 125");
     assert.equal(bandAt("2026-11-07", 2).gutter, "Night 75");
   });
+
+  it("reads an edited band for the open cell and the peak line", () => {
+    const saved = [
+      {
+        weekday: 5,
+        day_label: "Saturday",
+        hour: 10,
+        band_id: "weekend_fri_eve",
+        label: "Peak",
+        tokens_per_hour: "160",
+        counts_toward_peak_cap: true,
+      },
+      {
+        weekday: 5,
+        day_label: "Saturday",
+        hour: 11,
+        band_id: "weekday_day",
+        label: "Normal",
+        tokens_per_hour: "100",
+        counts_toward_peak_cap: false,
+      },
+    ];
+    assert.equal(bandAt("2026-11-07", 10, saved).gutter, "Peak 160");
+    assert.equal(bandAt("2026-11-07", 10, saved).tokens, 160);
+    assert.equal(bandAt("2026-11-07", 11, saved).tokens, 100);
+    const usage = peakWeek(
+      [
+        {
+          status: "confirmed",
+          startAt: "2026-11-07T10:00:00",
+          endAt: "2026-11-07T12:00:00",
+        },
+      ],
+      "2026-11-02",
+      { hours: saved, peakCapHours: 4 },
+    );
+    assert.equal(usage.used, 1);
+    assert.equal(usage.line, "Peak hours this week: 1 used · 3 left");
+  });
 });
 
 describe("selection", () => {

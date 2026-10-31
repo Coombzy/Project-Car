@@ -14,6 +14,7 @@ import {
 import { CELL_WORD, NO_BAY_FREE_MESSAGE, TIME_LABEL } from "../lib/booking-words";
 import { addDays, parseShopInstant, zonedDateTime, type ScheduleView } from "../lib/calendar";
 import type { Hoist } from "../lib/config";
+import type { RateChartData, RateHour } from "../lib/rate-chart";
 import { weekdayLabel } from "../lib/time";
 import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
 
@@ -32,6 +33,7 @@ type Props = {
   slots: CalendarSlot[];
   balance: string;
   returnTo: ScheduleReturn;
+  rates?: RateChartData | null;
   error?: string | null;
 };
 
@@ -89,7 +91,7 @@ function endStamp(day: string, hourExclusive: number): string {
   return wallStamp(day, hourExclusive);
 }
 
-export function BookingCalendar({ view, days, today, nowIso, hoists, slots, balance, returnTo, error }: Props) {
+export function BookingCalendar({ view, days, today, nowIso, hoists, slots, balance, returnTo, rates, error }: Props) {
   const now = useMemo(() => new Date(nowIso), [nowIso]);
   const [showNight, setShowNight] = useState(false);
   const [lane, setLane] = useState<string>("all");
@@ -116,7 +118,7 @@ export function BookingCalendar({ view, days, today, nowIso, hoists, slots, bala
         blocked.add(hour);
       }
     }
-    const summary = selectionSummary(selectedDay, anchor.hour, focusHour + 1, blocked);
+    const summary = selectionSummary(selectedDay, anchor.hour, focusHour + 1, blocked, rates?.hours);
     const startAt = summary.hours.length === 0 ? "" : wallStamp(selectedDay, summary.hours[0] ?? anchor.hour);
     const endAt = summary.hours.length === 0 ? "" : endStamp(selectedDay, (summary.hours[summary.hours.length - 1] ?? anchor.hour) + 1);
     const bay =
@@ -126,7 +128,7 @@ export function BookingCalendar({ view, days, today, nowIso, hoists, slots, bala
           ? lowestFreeBay(choices, slots, startAt, endAt)
           : choices.find((item) => item.id === anchor.hoistId) ?? null;
     return { ...summary, day: selectedDay, hoistId: anchor.hoistId, bay, startAt, endAt };
-  }, [anchor, choices, focusHour, now, slots]);
+  }, [anchor, choices, focusHour, now, rates?.hours, slots]);
 
   const quoteKey = selection ? `${selection.startAt}|${selection.endAt}|${selection.bay?.id ?? ""}|${selection.bay?.isShop ? "shop" : "bay"}` : "";
 
@@ -255,6 +257,7 @@ export function BookingCalendar({ view, days, today, nowIso, hoists, slots, bala
           now={now}
           selection={selection}
           onPick={pick}
+          saved={rates?.hours}
           compact={false}
         />
       </div>
@@ -269,6 +272,7 @@ export function BookingCalendar({ view, days, today, nowIso, hoists, slots, bala
           now={now}
           selection={selection}
           onPick={pick}
+          saved={rates?.hours}
         />
       </div>
       <form
@@ -365,6 +369,7 @@ function WeekGrid({
   now,
   selection,
   onPick,
+  saved,
 }: {
   days: string[];
   hours: number[];
@@ -375,6 +380,7 @@ function WeekGrid({
   now: Date;
   selection: { hours: number[]; day: string; hoistId: string } | null;
   onPick: (hoistId: string, day: string, hour: number) => void;
+  saved?: readonly RateHour[];
 }) {
   const columns = anyBay ? [anyHoist()] : hoists;
   return (
@@ -398,7 +404,7 @@ function WeekGrid({
                   const picked = Boolean(
                     selection && selection.hoistId === hoistId && selection.day === item && selection.hours.includes(hour),
                   );
-                  const text = cellText(choices, slots, hoist, anyBay, item, hour, now, picked, true);
+                  const text = cellText(choices, slots, hoist, anyBay, item, hour, now, picked, true, saved);
                   return (
                     <button
                       key={`${item}-${hoist.id}`}
@@ -446,6 +452,7 @@ function LaneTable({
   selection,
   onPick,
   compact,
+  saved,
 }: {
   day: string;
   hours: number[];
@@ -457,13 +464,14 @@ function LaneTable({
   selection: { hours: number[]; day: string; hoistId: string } | null;
   onPick: (hoistId: string, day: string, hour: number) => void;
   compact: boolean;
+  saved?: readonly RateHour[];
 }) {
   const columns = anyBay ? [anyHoist()] : hoists;
   return (
     <div className="lane-table" role="grid" aria-label={`${weekdayLabel(day)}, ${TIME_LABEL}`}>
       {hours.map((hour) => {
-        const band = bandAt(day, hour);
-        const previous = hour === 0 ? null : bandAt(day, hour - 1);
+        const band = bandAt(day, hour, saved);
+        const previous = hour === 0 ? null : bandAt(day, hour - 1, saved);
         return (
           <div key={hour} className={`lane-row-hours${hour < 6 ? " night" : ""}`} role="row">
             <div className="gutter">
@@ -474,7 +482,7 @@ function LaneTable({
               const picked = Boolean(
                 selection && selection.hoistId === hoistId && selection.day === day && selection.hours.includes(hour),
               );
-              const text = cellText(choices, slots, hoist, anyBay, day, hour, now, picked, compact);
+              const text = cellText(choices, slots, hoist, anyBay, day, hour, now, picked, compact, saved);
               return (
                 <button
                   key={hoist.id}
@@ -512,8 +520,9 @@ function cellText(
   now: Date,
   picked: boolean,
   compact: boolean,
+  saved?: readonly RateHour[],
 ): { visible: string; aria: string; selectable: boolean } {
-  const band = bandAt(day, hour);
+  const band = bandAt(day, hour, saved);
   const when = `${weekdayLabel(day)} ${pad(hour)}:00, ${band.gutter}, ${TIME_LABEL}`;
   if (hourStart(day, hour).getTime() < now.getTime()) {
     return { visible: CELL_WORD.past, aria: `${when}, past`, selectable: false };

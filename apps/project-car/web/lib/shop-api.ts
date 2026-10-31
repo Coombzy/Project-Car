@@ -1,3 +1,4 @@
+import type { RateChartData } from "./rate-chart";
 import {
   MEMBER_SESSION_COOKIE,
   parseApiError,
@@ -217,6 +218,10 @@ export async function markWaitlistContacted(id: string): Promise<WaitlistEntry> 
 
 export async function listTiers(): Promise<MembershipTier[]> {
   return shopJson<MembershipTier[]>("/tiers", "Could not load tiers.");
+}
+
+export async function getOwnerRateChart(): Promise<RateChartData> {
+  return shopJson<RateChartData>("/tiers/rate-chart", "Could not load the rate chart.");
 }
 
 export async function patchTier(name: string, payload: Partial<MembershipTier>): Promise<MembershipTier> {
@@ -629,6 +634,10 @@ export async function listMemberHoists(): Promise<Hoist[]> {
 
 export async function getMemberFill(): Promise<FillPreview> {
   return memberJson<FillPreview>("/member/fill", "Could not load tomorrow's fill openings.");
+}
+
+export async function getMemberRates(): Promise<RateChartData> {
+  return memberJson<RateChartData>("/member/rates", "Could not load the rate chart.");
 }
 
 export async function getMemberSchedule(params?: {

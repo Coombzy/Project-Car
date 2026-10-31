@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { bandAt } from "../lib/booking-calendar";
 import { TIME_LABEL, bookingStatusLabel } from "../lib/booking-words";
+import type { RateHour } from "../lib/rate-chart";
 import { addDays, parseShopInstant, scheduleHref, zonedDateTime } from "../lib/calendar";
 import type { Booking, Hoist } from "../lib/config";
 import { weekdayLabel } from "../lib/time";
@@ -43,6 +44,7 @@ export function OwnerLaneGrid({
   returnTo,
   weekStart,
   month,
+  saved,
 }: {
   days: string[];
   nowIso: string;
@@ -52,6 +54,7 @@ export function OwnerLaneGrid({
   returnTo: ScheduleReturn;
   weekStart: string;
   month: string;
+  saved?: readonly RateHour[];
 }) {
   const now = parseShopInstant(nowIso).getTime();
   const hours = Array.from({ length: 18 }, (_, index) => index + 6);
@@ -110,7 +113,7 @@ export function OwnerLaneGrid({
                   const booking = bookings.find(
                     (item) => item.hoist_id === hoist.id && OCCUPYING.has(item.status) && covers(item, day, hour),
                   );
-                  const band = bandAt(day, hour);
+                  const band = bandAt(day, hour, saved);
                   const past = zonedDateTime(day, hour).getTime() < now;
                   const text = booking
                     ? `${booking.member_name.split(" ")[0]} ${bookingStatusLabel(booking.status)}`
