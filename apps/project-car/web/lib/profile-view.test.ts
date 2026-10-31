@@ -370,4 +370,59 @@ describe("member profile view", () => {
     assert.doesNotMatch(script, /member-login/);
     assert.doesNotMatch(script, /member-detail/);
   });
+
+  it("test_visual_build_compares_committed_member_screenshots", () => {
+    const script = readFileSync(join(libDir, "../visual/build-web.sh"), "utf8");
+    assert.doesNotMatch(
+      script,
+      /member-nav-ref/,
+      "visual build must compare the committed screenshots, not replace them from member-nav-ref",
+    );
+    assert.doesNotMatch(
+      script,
+      /base64 -d/,
+      "visual build must not decode screenshot bytes over visual/screenshots",
+    );
+    assert.match(script, /npm run build/);
+    for (const [width, [px, py]] of Object.entries(VIEWPORT)) {
+      for (const name of MEMBER_SHOTS) {
+        const pngPath = join(libDir, "../visual/screenshots", width, `${name}.png`);
+        assert.equal(
+          existsSync(pngPath),
+          true,
+          `committed member screenshot missing: ${width}/${name}.png`,
+        );
+        const committed = readFileSync(pngPath);
+        assertCompletePng(committed, px, py, `screenshots/${width}/${name}`);
+        assert.equal(
+          committed.equals(readRefPng(width, name)),
+          true,
+          `${width}/${name}.png is not the member-nav-ref capture`,
+        );
+      }
+    }
+    const config = readFileSync(join(libDir, "../playwright.config.ts"), "utf8");
+    assert.match(config, /maxDiffPixelRatio:\s*0\.01/);
+    assert.match(
+      config,
+      /snapshotPathTemplate:\s*"\{testDir\}\/screenshots\/\{projectName\}\/\{arg\}\{ext\}"/,
+    );
+    assert.doesNotMatch(config, /member-nav-ref/);
+    const pages = readFileSync(join(libDir, "../visual/pages.spec.ts"), "utf8");
+    assert.match(pages, /const MAX_LAYOUT_SHIFT = 0\.1/);
+    assert.doesNotMatch(pages, /maxDiffPixelRatio/);
+    const attributesPath = join(libDir, "../../../../.gitattributes");
+    assert.equal(existsSync(attributesPath), true, "member screenshot diff attribute missing");
+    const attributes = readFileSync(attributesPath, "utf8");
+    for (const name of MEMBER_SHOTS) {
+      assert.match(
+        attributes,
+        new RegExp(
+          `^apps/project-car/web/visual/screenshots/\\*/${name}\\.png diff$`,
+          "m",
+        ),
+        `${name}.png must diff as text so the pull request diff carries the bytes`,
+      );
+    }
+  });
 });
