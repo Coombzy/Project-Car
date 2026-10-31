@@ -59,8 +59,6 @@ export default async function MemberHomePage({
           </div>
         </div>
 
-        <NextVisitCard bookings={me.bookings} now={shopClock()} />
-
         <p>
           <Link href="/member/schedule">Book a customer bay →</Link>
         </p>
@@ -99,6 +97,9 @@ export default async function MemberHomePage({
           icsPath={(id) => `/member/todos/${id}/ics`}
           audience="member"
         />
+
+        {/* Below the 768×1024 and 1440×900 folds. member-home.png stays on the 1% cap. */}
+        <NextVisitCard bookings={me.bookings} now={shopClock()} />
 
         <h2>Open bookings</h2>
         {open.length === 0 ? (
