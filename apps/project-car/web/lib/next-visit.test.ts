@@ -160,6 +160,49 @@ describe("nextVisit", () => {
     assert.equal(visit.opensAt, "2026-06-18T01:45:00.000Z");
     assert.equal(visit.checkInOpensLabel, "Check-in opens at 19:45");
   });
+
+  it("test_next_visit_check_in_opens_15_minutes_before_an_in_progress_visit", async () => {
+    const source = readFileSync(join(libDir, "next-visit.ts"), "utf8");
+    assert.match(
+      source,
+      /checkInOpensAt\(booking\.start_at\)/,
+      "nextVisit must take the check-in instant from checkInOpensAt",
+    );
+
+    // Backlog proof: 10:00–11:00 with now 10:10, and nothing later, is the next visit.
+    // America/Regina is UTC−6. 10:00 Regina is 16:00Z; 10:10 is 16:10Z.
+    const now = new Date("2026-06-17T16:10:00.000Z");
+    const helper = await loadNextVisit();
+    assert.equal(typeof helper.checkInOpensAt, "function");
+    assert.equal(helper.NEXT_VISIT_EARLY_MINUTES, 15);
+
+    const inProgress = booking({
+      id: "in-progress",
+      hoist_name: "Bay 1",
+      start_at: "2026-06-17T16:00:00.000Z",
+      end_at: "2026-06-17T17:00:00.000Z",
+      status: "confirmed",
+    });
+    const later = booking({
+      id: "later-same-day",
+      hoist_name: "Bay 2",
+      start_at: "2026-06-17T18:00:00.000Z",
+      end_at: "2026-06-17T20:00:00.000Z",
+      status: "confirmed",
+    });
+    const opens = helper.checkInOpensAt(inProgress.start_at);
+    assert.equal(opens.toISOString(), "2026-06-17T15:45:00.000Z");
+
+    const visit = helper.nextVisit([later, inProgress], now);
+    assert.ok(visit, "a visit that has started and not ended is the next visit");
+    assert.equal(visit.id, "in-progress");
+    assert.equal(visit.bay, "Bay 1");
+    assert.equal(visit.status, "confirmed");
+    assert.equal(visit.dayLabel, "Wed, Jun 17");
+    assert.equal(visit.timeLabel, "10:00–11:00");
+    assert.equal(visit.checkInOpensLabel, "Check-in opens at 09:45");
+    assert.equal(visit.opensAt, opens.toISOString());
+  });
 });
 
 async function loadNextVisit(): Promise<{
@@ -178,6 +221,7 @@ async function loadNextVisit(): Promise<{
   NEXT_VISIT_EARLY_MINUTES: number;
   NO_VISIT_BOOKED: string;
   SCHEDULE_HREF: string;
+  checkInOpensAt: (startAt: string, earlyMinutes?: number) => Date;
 }> {
   try {
     return await import("./next-visit.ts");
