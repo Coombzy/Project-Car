@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from app.models import Booking, BookingKind, BookingStatus
@@ -35,16 +35,22 @@ def booking_member_name(booking: Booking) -> str:
     return "Shop"
 
 
-def booking_overlaps_window(booking: Booking, window_start: datetime, window_end: datetime) -> bool:
-    """True when a booking overlaps [window_start, window_end) after tz normalize.
+def _stored_utc(value: datetime) -> datetime:
+    """Naive timestamps are UTC instants. Aware timestamps are converted to UTC.
 
-    SQLite demo rows are often naive shop-local wall clocks; Postgres stores
-    aware UTC. Always compare through ``as_utc`` so afternoon Regina slots are
-    not dropped against a UTC SQL bound.
+    SQLite returns the UTC instant with no offset. ``as_utc`` would read that
+    as shop wall time and move the dashboard hour by six.
     """
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def booking_overlaps_window(booking: Booking, window_start: datetime, window_end: datetime) -> bool:
+    """True when a booking overlaps [window_start, window_end)."""
     if booking.status not in OPEN_HOUR_STATUSES:
         return False
-    return as_utc(booking.start_at) < as_utc(window_end) and as_utc(booking.end_at) > as_utc(
+    return _stored_utc(booking.start_at) < as_utc(window_end) and _stored_utc(booking.end_at) > as_utc(
         window_start
     )
 
@@ -66,8 +72,8 @@ def expand_booked_hours(
             continue
         if member_id is not None and booking.member_id != member_id:
             continue
-        overlap_start = max(as_utc(booking.start_at), as_utc(window_start))
-        overlap_end = min(as_utc(booking.end_at), as_utc(window_end))
+        overlap_start = max(_stored_utc(booking.start_at), as_utc(window_start))
+        overlap_end = min(_stored_utc(booking.end_at), as_utc(window_end))
         if overlap_end <= overlap_start:
             continue
         hoist = getattr(booking, "hoist", None)
