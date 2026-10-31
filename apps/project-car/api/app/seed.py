@@ -282,9 +282,9 @@ def _make_booking(
         if member is None:
             raise ValueError("Customer demo bookings need a member.")
         quote = quote_reserve(
-            start,
-            end,
-            fill=resolve_fill_for_slot(session, start, end),
+            as_utc(start),
+            as_utc(end),
+            fill=resolve_fill_for_slot(session, as_utc(start), as_utc(end)),
             session=session,
         )
         tokens = quote.final_reserve_cost
@@ -294,8 +294,8 @@ def _make_booking(
         id=seed_id("booking", key),
         member_id=member.id if member is not None else None,
         hoist_id=hoist.id,
-        start_at=start,
-        end_at=end,
+        start_at=as_utc(start),
+        end_at=as_utc(end),
         kind=kind,
         status=BookingStatus.PENDING,
         reserved_tokens=tokens,

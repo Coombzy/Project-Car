@@ -42,3 +42,32 @@ def test_booking_json_keeps_the_mountain_hour(client: TestClient) -> None:
     owner_start = datetime.fromisoformat(owner_row["start_at"])
     assert owner_start.tzinfo is not None
     assert owner_start.astimezone(PRICING_TZ).hour == 10
+
+
+def test_dashboard_strip_keeps_the_mountain_hour(client: TestClient) -> None:
+    freeze_shop_clock(datetime(2026, 11, 2, 9, tzinfo=PRICING_TZ))
+    member = create_member(client, email="strip@example.com", name="Strip Hour")
+    hoist = create_hoist(client, name="Bay 1")
+    start = datetime(2026, 11, 2, 14, tzinfo=PRICING_TZ)
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start.isoformat(),
+            "end_at": datetime(2026, 11, 2, 15, tzinfo=PRICING_TZ).isoformat(),
+        },
+    )
+    assert created.status_code == 201, created.text
+    dash = client.get("/dashboard", headers=AUTH)
+    assert dash.status_code == 200, dash.text
+    hours = [
+        hour
+        for bay in dash.json()["hoists"]
+        for hour in bay["next_hours"]
+        if hour["member_name"] == "Strip Hour"
+    ]
+    assert len(hours) == 1
+    shown = datetime.fromisoformat(hours[0]["hour_start"]).astimezone(PRICING_TZ)
+    assert shown.hour == 14
