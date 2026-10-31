@@ -296,6 +296,7 @@ export function BookingCalendar({ view, days, today, nowIso, hoists, slots, bala
         aria-live="polite"
       >
         <ScheduleReturnFields returnTo={returnTo} />
+        <p>Free until 24 hours before the start. Inside that, half is kept. After it starts, it can't be cancelled.</p>
         <input
           type="hidden"
           name="hoist_id"
@@ -605,9 +606,11 @@ const CALENDAR_CSS = `
 .booking-cal .lane-cell { flex: 1; min-width: 0; font-size: 13px; text-align: left; padding: 4px 6px; }
 .booking-cal .lane-cell:disabled { color: var(--muted); }
 .booking-cal .is-picked { background: var(--bg-elev); outline: 2px solid var(--accent); }
-.booking-cal .night { display: none; }
-.booking-cal.show-night .night { display: flex; }
 .booking-cal .week-layout { display: none; }
+@media (max-width: 767px) {
+  .booking-cal .night { display: none; }
+  .booking-cal.show-night .night { display: flex; }
+}
 .booking-cal.is-responsive .day-layout { display: block; }
 @media (min-width: 768px) {
   .booking-cal.is-responsive .day-layout { display: none; }
