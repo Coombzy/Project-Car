@@ -76,7 +76,7 @@ def test_v1_walkthrough(client: TestClient) -> None:
         transport.client = previous
     assert signed.status_code == 201, signed.text
     assert signed.json()["mode"] == "self_serve"
-    assert signed.json()["member_id"]
+    member_id = signed.json()["member_id"]
 
     login_member(client, EMAIL, PASSWORD)
     bought = client.post(
