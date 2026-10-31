@@ -404,7 +404,7 @@ def member_cancel_booking(
     principal: MemberUser,
 ) -> BookingOut:
     _own_booking(session, principal, booking_id)
-    return BookingOut.from_booking(booking_service.cancel_booking(session, booking_id))
+    return BookingOut.from_booking(booking_service.cancel_booking(session, booking_id, by_member=True))
 
 
 @router.get("/bookings/{booking_id}/ics")

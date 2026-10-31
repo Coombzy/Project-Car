@@ -95,7 +95,8 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `POST` | `/bookings/{id}/confirm` | Owner | Pending → confirmed (overlap → 409) |
 | `POST` | `/bookings/{id}/check-in` | Owner | → active |
 | `POST` | `/bookings/{id}/complete` | Owner | The reserve is the charge; no refund of unused time (`unused_tokens` > 0 → 400) |
-| `POST` | `/bookings/{id}/cancel` | Owner | Refund remaining reserve |
+| `POST` | `/bookings/{id}/cancel` | Owner | Refund the whole reserve (no late fee) |
+| `POST` | `/bookings/sweep-no-shows` | Owner / bot | Confirmed bookings past their end with no check-in → `no_show`; reserve kept (`NO_SHOW_KEEP_PCT` 100) |
 | `GET` | `/member/me` | Member | Own profile, balance, ledger, bookings |
 | `GET` | `/member/tokens` | Member | Own ledger |
 | `GET` | `/member/hoists` | Member | Customer bays only |
@@ -120,7 +121,7 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `POST` | `/member/bookings/quote` | Member | Duration × band × overlay × fill for self |
 | `POST` | `/member/bookings` | Member | Create own customer booking |
 | `POST` | `/member/bookings/{id}/confirm` | Member | Confirm own pending booking |
-| `POST` | `/member/bookings/{id}/cancel` | Member | Cancel own booking, refund reserve |
+| `POST` | `/member/bookings/{id}/cancel` | Member | Cancel own booking: full refund ≥ `FREE_CANCEL_HOURS` (24) before start, else `LATE_CANCEL_KEEP_PCT` (50%) kept; at or after start → 400 `cancel_after_start` |
 | `GET` | `/jobs/events` | Owner | Job claim and done rows, newest first |
 | `GET` | `/member/jobs/events` | Member | Own claim and done rows |
 | `POST` | `/member/jobs/claims` | Member | Store one claim row for a posted job |
@@ -162,7 +163,7 @@ CORS is an **explicit allowlist** via `CORS_ORIGINS` (comma-separated). `*` is i
 
 ### Booking / token rules (spec §5)
 
-1. A bay hour belongs to at most one booking. **Pending**, **confirmed**, **active**, and **overdue** bookings hold that hour on that hoist. A second booking that overlaps the hour returns `409 hoist_overlap` and does not reserve tokens. **Cancelled** and **completed** release the hour. The same hour on another bay, and the next hour on the same bay, stay available. Confirm still rejects a window that overlaps a confirmed, active, or overdue booking.
+1. A bay hour belongs to at most one booking. **Pending**, **confirmed**, **active**, and **overdue** bookings hold that hour on that hoist. A second booking that overlaps the hour returns `409 hoist_overlap` and does not reserve tokens. **Cancelled**, **completed**, and **no_show** release the hour. The same hour on another bay, and the next hour on the same bay, stay available. Confirm still rejects a window that overlaps a confirmed, active, or overdue booking.
 2. Creating a **customer** booking **reserves** tokens (`booking_reserve`, negative) and starts `pending`. The API computes `reserved_tokens` per held Regina hour (`Σ(100 × that hour's band) × overlay × fill`), lists one `pricing_rule.segments` entry per hour, and ignores a client `tokens` field. A partial hour is charged as the whole hour it holds. The quote is stored on `booking.pricing_rule` and ledger `meta`. Shop work (`kind=shop`) skips the ledger. Fill applies only to next-day customer-bay openings (`token-pricing.md`).
 3. Completing an active or overdue booking keeps the whole reserve as the charge and writes no ledger row. Unused time is never refunded once a visit has started (`unused_tokens` > 0 → 400 `unused_refund_not_allowed`). No ledger write may take a balance below 0 (`TOKEN_BALANCE_FLOOR`). `POST /bookings/{id}/overdue` (Owner or the approved bot, no scheduler) flips an active booking past its end to `overdue`, opens one `late_return` incident, and writes no ledger or billing row. Repeat calls stay on that one incident. Cancel still refuses overdue. The Owner completes it later to release the hour. An AI cannot complete.
 4. Cancel refunds remaining reserve. `member.token_balance` is a cached ledger sum — never changed without a row.

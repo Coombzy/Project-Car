@@ -87,6 +87,7 @@ class BookingStatus(str, enum.Enum):
     COMPLETED = "completed"
     OVERDUE = "overdue"
     CANCELLED = "cancelled"
+    NO_SHOW = "no_show"
 
 
 class BookingKind(str, enum.Enum):
