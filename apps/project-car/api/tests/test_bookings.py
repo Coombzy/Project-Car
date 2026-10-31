@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from pathlib import Path
 from unittest.mock import patch
 from uuid import UUID
 
@@ -1476,3 +1477,394 @@ def test_second_complete_locks_then_refunds_once(client: TestClient, monkeypatch
     assert len(refunds) == 1
     assert _dec(refunds[0]["amount"]) == reserved
     assert _balance(client, member["id"]) == opening - used
+
+
+def _assert_cancel_refunds_once(
+    client: TestClient,
+    *,
+    member_id: str,
+    booking_id: str,
+    reserved: Decimal,
+    balance_after: Decimal,
+) -> None:
+    cancelled = client.post(f"/bookings/{booking_id}/cancel", headers=AUTH)
+    assert cancelled.status_code == 200, cancelled.text
+    assert cancelled.json()["status"] == "cancelled"
+    assert _dec(cancelled.json()["reserved_tokens"]) == Decimal("0")
+    refunds = _rows(_ledger(client, member_id), kind="booking_refund", booking_id=booking_id)
+    assert len(refunds) == 1
+    assert _dec(refunds[0]["amount"]) == reserved
+    assert refunds[0]["meta"]["pricing_rule"]["final_reserve_cost"] == str(reserved)
+    assert _balance(client, member_id) == balance_after
+    again = client.post(f"/bookings/{booking_id}/cancel", headers=AUTH)
+    assert again.status_code == 400, again.text
+    assert again.json()["error"]["code"] == "invalid_transition"
+    assert len(_rows(_ledger(client, member_id), kind="booking_refund", booking_id=booking_id)) == 1
+    assert _balance(client, member_id) == balance_after
+
+
+def test_cancel_after_check_in_keeps_the_reserve(client: TestClient) -> None:
+    """Check-in, then cancel, is 400 and leaves the visit active.
+
+    The Owner route and the member route both answer cancel_after_check_in.
+    No booking_refund is written and the hoist stays occupied. A pending
+    cancel and a confirmed cancel still refund once.
+
+    Red on main: cancel of the active visit is 200, the status is cancelled,
+    the hoist is free, and the reserve comes back as booking_refund.
+    """
+    member = create_member(client, email="ada.cancel-active@example.com")
+    hoist = create_hoist(client, name="Bay 1")
+    opening = Decimal("1500")
+
+    active_start, active_end = _window_inside_check_in()
+    active_reserved = _expected_reserve(client, active_start, active_end, member["id"])
+    assert active_reserved > 0
+    active = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": active_start,
+            "end_at": active_end,
+        },
+    )
+    assert active.status_code == 201, active.text
+    active_id = active.json()["id"]
+    assert client.post(f"/bookings/{active_id}/confirm", headers=AUTH).status_code == 200
+    checked = client.post(f"/bookings/{active_id}/check-in", headers=AUTH)
+    assert checked.status_code == 200, checked.text
+    assert checked.json()["status"] == "active"
+    assert _hoist_status(client, hoist["id"]) == "occupied"
+
+    pending_start, pending_end = _window(6)
+    pending_reserved = _expected_reserve(client, pending_start, pending_end, member["id"])
+    pending = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": pending_start,
+            "end_at": pending_end,
+        },
+    )
+    assert pending.status_code == 201, pending.text
+    pending_id = pending.json()["id"]
+    assert pending.json()["status"] == "pending"
+
+    ledger_before = _ledger(client, member["id"])
+    balance_before = _balance(client, member["id"])
+    assert balance_before == opening - active_reserved - pending_reserved
+    assert _rows(ledger_before, kind="booking_refund", booking_id=active_id) == []
+    reserved_before = _dec(_stored_booking(client, active_id)["reserved_tokens"])
+    assert reserved_before == active_reserved
+
+    owner_cancel = client.post(f"/bookings/{active_id}/cancel", headers=AUTH)
+    stored = _stored_booking(client, active_id)
+    owner_refunds = _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=active_id)
+    hoist_after_owner = _hoist_status(client, hoist["id"])
+    assert (
+        owner_cancel.status_code == 400
+        and stored["status"] == "active"
+        and owner_refunds == []
+        and hoist_after_owner == "occupied"
+    ), (
+        f"status={owner_cancel.status_code} booking={stored['status']} hoist={hoist_after_owner} "
+        f"refunds={len(owner_refunds)} body={owner_cancel.text}"
+    )
+    assert owner_cancel.json()["error"]["code"] == "cancel_after_check_in"
+    assert owner_cancel.json()["error"]["message"] == "Complete the visit instead."
+    assert set(owner_cancel.json()["error"]) == {"code", "message"}
+
+    login_member(client, "ada.cancel-active@example.com")
+    member_cancel = client.post(f"/member/bookings/{active_id}/cancel")
+    stored = _stored_booking(client, active_id)
+    member_refunds = _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=active_id)
+    hoist_after_member = _hoist_status(client, hoist["id"])
+    assert (
+        member_cancel.status_code == 400
+        and stored["status"] == "active"
+        and member_refunds == []
+        and hoist_after_member == "occupied"
+    ), (
+        f"status={member_cancel.status_code} booking={stored['status']} hoist={hoist_after_member} "
+        f"refunds={len(member_refunds)} body={member_cancel.text}"
+    )
+    assert member_cancel.json()["error"]["code"] == "cancel_after_check_in"
+    assert member_cancel.json()["error"]["message"] == "Complete the visit instead."
+    assert _ledger(client, member["id"]) == ledger_before
+    assert _balance(client, member["id"]) == balance_before
+    assert _dec(stored["reserved_tokens"]) == reserved_before
+
+    _assert_cancel_refunds_once(
+        client,
+        member_id=member["id"],
+        booking_id=pending_id,
+        reserved=pending_reserved,
+        balance_after=opening - active_reserved,
+    )
+    assert _stored_booking(client, active_id)["status"] == "active"
+    assert _hoist_status(client, hoist["id"]) == "occupied"
+    assert _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=active_id) == []
+
+    confirmed_start, confirmed_end = _window(12)
+    confirmed_reserved = _expected_reserve(client, confirmed_start, confirmed_end, member["id"])
+    confirmed = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": confirmed_start,
+            "end_at": confirmed_end,
+        },
+    )
+    assert confirmed.status_code == 201, confirmed.text
+    confirmed_id = confirmed.json()["id"]
+    confirmed_ok = client.post(f"/bookings/{confirmed_id}/confirm", headers=AUTH)
+    assert confirmed_ok.status_code == 200, confirmed_ok.text
+    assert confirmed_ok.json()["status"] == "confirmed"
+    _assert_cancel_refunds_once(
+        client,
+        member_id=member["id"],
+        booking_id=confirmed_id,
+        reserved=confirmed_reserved,
+        balance_after=opening - active_reserved,
+    )
+    assert _stored_booking(client, active_id)["status"] == "active"
+    assert _dec(_stored_booking(client, active_id)["reserved_tokens"]) == active_reserved
+    assert _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=active_id) == []
+    assert _hoist_status(client, hoist["id"]) == "occupied"
+
+
+def test_preloaded_cancel_after_check_in_keeps_the_reserve(client: TestClient) -> None:
+    """Cancel on a session that already loaded the visit as confirmed.
+
+    Member cancel loads the row (_own_booking) and then calls cancel_booking
+    on that same session. A check-in can commit between those reads. The lock
+    select returns the identity-map copy, which still says confirmed, and
+    cancel refunds a visit that is already active.
+
+    Red on head 895f86e0f053: cancel returns, the status is 200, the booking
+    is cancelled, and one booking_refund is written. The hoist stays occupied:
+    the in-memory hoist is still the pre-check-in copy, so cancel does not
+    write available.
+    """
+    from fastapi import HTTPException
+    from sqlalchemy import func
+
+    from app.models import BookingHour
+    from app.services.bookings import cancel_booking, get_booking
+
+    member = create_member(client, email="ada.preloaded-cancel@example.com")
+    hoist = create_hoist(client, name="Bay 1")
+    start, end = _window_inside_check_in()
+    reserved = _expected_reserve(client, start, end, member["id"])
+    assert reserved > 0
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start,
+            "end_at": end,
+        },
+    )
+    assert created.status_code == 201, created.text
+    active_id = created.json()["id"]
+    confirmed = client.post(f"/bookings/{active_id}/confirm", headers=AUTH)
+    assert confirmed.status_code == 200, confirmed.text
+
+    def hour_count() -> int:
+        counter = client.session_factory()  # type: ignore[attr-defined]
+        try:
+            found = counter.scalar(
+                select(func.count())
+                .select_from(BookingHour)
+                .where(BookingHour.booking_id == UUID(active_id))
+            )
+            return int(found or 0)
+        finally:
+            counter.close()
+
+    hours_before = hour_count()
+    assert hours_before > 0
+    balance_before = _balance(client, member["id"])
+    assert balance_before == Decimal("1500") - reserved
+
+    session = client.session_factory()  # type: ignore[attr-defined]
+    raised: HTTPException | None = None
+    try:
+        loaded = get_booking(session, UUID(active_id))
+        assert loaded.status == BookingStatus.CONFIRMED
+        checked = client.post(f"/bookings/{active_id}/check-in", headers=AUTH)
+        assert checked.status_code == 200, checked.text
+        assert checked.json()["status"] == "active"
+        assert _hoist_status(client, hoist["id"]) == "occupied"
+        # The identity map still says confirmed. Do not refresh this object here.
+        assert loaded.status == BookingStatus.CONFIRMED
+        try:
+            cancel_booking(session, UUID(active_id))
+            session.commit()
+        except HTTPException as exc:
+            raised = exc
+            session.rollback()
+    finally:
+        session.close()
+
+    stored = _stored_booking(client, active_id)
+    refunds = _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=active_id)
+    hoist_after = _hoist_status(client, hoist["id"])
+    code = 200 if raised is None else raised.status_code
+    assert (
+        code == 400
+        and stored["status"] == "active"
+        and refunds == []
+        and hoist_after == "occupied"
+    ), (
+        f"status={code} booking={stored['status']} hoist={hoist_after} refunds={len(refunds)}"
+    )
+    assert raised is not None
+    assert raised.detail["code"] == "cancel_after_check_in"
+    assert raised.detail["message"] == "Complete the visit instead."
+    assert set(raised.detail) == {"code", "message"}
+    assert hour_count() == hours_before
+    assert _balance(client, member["id"]) == balance_before
+    assert _dec(stored["reserved_tokens"]) == reserved
+
+
+def test_cancel_reread_holds_the_booking_row_lock(client: TestClient, monkeypatch) -> None:
+    """The re-read inside cancel_booking asks for the booking row lock.
+
+    _locked_booking selects FOR UPDATE, then returns the identity-map copy.
+    session.refresh is the SELECT that loads the status committed by check-in.
+    That SELECT has to ask for the same row lock. populate_existing stays off
+    _locked_booking because check-in, complete, and overdue share that helper.
+
+    Red on head a3eb1ba4ed76: refresh runs with with_for_update left unset,
+    so the recorded flag is None. The visit must still stay active with no
+    refund. This does not replace test_cancel_after_check_in_keeps_the_reserve
+    or test_preloaded_cancel_after_check_in_keeps_the_reserve.
+    """
+    from sqlalchemy.orm import Session
+
+    from app.models import Booking
+
+    flags: list[object] = []
+    armed = False
+    real_refresh = Session.refresh
+
+    def spy_refresh(self, instance, attribute_names=None, with_for_update=None):
+        nonlocal armed
+        if armed and isinstance(instance, Booking):
+            flags.append(with_for_update)
+        return real_refresh(
+            self,
+            instance,
+            attribute_names=attribute_names,
+            with_for_update=with_for_update,
+        )
+
+    monkeypatch.setattr(Session, "refresh", spy_refresh)
+
+    member = create_member(client, email="ada.cancel-reread@example.com")
+    hoist = create_hoist(client, name="Bay 1")
+    start, end = _window_inside_check_in()
+    reserved = _expected_reserve(client, start, end, member["id"])
+    assert reserved > 0
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start,
+            "end_at": end,
+        },
+    )
+    assert created.status_code == 201, created.text
+    active_id = created.json()["id"]
+    assert client.post(f"/bookings/{active_id}/confirm", headers=AUTH).status_code == 200
+    checked = client.post(f"/bookings/{active_id}/check-in", headers=AUTH)
+    assert checked.status_code == 200, checked.text
+    assert checked.json()["status"] == "active"
+
+    balance_before = _balance(client, member["id"])
+    armed = True
+    owner_cancel = client.post(f"/bookings/{active_id}/cancel", headers=AUTH)
+    armed = False
+    stored = _stored_booking(client, active_id)
+    refunds = _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=active_id)
+    hoist_after = _hoist_status(client, hoist["id"])
+    assert (
+        owner_cancel.status_code == 400
+        and stored["status"] == "active"
+        and refunds == []
+        and hoist_after == "occupied"
+    ), (
+        f"status={owner_cancel.status_code} booking={stored['status']} hoist={hoist_after} "
+        f"refunds={len(refunds)} body={owner_cancel.text}"
+    )
+    assert owner_cancel.json()["error"]["code"] == "cancel_after_check_in"
+    assert owner_cancel.json()["error"]["message"] == "Complete the visit instead."
+    assert _balance(client, member["id"]) == balance_before
+    assert _dec(stored["reserved_tokens"]) == reserved
+    assert flags, "cancel_booking did not refresh the booking"
+    assert flags[0] is True, f"cancel re-read did not take the row lock: {flags[0]!r}"
+
+
+def test_r61_does_not_own_the_visual_spec() -> None:
+    """R62 owns visual/pages.spec.ts. R61 must not append a week-grid test there.
+
+    Red on head 46b893c5a3ac: that spec still defines
+    test_active_visit_hides_cancel_keeps_complete, and booking-cancel.test.ts
+    still string-matches the spec. The schedule proof is the cancel case above
+    and the card test, plus hosted week-grid screenshots. This lock is what
+    fails until those two additions are gone.
+    """
+    web = Path(__file__).resolve().parents[2] / "web"
+    spec = (web / "visual" / "pages.spec.ts").read_text(encoding="utf-8")
+    unit = (web / "lib" / "booking-cancel.test.ts").read_text(encoding="utf-8")
+    assert "test_active_visit_hides_cancel_keeps_complete" not in spec, (
+        "R62 owns visual/pages.spec.ts; remove test_active_visit_hides_cancel_keeps_complete"
+    )
+    assert "test_week_schedule_spec_checks_the_seeded_active_card" not in unit, (
+        "booking-cancel.test.ts must not string-match visual/pages.spec.ts"
+    )
+    assert 'it("test_active_cards_do_not_offer_cancel"' in unit
+    assert '{ name: "schedule", path: "/schedule" }' in spec
+    assert '{ name: "member-schedule", path: "/member/schedule" }' in spec
+
+
+def test_r61_does_not_ship_the_week_grid_spec() -> None:
+    """R61 does not add a Playwright file under visual/.
+
+    visual/pages.spec.ts belongs to R62. active-visit-cancel.spec.ts and the
+    data-booking-status hooks that exist only so that spec can find a chip are
+    outside this row. The UI proof is hosted shots of /schedule?view=week and
+    /member/schedule?view=week at 390 and 1440.
+
+    Red on head efe826e9e00e68836a838424c3647afcae2ae226: the spec file is
+    present, both cards set data-booking-status, and
+    test_seeded_week_grid_hides_cancel_on_the_active_visit is still defined.
+    """
+    import ast
+
+    web = Path(__file__).resolve().parents[2] / "web"
+    spec = web / "visual" / "active-visit-cancel.spec.ts"
+    assert not spec.exists(), (
+        "visual/active-visit-cancel.spec.ts is outside R61; delete it"
+    )
+    owner = (web / "components" / "owner-booking-card.tsx").read_text(encoding="utf-8")
+    member = (web / "components" / "member-booking-card.tsx").read_text(encoding="utf-8")
+    assert "data-booking-status" not in owner
+    assert "data-booking-status" not in member
+    defined = {
+        node.name
+        for node in ast.walk(ast.parse(Path(__file__).read_text(encoding="utf-8")))
+        if isinstance(node, ast.FunctionDef)
+    }
+    assert "test_seeded_week_grid_hides_cancel_on_the_active_visit" not in defined

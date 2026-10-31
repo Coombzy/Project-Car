@@ -71,7 +71,7 @@ export function OwnerBookingCard({
             <button type="submit">Complete</button>
           </form>
         ) : null}
-        {booking.status === "pending" || booking.status === "confirmed" || booking.status === "active" ? (
+        {booking.status === "pending" || booking.status === "confirmed" ? (
           <form action={cancelBookingAction}>
             <ScheduleReturnFields returnTo={returnTo} />
             <input type="hidden" name="id" value={booking.id} />
