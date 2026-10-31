@@ -11,7 +11,7 @@ from app.models import Booking, BookingStatus, Hoist, HoistStatus, NotificationO
 from app.services.fill import detect_openings, select_discount_pct
 from app.services.pricing import quote_reserve
 from app.shop_time import PRICING_TZ, pricing_clock_window, pricing_next_day, pricing_now
-from tests.conftest import AUTH, create_hoist, create_member, login_member
+from tests.conftest import AUTH, create_hoist, create_member, login_member, next_hour
 
 AI = {"Authorization": "Bearer dev-ai-secret"}
 
@@ -227,11 +227,7 @@ def test_same_day_slot_does_not_take_fill(client: TestClient) -> None:
     create_member(client, email="ada@example.com")
     create_hoist(client, name="Bay 1")
     now = pricing_now()
-    start = now + timedelta(hours=2)
-    if start.astimezone(PRICING_TZ).date() != now.astimezone(PRICING_TZ).date():
-        start = now.replace(hour=10, minute=0, second=0, microsecond=0)
-        if start <= now:
-            start = now + timedelta(minutes=30)
+    start = next_hour(1).astimezone(PRICING_TZ)
     end = start + timedelta(hours=1)
     if start.astimezone(PRICING_TZ).date() != now.astimezone(PRICING_TZ).date():
         return

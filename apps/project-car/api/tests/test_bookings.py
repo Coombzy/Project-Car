@@ -14,18 +14,18 @@ from app.models import Booking, BookingKind, BookingStatus, Member, TokenTransac
 from app.services.pricing import quote_reserve
 from app.services.tokens import apply_ledger
 from app.shop_time import PRICING_TZ, as_utc, shop_now
-from tests.conftest import AUTH, create_hoist, create_member, login_member
+from tests.conftest import AUTH, check_in_open_start, create_hoist, create_member, login_member, next_hour
 
 
 def _window(hours_from_now: int, length_hours: float = 2) -> tuple[str, str]:
-    start = shop_now() + timedelta(hours=hours_from_now)
+    start = next_hour(hours_from_now)
     end = start + timedelta(hours=length_hours)
     return start.isoformat(), end.isoformat()
 
 
 def _window_inside_check_in(length_hours: float = 2) -> tuple[str, str]:
     """Start 10 minutes out, inside the 15-minute check-in window."""
-    start = shop_now() + timedelta(minutes=10)
+    start = check_in_open_start()
     end = start + timedelta(hours=length_hours)
     return start.isoformat(), end.isoformat()
 
@@ -193,7 +193,7 @@ def test_two_bookings_cannot_take_the_same_bay_hour(client: TestClient) -> None:
     partial = hour + timedelta(minutes=30)
     next_hour = hour_end
     # Inside the check-in window so complete can still release this hour.
-    later = shop_now() + timedelta(minutes=10)
+    later = check_in_open_start()
 
     first = _book(client, member_id=ada["id"], hoist_id=bay["id"], start=hour, end=hour_end)
     assert first.status_code == 201, first.text
@@ -215,7 +215,8 @@ def test_two_bookings_cannot_take_the_same_bay_hour(client: TestClient) -> None:
         start=partial,
         end=partial + timedelta(hours=1),
     )
-    _assert_bay_hour_taken(shared)
+    assert shared.status_code == 400, shared.text
+    assert shared.json()["error"]["code"] == "not_on_the_hour"
     assert _dec(client.get(f"/members/{casey['id']}", headers=AUTH).json()["token_balance"]) == Decimal("1500")
 
     other_bay = _book(client, member_id=casey["id"], hoist_id=other["id"], start=hour, end=hour_end)
@@ -614,7 +615,7 @@ def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None
 def _confirmed_from_now(client: TestClient, *, hours: float) -> tuple[dict, str]:
     member = create_member(client)
     hoist = create_hoist(client)
-    start = shop_now() + timedelta(hours=hours)
+    start = check_in_open_start() if hours < 1 else next_hour(hours)
     end = start + timedelta(hours=2)
     created = client.post(
         "/bookings",
@@ -806,8 +807,8 @@ def test_tier_rules_enforced(client: TestClient) -> None:
         json={
             "member_id": basic["id"],
             "hoist_id": hoist["id"],
-            "start_at": (shop_now() + timedelta(hours=8)).isoformat(),
-            "end_at": (shop_now() + timedelta(hours=10)).isoformat(),
+            "start_at": next_hour(8).isoformat(),
+            "end_at": next_hour(10).isoformat(),
         },
     )
     assert second.status_code == 400
@@ -827,7 +828,7 @@ def test_tier_rules_enforced(client: TestClient) -> None:
     )
     assert limited.status_code == 201, limited.text
     short_window = create_member(client, name="Riley", email="riley@example.com", tier_name="limited")
-    far_start = shop_now() + timedelta(days=10)
+    far_start = next_hour(24 * 10)
     window = client.post(
         "/bookings",
         headers=AUTH,
@@ -881,7 +882,7 @@ def test_inactive_member_and_insufficient_tokens(client: TestClient) -> None:
     assert poor.json()["error"]["code"] == "insufficient_tokens"
 
 
-def test_ninety_minute_booking_is_charged_for_both_held_hours(client: TestClient) -> None:
+def test_ninety_minute_booking_is_off_the_hour_grid(client: TestClient) -> None:
     member = create_member(client)
     hoist = create_hoist(client)
     start = shop_now() + timedelta(days=3)
@@ -900,12 +901,8 @@ def test_ninety_minute_booking_is_charged_for_both_held_hours(client: TestClient
             "end_at": end.isoformat(),
         },
     )
-    assert created.status_code == 201, created.text
-    body = created.json()
-    assert body["pricing_rule"]["hours"] == "2"
-    assert body["pricing_rule"]["base_tokens"] == "200"
-    assert len(body["pricing_rule"]["segments"]) == 2
-    assert _dec(body["reserved_tokens"]) == quote_reserve(start, end).final_reserve_cost
+    assert created.status_code == 400, created.text
+    assert created.json()["error"]["code"] == "not_on_the_hour"
 
 
 def test_shop_hoist_is_owner_only(client: TestClient) -> None:
@@ -1147,7 +1144,7 @@ def test_past_start_is_rejected(client: TestClient) -> None:
     try:
         row = session.get(Booking, UUID(first))
         assert row is not None
-        open_start = as_utc(shop_now() + timedelta(minutes=10))
+        open_start = as_utc(check_in_open_start())
         row.start_at = open_start
         row.end_at = open_start + timedelta(hours=2)
         session.commit()

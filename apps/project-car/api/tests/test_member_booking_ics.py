@@ -7,12 +7,12 @@ from datetime import datetime, timedelta
 import pytest
 from fastapi.testclient import TestClient
 
-from app.shop_time import as_utc, shop_now
-from tests.conftest import create_hoist, create_member, login_member
+from app.shop_time import as_utc
+from tests.conftest import create_hoist, create_member, login_member, next_hour
 
 
 def _window(hours_from_now: int, length_hours: float = 2) -> tuple[str, str]:
-    start = shop_now() + timedelta(hours=hours_from_now)
+    start = next_hour(hours_from_now)
     end = start + timedelta(hours=length_hours)
     return start.isoformat(), end.isoformat()
 
