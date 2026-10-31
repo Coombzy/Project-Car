@@ -50,14 +50,13 @@ export async function memberCreateBookingAction(formData: FormData): Promise<voi
       end_at: window.end,
     });
     const hoistId = String(formData.get("hoist_id") ?? "").trim();
-    const created = await createMemberBooking({
+    await createMemberBooking({
       ...(hoistId ? { hoist_id: hoistId } : {}),
       start_at: window.start,
       end_at: window.end,
       tokens: quoted.reserved_tokens,
       notes: String(formData.get("notes") ?? "") || null,
     });
-    await confirmMemberBooking(created.id);
   } catch (error) {
     fail(formData, error);
   }

@@ -462,6 +462,7 @@ def create_booking(
     notes: str | None,
     kind: BookingKind = BookingKind.CUSTOMER,
     shown_tokens: Decimal | None = None,
+    confirm: bool = False,
 ) -> Booking:
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
@@ -577,6 +578,10 @@ def create_booking(
         note="Reserve tokens for booking",
         meta=meta,
     )
+    if confirm:
+        booking.status = BookingStatus.CONFIRMED
+        session.add(booking)
+        session.flush()
     session.refresh(booking)
     return get_booking(session, booking.id)
 

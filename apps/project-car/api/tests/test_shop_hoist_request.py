@@ -124,7 +124,7 @@ def test_bays_stay_a_direct_booking(client: TestClient) -> None:
     assert booked.status_code == 201, booked.text
     body = booked.json()
     assert body["kind"] == "customer"
-    assert body["status"] == "pending"
+    assert body["status"] == "confirmed"
     assert "record" not in body
     assert _dec(client.get("/member/me").json()["token_balance"]) == balance - _dec(body["reserved_tokens"])
     assert client.get("/member/bookings").json()[0]["id"] == body["id"]

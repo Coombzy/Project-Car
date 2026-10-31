@@ -404,6 +404,7 @@ def member_create_booking(
         notes=body.notes,
         kind=BookingKind.CUSTOMER,
         shown_tokens=body.tokens,
+        confirm=True,
     )
     return BookingOut.from_booking(booking)
 

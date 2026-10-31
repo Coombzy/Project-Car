@@ -35,7 +35,7 @@ Shop-web App Router paths under `/member` (today parked on ops/app):
 |------|------|
 | `/member/login` | Demo Member login (`ada.reyes@example.com` + `MEMBER_DEMO_PASSWORD`). Cookie `pc_member_session`. |
 | `/member` | Balance + ledger + personal todos + next-24h hours on bays that member booked. |
-| `/member/schedule` | Book / quote / confirm / cancel on **Bays 1–5**. Shop hoist is a pending request, not a direct booking. |
+| `/member/schedule` | Book / quote / cancel on **Bays 1–5**. Book confirms in the same save. Shop hoist is a pending request, not a direct booking. |
 | `/member/schedule/quote` | Same-origin quote POST (browser → Next, not browser → API). |
 | `/member/chat`, `/member/chat/{id}` | Chat v1 — own rooms, reply, poll. Logged-out **auth-gate 307**. |
 | `/member/parts` | Parts **request desk** (PT / TC SKUs). Not commerce. |

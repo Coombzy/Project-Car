@@ -100,7 +100,7 @@ def test_member_book_confirm_cancel_and_ledger(client: TestClient) -> None:
     )
     assert created.status_code == 201, created.text
     booking = created.json()
-    assert booking["status"] == "pending"
+    assert booking["status"] == "confirmed"
     assert booking["kind"] == "customer"
     assert booking["member_id"] == member["id"]
     assert _dec(booking["reserved_tokens"]) == expected
@@ -108,10 +108,6 @@ def test_member_book_confirm_cancel_and_ledger(client: TestClient) -> None:
 
     profile = client.get("/member/me")
     assert _dec(profile.json()["token_balance"]) == Decimal("1500") - expected
-
-    confirmed = client.post(f"/member/bookings/{booking['id']}/confirm")
-    assert confirmed.status_code == 200, confirmed.text
-    assert confirmed.json()["status"] == "confirmed"
 
     cancelled = client.post(f"/member/bookings/{booking['id']}/cancel")
     assert cancelled.status_code == 200, cancelled.text
