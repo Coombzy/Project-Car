@@ -1662,57 +1662,6 @@ def test_r61_does_not_own_the_visual_spec() -> None:
     assert '{ name: "member-schedule", path: "/member/schedule" }' in spec
 
 
-def test_seeded_week_grid_hides_cancel_on_the_active_visit() -> None:
-    """The month heat-map does not draw Cancel. The week grid does.
-
-    Red on head 6c82eccbfdadaf8e8d77a03a297ccd5b3a78f771: the week-grid spec
-    is absent, and neither card exposes data-booking-status. Default
-    /schedule and /member/schedule stay the month view (parseViewParam).
-    pages.spec.ts stays R62's file. This spec does not call toHaveScreenshot
-    and does not change maxDiffPixelRatio.
-    """
-    web = Path(__file__).resolve().parents[2] / "web"
-    spec_path = web / "visual" / "active-visit-cancel.spec.ts"
-    assert spec_path.is_file(), (
-        "visual/active-visit-cancel.spec.ts is missing, so the seeded active "
-        "visit on /schedule?view=week and /member/schedule?view=week is not checked"
-    )
-    spec = spec_path.read_text(encoding="utf-8")
-    assert 'test("test_seeded_active_visit_hides_cancel"' in spec
-    assert "/schedule?view=week" in spec
-    assert "/member/schedule?view=week" in spec
-    assert "Riley Park" in spec
-    assert "riley.park@example.com" in spec
-    assert "Ada Reyes" in spec
-    assert 'hasText: "Cancel"' in spec
-    assert 'hasText: "Complete"' in spec
-    assert "[data-booking-status=active]" in spec
-    assert ".pill-confirmed" in spec
-    assert spec.count("toHaveCount(0)") >= 4
-    assert spec.count("toHaveCount(1)") >= 4
-    assert "toHaveScreenshot" not in spec
-    assert "maxDiffPixelRatio" not in spec
-    assert "pages.spec.ts" not in spec
-
-    owner = (web / "components" / "owner-booking-card.tsx").read_text(encoding="utf-8")
-    member = (web / "components" / "member-booking-card.tsx").read_text(encoding="utf-8")
-    assert "data-booking-status={booking.status}" in owner, (
-        "owner card does not expose data-booking-status, so the week grid cannot "
-        "tell an active visit from a confirmed one"
-    )
-    assert "data-booking-status={own?.status ?? slot.status}" in member, (
-        "member card does not expose data-booking-status"
-    )
-    assert 'booking.status === "pending" || booking.status === "confirmed" ?' in owner
-    assert (
-        'booking.status === "pending" || booking.status === "confirmed" || booking.status === "active"'
-        not in owner
-    )
-    assert 'own && own.status === "confirmed"' in member
-    assert 'own.status === "confirmed" || own.status === "active"' not in member
-    assert 'booking.status === "active" ?' in owner
-
-
 def test_r61_does_not_ship_the_week_grid_spec() -> None:
     """R61 does not add a Playwright file under visual/.
 

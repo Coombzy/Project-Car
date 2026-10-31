@@ -26,7 +26,6 @@ export function OwnerBookingCard({
   return (
     <article
       className={`booking-chip status-${booking.status}${booking.kind === "shop" ? " booking-chip-shop" : ""}${compact ? " booking-chip-hour" : ""}`}
-      data-booking-status={booking.status}
     >
       <strong>{booking.member_name}</strong>
       {booking.kind === "shop" ? <StatusPill value="shop" /> : null}
