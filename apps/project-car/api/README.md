@@ -86,7 +86,7 @@ python -m app.seed --reset  # wipe members/hoists/bookings/ledger/waitlist, then
 | `GET/POST` | `/members/{id}/tokens` | Owner | Ledger / admin adjustment (`reason` required; never below a 0 balance → 409 `would_go_negative`) |
 | `POST` | `/members/{id}/token-purchases` | Owner (human) | Credit paid tokens once per PayPal payment id, with GST |
 | `GET/POST` | `/hoists` | Owner | List / create |
-| `PATCH` | `/hoists/{id}` | Owner | Status, labels |
+| `PATCH` | `/hoists/{id}` | Owner | Status, labels. Closing (maintenance / locked) over future bookings is 409 `bay_has_bookings` unless `cancel_bookings: true` + `reason`: full refund and one email per member |
 | `POST` | `/bookings/quote` | Owner | Duration × band × overlay × fill preview |
 | `GET` | `/fill/preview` | Owner | Next-day customer-bay openings + fill discount |
 | `POST` | `/fill/notify` | Owner | Dry-run or send fill notices (email stub / SMTP) |

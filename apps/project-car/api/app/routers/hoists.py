@@ -1,14 +1,20 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+from app.auth import Principal
 from app.deps import DbSession, Owner
 from app.models import Booking, BookingStatus, Hoist, HoistStatus
+from app.routers.members import OVERRIDE_REASON_MAX, OVERRIDE_REASON_MIN
 from app.schemas import HoistCreate, HoistOut, HoistPatch
+from app.services import bookings as booking_service
+from app.services.notify import enqueue_bay_closed_notices
+from app.services.staff import reject_ai
 
 router = APIRouter(tags=["hoists"])
 
@@ -49,6 +55,73 @@ def _reject_available_while_occupied(session, hoist_id: UUID, *, status: object)
             "message": "That hoist still has an active or overdue visit.",
         },
     )
+
+
+def _close_over_future_bookings(
+    session,
+    hoist: Hoist,
+    owner: Principal,
+    *,
+    cancel: bool,
+    reason: str,
+) -> None:
+    """Refuse to close a bay over future bookings unless told to cancel them.
+
+    With ``cancel`` each booking is cancelled with its full reserve refunded
+    and each member gets one email.
+    """
+    if cancel:
+        reject_ai(
+            owner,
+            code="refund_requires_human",
+            message="A refund is not applied until a human accepts it.",
+        )
+        if not OVERRIDE_REASON_MIN <= len(reason) <= OVERRIDE_REASON_MAX:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "reason_required",
+                    "message": (
+                        f"Cancelling bookings needs a reason of {OVERRIDE_REASON_MIN}-"
+                        f"{OVERRIDE_REASON_MAX} characters."
+                    ),
+                },
+            )
+    bookings = booking_service.future_bookings_on_hoist(session, hoist.id)
+    if not bookings:
+        return
+    if not cancel:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "bay_has_bookings",
+                "message": (
+                    "That bay has future bookings. Send cancel_bookings with a reason "
+                    "to cancel and refund them."
+                ),
+                "bookings": [
+                    {
+                        "id": str(booking.id),
+                        "member_id": str(booking.member_id) if booking.member_id else None,
+                        "start_at": booking.start_at.isoformat(),
+                        "end_at": booking.end_at.isoformat(),
+                        "status": booking.status.value,
+                    }
+                    for booking in bookings
+                ],
+            },
+        )
+    refunds = {booking.id: Decimal(booking.reserved_tokens) for booking in bookings}
+    cancelled = [
+        booking_service.cancel_booking(
+            session,
+            booking.id,
+            refund_meta={"reason": "bay_closed", "bay_closed": {"reason": reason, "by": owner.email}},
+            refund_note=f"Refund reserve: {hoist.name} closed",
+        )
+        for booking in bookings
+    ]
+    enqueue_bay_closed_notices(session, hoist, cancelled, refunds=refunds, reason=reason)
 
 
 def _ensure_single_shop_hoist(session, *, is_shop: bool, exclude_id: UUID | None = None) -> None:
@@ -108,7 +181,7 @@ def create_hoist(body: HoistCreate, session: DbSession, _owner: Owner) -> HoistO
 
 
 @router.patch("/hoists/{hoist_id}", response_model=HoistOut)
-def patch_hoist(hoist_id: UUID, body: HoistPatch, session: DbSession, _owner: Owner) -> HoistOut:
+def patch_hoist(hoist_id: UUID, body: HoistPatch, session: DbSession, owner: Owner) -> HoistOut:
     row = session.get(Hoist, hoist_id)
     if row is None:
         raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Hoist not found."})
@@ -118,10 +191,14 @@ def patch_hoist(hoist_id: UUID, body: HoistPatch, session: DbSession, _owner: Ow
         updates["name"] = updates["name"].strip()
     if "location_label" in updates and updates["location_label"] is not None:
         updates["location_label"] = updates["location_label"].strip()
+    cancel_bookings = bool(updates.pop("cancel_bookings", False))
+    reason = (updates.pop("reason", None) or "").strip()
     if "status" in updates:
         _reject_available_while_occupied(session, row.id, status=updates["status"])
     if "is_shop" in updates:
         _ensure_single_shop_hoist(session, is_shop=bool(updates["is_shop"]), exclude_id=row.id)
+    if updates.get("status") in booking_service.UNAVAILABLE_HOIST:
+        _close_over_future_bookings(session, row, owner, cancel=cancel_bookings, reason=reason)
     for key, value in updates.items():
         setattr(row, key, value)
     session.add(row)

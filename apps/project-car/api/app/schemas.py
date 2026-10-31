@@ -345,6 +345,9 @@ class HoistPatch(BaseModel):
     location_label: str | None = Field(default=None, max_length=120)
     status: HoistStatus | None = None
     is_shop: bool | None = None
+    # Closing a bay (maintenance / locked) with future bookings needs both.
+    cancel_bookings: bool = False
+    reason: str | None = None
 
     @field_validator("name", mode="before")
     @classmethod
