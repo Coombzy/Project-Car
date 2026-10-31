@@ -29,9 +29,8 @@ def _confirmed(client: TestClient, *, hours_ahead: int = 30, length: int = 1) ->
         },
     )
     assert created.status_code == 201, created.text
-    confirmed = client.post(f"/member/bookings/{created.json()['id']}/confirm")
-    assert confirmed.status_code == 200, confirmed.text
-    return member, confirmed.json(), start
+    assert created.json()["status"] == "confirmed"
+    return member, created.json(), start
 
 
 def _balance(client: TestClient, member_id: str) -> Decimal:
