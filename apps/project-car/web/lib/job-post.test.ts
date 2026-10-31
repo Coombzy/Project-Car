@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join, sep } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -63,5 +63,42 @@ describe("postJobAction redirect", () => {
     assert.equal(source.includes("redirect(jobErrorHref(message))"), true);
     assert.match(source, /revalidatePath\("\/jobs"\);\s*redirect\(jobPostedHref\(\)\);/);
     assert.equal(source.includes("token_bounty: parsed.token_bounty"), true);
+  });
+
+  it("removes the visual scope lock without refusing bounty 0, 1.5 or 10000", () => {
+    assert.equal(JOB_BOUNTY_CAP, 10_000);
+    for (const [bounty, token] of [
+      ["0", "0"],
+      ["1.5", "1.5"],
+      ["10000", "10000"],
+      ["2.50", "2.5"],
+    ] as const) {
+      assert.deepEqual(parseJobForm({ title: "Sweep the bay", bounty }), {
+        ok: true,
+        title: "Sweep the bay",
+        notes: null,
+        token_bounty: token,
+      });
+    }
+    for (const bounty of ["-1", "1.555", "10000.01"]) {
+      assert.deepEqual(parseJobForm({ title: "Sweep the bay", bounty }), {
+        ok: false,
+        error: BOUNTY_ERROR,
+      });
+    }
+    assert.equal(jobPostedHref(), "/jobs?notice=Job%20posted.");
+    assert.equal(
+      jobErrorHref(BOUNTY_ERROR),
+      `/jobs?error=${encodeURIComponent(BOUNTY_ERROR)}`,
+    );
+
+    const scope = join(dirname(fileURLToPath(import.meta.url)), "../../api/tests/test_r80_scope.py");
+    const marker = ["apps", "project-car", "api", "tests", "test_r80_scope.py"].join(sep);
+    assert.equal(scope.endsWith(marker), true, scope);
+    assert.equal(
+      existsSync(scope),
+      false,
+      "R80 must not ship api/tests/test_r80_scope.py.",
+    );
   });
 });
