@@ -573,6 +573,7 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Depends on: R61 (same file). R64 follows this row.
 
 ### R64. Two confirmed visits on one bay can both be checked in
+- Superseded 2026-10-30: folded into R109. Do not launch on its own.
 - Category: Bug (verified on main 2026-10-27)
 - Baseline: `check_in_booking` in `apps/project-car/api/app/services/bookings.py` (line 501) refuses a maintenance or locked hoist and a booking that is not `confirmed`, then marks the booking `active` and the hoist occupied. It never asks whether another booking on that hoist is already `active` or `overdue`. Two back-to-back confirmed visits (10:00 to 11:00 and 11:00 to 12:00) can both be checked in when the first has not been completed and the shop clock is inside the second one's window (from 10:45, the R31 early window), so two cars share one lift in the books. R58 blocks the Owner from forcing the hoist Available under a visit with 409 `hoist_occupied`; check-in is the other door.
 - Target: check-in answers 409 `hoist_occupied` ("Another visit is still on this bay. Complete it first.") when a different booking on the same hoist is `active` or `overdue`; the booking stays `confirmed` and the hoist status is unchanged. Check-in on a free bay, and the same booking checked in twice (existing error), behave as today.
@@ -613,6 +614,7 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 - Depends on: none. Shares no file with any other open row.
 
 ### R68. An AI can set a member's login password
+- Superseded 2026-10-30: folded into R101. Do not launch on its own.
 - Category: Hardening (verified on main 2026-10-27)
 - Baseline: `set_member_password` in `apps/project-car/api/app/routers/members.py` (line 147) takes the `Owner` dependency, which also admits the AI bearer (`require_owner` returns `Principal(role="ai")`). It never calls `reject_ai`. The route in the same file that changes a token balance does (`adjust_member_tokens` refuses an AI with 403 "An AI cannot change a token balance on its own."). A password is a credential for a member's account, so the same stand-in applies: a person does it.
 - Target: an AI principal on `POST /members/{id}/password` answers 403 `ai_cannot_set_password` ("An AI cannot set a member's password on its own.") before the body is validated, with no hash written. The human Owner path, the R37 length rule and the response shape are unchanged. See Needs from Ben.
@@ -858,3 +860,444 @@ Rows R55–R62 (2026-10-26): this paragraph replaces the earlier ones for anythi
 Rows R63–R70 (2026-10-27): this paragraph replaces the earlier ones for anything still open. Merged since that paragraph: R55 (#193), R56 (#191), R57 (#192), R58 (#195), R59 (#194) and R60 (#196). Open from before: R51 (`services/parts_requests.py`), R52 (`schemas.py`), R61 (`services/bookings.py`, two booking cards) and R62 (web `app/not-found.tsx`, `app/error.tsx`, `visual/pages.spec.ts`). Files for R63–R70: R63 and R64 (`services/bookings.py` and `tests/test_bookings.py`, in that order, after R61), R65 and R68 (`routers/members.py`, in that order), R66 (`services/chat.py`), R67 (`services/staff.py`), R69 (web `lib/fetch-timeout.ts`, `lib/shop-api.ts`), R70 (web `lib/session-cookie.ts`, `lib/session.ts`). Any three of R65, R66, R67, R69 and R70 share no file and can run together; start with R65, R66 and R67 (API only, no screenshots). None of the eight changes a page, adds an alembic revision, or needs screenshots.
 
 Rows R71–R79 (2026-10-28): this paragraph replaces the earlier ones for anything still open. R70 (#202) is the last merged row. Still open from before: R51 (`services/parts_requests.py`), R52 (`schemas.py`), R61 then R63 then R64 (`services/bookings.py`), R62 (web `app/not-found.tsx`, `app/error.tsx`), R68 (`routers/members.py`) and R69 (web `lib/fetch-timeout.ts`, `lib/shop-api.ts`). Files for R71–R79: R71 (`routers/tiers.py`), R72 then R73 (`schemas.py`, after R52, one at a time), R74 (`routers/fill.py`), R75 (`services/staff.py`), R76 (`routers/jobs.py`, `services/jobs.py`), R77 (`routers/waitlist.py`), R78 (web `lib/shop-path.ts`, `lib/shop-api.ts`, after R69), R79 (web `lib/shop-error.ts`, `lib/page.ts`). Any three of R71, R74, R75, R76, R77 and R79 share no file and can run together, and none of them touches a page, adds an alembic revision or needs screenshots. Start R71, R74 and R77, then R51, R68 and R75.
+
+## Audit fix rows (R100–R148, added 2026-10-30)
+
+Source: `/workspace/Project-Car-Fix-List.md` (Opus audit of `main` @ `3968b0f`, bugs + UI + layout), approved by Ben Oct 30 2026 ("get build to start working on everything in the pdf"), plus five Opus follow-up checks (R144–R148). Paths are repo-relative. Every row: write the named failing test first and run it RED on `main`, then implement until GREEN; API proof `cd apps/project-car/api && pytest -q`; web proof `cd apps/project-car/web && npm run lint && npm run typecheck && npm test && npm run build`. No row edits `.github/workflows/**`. Leave PRs #107–#111 alone.
+
+Already covered, not duplicated: fix #9 = R61 (PR #206), fix #10 = R99 (in progress). R64 is folded into R114 and R68 into R101; do not launch R64 or R68 on their own. Fix #44 (first-click test with real members) is not a build row; it waits on Ben.
+
+Stand-in values (Ben has not decided; each is one named constant so the real value is a one-line change): AI allowlist = the actions listed in `Docs/ai-control.md`; shop time zone = `America/Regina`; booking granularity = on the hour only; partial fill discount = only minutes inside the fill window; booking caps = 24 h shop booking, 12 h member booking, 60 days ahead; staff permissions = check-in, complete, mark overdue, read schedule, create requests (no refunds, token changes, pricing, passwords, tiers). Each is marked **STAND-IN** in its row and listed under "Stand-ins pending Ben (R100+)".
+
+### R100. Repeated "Accept refund" clicks refund one booking many times
+- Category: Critical bug (fix #1)
+- Baseline: `accept_refund_request` in `apps/project-car/api/app/services/staff.py` reads the refund request without `with_for_update()`; `_locked_booking` in `apps/project-car/api/app/services/bookings.py` locks the booking but does not pass `populate_existing=True`, so a session that already loaded the row keeps stale `status`. Audit: 12 parallel accepts refunded one booking 9 times.
+- Target: `accept_refund_request` loads the `RefundRequest` with `select(...).with_for_update().execution_options(populate_existing=True)`, re-checks `status == pending` after the lock and returns 409 `refund_already_decided` otherwise; `_locked_booking` adds `.execution_options(populate_existing=True)`; the refund credit is written once per request (exactly one `refund` ledger row per request id).
+- Must not get worse: API `pytest`; single accept still refunds exactly once; deny path unchanged.
+- Proof (RED first): new `apps/project-car/api/tests/test_refund_lock.py`: `test_second_accept_is_409_and_one_ledger_row` (accept twice in sequence with two sessions: second is 409 `refund_already_decided`, ledger has one refund row, balance moved once); `test_locked_booking_refreshes_stale_status` (load booking in session A, change status in session B and commit, `_locked_booking` in A returns the new status). The parallel version runs under R104's Postgres mode.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/staff.py` (`accept_refund_request` only), `apps/project-car/api/app/services/bookings.py` (`_locked_booking` only), new `apps/project-car/api/tests/test_refund_lock.py`
+- Depends on: none. Priority: first.
+
+### R101. The AI bearer reaches almost every Owner route
+- Category: Critical security (fix #2; folds in R68)
+- Baseline: `require_owner` in `apps/project-car/api/app/deps.py` returns `Principal(role="ai")` for the AI bearer, so every route typed `Owner` (96 uses across `apps/project-car/api/app/routers/*.py`) is AI-reachable: create member (mints tokens), set member password (R68), reprice tiers, raise allowances, book and debit.
+- Target: new `apps/project-car/api/app/ai_allowlist.py` with `AI_ALLOWED: frozenset[tuple[str, str]]` of `(METHOD, path template)` — **STAND-IN**: exactly the actions in `Docs/ai-control.md` (create requests and drafts, approve/deny shop-hoist, parts and tool-crib requests, read bookings/schedule/balances/open requests, read parts and crib rows). `require_owner` becomes human-only (AI → 403 `ai_not_allowed`); new dependency `require_owner_or_allowed_ai` checks `request.method` + `request.scope["route"].path` against `AI_ALLOWED` and is used only on the allowlisted routes. `POST`/`PATCH /members/{member_id}/password` (or whatever route sets it) returns 403 `ai_cannot_set_password` for AI (R68). Comment at top of `ai_allowlist.py`: "STAND-IN until Ben confirms the AI list".
+- Must not get worse: API `pytest`; every existing AI test in `tests/test_staff_actions.py` for an allowlisted action still passes; Owner human behaviour unchanged.
+- Proof (RED first): new `apps/project-car/api/tests/test_ai_allowlist.py`: `test_every_mutating_route_ai_reachable_only_if_allowlisted` (walk `app.routes`; for every POST/PUT/PATCH/DELETE route, call with the AI bearer and minimal body; status must be 403 `ai_not_allowed` unless `(method, path)` is in `AI_ALLOWED`); `test_ai_cannot_create_member`, `test_ai_cannot_set_member_password` (403 `ai_cannot_set_password`), `test_ai_cannot_patch_tier`, `test_ai_cannot_adjust_tokens`; `test_allowlist_entries_all_exist` (each entry matches a real route).
+- Size: 2 tasks
+- Likely files: `apps/project-car/api/app/deps.py`, new `apps/project-car/api/app/ai_allowlist.py`, `apps/project-car/api/app/routers/staff.py`, `apps/project-car/api/app/routers/members.py`, `apps/project-car/api/app/routers/hoists.py`, `apps/project-car/api/app/routers/parts_requests.py`, `apps/project-car/api/app/routers/tool_crib.py`, new `apps/project-car/api/tests/test_ai_allowlist.py`
+- Depends on: none. Supersedes R68.
+
+### R102. Dev secrets are accepted in production because prod binds loopback
+- Category: Critical security (fix #3)
+- Baseline: `default_secret_blocked` / `reject_dev_secret` in `apps/project-car/api/app/auth.py` refuse `dev-owner-secret`, `dev-ai-secret`, `changeme` only when `SHOP_HOST` is not loopback (`host_is_loopback`); prod runs on 127.0.0.1 behind the tunnel, so defaults are accepted.
+- Target: new setting `shop_env: str = "prod"` in `apps/project-car/api/app/config.py` (`SHOP_ENV`). Defaults are refused unless `SHOP_ENV=dev`, regardless of host. App startup (`apps/project-car/api/app/main.py` lifespan or settings validator) raises `RuntimeError("insecure default secret: <setting name>")` (name only, never the value) when not dev and any of `owner_password`, `owner_api_secret`, `ai_api_secret`, `member_demo_password` equals its default. `apps/project-car/api/.env.example` gains `SHOP_ENV=dev`, `AI_API_SECRET=`, `SHOP_HOST=127.0.0.1`, `CLIENT_IP_HEADER=` with one-line comments. `apps/project-car/api/tests/conftest.py` sets `SHOP_ENV=dev`. `Docs/deployment-guide.md` adds a "Required secrets" list.
+- Must not get worse: API `pytest`; local dev with `.env.example` still boots.
+- Proof (RED first): new `apps/project-car/api/tests/test_dev_secret_guard.py`: `test_loopback_prod_refuses_dev_owner_secret` (SHOP_ENV unset, SHOP_HOST=127.0.0.1, bearer `dev-owner-secret` → 503/401 insecure-default error, not 200); `test_startup_fails_with_defaults_outside_dev` (error text names `owner_api_secret`, does not contain `dev-owner-secret`); `test_dev_env_allows_defaults`; `test_env_example_lists_required_keys` (file contains the four keys).
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/config.py`, `apps/project-car/api/app/auth.py` (`default_secret_blocked`, `reject_dev_secret`), `apps/project-car/api/app/main.py`, `apps/project-car/api/.env.example`, `apps/project-car/api/tests/conftest.py`, `Docs/deployment-guide.md`, new `apps/project-car/api/tests/test_dev_secret_guard.py`
+- Depends on: none. Doc's real `.env` check waits for Doc's Mac (Ben).
+
+### R103. Tests only run on SQLite, which ignores row locks
+- Category: Reliability (fix #4)
+- Baseline: `apps/project-car/api/tests/conftest.py` builds the engine from `"sqlite://"`; `with_for_update()` is a no-op, so lock bugs (#1, #5, #6) pass.
+- Target: conftest reads `TEST_DATABASE_URL`; when it starts with `postgresql`, create a fresh schema per test session via Alembic `upgrade head` and truncate between tests; otherwise SQLite as today. New pytest marker `pg` (registered in `apps/project-car/api/pyproject.toml`), auto-skipped with reason "needs TEST_DATABASE_URL" on SQLite. New helper `apps/project-car/api/tests/race.py`: `race(n, fn)` runs `fn(session)` in `n` threads, each with its own session/connection, released together by a `threading.Barrier`, returns results and exceptions. New `apps/project-car/scripts/test-pg.sh`: starts `postgres:16` with docker if `TEST_DATABASE_URL` is unset, exports it, runs `pytest -q -m "pg or not pg"`. `Docs/shop-os-ci.md` documents the exact CI job (service `postgres:16`, env `TEST_DATABASE_URL`, command) for a human to add — this row does NOT edit `.github/workflows/`.
+- Must not get worse: SQLite `pytest` unchanged and fast.
+- Proof (RED first): new `apps/project-car/api/tests/test_pg_race.py`: `@pytest.mark.pg test_refund_accept_race_refunds_once` (12 parallel accepts → exactly 1 success, 11 × 409, one ledger row); `test_race_helper_releases_together` (unit, runs on SQLite). Run `bash apps/project-car/scripts/test-pg.sh` locally: the pg test is RED before R100, GREEN after.
+- Size: 2 tasks
+- Likely files: `apps/project-car/api/tests/conftest.py`, `apps/project-car/api/pyproject.toml`, new `apps/project-car/api/tests/race.py`, new `apps/project-car/api/tests/test_pg_race.py`, new `apps/project-car/scripts/test-pg.sh`, `Docs/shop-os-ci.md`
+- Depends on: R100 merged for the green race test. The CI workflow job itself needs Ben (workflows are off-limits to GB).
+
+### R104. Accepting a fill draft repeatedly re-sends notices; chat drafts double-post
+- Category: Critical bug (fix #5)
+- Baseline: `accept_fill_draft` and `accept_chat_draft` in `apps/project-car/api/app/services/staff.py` load the draft via `_get_draft` with no lock; audit: 5 copies to each of 40 members.
+- Target: `_get_draft(..., lock=True)` uses `with_for_update()` + `populate_existing`; both accepts re-check `status == pending` after the lock → 409 `draft_already_decided`. Fill accept applies the R46 rule: if a campaign already exists for that target date and channel, 409 `already_notified` and no outbox rows.
+- Must not get worse: API `pytest`; first accept still sends one notice per member.
+- Proof (RED first): new `apps/project-car/api/tests/test_draft_locks.py`: `test_second_fill_accept_is_409_no_new_outbox` (outbox count equal after second call); `test_second_chat_accept_is_409_one_message`; `test_fill_accept_respects_one_campaign_per_day`; plus `@pytest.mark.pg` parallel variants (5 parallel accepts → 1 success) using `tests/race.py`.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/staff.py` (`_get_draft`, `accept_fill_draft`, `accept_chat_draft`), new `apps/project-car/api/tests/test_draft_locks.py`
+- Depends on: R103 for the pg variants (SQLite tests stand alone). Not with R100/R105 at the same time (same file).
+
+### R105. Parts, tool-crib, job-done and send-back decisions can both land
+- Category: Critical bug (fix #6)
+- Baseline: `decide_parts_request`, `decide_tool_crib_exception`, `complete_job`, `send_back_job` in `apps/project-car/api/app/services/staff.py` read rows without a lock; approve and deny can both commit.
+- Target: copy the shop-hoist pattern (`apps/project-car/api/app/services/shop_hoist_requests.py`): lock with `with_for_update()` + `populate_existing`, re-check the status after the lock, 409 `request_already_decided` / `job_already_decided`.
+- Must not get worse: API `pytest`.
+- Proof (RED first): new `apps/project-car/api/tests/test_decision_locks.py`: for each of the four, decide once then decide the opposite → 409 and the stored status/ledger is from the first decision only; `@pytest.mark.pg` parallel approve+deny → exactly one wins.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/staff.py` (the four functions only), new `apps/project-car/api/tests/test_decision_locks.py`
+- Depends on: after R104 (same file).
+
+### R106. Eight bad member logins lock the Owner out
+- Category: Security (fix #7)
+- Baseline: `reserve_login_failure(client_ip)` in `apps/project-car/api/app/auth.py` keys one bucket per client IP; behind the tunnel every request is 127.0.0.1 and the web does not forward the real IP, so all logins share one bucket and Owner and Member share it.
+- Target: bucket key = `(realm, client_ip, normalized account)` where realm ∈ {`owner`, `member`}; limit 8 per 15 min per key plus a looser per-IP cap of 50 per realm. Web login actions (`apps/project-car/web/app/login/actions.ts`, `apps/project-car/web/app/member/login/actions.ts`) forward the incoming client IP header named by `CLIENT_IP_HEADER` (from R55's setting, read in `apps/project-car/api/app/client_ip.py`) as that same header to the API; middleware does not trust it from the browser directly unless the request came through the tunnel.
+- Must not get worse: API `pytest`; web lint/typecheck/test/build; `tests/test_client_ip.py`.
+- Proof (RED first): new `apps/project-car/api/tests/test_login_buckets.py`: `test_member_failures_do_not_lock_owner` (8 bad member logins from one IP, then a correct owner login → 200); `test_other_account_not_locked`; `test_ninth_failure_same_account_is_429`. Web unit test `apps/project-car/web/lib/login-forward.test.ts` for the header-forward helper `apps/project-car/web/lib/login-forward.ts`.
+- Size: 2 tasks
+- Likely files: `apps/project-car/api/app/auth.py` (login bucket functions), `apps/project-car/api/app/routers/auth.py`, `apps/project-car/web/app/login/actions.ts`, `apps/project-car/web/app/member/login/actions.ts`, new `apps/project-car/web/lib/login-forward.ts`, new `apps/project-car/web/lib/login-forward.test.ts`, new `apps/project-car/api/tests/test_login_buckets.py`
+- Depends on: R102 merged (`.env.example` lists `CLIENT_IP_HEADER`).
+
+### R107. An expired session crashes to "Application error" instead of login
+- Category: Reliability (fix #8; R62 / PR #210 covers the error and 404 pages only)
+- Baseline: `apps/project-car/web/lib/page.ts` clears the session cookie from a Server Component when the API returns 401, which Next.js forbids, so the page throws.
+- Target: `lib/page.ts` only `redirect("/login?reason=session")` / `redirect("/member/login?reason=session")`; new route handlers `apps/project-car/web/app/logout/expired/route.ts` and `apps/project-car/web/app/member/logout/expired/route.ts` clear the cookie and redirect to login; `page.ts` redirects to those. `apps/project-car/web/middleware.ts` redirects a request carrying a cookie that fails a cheap shape check to the same handler.
+- Must not get worse: web lint/typecheck/test/build/screenshots; valid sessions unaffected.
+- Proof (RED first): new `apps/project-car/web/lib/session-expired.test.ts`: the helper `sessionExpiredTarget(kind)` returns the handler path and `page.ts` no longer imports `cookies` for writing (grep test); Playwright spec in `apps/project-car/web/tests/session-expired.spec.ts` (if the visual suite exists): set a garbage cookie, open `/` → lands on `/login?reason=session`, no "Application error".
+- Size: 1 task
+- Likely files: `apps/project-car/web/lib/page.ts`, `apps/project-car/web/middleware.ts`, new `apps/project-car/web/app/logout/expired/route.ts`, new `apps/project-car/web/app/member/logout/expired/route.ts`, new `apps/project-car/web/lib/session-expired.test.ts`
+- Depends on: none (do not touch `app/error.tsx` / `app/not-found.tsx`, PR #210 owns them).
+
+### R108. A shop booking can block a bay for two years
+- Category: Bug (fix #12) — **STAND-IN** caps
+- Baseline: `_create_shop_booking` in `apps/project-car/api/app/services/bookings.py` has no length or window check (one call made 17,520 hour rows).
+- Target: constants in `apps/project-car/api/app/services/bookings.py`: `MAX_SHOP_BOOKING_HOURS = 24`, `MAX_MEMBER_BOOKING_HOURS = 12`, `MAX_BOOKING_DAYS_AHEAD = 60` (comment "STAND-IN until Ben sets booking caps"; member bookings still also obey the tier window). All booking kinds: length > cap → 400 `booking_too_long`; start beyond window → 400 `booking_too_far_ahead`. Checked before any hour row is written.
+- Must not get worse: API `pytest`.
+- Proof (RED first): new `apps/project-car/api/tests/test_booking_caps.py`: shop booking of 25 h → 400 `booking_too_long` and zero `booking_hours` rows; 24 h ok; start 61 days out → 400 `booking_too_far_ahead`; member 13 h → 400.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/bookings.py` (`_create_shop_booking`, `create_booking` validation only), new `apps/project-car/api/tests/test_booking_caps.py`
+- Depends on: none. Not concurrently with other `bookings.py` rows.
+
+### R109. Check-in is allowed while another visit is on the bay (folds R64)
+- Category: Correctness (fix #14 / R64, decided)
+- Baseline: `check_in_booking` in `apps/project-car/api/app/services/bookings.py` does not look at other active or overdue bookings on the hoist.
+- Target: under the hoist lock, if another booking on the same hoist is `active` or `overdue`, 409 `hoist_occupied`.
+- Must not get worse: API `pytest`.
+- Proof (RED first): new `apps/project-car/api/tests/test_check_in_occupied.py`: A active on Bay 2, check in B on Bay 2 → 409 `hoist_occupied`; A overdue → 409; A completed → B checks in.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/bookings.py` (`check_in_booking` only), new `apps/project-car/api/tests/test_check_in_occupied.py`
+- Depends on: after R108 (same file). Supersedes R64.
+
+### R110. Half-hour back-to-back bookings collide and forms default to odd minutes
+- Category: Correctness (fix #11) — **STAND-IN**: on the hour only
+- Baseline: hour lock in `claim_booking_hours` (`apps/project-car/api/app/services/bookings.py`) keys whole hours, so 10:30–11:30 then 11:30–12:30 conflict; forms default to now (e.g. 7:59 PM).
+- Target: constant `BOOKING_GRANULARITY_MINUTES = 60` ("STAND-IN until Ben picks on-the-hour vs half hours"); `create_booking` rejects a start or end not on that grid with 400 `booking_not_on_grid`. Web forms (`apps/project-car/web/components/create-booking-form.tsx`, `apps/project-car/web/components/member-booking-form.tsx`) default start to the next whole hour and replace the end field with a duration picker (1–12 h) via a new pure helper `apps/project-car/web/lib/booking-defaults.ts`.
+- Must not get worse: API `pytest`; web suite and screenshots.
+- Proof (RED first): `apps/project-car/api/tests/test_booking_grid.py` (10:30 start → 400 `booking_not_on_grid`; 10:00–11:00 then 11:00–12:00 both succeed); `apps/project-car/web/lib/booking-defaults.test.ts` (19:59 → 20:00, 20:00 → 20:00 next-hour rule documented, duration → end).
+- Size: 2 tasks
+- Likely files: `apps/project-car/api/app/services/bookings.py` (`create_booking` validation only), new `apps/project-car/api/tests/test_booking_grid.py`, `apps/project-car/web/components/create-booking-form.tsx`, `apps/project-car/web/components/member-booking-form.tsx`, new `apps/project-car/web/lib/booking-defaults.ts`, new `apps/project-car/web/lib/booking-defaults.test.ts`
+- Depends on: R99 merged (shares the booking forms); after R109.
+
+### R111. Two shop time zones (Edmonton inputs, Regina display)
+- Category: Correctness (fix #15) — **STAND-IN**: America/Regina
+- Baseline: `SHOP_TZ = ZoneInfo("America/Edmonton")` and `PRICING_TZ = ZoneInfo("America/Regina")` in `apps/project-car/api/app/shop_time.py`; web `apps/project-car/web/lib/time.ts` and `apps/project-car/web/lib/calendar.ts` format in Regina. Edmonton falls back Nov 1, so inputs drift an hour from display.
+- Target: one constant `SHOP_TZ_NAME = "America/Regina"` ("STAND-IN until Ben confirms the shop zone") in `shop_time.py`; `SHOP_TZ` and `PRICING_TZ` both derive from it. Web gets one `SHOP_TIME_ZONE` export in `lib/time.ts` used by `lib/calendar.ts`. All datetimes the web sends carry an explicit offset (`toISOString` with offset helper), never a naive local string.
+- Must not get worse: API `pytest` (incl. `tests/test_shop_time.py`); web suite.
+- Proof (RED first): `apps/project-car/api/tests/test_single_zone.py` (`SHOP_TZ == PRICING_TZ`; a naive 2026-11-01T01:30 input is interpreted as Regina, same instant shown back); `apps/project-car/web/lib/time.test.ts` new case (form value → ISO string with `-06:00`; calendar day labels use the same zone).
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/shop_time.py`, new `apps/project-car/api/tests/test_single_zone.py`, `apps/project-car/web/lib/time.ts`, `apps/project-car/web/lib/time.test.ts`, `apps/project-car/web/lib/calendar.ts`
+- Depends on: none (R99 tests already use Regina).
+
+### R112. The whole booking gets the fill discount if any minute touches the window
+- Category: Correctness (fix #16) — **STAND-IN**: discount only minutes inside the window
+- Baseline: `slot_overlaps_next_day_window` / `resolve_fill_for_slot` in `apps/project-car/api/app/services/fill.py` return one factor for the booking.
+- Target: `resolve_fill_for_slot` returns the in-window interval; R99's per-segment `quote_reserve` in `apps/project-car/api/app/services/pricing.py` applies the fill factor only to segment minutes inside it. Constant `FILL_DISCOUNT_SCOPE = "window_minutes_only"` ("STAND-IN").
+- Must not get worse: API `pytest`; R99 expected numbers.
+- Proof (RED first): `apps/project-car/api/tests/test_fill_partial.py`: 2 h booking with 1 h inside the window at 0.80, standard band 1.00 → 100 + 80 = 180.00 (main gives 160.00); wholly inside → as today.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/fill.py` (`resolve_fill_for_slot`, `slot_overlaps_next_day_window`), `apps/project-car/api/app/services/pricing.py`, new `apps/project-car/api/tests/test_fill_partial.py`, `Docs/token-pricing.md`
+- Depends on: R99 merged.
+
+### R113. Member "Book" creates then confirms in two calls
+- Category: Correctness (fix #21)
+- Baseline: `apps/project-car/web/app/member/schedule/actions.ts` calls create then confirm; a failed confirm leaves a pending booking holding tokens.
+- Target: `create_booking` in `apps/project-car/api/app/services/bookings.py` accepts `confirm: bool = False` (body field on the member create route in `apps/project-car/api/app/routers/member.py`); when true, create + confirm happen in one transaction, all or nothing. Web action sends one call.
+- Must not get worse: API `pytest`; web suite.
+- Proof (RED first): `apps/project-car/api/tests/test_member_book_atomic.py`: create with `confirm=true` → status confirmed; force confirm to fail (monkeypatch `confirm_booking` to raise) → no booking row and balance unchanged.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/bookings.py` (`create_booking` signature only), `apps/project-car/api/app/routers/member.py`, `apps/project-car/web/app/member/schedule/actions.ts`, new `apps/project-car/api/tests/test_member_book_atomic.py`
+- Depends on: after R110 (same files).
+
+### R114. Quote shows a negative balance and Reserve stays enabled
+- Category: Correctness (fix #22)
+- Baseline: `apps/project-car/web/components/booking-cost.tsx` shows "balance 0 → -125"; submit in `create-booking-form.tsx` stays enabled.
+- Target: new pure helper `reserveBlockReason(quote, balance)` in `apps/project-car/web/lib/reserve-guard.ts` returns `"Not enough tokens: need 125, have 0"` or null; forms disable Reserve and show the reason.
+- Must not get worse: web suite and screenshots.
+- Proof (RED first): `apps/project-car/web/lib/reserve-guard.test.ts` (0 vs 125 → reason; 200 vs 125 → null; equal → null).
+- Size: 1 task
+- Likely files: new `apps/project-car/web/lib/reserve-guard.ts`, new `apps/project-car/web/lib/reserve-guard.test.ts`, `apps/project-car/web/components/booking-cost.tsx`, `apps/project-car/web/components/create-booking-form.tsx`, `apps/project-car/web/components/member-booking-form.tsx`
+- Depends on: after R110 (same forms).
+
+### R115. Overdue visits are not counted as occupying a bay
+- Category: Correctness (fix #23)
+- Baseline: `OCCUPYING = (PENDING, CONFIRMED, ACTIVE)` in `apps/project-car/api/app/services/fill.py`.
+- Target: add `BookingStatus.OVERDUE`; remove the overdue bullet from Docs/backlog.md Skipped list.
+- Must not get worse: API `pytest`.
+- Proof (RED first): `apps/project-car/api/tests/test_fill_overdue.py`: overdue booking on Bay 3 → `detect_openings` for tomorrow does not offer Bay 3's overlapping hours.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/fill.py` (`OCCUPYING` only), new `apps/project-car/api/tests/test_fill_overdue.py`
+- Depends on: after R112 (same file).
+
+### R116. With no SMTP host, accepted notices are marked "sent"
+- Category: Correctness (fix #24)
+- Baseline: `accept_fill_draft` in `apps/project-car/api/app/services/staff.py` and `apps/project-car/api/app/services/notify.py` mark outbox rows sent with no SMTP.
+- Target: new outbox status `not_configured` (enum value in `apps/project-car/api/app/models.py`; it is a string column, so no migration if `native_enum=False` — if native, add one Alembic revision); used when `smtp_host` is empty.
+- Must not get worse: API `pytest`.
+- Proof (RED first): `apps/project-car/api/tests/test_notify_no_smtp.py`: no SMTP → outbox rows `not_configured`, none `sent`.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/notify.py`, `apps/project-car/api/app/services/staff.py` (`accept_fill_draft` status only), `apps/project-car/api/app/models.py` (outbox status enum only), new `apps/project-car/api/tests/test_notify_no_smtp.py`
+- Depends on: after R105 (staff.py).
+
+### R117. No record of who made a booking or ledger entry
+- Category: Security / audit (fix #13)
+- Baseline: `Booking` and `TokenLedger` in `apps/project-car/api/app/models.py` have no creator columns; AI create/confirm writes no `record_action`.
+- Target: one Alembic revision `apps/project-car/api/alembic/versions/20261031_0017_created_by.py` adds nullable `created_by_kind` (`owner|member|ai|system`) and `created_by_id` to `bookings` and `token_ledger` (downgrade drops them). `services/bookings.py` and `services/tokens.py` set them from the principal; every AI write route calls `record_action`.
+- Must not get worse: API `pytest`; migration up/down on SQLite.
+- Proof (RED first): `apps/project-car/api/tests/test_created_by.py`: AI-created booking stores `created_by_kind="ai"` and an action row; member booking stores member id; ledger rows carry the same.
+- Size: 2 tasks
+- Likely files: `apps/project-car/api/app/models.py`, new `apps/project-car/api/alembic/versions/20261031_0017_created_by.py`, `apps/project-car/api/app/services/tokens.py`, `apps/project-car/api/app/services/bookings.py` (writes of the new columns only), new `apps/project-car/api/tests/test_created_by.py`
+- Depends on: R101 merged; after R113 (bookings.py). Only migration in flight.
+
+### R118. Owner sessions cannot be revoked
+- Category: Security (fix #17)
+- Baseline: `create_session_token` in `apps/project-car/api/app/auth.py` has no fingerprint; logout or password change leaves tokens valid 24 h.
+- Target: owner token carries `pw_fp = password_fingerprint(settings, owner_password)` plus a `session_epoch` read from a new single-row setting table or file-free in-memory+DB value (`owner_session_epoch` in `apps/project-car/api/app/models.py`, same migration rules as R117 — reuse R117 revision if not yet merged, else new 0018); logout bumps the epoch; `read_session_token` rejects mismatches.
+- Must not get worse: API `pytest`; `tests/test_session_cookie.py`.
+- Proof (RED first): `apps/project-car/api/tests/test_owner_revoke.py`: token issued, logout, old token → 401; password change → old token 401.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/auth.py` (session token functions), `apps/project-car/api/app/routers/auth.py`, `apps/project-car/api/app/models.py`, new `apps/project-car/api/alembic/versions/20261031_0018_owner_session_epoch.py`, new `apps/project-car/api/tests/test_owner_revoke.py`
+- Depends on: after R106 (auth.py) and R117 (migration order).
+
+### R119. All AIs share one actor id
+- Category: Security (fix #18)
+- Baseline: `ai_actor_id = "shop-ai"` in `apps/project-car/api/app/config.py`; `reject_own_request` in `services/staff.py` cannot tell bots apart and lets AI approve another AI's request.
+- Target: setting `ai_bearers` = comma list `name:secret` (falls back to `shop-ai:<AI_API_SECRET>`); principal email = bot name; `reject_own_request` also blocks AI approving any AI-created request (403 `ai_cannot_approve_ai`).
+- Must not get worse: API `pytest`.
+- Proof (RED first): `apps/project-car/api/tests/test_ai_actors.py`: bot-a creates, bot-b approves → 403 `ai_cannot_approve_ai`; owner approves → ok; actor recorded as `bot-a`.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/config.py`, `apps/project-car/api/app/deps.py`, `apps/project-car/api/app/services/staff.py` (`reject_own_request`, `actor_of`), new `apps/project-car/api/tests/test_ai_actors.py`
+- Depends on: R101 merged; after R116.
+
+### R120. Cancel or complete rescans every held booking
+- Category: Performance (fix #19)
+- Baseline: `release_booking_hours` calls `backfill_holding_booking_hours(session)` over all bookings in `apps/project-car/api/app/services/bookings.py`.
+- Target: `backfill_holding_booking_hours(session, booking_id=None)`; cancel/complete pass the booking id; full scan only from migration/admin.
+- Must not get worse: API `pytest`.
+- Proof (RED first): `apps/project-car/api/tests/test_scoped_backfill.py`: with SQLAlchemy `before_cursor_execute` counter, cancel with 200 other bookings issues ≤ 10 statements (main issues hundreds).
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/bookings.py` (`release_booking_hours`, `backfill_holding_booking_hours`), new `apps/project-car/api/tests/test_scoped_backfill.py`
+- Depends on: after R117.
+
+### R121. A booking-hour conflict rolls back the whole request; refund commits mid-request
+- Category: Reliability (fix #20)
+- Baseline: `claim_booking_hours` catches IntegrityError with `session.rollback()`; `accept_refund_request` calls `session.commit()`.
+- Target: `with session.begin_nested():` SAVEPOINT around the insert; no `commit()` inside `apps/project-car/api/app/services/*.py` (routers commit).
+- Must not get worse: API `pytest`.
+- Proof (RED first): `apps/project-car/api/tests/test_no_service_commit.py`: AST scan of `app/services/*.py` finds no `.commit(` call; conflict test: earlier writes in the same request survive a hour conflict.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/services/bookings.py` (`claim_booking_hours`), `apps/project-car/api/app/services/staff.py` (`accept_refund_request` commit only), `apps/project-car/api/app/routers/staff.py`, new `apps/project-car/api/tests/test_no_service_commit.py`
+- Depends on: after R100, R119, R120.
+
+### R122. Runbook does not say how to fix legacy overlaps before migration 0015
+- Category: Docs (fix #25)
+- Target: `Docs/doc-unfreeze.md` (or `Docs/deployment-guide.md`) section "Before pulling 0015": exact SQL to list overlapping bookings per hoist, how to cancel/shift them, re-run `alembic upgrade head`. New script `apps/project-car/api/scripts/find_overlaps.py` prints the rows (read-only).
+- Proof (RED first): `apps/project-car/api/tests/test_find_overlaps.py`: two overlapping seeded bookings → script lists both ids; none → exit 0 "no overlaps".
+- Size: 1 task
+- Likely files: new `apps/project-car/api/scripts/find_overlaps.py`, new `apps/project-car/api/tests/test_find_overlaps.py`, `Docs/doc-unfreeze.md`
+- Depends on: none.
+
+### R123. Internal and dev text shows in the product
+- Category: UI (fix #26)
+- Baseline: `GET /TIERS`-style eyebrows in page headers, OAuth env var names, host notes, an 8-line member banner in `apps/project-car/web/components/member-shell.tsx`, `owner-demo-banner.tsx`.
+- Target: one dismissible one-line demo banner component `apps/project-car/web/components/demo-banner.tsx` ("Demo shop — Details") with details in a `<details>`; remove method/path eyebrows and env-var names from page headers; dismissal stored in a cookie.
+- Must not get worse: web suite; screenshots updated.
+- Proof (RED first): `apps/project-car/web/lib/no-dev-text.test.ts`: scans `app/**/page.tsx` and `components/*.tsx` for `/GET \//`, `POST /`, `_CLIENT_ID`, `_SECRET` strings in JSX text → zero hits (fails on main).
+- Size: 2 tasks
+- Likely files: new `apps/project-car/web/components/demo-banner.tsx`, `apps/project-car/web/components/member-shell.tsx`, `apps/project-car/web/components/owner-shell.tsx`, `apps/project-car/web/components/owner-demo-banner.tsx`, `apps/project-car/web/app/login/page.tsx`, `apps/project-car/web/app/tiers/page.tsx`, new `apps/project-car/web/lib/no-dev-text.test.ts`
+- Depends on: none.
+
+### R124. Raw values shown to people (65.0000 hours, slugs, ledger kinds)
+- Category: UI (fix #27)
+- Target: new `apps/project-car/web/lib/format.ts`: `formatHours("65.0000") → "65 h"`, `"1.5000" → "1.5 h"`; `tierName(slug, tiers)`; `ledgerKindLabel("booking_reserve") → "Booking hold"` (map every `LedgerKind` value); running balance column in member detail ledger.
+- Proof (RED first): `apps/project-car/web/lib/format.test.ts` covering each function and every ledger kind in `lib/shop-api.ts`.
+- Size: 1 task
+- Likely files: new `apps/project-car/web/lib/format.ts`, new `apps/project-car/web/lib/format.test.ts`, `apps/project-car/web/app/member/page.tsx`, `apps/project-car/web/app/members/page.tsx`, `apps/project-car/web/app/members/[id]/page.tsx`
+- Depends on: none.
+
+### R125. "Grant this month" and multiplier edits apply with no confirm
+- Category: UI (fix #28)
+- Target: confirm step that names the effect ("Grant 400 tokens to 23 active members?") via a new client component `apps/project-car/web/components/confirm-button.tsx`; "Rebuild balance" moves to a secondary menu on member Tokens card.
+- Proof (RED first): `apps/project-car/web/lib/confirm-copy.test.ts` for `grantConfirmText(count, tokens)` and `multiplierConfirmText(old,new)` in new `apps/project-car/web/lib/confirm-copy.ts`.
+- Size: 1 task
+- Likely files: new `apps/project-car/web/components/confirm-button.tsx`, new `apps/project-car/web/lib/confirm-copy.ts`, new `apps/project-car/web/lib/confirm-copy.test.ts`, `apps/project-car/web/app/tiers/page.tsx`, `apps/project-car/web/app/members/[id]/page.tsx`
+- Depends on: after R123 and R124 (shared pages).
+
+### R126. Tiny text, missing focus ring, small targets, More menu ignores Escape
+- Category: UI / accessibility (fix #29)
+- Target: in `apps/project-car/web/app/globals.css`: no `font-size` below 12px; `:focus-visible { outline: 2px solid ... }` on all interactive elements; menu rows and buttons `min-height: 44px`. `owner-shell.tsx` More menu closes on Escape and returns focus to its button.
+- Proof (RED first): `apps/project-car/web/lib/css-floor.test.ts`: parses `globals.css`, fails on any `font-size` < 12px and if `:focus-visible` rule is missing.
+- Size: 1 task
+- Likely files: `apps/project-car/web/app/globals.css`, `apps/project-car/web/components/owner-shell.tsx`, new `apps/project-car/web/lib/css-floor.test.ts`
+- Depends on: after R123 (owner-shell.tsx).
+
+### R127. Schedule is unusable on a phone
+- Category: UI (fix #30)
+- Target: under 640px, `apps/project-car/web/app/schedule/page.tsx` and `apps/project-car/web/app/member/schedule/page.tsx` render a day agenda (day picker + bay filter) instead of the grid; month cells show density dots (new `apps/project-car/web/lib/density.ts`); week view cropped to shop hours.
+- Proof (RED first): `apps/project-car/web/lib/density.test.ts` (0, 1–3, 4+ bookings → 0/1/2/3 dots); Playwright 390px screenshot shows ≤ 80 tap targets on schedule.
+- Size: 2 tasks
+- Likely files: `apps/project-car/web/app/schedule/page.tsx`, `apps/project-car/web/app/member/schedule/page.tsx`, `apps/project-car/web/components/month-heatmap.tsx`, `apps/project-car/web/components/week-hoist-calendars.tsx`, new `apps/project-car/web/components/day-agenda.tsx`, new `apps/project-car/web/lib/density.ts`, new `apps/project-car/web/lib/density.test.ts`
+- Depends on: R110 merged.
+
+### R128. Members, Waitlist and Parts lists have no search, filter or paging
+- Category: UI (fix #42; R60 paged member tokens/bookings only)
+- Target: list endpoints `GET /members`, `GET /waitlist`, `GET /parts-requests` accept `q`, `status`, `limit` (default 200, max 500), `offset`; pages get a search box and next/prev.
+- Proof (RED first): `apps/project-car/api/tests/test_list_search.py` (q filters by name/email; limit 501 → 422; offset pages).
+- Size: 2 tasks
+- Likely files: `apps/project-car/api/app/routers/members.py`, `apps/project-car/api/app/routers/waitlist.py`, `apps/project-car/api/app/routers/parts_requests.py`, new `apps/project-car/api/tests/test_list_search.py`, `apps/project-car/web/app/members/page.tsx`, `apps/project-car/web/app/waitlist/page.tsx`, `apps/project-car/web/app/parts/page.tsx`
+- Depends on: R101 merged (routers).
+
+### R129. No single Inbox for approvals
+- Category: Layout (fix #31)
+- Target: new API `GET /inbox` in new `apps/project-car/api/app/routers/inbox.py` returning pending shop-hoist requests, refund requests, fill and chat drafts, parts requests, tool-crib exceptions with `kind`, `id`, `summary`, `created_by`, `approve_path`, `deny_path`. New page `apps/project-car/web/app/inbox/page.tsx` grouping by kind with Approve/Deny calling the existing routes; `ShopHoistRequestQueue` moves from `app/schedule/page.tsx` to the Inbox.
+- Proof (RED first): `apps/project-car/api/tests/test_inbox.py`: one of each pending kind → six items; decided items absent; AI and member get 403.
+- Size: 2 tasks
+- Likely files: new `apps/project-car/api/app/routers/inbox.py`, `apps/project-car/api/app/main.py`, new `apps/project-car/api/tests/test_inbox.py`, new `apps/project-car/web/app/inbox/page.tsx`, `apps/project-car/web/lib/shop-api.ts`, `apps/project-car/web/app/schedule/page.tsx`
+- Depends on: R100, R104, R105 merged (ideally R101).
+
+### R130. Member phone layout has no bottom tabs or balance chip
+- Category: Layout (fix #32)
+- Target: `apps/project-car/web/components/member-shell.tsx`: bottom tab bar under 640px (Home, Book, Bookings, Messages, Account), token balance chip in the header; active tab from pathname via new `apps/project-car/web/lib/member-tabs.ts`.
+- Proof (RED first): `apps/project-car/web/lib/member-tabs.test.ts` (`/member/schedule` → Book, `/member/chat/x` → Messages).
+- Size: 1 task
+- Likely files: `apps/project-car/web/components/member-shell.tsx`, `apps/project-car/web/app/globals.css`, new `apps/project-car/web/lib/member-tabs.ts`, new `apps/project-car/web/lib/member-tabs.test.ts`
+- Depends on: after R123, R126.
+
+### R131. Member Home does not lead with next booking, balance and "Book a bay"
+- Category: Layout (fix #33; R91 / PR #217 adds next visit and check-in time)
+- Target: top of `apps/project-car/web/app/member/page.tsx`: balance, next booking card, "Book a bay" primary button; ledger moves to `/member/account` (link).
+- Proof (RED first): Playwright `apps/project-car/web/tests/member-home.spec.ts` order check, or a pure `memberHomeSections()` in new `apps/project-car/web/lib/member-home.ts` with test.
+- Size: 1 task
+- Likely files: `apps/project-car/web/app/member/page.tsx`, new `apps/project-car/web/lib/member-home.ts`, new `apps/project-car/web/lib/member-home.test.ts`
+- Depends on: R91 merged; after R124.
+
+### R132. Owner Today page order
+- Category: Layout (fix #34)
+- Target: `apps/project-car/web/app/page.tsx`: Needs you strip (count from `GET /inbox`), bay timeline, at-risk members, KPIs (2×2 under 640px); calendars card and to-do form move off; three calendar buttons → one.
+- Proof (RED first): `apps/project-car/web/lib/today-sections.test.ts` for new `apps/project-car/web/lib/today-sections.ts` order list.
+- Size: 1 task
+- Likely files: `apps/project-car/web/app/page.tsx`, new `apps/project-car/web/lib/today-sections.ts`, new `apps/project-car/web/lib/today-sections.test.ts`
+- Depends on: R129 merged.
+
+### R133. Member Schedule mixes booking and my bookings
+- Category: Layout (fix #35)
+- Target: `/member/book` (day → bay → time → cost → confirm) and `/member/bookings`; `/member/schedule` redirects to `/member/book`.
+- Proof (RED first): `apps/project-car/web/lib/redirects.test.ts` for the redirect table in new `apps/project-car/web/lib/redirects.ts`.
+- Size: 2 tasks
+- Likely files: new `apps/project-car/web/app/member/book/page.tsx`, new `apps/project-car/web/app/member/bookings/page.tsx`, `apps/project-car/web/app/member/schedule/page.tsx`, new `apps/project-car/web/lib/redirects.ts`, new `apps/project-car/web/lib/redirects.test.ts`
+- Depends on: R127, R130 merged.
+
+### R134. Names are inconsistent (hoist/bay/customer bay ...)
+- Category: Layout (fix #36) — names are a stand-in until Ben approves
+- Target: nav labels and h1s: Today, Home, Bays, Plans & pricing, Fill open slots, Messages, Billing, Shop jobs; old routes redirect (add to `lib/redirects.ts`); one vocabulary file `apps/project-car/web/lib/labels.ts`.
+- Proof (RED first): `apps/project-car/web/lib/labels.test.ts`: no JSX text in `app/**` or `components/**` contains "hoist" (case-insensitive) outside code identifiers.
+- Size: 1 task
+- Likely files: new `apps/project-car/web/lib/labels.ts`, new `apps/project-car/web/lib/labels.test.ts`, `apps/project-car/web/lib/redirects.ts`, `apps/project-car/web/components/owner-shell.tsx`, `apps/project-car/web/components/member-shell.tsx`
+- Depends on: R133 merged.
+
+### R135. Owner nav is not grouped by task
+- Category: Layout (fix #37)
+- Target: `apps/project-car/web/components/owner-shell.tsx`: groups Today, Schedule, Inbox, Messages, Members, Floor, Inventory, Grow, Billing, Settings; left sidebar ≥960px, bottom bar + More sheet on phones; data in new `apps/project-car/web/lib/owner-nav.ts`.
+- Proof (RED first): `apps/project-car/web/lib/owner-nav.test.ts` (every existing owner route appears exactly once).
+- Size: 2 tasks
+- Likely files: `apps/project-car/web/components/owner-shell.tsx`, new `apps/project-car/web/lib/owner-nav.ts`, new `apps/project-car/web/lib/owner-nav.test.ts`, `apps/project-car/web/app/globals.css`
+- Depends on: R129, R134 merged.
+
+### R136. Placeholders show as real features
+- Category: Layout (fix #38)
+- Target: `NEXT_PUBLIC_SHOW_DEMO_PLACEHOLDERS` flag (default off) in `apps/project-car/web/lib/config.ts`; Cameras pages and "Sample … (not stored)" sections render only when on.
+- Proof (RED first): `apps/project-car/web/lib/config.test.ts` new case; `apps/project-car/web/lib/placeholders.ts` gated helper test.
+- Size: 1 task
+- Likely files: `apps/project-car/web/lib/config.ts`, `apps/project-car/web/lib/config.test.ts`, `apps/project-car/web/lib/placeholders.ts`, `apps/project-car/web/app/cameras/page.tsx`, `apps/project-car/web/app/jobs/page.tsx`
+- Depends on: none.
+
+### R137. No Settings hub or member Account page
+- Category: Layout (fix #39; R88 / PR #215 adds member profile)
+- Target: `/settings` with Plans & pricing (`/tiers`), Bays (`/hoists`), Calendar sync; `/member/account` holds profile (R88) and ledger.
+- Proof (RED first): `apps/project-car/web/lib/redirects.test.ts` cases for `/tiers` → `/settings/plans`, `/hoists` → `/settings/bays`.
+- Size: 2 tasks
+- Likely files: new `apps/project-car/web/app/settings/page.tsx`, new `apps/project-car/web/app/member/account/page.tsx`, `apps/project-car/web/lib/redirects.ts`, `apps/project-car/web/lib/redirects.test.ts`
+- Depends on: R88 and R135 merged.
+
+### R138. /tools mixes tool crib and purchasing
+- Category: Layout (fix #40)
+- Target: `/floor/tool-crib` and `/inventory/tools`; `/tools` redirects to the crib.
+- Proof (RED first): `apps/project-car/web/lib/inventory.test.ts` new case for split section helpers.
+- Size: 1 task
+- Likely files: `apps/project-car/web/app/tools/page.tsx`, new `apps/project-car/web/app/floor/tool-crib/page.tsx`, new `apps/project-car/web/app/inventory/tools/page.tsx`, `apps/project-car/web/lib/inventory.ts`, `apps/project-car/web/lib/inventory.test.ts`
+- Depends on: R135 merged.
+
+### R139. No unread badge on Messages or pending count on Inbox
+- Category: Layout (fix #41)
+- Target: API `GET /counts` (new `apps/project-car/api/app/routers/counts.py`): `{inbox_pending, unread_messages}` per principal; chat read marker per room (uses existing message ids; if a column is needed, one migration after R118). Badges in both shells, polled with `lib/chat-poll.ts`.
+- Proof (RED first): `apps/project-car/api/tests/test_counts.py` (new message → unread 1; read → 0; pending request → inbox 1).
+- Size: 2 tasks
+- Likely files: new `apps/project-car/api/app/routers/counts.py`, `apps/project-car/api/app/main.py`, new `apps/project-car/api/tests/test_counts.py`, `apps/project-car/web/lib/chat-poll.ts`
+- Depends on: R129, R135 merged.
+
+### R140. There is no staff login (API)
+- Category: Layout / auth (fix #43) — **STAND-IN** staff permissions
+- Target: `Principal(role="staff")` from a staff password setting (`STAFF_PASSWORD`, refused default per R102); new `apps/project-car/api/app/staff_permissions.py` `STAFF_ALLOWED` = check-in, complete, mark overdue, read schedule, create requests ("STAND-IN until Ben sets staff permissions"); dependency `require_staff_or_owner`.
+- Proof (RED first): `apps/project-car/api/tests/test_staff_role.py`: staff can check in; staff refund accept / token adjust / tier patch / member password → 403 `staff_not_allowed`; matrix walk like R101.
+- Size: 2 tasks
+- Likely files: new `apps/project-car/api/app/staff_permissions.py`, `apps/project-car/api/app/deps.py`, `apps/project-car/api/app/routers/auth.py`, `apps/project-car/api/app/routers/bookings.py`, new `apps/project-car/api/tests/test_staff_role.py`
+- Depends on: R101, R118, R119 merged.
+
+### R141. There is no staff Shift view
+- Category: Layout (fix #43, web) — **STAND-IN**
+- Target: staff login page `apps/project-car/web/app/staff/login/page.tsx`; `/shift` page with today's bays, check-in/complete, requests; owner shell filtered by new `apps/project-car/web/lib/staff-nav.ts`.
+- Proof (RED first): `apps/project-car/web/lib/staff-nav.test.ts` (staff sees only Shift, Schedule, Inbox-requests).
+- Size: 2 tasks
+- Likely files: new `apps/project-car/web/app/staff/login/page.tsx`, new `apps/project-car/web/app/shift/page.tsx`, new `apps/project-car/web/lib/staff-nav.ts`, new `apps/project-car/web/lib/staff-nav.test.ts`, `apps/project-car/web/middleware.ts`
+- Depends on: R140, R135 merged.
+
+### R142. Concurrency harness across every state-changing endpoint (Opus check a)
+- Category: Tests
+- Target: new `apps/project-car/api/tests/test_pg_concurrency_sweep.py` (`@pytest.mark.pg`) using `tests/race.py`: 10 parallel calls each for booking confirm, check-in, owner token adjust, job claim, chat draft accept, fill draft accept, refund accept; for each, snapshot `token_ledger` sum and row count per member before/after and assert exactly one success and the ledger diff equals one call's effect. Report table printed with `-s`.
+- Proof: RED for any endpoint still unlocked when written (record which in the PR); GREEN once R100/R104/R105 are merged and any new findings get their own row.
+- Size: 1 task
+- Likely files: new `apps/project-car/api/tests/test_pg_concurrency_sweep.py`, `apps/project-car/api/tests/race.py`
+- Depends on: R103 merged.
+
+### R143. Route × caller access matrix locked in as a test (Opus check b)
+- Category: Tests
+- Target: new `apps/project-car/api/tests/access_matrix.py` with the expected result for every route × {owner, member, ai, anonymous} (allow / 401 / 403 code); `apps/project-car/api/tests/test_access_matrix.py` walks `app.routes`, fails on any route missing from the matrix and on any mismatch. Generated table also written to `Docs/access-matrix.md`.
+- Proof (RED first): test fails on main (AI over-reach); GREEN after R101.
+- Size: 2 tasks
+- Likely files: new `apps/project-car/api/tests/access_matrix.py`, new `apps/project-car/api/tests/test_access_matrix.py`, new `Docs/access-matrix.md`
+- Depends on: R101 merged.
+
+### R144. Migration up/down tests on Postgres (Opus check c)
+- Category: Tests
+- Target: new `apps/project-car/api/tests/test_pg_migrations.py` (`@pytest.mark.pg`): empty DB `upgrade head` → `downgrade base` → `upgrade head`; seeded DB (`app.seed`) at revision 0014 with two overlapping bookings → `upgrade 0015` fails with the documented message, after fixing → succeeds and `booking_hours` rows match bookings; non-overlapping seed → backfill row count equals total booked hours.
+- Size: 1 task
+- Likely files: new `apps/project-car/api/tests/test_pg_migrations.py`
+- Depends on: R103 merged.
+
+### R145. Ledger reconciliation script and synthetic-data performance test (Opus check d)
+- Category: Tests / ops
+- Target: new `apps/project-car/api/scripts/reconcile_ledger.py` (read-only): for each member, cached balance vs sum of ledger rows; prints mismatches, exit 1 if any. New `apps/project-car/api/tests/test_reconcile_ledger.py`. New `apps/project-car/api/tests/test_perf_synthetic.py` (marker `perf`, skipped by default): 5,000 members / 50,000 bookings; cancel and complete under 200 ms; `GET /members`, `GET /bookings`, `GET /waitlist` with paging under 300 ms; prints timings.
+- Proof (RED first): reconcile test with a deliberately drifted balance → listed, exit 1.
+- Size: 2 tasks
+- Likely files: new `apps/project-car/api/scripts/reconcile_ledger.py`, new `apps/project-car/api/tests/test_reconcile_ledger.py`, new `apps/project-car/api/tests/test_perf_synthetic.py`, `apps/project-car/api/pyproject.toml` (marker only)
+- Depends on: R120, R128 merged for the green perf numbers.
+
+### R146. Accessibility scan and keyboard checks (Opus check e)
+- Category: Tests
+- Target: new Playwright spec `apps/project-car/web/tests/a11y.spec.ts` using `@axe-core/playwright` (devDependency): every owner and member page at 390px and 1440px, zero serious/critical violations; keyboard-only: log in, book a bay end to end, open and close the owner More menu with Escape. Report saved as `apps/project-car/web/test-results/a11y.json`.
+- Proof: RED on main (tiny text/focus); GREEN after R126 and fixes found.
+- Size: 2 tasks
+- Likely files: new `apps/project-car/web/tests/a11y.spec.ts`, `apps/project-car/web/package.json` (devDependency only), `apps/project-car/web/playwright.config.ts`
+- Depends on: R126 merged.
+
+## Stand-ins pending Ben (R100+)
+
+| Row | Real value needed | Stand-in used |
+| --- | --- | --- |
+| R101 | Exact list of things the AI may do | `Docs/ai-control.md` list, in `app/ai_allowlist.py` |
+| R108 | Max booking length and how far ahead | 24 h shop, 12 h member, 60 days |
+| R110 | On-the-hour only or half hours | On the hour (`BOOKING_GRANULARITY_MINUTES = 60`) |
+| R111 | Shop time zone | America/Regina (`SHOP_TZ_NAME`) |
+| R112 | Fill discount on partly-discounted bookings | Only minutes inside the window |
+| R134 | Rename list | Names in fix #36 |
+| R140, R141 | What staff may do | Check-in, complete, mark overdue, read schedule, create requests |
