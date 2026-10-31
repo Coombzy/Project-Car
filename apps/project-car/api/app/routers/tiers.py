@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.deps import DbSession, Owner
 from app.models import MembershipTier, PricingBand, PricingOverlay
-from app.schemas import MemberRateChartOut, TierCreate, TierOut, TierPatch
+from app.schemas import MemberRateChartOut, PlanOfferOut, TierCreate, TierOut, TierPatch
 from app.services.peak_cap import PEAK_BAND_IDS, PEAK_HOURS_PER_WEEK
 from app.services.pricing import PricingError, ensure_pricing_settings, quantize_multiplier, weekly_rate_chart
 from app.services.staff import reject_ai
@@ -185,6 +185,13 @@ def patch_overlay_multiplier(
     session.flush()
     session.refresh(row)
     return PricingMultiplierOut.model_validate(row)
+
+
+@router.get("/plans", response_model=list[PlanOfferOut])
+def list_plans(session: DbSession) -> list[PlanOfferOut]:
+    """Signup reads the same rows the owner edits. No session required."""
+    rows = session.scalars(select(MembershipTier).order_by(MembershipTier.name)).all()
+    return [PlanOfferOut.model_validate(row) for row in rows]
 
 
 @router.get("/tiers", response_model=list[TierOut])

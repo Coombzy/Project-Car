@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { PlanOffer } from "../../../components/plan-offer";
+import { listPublicPlans } from "../../../lib/shop-api";
 import { safeMemberNext } from "../../../lib/safe-next";
 import { MemberLoginForm } from "./login-form";
 
@@ -10,6 +12,12 @@ export default async function MemberLoginPage({
 }) {
   const params = await searchParams;
   const nextPath = safeMemberNext(params.next);
+  let plans: Awaited<ReturnType<typeof listPublicPlans>> = [];
+  try {
+    plans = await listPublicPlans();
+  } catch {
+    plans = [];
+  }
 
   return (
     <main>
@@ -40,6 +48,22 @@ export default async function MemberLoginPage({
         <p className="muted" style={{ marginTop: "1.2rem" }}>
           Management Owner demo is on <Link href="/login">/login</Link>.
         </p>
+      </section>
+      <section style={{ maxWidth: 720, margin: "2rem auto" }}>
+        <h2>Plans</h2>
+        <p className="lede">
+          Signup shows the saved monthly price plus GST. The owner edits that
+          price. The shop is not open.
+        </p>
+        {plans.length === 0 ? (
+          <div className="banner empty">Plans could not be loaded.</div>
+        ) : (
+          <div className="tier-list">
+            {plans.map((plan) => (
+              <PlanOffer key={plan.name} plan={plan} />
+            ))}
+          </div>
+        )}
       </section>
     </main>
   );

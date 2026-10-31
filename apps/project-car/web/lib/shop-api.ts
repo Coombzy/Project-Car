@@ -224,6 +224,10 @@ export async function getOwnerRateChart(): Promise<RateChartData> {
   return shopJson<RateChartData>("/tiers/rate-chart", "Could not load the rate chart.");
 }
 
+export async function listPublicPlans(): Promise<MembershipTier[]> {
+  return shopJson<MembershipTier[]>("/plans", "Could not load plans.");
+}
+
 export async function patchTier(name: string, payload: Partial<MembershipTier>): Promise<MembershipTier> {
   return shopJson<MembershipTier>(`/tiers/${name}`, "Could not update the tier.", {
     method: "PATCH",

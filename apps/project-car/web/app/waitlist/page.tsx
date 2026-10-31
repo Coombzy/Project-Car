@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { OwnerShell } from "../../components/owner-shell";
+import { PlanOffer } from "../../components/plan-offer";
 import type { MembershipTier, WaitlistEntry } from "../../lib/config";
 import { handlePageError } from "../../lib/page";
 import { getMe, listTiers, listWaitlist } from "../../lib/shop-api";
@@ -40,6 +41,8 @@ function WaitlistMemberControl({
         {tiers.map((tier) => (
           <option key={tier.name} value={tier.name}>
             {tier.display_name}
+            {tier.price ? ` · $${tier.price} ${tier.currency}/${tier.billing_period} plus GST` : ""}
+            {tier.price_mark ? ` · ${tier.price_mark}` : ""}
           </option>
         ))}
       </select>
@@ -70,6 +73,21 @@ export default async function WaitlistPage({
           member with that tier&apos;s starting tokens. You can still mark a row contacted.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
+        <section style={{ marginBottom: "1.2rem" }}>
+          <h2>Plans</h2>
+          <p className="muted">
+            Signup uses the saved monthly price plus GST. Edit the price on Tiers.
+          </p>
+          {tiers.length === 0 ? (
+            <div className="banner empty">No tiers. Run API migrations, then seed.</div>
+          ) : (
+            <div className="tier-list">
+              {tiers.map((tier) => (
+                <PlanOffer key={tier.name} plan={tier} />
+              ))}
+            </div>
+          )}
+        </section>
         {entries.length === 0 ? (
           <div className="banner empty">
             No one is on the waitlist yet. Seed demo rows or POST /waitlist.

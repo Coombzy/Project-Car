@@ -45,12 +45,12 @@ Bands and overlay never replace the append-only ledger. Owner create (`POST /boo
 
 ## Membership allotments (two tiers)
 
-Two tiers. One includes more tokens per period than the other. **Names and dollar prices stay Owner-editable.** Included-token counts below are **Owner-editable placeholders, not public prices.** Do not put them on projectcar.ca.
+Two tiers. One includes more tokens per period than the other. **Names and dollar prices stay Owner-editable.** Included-token counts below are **Owner-editable placeholders.** Dollar prices are stand-in settings on the tier row (`membership_tiers.price`), shown on the shop signup and plan screens. GST is the same five percent stand-in used on token purchases, added on top of the stored monthly price. These are not brochure prices and not live billing. The shop is not open.
 
-| Placeholder name | `included_tokens` / period |
-|------------------|----------------------------|
-| Basic | **1000** |
-| Premium | **1500** |
+| Placeholder name | `included_tokens` / period | Monthly price (CAD, before GST) |
+|------------------|----------------------------|----------------------------------|
+| Basic | **1000** | **500** stand-in. Owner can edit. |
+| Premium | **1500** | **750** stand-in until Ben confirms. |
 
 Two tiers only. **Pro** and **Weekly** are retired names — rename Pro → Premium in seed and demo `tier_name` references. Owner can still add or rename tiers later in data — this is not a schema ban.
 

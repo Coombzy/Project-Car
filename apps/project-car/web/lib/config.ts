@@ -35,6 +35,12 @@ export type MembershipTier = {
   name: string;
   display_name: string;
   price: string;
+  currency: string;
+  billing_period: string;
+  gst_rate: string;
+  gst_cad: string;
+  total_cad: string;
+  price_mark: string | null;
   included_tokens: number;
   booking_window_days: number;
   max_simultaneous_bookings: number;
