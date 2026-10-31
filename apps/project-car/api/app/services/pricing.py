@@ -1,12 +1,14 @@
-"""Duration × band × overlay × fill reserve quotes (Docs/token-pricing.md).
+"""Per-hour band × overlay × fill reserve quotes (Docs/token-pricing.md).
 
-`base_tokens = hours × 100`
-`final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier × fill_multiplier`
+`banded_tokens = Σ over held hours (100 × that hour's band_multiplier)`
+`final_reserve_cost = banded_tokens × advance_multiplier × fill_multiplier`
 
-Bands are looked up in America/Regina from the booking **start**. Overlay is
-measured at reserve time (now → start). Fill is an explicit next-day factor
-(default 1.0) — it does not change locked band / overlay math. Cancel /
-complete must reuse the locked quote — never re-run this table.
+A booking holds every America/Regina clock hour its span touches
+(`iter_regina_hours`), and each held hour is charged in full at the band that
+contains it (Ben, 2026-10-30). The lead-time overlay is off
+(`LEAD_TIME_OVERLAYS_ENABLED`), so only the Owner-editable `standard` row
+applies. Fill is an explicit next-day factor (default 1.0). Cancel / complete
+must reuse the locked quote — never re-run this table.
 
 The tuples below are the seeded defaults. `quote_reserve` reads
 `pricing_bands` and `pricing_overlays` when a session is passed. A call
@@ -23,7 +25,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from sqlalchemy.orm import Session
 
 from app.models import PricingBand, PricingOverlay
-from app.shop_time import PRICING_TZ, as_utc, shop_now
+from app.shop_time import PRICING_TZ, as_utc, iter_regina_hours, shop_now
 
 BASE_TOKENS_PER_HOUR = Decimal("100")
 PRICING_TZ_NAME = "America/Regina"
@@ -38,6 +40,14 @@ LATE_NIGHT = ("late_night", "Late night / early morning", Decimal("0.75"))
 ADVANCE = ("advance", "Advance", Decimal("0.85"))
 STANDARD = ("standard", "Standard", Decimal("1.00"))
 LAST_MINUTE = ("last_minute", "Last-minute", Decimal("1.25"))
+
+# Ben, D6 + D7: no 7-days-ahead discount and no last-minute surcharge. While
+# False every booking takes the `standard` overlay row; the `advance` and
+# `last_minute` rows stay stored and editable but price nothing.
+LEAD_TIME_OVERLAYS_ENABLED = False
+
+MIXED_BAND_ID = "mixed"
+MIXED_BAND_LABEL = "Mixed bands (per hour)"
 
 
 class PricingError(ValueError):
@@ -78,6 +88,27 @@ NO_FILL = FillFactor(
 
 
 @dataclass(frozen=True)
+class HourSegment:
+    start_at: datetime
+    end_at: datetime
+    band: Band
+
+    @property
+    def band_tokens(self) -> Decimal:
+        return BASE_TOKENS_PER_HOUR * self.band.multiplier
+
+    def as_rule(self) -> dict[str, str]:
+        return {
+            "start_at": self.start_at.isoformat(),
+            "end_at": self.end_at.isoformat(),
+            "band_id": self.band.id,
+            "band_label": self.band.label,
+            "band_multiplier": _factor_str(self.band.multiplier),
+            "band_tokens": _factor_str(self.band_tokens),
+        }
+
+
+@dataclass(frozen=True)
 class ReserveQuote:
     hours: Decimal
     band: Band
@@ -86,8 +117,13 @@ class ReserveQuote:
     final_reserve_cost: Decimal
     fill: FillFactor = NO_FILL
     tz: str = PRICING_TZ_NAME
+    segments: tuple[HourSegment, ...] = ()
 
-    def as_rule(self) -> dict[str, str]:
+    @property
+    def banded_tokens(self) -> Decimal:
+        return sum((segment.band_tokens for segment in self.segments), Decimal("0"))
+
+    def as_rule(self) -> dict[str, object]:
         return {
             "band_id": self.band.id,
             "band_label": self.band.label,
@@ -101,11 +137,13 @@ class ReserveQuote:
             "fill_discount_pct": _factor_str(self.fill.discount_pct),
             "hours": _factor_str(self.hours),
             "base_tokens": _factor_str(self.base_tokens),
+            "banded_tokens": _factor_str(self.banded_tokens),
             "final_reserve_cost": _money_str(self.final_reserve_cost),
             "tz": self.tz,
+            "segments": [segment.as_rule() for segment in self.segments],
         }
 
-    def ledger_meta(self) -> dict[str, dict[str, str]]:
+    def ledger_meta(self) -> dict[str, dict[str, object]]:
         return {"pricing_rule": self.as_rule()}
 
 
@@ -208,6 +246,8 @@ def resolve_overlay(
     session: Session | None = None,
 ) -> Overlay:
     """Advance overlay from reserve time → start. Docs/token-pricing.md boundaries."""
+    if not LEAD_TIME_OVERLAYS_ENABLED:
+        return _stored_overlay(session, STANDARD)
     delta = as_utc(start_at) - as_utc(reserved_at)
     if delta >= timedelta(days=7):
         return _stored_overlay(session, ADVANCE)
@@ -236,8 +276,12 @@ def quote_reserve(
 ) -> ReserveQuote:
     if session is not None:
         ensure_pricing_settings(session)
-    hours = duration_hours(start_at, end_at)
-    band = resolve_band(start_at, session=session)
+    duration_hours(start_at, end_at)
+    segments = tuple(
+        HourSegment(start_at=hour_start, end_at=hour_end, band=resolve_band(hour_start, session=session))
+        for hour_start, hour_end in iter_regina_hours(start_at, end_at)
+    )
+    hours = Decimal(len(segments))
     overlay = resolve_overlay(
         start_at=start_at,
         reserved_at=reserved_at or shop_now(),
@@ -245,16 +289,30 @@ def quote_reserve(
     )
     fill_factor = fill or NO_FILL
     base = (hours * BASE_TOKENS_PER_HOUR).quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
-    final = (base * band.multiplier * overlay.multiplier * fill_factor.multiplier).quantize(
+    banded = sum((segment.band_tokens for segment in segments), Decimal("0"))
+    final = (banded * overlay.multiplier * fill_factor.multiplier).quantize(
         MONEY_QUANT, rounding=ROUND_HALF_UP
     )
     if final <= 0:
         raise PricingError("invalid_tokens", "Reserved tokens must be greater than zero.")
     return ReserveQuote(
         hours=hours,
-        band=band,
+        band=_summary_band(segments, banded=banded, base=base),
         overlay=overlay,
         fill=fill_factor,
         base_tokens=base,
         final_reserve_cost=final,
+        segments=segments,
+    )
+
+
+def _summary_band(segments: tuple[HourSegment, ...], *, banded: Decimal, base: Decimal) -> Band:
+    """The one band every hour shares, or ``mixed`` at the effective multiplier."""
+    ids = {segment.band.id for segment in segments}
+    if len(ids) == 1:
+        return segments[0].band
+    return Band(
+        id=MIXED_BAND_ID,
+        label=MIXED_BAND_LABEL,
+        multiplier=(banded / base).quantize(MULTIPLIER_QUANT, rounding=ROUND_HALF_UP),
     )

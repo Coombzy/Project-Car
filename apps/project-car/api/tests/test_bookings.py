@@ -881,7 +881,7 @@ def test_inactive_member_and_insufficient_tokens(client: TestClient) -> None:
     assert poor.json()["error"]["code"] == "insufficient_tokens"
 
 
-def test_ninety_minute_booking_via_api(client: TestClient) -> None:
+def test_ninety_minute_booking_is_charged_for_both_held_hours(client: TestClient) -> None:
     member = create_member(client)
     hoist = create_hoist(client)
     start = shop_now() + timedelta(days=3)
@@ -902,8 +902,9 @@ def test_ninety_minute_booking_via_api(client: TestClient) -> None:
     )
     assert created.status_code == 201, created.text
     body = created.json()
-    assert body["pricing_rule"]["hours"] == "1.5"
-    assert body["pricing_rule"]["base_tokens"] == "150"
+    assert body["pricing_rule"]["hours"] == "2"
+    assert body["pricing_rule"]["base_tokens"] == "200"
+    assert len(body["pricing_rule"]["segments"]) == 2
     assert _dec(body["reserved_tokens"]) == quote_reserve(start, end).final_reserve_cost
 
 
