@@ -865,14 +865,14 @@ Rows R71–R79 (2026-10-28): this paragraph replaces the earlier ones for anythi
 
 Source: Opus clock-change and ops/API security report, Oct 31 2026 02:50 UTC (S1–S8, Bugs 1–5), approved by Ben Oct 30. These run first. Launch order: R102 (S1, merged into the fix-list dev-secret row) → R147 (S2) → R106 (S3/S4, merged into the fix-list login row) → R101 (AI allowlist; leaves a human-only `require_owner`) → R118 (S5; its `pwd_fp`/`epoch` check sits on the human `require_owner` R101 leaves) → R111 (clock API) → R148 → R149 → R150 → R151 → R152 → R153 → R154 → R155, then R100 onward. Same proof rules as the audit section below. No row edits `.github/workflows/**`; where Opus asks for a CI job (stale-tzdata run, faketime run) the row adds a script and documents the job in `Docs/shop-os-ci.md` for a human to add.
 
-### R147. The default owner password `changeme` is accepted and the login page prints and pre-fills it
+### R147. The default demo owner password is accepted and the login page prints and pre-fills it
 - Category: Critical security (Opus S2)
-- Baseline: `credentials_match` in `apps/project-car/api/app/auth.py:264-267` compares against `owner_password` (default `changeme`, `apps/project-car/api/app/config.py:23`); `_guard_login` in `apps/project-car/api/app/routers/auth.py:43-50` only rejects the session secret. `apps/project-car/web/app/login/page.tsx:24-31` renders "Demo Owner credentials: owner@projectcar.ca / changeme"; `apps/project-car/web/app/login/login-form.tsx:20,29` and `apps/project-car/web/app/member/login/page.tsx:31`, `apps/project-car/web/app/member/login/login-form.tsx:32` pre-fill.
-- Target: outside dev mode the API refuses to start with `changeme` or a password shorter than 12 (R102's startup `RuntimeError`; no request-level check here). Banner and `defaultValue`s render only when new helper `showDemoLoginHints()` in `apps/project-car/web/lib/demo-login.ts` is true: `process.env.NODE_ENV !== "production"` or `SHOP_DEMO_LOGIN_HINTS === "true"`.
-- Must not get worse: API `pytest` (incl. `tests/test_demo_password.py`); web suite; visual suite still logs in (it runs with hints on).
-- Proof (RED first): `apps/project-car/api/tests/test_owner_default_password.py`: `test_default_owner_password_refused_outside_dev` (SHOP_DEV_MODE unset, `changeme` → `create_app` raises `RuntimeError`, reusing R102's startup rule); `test_dev_mode_allows_demo_password` (SHOP_DEV_MODE=1, `changeme` login → 200). `apps/project-car/web/lib/demo-login.test.ts`: production + no flag → false; flag → true; and a grep test that `app/login/page.tsx` and both login forms reference `showDemoLoginHints` and contain no literal `changeme` outside that guard.
+- Baseline: `credentials_match` in `apps/project-car/api/app/auth.py:264-267` compares against `owner_password` (default: the default demo owner password, `apps/project-car/api/app/config.py:23`); `_guard_login` in `apps/project-car/api/app/routers/auth.py:43-50` only rejects the session secret. `apps/project-car/web/app/login/page.tsx:24-31` renders a "Demo Owner credentials" banner with the demo owner email and the default demo owner password; `apps/project-car/web/app/login/login-form.tsx:20,29` and `apps/project-car/web/app/member/login/page.tsx:31`, `apps/project-car/web/app/member/login/login-form.tsx:32` pre-fill.
+- Target: outside dev mode the API refuses to start with the default demo owner password or a password shorter than 12 (R102's startup `RuntimeError`; no request-level check here). Banner and `defaultValue`s render only when new helper `showDemoLoginHints()` in `apps/project-car/web/lib/demo-login.ts` is true: `process.env.NODE_ENV !== "production"` or `SHOP_DEMO_LOGIN_HINTS === "true"`.
+- Must not get worse: API `pytest` (incl. `tests/test_demo_password.py`); web suite; visual suite still logs in (`apps/project-car/web/playwright.config.ts` sets `SHOP_DEMO_LOGIN_HINTS=true` on the `next start` web server and `apps/project-car/web/visual/build-web.sh` exports it). The startup refusal of the default password is R102's proof, already green when this row starts; `tests/test_demo_password.py` keeps the dev-mode login → 200 check.
+- Proof (RED first): `apps/project-car/web/lib/demo-login.test.ts` is the RED proof: production + no flag → false; flag → true; and a grep test that `app/login/page.tsx` and both login forms reference `showDemoLoginHints` and contain no literal copy of the default demo owner password outside that guard.
 - Size: 1 task
-- Likely files: new `apps/project-car/api/tests/test_owner_default_password.py`, `apps/project-car/web/app/login/page.tsx`, `apps/project-car/web/app/login/login-form.tsx`, `apps/project-car/web/app/member/login/page.tsx`, `apps/project-car/web/app/member/login/login-form.tsx`, new `apps/project-car/web/lib/demo-login.ts`, new `apps/project-car/web/lib/demo-login.test.ts`
+- Likely files: `apps/project-car/web/playwright.config.ts` (web server env only), `apps/project-car/web/visual/build-web.sh` (one export line), `apps/project-car/web/app/login/page.tsx`, `apps/project-car/web/app/login/login-form.tsx`, `apps/project-car/web/app/member/login/page.tsx`, `apps/project-car/web/app/member/login/login-form.tsx`, new `apps/project-car/web/lib/demo-login.ts`, new `apps/project-car/web/lib/demo-login.test.ts`
 - Depends on: R102 merged (`SHOP_DEV_MODE`). Screenshots of `/login` at 390 and 1440.
 
 ### R148. Web sends zone-less `datetime-local` strings to the API
@@ -883,7 +883,7 @@ Source: Opus clock-change and ops/API security report, Oct 31 2026 02:50 UTC (S1
 - Proof (RED first): `apps/project-car/web/lib/shop-instant.test.ts`: `2026-11-04T09:00` → `2026-11-04T15:00:00.000Z` under `TZ=UTC` and `TZ=America/Edmonton` (run the test file twice with `TZ=` set); grep test that the six files call `toShopInstant`.
 - Size: 1 task
 - Likely files: new `apps/project-car/web/lib/shop-instant.ts`, new `apps/project-car/web/lib/shop-instant.test.ts`, `apps/project-car/web/app/schedule/actions.ts`, `apps/project-car/web/app/member/schedule/actions.ts`, `apps/project-car/web/app/todos/actions.ts`, `apps/project-car/web/app/member/todos/actions.ts`, `apps/project-car/web/app/schedule/quote/route.ts`, `apps/project-car/web/app/member/schedule/quote/route.ts`
-- Depends on: after R111. Before R110/R113/R114 (same action files; those already wait). Also after R99 (both quote routes).
+- Depends on: R111 merged. R110, R113 and R114 wait for this row (same action files). Also after R99 (both quote routes).
 
 ### R149. API tests depend on the wall clock and fail in the repeated hour
 - Category: Clock / tests (Opus Bug 2)
@@ -892,7 +892,7 @@ Source: Opus clock-change and ops/API security report, Oct 31 2026 02:50 UTC (S1
 - Proof (RED first): `bash apps/project-car/scripts/test-clock.sh` red on main (17 fail), green after; normal `pytest` stays green.
 - Size: 2 tasks
 - Likely files: `apps/project-car/api/tests/conftest.py`, `apps/project-car/api/tests/test_bookings.py`, `apps/project-car/api/tests/test_staff_actions.py`, `apps/project-car/api/tests/test_hoist_guards.py`, `apps/project-car/api/tests/test_overdue.py`, `apps/project-car/api/tests/test_shop_hoist_request.py`, `apps/project-car/api/tests/test_incidents.py`, `apps/project-car/api/tests/test_member_booking_ics.py`, `apps/project-car/api/tests/test_member_self_serve.py`, new `apps/project-car/scripts/test-clock.sh`, `Docs/shop-os-ci.md`
-- Depends on: R61, R63 and R92 merged; one chain for `conftest.py` and `pyproject.toml`: R102 → R111 → R149 → R103.
+- Depends on: R61 and R63 merged; R148 merged. One chain for `conftest.py` / `pyproject.toml` / `Docs/shop-os-ci.md`: R92 → R102 → R106 → R111 → R148 → R149 → R103 → R145.
 
 ### R150. Dashboard "today" uses an Edmonton day, and a naive `SHOP_NOW` means three instants
 - Category: Clock (Opus Bugs 4 and 5)
@@ -907,7 +907,7 @@ Source: Opus clock-change and ops/API security report, Oct 31 2026 02:50 UTC (S1
 - Category: Low security (Opus S6)
 - Baseline: `cookie_secure=False` at `apps/project-car/api/app/config.py:34`, `COOKIE_SECURE=false` in `apps/project-car/api/.env.example:13`.
 - Target: default `True`; `SHOP_DEV_MODE=1` or `COOKIE_SECURE=false` opts out; `.env.example` dev section sets `COOKIE_SECURE=false` with a comment.
-- Proof (RED first): `apps/project-car/api/tests/test_cookie_secure_default.py`: `test_session_cookie_secure_by_default` (login Set-Cookie contains `Secure`); dev mode without the var → no `Secure`.
+- Proof (RED first): `apps/project-car/api/tests/test_cookie_secure_default.py`: `test_session_cookie_secure_by_default` (`SHOP_DEV_MODE` unset via `monkeypatch.delenv`, `COOKIE_SECURE` not set; login Set-Cookie contains `Secure`); dev mode without the var → no `Secure`.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/config.py` (`cookie_secure` only), `apps/project-car/api/.env.example`, new `apps/project-car/api/tests/test_cookie_secure_default.py`
 - Depends on: after R102 and R106 (same files).
@@ -967,20 +967,20 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Baseline: `require_owner` in `apps/project-car/api/app/deps.py` returns `Principal(role="ai")` for the AI bearer, so every route typed `Owner` (96 uses across `apps/project-car/api/app/routers/*.py`) is AI-reachable: create member (mints tokens), set member password (R68), reprice tiers, raise allowances, book and debit.
 - Target: new `apps/project-car/api/app/ai_allowlist.py` with `AI_ALLOWED: frozenset[tuple[str, str]]` of `(METHOD, path template)` — **STAND-IN**: exactly the actions in `Docs/ai-control.md` (create requests and drafts, approve/deny shop-hoist, parts and tool-crib requests, read bookings/schedule/balances/open requests, read parts and crib rows). `require_owner` becomes human-only (AI → 403 `ai_not_allowed`); new dependency `require_owner_or_allowed_ai` checks `request.method` + `request.scope["route"].path` against `AI_ALLOWED` and is used only on the allowlisted routes. `POST`/`PATCH /members/{member_id}/password` (or whatever route sets it) returns 403 `ai_cannot_set_password` for AI (R68). Comment at top of `ai_allowlist.py`: "STAND-IN until Ben confirms the AI list".
 - Must not get worse: API `pytest`; every existing AI test in `tests/test_staff_actions.py` for an allowlisted action still passes; Owner human behaviour unchanged.
-- Proof (RED first): new `apps/project-car/api/tests/test_ai_allowlist.py`: `test_every_mutating_route_ai_reachable_only_if_allowlisted` (walk `app.routes`; for every POST/PUT/PATCH/DELETE route, call with the AI bearer and minimal body; status must be 403 `ai_not_allowed` unless `(method, path)` is in `AI_ALLOWED`); `test_ai_cannot_create_member`, `test_ai_cannot_set_member_password` (403 `ai_cannot_set_password`, also with an invalid body, so the 403 comes before body validation; no password hash written), `test_owner_set_password_unchanged` (Owner path, R37 length rule and response shape as before), `test_ai_cannot_patch_tier`, `test_ai_cannot_adjust_tokens`; `test_allowlist_entries_all_exist` (each entry matches a real route).
+- Proof (RED first): new `apps/project-car/api/tests/test_ai_allowlist.py`: `test_every_mutating_route_ai_reachable_only_if_allowlisted` (walk `app.routes`; for every POST/PUT/PATCH/DELETE route, call with the AI bearer and minimal body; status must be 403 `ai_not_allowed` unless `(method, path)` is in `AI_ALLOWED`); `test_ai_cannot_create_member`, `test_ai_cannot_set_member_password` (403 `ai_cannot_set_password` with detail "An AI cannot set a member's password on its own.", also with an invalid body, so the 403 comes before body validation; no password hash written), `test_owner_set_password_unchanged` (Owner path, R37 length rule and response shape as before), `test_ai_cannot_patch_tier`, `test_ai_cannot_adjust_tokens`; `test_allowlist_entries_all_exist` (each entry matches a real route).
 - Size: 2 tasks
 - Likely files: `apps/project-car/api/app/deps.py`, new `apps/project-car/api/app/ai_allowlist.py`, `apps/project-car/api/app/routers/staff.py`, `apps/project-car/api/app/routers/members.py`, `apps/project-car/api/app/routers/hoists.py`, `apps/project-car/api/app/routers/parts_requests.py`, `apps/project-car/api/app/routers/tool_crib.py`, new `apps/project-car/api/tests/test_ai_allowlist.py`
 - Depends on: none. Supersedes R68.
 
 ### R102. Dev or short secrets are accepted in production because prod binds loopback (fix #3 + Opus S1)
 - Category: Critical security (fix #3, Opus S1). Top of the build order.
-- Baseline: `default_secret_blocked` / `reject_dev_secret` in `apps/project-car/api/app/auth.py` refuse `dev-owner-secret`, `dev-ai-secret`, `changeme` only when `SHOP_HOST` is not loopback (`host_is_loopback`); prod runs on 127.0.0.1 behind the tunnel, so defaults are accepted.
-- Target: new setting `shop_dev_mode: bool = False` (`SHOP_DEV_MODE=1`) in `apps/project-car/api/app/config.py`; production is never inferred from `SHOP_HOST` (supersedes the earlier `SHOP_ENV` plan). At startup (`create_app` in `apps/project-car/api/app/main.py`) raise `RuntimeError("insecure default secret: <setting name>")` (name only, never the value) unless dev mode, when any of `owner_api_secret`, `ai_api_secret`, `session_secret` is a known default (`dev-owner-secret`, `dev-ai-secret`, `dev-session-secret-change-me`) or shorter than 32 characters, or `owner_password` is `changeme` or shorter than 12 characters. Per-request `default_secret_blocked` (`apps/project-car/api/app/auth.py:294-301`) keys on dev mode, not `host_is_loopback`. Secret defaults in `config.py:23-27` become empty (required outside dev). `apps/project-car/api/.env.example` values become `CHANGE_ME_...` placeholders that fail the check, plus `SHOP_DEV_MODE=1` under a `# local dev only` comment, so local dev with `.env.example` boots in dev mode and a copy with that line removed fails the check. Tests (`tests/conftest.py`), `apps/project-car/web/playwright.config.ts` and `apps/project-car/web/visual/start-api.sh` set `SHOP_DEV_MODE=1`. `Docs/deployment-guide.md` adds a "Required secrets" list.
+- Baseline: `default_secret_blocked` / `reject_dev_secret` in `apps/project-car/api/app/auth.py` refuse `dev-owner-secret`, `dev-ai-secret`, the default demo owner password only when `SHOP_HOST` is not loopback (`host_is_loopback`); prod runs on 127.0.0.1 behind the tunnel, so defaults are accepted.
+- Target: new setting `shop_dev_mode: bool = False` (`SHOP_DEV_MODE=1`) in `apps/project-car/api/app/config.py`; production is never inferred from `SHOP_HOST` (supersedes the earlier `SHOP_ENV` plan). At startup (`create_app` in `apps/project-car/api/app/main.py`) raise `RuntimeError("insecure default secret: <setting name>")` (name only, never the value) unless dev mode, when any of `owner_api_secret`, `ai_api_secret`, `session_secret` is a known default (`dev-owner-secret`, `dev-ai-secret`, `dev-session-secret-change-me`) or shorter than 32 characters, or `owner_password` is the default demo owner password or shorter than 12 characters. Per-request `default_secret_blocked` (`apps/project-car/api/app/auth.py:294-301`) keys on dev mode, not `host_is_loopback`. Secret defaults in `config.py:23-27` become empty (required outside dev). `apps/project-car/api/.env.example` values become `CHANGE_ME_...` placeholders that fail the check, plus `SHOP_DEV_MODE=1` under a `# local dev only` comment, so local dev with `.env.example` boots in dev mode and a copy with that line removed fails the check. Tests (`tests/conftest.py`), `apps/project-car/web/playwright.config.ts` and `apps/project-car/web/visual/start-api.sh` set `SHOP_DEV_MODE=1`. `Docs/deployment-guide.md` adds a "Required secrets" list.
 - Must not get worse: API `pytest`; local dev with `.env.example` still boots.
-- Proof (RED first): new `apps/project-car/api/tests/test_dev_secret_guard.py`: `test_app_refuses_to_start_with_default_secrets` (each default with `SHOP_HOST` unset and with `SHOP_HOST=127.0.0.1` → exception naming the setting; message never contains the value); `test_short_secret_refused` (31 chars); `test_changeme_owner_password_refused_at_startup`; `test_dev_mode_allows_defaults`; `test_env_example_placeholders_fail_check`. `tests/test_demo_password.py` stays green. `test_short_owner_password_refused_at_startup` (11 chars). Keep both R17 proofs in `tests/test_demo_password.py`, pointed at `SHOP_DEV_MODE` unset.
+- Proof (RED first): new `apps/project-car/api/tests/test_dev_secret_guard.py`: `test_app_refuses_to_start_with_default_secrets` (each default with `SHOP_HOST` unset and with `SHOP_HOST=127.0.0.1` → exception naming the setting; message never contains the value); `test_short_secret_refused` (31 chars); `test_default_demo_owner_password_refused_at_startup`; `test_dev_mode_allows_defaults`; `test_env_example_placeholders_fail_check`. `tests/test_demo_password.py` stays green. `test_short_owner_password_refused_at_startup` (11 chars). Keep both R17 proofs in `tests/test_demo_password.py`, pointed at `SHOP_DEV_MODE` unset.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/config.py`, `apps/project-car/api/app/auth.py` (`default_secret_blocked`, `reject_dev_secret`), `apps/project-car/api/app/main.py` (startup check only), `apps/project-car/api/.env.example`, `apps/project-car/api/tests/conftest.py`, `apps/project-car/web/playwright.config.ts`, `apps/project-car/web/visual/start-api.sh`, `Docs/deployment-guide.md`, new `apps/project-car/api/tests/test_dev_secret_guard.py`
-- Depends on: none. Doc's real `.env` check waits for Doc's Mac (Ben). Also after R92 (`main.py`, `models.py`).
+- Depends on: R92 merged (`main.py`, `models.py`). Doc's real `.env` check waits for Doc's Mac (Ben).
 
 ### R103. Tests only run on SQLite, which ignores row locks
 - Category: Reliability (fix #4)
@@ -990,7 +990,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): new `apps/project-car/api/tests/test_pg_race.py`: `test_race_helper_releases_together` (unit, runs on SQLite); `@pytest.mark.pg test_pg_mode_uses_postgres` (dialect is postgresql); on SQLite the `pg` tests are skipped with reason "needs TEST_DATABASE_URL". `bash apps/project-car/scripts/test-pg.sh` green. The 12-wide refund race lives in R100.
 - Size: 2 tasks
 - Likely files: `apps/project-car/api/tests/conftest.py`, `apps/project-car/api/pyproject.toml`, new `apps/project-car/api/tests/race.py`, new `apps/project-car/api/tests/test_pg_race.py`, new `apps/project-car/scripts/test-pg.sh`, `Docs/shop-os-ci.md`
-- Depends on: after R102 (`conftest.py`). The CI workflow job itself needs Ben (workflows are off-limits to GB).
+- Depends on: R149 merged (and so R111: `conftest.py`, `pyproject.toml`, `Docs/shop-os-ci.md`). The CI workflow job itself needs Ben (workflows are off-limits to GB).
 
 ### R104. Accepting a fill draft repeatedly re-sends notices; chat drafts double-post
 - Category: Critical bug (fix #5)
@@ -1000,7 +1000,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): new `apps/project-car/api/tests/test_draft_locks.py`: `test_second_fill_accept_is_409_no_new_outbox` (outbox count equal after second call); `test_second_chat_accept_is_409_one_message`; `test_fill_accept_respects_one_campaign_per_day`; plus `@pytest.mark.pg` parallel variants (5 parallel accepts → 1 success) using `tests/race.py`.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/services/staff.py` (`_get_draft`, `accept_fill_draft`, `accept_chat_draft`), new `apps/project-car/api/tests/test_draft_locks.py`
-- Depends on: R103 for the pg variants (SQLite tests stand alone). Not with R100/R105 at the same time (same file).
+- Depends on: R75 and R100 merged (`services/staff.py` chain R75 → R100 → R104 → R105 → R116); R103 merged for the pg variants.
 
 ### R105. Parts, tool-crib, job-done and send-back decisions can both land
 - Category: Critical bug (fix #6)
@@ -1010,7 +1010,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): new `apps/project-car/api/tests/test_decision_locks.py`: for each of the four, decide once then decide the opposite → 409 and the stored status/ledger is from the first decision only; `@pytest.mark.pg` parallel approve+deny → exactly one wins.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/services/staff.py` (the four functions only), new `apps/project-car/api/tests/test_decision_locks.py`
-- Depends on: after R104 (same file).
+- Depends on: R104 merged (same file).
 
 ### R106. Eight bad member logins lock the Owner out; CLIENT_IP_HEADER is trusted from anyone (fix #7 + Opus S3/S4)
 - Category: High security (fix #7, Opus S3/S4). Third in the build order.
@@ -1020,7 +1020,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): new `apps/project-car/api/tests/test_login_buckets.py`: `test_member_failures_do_not_lock_owner`; `test_web_login_buckets_are_per_end_user` (proxy secret + client IP A ×8 failures; IP B → not 429); `test_owner_account_backoff_across_ips` (failures from 40 IPs → 429); `test_client_ip_header_ignored_without_proxy_secret`; `test_client_ip_header_ignored_from_untrusted_peer`; `test_xff_rejected_as_client_ip_header_at_startup`. Web `apps/project-car/web/lib/login-forward.test.ts`. Existing `tests/test_client_ip.py` assertions stay; none are deleted.
 - Size: 2 tasks
 - Likely files: `apps/project-car/api/app/auth.py` (login bucket functions), `apps/project-car/api/app/client_ip.py`, `apps/project-car/api/app/config.py` (`trusted_proxies`, `shop_proxy_secret` only), `apps/project-car/api/app/main.py` (`SHOP_PROXY_SECRET` startup check only), `apps/project-car/api/app/routers/auth.py`, `apps/project-car/web/app/login/actions.ts`, `apps/project-car/web/app/member/login/actions.ts`, new `apps/project-car/web/lib/login-forward.ts`, new `apps/project-car/web/lib/login-forward.test.ts`, new `apps/project-car/api/tests/test_login_buckets.py`
-- Depends on: R102 merged.
+- Depends on: R102 merged (`main.py`, `config.py`).
 
 ### R107. An expired session crashes to "Application error" instead of login
 - Category: Reliability (fix #8; R62 / PR #210 covers the error and 404 pages only)
@@ -1030,7 +1030,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): new `apps/project-car/web/lib/session-expired.test.ts`: the helper `sessionExpiredTarget(kind)` returns the handler path and `page.ts` no longer imports `cookies` for writing (grep test); Playwright spec in `apps/project-car/web/tests/session-expired.spec.ts` (if the visual suite exists): set a garbage cookie, open `/` → lands on `/login?reason=session`, no "Application error".
 - Size: 1 task
 - Likely files: `apps/project-car/web/lib/page.ts`, `apps/project-car/web/middleware.ts`, new `apps/project-car/web/app/logout/expired/route.ts`, new `apps/project-car/web/app/member/logout/expired/route.ts`, new `apps/project-car/web/lib/session-expired.test.ts`
-- Depends on: none (do not touch `app/error.tsx` / `app/not-found.tsx`, PR #210 owns them). Also after R79 (`lib/page.ts`).
+- Depends on: R79 merged (`lib/page.ts`). Do not touch `app/error.tsx` / `app/not-found.tsx` (PR #210 owns them).
 
 ### R108. A shop booking can block a bay for two years
 - Category: Bug (fix #12) — **STAND-IN** caps
@@ -1060,7 +1060,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/api/tests/test_booking_grid.py` (10:30 start → 400 `booking_not_on_grid`; 10:00–11:00 then 11:00–12:00 both succeed); `apps/project-car/web/lib/booking-defaults.test.ts` (19:59 → 20:00, 20:00 → 20:00 next-hour rule documented, duration → end).
 - Size: 2 tasks
 - Likely files: `apps/project-car/api/app/services/bookings.py` (`create_booking` validation only), new `apps/project-car/api/tests/test_booking_grid.py`, `apps/project-car/web/components/create-booking-form.tsx`, `apps/project-car/web/components/member-booking-form.tsx`, new `apps/project-car/web/lib/booking-defaults.ts`, new `apps/project-car/web/lib/booking-defaults.test.ts`
-- Depends on: R99 merged (shares the booking forms); after R109.
+- Depends on: R99 merged (shares the booking forms); after R109. Also after R148 (action files).
 
 ### R111. Zone-less times are read as Edmonton while the UI means Regina (fix #15 + Opus Bugs 1 and 3)
 - Category: Clock (fix #15, Opus Bugs 1/3). First clock row, after R102/R147/R106/R118.
@@ -1070,7 +1070,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): new `apps/project-car/api/tests/test_naive_times_are_regina.py`: `POST /bookings/quote` and `POST /bookings` with naive `2026-11-04T09:00` store `15:00Z`; same for `POST /shop-hoist-requests` and `POST /todos`, todo ICS `DTSTART;TZID=America/Regina:20261104T090000`; with `SHOP_NOW=2026-10-25T12:00:00-06:00` set in the test (frozen; no fill window reaches Nov 4), naive `2026-11-04T00:00`–`04:00` books 4.0 h and its reserve equals `quote_booking` for the explicit `2026-11-04T06:00:00Z`–`10:00:00Z` (same instants, so the same price; no hard-coded amount); `test_no_edmonton_in_app` (no `America/Edmonton` under `app/`). New `apps/project-car/api/tests/test_dashboard_today.py`: `SHOP_NOW=2026-12-15T06:40:00Z` (Regina 00:40 Dec 15; Edmonton 23:40 Dec 14). Regina today = `[2026-12-15T06:00:00Z, 2026-12-16T06:00:00Z)`; Edmonton today = `[2026-12-14T07:00:00Z, 2026-12-15T07:00:00Z)`. Use a booking `2026-12-16T05:00:00Z–05:30:00Z` (Regina 23:00 Dec 15, inside Regina's today; Edmonton 22:00 Dec 15, outside Edmonton's today which ended at `2026-12-15T07:00:00Z`) → it is in the dashboard's today list (membership only; RED on main). Run normally and via `bash apps/project-car/scripts/test-stale-tz.sh`: stale run RED on main, both GREEN after.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/shop_time.py`, `apps/project-car/api/app/seed.py` (zone lines only), `apps/project-car/api/pyproject.toml`, `apps/project-car/api/app/main.py` (startup log line only), new `apps/project-car/api/tests/test_naive_times_are_regina.py`, new `apps/project-car/api/tests/test_dashboard_today.py`, new `apps/project-car/scripts/test-stale-tz.sh`, `apps/project-car/web/lib/calendar.ts` (comment only), `Docs/token-pricing.md`
-- Depends on: after R102 (`main.py`). Web explicit offsets are R148. Also after R99 (`Docs/token-pricing.md`, quote paths).
+- Depends on: R106 merged (`main.py`). Web explicit offsets are R148. Also after R99 (`Docs/token-pricing.md`, quote paths).
 
 ### R112. The whole booking gets the fill discount if any minute touches the window
 - Category: Correctness (fix #16) — **STAND-IN**: discount only minutes inside the window
@@ -1090,7 +1090,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/api/tests/test_member_book_atomic.py`: create with `confirm=true` → status confirmed; force confirm to fail (monkeypatch `confirm_booking` to raise) → no booking row and balance unchanged.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/services/bookings.py` (`create_booking` signature only), `apps/project-car/api/app/routers/member.py`, `apps/project-car/web/app/member/schedule/actions.ts`, new `apps/project-car/api/tests/test_member_book_atomic.py`
-- Depends on: after R110 (same files).
+- Depends on: R110 and R148 merged (same files; R148 owns `app/member/schedule/actions.ts` first).
 
 ### R114. Quote shows a negative balance and Reserve stays enabled
 - Category: Correctness (fix #22)
@@ -1100,7 +1100,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/web/lib/reserve-guard.test.ts` (0 vs 125 → reason; 200 vs 125 → null; equal → null).
 - Size: 1 task
 - Likely files: new `apps/project-car/web/lib/reserve-guard.ts`, new `apps/project-car/web/lib/reserve-guard.test.ts`, `apps/project-car/web/components/booking-cost.tsx`, `apps/project-car/web/components/create-booking-form.tsx`, `apps/project-car/web/components/member-booking-form.tsx`
-- Depends on: after R110 (same forms).
+- Depends on: R110 and R148 merged (same forms and action files).
 
 ### R115. Overdue visits are not counted as occupying a bay
 - Category: Correctness (fix #23)
@@ -1120,7 +1120,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/api/tests/test_notify_no_smtp.py`: no SMTP → outbox rows `not_configured`, none `sent`.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/services/notify.py`, `apps/project-car/api/app/services/staff.py` (`accept_fill_draft` status only), `apps/project-car/api/app/models.py` (outbox status enum only), new `apps/project-car/api/tests/test_notify_no_smtp.py`
-- Depends on: after R105 (staff.py).
+- Depends on: R105 merged (`staff.py`); R92 and R118 merged (`models.py` chain R92 → R118 → R116 → R117).
 
 ### R117. No record of who made a booking or ledger entry
 - Category: Security / audit (fix #13)
@@ -1130,7 +1130,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/api/tests/test_created_by.py`: AI-created booking stores `created_by_kind="ai"` and an action row; member booking stores member id; ledger rows carry the same.
 - Size: 2 tasks
 - Likely files: `apps/project-car/api/app/models.py`, new `apps/project-car/api/alembic/versions/20261031_0018_created_by.py`, `apps/project-car/api/app/services/tokens.py`, `apps/project-car/api/app/services/bookings.py` (writes of the new columns only), new `apps/project-car/api/tests/test_created_by.py`
-- Depends on: also after R116 (`models.py`). R101 merged; after R113 (bookings.py). Only migration in flight. Also after R118 (migration 0017 is R118's; this row is 0018).
+- Depends on: R116 merged (`models.py`; so also after R118, whose migration is 0017; this row is 0018). R101 merged; after R113 (bookings.py). Only migration in flight.
 
 ### R118. Owner sessions cannot be revoked (fix #17 + Opus S5)
 - Category: Security (fix #17, Opus S5). Fourth in the build order.
@@ -1140,7 +1140,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/api/tests/test_owner_revoke.py`: `test_owner_cookie_rejected_after_logout` (old cookie → 401); `test_owner_cookie_rejected_after_password_change` (old cookie → 401); fresh login → 200; migration up/down on SQLite.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/auth.py` (session token functions), `apps/project-car/api/app/deps.py` (`require_owner` token check only), `apps/project-car/api/app/routers/auth.py`, `apps/project-car/api/app/models.py`, new `apps/project-car/api/alembic/versions/20261031_0017_owner_session_epoch.py`, new `apps/project-car/api/tests/test_owner_revoke.py`
-- Depends on: after R106 (`auth.py`, `routers/auth.py`) and R101 (`deps.py`). Owns migration 0017; R117 moves to 0018 and waits for R118. R101 must merge first: the `pwd_fp`/`epoch` check goes in the human `require_owner` path R101 leaves. Also after R92 (`main.py`, `models.py`).
+- Depends on: R92, R101 and R106 merged (`main.py`/`models.py`, `deps.py`, `auth.py`/`routers/auth.py`). Owns migration 0017; R117 moves to 0018. The `pwd_fp`/`epoch` check goes in the human `require_owner` path R101 leaves.
 
 ### R119. All AIs share one actor id
 - Category: Security (fix #18)
@@ -1150,7 +1150,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/api/tests/test_ai_actors.py`: bot-a creates, bot-b approves → 403 `ai_cannot_approve_ai`; owner approves → ok; actor recorded as `bot-a`.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/config.py`, `apps/project-car/api/app/deps.py`, `apps/project-car/api/app/services/staff.py` (`reject_own_request`, `actor_of`), new `apps/project-car/api/tests/test_ai_actors.py`
-- Depends on: also after R102 (`config.py`). R101 merged; after R116.
+- Depends on: R116, R118 and R152 merged (`deps.py`, `config.py`). R101 merged.
 
 ### R120. Cancel or complete rescans every held booking
 - Category: Performance (fix #19)
@@ -1165,9 +1165,9 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 ### R121. A booking-hour conflict rolls back the whole request; refund commits mid-request
 - Category: Reliability (fix #20)
 - Baseline: `claim_booking_hours` catches IntegrityError with `session.rollback()`; `accept_refund_request` calls `session.commit()`.
-- Target: `with session.begin_nested():` SAVEPOINT around the insert; no `commit()` inside `apps/project-car/api/app/services/*.py` (routers commit).
+- Target: `with session.begin_nested():` SAVEPOINT around the insert; no `commit()` inside `claim_booking_hours` or `accept_refund_request` (the router commits).
 - Must not get worse: API `pytest`.
-- Proof (RED first): `apps/project-car/api/tests/test_no_service_commit.py`: AST scan of `app/services/*.py` finds no `.commit(` call; conflict test: earlier writes in the same request survive a hour conflict.
+- Proof (RED first): `apps/project-car/api/tests/test_no_service_commit.py`: AST scan of `claim_booking_hours` (`app/services/bookings.py`) and `accept_refund_request` (`app/services/staff.py`) finds no `.commit(` call (other service functions are out of scope for this row); conflict test: earlier writes in the same request survive a hour conflict.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/services/bookings.py` (`claim_booking_hours`), `apps/project-car/api/app/services/staff.py` (`accept_refund_request` commit only), `apps/project-car/api/app/routers/staff.py`, new `apps/project-car/api/tests/test_no_service_commit.py`
 - Depends on: after R100, R119, R120.
@@ -1188,7 +1188,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/web/lib/no-dev-text.test.ts`: scans `app/**/page.tsx` and `components/*.tsx` for `/GET \//`, `POST /`, `_CLIENT_ID`, `_SECRET` strings in JSX text → zero hits (fails on main).
 - Size: 2 tasks
 - Likely files: new `apps/project-car/web/components/demo-banner.tsx`, `apps/project-car/web/components/member-shell.tsx`, `apps/project-car/web/components/owner-shell.tsx`, `apps/project-car/web/components/owner-demo-banner.tsx`, `apps/project-car/web/app/login/page.tsx`, `apps/project-car/web/app/tiers/page.tsx`, new `apps/project-car/web/lib/no-dev-text.test.ts`
-- Depends on: none.
+- Depends on: R147 merged (`app/login/page.tsx`).
 
 ### R124. Raw values shown to people (65.0000 hours, slugs, ledger kinds)
 - Category: UI (fix #27)
@@ -1236,7 +1236,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/api/tests/test_inbox.py`: one of each pending kind → six items; decided items absent; AI and member get 403.
 - Size: 2 tasks
 - Likely files: new `apps/project-car/api/app/routers/inbox.py`, `apps/project-car/api/app/main.py`, new `apps/project-car/api/tests/test_inbox.py`, new `apps/project-car/web/app/inbox/page.tsx`, `apps/project-car/web/lib/shop-api.ts`, `apps/project-car/web/app/schedule/page.tsx`
-- Depends on: also after R102 (`main.py`) and R127 (`schedule/page.tsx`). R100, R104, R105 merged (ideally R101).
+- Depends on: R154 merged (`main.py` chain R154 → R129 → R139 → R140); R78 merged (`lib/shop-api.ts` chain R69 → R78 → R129); R127 merged (`schedule/page.tsx`). R100, R104, R105 merged (ideally R101).
 
 ### R130. Member phone layout has no bottom tabs or balance chip
 - Category: Layout (fix #32)
@@ -1316,7 +1316,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/api/tests/test_counts.py` (new message → unread 1; read → 0; pending request → inbox 1).
 - Size: 2 tasks
 - Likely files: new `apps/project-car/api/app/routers/counts.py`, `apps/project-car/api/app/main.py`, new `apps/project-car/api/tests/test_counts.py`, `apps/project-car/web/lib/chat-poll.ts`
-- Depends on: R129, R135 merged.
+- Depends on: R129 merged (`main.py`), R135 merged.
 
 ### R140. There is no staff login (API)
 - Category: Layout / auth (fix #43) — **STAND-IN** staff permissions
@@ -1324,7 +1324,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/api/tests/test_staff_role.py`: staff can check in; staff refund accept / token adjust / tier patch / member password → 403 `staff_not_allowed`; matrix walk like R101.
 - Size: 2 tasks
 - Likely files: new `apps/project-car/api/app/staff_permissions.py`, `apps/project-car/api/app/config.py` (`staff_password` only), `apps/project-car/api/app/main.py` (add `STAFF_PASSWORD` to R102's startup refused-default check), `apps/project-car/api/app/deps.py`, `apps/project-car/api/app/routers/auth.py`, `apps/project-car/api/app/routers/bookings.py`, new `apps/project-car/api/tests/test_staff_role.py`
-- Depends on: R101, R118, R119 merged.
+- Depends on: R139 merged (`main.py`); R101, R118, R119 merged.
 
 ### R141. There is no staff Shift view
 - Category: Layout (fix #43, web) — **STAND-IN**
