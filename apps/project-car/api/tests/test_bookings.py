@@ -1711,3 +1711,34 @@ def test_seeded_week_grid_hides_cancel_on_the_active_visit() -> None:
     assert 'own && own.status === "confirmed"' in member
     assert 'own.status === "confirmed" || own.status === "active"' not in member
     assert 'booking.status === "active" ?' in owner
+
+
+def test_r61_does_not_ship_the_week_grid_spec() -> None:
+    """R61 does not add a Playwright file under visual/.
+
+    visual/pages.spec.ts belongs to R62. active-visit-cancel.spec.ts and the
+    data-booking-status hooks that exist only so that spec can find a chip are
+    outside this row. The UI proof is hosted shots of /schedule?view=week and
+    /member/schedule?view=week at 390 and 1440.
+
+    Red on head efe826e9e00e68836a838424c3647afcae2ae226: the spec file is
+    present, both cards set data-booking-status, and
+    test_seeded_week_grid_hides_cancel_on_the_active_visit is still defined.
+    """
+    import ast
+
+    web = Path(__file__).resolve().parents[2] / "web"
+    spec = web / "visual" / "active-visit-cancel.spec.ts"
+    assert not spec.exists(), (
+        "visual/active-visit-cancel.spec.ts is outside R61; delete it"
+    )
+    owner = (web / "components" / "owner-booking-card.tsx").read_text(encoding="utf-8")
+    member = (web / "components" / "member-booking-card.tsx").read_text(encoding="utf-8")
+    assert "data-booking-status" not in owner
+    assert "data-booking-status" not in member
+    defined = {
+        node.name
+        for node in ast.walk(ast.parse(Path(__file__).read_text(encoding="utf-8")))
+        if isinstance(node, ast.FunctionDef)
+    }
+    assert "test_seeded_week_grid_hides_cancel_on_the_active_visit" not in defined
