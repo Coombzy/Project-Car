@@ -365,6 +365,31 @@ class HoistPatch(BaseModel):
         return value.strip()
 
 
+class MemberRateBandOut(BaseModel):
+    id: str
+    label: str
+    multiplier: str
+    tokens_per_hour: str
+
+
+class MemberRateHourOut(BaseModel):
+    weekday: int
+    day_label: str
+    hour: int
+    band_id: str
+    label: str
+    tokens_per_hour: str
+    counts_toward_peak_cap: bool
+
+
+class MemberRateChartOut(BaseModel):
+    tz_label: str
+    peak_cap_hours: int
+    note: str
+    bands: list[MemberRateBandOut]
+    hours: list[MemberRateHourOut]
+
+
 class PricingSegmentOut(BaseModel):
     start_at: datetime
     end_at: datetime

@@ -1,4 +1,5 @@
 import { BookingCalendar, type CalendarSlot } from "../../../components/booking-calendar";
+import { RateChart } from "../../../components/rate-chart";
 import { MemberBookingCard } from "../../../components/member-booking-card";
 import { MemberShell } from "../../../components/member-shell";
 import { MonthHeatmap } from "../../../components/month-heatmap";
@@ -16,7 +17,7 @@ import {
   sortHoists,
 } from "../../../lib/calendar";
 import { handleMemberPageError, shopErrorMessage } from "../../../lib/page";
-import { getMemberMe, getMemberSchedule, getMemberShopHoist } from "../../../lib/shop-api";
+import { getMemberMe, getMemberRates, getMemberSchedule, getMemberShopHoist } from "../../../lib/shop-api";
 import { parseWeekParam, shopClock } from "../../../lib/time";
 
 export const dynamic = "force-dynamic";
@@ -52,7 +53,7 @@ export default async function MemberSchedulePage({
     }
 
     let loadError: string | null = null;
-    const [schedule, shopHoist] = await Promise.all([
+    const [schedule, shopHoist, rates] = await Promise.all([
       getMemberSchedule({
         windowStart: shopWindowQuery(window.start),
         windowEnd: shopWindowQuery(window.end),
@@ -61,6 +62,7 @@ export default async function MemberSchedulePage({
         return { hoists: [], bookings: [], occupancy: [] };
       }),
       getMemberShopHoist().catch(() => null),
+      getMemberRates().catch(() => null),
     ]);
 
     const ordered = sortHoists(shopHoist ? [...schedule.hoists, shopHoist] : schedule.hoists);
@@ -97,6 +99,7 @@ export default async function MemberSchedulePage({
           does not hold the hour.
         </p>
         {loadError ? <div className="banner error">{loadError}</div> : null}
+        {rates ? <RateChart rates={rates} helpHref="/member/help" /> : null}
 
         <ScheduleToolbar base="/member/schedule" view={view} weekStart={weekStart} month={month} hoist={hoistId} />
 

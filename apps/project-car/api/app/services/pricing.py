@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import PricingBand, PricingOverlay
@@ -300,6 +301,69 @@ def quote_reserve(
         final_reserve_cost=final,
         segments=segments,
     )
+
+
+RATE_CHART_NOTE = "Only Peak counts toward the 4-hour weekly cap."
+RATE_DAY_LABELS = (
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+)
+
+
+def tokens_per_hour_label(multiplier: Decimal) -> str:
+    amount = (BASE_TOKENS_PER_HOUR * Decimal(multiplier)).quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
+    if amount == amount.to_integral_value():
+        return str(int(amount))
+    return format(amount, "f")
+
+
+def weekly_rate_chart(
+    session: Session,
+    *,
+    peak_band_ids: frozenset[str],
+    peak_cap_hours: int,
+) -> dict[str, object]:
+    """One cell per hour of a shop week, using the saved band rows."""
+    ensure_pricing_settings(session)
+    stored = session.scalars(select(PricingBand).order_by(PricingBand.sort_order, PricingBand.id)).all()
+    monday = datetime(2026, 11, 2, tzinfo=PRICING_TZ)
+    hours: list[dict[str, object]] = []
+    for day in range(7):
+        for hour in range(24):
+            start = monday + timedelta(days=day, hours=hour)
+            band = resolve_band(start, session=session)
+            hours.append(
+                {
+                    "weekday": day,
+                    "day_label": RATE_DAY_LABELS[day],
+                    "hour": hour,
+                    "band_id": band.id,
+                    "label": band.label,
+                    "tokens_per_hour": tokens_per_hour_label(band.multiplier),
+                    "counts_toward_peak_cap": band.id in peak_band_ids,
+                }
+            )
+    bands = [
+        {
+            "id": row.id,
+            "label": row.label,
+            "multiplier": format(Decimal(row.multiplier), "f"),
+            "tokens_per_hour": tokens_per_hour_label(Decimal(row.multiplier)),
+        }
+        for row in stored
+    ]
+    return {
+        "tz_label": "Mountain Time",
+        "peak_cap_hours": peak_cap_hours,
+        "note": RATE_CHART_NOTE,
+        "bands": bands,
+        "hours": hours,
+    }
 
 
 def _summary_band(segments: tuple[HourSegment, ...], *, banded: Decimal, base: Decimal) -> Band:

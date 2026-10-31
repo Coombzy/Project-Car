@@ -33,6 +33,7 @@ from app.schemas import (
     MemberBookingCreate,
     MemberBookingQuoteRequest,
     MemberDashboardOut,
+    MemberRateChartOut,
     MemberScheduleOut,
     MemberSelfOut,
     OccupancyOut,
@@ -46,6 +47,8 @@ from app.schemas import (
 from app.routers.dashboard import member_dashboard_payload
 from app.services import bookings as booking_service
 from app.services.fill import snapshot_next_day
+from app.services.peak_cap import PEAK_BAND_IDS, PEAK_HOURS_PER_WEEK
+from app.services.pricing import weekly_rate_chart
 from app.services.shop_hoist_requests import (
     create_shop_hoist_request,
     get_shop_hoist,
@@ -156,6 +159,16 @@ def _booking_ics(booking: Booking) -> str:
         "END:VCALENDAR",
     ]
     return "\r\n".join(_fold_ics_line(line) for line in lines) + "\r\n"
+
+
+@router.get("/rates", response_model=MemberRateChartOut)
+def member_rates(session: DbSession, _principal: MemberUser) -> MemberRateChartOut:
+    chart = weekly_rate_chart(
+        session,
+        peak_band_ids=PEAK_BAND_IDS,
+        peak_cap_hours=PEAK_HOURS_PER_WEEK,
+    )
+    return MemberRateChartOut.model_validate(chart)
 
 
 @router.get("/me", response_model=MemberSelfOut)
