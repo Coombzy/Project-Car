@@ -10,6 +10,7 @@ import {
   lowestFreeBay,
   memberCancelOffer,
   peakWeek,
+  quotedSelectionLine,
   selectionSummary,
 } from "./booking-calendar.ts";
 
@@ -93,6 +94,21 @@ describe("selection", () => {
     assert.deepEqual(summary.hours, [15, 16, 17]);
     assert.equal(summary.note, "18:00 is booked; selection ends at 18:00");
     assert.equal(summary.total, 100 + 125 + 125);
+  });
+
+  it("shows the quoted total, including a published fill", () => {
+    assert.equal(
+      quotedSelectionLine({
+        segments: [
+          { band_label: "Normal", band_tokens: "100.00" },
+          { band_label: "Evening", band_tokens: "125.00" },
+        ],
+        fill_multiplier: "0.85",
+        fill_label: "Fill the gaps 15%",
+        final_reserve_cost: "191.25",
+      }),
+      "Normal 100.00 × 1 = 100 · Evening 125.00 × 1 = 125 · Fill the gaps 15% · Total 191.25",
+    );
   });
 });
 

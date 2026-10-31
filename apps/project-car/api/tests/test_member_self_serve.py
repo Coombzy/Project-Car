@@ -94,7 +94,7 @@ def test_member_book_confirm_cancel_and_ledger(client: TestClient) -> None:
             "hoist_id": hoist["id"],
             "start_at": start,
             "end_at": end,
-            "tokens": "1",
+            "tokens": str(expected),
             "notes": "Turbo mock-up",
         },
     )

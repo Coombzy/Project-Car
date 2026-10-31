@@ -11,6 +11,7 @@ import {
   cancelMemberBooking,
   confirmMemberBooking,
   createMemberBooking,
+  quoteMemberBooking,
   requestMemberShopHoist,
 } from "../../../lib/shop-api";
 
@@ -44,10 +45,15 @@ export async function memberCreateBookingAction(formData: FormData): Promise<voi
       String(formData.get("start_at") ?? ""),
       String(formData.get("end_at") ?? ""),
     );
+    const quoted = await quoteMemberBooking({
+      start_at: window.start,
+      end_at: window.end,
+    });
     const created = await createMemberBooking({
       hoist_id: String(formData.get("hoist_id") ?? ""),
       start_at: window.start,
       end_at: window.end,
+      tokens: quoted.reserved_tokens,
       notes: String(formData.get("notes") ?? "") || null,
     });
     await confirmMemberBooking(created.id);

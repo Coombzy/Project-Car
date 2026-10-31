@@ -64,8 +64,11 @@ NO_SHOW_KEEP_PCT = Decimal("100")
 CENTS = Decimal("0.01")
 
 
-def _error(status: int, code: str, message: str) -> HTTPException:
-    return HTTPException(status_code=status, detail={"code": code, "message": message})
+def _error(status: int, code: str, message: str, **extra: object) -> HTTPException:
+    detail: dict[str, object] = {"code": code, "message": message}
+    for key, value in extra.items():
+        detail[key] = format(value, "f") if isinstance(value, Decimal) else value
+    return HTTPException(status_code=status, detail=detail)
 
 
 def reject_start_in_past(start_at: datetime) -> None:
@@ -379,6 +382,7 @@ def create_booking(
     end_at: datetime,
     notes: str | None,
     kind: BookingKind = BookingKind.CUSTOMER,
+    shown_tokens: Decimal | None = None,
 ) -> Booking:
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
@@ -411,6 +415,13 @@ def create_booking(
     except PricingError as exc:
         raise _error(400, exc.code, exc.message) from exc
     tokens = quote.final_reserve_cost
+    if shown_tokens is not None and Decimal(shown_tokens).quantize(Decimal("0.01")) != tokens:
+        raise _error(
+            409,
+            "price_changed",
+            "The price changed. Book was not saved.",
+            reserved_tokens=tokens,
+        )
     rule = quote.as_rule()
     meta = quote.ledger_meta()
 
