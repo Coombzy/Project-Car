@@ -52,11 +52,12 @@ export function OwnerBookingCard({
             {checkIn.hint ? <span className="check-in-hint">{checkIn.hint}</span> : null}
           </form>
         ) : null}
-        {booking.status === "active" ? (
+        {booking.status === "active" || booking.status === "overdue" ? (
           <form className="complete-booking" action={completeBookingAction}>
             <ScheduleReturnFields returnTo={returnTo} />
             <input type="hidden" name="id" value={booking.id} />
             <button type="submit">Finish visit</button>
+            <span className="check-in-hint">Time past the booked end is charged by the hour.</span>
           </form>
         ) : null}
         {booking.status === "pending" || booking.status === "confirmed" || booking.status === "active" ? (

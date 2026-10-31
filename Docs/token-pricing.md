@@ -37,7 +37,7 @@ Bands and overlay never replace the append-only ledger. Owner create (`POST /boo
 - Create **reserves** (`booking_reserve`) → complete **debits** used (`booking_debit`) and **refunds** unused reserve (`booking_refund`) → cancel refunds remaining reserve.
 - `member.token_balance` is a **cache** of the ledger. Ledger wins.
 - Tier `included_tokens`, `booking_window_days`, and `max_simultaneous_bookings` stay enforced.
-- Overdue does **not** auto-charge money.
+- Overdue does **not** auto-charge money. Marking a visit overdue moves no tokens. Finishing it keeps the booked charge and adds one `booking_debit` for each whole hour past the booked end, at that hour's band. Time still inside the booking is not refunded. A finish that cannot pay for those extra hours is refused and the visit stays open.
 - Two membership tiers in seed (not three). Allotments below.
 - **Six hoists** in seed. Exactly one is the **shop hoist** (`is_shop`). v1 choice **(A)** — Owner-only; customers cannot book it. See below.
 
