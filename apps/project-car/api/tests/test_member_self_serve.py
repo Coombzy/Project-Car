@@ -76,7 +76,8 @@ def test_member_cannot_use_owner_routes_or_other_member(client: TestClient) -> N
 def test_member_book_confirm_cancel_and_ledger(client: TestClient) -> None:
     member = create_member(client, email="ada@example.com", tier_name="premium")
     hoist = create_hoist(client, name="Bay 1")
-    start, end = _window(5)
+    # Past the 24-hour free-cancel window, so the cancel below refunds in full.
+    start, end = _window(30)
 
     login_member(client, "ada@example.com")
     quoted = client.post("/member/bookings/quote", json={"start_at": start, "end_at": end})

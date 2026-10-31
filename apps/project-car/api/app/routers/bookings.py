@@ -154,6 +154,21 @@ def check_in_booking(booking_id: UUID, session: DbSession, _owner: Owner) -> Boo
     return BookingOut.from_booking(booking_service.check_in_booking(session, booking_id))
 
 
+@router.post("/bookings/sweep-no-shows", response_model=list[BookingOut])
+def sweep_no_shows(session: DbSession, owner: Owner) -> list[BookingOut]:
+    """Owner or approved bot. Confirmed bookings past their end with no check-in."""
+    swept = booking_service.sweep_no_shows(session)
+    for booking in swept:
+        record_action(
+            session,
+            principal=owner,
+            action="no_show",
+            request_id=booking.id,
+            subject=StaffSubject.BOOKING,
+        )
+    return [BookingOut.from_booking(booking) for booking in swept]
+
+
 @router.post("/bookings/{booking_id}/overdue", response_model=BookingOut)
 def mark_booking_overdue(booking_id: UUID, session: DbSession, owner: Owner) -> BookingOut:
     """Owner or approved bot. No scheduler. Does not move tokens or money."""

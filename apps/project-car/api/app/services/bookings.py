@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -54,6 +54,13 @@ CLOSE_BLOCKING_STATUSES = (BookingStatus.PENDING, BookingStatus.CONFIRMED)
 CHECK_IN_EARLY_MINUTES = 15
 # Ben, D2: bookings start and end on the Regina hour and last at least an hour.
 BOOKING_MIN_HOURS = 1
+# Ben, D3: a member cancel this many hours or more before the start is free.
+# Inside the window the shop keeps LATE_CANCEL_KEEP_PCT of the reserve.
+FREE_CANCEL_HOURS = 24
+LATE_CANCEL_KEEP_PCT = Decimal("50")
+# Ben, D4: a confirmed booking that ends without a check-in keeps this share.
+NO_SHOW_KEEP_PCT = Decimal("100")
+CENTS = Decimal("0.01")
 
 
 def _error(status: int, code: str, message: str) -> HTTPException:
@@ -666,13 +673,41 @@ def future_bookings_on_hoist(session: Session, hoist_id: UUID) -> list[Booking]:
     return [row for row in rows if _stored_utc(row.end_at) > now]
 
 
+def kept_share(reserved: Decimal, keep_pct: Decimal) -> Decimal:
+    """Tokens the shop keeps, rounded half up to the cent."""
+    return (Decimal(reserved) * keep_pct / Decimal("100")).quantize(CENTS, rounding=ROUND_HALF_UP)
+
+
+def _member_cancel_terms(booking: Booking) -> tuple[Decimal, dict]:
+    """Share kept and refund meta for a member cancel (Ben, D3 / D5)."""
+    lead = _stored_utc(booking.start_at) - _stored_utc(shop_now())
+    if lead <= timedelta(0):
+        raise _error(400, "cancel_after_start", "A booking cannot be cancelled once it has started.")
+    if lead >= timedelta(hours=FREE_CANCEL_HOURS):
+        return Decimal("0"), {"policy": "free_cancel"}
+    hours_before = (Decimal(lead.total_seconds()) / Decimal(3600)).quantize(CENTS, rounding=ROUND_HALF_UP)
+    kept = kept_share(Decimal(booking.reserved_tokens), LATE_CANCEL_KEEP_PCT)
+    return kept, {
+        "policy": "late_cancel",
+        "keep_pct": str(LATE_CANCEL_KEEP_PCT),
+        "kept_tokens": str(kept),
+        "hours_before": str(hours_before),
+    }
+
+
 def cancel_booking(
     session: Session,
     booking_id: UUID,
     *,
+    by_member: bool = False,
     refund_meta: dict | None = None,
     refund_note: str = "Refund reserve on cancel",
 ) -> Booking:
+    """Cancel an open booking and refund its reserve.
+
+    ``by_member`` applies the member cancel window. Owner cancels, accepted
+    refund requests and bay closures refund in full.
+    """
     # Lock the booking, then the member, before the status check. A second
     # cancel waits, sees the new status, and does not write another refund.
     # Shop work can have no member and no reserve.
@@ -683,18 +718,23 @@ def cancel_booking(
 
     reserved = Decimal(booking.reserved_tokens)
     meta = {"pricing_rule": booking.pricing_rule} if booking.pricing_rule else {}
+    kept = Decimal("0")
+    if by_member:
+        kept, terms = _member_cancel_terms(booking)
+        meta.update(terms)
     meta.update(refund_meta or {})
-    if reserved > 0:
+    refund = reserved - kept
+    if refund > 0:
         apply_ledger(
             session,
             member,
             kind=TokenTransactionKind.BOOKING_REFUND,
-            amount=reserved,
+            amount=refund,
             booking_id=booking.id,
-            note=refund_note,
+            note=refund_note if kept == 0 else f"Late cancel: refund {refund}, keep {kept}",
             meta=meta or None,
         )
-        booking.reserved_tokens = Decimal("0")
+    booking.reserved_tokens = Decimal("0")
 
     booking.status = BookingStatus.CANCELLED
     session.add(booking)
@@ -702,3 +742,46 @@ def cancel_booking(
     session.flush()
     _set_hoist_available_if_idle(session, booking.hoist)
     return get_booking(session, booking.id)
+
+
+def sweep_no_shows(session: Session) -> list[Booking]:
+    """Mark confirmed member bookings that ended without a check-in as no-shows.
+
+    The shop keeps NO_SHOW_KEEP_PCT of the reserve; any remainder is refunded.
+    Repeat sweeps find nothing new.
+    """
+    now = _stored_utc(shop_now())
+    candidates = session.scalars(
+        select(Booking.id)
+        .where(
+            Booking.status == BookingStatus.CONFIRMED,
+            Booking.member_id.is_not(None),
+        )
+        .order_by(Booking.end_at, Booking.id)
+    ).all()
+    swept: list[Booking] = []
+    for booking_id in candidates:
+        booking = _locked_booking(session, booking_id)
+        if booking.status != BookingStatus.CONFIRMED or _stored_utc(booking.end_at) > now:
+            continue
+        member = lock_member(session, booking.member_id)
+        reserved = Decimal(booking.reserved_tokens)
+        kept = kept_share(reserved, NO_SHOW_KEEP_PCT)
+        if reserved - kept > 0:
+            apply_ledger(
+                session,
+                member,
+                kind=TokenTransactionKind.BOOKING_REFUND,
+                amount=reserved - kept,
+                booking_id=booking.id,
+                note=f"No-show: refund {reserved - kept}, keep {kept}",
+                meta={"policy": "no_show", "keep_pct": str(NO_SHOW_KEEP_PCT), "kept_tokens": str(kept)},
+            )
+        booking.reserved_tokens = Decimal("0")
+        booking.status = BookingStatus.NO_SHOW
+        session.add(booking)
+        release_booking_hours(session, booking)
+        session.flush()
+        _set_hoist_available_if_idle(session, booking.hoist)
+        swept.append(get_booking(session, booking.id))
+    return swept

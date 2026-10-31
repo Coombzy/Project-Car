@@ -414,6 +414,7 @@ def create_refund_request(session: Session, booking_id: UUID, principal: Princip
         BookingStatus.COMPLETED,
         BookingStatus.CANCELLED,
         BookingStatus.OVERDUE,
+        BookingStatus.NO_SHOW,
     ):
         raise _error(
             409,
@@ -474,6 +475,7 @@ def accept_refund_request(session: Session, request_id: UUID, principal: Princip
         BookingStatus.COMPLETED,
         BookingStatus.CANCELLED,
         BookingStatus.OVERDUE,
+        BookingStatus.NO_SHOW,
     ):
         # Accept cannot cancel these. Deny the request so it leaves pending,
         # and do not write a ledger row. Commit before the raise: get_db rolls

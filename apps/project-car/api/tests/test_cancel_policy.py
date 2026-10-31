@@ -206,3 +206,16 @@ def test_ai_may_sweep_and_no_show_is_final(client: TestClient) -> None:
         response = client.post(path, headers=headers)
         assert response.status_code == 400, (path, response.text)
     assert _booking(client, booking["id"])["status"] == "no_show"
+
+
+def test_no_show_cannot_be_refunded_through_a_refund_request(client: TestClient) -> None:
+    member, booking, start = _member_booking(client, length=1)
+    freeze_shop_clock(start + timedelta(hours=1))
+    assert client.post("/bookings/sweep-no-shows", headers=AUTH).status_code == 200
+    before = _balance(client, member["id"])
+
+    filed = client.post("/refund-requests", headers=AI, json={"booking_id": booking["id"]})
+
+    assert filed.status_code == 409, filed.text
+    assert filed.json()["error"]["code"] == "refund_not_open"
+    assert _balance(client, member["id"]) == before
