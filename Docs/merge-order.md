@@ -38,7 +38,7 @@ Other open pull requests (finance trackers, backlog docs, and older `gb/` rows s
 | 14 | [#239](https://github.com/Coombzy/Project-Car/pull/239) | `cursor/whole-hour-book-e6d6` | No refund once a visit starts. | Check-in or a started visit keeps the booked tokens. Unused time is not returned. |
 | 15 | [#240](https://github.com/Coombzy/Project-Car/pull/240) | `cursor/cancel-and-no-show-e6d6` | Apply the peak cap to Bay 6 and drop requests when it closes. | Closing Bay 6 drops pending requests on that bay. |
 | 16 | [#241](https://github.com/Coombzy/Project-Car/pull/241) | `cursor/bay6-peak-cap-e6d6` | Four token bands, and only Peak counts toward the cap. | Evening and off-peak hours no longer count toward the weekly cap. |
-| 17 | [#243](https://github.com/Coombzy/Project-Car/pull/243) | `cursor/four-band-hours-e6d6` | Show the weekly rate chart on the member booking screen. | The chart can disagree with the quote if a band window changes under it. |
+| 17 | [#243](https://github.com/Coombzy/Project-Car/pull/243) | `cursor/four-band-hours-e6d6` | Weekly rate chart, open cells, and the peak-hours line read the saved bands, same as the quote and the cap. | If the rate fetch fails, cells fall back to the seeded table until the next load. The quote still uses the saved bands. |
 | 18 | [#244](https://github.com/Coombzy/Project-Car/pull/244) | `cursor/rate-chart-e6d6` | Basic is $500 CAD/month plus GST. Premium stays a $750 stand-in. | Premium $750 reads as a real price on signup until Ben confirms it. |
 | 19 | [#245](https://github.com/Coombzy/Project-Car/pull/245) | `cursor/basic-plan-price-e6d6` | Book charges the published deal, and only the total it showed. | A stale page whose total no longer matches is refused and writes nothing. |
 | 20 | [#246](https://github.com/Coombzy/Project-Car/pull/246) | `cursor/book-shown-price-e6d6` | Grant button rolls one month of allowance. | A second press that month does nothing. Unused allowance above one month expires. |
@@ -76,8 +76,9 @@ Read bottom-up from #225 through #263. The tip's shop API, web lint, and layout 
 | [#248](https://github.com/Coombzy/Project-Car/pull/248) | Any-bay skipped a bay whose status was occupied, even when the requested hour was free. The form also sent the preview bay id, so the server never tried the next bay. | Occupied bays stay eligible. Maintenance and locked bays stay out. Any bay submits no hoist id. |
 | [#258](https://github.com/Coombzy/Project-Car/pull/258) | SQLite returns a stored UTC instant with no offset. The dashboard strip read that as shop wall time, so a 2 p.m. booking showed at 8 p.m. Seed rows were the other way around: wall time read as UTC. | The strip reads a naive timestamp as UTC. Seed bookings are stored as the same UTC instant the API writes. |
 
+Follow-up on [#243](https://github.com/Coombzy/Project-Car/pull/243): open cells and the "Peak hours this week" line now read the saved bands, same as the chart, the quote, and the cap. The member home peak line was wired when [#251](https://github.com/Coombzy/Project-Car/pull/251) was restacked. A test edits Peak to 1.60 and checks the member chart, the owner chart, the quote, the cap, the open-cell gutter, and the peak line. Children above #243 were restacked. No merge.
+
 Left as they are:
 
-- Open cells on the calendar, and the "Peak hours this week" line, still use the seeded multipliers. The rate chart, the quote, and the cap use the saved bands. Those three agree. The cells disagree only after an owner edits a band. The charge is the quote.
 - Two members taking the same any-bay hour at once is still not proven on Postgres. No workflow file was edited.
 - Cancel keep, no-show, piles, GST, the stand-in processor, extra-hour charges, and signup were read against the product rules and not changed.
