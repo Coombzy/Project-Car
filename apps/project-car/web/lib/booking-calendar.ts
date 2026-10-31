@@ -201,6 +201,14 @@ function rangesOverlap(start: number, end: number, otherStart: number, otherEnd:
   return start < otherEnd && otherStart < end;
 }
 
+export function submittedHoistId(laneHoistId: string, bayId: string): string {
+  // Any bay lets the server try the next bay if this one is taken at save time.
+  if (laneHoistId === "any") {
+    return "";
+  }
+  return bayId;
+}
+
 export function lowestFreeBay(
   bays: BayChoice[],
   intervals: SpanInterval[],
@@ -209,7 +217,9 @@ export function lowestFreeBay(
 ): BayChoice | null {
   const start = parseShopInstant(startAt).getTime();
   const end = parseShopInstant(endAt).getTime();
-  const ordered = [...bays].filter((bay) => !bay.isShop && bay.status === "available").sort((a, b) => a.number - b.number);
+  const ordered = [...bays]
+    .filter((bay) => !bay.isShop && bay.status !== "maintenance" && bay.status !== "locked")
+    .sort((a, b) => a.number - b.number);
   for (const bay of ordered) {
     const taken = intervals.some((interval) => {
       if (interval.hoistId !== bay.id || !OCCUPYING.has(interval.status)) {

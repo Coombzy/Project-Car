@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime, timedelta, timezone
 from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID
@@ -47,6 +48,7 @@ HOLDING_STATUSES = (
     BookingStatus.OVERDUE,
 )
 BAY_HOUR_TAKEN = "That bay already has a booking on this hour."
+NO_BAY = "No member bay is free for every hour of this visit."
 UNAVAILABLE_HOIST = (HoistStatus.MAINTENANCE, HoistStatus.LOCKED)
 # A bay cannot close over these until they are cancelled. Active and overdue
 # visits are already on the bay and are left for the Owner to finish.
@@ -215,14 +217,8 @@ def _hour_key(value: datetime) -> datetime:
     return normalized.replace(microsecond=0)
 
 
-def claim_booking_hours(session: Session, booking: Booking) -> None:
-    """Insert one row per Regina hour. Unique (hoist_id, hour_start) is the lock.
-
-    A second flush of the same bay hour raises 409 hoist_overlap even when the
-    SELECT overlap check is skipped. Claim is done only when this booking
-    already owns every Regina hour of this hoist and window. One existing row
-    is not enough: confirm must still insert the hours that are missing.
-    """
+def _add_missing_hours(session: Session, booking: Booking) -> None:
+    """Insert missing Regina hour rows and flush. Caller handles IntegrityError."""
     # SQLite returns stored UTC as naive. as_utc would treat that as shop-local.
     start_at = _stored_utc(booking.start_at)
     end_at = _stored_utc(booking.end_at)
@@ -245,8 +241,22 @@ def claim_booking_hours(session: Session, booking: Booking) -> None:
                 hour_start=hour_start,
             )
         )
+    session.flush()
+
+
+def claim_booking_hours(session: Session, booking: Booking) -> None:
+    """Insert one row per Regina hour. Unique (hoist_id, hour_start) is the lock.
+
+    A second flush of the same bay hour raises 409 hoist_overlap even when the
+    SELECT overlap check is skipped. Claim is done only when this booking
+    already owns every Regina hour of this hoist and window. One existing row
+    is not enough: confirm must still insert the hours that are missing.
+
+    The conflict path rolls the whole session back. Any-bay retries must not
+    call this: they insert inside a savepoint and try the next bay.
+    """
     try:
-        session.flush()
+        _add_missing_hours(session, booking)
     except IntegrityError:
         session.rollback()
         raise _error(409, "hoist_overlap", BAY_HOUR_TAKEN) from None
@@ -373,11 +383,79 @@ def preview_reserve(
     return quote, balance, balance - quote.final_reserve_cost
 
 
+def _bay_number_key(hoist: Hoist) -> tuple[int, str]:
+    """Lowest trailing number first. A name with no number sorts last, then by name."""
+    match = re.search(r"(\d+)$", hoist.name.strip())
+    number = int(match.group(1)) if match else 1_000_000_000
+    return (number, hoist.name)
+
+
+def _member_bays_lowest_first(session: Session) -> list[Hoist]:
+    """Member bays that can take a visit. Free means the hour, not the bay's current status.
+
+    A bay checked in right now is ``occupied`` and still free for a later hour.
+    Maintenance and locked bays stay out, the same rule as booking a named bay.
+    """
+    rows = session.scalars(
+        select(Hoist).where(
+            Hoist.is_shop.is_(False),
+            Hoist.status.notin_(UNAVAILABLE_HOIST),
+        )
+    ).all()
+    return sorted(rows, key=_bay_number_key)
+
+
+def _place_on_any_bay(
+    session: Session,
+    *,
+    member: Member,
+    start_at: datetime,
+    end_at: datetime,
+    tokens: Decimal,
+    rule: object,
+    notes: str | None,
+) -> Booking | None:
+    """Save the visit on the first free member bay. A lost hour tries the next bay.
+
+    The hour insert runs inside a savepoint. ``claim_booking_hours`` rolls the
+    whole session back, which would throw away the chance to try Bay 2.
+    """
+    for hoist in _member_bays_lowest_first(session):
+        if hoist_has_overlap(
+            session,
+            hoist.id,
+            start_at,
+            end_at,
+            statuses=HOLDING_STATUSES,
+        ):
+            continue
+        try:
+            with session.begin_nested():
+                booking = Booking(
+                    member_id=member.id,
+                    hoist_id=hoist.id,
+                    start_at=start_at,
+                    end_at=end_at,
+                    kind=BookingKind.CUSTOMER,
+                    status=BookingStatus.PENDING,
+                    reserved_tokens=tokens,
+                    pricing_rule=rule,
+                    notes=notes,
+                )
+                session.add(booking)
+                session.flush()
+                _add_missing_hours(session, booking)
+        except IntegrityError:
+            continue
+        return booking
+    return None
+
+
 def create_booking(
     session: Session,
     *,
     member_id: UUID | None,
-    hoist_id: UUID,
+    hoist_id: UUID | None,
     start_at: datetime,
     end_at: datetime,
     notes: str | None,
@@ -390,11 +468,15 @@ def create_booking(
     reject_start_in_past(start_at)
     reject_off_grid(start_at, end_at)
 
-    hoist = session.get(Hoist, hoist_id)
-    if hoist is None:
-        raise _error(404, "not_found", "Hoist not found.")
-    if hoist.status in UNAVAILABLE_HOIST:
-        raise _error(400, "hoist_unavailable", "That hoist is in maintenance or locked.")
+    hoist: Hoist | None = None
+    if hoist_id is not None:
+        hoist = session.get(Hoist, hoist_id)
+        if hoist is None:
+            raise _error(404, "not_found", "Hoist not found.")
+        if hoist.status in UNAVAILABLE_HOIST:
+            raise _error(400, "hoist_unavailable", "That hoist is in maintenance or locked.")
+    elif kind == BookingKind.SHOP:
+        raise _error(400, "not_shop_hoist", "Shop work can only be booked on the shop hoist.")
 
     if kind == BookingKind.SHOP:
         return _create_shop_booking(
@@ -430,7 +512,7 @@ def create_booking(
     if member.status != MemberStatus.ACTIVE:
         raise _error(400, "member_not_bookable", "Only active members can book a hoist.")
 
-    if hoist.is_shop:
+    if hoist is not None and hoist.is_shop:
         raise _error(
             400,
             "shop_hoist_request_required",
@@ -457,22 +539,34 @@ def create_booking(
     if Decimal(member.token_balance) < tokens:
         raise _error(400, "insufficient_tokens", "Member does not have enough tokens to reserve.")
 
-    _reject_if_bay_hour_taken(session, hoist.id, start_at, end_at)
-
-    booking = Booking(
-        member_id=member.id,
-        hoist_id=hoist.id,
-        start_at=start_at,
-        end_at=end_at,
-        kind=BookingKind.CUSTOMER,
-        status=BookingStatus.PENDING,
-        reserved_tokens=tokens,
-        pricing_rule=rule,
-        notes=notes,
-    )
-    session.add(booking)
-    session.flush()
-    claim_booking_hours(session, booking)
+    if hoist is None:
+        booking = _place_on_any_bay(
+            session,
+            member=member,
+            start_at=start_at,
+            end_at=end_at,
+            tokens=tokens,
+            rule=rule,
+            notes=notes,
+        )
+        if booking is None:
+            raise _error(409, "no_bay", NO_BAY)
+    else:
+        _reject_if_bay_hour_taken(session, hoist.id, start_at, end_at)
+        booking = Booking(
+            member_id=member.id,
+            hoist_id=hoist.id,
+            start_at=start_at,
+            end_at=end_at,
+            kind=BookingKind.CUSTOMER,
+            status=BookingStatus.PENDING,
+            reserved_tokens=tokens,
+            pricing_rule=rule,
+            notes=notes,
+        )
+        session.add(booking)
+        session.flush()
+        claim_booking_hours(session, booking)
     apply_ledger(
         session,
         member,

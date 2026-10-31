@@ -114,7 +114,7 @@ def list_owner_shop_hoist_requests(
 def create_booking(
     body: BookingCreate, session: DbSession, owner: Owner
 ) -> BookingOut | ShopHoistRequestOut:
-    if body.kind == BookingKind.CUSTOMER:
+    if body.kind == BookingKind.CUSTOMER and body.hoist_id is not None:
         hoist = session.get(Hoist, body.hoist_id)
         if hoist is not None and hoist.is_shop:
             if body.member_id is None:

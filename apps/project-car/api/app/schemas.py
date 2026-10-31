@@ -547,7 +547,7 @@ class BookingOut(BaseModel):
 
 class BookingCreate(BaseModel):
     member_id: UUID | None = None
-    hoist_id: UUID
+    hoist_id: UUID | None = None
     start_at: datetime
     end_at: datetime
     kind: BookingKind = BookingKind.CUSTOMER
@@ -582,7 +582,7 @@ class BookingComplete(BaseModel):
 
 
 class MemberBookingCreate(BaseModel):
-    hoist_id: UUID
+    hoist_id: UUID | None = None
     start_at: datetime
     end_at: datetime
     tokens: Decimal | None = Field(default=None, description="Ignored. Server computes reserve from duration.")

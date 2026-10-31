@@ -355,6 +355,11 @@ def member_create_shop_hoist_request(
     session: DbSession,
     principal: MemberUser,
 ) -> ShopHoistRequestOut:
+    if body.hoist_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "hoist_required", "message": "A shop hoist request needs a bay."},
+        )
     row = create_shop_hoist_request(
         session,
         member_id=principal.member_id,
@@ -375,7 +380,7 @@ def member_create_booking(
     principal: MemberUser,
 ) -> BookingOut | ShopHoistRequestOut:
     _own_member(session, principal)
-    hoist = session.get(Hoist, body.hoist_id)
+    hoist = session.get(Hoist, body.hoist_id) if body.hoist_id is not None else None
     if hoist is not None and hoist.is_shop:
         row = create_shop_hoist_request(
             session,
