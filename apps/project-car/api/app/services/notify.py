@@ -30,7 +30,7 @@ from app.models import (
     NotificationStatus,
 )
 from app.services.fill import FillSnapshot, discount_label
-from app.shop_time import PRICING_TZ, SHOP_TZ, pricing_now
+from app.shop_time import PRICING_TZ, SHOP_TZ, format_shop_time, pricing_now
 
 
 class NotifyError(ValueError):
@@ -352,6 +352,58 @@ def _deliver_row(
     session.add(row)
     session.flush()
     return row
+
+
+def enqueue_shop_request_closed_notices(
+    session: Session,
+    hoist: Hoist,
+    requests: list,
+    *,
+    reason: str,
+    settings: Settings | None = None,
+) -> list[NotificationOutbox]:
+    """One email per member whose open shop-hoist request was dropped."""
+    cfg = settings or get_settings()
+    rows: list[NotificationOutbox] = []
+    for request in requests:
+        member = request.member
+        if member is None:
+            continue
+        start = request.start_at
+        if start.tzinfo is None:
+            start = start.replace(tzinfo=timezone.utc)
+        body = (
+            f"Hi {member.name},\n\n"
+            f"{hoist.name} is closed, so we cancelled your shop hoist request "
+            f"for {format_shop_time(start)}.\n\n"
+            f"Reason: {reason}\n"
+            "No tokens were taken. Ask again when the bay is open."
+        )
+        row = NotificationOutbox(
+            channel=NotificationChannel.EMAIL,
+            member_id=member.id,
+            to_address=member.email,
+            subject=f"{hoist.name} is closed - your request was cancelled",
+            body=body,
+            payload={
+                "kind": "shop_request_closed",
+                "hoist_id": str(hoist.id),
+                "request_id": str(request.id),
+                "reason": reason,
+            },
+            status=NotificationStatus.PENDING,
+            dry_run=False,
+        )
+        if not member.email:
+            row.status = NotificationStatus.SKIPPED
+            row.last_error = "missing_recipient"
+        session.add(row)
+        rows.append(row)
+    session.flush()
+    for row in rows:
+        if row.status == NotificationStatus.PENDING:
+            _deliver_row(session, row, settings=cfg)
+    return rows
 
 
 def list_outbox(session: Session, *, limit: int = 50) -> list[NotificationOutbox]:

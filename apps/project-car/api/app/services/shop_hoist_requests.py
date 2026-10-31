@@ -40,6 +40,7 @@ from app.services.bookings import (
     preview_reserve,
     reject_start_in_past,
 )
+from app.services.peak_cap import check_peak_cap
 from app.services.staff import actor_of, record_action, reject_own_request
 from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
@@ -141,6 +142,7 @@ def create_shop_hoist_request(
         end_at=end_at,
         member_id=member.id,
     )
+    check_peak_cap(session, member.id, start_at, end_at)
     window = timedelta(days=member.tier.booking_window_days)
     if start_at > as_utc(shop_now()) + window:
         raise _error(
@@ -200,6 +202,7 @@ def approve_shop_hoist_request(
         )
     if Decimal(member.token_balance) < quote:
         raise _error(400, "insufficient_tokens", "Member does not have enough tokens to reserve.")
+    check_peak_cap(session, member.id, _stored_utc(row.start_at), _stored_utc(row.end_at))
     if hoist_has_overlap(
         session,
         row.hoist_id,

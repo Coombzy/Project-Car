@@ -9,11 +9,12 @@ from sqlalchemy.exc import IntegrityError
 
 from app.auth import Principal
 from app.deps import DbSession, Owner
-from app.models import Booking, BookingStatus, Hoist, HoistStatus
+from app.models import Booking, BookingStatus, Hoist, HoistStatus, ShopHoistRequestStatus
 from app.routers.members import OVERRIDE_REASON_MAX, OVERRIDE_REASON_MIN
 from app.schemas import HoistCreate, HoistOut, HoistPatch
 from app.services import bookings as booking_service
-from app.services.notify import enqueue_bay_closed_notices
+from app.services.notify import enqueue_bay_closed_notices, enqueue_shop_request_closed_notices
+from app.services.shop_hoist_requests import deny_shop_hoist_request, list_shop_hoist_requests
 from app.services.staff import reject_ai
 
 router = APIRouter(tags=["hoists"])
@@ -55,6 +56,25 @@ def _reject_available_while_occupied(session, hoist_id: UUID, *, status: object)
             "message": "That hoist still has an active or overdue visit.",
         },
     )
+
+
+def _drop_open_shop_requests(session: DbSession, hoist: Hoist, principal: Principal, *, reason: str) -> None:
+    pending = [
+        request
+        for request in list_shop_hoist_requests(session, status=ShopHoistRequestStatus.PENDING)
+        if request.hoist_id == hoist.id
+    ]
+    denied = []
+    for request in pending:
+        updated, _action = deny_shop_hoist_request(session, request.id, principal)
+        denied.append(updated)
+    if denied:
+        enqueue_shop_request_closed_notices(
+            session,
+            hoist,
+            denied,
+            reason=reason or "The bay is closed",
+        )
 
 
 def _close_over_future_bookings(
@@ -199,6 +219,7 @@ def patch_hoist(hoist_id: UUID, body: HoistPatch, session: DbSession, owner: Own
         _ensure_single_shop_hoist(session, is_shop=bool(updates["is_shop"]), exclude_id=row.id)
     if updates.get("status") in booking_service.UNAVAILABLE_HOIST:
         _close_over_future_bookings(session, row, owner, cancel=cancel_bookings, reason=reason)
+        _drop_open_shop_requests(session, row, owner, reason=reason)
     for key, value in updates.items():
         setattr(row, key, value)
     session.add(row)
