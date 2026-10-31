@@ -76,20 +76,21 @@ def test_v1_walkthrough(client: TestClient) -> None:
         transport.client = previous
     assert signed.status_code == 201, signed.text
     assert signed.json()["mode"] == "self_serve"
-    member_id = signed.json()["member_id"]
+    assert signed.json()["member_id"]
+
+    login_member(client, EMAIL, PASSWORD)
     bought = client.post(
-        f"/members/{member_id}/token-purchases",
-        headers=AUTH,
+        "/member/token-purchases",
         json={"payment_id": PAYMENT, "tokens": "200.00", "subtotal_cad": "40.00"},
     )
     assert bought.status_code == 201, bought.text
     purchase = bought.json()["meta"]["purchase"]
     assert purchase["payment_id"] == PAYMENT
+    assert purchase["processor"] == "stand-in"
     assert _dec(purchase["subtotal_cad"]) == Decimal("40.00")
     assert _dec(purchase["gst_cad"]) == Decimal("2.00")
     assert _dec(purchase["total_cad"]) == Decimal("42.00")
 
-    login_member(client, EMAIL, PASSWORD)
     opened = _me(client)
     assert _dec(opened["allowance_balance"]) == Decimal("1000")
     assert _dec(opened["purchased_balance"]) == Decimal("200")
