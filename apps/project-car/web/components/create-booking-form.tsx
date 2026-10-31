@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { createBookingAction } from "../app/schedule/actions";
-import { segmentCostLines, showSingleBandLabel } from "../lib/booking-segments";
+import { segmentCostLines, segmentRowKey, showSingleBandLabel } from "../lib/booking-segments";
 import type { BookingQuote, Hoist, Member } from "../lib/config";
 import { tokensLabel } from "../lib/time";
 import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
@@ -184,9 +184,9 @@ export function CreateBookingForm({
             </>
           ) : (
             <>
-              {segmentCostLines(rule).map((line) => (
-                <p className="quote-math" key={line}>
-                  {line}
+              {(rule.segments ?? []).map((segment) => (
+                <p className="quote-math" key={segmentRowKey(segment)}>
+                  {segmentCostLines({ segments: [segment] })[0]}
                 </p>
               ))}
               <p className="quote-math">

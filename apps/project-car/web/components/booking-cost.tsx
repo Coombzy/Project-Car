@@ -1,5 +1,5 @@
 import type { PricingRule } from "../lib/config";
-import { segmentCostLines, showSingleBandLabel } from "../lib/booking-segments";
+import { segmentCostLines, segmentRowKey, showSingleBandLabel } from "../lib/booking-segments";
 import { fillApplies, overlayIsNonStandard, tokensLabel } from "../lib/time";
 
 export function BookingCost({
@@ -21,7 +21,7 @@ export function BookingCost({
       ) : null}
       {pricingRule && !singleBand
         ? (pricingRule.segments ?? []).map((segment) => (
-            <span key={`${segment.band_id}-${segment.start}`} className={`band-chip band-${segment.band_id}`}>
+            <span key={segmentRowKey(segment)} className={`band-chip band-${segment.band_id}`}>
               {segmentCostLines({ segments: [segment] })[0]}
             </span>
           ))

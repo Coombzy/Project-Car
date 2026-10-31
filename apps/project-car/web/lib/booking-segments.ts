@@ -20,6 +20,10 @@ export type SegmentRule = {
   segments?: SegmentLine[] | null;
 };
 
+export function segmentRowKey(segment: { band_id: string; start: string }): string {
+  return `${segment.band_id}-${segment.start}`;
+}
+
 function tokenText(value: string): string {
   const amount = Number(value);
   if (Number.isNaN(amount)) {

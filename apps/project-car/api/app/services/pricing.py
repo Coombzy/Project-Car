@@ -348,7 +348,13 @@ def quote_reserve(
 ) -> ReserveQuote:
     if session is not None:
         ensure_pricing_settings(session)
-    hours = duration_hours(start_at, end_at)
+    # duration_hours rejects end <= start before any slice exists. A zero-length
+    # window still has to fail as invalid_tokens, and must not read segments[0].
+    start_utc = as_utc(start_at)
+    end_utc = as_utc(end_at)
+    if end_utc < start_utc:
+        raise PricingError("invalid_window", "Booking end must be after start.")
+    hours = Decimal("0") if start_utc == end_utc else duration_hours(start_at, end_at)
     overlay = resolve_overlay(
         start_at=start_at,
         reserved_at=reserved_at or shop_now(),
@@ -363,6 +369,8 @@ def quote_reserve(
         fill_factor=fill_factor,
         session=session,
     )
+    if not segments:
+        raise PricingError("invalid_tokens", "Reserved tokens must be greater than zero.")
     # Start segment only. Stored ledger rows and old clients keep reading band_*.
     band = segments[0].band
     raw = sum((segment.tokens for segment in segments), Decimal("0"))
