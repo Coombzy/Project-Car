@@ -22,7 +22,7 @@ describe("shop web manifest", () => {
     assert.equal(manifest.name, "Project Car Shop OS");
     assert.equal(manifest.start_url, "/");
     assert.equal(manifest.display, "standalone");
-    assert.equal(manifest.background_color, "#0b0c0e");
+    assert.equal(manifest.background_color, "#0b0d10");
 
     const css = readFileSync(join(webRoot, "app", "globals.css"), "utf8");
     const background = css.match(/--bg:\s*(#[0-9a-fA-F]{6})/);

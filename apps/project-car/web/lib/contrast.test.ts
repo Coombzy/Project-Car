@@ -102,9 +102,9 @@ const edge = (fg: string, ...bgs: string[]): Pair[] => bgs.map((bg) => ({ fg, bg
 const SURFACES = ["bg", "bg-glow", "surface-sunken", "surface", "surface-2"];
 
 const PAIRS: Pair[] = [
-  ...text("text", ...SURFACES, "purple-tint", "orange-tint", "neutral-tint", "info-tint"),
+  ...text("text", ...SURFACES, "purple-tint", "orange-tint", "info-tint", "danger-tint"),
   ...text("text", "purple-wash over surface", "orange-wash over surface", "danger-wash over surface"),
-  ...text("text-muted", ...SURFACES, "neutral-tint", "orange-wash over surface", "orange-wash-soft over surface"),
+  ...text("text-muted", ...SURFACES, "orange-wash over surface", "orange-wash-soft over surface"),
   ...text("link", ...SURFACES),
   ...text("purple", "purple-tint"),
   ...text("orange", "surface", "orange-tint"),
@@ -112,7 +112,7 @@ const PAIRS: Pair[] = [
   ...text("warn", "surface", "warn-tint"),
   ...text("danger", "surface", "danger-tint"),
   ...text("info", "surface", "info-tint"),
-  ...edge("border", ...SURFACES, "neutral-tint"),
+  ...edge("border", ...SURFACES),
   ...edge("purple", ...SURFACES, "purple-tint"),
   ...edge("orange", ...SURFACES),
   ...edge("orange-line", "surface", "orange-tint"),
