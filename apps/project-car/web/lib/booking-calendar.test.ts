@@ -9,6 +9,7 @@ import {
   gstLine,
   lowestFreeBay,
   memberCancelOffer,
+  submittedHoistId,
   peakWeek,
   quotedSelectionLine,
   selectionSummary,
@@ -128,6 +129,14 @@ describe("any bay", () => {
       "2026-11-05T18:00:00",
     );
     assert.equal(chosen?.id, "b2");
+  });
+
+  it("keeps an occupied bay when that hour is free, and does not pin Any bay", () => {
+    const occupied = BAYS.map((bay) => (bay.id === "b1" ? { ...bay, status: "occupied" } : bay));
+    const chosen = lowestFreeBay(occupied, [], "2026-11-05T16:00:00", "2026-11-05T17:00:00");
+    assert.equal(chosen?.id, "b1");
+    assert.equal(submittedHoistId("any", "b1"), "");
+    assert.equal(submittedHoistId("b2", "b2"), "b2");
   });
 
   it("returns none when every member bay is taken or closed", () => {

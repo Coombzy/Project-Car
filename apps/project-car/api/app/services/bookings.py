@@ -391,10 +391,15 @@ def _bay_number_key(hoist: Hoist) -> tuple[int, str]:
 
 
 def _member_bays_lowest_first(session: Session) -> list[Hoist]:
+    """Member bays that can take a visit. Free means the hour, not the bay's current status.
+
+    A bay checked in right now is ``occupied`` and still free for a later hour.
+    Maintenance and locked bays stay out, the same rule as booking a named bay.
+    """
     rows = session.scalars(
         select(Hoist).where(
             Hoist.is_shop.is_(False),
-            Hoist.status == HoistStatus.AVAILABLE,
+            Hoist.status.notin_(UNAVAILABLE_HOIST),
         )
     ).all()
     return sorted(rows, key=_bay_number_key)

@@ -9,6 +9,7 @@ import {
   lowestFreeBay,
   quotedSelectionLine,
   selectionSummary,
+  submittedHoistId,
   type BayChoice,
   type SpanInterval,
 } from "../lib/booking-calendar";
@@ -295,7 +296,11 @@ export function BookingCalendar({ view, days, today, nowIso, hoists, slots, bala
         aria-live="polite"
       >
         <ScheduleReturnFields returnTo={returnTo} />
-        <input type="hidden" name="hoist_id" value={selection?.bay?.id ?? ""} />
+        <input
+          type="hidden"
+          name="hoist_id"
+          value={submittedHoistId(selection?.hoistId ?? "", selection?.bay?.id ?? "")}
+        />
         <input type="hidden" name="start_at" value={selection?.startAt ?? ""} />
         <input type="hidden" name="end_at" value={selection?.endAt ?? ""} />
         {selection && selection.hours.length > 0 ? (
