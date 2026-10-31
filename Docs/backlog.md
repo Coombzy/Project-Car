@@ -868,9 +868,9 @@ Source: Opus clock-change and ops/API security report, Oct 31 2026 02:50 UTC (S1
 ### R147. The default owner password `changeme` is accepted and the login page prints and pre-fills it
 - Category: Critical security (Opus S2)
 - Baseline: `credentials_match` in `apps/project-car/api/app/auth.py:264-267` compares against `owner_password` (default `changeme`, `apps/project-car/api/app/config.py:23`); `_guard_login` in `apps/project-car/api/app/routers/auth.py:43-50` only rejects the session secret. `apps/project-car/web/app/login/page.tsx:24-31` renders "Demo Owner credentials: owner@projectcar.ca / changeme"; `apps/project-car/web/app/login/login-form.tsx:20,29` and `apps/project-car/web/app/member/login/page.tsx:31`, `apps/project-car/web/app/member/login/login-form.tsx:32` pre-fill.
-- Target: `_guard_login` returns 503 `insecure_default` when `owner_password` is `changeme` or shorter than 12 (same rule as R102's startup check) unless `SHOP_DEV_MODE=1` (setting from R102). Banner and `defaultValue`s render only when new helper `showDemoLoginHints()` in `apps/project-car/web/lib/demo-login.ts` is true: `process.env.NODE_ENV !== "production"` or `SHOP_DEMO_LOGIN_HINTS === "true"`.
+- Target: outside dev mode the API refuses to start with `changeme` or a password shorter than 12 (R102's startup `RuntimeError`; no request-level check here). Banner and `defaultValue`s render only when new helper `showDemoLoginHints()` in `apps/project-car/web/lib/demo-login.ts` is true: `process.env.NODE_ENV !== "production"` or `SHOP_DEMO_LOGIN_HINTS === "true"`.
 - Must not get worse: API `pytest` (incl. `tests/test_demo_password.py`); web suite; visual suite still logs in (it runs with hints on).
-- Proof (RED first): `apps/project-car/api/tests/test_owner_default_password.py`: `test_default_owner_password_refused_outside_dev` (SHOP_DEV_MODE unset, `changeme` → 503 `insecure_default`, never 200); `test_dev_mode_allows_demo_password`. `apps/project-car/web/lib/demo-login.test.ts`: production + no flag → false; flag → true; and a grep test that `app/login/page.tsx` and both login forms reference `showDemoLoginHints` and contain no literal `changeme` outside that guard.
+- Proof (RED first): `apps/project-car/api/tests/test_owner_default_password.py`: `test_default_owner_password_refused_outside_dev` (SHOP_DEV_MODE unset, `changeme` → `create_app` raises `RuntimeError`, reusing R102's startup rule); `test_dev_mode_allows_demo_password` (SHOP_DEV_MODE=1, `changeme` login → 200). `apps/project-car/web/lib/demo-login.test.ts`: production + no flag → false; flag → true; and a grep test that `app/login/page.tsx` and both login forms reference `showDemoLoginHints` and contain no literal `changeme` outside that guard.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/routers/auth.py` (`_guard_login`), new `apps/project-car/api/tests/test_owner_default_password.py`, `apps/project-car/web/app/login/page.tsx`, `apps/project-car/web/app/login/login-form.tsx`, `apps/project-car/web/app/member/login/page.tsx`, `apps/project-car/web/app/member/login/login-form.tsx`, new `apps/project-car/web/lib/demo-login.ts`, new `apps/project-car/web/lib/demo-login.test.ts`
 - Depends on: R102 merged (`SHOP_DEV_MODE`). Screenshots of `/login` at 390 and 1440.
@@ -898,7 +898,7 @@ Source: Opus clock-change and ops/API security report, Oct 31 2026 02:50 UTC (S1
 - Category: Clock (Opus Bugs 4 and 5)
 - Baseline: `apps/project-car/api/app/routers/dashboard.py:132` `day_bounds(shop_now().date())`; `shop_time.py:29-37` applies each caller's zone to a naive `SHOP_NOW`; web `apps/project-car/web/lib/time.ts:4-11` and `lib/calendar.ts:75` use `new Date(naive)`.
 - Target: dashboard uses the Regina day (same as the 24 h strip, `:133`). A naive `SHOP_NOW` raises `ValueError("SHOP_NOW needs an offset")` in `shop_time.py` and throws in `lib/time.ts` `shopClock()`.
-- Proof (RED first): `apps/project-car/api/tests/test_dashboard_today.py` (frozen at `2026-12-15T06:30:00Z` = Regina 00:30 on Dec 15, a winter instant where stale-tzdata Edmonton is still Dec 14, with an active booking → it is in today's list and the bay badge is occupied); `apps/project-car/api/tests/test_shop_now_offset.py` (naive raises; offset value gives the same instant from `shop_now()` and `pricing_now()`); `apps/project-car/web/lib/time.test.ts` new case (naive throws).
+- Proof (RED first): `apps/project-car/api/tests/test_dashboard_today.py` (frozen at `2026-12-15T07:30:00Z` = Regina 01:30 Dec 15 (Regina UTC−6, Edmonton UTC−7 in December, so Edmonton's Dec 14 ended at 07:00Z); a booking `07:30Z–08:30Z` overlaps only the Regina day → it is in today's list and the bay badge is occupied; RED on the Edmonton baseline); `apps/project-car/api/tests/test_shop_now_offset.py` (naive raises; offset value gives the same instant from `shop_now()` and `pricing_now()`); `apps/project-car/web/lib/time.test.ts` new case (naive throws).
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/routers/dashboard.py`, `apps/project-car/api/app/shop_time.py` (`SHOP_NOW` parse only), new `apps/project-car/api/tests/test_dashboard_today.py`, new `apps/project-car/api/tests/test_shop_now_offset.py`, `apps/project-car/web/lib/time.ts`, `apps/project-car/web/lib/time.test.ts`
 - Depends on: after R111 and R148.
@@ -960,7 +960,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): new `apps/project-car/api/tests/test_refund_lock.py`: `test_second_accept_is_409_and_one_ledger_row` (accept twice in sequence with two sessions: second is 409 `refund_already_decided`, ledger has one refund row, balance moved once); `test_locked_booking_refreshes_stale_status` (load booking in session A, change status in session B and commit, `_locked_booking` in A returns the new status). The parallel version runs under R103's Postgres mode. Plus `@pytest.mark.pg test_refund_accept_race_refunds_once` in the same file (12 parallel accepts via R103's `tests/race.py` → exactly 1 success, 11 × 409, one ledger row): RED before the fix, GREEN after.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/services/staff.py` (`accept_refund_request` only), `apps/project-car/api/app/services/bookings.py` (`_locked_booking` only), new `apps/project-car/api/tests/test_refund_lock.py`
-- Depends on: none. Priority: first of the audit rows; runs after the security block (R102, R147, R106, R118) per the launch order above, and may run beside R102 (no shared files). Also after R61, R63 and R75 (`bookings.py`, `staff.py`). R103 merged (Postgres mode for the race test).
+- Depends on: R61, R63, R75 (`bookings.py`, `staff.py`), the security block (R102, R147, R106, R118), and R103 (Postgres mode for the race test), all merged. First of the audit rows after those.
 
 ### R101. The AI bearer reaches almost every Owner route
 - Category: Critical security (fix #2; folds in R68)
@@ -1055,7 +1055,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 ### R110. Half-hour back-to-back bookings collide and forms default to odd minutes
 - Category: Correctness (fix #11) — **STAND-IN**: on the hour only
 - Baseline: hour lock in `claim_booking_hours` (`apps/project-car/api/app/services/bookings.py`) keys whole hours, so 10:30–11:30 then 11:30–12:30 conflict; forms default to now (e.g. 7:59 PM).
-- Target: constant `BOOKING_GRANULARITY_MINUTES = 60` ("STAND-IN until Ben picks on-the-hour vs half hours"); `create_booking` rejects a start or end not on that grid with 400 `booking_not_on_grid`. Web forms (`apps/project-car/web/components/create-booking-form.tsx`, `apps/project-car/web/components/member-booking-form.tsx`) default start to the next whole hour and replace the end field with a duration picker (1–12 h) via a new pure helper `apps/project-car/web/lib/booking-defaults.ts`.
+- Target: constant `BOOKING_GRANULARITY_MINUTES = 60` ("STAND-IN until Ben picks on-the-hour vs half hours"); `create_booking` rejects a start or end not on that grid with 400 `booking_not_on_grid`. Web forms (`apps/project-car/web/components/create-booking-form.tsx`, `apps/project-car/web/components/member-booking-form.tsx`) default start to the next whole hour and replace the end field with a duration picker (member form 1–`MAX_MEMBER_BOOKING_HOURS` = 12 h; owner/shop form 1–`MAX_SHOP_BOOKING_HOURS` = 24 h, from R108) via a new pure helper `apps/project-car/web/lib/booking-defaults.ts`.
 - Must not get worse: API `pytest`; web suite and screenshots.
 - Proof (RED first): `apps/project-car/api/tests/test_booking_grid.py` (10:30 start → 400 `booking_not_on_grid`; 10:00–11:00 then 11:00–12:00 both succeed); `apps/project-car/web/lib/booking-defaults.test.ts` (19:59 → 20:00, 20:00 → 20:00 next-hour rule documented, duration → end).
 - Size: 2 tasks
@@ -1337,7 +1337,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 ### R142. Concurrency harness across every state-changing endpoint (Opus check a)
 - Category: Tests
 - Target: new `apps/project-car/api/tests/test_pg_concurrency_sweep.py` (`@pytest.mark.pg`) using `tests/race.py`: 10 parallel calls each for booking confirm, check-in, owner token adjust, job claim, chat draft accept, fill draft accept, refund accept; for each, snapshot `token_ledger` sum and row count per member before/after and assert exactly one success and the ledger diff equals one call's effect. Report table printed with `-s`.
-- Proof: merges with its assertions already green: every endpoint covered is locked by R100/R104/R105 first; any new failure found while writing it becomes a new row, not a red merge.
+- Proof: each assertion is RED on old code and the PR merges only when every assertion it adds passes; endpoints are locked by R100/R104/R105 first. A newly found hole may also get its own row, but its assertion is not removed from this PR.
 - Size: 1 task
 - Likely files: new `apps/project-car/api/tests/test_pg_concurrency_sweep.py`, `apps/project-car/api/tests/race.py`
 - Depends on: R103 merged.
@@ -1368,7 +1368,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 ### R146. Accessibility scan and keyboard checks (Opus check e)
 - Category: Tests
 - Target: new Playwright spec `apps/project-car/web/tests/a11y.spec.ts` using `@axe-core/playwright` (devDependency): every owner and member page at 390px and 1440px, zero serious/critical violations; keyboard-only: log in, book a bay end to end, open and close the owner More menu with Escape. Report saved as `apps/project-car/web/test-results/a11y.json`.
-- Proof: merges green: scan scoped to pages already fixed (after R126); any serious/critical violation found becomes a new row.
+- Proof: scan scoped to pages already fixed (after R126); the PR merges only when its scan and keyboard assertions pass. A newly found violation may also get its own row, but no assertion is dropped from this PR.
 - Size: 2 tasks
 - Likely files: new `apps/project-car/web/tests/a11y.spec.ts`, `apps/project-car/web/package.json` (devDependency only), `apps/project-car/web/playwright.config.ts`
 - Depends on: R126 merged.
