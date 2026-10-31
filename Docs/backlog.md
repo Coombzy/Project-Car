@@ -861,6 +861,89 @@ Rows R63–R70 (2026-10-27): this paragraph replaces the earlier ones for anythi
 
 Rows R71–R79 (2026-10-28): this paragraph replaces the earlier ones for anything still open. R70 (#202) is the last merged row. Still open from before: R51 (`services/parts_requests.py`), R52 (`schemas.py`), R61 then R63 (`services/bookings.py`; R64 is superseded by R109), R62 (web `app/not-found.tsx`, `app/error.tsx`), R69 (R68 is superseded by R101) (web `lib/fetch-timeout.ts`, `lib/shop-api.ts`). Files for R71–R79: R71 (`routers/tiers.py`), R72 then R73 (`schemas.py`, after R52, one at a time), R74 (`routers/fill.py`), R75 (`services/staff.py`), R76 (`routers/jobs.py`, `services/jobs.py`), R77 (`routers/waitlist.py`), R78 (web `lib/shop-path.ts`, `lib/shop-api.ts`, after R69), R79 (web `lib/shop-error.ts`, `lib/page.ts`). Any three of R71, R74, R75, R76, R77 and R79 share no file and can run together, and none of them touches a page, adds an alembic revision or needs screenshots. Start R71, R74 and R77, then R51, R68 and R75.
 
+## Security and clock rows (R147–R155, added 2026-10-30)
+
+Source: Opus clock-change and ops/API security report, Oct 31 2026 02:50 UTC (S1–S8, Bugs 1–5), approved by Ben Oct 30. These run first. Launch order: R102 (S1, merged into the fix-list dev-secret row) → R147 (S2) → R106 (S3/S4, merged into the fix-list login row) → R118 (S5) → R111 (clock API) → R148 → R149 → R150 → R151 → R152 → R153 → R154 → R155, then R100 onward. Same proof rules as the audit section below. No row edits `.github/workflows/**`; where Opus asks for a CI job (stale-tzdata run, faketime run) the row adds a script and documents the job in `Docs/shop-os-ci.md` for a human to add.
+
+### R147. The default owner password `changeme` is accepted and the login page prints and pre-fills it
+- Category: Critical security (Opus S2)
+- Baseline: `credentials_match` in `apps/project-car/api/app/auth.py:264-267` compares against `owner_password` (default `changeme`, `apps/project-car/api/app/config.py:23`); `_guard_login` in `apps/project-car/api/app/routers/auth.py:43-50` only rejects the session secret. `apps/project-car/web/app/login/page.tsx:24-31` renders "Demo Owner credentials: owner@projectcar.ca / changeme"; `apps/project-car/web/app/login/login-form.tsx:20,29` and `apps/project-car/web/app/member/login/page.tsx:31`, `apps/project-car/web/app/member/login/login-form.tsx:32` pre-fill.
+- Target: `_guard_login` returns 503 `insecure_default` when `owner_password` is `changeme` (or shorter than 12) unless `SHOP_DEV_MODE=1` (setting from R102). Banner and `defaultValue`s render only when new helper `showDemoLoginHints()` in `apps/project-car/web/lib/demo-login.ts` is true: `process.env.NODE_ENV !== "production"` or `SHOP_DEMO_LOGIN_HINTS === "true"`.
+- Must not get worse: API `pytest` (incl. `tests/test_demo_password.py`); web suite; visual suite still logs in (it runs with hints on).
+- Proof (RED first): `apps/project-car/api/tests/test_owner_default_password.py`: `test_default_owner_password_refused_outside_dev` (SHOP_DEV_MODE unset, `changeme` → 503 `insecure_default`, never 200); `test_dev_mode_allows_demo_password`. `apps/project-car/web/lib/demo-login.test.ts`: production + no flag → false; flag → true; and a grep test that `app/login/page.tsx` and both login forms reference `showDemoLoginHints` and contain no literal `changeme` outside that guard.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/auth.py` (`_guard_login`), new `apps/project-car/api/tests/test_owner_default_password.py`, `apps/project-car/web/app/login/page.tsx`, `apps/project-car/web/app/login/login-form.tsx`, `apps/project-car/web/app/member/login/page.tsx`, `apps/project-car/web/app/member/login/login-form.tsx`, new `apps/project-car/web/lib/demo-login.ts`, new `apps/project-car/web/lib/demo-login.test.ts`
+- Depends on: R102 merged (`SHOP_DEV_MODE`). Screenshots of `/login` at 390 and 1440.
+
+### R148. Web sends zone-less `datetime-local` strings to the API
+- Category: Clock (Opus Bug 1, web half)
+- Baseline: `apps/project-car/web/app/schedule/actions.ts:49-50`, `apps/project-car/web/app/member/schedule/actions.ts:43-44,60-61`, `apps/project-car/web/app/todos/actions.ts:14-17`, `apps/project-car/web/app/member/todos/actions.ts:15`, `apps/project-car/web/app/schedule/quote/route.ts:21-22`, `apps/project-car/web/app/member/schedule/quote/route.ts:21-22` forward the raw value.
+- Target: new `toShopInstant(value: string): string` in `apps/project-car/web/lib/shop-instant.ts` (uses `zonedDateTime` from `lib/calendar.ts:223` with `SHOP_TZ` = America/Regina) returns an ISO string ending `Z`; throws on an unparseable value. All six call sites use it.
+- Must not get worse: web suite and screenshots.
+- Proof (RED first): `apps/project-car/web/lib/shop-instant.test.ts`: `2026-11-04T09:00` → `2026-11-04T15:00:00.000Z` under `TZ=UTC` and `TZ=America/Edmonton` (run the test file twice with `TZ=` set); grep test that the six files call `toShopInstant`.
+- Size: 1 task
+- Likely files: new `apps/project-car/web/lib/shop-instant.ts`, new `apps/project-car/web/lib/shop-instant.test.ts`, `apps/project-car/web/app/schedule/actions.ts`, `apps/project-car/web/app/member/schedule/actions.ts`, `apps/project-car/web/app/todos/actions.ts`, `apps/project-car/web/app/member/todos/actions.ts`, `apps/project-car/web/app/schedule/quote/route.ts`, `apps/project-car/web/app/member/schedule/quote/route.ts`
+- Depends on: after R111. Before R110/R113/R114 (same action files; those already wait).
+
+### R149. API tests depend on the wall clock and fail in the repeated hour
+- Category: Clock / tests (Opus Bug 2)
+- Baseline: helpers add `timedelta` to aware Edmonton datetimes (`apps/project-car/api/tests/test_bookings.py:626` `_confirmed_from_now` + 8 sites, `tests/test_staff_actions.py:20,43,90`, `tests/test_hoist_guards.py:29,64`, `tests/test_overdue.py` 20 sites, `tests/test_shop_hoist_request.py`, `tests/test_incidents.py`, `tests/test_member_booking_ics.py`, `tests/test_member_self_serve.py`); under faketime `@2026-11-01 08:30:00` with pre-2026c tzdata, 17 fail.
+- Target: new fixture `frozen_now` in `apps/project-car/api/tests/conftest.py` sets `SHOP_NOW` to an explicit-offset instant; helpers build instants as `datetime.now(timezone.utc) + delta`. New `apps/project-car/scripts/test-clock.sh` runs `pytest` under `faketime "@2026-11-01 08:30:00"` with `PYTHONTZPATH` pointed at `tzdata==2025.2` installed into a temp dir.
+- Proof (RED first): `bash apps/project-car/scripts/test-clock.sh` red on main (17 fail), green after; new `apps/project-car/api/tests/test_no_naive_test_clock.py` greps `tests/*.py` for `shop_now() +` / `shop_now() -` → zero hits.
+- Size: 2 tasks
+- Likely files: `apps/project-car/api/tests/conftest.py`, `apps/project-car/api/tests/test_bookings.py`, `apps/project-car/api/tests/test_staff_actions.py`, `apps/project-car/api/tests/test_hoist_guards.py`, `apps/project-car/api/tests/test_overdue.py`, `apps/project-car/api/tests/test_shop_hoist_request.py`, `apps/project-car/api/tests/test_incidents.py`, `apps/project-car/api/tests/test_member_booking_ics.py`, `apps/project-car/api/tests/test_member_self_serve.py`, new `apps/project-car/scripts/test-clock.sh`, new `apps/project-car/api/tests/test_no_naive_test_clock.py`, `Docs/shop-os-ci.md`
+- Depends on: after R111 and R102 (`conftest.py`).
+
+### R150. Dashboard "today" uses an Edmonton day, and a naive `SHOP_NOW` means three instants
+- Category: Clock (Opus Bugs 4 and 5)
+- Baseline: `apps/project-car/api/app/routers/dashboard.py:132` `day_bounds(shop_now().date())`; `shop_time.py:29-37` applies each caller's zone to a naive `SHOP_NOW`; web `apps/project-car/web/lib/time.ts:4-11` and `lib/calendar.ts:75` use `new Date(naive)`.
+- Target: dashboard uses the Regina day (same as the 24 h strip, `:133`). A naive `SHOP_NOW` raises `ValueError("SHOP_NOW needs an offset")` in `shop_time.py` and throws in `lib/time.ts` `shopClock()`.
+- Proof (RED first): `apps/project-car/api/tests/test_dashboard_today.py` (frozen at Regina 00:30 with an active booking → it is in today's list and the bay badge is occupied); `apps/project-car/api/tests/test_shop_now_offset.py` (naive raises; offset value gives the same instant from `shop_now()` and `pricing_now()`); `apps/project-car/web/lib/time.test.ts` new case (naive throws).
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/routers/dashboard.py`, `apps/project-car/api/app/shop_time.py` (`SHOP_NOW` parse only), new `apps/project-car/api/tests/test_dashboard_today.py`, new `apps/project-car/api/tests/test_shop_now_offset.py`, `apps/project-car/web/lib/time.ts`, `apps/project-car/web/lib/time.test.ts`
+- Depends on: after R111 and R148.
+
+### R151. The API session cookie is not Secure by default
+- Category: Low security (Opus S6)
+- Baseline: `cookie_secure=False` at `apps/project-car/api/app/config.py:34`, `COOKIE_SECURE=false` in `apps/project-car/api/.env.example:13`.
+- Target: default `True`; `SHOP_DEV_MODE=1` or `COOKIE_SECURE=false` opts out; `.env.example` dev section sets `COOKIE_SECURE=false` with a comment.
+- Proof (RED first): `apps/project-car/api/tests/test_cookie_secure_default.py`: `test_session_cookie_secure_by_default` (login Set-Cookie contains `Secure`); dev mode without the var → no `Secure`.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/config.py` (`cookie_secure` only), `apps/project-car/api/.env.example`, new `apps/project-car/api/tests/test_cookie_secure_default.py`
+- Depends on: after R102 and R106 (same files).
+
+### R152. Credentialed CORS is open to the brochure origins
+- Category: Low security (Opus S7)
+- Baseline: `apps/project-car/api/app/main.py:47-55` `allow_credentials=True` for every origin in `cors_origins` (defaults include `https://projectcar.ca`, `https://www.projectcar.ca`, `config.py:39-42`).
+- Target: two settings: `cors_public_origins` (brochure; no credentials; only `POST /waitlist` + its preflight) and `cors_credentialed_origins` (default `https://ops.projectcar.ca`, `https://app.projectcar.ca`). Implement as one small middleware in new `apps/project-car/api/app/cors.py`. Update `Docs/cors-origins.md`.
+- Proof (RED first): `apps/project-car/api/tests/test_cors_split.py`: `test_brochure_origin_gets_no_credentials` (no `Access-Control-Allow-Credentials` for `https://projectcar.ca` on `GET /members` preflight; waitlist preflight allowed); ops origin still credentialed; `tests/test_cors_waitlist.py` stays green.
+- Size: 1 task
+- Likely files: new `apps/project-car/api/app/cors.py`, `apps/project-car/api/app/main.py` (CORS wiring only), `apps/project-car/api/app/config.py` (CORS settings only), new `apps/project-car/api/tests/test_cors_split.py`, `Docs/cors-origins.md`
+- Depends on: after R151 and R102 (shared files).
+
+### R153. `/docs` and `/openapi.json` are public in production
+- Category: Low security (Opus S7)
+- Baseline: `apps/project-car/api/app/main.py:32` FastAPI docs on.
+- Target: `docs_url`, `redoc_url`, `openapi_url` are `None` unless `SHOP_DEV_MODE=1`.
+- Proof (RED first): `apps/project-car/api/tests/test_openapi_hidden.py`: `test_openapi_hidden_in_production` (`/docs`, `/redoc`, `/openapi.json` → 404); dev mode → 200.
+- Size: 1 task
+- Likely files: `apps/project-car/api/app/main.py` (FastAPI constructor only), new `apps/project-car/api/tests/test_openapi_hidden.py`
+- Depends on: after R152 (`main.py`).
+
+### R154. The API sends no security headers
+- Category: Low security (Opus S7/S8)
+- Target: middleware in new `apps/project-car/api/app/security_headers.py` adds `X-Content-Type-Options: nosniff`, `Strict-Transport-Security: max-age=31536000; includeSubDomains`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` on every API response. Edge HSTS change is Zone's (note in `Docs/api-stay-up.md`).
+- Proof (RED first): `apps/project-car/api/tests/test_api_security_headers.py`: `GET /health` carries all five headers; a 404 and a 401 carry them too.
+- Size: 1 task
+- Likely files: new `apps/project-car/api/app/security_headers.py`, `apps/project-car/api/app/main.py` (one `add_middleware` line), new `apps/project-car/api/tests/test_api_security_headers.py`, `Docs/api-stay-up.md`
+- Depends on: after R153 (`main.py`).
+
+### R155. Opus clock and security checks that need Doc or Ben
+- Category: Tracking only — not a GB build row; do not launch.
+- Items: tzdata version on Doc (`.venv/bin/python -c ...` and `/var/db/timezone/zoneinfo/+VERSION`); count of default secrets in Doc's `.env` (count only); `run-shop-api.sh` flags (`SHOP_HOST`, `--workers`, `--proxy-headers`, `FORWARDED_ALLOW_IPS`); live `COOKIE_SECURE`, `CLIENT_IP_HEADER`, `CORS_ORIGINS`; Zone: exempt `OPTIONS` and `POST /waitlist` from the bot challenge and raise edge HSTS to 1 year with `includeSubDomains`.
+- Likely files: none.
+- Depends on: Doc's Mac back online (Ben, about Nov 2).
+
 ## Audit fix rows (R100–R146, added 2026-10-30)
 
 Source: `/workspace/Project-Car-Fix-List.md` (Opus audit of `main` @ `3968b0f`, bugs + UI + layout), approved by Ben Oct 30 2026 ("get build to start working on everything in the pdf"), plus five Opus follow-up checks (R142–R146). Paths are repo-relative. Every row: write the named failing test first and run it RED on `main`, then implement until GREEN; API proof `cd apps/project-car/api && pytest -q`; web proof `cd apps/project-car/web && npm run lint && npm run typecheck && npm test && npm run build`. No row edits `.github/workflows/**`. Leave PRs #107–#111 alone.
@@ -889,14 +972,14 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Likely files: `apps/project-car/api/app/deps.py`, new `apps/project-car/api/app/ai_allowlist.py`, `apps/project-car/api/app/routers/staff.py`, `apps/project-car/api/app/routers/members.py`, `apps/project-car/api/app/routers/hoists.py`, `apps/project-car/api/app/routers/parts_requests.py`, `apps/project-car/api/app/routers/tool_crib.py`, new `apps/project-car/api/tests/test_ai_allowlist.py`
 - Depends on: none. Supersedes R68.
 
-### R102. Dev secrets are accepted in production because prod binds loopback
-- Category: Critical security (fix #3)
+### R102. Dev or short secrets are accepted in production because prod binds loopback (fix #3 + Opus S1)
+- Category: Critical security (fix #3, Opus S1). Top of the build order.
 - Baseline: `default_secret_blocked` / `reject_dev_secret` in `apps/project-car/api/app/auth.py` refuse `dev-owner-secret`, `dev-ai-secret`, `changeme` only when `SHOP_HOST` is not loopback (`host_is_loopback`); prod runs on 127.0.0.1 behind the tunnel, so defaults are accepted.
-- Target: new setting `shop_env: str = "prod"` in `apps/project-car/api/app/config.py` (`SHOP_ENV`). Defaults are refused unless `SHOP_ENV=dev`, regardless of host. App startup (`apps/project-car/api/app/main.py` lifespan or settings validator) raises `RuntimeError("insecure default secret: <setting name>")` (name only, never the value) when not dev and any of `owner_password`, `owner_api_secret`, `ai_api_secret`, `member_demo_password` equals its default. `apps/project-car/api/.env.example` gains `SHOP_ENV=dev`, `AI_API_SECRET=`, `SHOP_HOST=127.0.0.1`, `CLIENT_IP_HEADER=` with one-line comments. `apps/project-car/api/tests/conftest.py` sets `SHOP_ENV=dev`. `Docs/deployment-guide.md` adds a "Required secrets" list.
+- Target: new setting `shop_dev_mode: bool = False` (`SHOP_DEV_MODE=1`) in `apps/project-car/api/app/config.py`; production is never inferred from `SHOP_HOST` (supersedes the earlier `SHOP_ENV` plan). At startup (`create_app` in `apps/project-car/api/app/main.py`) raise `RuntimeError("insecure default secret: <setting name>")` (name only, never the value) unless dev mode, when any of `owner_api_secret`, `ai_api_secret`, `session_secret` is a known default (`dev-owner-secret`, `dev-ai-secret`, `dev-session-secret-change-me`) or shorter than 32 characters, or `owner_password` is `changeme`. Per-request `default_secret_blocked` (`apps/project-car/api/app/auth.py:294-301`) keys on dev mode, not `host_is_loopback`. Secret defaults in `config.py:23-27` become empty (required outside dev). `apps/project-car/api/.env.example` values become `CHANGE_ME_...` placeholders that fail the check, plus a commented `SHOP_DEV_MODE=1` dev line. Tests (`tests/conftest.py`), `apps/project-car/web/playwright.config.ts` and `apps/project-car/web/visual/start-api.sh` set `SHOP_DEV_MODE=1`. `Docs/deployment-guide.md` adds a "Required secrets" list.
 - Must not get worse: API `pytest`; local dev with `.env.example` still boots.
-- Proof (RED first): new `apps/project-car/api/tests/test_dev_secret_guard.py`: `test_loopback_prod_refuses_dev_owner_secret` (SHOP_ENV unset, SHOP_HOST=127.0.0.1, bearer `dev-owner-secret` → 503/401 insecure-default error, not 200); `test_startup_fails_with_defaults_outside_dev` (error text names `owner_api_secret`, does not contain `dev-owner-secret`); `test_dev_env_allows_defaults`; `test_env_example_lists_required_keys` (file contains the four keys).
+- Proof (RED first): new `apps/project-car/api/tests/test_dev_secret_guard.py`: `test_app_refuses_to_start_with_default_secrets` (each default with `SHOP_HOST` unset and with `SHOP_HOST=127.0.0.1` → exception naming the setting; message never contains the value); `test_short_secret_refused` (31 chars); `test_changeme_owner_password_refused_at_startup`; `test_dev_mode_allows_defaults`; `test_env_example_placeholders_fail_check`. `tests/test_demo_password.py` stays green.
 - Size: 1 task
-- Likely files: `apps/project-car/api/app/config.py`, `apps/project-car/api/app/auth.py` (`default_secret_blocked`, `reject_dev_secret`), `apps/project-car/api/app/main.py`, `apps/project-car/api/.env.example`, `apps/project-car/api/tests/conftest.py`, `Docs/deployment-guide.md`, new `apps/project-car/api/tests/test_dev_secret_guard.py`
+- Likely files: `apps/project-car/api/app/config.py`, `apps/project-car/api/app/auth.py` (`default_secret_blocked`, `reject_dev_secret`), `apps/project-car/api/app/main.py` (startup check only), `apps/project-car/api/.env.example`, `apps/project-car/api/tests/conftest.py`, `apps/project-car/web/playwright.config.ts`, `apps/project-car/web/visual/start-api.sh`, `Docs/deployment-guide.md`, new `apps/project-car/api/tests/test_dev_secret_guard.py`
 - Depends on: none. Doc's real `.env` check waits for Doc's Mac (Ben).
 
 ### R103. Tests only run on SQLite, which ignores row locks
@@ -929,15 +1012,15 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Likely files: `apps/project-car/api/app/services/staff.py` (the four functions only), new `apps/project-car/api/tests/test_decision_locks.py`
 - Depends on: after R104 (same file).
 
-### R106. Eight bad member logins lock the Owner out
-- Category: Security (fix #7)
+### R106. Eight bad member logins lock the Owner out; CLIENT_IP_HEADER is trusted from anyone (fix #7 + Opus S3/S4)
+- Category: High security (fix #7, Opus S3/S4). Third in the build order.
 - Baseline: `reserve_login_failure(client_ip)` in `apps/project-car/api/app/auth.py` keys one bucket per client IP; behind the tunnel every request is 127.0.0.1 and the web does not forward the real IP, so all logins share one bucket and Owner and Member share it.
-- Target: bucket key = `(realm, client_ip, normalized account)` where realm ∈ {`owner`, `member`}; limit 8 per 15 min per key plus a looser per-IP cap of 50 per realm. Web login actions (`apps/project-car/web/app/login/actions.ts`, `apps/project-car/web/app/member/login/actions.ts`) forward the incoming client IP header named by `CLIENT_IP_HEADER` (from R55's setting, read in `apps/project-car/api/app/client_ip.py`) as that same header to the API; middleware does not trust it from the browser directly unless the request came through the tunnel.
+- Target: web login server actions (`apps/project-car/web/app/login/actions.ts`, `apps/project-car/web/app/member/login/actions.ts`) read `CF-Connecting-IP` from `headers()` and send it as `X-Shop-Client-IP` with `X-Shop-Proxy-Secret` (new env `SHOP_PROXY_SECRET`, shared by web and API, added to R102's refused-default list) via new helper `apps/project-car/web/lib/login-forward.ts`. `apps/project-car/api/app/client_ip.py` honours `X-Shop-Client-IP` only when the proxy secret matches (constant-time) and honours `CLIENT_IP_HEADER` only when the TCP peer is in new setting `trusted_proxies` (default `127.0.0.1,::1`); startup refuses `CLIENT_IP_HEADER=X-Forwarded-For` (document `CF-Connecting-IP` as the only supported value). Buckets in `apps/project-car/api/app/auth.py`: per `(realm, client_ip)` 8 per 15 min, realm ∈ {owner, member}; plus per-account counter (realm + normalized email) with exponential backoff after 5 failures from any IPs (1, 2, 4 … capped at 15 min). Counters stay in-process here; a shared store is a later row.
 - Must not get worse: API `pytest`; web lint/typecheck/test/build; `tests/test_client_ip.py`.
-- Proof (RED first): new `apps/project-car/api/tests/test_login_buckets.py`: `test_member_failures_do_not_lock_owner` (8 bad member logins from one IP, then a correct owner login → 200); `test_other_account_not_locked`; `test_ninth_failure_same_account_is_429`. Web unit test `apps/project-car/web/lib/login-forward.test.ts` for the header-forward helper `apps/project-car/web/lib/login-forward.ts`.
+- Proof (RED first): new `apps/project-car/api/tests/test_login_buckets.py`: `test_member_failures_do_not_lock_owner`; `test_web_login_buckets_are_per_end_user` (proxy secret + client IP A ×8 failures; IP B → not 429); `test_owner_account_backoff_across_ips` (failures from 40 IPs → 429); `test_client_ip_header_ignored_without_proxy_secret`; `test_client_ip_header_ignored_from_untrusted_peer`; `test_xff_rejected_as_client_ip_header_at_startup`. Web `apps/project-car/web/lib/login-forward.test.ts`.
 - Size: 2 tasks
-- Likely files: `apps/project-car/api/app/auth.py` (login bucket functions), `apps/project-car/api/app/routers/auth.py`, `apps/project-car/web/app/login/actions.ts`, `apps/project-car/web/app/member/login/actions.ts`, new `apps/project-car/web/lib/login-forward.ts`, new `apps/project-car/web/lib/login-forward.test.ts`, new `apps/project-car/api/tests/test_login_buckets.py`
-- Depends on: R102 merged (`.env.example` lists `CLIENT_IP_HEADER`).
+- Likely files: `apps/project-car/api/app/auth.py` (login bucket functions), `apps/project-car/api/app/client_ip.py`, `apps/project-car/api/app/config.py` (`trusted_proxies`, `shop_proxy_secret` only), `apps/project-car/api/app/routers/auth.py`, `apps/project-car/web/app/login/actions.ts`, `apps/project-car/web/app/member/login/actions.ts`, new `apps/project-car/web/lib/login-forward.ts`, new `apps/project-car/web/lib/login-forward.test.ts`, new `apps/project-car/api/tests/test_login_buckets.py`
+- Depends on: R102 merged; after R147 (`routers/auth.py`).
 
 ### R107. An expired session crashes to "Application error" instead of login
 - Category: Reliability (fix #8; R62 / PR #210 covers the error and 404 pages only)
@@ -979,15 +1062,15 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Likely files: `apps/project-car/api/app/services/bookings.py` (`create_booking` validation only), new `apps/project-car/api/tests/test_booking_grid.py`, `apps/project-car/web/components/create-booking-form.tsx`, `apps/project-car/web/components/member-booking-form.tsx`, new `apps/project-car/web/lib/booking-defaults.ts`, new `apps/project-car/web/lib/booking-defaults.test.ts`
 - Depends on: R99 merged (shares the booking forms); after R109.
 
-### R111. Two shop time zones (Edmonton inputs, Regina display)
-- Category: Correctness (fix #15) — **STAND-IN**: America/Regina
+### R111. Zone-less times are read as Edmonton while the UI means Regina (fix #15 + Opus Bugs 1 and 3)
+- Category: Clock (fix #15, Opus Bugs 1/3). First clock row, after R102/R147/R106/R118.
 - Baseline: `SHOP_TZ = ZoneInfo("America/Edmonton")` and `PRICING_TZ = ZoneInfo("America/Regina")` in `apps/project-car/api/app/shop_time.py`; web `apps/project-car/web/lib/time.ts` and `apps/project-car/web/lib/calendar.ts` format in Regina. Edmonton falls back Nov 1, so inputs drift an hour from display.
-- Target: one constant `SHOP_TZ_NAME = "America/Regina"` ("STAND-IN until Ben confirms the shop zone") in `shop_time.py`; `SHOP_TZ` and `PRICING_TZ` both derive from it. Web gets one `SHOP_TIME_ZONE` export in `lib/time.ts` used by `lib/calendar.ts`. All datetimes the web sends carry an explicit offset (`toISOString` with offset helper), never a naive local string.
+- Target: in `apps/project-car/api/app/shop_time.py`, `as_utc()` (`:22-26`) reads naive values as `PRICING_TZ` (America/Regina); remove `SHOP_TZ` (Edmonton) and switch `shop_now`, `shop_today`, `day_bounds`, `week_monday` and the seed (`apps/project-car/api/app/seed.py:535-536,706,1099`) to Regina via `SHOP_TZ_NAME = "America/Regina"` (**STAND-IN** until Ben confirms). Add `tzdata>=2026.3` to `apps/project-car/api/pyproject.toml` and log the tzdata version at startup. Fix comments and docs: `shop_time.py:1-9`, `apps/project-car/web/lib/calendar.ts:7-8`, `Docs/token-pricing.md:123`. New `apps/project-car/scripts/test-stale-tz.sh` runs the new test file with `PYTHONTZPATH` at `tzdata==2025.2` installed into a temp dir.
 - Must not get worse: API `pytest` (incl. `tests/test_shop_time.py`); web suite.
-- Proof (RED first): `apps/project-car/api/tests/test_single_zone.py` (`SHOP_TZ == PRICING_TZ`; a naive 2026-11-01T01:30 input is interpreted as Regina, same instant shown back); `apps/project-car/web/lib/time.test.ts` new case (form value → ISO string with `-06:00`; calendar day labels use the same zone).
+- Proof (RED first): new `apps/project-car/api/tests/test_naive_times_are_regina.py`: `POST /bookings/quote` and `POST /bookings` with naive `2026-11-04T09:00` store `15:00Z`; same for `POST /shop-hoist-requests` and `POST /todos`, todo ICS `DTSTART;TZID=America/Regina:20261104T090000`; naive `2026-11-01T00:00`–`04:00` books 4.0 h and reserves 750.00; `test_no_edmonton_in_app` (no `America/Edmonton` under `app/`). Run normally and via `bash apps/project-car/scripts/test-stale-tz.sh`: stale run RED on main, both GREEN after.
 - Size: 1 task
-- Likely files: `apps/project-car/api/app/shop_time.py`, new `apps/project-car/api/tests/test_single_zone.py`, `apps/project-car/web/lib/time.ts`, `apps/project-car/web/lib/time.test.ts`, `apps/project-car/web/lib/calendar.ts`
-- Depends on: none (R99 tests already use Regina).
+- Likely files: `apps/project-car/api/app/shop_time.py`, `apps/project-car/api/app/seed.py` (zone lines only), `apps/project-car/api/pyproject.toml`, `apps/project-car/api/app/main.py` (startup log line only), new `apps/project-car/api/tests/test_naive_times_are_regina.py`, new `apps/project-car/scripts/test-stale-tz.sh`, `apps/project-car/web/lib/calendar.ts` (comment only), `Docs/token-pricing.md`
+- Depends on: after R102 (`main.py`). Web explicit offsets are R148.
 
 ### R112. The whole booking gets the fill discount if any minute touches the window
 - Category: Correctness (fix #16) — **STAND-IN**: discount only minutes inside the window
@@ -1042,22 +1125,22 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 ### R117. No record of who made a booking or ledger entry
 - Category: Security / audit (fix #13)
 - Baseline: `Booking` and `TokenLedger` in `apps/project-car/api/app/models.py` have no creator columns; AI create/confirm writes no `record_action`.
-- Target: one Alembic revision `apps/project-car/api/alembic/versions/20261031_0017_created_by.py` adds nullable `created_by_kind` (`owner|member|ai|system`) and `created_by_id` to `bookings` and `token_ledger` (downgrade drops them). `services/bookings.py` and `services/tokens.py` set them from the principal; every AI write route calls `record_action`.
+- Target: one Alembic revision `apps/project-car/api/alembic/versions/20261031_0018_created_by.py` adds nullable `created_by_kind` (`owner|member|ai|system`) and `created_by_id` to `bookings` and `token_ledger` (downgrade drops them). `services/bookings.py` and `services/tokens.py` set them from the principal; every AI write route calls `record_action`.
 - Must not get worse: API `pytest`; migration up/down on SQLite.
 - Proof (RED first): `apps/project-car/api/tests/test_created_by.py`: AI-created booking stores `created_by_kind="ai"` and an action row; member booking stores member id; ledger rows carry the same.
 - Size: 2 tasks
-- Likely files: `apps/project-car/api/app/models.py`, new `apps/project-car/api/alembic/versions/20261031_0017_created_by.py`, `apps/project-car/api/app/services/tokens.py`, `apps/project-car/api/app/services/bookings.py` (writes of the new columns only), new `apps/project-car/api/tests/test_created_by.py`
-- Depends on: also after R116 (`models.py`). R101 merged; after R113 (bookings.py). Only migration in flight.
+- Likely files: `apps/project-car/api/app/models.py`, new `apps/project-car/api/alembic/versions/20261031_0018_created_by.py`, `apps/project-car/api/app/services/tokens.py`, `apps/project-car/api/app/services/bookings.py` (writes of the new columns only), new `apps/project-car/api/tests/test_created_by.py`
+- Depends on: also after R116 (`models.py`). R101 merged; after R113 (bookings.py). Only migration in flight. Also after R118 (migration 0017 is R118's; this row is 0018).
 
-### R118. Owner sessions cannot be revoked
-- Category: Security (fix #17)
+### R118. Owner sessions cannot be revoked (fix #17 + Opus S5)
+- Category: Security (fix #17, Opus S5). Fourth in the build order.
 - Baseline: `create_session_token` in `apps/project-car/api/app/auth.py` has no fingerprint; logout or password change leaves tokens valid 24 h.
-- Target: owner token carries `pw_fp = password_fingerprint(settings, owner_password)` plus a `session_epoch` read from a new single-row setting table or file-free in-memory+DB value (`owner_session_epoch` in `apps/project-car/api/app/models.py`, same migration rules as R117 — reuse R117 revision if not yet merged, else new 0018); logout bumps the epoch; `read_session_token` rejects mismatches.
+- Target: owner token (`apps/project-car/api/app/auth.py:78-79`) carries `pwd_fp = password_fingerprint(settings, owner_password)` and `epoch`; new single-row table `owner_session_epoch` in `apps/project-car/api/app/models.py` via `apps/project-car/api/alembic/versions/20261031_0017_owner_session_epoch.py` (downgrade drops it). `require_owner` (`apps/project-car/api/app/deps.py:47-54`) rejects mismatched `pwd_fp` or `epoch`; `POST /auth/logout` (`routers/auth.py:69-72`) bumps the epoch. Owner TTL stays 24 h.
 - Must not get worse: API `pytest`; `tests/test_session_cookie.py`.
-- Proof (RED first): `apps/project-car/api/tests/test_owner_revoke.py`: token issued, logout, old token → 401; password change → old token 401.
+- Proof (RED first): `apps/project-car/api/tests/test_owner_revoke.py`: `test_owner_cookie_rejected_after_logout` (old cookie → 401); `test_owner_cookie_rejected_after_password_change` (old cookie → 401); fresh login → 200; migration up/down on SQLite.
 - Size: 1 task
-- Likely files: `apps/project-car/api/app/auth.py` (session token functions), `apps/project-car/api/app/routers/auth.py`, `apps/project-car/api/app/models.py`, new `apps/project-car/api/alembic/versions/20261031_0018_owner_session_epoch.py`, new `apps/project-car/api/tests/test_owner_revoke.py`
-- Depends on: after R106 (auth.py) and R117 (migration order).
+- Likely files: `apps/project-car/api/app/auth.py` (session token functions), `apps/project-car/api/app/deps.py` (`require_owner` token check only), `apps/project-car/api/app/routers/auth.py`, `apps/project-car/api/app/models.py`, new `apps/project-car/api/alembic/versions/20261031_0017_owner_session_epoch.py`, new `apps/project-car/api/tests/test_owner_revoke.py`
+- Depends on: after R106 (`auth.py`, `routers/auth.py`) and R101 (`deps.py`). Owns migration 0017; R117 moves to 0018 and waits for R118.
 
 ### R119. All AIs share one actor id
 - Category: Security (fix #18)
