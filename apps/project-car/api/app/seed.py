@@ -76,6 +76,7 @@ from app.models import (
     WaitlistEntry,
 )
 from app.services.fill import resolve_fill_for_slot
+from app.services.plan_price import BASIC_MONTHLY_CAD, PREMIUM_MONTHLY_CAD, tier_notes
 from app.services.pricing import BASE_TOKENS_PER_HOUR, ensure_pricing_settings, quote_reserve
 from app.services.tokens import apply_ledger, rebuild_token_balance
 from app.services.bookings import HOLDING_STATUSES, claim_booking_hours
@@ -104,32 +105,33 @@ def seed_id(*parts: str) -> UUID:
 
 
 # Two tiers only. included_tokens are period allotments (Owner-editable
-# placeholders). Dollar prices here are leftover demo numbers, not live.
+# placeholders). Dollar prices are stand-in settings on the row. Basic is
+# 500 CAD/month before GST. Premium stays 750 until Ben confirms it.
 PLACEHOLDER_TIERS = [
     {
         "name": "basic",
         "display_name": "Basic",
-        "price": Decimal("150.00"),
+        "price": BASIC_MONTHLY_CAD,
         "included_tokens": 1000,
         "booking_window_days": 14,
         "max_simultaneous_bookings": 1,
-        "notes": (
-            "Placeholder. Owner can edit. Not live pricing. "
-            "Allotment 1000 tokens/period. Base hoist rate is "
-            f"{BASE_TOKENS_PER_HOUR} tokens/hour."
+        "notes": tier_notes(
+            premium=False,
+            included_tokens=1000,
+            base_tokens_per_hour=BASE_TOKENS_PER_HOUR,
         ),
     },
     {
         "name": "premium",
         "display_name": "Premium",
-        "price": Decimal("250.00"),
+        "price": PREMIUM_MONTHLY_CAD,
         "included_tokens": 1500,
         "booking_window_days": 21,
         "max_simultaneous_bookings": 2,
-        "notes": (
-            "Placeholder. Owner can edit. Not live pricing. "
-            "Allotment 1500 tokens/period. Base hoist rate is "
-            f"{BASE_TOKENS_PER_HOUR} tokens/hour."
+        "notes": tier_notes(
+            premium=True,
+            included_tokens=1500,
+            base_tokens_per_hour=BASE_TOKENS_PER_HOUR,
         ),
     },
 ]

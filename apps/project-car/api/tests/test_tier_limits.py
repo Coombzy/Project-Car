@@ -104,7 +104,7 @@ def test_at_the_cap_is_201_on_create_and_200_on_patch(
 def test_price_with_three_decimals_is_422_on_create_and_patch(client: TestClient) -> None:
     before = _tier(client, "basic")
     assert before is not None
-    assert Decimal(before["price"]) == Decimal("150.00")
+    assert Decimal(before["price"]) == Decimal("500.00")
 
     created = client.post("/tiers", headers=AUTH, json=_payload("thirds", price="12.345"))
     _assert_rejected(created, "price")

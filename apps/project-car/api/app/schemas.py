@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationError, computed_field, field_validator
 
 from app.models import (
     ActorKind,
@@ -30,6 +30,14 @@ from app.models import (
     ToolCribEvent,
     ToolCribEventKind,
 )
+from app.services.plan_price import (
+    PLAN_CURRENCY,
+    PLAN_PERIOD,
+    gst_on,
+    price_mark as stored_price_mark,
+    total_with_gst,
+)
+from app.services.tokens import GST_RATE
 
 
 def _blank_to_none(value: str | None) -> str | None:
@@ -100,16 +108,59 @@ class PrincipalOut(BaseModel):
     member_id: UUID | None = None
 
 
-class TierOut(BaseModel):
+class PlanPriceOut(BaseModel):
+    """Monthly CAD price from the tier row, plus GST from the stored rate."""
+
     model_config = ConfigDict(from_attributes=True)
+
+    price: Decimal
+    notes: str | None = None
+
+    @computed_field
+    @property
+    def currency(self) -> str:
+        return PLAN_CURRENCY
+
+    @computed_field
+    @property
+    def billing_period(self) -> str:
+        return PLAN_PERIOD
+
+    @computed_field
+    @property
+    def gst_rate(self) -> Decimal:
+        return GST_RATE
+
+    @computed_field
+    @property
+    def gst_cad(self) -> Decimal:
+        return gst_on(self.price)
+
+    @computed_field
+    @property
+    def total_cad(self) -> Decimal:
+        return total_with_gst(self.price)
+
+    @computed_field
+    @property
+    def price_mark(self) -> str | None:
+        return stored_price_mark(self.notes)
+
+
+class PlanOfferOut(PlanPriceOut):
+    """Signup payload. The price is the saved tier row, not a copy in the page."""
 
     name: str
     display_name: str
-    price: Decimal
+    included_tokens: int
+
+
+class TierOut(PlanPriceOut):
+    name: str
+    display_name: str
     included_tokens: int
     booking_window_days: int
     max_simultaneous_bookings: int
-    notes: str | None
     created_at: datetime
     updated_at: datetime
 
