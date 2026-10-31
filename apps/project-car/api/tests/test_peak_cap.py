@@ -14,10 +14,10 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
-from app.services.peak_cap import PeakOverCapPolicy
 from fastapi.testclient import TestClient
 
 from app.services import peak_cap
+from app.services.peak_cap import PeakOverCapPolicy
 from app.shop_time import PRICING_TZ
 from tests.conftest import AUTH, create_hoist, create_member, freeze_shop_clock
 
