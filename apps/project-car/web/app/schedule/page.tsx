@@ -98,6 +98,7 @@ export default async function SchedulePage({
           Pending {bookings.filter((booking) => booking.status === "pending").length} · Overdue{" "}
           {bookings.filter((booking) => booking.status === "overdue").length} · No-show{" "}
           {bookings.filter((booking) => booking.status === "no_show").length}. Finish visit keeps the held tokens.
+          Time past the booked end is charged by the hour.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
         {loadError ? <div className="banner error">{loadError}</div> : null}

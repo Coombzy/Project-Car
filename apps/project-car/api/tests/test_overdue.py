@@ -325,11 +325,18 @@ def test_overdue_stores_one_late_return_and_moves_no_money(client: TestClient) -
     assert stored.status == BookingStatus.COMPLETED
     assert Decimal(stored.reserved_tokens) == Decimal("0")
     settled = _token_rows(client, booking_id)
-    assert [row.kind.value for row in settled] == ["booking_reserve"]
-    assert Decimal(settled[0].amount) == -reserved
+    kinds = [row.kind.value for row in settled]
+    assert kinds.count("booking_reserve") == 1
+    assert kinds.count("booking_debit") == 1
+    assert "booking_refund" not in kinds
+    reserve_row = next(row for row in settled if row.kind.value == "booking_reserve")
+    debit_row = next(row for row in settled if row.kind.value == "booking_debit")
+    assert Decimal(reserve_row.amount) == -reserved
+    assert Decimal(debit_row.amount) < 0
+    assert debit_row.meta["reason"] == "extra_hours"
     assert _count(client, BillingTransaction) == 0
     assert len(_incidents(client, booking_id)) == 1
-    assert _balance(client, ada["id"]) == balance
+    assert _balance(client, ada["id"]) == balance + Decimal(debit_row.amount)
     hoists = {row["name"]: row for row in client.get("/hoists", headers=AUTH).json()}
     assert hoists["Bay 1"]["status"] == "available"
 

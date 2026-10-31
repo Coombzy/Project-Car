@@ -29,7 +29,7 @@ from app.models import (
 )
 from app.services.fill import resolve_fill_for_slot
 from app.services.peak_cap import check_peak_cap
-from app.services.pricing import PricingError, quote_reserve
+from app.services.pricing import BASE_TOKENS_PER_HOUR, PricingError, quote_reserve, resolve_band
 from app.services.tokens import apply_ledger, piles_for_refund
 from app.shop_time import PRICING_TZ, as_utc, iter_regina_hours, shop_now
 
@@ -680,11 +680,34 @@ def check_in_booking(session: Session, booking_id: UUID) -> Booking:
     return get_booking(session, booking.id)
 
 
-def complete_booking(session: Session, booking_id: UUID) -> Booking:
-    """Close an active or overdue visit. The reserve stands as the charge.
+def _extra_hour_segments(session: Session, booking: Booking) -> list[dict[str, str]]:
+    """Whole hours after the booked end, each at that hour's band."""
+    now = _stored_utc(shop_now())
+    end = _stored_utc(booking.end_at)
+    if now <= end:
+        return []
+    segments: list[dict[str, str]] = []
+    for hour_start, hour_end in iter_regina_hours(end, now):
+        band = resolve_band(hour_start, session=session)
+        tokens = (BASE_TOKENS_PER_HOUR * band.multiplier).quantize(CENTS, rounding=ROUND_HALF_UP)
+        segments.append(
+            {
+                "start_at": hour_start.isoformat(),
+                "end_at": hour_end.isoformat(),
+                "band_id": band.id,
+                "band_label": band.label,
+                "tokens": format(tokens, "f"),
+            }
+        )
+    return segments
 
-    Unused time is never refunded once a visit has started (Ben, D16), so
-    completion writes no ledger row.
+
+def complete_booking(session: Session, booking_id: UUID) -> Booking:
+    """Close an active or overdue visit.
+
+    The booked reserve stays charged (Ben, D16). Each whole hour past the
+    booked end is an extra ``booking_debit`` at that hour's band. Shop work
+    has no member to charge.
     """
     # Lock the booking before the status check. A second complete waits and
     # sees the new status.
@@ -694,6 +717,19 @@ def complete_booking(session: Session, booking_id: UUID) -> Booking:
             400,
             "invalid_transition",
             "Only an active or overdue booking can be completed.",
+        )
+    segments = _extra_hour_segments(session, booking)
+    extra = sum((Decimal(segment["tokens"]) for segment in segments), Decimal("0"))
+    if extra > 0 and booking.member_id is not None:
+        member = lock_member(session, booking.member_id)
+        apply_ledger(
+            session,
+            member,
+            kind=TokenTransactionKind.BOOKING_DEBIT,
+            amount=-extra,
+            booking_id=booking.id,
+            note="Extra hours past the booked end",
+            meta={"reason": "extra_hours", "hours": str(len(segments)), "segments": segments},
         )
     booking.reserved_tokens = Decimal("0")
     booking.status = BookingStatus.COMPLETED
@@ -736,7 +772,7 @@ def _open_late_return(session: Session, booking: Booking) -> Incident:
         severity=IncidentSeverity.MINOR,
         description=(
             "Late return. The booking was still active after its end. "
-            "No money was charged. The Owner reviews this incident."
+            "The booked tokens stay charged. Extra hours are charged when the visit is finished."
         ),
         photos=[],
     )
