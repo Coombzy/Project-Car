@@ -465,7 +465,7 @@ test("test_schedule_page_offers_approve_and_deny", async () => {
 
     const first = await render();
     const pageText = textOf(first);
-    assert.match(pageText, /Month heat-map/, `schedule page did not render (${calls.map((call) => call.path).join(", ")})`);
+    assert.match(pageText, /Week · per hoist/, `schedule page did not render (${calls.map((call) => call.path).join(", ")})`);
     const approve = deskForms(first, "Approve");
     const deny = deskForms(first, "Deny");
     assert.deepEqual(
