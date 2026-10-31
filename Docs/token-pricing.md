@@ -20,12 +20,14 @@ This file is the lock. Owner booking now computes reserve in the API. Do not inv
 
 ```
 base_tokens = hours × 100
-final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier × fill_multiplier
+final_reserve_cost = Σ (segment_hours × 100 × segment_band × advance_multiplier × fill_multiplier)
 ```
 
-**`base_tokens` is duration × 100.** One hundred tokens per hour of hoist time. Not an arbitrary Owner-entered reserve amount.
+Round that sum **once** to 0.01 (`ROUND_HALF_UP`) at the end. A booking that stays inside one band is the same product as before: one segment, one band.
 
-`hours` is the booking duration (end − start) in shop-local time. Fractional hours are allowed (`1.5` → `150`). Order is locked: duration base, then band, then overlay, then fill. Band and overlay stay the locked tables below — fill is a separate factor, never folded into either. Show the factors and the total before confirm. Lock the same numbers onto the reserve ledger row (`pricing_rule` in meta). Cancel / complete **refund or debit that reserved amount** — do not reprice if bands, overlays, or fill offers change later.
+**`base_tokens` is duration × 100.** One hundred tokens per hour of hoist time. Not an arbitrary Owner-entered reserve amount. It is not re-weighted by the band. The band multiplier lives on each segment.
+
+`hours` is the booking duration (end − start) in shop-local time. Fractional hours are allowed (`1.5` → `150`). A partial hour prorates by the minute. Order is locked: split the slot into band segments, then for each segment apply that segment's band, then the same overlay, then the same fill. Band and overlay stay the locked tables below — fill is a separate factor, never folded into either. Show one line per segment (label, hours, × multiplier, tokens) and the total before confirm when the slot crosses bands. A single-band slot still shows that one band label. Lock the same numbers onto the reserve ledger row (`pricing_rule` in meta, including `segments`). `band_id` / `band_label` / `band_multiplier` stay the **start** segment so older ledger rows and clients still parse. Cancel / complete **refund or debit that reserved amount** — do not reprice if bands, overlays, or fill offers change later.
 
 Bands and overlay never replace the append-only ledger. Owner create (`POST /bookings`) computes this in the API and ignores any client `tokens` field.
 
@@ -101,7 +103,7 @@ Hours are **approximate defaults**. Multipliers are placeholders Ben can edit in
 
 **Fri-evening ambiguity (resolved for the default table):** “after ~16:00 or ~18:00” — default is **Fri 16:00–24:00** at weekend/Fri-eve premium **1.5×**, not the weekday-eve **1.25×**.
 
-Intervals are half-open `[start, end)` in `America/Regina`. Price a booking from the band that contains its **start**. Spanning bands does not split the slot in v1.
+Intervals are half-open `[start, end)` in `America/Regina`. Every minute is priced at the band that contains it. Split `[start, end)` at each band boundary — 08:00, 16:00, 21:00, midnight, Fri 16:00, Sat/Sun day changes, Sun 21:00 — and sum the segments. Adjacent slices that resolve to the same band stay one segment (a Monday 21:00–Tuesday 02:00 late-night run crosses midnight as one segment). Boundaries follow the Regina wall clock (`PRICING_TZ`). Regina has no DST, so a US/Canada fallback night does not move these edges.
 
 | Band id | When (`America/Regina`) | × | Label |
 |---------|-------------------------|---|-------|
@@ -204,7 +206,7 @@ Every `booking_reserve` (and the matching debit / refund rows) stores the math. 
 
 ## UX must-haves (non-optional)
 
-1. **Create booking.** Show `(hours × 100) × band × overlay × fill = total`, balance **before** and **after**, plus **band label**, **overlay label**, and **fill label** when fill ≠ 1.0, before confirm / reserve.
+1. **Create booking.** Inside one band, show `(hours × 100) × band × overlay × fill = total`, balance **before** and **after**, plus **band label**, **overlay label**, and **fill label** when fill ≠ 1.0, before confirm / reserve. When the slot crosses bands, show one line per segment (label, hours, × multiplier, tokens) and the total. Do not show a single start-band label for that booking. Overlay and fill still apply to every segment.
 2. **Weekly hour-slot cells.** Band color + token-cost badge on the booking in the hour grid. Overlay chip when overlay ≠ 1.0. Fill chip when fill ≠ 1.0. Month view is density-only (booked hours vs 08:00–21:00), not a second price surface.
 3. **Member detail.** Balance + recent ledger. **At-risk** when open reserved tokens **>** remaining (cached) free balance.
 4. **Cancel / complete.** Show refund or debit **inline** (the locked reserved amount).
@@ -226,7 +228,24 @@ Tuesday 17:00 start, **2-hour** slot, reserved **20 hours** ahead.
 
 Same 2-hour slot reserved **30 hours** ahead: overlay **1.25×** → `200 × 1.25 × 1.25 × 1.0 = 312.50`.
 
-Same last-minute slot on **tomorrow** when customer bays are fully open (25% fill): `200 × 1.25 × 1.25 × 0.75 = 234.38`.
+Same last-minute slot on **tomorrow** when customer bays are fully open (25% fill): `200 × 1.25 × 1.25 × 0.75 = 234.38`. The unrounded product is `234.375`; the quote rounds once to `234.38`.
+
+### Spanning bands (per minute)
+
+Monday, reserved 8 or more days ahead (advance **0.85**). Each line is `hours × band`, then `× 100 × 0.85`.
+
+| Window | Segments | Total |
+|--------|----------|-------|
+| 07:00–21:00 | 1h × 0.75 + 8h × 1.00 + 5h × 1.25 | **1,275.00** |
+| 08:00–21:00 | 8h × 1.00 + 5h × 1.25 = 14.25, then × 85 | **1,211.25** |
+
+The 07:00 start costs more than the 08:00 start. Adding that hour does not make the reserve cheaper.
+
+Monday 20:00 → Tuesday 02:00, standard overlay **1.00**: `1h × 1.25 + 5h × 0.75 = 500.00`. Two segments. The late-night segment runs 21:00 across midnight to 02:00.
+
+Monday 07:30–08:30, standard overlay: `0.5h × 0.75 + 0.5h × 1.00 = 87.50`.
+
+Sunday 2026-11-01 00:00–04:00 (the night US/Canada clocks fall back) is **4.0000h** of `weekend_fri_eve`. Regina does not insert an hour. Sunday 00:00–21:00 is the weekend band; late night on Sunday starts at 21:00.
 
 ---
 

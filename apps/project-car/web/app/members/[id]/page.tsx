@@ -7,6 +7,7 @@ import { StatusPill } from "../../../components/status-pill";
 import { ShopApiError } from "../../../lib/config";
 import { handlePageError } from "../../../lib/page";
 import { getMe, getMember, listMemberTokens, listTiers } from "../../../lib/shop-api";
+import { pricingRuleSummary } from "../../../lib/booking-segments";
 import { formatShopDateTime, tokensLabel } from "../../../lib/time";
 import { adjustTokensAction, patchMemberAction, rebuildTokensAction } from "../actions";
 
@@ -176,9 +177,7 @@ export default async function MemberDetailPage({
                     <td>{tokensLabel(row.amount)}</td>
                     <td className="notes">{row.note ?? "—"}</td>
                     <td className="notes">
-                      {row.meta?.pricing_rule
-                        ? `${row.meta.pricing_rule.hours}h × 100 × ${row.meta.pricing_rule.band_multiplier} × ${row.meta.pricing_rule.advance_multiplier} = ${tokensLabel(row.meta.pricing_rule.final_reserve_cost)} · ${row.meta.pricing_rule.band_label} · ${row.meta.pricing_rule.overlay_label}`
-                        : "—"}
+                      {row.meta?.pricing_rule ? pricingRuleSummary(row.meta.pricing_rule) : "—"}
                     </td>
                   </tr>
                 ))}

@@ -342,6 +342,18 @@ class HoistPatch(BaseModel):
         return value.strip()
 
 
+class PricingSegmentOut(BaseModel):
+    """One band slice of a reserve. Absent on ledger rows written before the split."""
+
+    band_id: str
+    band_label: str
+    band_multiplier: str
+    start: str
+    end: str
+    hours: str
+    tokens: str
+
+
 class PricingRuleOut(BaseModel):
     band_id: str
     band_label: str
@@ -357,6 +369,7 @@ class PricingRuleOut(BaseModel):
     base_tokens: str
     final_reserve_cost: str
     tz: str
+    segments: list[PricingSegmentOut] | None = None
 
 
 class BookingOut(BaseModel):

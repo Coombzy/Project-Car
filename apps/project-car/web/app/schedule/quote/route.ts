@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { quoteSegmentLines } from "../../../lib/booking-segments";
 import { ShopApiError } from "../../../lib/config";
 import { quoteBooking } from "../../../lib/shop-api";
 
@@ -22,7 +23,10 @@ export async function POST(request: Request): Promise<Response> {
       end_at: payload.end_at,
       member_id: payload.member_id,
     });
-    return NextResponse.json(quote);
+    return NextResponse.json({
+      ...quote,
+      segment_lines: quoteSegmentLines(quote.pricing_rule),
+    });
   } catch (error) {
     if (error instanceof ShopApiError) {
       return NextResponse.json({ error: { code: error.code, message: error.message } }, { status: error.status });

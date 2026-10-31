@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from fastapi.testclient import TestClient
 
@@ -232,3 +232,185 @@ def test_owner_can_patch_band_and_overlay_in_one_request(client: TestClient) -> 
     )
     assert quoted.status_code == 200, quoted.text
     assert Decimal(str(quoted.json()["reserved_tokens"])) == Decimal("99.00")
+
+
+def test_per_hour_band_audit_case() -> None:
+    """Monday, reserved 8 days ahead. Adding the 07:00 hour must not get cheaper."""
+    reserved_at = _at(2026, 9, 7, 7) - timedelta(days=8)
+    from_seven = quote_reserve(
+        _at(2026, 9, 7, 7),
+        _at(2026, 9, 7, 21),
+        reserved_at=reserved_at,
+    )
+    from_eight = quote_reserve(
+        _at(2026, 9, 7, 8),
+        _at(2026, 9, 7, 21),
+        reserved_at=reserved_at,
+    )
+    assert from_seven.overlay.id == "advance"
+    assert from_eight.overlay.id == "advance"
+    # (1×0.75 + 8×1.00 + 5×1.25) × 100 × 0.85
+    assert from_seven.final_reserve_cost == Decimal("1275.00")
+    # 14.25 × 85
+    assert from_eight.final_reserve_cost == Decimal("1211.25")
+    assert from_seven.final_reserve_cost > from_eight.final_reserve_cost
+    assert from_seven.band.id == "late_night"
+    assert from_eight.band.id == "weekday_day"
+    assert [segment.band.id for segment in from_seven.segments] == [
+        "late_night",
+        "weekday_day",
+        "weekday_eve",
+    ]
+
+
+def test_partial_hour_prorates_across_a_boundary() -> None:
+    start = _at(2026, 9, 7, 7, 30)
+    end = _at(2026, 9, 7, 8, 30)
+    quote = quote_reserve(start, end, reserved_at=start - timedelta(hours=72))
+    assert quote.overlay.id == "standard"
+    # 0.5×0.75 + 0.5×1.00, × 100
+    assert quote.final_reserve_cost == Decimal("87.50")
+    assert len(quote.segments) == 2
+    assert quote.segments[0].hours == Decimal("0.5")
+    assert quote.segments[1].hours == Decimal("0.5")
+
+
+def test_extending_by_an_hour_never_costs_less() -> None:
+    days = (
+        _at(2026, 9, 7, 0),  # Monday
+        _at(2026, 9, 11, 0),  # Friday
+        _at(2026, 9, 12, 0),  # Saturday
+        _at(2026, 9, 13, 0),  # Sunday
+    )
+    for day in days:
+        for hour in range(24):
+            start = day + timedelta(hours=hour)
+            reserved_at = start - timedelta(days=8)
+            for length in range(1, 24):
+                shorter = quote_reserve(
+                    start,
+                    start + timedelta(hours=length),
+                    reserved_at=reserved_at,
+                )
+                longer = quote_reserve(
+                    start,
+                    start + timedelta(hours=length + 1),
+                    reserved_at=reserved_at,
+                )
+                assert longer.final_reserve_cost >= shorter.final_reserve_cost, (
+                    f"{start.isoformat()} length {length}: "
+                    f"{shorter.final_reserve_cost} -> {longer.final_reserve_cost}"
+                )
+
+
+def test_booking_across_midnight_splits_at_midnight() -> None:
+    start = _at(2026, 9, 7, 20)  # Monday 20:00
+    end = _at(2026, 9, 8, 2)  # Tuesday 02:00
+    quote = quote_reserve(start, end, reserved_at=start - timedelta(hours=72))
+    assert quote.overlay.id == "standard"
+    # 1×1.25 + 5×0.75, × 100
+    assert quote.final_reserve_cost == Decimal("500.00")
+    assert len(quote.segments) == 2
+    eve, late = quote.segments
+    assert eve.band.id == "weekday_eve"
+    assert eve.hours == Decimal("1")
+    assert late.band.id == "late_night"
+    assert late.hours == Decimal("5")
+    assert late.start.astimezone(PRICING_TZ).hour == 21
+    assert late.end.astimezone(PRICING_TZ) == end
+
+
+def test_us_dst_change_does_not_shift_bands() -> None:
+    """2026-11-01 00:00–04:00 America/Regina stays 4.0000h.
+
+    That night US/Canada clocks fall back. Regina does not. Segment edges
+    follow PRICING_TZ wall clock, so the span is four hours at UTC−6, not
+    five. Sunday 00:00–21:00 is weekend_fri_eve on the locked band table
+    (late_night starts at 21:00). The row text says "late-night"; the table
+    in Docs/token-pricing.md and resolve_band win.
+    """
+    start = _at(2026, 11, 1, 0)
+    end = _at(2026, 11, 1, 4)
+    quote = quote_reserve(start, end, reserved_at=start - timedelta(hours=72))
+    assert quote.hours == Decimal("4.0000")
+    assert len(quote.segments) == 1
+    segment = quote.segments[0]
+    assert segment.band.id == "weekend_fri_eve"
+    assert segment.hours == Decimal("4.0000")
+    assert segment.start.utcoffset() == timedelta(hours=-6)
+    assert segment.end.utcoffset() == timedelta(hours=-6)
+    assert segment.end - segment.start == timedelta(hours=4)
+    assert quote.band.id == "weekend_fri_eve"
+
+
+def test_fill_applies_to_every_segment() -> None:
+    start = _at(2026, 9, 7, 15)  # Monday 15:00
+    end = _at(2026, 9, 7, 17)
+    fill = FillFactor(
+        id="next_day_open",
+        label="Fill the gaps 20%",
+        multiplier=Decimal("0.80"),
+        discount_pct=Decimal("20"),
+    )
+    quote = quote_reserve(start, end, reserved_at=start - timedelta(hours=72), fill=fill)
+    assert quote.overlay.id == "standard"
+    # (1×1.00 + 1×1.25) × 100 × 0.80
+    assert quote.final_reserve_cost == Decimal("180.00")
+    assert [segment.band.id for segment in quote.segments] == ["weekday_day", "weekday_eve"]
+    assert quote.segments[0].tokens == Decimal("80")
+    assert quote.segments[1].tokens == Decimal("100")
+
+
+def test_single_band_booking_unchanged() -> None:
+    start = _at(2026, 9, 8, 9)  # Tuesday 09:00
+    end = _at(2026, 9, 8, 11)
+    quote = quote_reserve(start, end, reserved_at=start - timedelta(hours=72))
+    assert quote.hours == Decimal("2")
+    assert quote.band.id == "weekday_day"
+    assert quote.band.multiplier == Decimal("1.00")
+    assert quote.overlay.id == "standard"
+    assert quote.base_tokens == Decimal("200.00")
+    assert quote.final_reserve_cost == Decimal("200.00")
+    assert len(quote.segments) == 1
+    assert quote.segments[0].band.id == "weekday_day"
+    assert quote.segments[0].hours == Decimal("2")
+    rule = quote.as_rule()
+    assert rule["band_id"] == "weekday_day"
+    assert rule["band_multiplier"] == "1"
+    assert rule["final_reserve_cost"] == "200.00"
+
+
+def test_segments_in_rule() -> None:
+    start = _at(2026, 9, 8, 17)  # Tuesday 17:00, one band, product needs a final round
+    end = start + timedelta(hours=2)
+    fill = FillFactor(
+        id="next_day_open",
+        label="Fill the gaps 25%",
+        multiplier=Decimal("0.75"),
+        discount_pct=Decimal("25"),
+    )
+    quote = quote_reserve(start, end, reserved_at=start - timedelta(hours=30), fill=fill)
+    rule = quote.as_rule()
+    segments = rule["segments"]
+    assert isinstance(segments, list) and len(segments) == 1
+    hours = sum((Decimal(segment["hours"]) for segment in segments), Decimal("0"))
+    tokens = sum((Decimal(segment["tokens"]) for segment in segments), Decimal("0"))
+    assert hours == quote.hours
+    assert tokens == Decimal("234.375")
+    assert tokens.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) == quote.final_reserve_cost
+    assert tokens != quote.final_reserve_cost
+    assert rule["final_reserve_cost"] == "234.38"
+    assert rule["band_id"] == "weekday_eve"
+
+    spanning = quote_reserve(
+        _at(2026, 9, 7, 7),
+        _at(2026, 9, 7, 21),
+        reserved_at=_at(2026, 9, 7, 7) - timedelta(days=8),
+    )
+    spanning_rule = spanning.as_rule()
+    spanning_segments = spanning_rule["segments"]
+    assert isinstance(spanning_segments, list) and len(spanning_segments) == 3
+    assert sum((Decimal(segment["hours"]) for segment in spanning_segments), Decimal("0")) == spanning.hours
+    unrounded = sum((Decimal(segment["tokens"]) for segment in spanning_segments), Decimal("0"))
+    assert unrounded.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) == spanning.final_reserve_cost
+    assert spanning_rule["band_id"] == spanning.segments[0].band.id

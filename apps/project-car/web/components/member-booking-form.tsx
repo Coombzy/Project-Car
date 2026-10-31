@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { memberCreateBookingAction } from "../app/member/schedule/actions";
+import { segmentCostLines, showSingleBandLabel } from "../lib/booking-segments";
 import type { BookingQuote, Hoist, MemberSelf } from "../lib/config";
 import { tokensLabel } from "../lib/time";
 import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
@@ -125,15 +126,34 @@ export function MemberBookingForm({
       {rule ? (
         <div className="quote-preview">
           <p className="eyebrow">Reserve quote · America/Regina bands</p>
-          <p className="quote-math">
-            {rule.hours}h × 100 × {rule.band_multiplier} × {rule.advance_multiplier}
-            {rule.fill_multiplier && rule.fill_multiplier !== "1" ? ` × ${rule.fill_multiplier}` : ""} ={" "}
-            <strong>{tokensLabel(rule.final_reserve_cost)}</strong>
-          </p>
-          <p className="muted">
-            {tokensLabel(rule.base_tokens)} base · {rule.band_label} · {rule.overlay_label}
-            {rule.fill_multiplier && rule.fill_multiplier !== "1" ? ` · ${rule.fill_label ?? "Fill"}` : ""}
-          </p>
+          {showSingleBandLabel(rule) ? (
+            <>
+              <p className="quote-math">
+                {rule.hours}h × 100 × {rule.band_multiplier} × {rule.advance_multiplier}
+                {rule.fill_multiplier && rule.fill_multiplier !== "1" ? ` × ${rule.fill_multiplier}` : ""} ={" "}
+                <strong>{tokensLabel(rule.final_reserve_cost)}</strong>
+              </p>
+              <p className="muted">
+                {tokensLabel(rule.base_tokens)} base · {rule.band_label} · {rule.overlay_label}
+                {rule.fill_multiplier && rule.fill_multiplier !== "1" ? ` · ${rule.fill_label ?? "Fill"}` : ""}
+              </p>
+            </>
+          ) : (
+            <>
+              {segmentCostLines(rule).map((line) => (
+                <p className="quote-math" key={line}>
+                  {line}
+                </p>
+              ))}
+              <p className="quote-math">
+                Total <strong>{tokensLabel(rule.final_reserve_cost)}</strong>
+              </p>
+              <p className="muted">
+                {rule.overlay_label}
+                {rule.fill_multiplier && rule.fill_multiplier !== "1" ? ` · ${rule.fill_label ?? "Fill"}` : ""}
+              </p>
+            </>
+          )}
           {quote?.token_balance !== null && quote?.token_balance_after !== null ? (
             <p className="muted">
               {member.name} balance {tokensLabel(quote.token_balance)} →{" "}

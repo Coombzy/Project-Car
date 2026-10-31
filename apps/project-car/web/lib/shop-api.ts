@@ -28,6 +28,7 @@ import {
   type Todo,
   type TokenTransaction,
   type ToolCribEvent,
+  type PricingSegment,
   type WaitlistEntry,
 } from "./config";
 import {
@@ -36,6 +37,8 @@ import {
   readMemberSessionToken,
   readSessionToken,
 } from "./session";
+
+export type QuoteSegment = PricingSegment;
 
 async function readJson(response: Response): Promise<unknown> {
   const text = await response.text();

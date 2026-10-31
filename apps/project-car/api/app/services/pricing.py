@@ -1,12 +1,14 @@
 """Duration × band × overlay × fill reserve quotes (Docs/token-pricing.md).
 
 `base_tokens = hours × 100`
-`final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier × fill_multiplier`
+`final_reserve_cost = Σ (segment_hours × 100 × segment_band × advance_multiplier × fill_multiplier)`
 
-Bands are looked up in America/Regina from the booking **start**. Overlay is
-measured at reserve time (now → start). Fill is an explicit next-day factor
-(default 1.0) — it does not change locked band / overlay math. Cancel /
-complete must reuse the locked quote — never re-run this table.
+Each minute is priced at the America/Regina band that contains it. A slot that
+crosses a band boundary is split and summed, then rounded once to 0.01.
+`band_*` on the quote stays the start segment so older clients still parse.
+Overlay is measured at reserve time (now → start). Fill is an explicit
+next-day factor (default 1.0) applied to every segment. Cancel / complete
+must reuse the locked quote — never re-run this table.
 
 The tuples below are the seeded defaults. `quote_reserve` reads
 `pricing_bands` and `pricing_overlays` when a session is passed. A call
@@ -78,6 +80,28 @@ NO_FILL = FillFactor(
 
 
 @dataclass(frozen=True)
+class QuoteSegment:
+    """One half-open slice of a reserve, priced at a single band."""
+
+    band: Band
+    start: datetime
+    end: datetime
+    hours: Decimal
+    tokens: Decimal
+
+    def as_dict(self) -> dict[str, str]:
+        return {
+            "band_id": self.band.id,
+            "band_label": self.band.label,
+            "band_multiplier": _factor_str(self.band.multiplier),
+            "start": self.start.isoformat(),
+            "end": self.end.isoformat(),
+            "hours": _hours_str(self.hours),
+            "tokens": _exact_str(self.tokens),
+        }
+
+
+@dataclass(frozen=True)
 class ReserveQuote:
     hours: Decimal
     band: Band
@@ -86,8 +110,9 @@ class ReserveQuote:
     final_reserve_cost: Decimal
     fill: FillFactor = NO_FILL
     tz: str = PRICING_TZ_NAME
+    segments: tuple[QuoteSegment, ...] = ()
 
-    def as_rule(self) -> dict[str, str]:
+    def as_rule(self) -> dict[str, object]:
         return {
             "band_id": self.band.id,
             "band_label": self.band.label,
@@ -103,9 +128,10 @@ class ReserveQuote:
             "base_tokens": _factor_str(self.base_tokens),
             "final_reserve_cost": _money_str(self.final_reserve_cost),
             "tz": self.tz,
+            "segments": [segment.as_dict() for segment in self.segments],
         }
 
-    def ledger_meta(self) -> dict[str, dict[str, str]]:
+    def ledger_meta(self) -> dict[str, dict[str, object]]:
         return {"pricing_rule": self.as_rule()}
 
 
@@ -119,6 +145,92 @@ def _factor_str(value: Decimal) -> str:
 
 def _money_str(value: Decimal) -> str:
     return format(value.quantize(MONEY_QUANT, rounding=ROUND_HALF_UP), "f")
+
+
+def _hours_str(value: Decimal) -> str:
+    """Hour text that round-trips the 0.0001 duration quantum."""
+    quantized = value.quantize(HOURS_QUANT, rounding=ROUND_HALF_UP)
+    text = format(quantized, "f").rstrip("0").rstrip(".")
+    return text or "0"
+
+
+def _exact_str(value: Decimal) -> str:
+    """Token text before the one final cent round. Strips trailing zeros only."""
+    text = format(value, "f")
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return text or "0"
+
+
+# Wall-clock cuts in America/Regina. Day changes are midnight. Fri 16:00,
+# Sat/Sun, and Sun 21:00 are the same clocks on those weekdays — resolve_band
+# decides which band each side is. Adjacent slices with the same band merge.
+_BAND_CUTS = (time(0, 0), time(8, 0), time(16, 0), time(21, 0))
+
+
+def _band_cut_points(local_start: datetime, local_end: datetime) -> list[datetime]:
+    """Regina wall-clock instants where a band can change, plus the endpoints.
+
+    Built with PRICING_TZ, not a fixed UTC offset. Regina has no DST, so a
+    US/Canada fallback night does not insert or drop an hour here.
+    """
+    points = [local_start]
+    day = local_start.date()
+    last_day = local_end.date()
+    while day <= last_day:
+        for clock in _BAND_CUTS:
+            instant = datetime.combine(day, clock, tzinfo=PRICING_TZ)
+            if local_start < instant < local_end:
+                points.append(instant)
+        day += timedelta(days=1)
+    points.append(local_end)
+    points.sort()
+    unique: list[datetime] = []
+    for point in points:
+        if not unique or point != unique[-1]:
+            unique.append(point)
+    return unique
+
+
+def _price_segments(
+    start_at: datetime,
+    end_at: datetime,
+    *,
+    hours: Decimal,
+    overlay: Overlay,
+    fill_factor: FillFactor,
+    session: Session | None,
+) -> list[QuoteSegment]:
+    local_start = as_utc(start_at).astimezone(PRICING_TZ)
+    local_end = as_utc(end_at).astimezone(PRICING_TZ)
+    bounds = _band_cut_points(local_start, local_end)
+    merged: list[tuple[datetime, datetime, Band]] = []
+    for left, right in zip(bounds, bounds[1:]):
+        band = resolve_band(left, session=session)
+        if merged and merged[-1][2].id == band.id:
+            merged[-1] = (merged[-1][0], right, merged[-1][2])
+        else:
+            merged.append((left, right, band))
+    segments: list[QuoteSegment] = []
+    consumed = Decimal("0")
+    last = len(merged) - 1
+    for index, (left, right, band) in enumerate(merged):
+        if index == last:
+            segment_hours = hours - consumed
+        else:
+            segment_hours = duration_hours(left, right)
+            consumed += segment_hours
+        tokens = (
+            segment_hours
+            * BASE_TOKENS_PER_HOUR
+            * band.multiplier
+            * overlay.multiplier
+            * fill_factor.multiplier
+        )
+        segments.append(
+            QuoteSegment(band=band, start=left, end=right, hours=segment_hours, tokens=tokens)
+        )
+    return segments
 
 
 BAND_ROWS = (WEEKDAY_DAY, WEEKDAY_EVE, WEEKEND_FRI_EVE, LATE_NIGHT)
@@ -237,17 +349,25 @@ def quote_reserve(
     if session is not None:
         ensure_pricing_settings(session)
     hours = duration_hours(start_at, end_at)
-    band = resolve_band(start_at, session=session)
     overlay = resolve_overlay(
         start_at=start_at,
         reserved_at=reserved_at or shop_now(),
         session=session,
     )
     fill_factor = fill or NO_FILL
-    base = (hours * BASE_TOKENS_PER_HOUR).quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
-    final = (base * band.multiplier * overlay.multiplier * fill_factor.multiplier).quantize(
-        MONEY_QUANT, rounding=ROUND_HALF_UP
+    segments = _price_segments(
+        start_at,
+        end_at,
+        hours=hours,
+        overlay=overlay,
+        fill_factor=fill_factor,
+        session=session,
     )
+    # Start segment only. Stored ledger rows and old clients keep reading band_*.
+    band = segments[0].band
+    raw = sum((segment.tokens for segment in segments), Decimal("0"))
+    base = (hours * BASE_TOKENS_PER_HOUR).quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
+    final = raw.quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
     if final <= 0:
         raise PricingError("invalid_tokens", "Reserved tokens must be greater than zero.")
     return ReserveQuote(
@@ -257,4 +377,5 @@ def quote_reserve(
         fill=fill_factor,
         base_tokens=base,
         final_reserve_cost=final,
+        segments=tuple(segments),
     )
