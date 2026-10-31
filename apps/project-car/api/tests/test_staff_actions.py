@@ -11,13 +11,13 @@ from sqlalchemy import select
 
 from app.models import Booking, RefundRequest, ShopJob, ShopJobStatus, StaffAction
 from app.shop_time import as_utc, shop_now
-from tests.conftest import AUTH, create_hoist, create_member, login_member
+from tests.conftest import AUTH, check_in_open_start, create_hoist, create_member, login_member, next_hour
 
 AI = {"Authorization": "Bearer dev-ai-secret"}
 
 
 def _window(hours_from_now: int, length_hours: float = 1) -> tuple[str, str]:
-    start = shop_now() + timedelta(hours=hours_from_now)
+    start = next_hour(hours_from_now)
     end = start + timedelta(hours=length_hours)
     return start.isoformat(), end.isoformat()
 
@@ -40,7 +40,8 @@ def _owner_booking(
     *,
     minutes_from_now: int = 0,
 ) -> dict:
-    start_dt = shop_now() + timedelta(hours=hours_from_now, minutes=minutes_from_now)
+    # A minutes offset asks for a start inside the open check-in window.
+    start_dt = check_in_open_start() if minutes_from_now else next_hour(hours_from_now)
     end_dt = start_dt + timedelta(hours=1)
     start, end = start_dt.isoformat(), end_dt.isoformat()
     created = client.post(

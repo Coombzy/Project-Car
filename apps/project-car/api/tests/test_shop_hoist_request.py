@@ -9,15 +9,14 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from app.config import get_settings
-from app.shop_time import shop_now
-from tests.conftest import AUTH, create_hoist, create_member, login_member
+from tests.conftest import AUTH, create_hoist, create_member, login_member, next_hour
 
 REPO = Path(__file__).resolve().parents[4]
 AI = {"Authorization": "Bearer dev-ai-secret"}
 
 
 def _window(hours_from_now: int, length_hours: float = 1) -> tuple[str, str]:
-    start = shop_now() + timedelta(hours=hours_from_now)
+    start = next_hour(hours_from_now)
     end = start + timedelta(hours=length_hours)
     return start.isoformat(), end.isoformat()
 
