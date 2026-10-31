@@ -31,7 +31,11 @@ export function MemberBookingCard({
       </div>
       {own ? <BookingCost reservedTokens={own.reserved_tokens} pricingRule={own.pricing_rule} /> : null}
       <span className={`pill pill-${slot.status}`}>{bookingStatusLabel(slot.status)}</span>
-      {cancel?.visible ? <p className="muted">{cancel.note}</p> : null}
+      {cancel?.visible ? (
+        <p className="muted">
+          {cancel.confirmText} {cancel.note}
+        </p>
+      ) : null}
       {own && own.status === "pending" ? (
         <div className="chip-actions">
           <form action={memberConfirmBookingAction}>
@@ -46,6 +50,9 @@ export function MemberBookingCard({
           <form action={memberCancelBookingAction}>
             <ScheduleReturnFields returnTo={returnTo} />
             <input type="hidden" name="id" value={own.id} />
+            <label>
+              <input type="checkbox" name="confirm" value="yes" required /> Yes, cancel
+            </label>
             <button className="ghost" type="submit">
               {cancel.label}
             </button>

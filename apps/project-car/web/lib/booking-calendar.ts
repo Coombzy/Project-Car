@@ -58,6 +58,7 @@ export type CancelOffer = {
   refund: number;
   kept: number;
   label: string;
+  confirmText: string;
   note: string;
 };
 
@@ -189,7 +190,14 @@ export function memberCancelOffer(
 ): CancelOffer {
   const start = parseShopInstant(booking.startAt).getTime();
   const reserved = fromCents(cents(booking.reservedTokens));
-  const hidden: CancelOffer = { visible: false, refund: 0, kept: reserved, label: "", note: AFTER_START_MESSAGE };
+  const hidden: CancelOffer = {
+    visible: false,
+    refund: 0,
+    kept: reserved,
+    label: "",
+    confirmText: "",
+    note: AFTER_START_MESSAGE,
+  };
   if (booking.status === "active" || booking.status === "no_show" || booking.status === "completed" || booking.status === "cancelled" || booking.status === "overdue") {
     return hidden;
   }
@@ -209,6 +217,7 @@ export function memberCancelOffer(
     refund,
     kept,
     label: `Cancel · get ${refundText} tokens back`,
+    confirmText: `Cancel this visit? You get ${refundText} tokens back.`,
     note: lead >= FREE_CANCEL_MS ? "Free to cancel until 24 hours before it starts." : "Late cancel keeps half.",
   };
 }

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { bookingErrorCopy } from "../../../lib/booking-calendar";
 import { parseViewParam, scheduleHref } from "../../../lib/calendar";
 import { ShopApiError } from "../../../lib/config";
+import { snapWholeHourWindow } from "../../../lib/time";
 import {
   cancelMemberBooking,
   confirmMemberBooking,
@@ -39,10 +40,14 @@ function fail(formData: FormData, error: unknown): never {
 
 export async function memberCreateBookingAction(formData: FormData): Promise<void> {
   try {
+    const window = snapWholeHourWindow(
+      String(formData.get("start_at") ?? ""),
+      String(formData.get("end_at") ?? ""),
+    );
     const created = await createMemberBooking({
       hoist_id: String(formData.get("hoist_id") ?? ""),
-      start_at: String(formData.get("start_at") ?? ""),
-      end_at: String(formData.get("end_at") ?? ""),
+      start_at: window.start,
+      end_at: window.end,
       notes: String(formData.get("notes") ?? "") || null,
     });
     await confirmMemberBooking(created.id);
@@ -56,10 +61,14 @@ export async function memberCreateBookingAction(formData: FormData): Promise<voi
 
 export async function memberRequestShopHoistAction(formData: FormData): Promise<void> {
   try {
+    const window = snapWholeHourWindow(
+      String(formData.get("start_at") ?? ""),
+      String(formData.get("end_at") ?? ""),
+    );
     await requestMemberShopHoist({
       hoist_id: String(formData.get("hoist_id") ?? ""),
-      start_at: String(formData.get("start_at") ?? ""),
-      end_at: String(formData.get("end_at") ?? ""),
+      start_at: window.start,
+      end_at: window.end,
       notes: String(formData.get("notes") ?? "") || null,
     });
   } catch (error) {
@@ -83,6 +92,9 @@ export async function memberConfirmBookingAction(formData: FormData): Promise<vo
 
 export async function memberCancelBookingAction(formData: FormData): Promise<void> {
   try {
+    if (formData.get("confirm") !== "yes") {
+      throw new ShopApiError(400, "confirm_cancel", "Confirm the cancel before it counts.");
+    }
     await cancelMemberBooking(String(formData.get("id") ?? ""));
   } catch (error) {
     fail(formData, error);
