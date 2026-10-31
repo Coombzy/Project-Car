@@ -228,6 +228,20 @@ export async function listPublicPlans(): Promise<MembershipTier[]> {
   return shopJson<MembershipTier[]>("/plans", "Could not load plans.");
 }
 
+export type SignupModeName = "self_serve" | "waitlist";
+
+export async function getSignupMode(): Promise<{ mode: SignupModeName }> {
+  return shopJson<{ mode: SignupModeName }>("/signup-mode", "Could not load signup mode.");
+}
+
+export async function setSignupMode(mode: SignupModeName): Promise<{ mode: SignupModeName }> {
+  return shopJson<{ mode: SignupModeName }>("/signup-mode", "Could not save signup mode.", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mode }),
+  });
+}
+
 export async function patchTier(name: string, payload: Partial<MembershipTier>): Promise<MembershipTier> {
   return shopJson<MembershipTier>(`/tiers/${name}`, "Could not update the tier.", {
     method: "PATCH",
@@ -556,6 +570,51 @@ export async function loginMember(email: string, password: string): Promise<stri
     throw parseApiError(502, null, "Shop API did not return a member session cookie.");
   }
   return token;
+}
+
+export async function signupAccount(payload: {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  tier_name: string;
+  notes: string;
+}): Promise<{ mode: SignupModeName; token: string | null }> {
+  let response: Response;
+  try {
+    response = await fetch(`${shopApiUrl()}/signup`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: payload.name,
+        email: payload.email,
+        phone: payload.phone || null,
+        password: payload.password || null,
+        tier_name: payload.tier_name || "basic",
+        notes: payload.notes || null,
+      }),
+      cache: "no-store",
+    });
+  } catch {
+    throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
+  }
+  const body = await readJson(response);
+  if (!response.ok) {
+    throw parseApiError(response.status, body, "Could not sign up.");
+  }
+  const modeValue =
+    body && typeof body === "object" && "mode" in body ? (body as { mode?: unknown }).mode : null;
+  if (modeValue !== "self_serve" && modeValue !== "waitlist") {
+    throw parseApiError(502, null, "Shop API returned an unknown signup mode.");
+  }
+  const token = extractMemberSessionValue(response.headers.getSetCookie());
+  if (modeValue === "self_serve" && !token) {
+    throw parseApiError(502, null, "Shop API did not return a member session cookie.");
+  }
+  return { mode: modeValue, token };
 }
 
 export async function logoutMember(): Promise<void> {

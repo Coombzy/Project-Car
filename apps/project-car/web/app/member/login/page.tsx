@@ -46,7 +46,8 @@ export default async function MemberLoginPage({
         ) : null}
         <MemberLoginForm nextPath={nextPath} />
         <p className="muted" style={{ marginTop: "1.2rem" }}>
-          Management Owner demo is on <Link href="/login">/login</Link>.
+          New member? <Link href="/signup">Sign up</Link>. Management Owner demo is on{" "}
+          <Link href="/login">/login</Link>.
         </p>
       </section>
       <section style={{ maxWidth: 720, margin: "2rem auto" }}>
