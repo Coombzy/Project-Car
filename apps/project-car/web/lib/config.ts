@@ -138,7 +138,7 @@ export type Booking = {
   kind: "customer" | "shop";
   start_at: string;
   end_at: string;
-  status: "pending" | "confirmed" | "active" | "completed" | "overdue" | "cancelled";
+  status: "pending" | "confirmed" | "active" | "completed" | "overdue" | "cancelled" | "no_show";
   reserved_tokens: string;
   pricing_rule: PricingRule | null;
   notes: string | null;
@@ -164,7 +164,15 @@ export type TokenTransaction = {
   kind: string;
   amount: string;
   note: string | null;
-  meta: { pricing_rule?: PricingRule } | null;
+  meta: {
+    pricing_rule?: PricingRule;
+    purchase?: {
+      subtotal_cad?: string;
+      gst_cad?: string;
+      gst_rate?: string;
+      total_cad?: string;
+    };
+  } | null;
   created_at: string;
 };
 

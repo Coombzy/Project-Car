@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { parseViewParam, scheduleHref } from "../../lib/calendar";
 import { ShopApiError } from "../../lib/config";
-import { scheduleHref, type ScheduleView } from "../../lib/calendar";
 import {
   approveShopHoistRequest,
   cancelBooking,
@@ -21,7 +21,7 @@ function scheduleTarget(formData: FormData): string {
   const month = String(formData.get("month") ?? "");
   const hoist = String(formData.get("hoist") ?? "");
   return scheduleHref("/schedule", {
-    view: view === "week" || view === "month" ? (view as ScheduleView) : undefined,
+    view: parseViewParam(view),
     week: week || undefined,
     month: month || undefined,
     hoist: hoist || undefined,
@@ -31,7 +31,7 @@ function scheduleTarget(formData: FormData): string {
 function fail(formData: FormData, error: unknown, fallback = "Booking action failed."): never {
   const message = error instanceof ShopApiError ? error.message : fallback;
   redirect(scheduleHref("/schedule", {
-    view: String(formData.get("view") ?? "") === "week" ? "week" : "month",
+    view: parseViewParam(String(formData.get("view") ?? "")),
     week: String(formData.get("week") ?? "") || undefined,
     month: String(formData.get("month") ?? "") || undefined,
     hoist: String(formData.get("hoist") ?? "") || undefined,

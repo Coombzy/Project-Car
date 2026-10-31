@@ -1,0 +1,288 @@
+import { addDays, calendarDate, parseShopInstant, zonedDateTime } from "./calendar";
+import {
+  AFTER_START_MESSAGE,
+  BAND_SHORT,
+  BELOW_ZERO_MESSAGE,
+  PEAK_HOURS_PER_WEEK,
+  TAKEN_MESSAGE,
+  type BandId,
+} from "./booking-words";
+
+/** Seeded band table from the shop API. A quote at Book is the price that is charged. */
+const BAND_MULTIPLIER: Record<BandId, number> = {
+  weekday_day: 1,
+  weekday_eve: 1.25,
+  weekend_fri_eve: 1.5,
+  late_night: 0.75,
+};
+
+const BASE_TOKENS = 100;
+const PHONE_MAX_PX = 767;
+const FREE_CANCEL_MS = 24 * 60 * 60 * 1000;
+const LATE_KEEP_PCT = 50;
+const PEAK_BAND: BandId = "weekend_fri_eve";
+
+const OCCUPYING = new Set(["pending", "confirmed", "active", "completed", "overdue"]);
+
+export type BandAt = {
+  id: BandId;
+  short: string;
+  tokens: number;
+  gutter: string;
+};
+
+export type BayChoice = {
+  id: string;
+  name: string;
+  number: number;
+  isShop: boolean;
+  status: string;
+};
+
+export type SpanInterval = {
+  hoistId: string;
+  startAt: string;
+  endAt: string;
+  status: string;
+};
+
+export type SelectionSummary = {
+  hours: number[];
+  line: string;
+  note: string | null;
+  total: number;
+};
+
+export type CancelOffer = {
+  visible: boolean;
+  refund: number;
+  kept: number;
+  label: string;
+  note: string;
+};
+
+export type PeakUsage = {
+  cap: number;
+  used: number;
+  remaining: number;
+  line: string;
+};
+
+export type PurchaseMeta = {
+  subtotal_cad?: string;
+  gst_rate?: string;
+  gst_cad?: string;
+  total_cad?: string;
+};
+
+function pad(hour: number): string {
+  return String(hour).padStart(2, "0");
+}
+
+function weekdayIndex(isoDate: string): number {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  const utc = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  return utc === 0 ? 6 : utc - 1;
+}
+
+export function bandAt(isoDate: string, hour: number): BandAt {
+  const weekday = weekdayIndex(isoDate);
+  let id: BandId = "late_night";
+  if (weekday === 5) {
+    id = "weekend_fri_eve";
+  } else if (weekday === 6) {
+    id = hour < 21 ? "weekend_fri_eve" : "late_night";
+  } else if (hour < 8) {
+    id = "late_night";
+  } else if (hour < 16) {
+    id = "weekday_day";
+  } else if (weekday === 4) {
+    id = "weekend_fri_eve";
+  } else if (hour < 21) {
+    id = "weekday_eve";
+  }
+  const tokens = BASE_TOKENS * BAND_MULTIPLIER[id];
+  const short = BAND_SHORT[id];
+  return { id, short, tokens, gutter: `${short} ${tokens}` };
+}
+
+export function selectionSummary(
+  isoDate: string,
+  startHour: number,
+  endHour: number,
+  blocked: ReadonlySet<number> = new Set(),
+): SelectionSummary {
+  const hours: number[] = [];
+  let note: string | null = null;
+  const lo = Math.min(startHour, endHour);
+  const hi = Math.max(startHour, endHour);
+  for (let hour = lo; hour < hi; hour += 1) {
+    if (blocked.has(hour)) {
+      note = `${pad(hour)}:00 is booked; selection ends at ${pad(hour)}:00`;
+      break;
+    }
+    hours.push(hour);
+  }
+  const groups: { short: string; tokens: number; count: number }[] = [];
+  for (const hour of hours) {
+    const band = bandAt(isoDate, hour);
+    const last = groups[groups.length - 1];
+    if (last && last.short === band.short && last.tokens === band.tokens) {
+      last.count += 1;
+    } else {
+      groups.push({ short: band.short, tokens: band.tokens, count: 1 });
+    }
+  }
+  const total = groups.reduce((sum, group) => sum + group.tokens * group.count, 0);
+  const parts = groups.map((group) => `${group.short} ${group.tokens} × ${group.count} = ${group.tokens * group.count}`);
+  const line = parts.length === 0 ? "" : `${parts.join(" · ")} · Total ${total}`;
+  return { hours, line, note, total };
+}
+
+function rangesOverlap(start: number, end: number, otherStart: number, otherEnd: number): boolean {
+  return start < otherEnd && otherStart < end;
+}
+
+export function lowestFreeBay(
+  bays: BayChoice[],
+  intervals: SpanInterval[],
+  startAt: string,
+  endAt: string,
+): BayChoice | null {
+  const start = parseShopInstant(startAt).getTime();
+  const end = parseShopInstant(endAt).getTime();
+  const ordered = [...bays].filter((bay) => !bay.isShop && bay.status === "available").sort((a, b) => a.number - b.number);
+  for (const bay of ordered) {
+    const taken = intervals.some((interval) => {
+      if (interval.hoistId !== bay.id || !OCCUPYING.has(interval.status)) {
+        return false;
+      }
+      return rangesOverlap(
+        start,
+        end,
+        parseShopInstant(interval.startAt).getTime(),
+        parseShopInstant(interval.endAt).getTime(),
+      );
+    });
+    if (!taken) {
+      return bay;
+    }
+  }
+  return null;
+}
+
+function cents(amount: string | number): number {
+  return Math.round(Number(amount) * 100);
+}
+
+function fromCents(value: number): number {
+  return value / 100;
+}
+
+function keepCents(reservedCents: number, pct: number): number {
+  return Math.floor((reservedCents * pct + 50) / 100);
+}
+
+export function memberCancelOffer(
+  booking: { status: string; startAt: string; reservedTokens: string },
+  now: Date,
+): CancelOffer {
+  const start = parseShopInstant(booking.startAt).getTime();
+  const reserved = fromCents(cents(booking.reservedTokens));
+  const hidden: CancelOffer = { visible: false, refund: 0, kept: reserved, label: "", note: AFTER_START_MESSAGE };
+  if (booking.status === "active" || booking.status === "no_show" || booking.status === "completed" || booking.status === "cancelled" || booking.status === "overdue") {
+    return hidden;
+  }
+  if (booking.status !== "pending" && booking.status !== "confirmed") {
+    return hidden;
+  }
+  if (now.getTime() >= start) {
+    return hidden;
+  }
+  const lead = start - now.getTime();
+  const reservedCents = cents(booking.reservedTokens);
+  const kept = lead >= FREE_CANCEL_MS ? 0 : fromCents(keepCents(reservedCents, LATE_KEEP_PCT));
+  const refund = fromCents(reservedCents - keepCents(reservedCents, lead >= FREE_CANCEL_MS ? 0 : LATE_KEEP_PCT));
+  const refundText = Number.isInteger(refund) ? String(refund) : refund.toFixed(2);
+  return {
+    visible: true,
+    refund,
+    kept,
+    label: `Cancel · get ${refundText} tokens back`,
+    note: lead >= FREE_CANCEL_MS ? "Free to cancel until 24 hours before it starts." : "Late cancel keeps half.",
+  };
+}
+
+function hourInZone(instant: Date): number {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Regina",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(instant);
+  const hour = parts.find((part) => part.type === "hour")?.value ?? "0";
+  return Number(hour);
+}
+
+export function peakWeek(
+  bookings: { status: string; startAt: string; endAt: string }[],
+  weekStart: string,
+): PeakUsage {
+  const weekBegin = zonedDateTime(weekStart, 0).getTime();
+  const weekEnd = zonedDateTime(addDays(weekStart, 7), 0).getTime();
+  let used = 0;
+  for (const booking of bookings) {
+    if (booking.status === "cancelled") {
+      continue;
+    }
+    let cursor = parseShopInstant(booking.startAt).getTime();
+    const end = parseShopInstant(booking.endAt).getTime();
+    while (cursor < end) {
+      if (cursor >= weekBegin && cursor < weekEnd) {
+        const instant = new Date(cursor);
+        const band = bandAt(calendarDate(instant.toISOString()), hourInZone(instant));
+        if (band.id === PEAK_BAND) {
+          used += 1;
+        }
+      }
+      cursor += 3_600_000;
+    }
+  }
+  const remaining = Math.max(0, PEAK_HOURS_PER_WEEK - used);
+  return {
+    cap: PEAK_HOURS_PER_WEEK,
+    used,
+    remaining,
+    line: `Peak hours this week: ${used} used · ${remaining} left`,
+  };
+}
+
+export function gstLine(meta: { purchase?: PurchaseMeta; pricing_rule?: unknown } | null | undefined): string | null {
+  const purchase = meta?.purchase;
+  if (!purchase?.gst_cad || !purchase.subtotal_cad || !purchase.total_cad) {
+    return null;
+  }
+  return `Subtotal $${purchase.subtotal_cad} · GST $${purchase.gst_cad} · total $${purchase.total_cad}`;
+}
+
+export function bookingErrorCopy(code: string, fallback: string): string {
+  switch (code) {
+    case "hoist_overlap":
+      return TAKEN_MESSAGE;
+    case "would_go_negative":
+      return BELOW_ZERO_MESSAGE;
+    case "cancel_after_start":
+      return AFTER_START_MESSAGE;
+    case "peak_cap":
+      return fallback;
+    default:
+      return fallback;
+  }
+}
+
+export function calendarViewForWidth(width: number): "day" | "week" {
+  return width <= PHONE_MAX_PX ? "day" : "week";
+}
+
+export function balanceWouldGoNegative(balance: string | number, cost: number): boolean {
+  return Number(balance) - cost < 0;
+}

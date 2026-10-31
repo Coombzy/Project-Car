@@ -39,8 +39,9 @@ describe("hour bands", () => {
 
 describe("selection", () => {
   it("sums a Thursday afternoon by the band of each hour", () => {
+    // 14:00 and 15:00 are weekday day; 16:00 starts the evening band.
     assert.equal(
-      selectionSummary("2026-11-05", 15, 19).line,
+      selectionSummary("2026-11-05", 14, 18).line,
       "Day 100 × 2 = 200 · Eve 125 × 2 = 250 · Total 450",
     );
   });
@@ -49,7 +50,7 @@ describe("selection", () => {
     const summary = selectionSummary("2026-11-05", 15, 19, new Set([18]));
     assert.deepEqual(summary.hours, [15, 16, 17]);
     assert.equal(summary.note, "18:00 is booked; selection ends at 18:00");
-    assert.equal(summary.total, 100 + 100 + 125);
+    assert.equal(summary.total, 100 + 125 + 125);
   });
 });
 
@@ -76,6 +77,12 @@ describe("any bay", () => {
       BAYS,
       [
         {
+          hoistId: "b1",
+          startAt: "2026-11-05T16:00:00",
+          endAt: "2026-11-05T18:00:00",
+          status: "confirmed",
+        },
+        {
           hoistId: "b2",
           startAt: "2026-11-05T16:00:00",
           endAt: "2026-11-05T18:00:00",
@@ -90,7 +97,7 @@ describe("any bay", () => {
 });
 
 describe("cancel, peak, gst, and the taken message", () => {
-  const now = new Date("2026-11-05T16:00:00.000Z");
+  const now = new Date("2026-11-05T22:00:00.000Z");
 
   it("refunds all of a cancel 24 hours ahead and half inside the window", () => {
     const early = memberCancelOffer(

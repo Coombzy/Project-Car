@@ -1,9 +1,11 @@
+import { memberCancelBookingAction, memberConfirmBookingAction } from "../app/member/schedule/actions";
+import { memberCancelOffer } from "../lib/booking-calendar";
+import { bookingStatusLabel } from "../lib/booking-words";
+import { formatCalendarTime } from "../lib/calendar";
+import type { Booking, Occupancy } from "../lib/config";
+import { shopClock } from "../lib/time";
 import { BookingCost } from "./booking-cost";
 import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
-import { StatusPill } from "./status-pill";
-import type { Booking, Occupancy } from "../lib/config";
-import { formatCalendarTime } from "../lib/calendar";
-import { memberCancelBookingAction, memberConfirmBookingAction } from "../app/member/schedule/actions";
 
 export function MemberBookingCard({
   slot,
@@ -16,16 +18,20 @@ export function MemberBookingCard({
   returnTo: ScheduleReturn;
   compact?: boolean;
 }) {
+  const cancel = own
+    ? memberCancelOffer({ status: own.status, startAt: own.start_at, reservedTokens: own.reserved_tokens }, shopClock())
+    : null;
   return (
     <article
       className={`booking-chip status-${slot.status}${slot.own ? "" : " occupancy-chip"}${compact ? " booking-chip-hour" : ""}`}
     >
       <strong>{slot.own ? "You" : "Booked"}</strong>
       <div>
-        {formatCalendarTime(slot.start_at)}–{formatCalendarTime(slot.end_at)}
+        {formatCalendarTime(slot.start_at)}–{formatCalendarTime(slot.end_at)} · Mountain Time
       </div>
       {own ? <BookingCost reservedTokens={own.reserved_tokens} pricingRule={own.pricing_rule} /> : null}
-      <StatusPill value={slot.status} />
+      <span className={`pill pill-${slot.status}`}>{bookingStatusLabel(slot.status)}</span>
+      {cancel?.visible ? <p className="muted">{cancel.note}</p> : null}
       {own && own.status === "pending" ? (
         <div className="chip-actions">
           <form action={memberConfirmBookingAction}>
@@ -33,22 +39,15 @@ export function MemberBookingCard({
             <input type="hidden" name="id" value={own.id} />
             <button type="submit">Confirm</button>
           </form>
-          <form action={memberCancelBookingAction}>
-            <ScheduleReturnFields returnTo={returnTo} />
-            <input type="hidden" name="id" value={own.id} />
-            <button className="ghost" type="submit">
-              Cancel
-            </button>
-          </form>
         </div>
       ) : null}
-      {own && (own.status === "confirmed" || own.status === "active") ? (
+      {cancel?.visible && own ? (
         <div className="chip-actions">
           <form action={memberCancelBookingAction}>
             <ScheduleReturnFields returnTo={returnTo} />
             <input type="hidden" name="id" value={own.id} />
             <button className="ghost" type="submit">
-              Cancel
+              {cancel.label}
             </button>
           </form>
         </div>

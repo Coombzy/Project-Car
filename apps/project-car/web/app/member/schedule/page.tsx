@@ -1,25 +1,23 @@
+import { BookingCalendar, type CalendarSlot } from "../../../components/booking-calendar";
 import { MemberBookingCard } from "../../../components/member-booking-card";
-import { MemberBookingForm } from "../../../components/member-booking-form";
 import { MemberShell } from "../../../components/member-shell";
-import { ShopHoistRequestForm } from "../../../components/shop-hoist-request-form";
 import { MonthHeatmap } from "../../../components/month-heatmap";
 import { ScheduleToolbar } from "../../../components/schedule-toolbar";
-import { WeekHoistCalendars } from "../../../components/week-hoist-calendars";
-import { handleMemberPageError, shopErrorMessage } from "../../../lib/page";
-import { getMemberFill, getMemberMe, getMemberSchedule, getMemberShopHoist } from "../../../lib/shop-api";
+import { peakWeek } from "../../../lib/booking-calendar";
+import { TIME_LABEL } from "../../../lib/booking-words";
 import {
   addDays,
   calendarTodayIso,
   monthWindow,
   parseHoistParam,
   parseMonthParam,
-  parseSlotParam,
   parseViewParam,
   shopWindowQuery,
-  slotEnd,
   sortHoists,
 } from "../../../lib/calendar";
-import { parseWeekParam, shopClock, shopDateTimeLocal } from "../../../lib/time";
+import { handleMemberPageError, shopErrorMessage } from "../../../lib/page";
+import { getMemberMe, getMemberSchedule, getMemberShopHoist } from "../../../lib/shop-api";
+import { parseWeekParam, shopClock } from "../../../lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -35,11 +33,8 @@ export default async function MemberSchedulePage({
     const weekStart = parseWeekParam(params.week);
     const month = parseMonthParam(params.month, params.week ? weekStart : today);
     const hoistId = parseHoistParam(params.hoist);
-    const slot = parseSlotParam(params.slot);
     const window =
-      view === "month"
-        ? monthWindow(month)
-        : { start: weekStart, end: addDays(weekStart, 7) };
+      view === "month" ? monthWindow(month) : { start: weekStart, end: addDays(weekStart, 7) };
     const days = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
 
     let me;
@@ -49,15 +44,15 @@ export default async function MemberSchedulePage({
       const message = await handleMemberPageError(error);
       return (
         <MemberShell current="schedule" wide>
-          <p className="eyebrow">Your schedule</p>
-          <h1>Schedule</h1>
+          <p className="eyebrow">Book a bay</p>
+          <h1>Book a bay</h1>
           <div className="banner error">{message}</div>
         </MemberShell>
       );
     }
 
     let loadError: string | null = null;
-    const [schedule, fill, shopHoist] = await Promise.all([
+    const [schedule, shopHoist] = await Promise.all([
       getMemberSchedule({
         windowStart: shopWindowQuery(window.start),
         windowEnd: shopWindowQuery(window.end),
@@ -65,130 +60,97 @@ export default async function MemberSchedulePage({
         loadError = shopErrorMessage(error, "Could not load your schedule.");
         return { hoists: [], bookings: [], occupancy: [] };
       }),
-      getMemberFill().catch(() => null),
       getMemberShopHoist().catch(() => null),
     ]);
 
-    const ordered = sortHoists(schedule.hoists.filter((hoist) => !hoist.is_shop));
+    const ordered = sortHoists(shopHoist ? [...schedule.hoists, shopHoist] : schedule.hoists);
     const returnTo = { view, week: weekStart, month, hoist: hoistId };
-    const defaultStart = slot ?? shopDateTimeLocal(new Date(shopClock().getTime() + 72 * 3600 * 1000));
-    const defaultEnd = slot ? slotEnd(slot) : shopDateTimeLocal(new Date(shopClock().getTime() + 73 * 3600 * 1000));
+    const peak = peakWeek(
+      me.bookings.map((booking) => ({
+        status: booking.status,
+        startAt: booking.start_at,
+        endAt: booking.end_at,
+      })),
+      weekStart,
+    );
+    const slots: CalendarSlot[] = schedule.occupancy.map((slot) => ({
+      id: slot.booking_id,
+      hoistId: slot.hoist_id,
+      startAt: slot.start_at,
+      endAt: slot.end_at,
+      status: slot.status,
+      own: slot.own,
+      name: slot.own ? "You" : "Booked",
+    }));
+    const yours = me.bookings.filter(
+      (booking) => booking.status === "pending" || booking.status === "confirmed" || booking.status === "no_show",
+    );
 
     return (
       <MemberShell email={me.email} current="schedule" wide>
         <p className="eyebrow">
-          {view === "month" ? "Month heat-map" : "Week · per bay"} · America/Regina
+          Book a bay · {TIME_LABEL}
         </p>
-        <h1>Schedule</h1>
+        <h1>Book a bay</h1>
         <p className="lede">
-          Customer bays only — temporary /member demo on this management alias.
-          Customer app is projectcar.ca. Month is a density heat-map; week is
-          an hour grid per bay. Reserve is duration × 100 × band × overlay ×
-          fill. Cancel refunds the locked reserve. Bays 1–5 book directly.
-          The shop hoist is a request until someone approves it.
+          Balance {me.token_balance} tokens. {peak.line}. Bays 1–5 book on the hour. The shop hoist is ask-first and
+          does not hold the hour.
         </p>
-        {params.error ? <div className="banner error">{params.error}</div> : null}
         {loadError ? <div className="banner error">{loadError}</div> : null}
-        {fill?.applies ? (
-          <div className="banner empty">
-            Tomorrow ({fill.target_date}, America/Regina) has {fill.open_hours} open
-            customer-bay hours. Next-day open slots take a {fill.discount_pct}% fill
-            discount (× {fill.fill_multiplier}). Not a public price.
-          </div>
-        ) : null}
 
-        <ScheduleToolbar
-          base="/member/schedule"
-          view={view}
-          weekStart={weekStart}
-          month={month}
-          hoist={hoistId}
-        />
+        <ScheduleToolbar base="/member/schedule" view={view} weekStart={weekStart} month={month} hoist={hoistId} />
 
         {ordered.length === 0 ? (
-          <div className="banner empty">No customer bays yet. Ask the Owner to seed demo hoists.</div>
+          <div className="banner empty">No bays yet.</div>
         ) : view === "month" ? (
           <MonthHeatmap
             base="/member/schedule"
             month={month}
-            hoists={ordered}
+            hoists={ordered.filter((hoist) => !hoist.is_shop)}
             intervals={schedule.occupancy}
             today={today}
           />
         ) : (
-          <WeekHoistCalendars
-            base="/member/schedule"
-            weekStart={weekStart}
-            month={month}
+          <BookingCalendar
+            view={view}
             days={days}
             today={today}
+            nowIso={shopClock().toISOString()}
             hoists={ordered}
-            focusHoistId={hoistId}
-            itemsForHoist={(hoist) =>
-              schedule.occupancy
-                .filter((slotRow) => slotRow.hoist_id === hoist.id)
-                .map((slotRow) => {
-                  const own = slotRow.own
-                    ? schedule.bookings.find((booking) => booking.id === slotRow.booking_id)
-                    : undefined;
-                  return {
-                    id: slotRow.booking_id,
-                    start_at: slotRow.start_at,
-                    end_at: slotRow.end_at,
-                    node: <MemberBookingCard slot={slotRow} own={own} returnTo={returnTo} compact />,
-                  };
-                })
-            }
+            slots={slots}
+            balance={me.token_balance}
+            returnTo={returnTo}
+            error={params.error}
           />
         )}
 
         <section className="card" style={{ marginTop: "1.4rem" }}>
-          <h2>Book a customer bay</h2>
-          <p className="lede">
-            Quote shows band + overlay + fill + total before reserve. Book confirms the
-            slot. Bays book directly. The shop hoist is a separate request.
-            {slot ? ` Prefilling ${slot} from the hour slot you clicked.` : ""}
-          </p>
-          {ordered.length === 0 ? (
-            <p className="muted">Need at least one customer bay.</p>
+          <h2>Your bookings</h2>
+          {yours.length === 0 ? (
+            <p className="muted">No upcoming bookings. Tap an open hour above.</p>
           ) : (
-            <MemberBookingForm
-              key={`${defaultStart}-${hoistId ?? ""}`}
-              member={me}
-              hoists={ordered}
-              weekStart={weekStart}
-              defaultStart={defaultStart}
-              defaultEnd={defaultEnd}
-              defaultHoistId={hoistId}
-              returnTo={returnTo}
-            />
+            yours.map((booking) => {
+              const slot = {
+                booking_id: booking.id,
+                hoist_id: booking.hoist_id,
+                hoist_name: booking.hoist_name,
+                start_at: booking.start_at,
+                end_at: booking.end_at,
+                status: booking.status,
+                own: true,
+              };
+              return <MemberBookingCard key={booking.id} slot={slot} own={booking} returnTo={returnTo} />;
+            })
           )}
         </section>
-
-        {shopHoist ? (
-          <section className="card" style={{ marginTop: "1.4rem" }}>
-            <h2>Request the shop hoist</h2>
-            <p className="lede">
-              This is a request, not a booking. It does not hold the hour and does not use tokens
-              until a person or an AI approves it. The shop is not open.
-            </p>
-            <ShopHoistRequestForm
-              hoist={shopHoist}
-              weekStart={weekStart}
-              defaultStart={defaultStart}
-              defaultEnd={defaultEnd}
-              returnTo={returnTo}
-            />
-          </section>
-        ) : null}
       </MemberShell>
     );
   } catch (error) {
     const message = await handleMemberPageError(error);
     return (
       <MemberShell current="schedule" wide>
-        <p className="eyebrow">Your schedule</p>
-        <h1>Schedule</h1>
+        <p className="eyebrow">Book a bay</p>
+        <h1>Book a bay</h1>
         <div className="banner error">{message}</div>
       </MemberShell>
     );
