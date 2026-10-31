@@ -13,16 +13,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID
 
+from fastapi import HTTPException
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.models import Member, MemberStatus, TokenTransaction, TokenTransactionKind
 from app.shop_time import PRICING_TZ, pricing_now
 
 PERIOD_TZ = "America/Regina"
+# Ben, D15: GST applies to every money transaction. Stand-in rate until his
+# accountant confirms it.
+GST_RATE = Decimal("0.05")
+CENTS = Decimal("0.01")
 
 
 def apply_ledger(
@@ -34,6 +40,7 @@ def apply_ledger(
     booking_id=None,
     note: str | None = None,
     meta: dict | None = None,
+    payment_ref: str | None = None,
 ) -> TokenTransaction:
     amount = Decimal(amount)
     row = TokenTransaction(
@@ -43,12 +50,70 @@ def apply_ledger(
         amount=amount,
         note=note,
         meta=meta,
+        payment_ref=payment_ref,
     )
     session.add(row)
     member.token_balance = Decimal(member.token_balance) + amount
     session.add(member)
-    session.flush()
+    try:
+        session.flush()
+    except IntegrityError:
+        # The unique indexes are the last guard: one reserve, refund and debit
+        # per booking, and one credit per payment id. The rollback also undoes
+        # the cache move above.
+        session.rollback()
+        if payment_ref is not None:
+            raise _conflict("already_credited", "That payment has already been credited.") from None
+        raise _conflict(
+            "duplicate_ledger_entry",
+            f"This booking already has a {kind.value} ledger row.",
+        ) from None
     return row
+
+
+def _conflict(code: str, message: str) -> HTTPException:
+    return HTTPException(status_code=409, detail={"code": code, "message": message})
+
+
+def _cents(value: Decimal) -> Decimal:
+    return Decimal(value).quantize(CENTS, rounding=ROUND_HALF_UP)
+
+
+def record_token_purchase(
+    session: Session,
+    member: Member,
+    *,
+    payment_id: str,
+    tokens: Decimal,
+    subtotal_cad: Decimal,
+    recorded_by: str,
+    note: str | None = None,
+) -> TokenTransaction:
+    """Credit paid tokens once per payment id, with GST on the CAD subtotal."""
+    already = session.scalar(
+        select(TokenTransaction.id).where(TokenTransaction.payment_ref == payment_id)
+    )
+    if already is not None:
+        raise _conflict("already_credited", "That payment has already been credited.")
+    subtotal = _cents(subtotal_cad)
+    gst = _cents(subtotal * GST_RATE)
+    purchase = {
+        "payment_id": payment_id,
+        "subtotal_cad": str(subtotal),
+        "gst_rate": str(GST_RATE),
+        "gst_cad": str(gst),
+        "total_cad": str(subtotal + gst),
+        "by": recorded_by,
+    }
+    return apply_ledger(
+        session,
+        member,
+        kind=TokenTransactionKind.TOKEN_PURCHASE,
+        amount=Decimal(tokens),
+        note=note or f"Token purchase {payment_id}",
+        meta={"purchase": purchase},
+        payment_ref=payment_id,
+    )
 
 
 def ledger_sum(session: Session, member_id) -> Decimal:

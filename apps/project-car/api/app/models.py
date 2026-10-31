@@ -32,6 +32,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -54,6 +55,11 @@ def _enum_column(enum_cls: type[enum.Enum], *, length: int = 32) -> SAEnum:
 JsonList = JSON().with_variant(JSONB(), "postgresql")
 JsonObject = JSON().with_variant(JSONB(), "postgresql")
 UuidPk = Uuid(as_uuid=True).with_variant(UUID(as_uuid=True), "postgresql")
+
+
+LEDGER_ONCE_PER_BOOKING_WHERE = (
+    "booking_id IS NOT NULL AND kind IN ('booking_reserve', 'booking_refund', 'booking_debit')"
+)
 
 
 def _utc_now() -> datetime:
@@ -136,6 +142,7 @@ class TokenTransactionKind(str, enum.Enum):
     BOOKING_REFUND = "booking_refund"
     MONTHLY_ALLOCATION = "monthly_allocation"
     ADMIN_ADJUSTMENT = "admin_adjustment"
+    TOKEN_PURCHASE = "token_purchase"
 
 
 class IncidentSeverity(str, enum.Enum):
@@ -724,7 +731,20 @@ class TokenTransaction(Base):
     """Append-only token ledger. member.token_balance is a cached sum."""
 
     __tablename__ = "token_transactions"
-    __table_args__ = (Index("ix_token_transactions_member_created", "member_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_token_transactions_member_created", "member_id", "created_at"),
+        Index("uq_token_transactions_payment_ref", "payment_ref", unique=True),
+        # One reserve, one refund and one debit per booking. A second refund
+        # for the same booking fails here even if a service check is skipped.
+        Index(
+            "uq_token_transactions_booking_kind",
+            "booking_id",
+            "kind",
+            unique=True,
+            sqlite_where=text(LEDGER_ONCE_PER_BOOKING_WHERE),
+            postgresql_where=text(LEDGER_ONCE_PER_BOOKING_WHERE),
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
     member_id: Mapped[uuid.UUID] = mapped_column(
@@ -740,6 +760,7 @@ class TokenTransaction(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     note: Mapped[Optional[str]] = mapped_column(Text)
     meta: Mapped[Optional[dict]] = mapped_column(JsonObject)
+    payment_ref: Mapped[Optional[str]] = mapped_column(String(120))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

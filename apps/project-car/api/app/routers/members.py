@@ -20,11 +20,12 @@ from app.schemas import (
     MemberPasswordSet,
     MemberPatch,
     TokenAdjustment,
+    TokenPurchaseCreate,
     TokenTransactionOut,
 )
 from app.services.bookings import lock_member
 from app.services.staff import reject_ai
-from app.services.tokens import apply_ledger, rebuild_token_balance
+from app.services.tokens import apply_ledger, rebuild_token_balance, record_token_purchase
 
 router = APIRouter(tags=["members"])
 
@@ -237,6 +238,45 @@ def adjust_member_tokens(
         note=body.note or "Owner adjustment",
     )
     session.flush()
+    session.refresh(row)
+    return TokenTransactionOut.model_validate(row)
+
+
+@router.post(
+    "/members/{member_id}/token-purchases",
+    response_model=TokenTransactionOut,
+    status_code=201,
+)
+def record_member_token_purchase(
+    member_id: UUID,
+    body: TokenPurchaseCreate,
+    session: DbSession,
+    owner: Owner,
+) -> TokenTransactionOut:
+    """Credit tokens for one PayPal payment. The payment id credits once."""
+    reject_ai(
+        owner,
+        code="token_change_requires_human",
+        message="An AI cannot change a token balance on its own.",
+    )
+    if body.tokens >= MAX_TOKEN_ADJUSTMENT:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "invalid_tokens",
+                "message": "A purchase must be under 1,000,000 tokens.",
+            },
+        )
+    member = lock_member(session, member_id)
+    row = record_token_purchase(
+        session,
+        member,
+        payment_id=body.payment_id,
+        tokens=body.tokens,
+        subtotal_cad=body.subtotal_cad,
+        recorded_by=owner.email,
+        note=body.note,
+    )
     session.refresh(row)
     return TokenTransactionOut.model_validate(row)
 

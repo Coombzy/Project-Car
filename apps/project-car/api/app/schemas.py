@@ -275,6 +275,23 @@ class TokenAdjustment(BaseModel):
     note: str | None = Field(default=None, max_length=2000)
 
 
+class TokenPurchaseCreate(BaseModel):
+    """A PayPal payment the Owner has seen land. Tokens and CAD come from that payment."""
+
+    payment_id: str = Field(min_length=1, max_length=120)
+    tokens: Decimal = Field(gt=0, decimal_places=2)
+    subtotal_cad: Decimal = Field(ge=0, decimal_places=2)
+    note: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("payment_id")
+    @classmethod
+    def strip_payment_id(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("payment_id cannot be blank.")
+        return stripped
+
+
 class TokenTransactionOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -285,6 +302,7 @@ class TokenTransactionOut(BaseModel):
     amount: Decimal
     note: str | None
     meta: dict | None = None
+    payment_ref: str | None = None
     created_at: datetime
 
 
