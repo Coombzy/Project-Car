@@ -859,7 +859,7 @@ Rows R55–R62 (2026-10-26): this paragraph replaces the earlier ones for anythi
 
 Rows R63–R70 (2026-10-27): this paragraph replaces the earlier ones for anything still open. Merged since that paragraph: R55 (#193), R56 (#191), R57 (#192), R58 (#195), R59 (#194) and R60 (#196). Open from before: R51 (`services/parts_requests.py`), R52 (`schemas.py`), R61 (`services/bookings.py`, two booking cards) and R62 (web `app/not-found.tsx`, `app/error.tsx`, `visual/pages.spec.ts`). Files for R63–R70: R63 and R64 (`services/bookings.py` and `tests/test_bookings.py`, in that order, after R61), R65 and R68 (`routers/members.py`, in that order), R66 (`services/chat.py`), R67 (`services/staff.py`), R69 (web `lib/fetch-timeout.ts`, `lib/shop-api.ts`), R70 (web `lib/session-cookie.ts`, `lib/session.ts`). Any three of R65, R66, R67, R69 and R70 share no file and can run together; start with R65, R66 and R67 (API only, no screenshots). None of the eight changes a page, adds an alembic revision, or needs screenshots.
 
-Rows R71–R79 (2026-10-28): this paragraph replaces the earlier ones for anything still open. R70 (#202) is the last merged row. Still open from before: R51 (`services/parts_requests.py`), R52 (`schemas.py`), R61 then R63 (`services/bookings.py`; R64 is superseded by R109), R62 (web `app/not-found.tsx`, `app/error.tsx`), R69 (web `lib/fetch-timeout.ts`, `lib/shop-api.ts`). R68: do not launch, folded into R101. Files for R71–R79: R71 (`routers/tiers.py`), R72 then R73 (`schemas.py`, after R52, one at a time), R74 (`routers/fill.py`), R75 (`services/staff.py`), R76 (`routers/jobs.py`, `services/jobs.py`), R77 (`routers/waitlist.py`), R78 (web `lib/shop-path.ts`, `lib/shop-api.ts`, after R69), R79 (web `lib/shop-error.ts`, `lib/page.ts`). Any three of R71, R74, R75, R76, R77 and R79 share no file and can run together, and none of them touches a page, adds an alembic revision or needs screenshots. Start R71, R74 and R77, then R51 and R75.
+Rows R71–R79 (2026-10-28): this paragraph replaces the earlier ones for anything still open. R70 (#202) is the last merged row. Still open from before: R51 (`services/parts_requests.py`), R52 (`schemas.py`), R61 then R63 (`services/bookings.py`; R64 is superseded by R109), R62 (web `app/not-found.tsx`, `app/error.tsx`), R69 (web `lib/fetch-timeout.ts`, `lib/shop-api.ts`). R68: do not launch, folded into R101. Files for R71–R79: R71 (`routers/tiers.py`), R72 then R73 (`schemas.py`, after R52, one at a time), R74 (`routers/fill.py`), R75 (`services/staff.py`), R76 (`routers/jobs.py`, `services/jobs.py`), R77 (`routers/waitlist.py`), R78 (web `lib/shop-path.ts`, `lib/shop-api.ts`, after R69), R79 (web `lib/shop-error.ts`, `lib/page.ts`). Any three of R71, R74, R75, R76, R77 and R79 share no file and can run together, and none of them touches a page, adds an alembic revision or needs screenshots. These run only after the security-first order below (R102 first); see the launch order in the clock and security section.
 
 ## Security and clock rows (R147–R155, added 2026-10-30)
 
@@ -892,7 +892,7 @@ Source: Opus clock-change and ops/API security report, Oct 31 2026 02:50 UTC (S1
 - Proof (RED first): `bash apps/project-car/scripts/test-clock.sh` red on main (17 fail), green after; normal `pytest` stays green.
 - Size: 2 tasks
 - Likely files: `apps/project-car/api/tests/conftest.py`, `apps/project-car/api/tests/test_bookings.py`, `apps/project-car/api/tests/test_staff_actions.py`, `apps/project-car/api/tests/test_hoist_guards.py`, `apps/project-car/api/tests/test_overdue.py`, `apps/project-car/api/tests/test_shop_hoist_request.py`, `apps/project-car/api/tests/test_incidents.py`, `apps/project-car/api/tests/test_member_booking_ics.py`, `apps/project-car/api/tests/test_member_self_serve.py`, new `apps/project-car/scripts/test-clock.sh`, `Docs/shop-os-ci.md`
-- Depends on: after R111 and R102 (`conftest.py`).
+- Depends on: R61, R63 and R92 merged; one chain for `conftest.py` and `pyproject.toml`: R102 → R111 → R149 → R103.
 
 ### R150. Dashboard "today" uses an Edmonton day, and a naive `SHOP_NOW` means three instants
 - Category: Clock (Opus Bugs 4 and 5)
@@ -946,7 +946,7 @@ Source: Opus clock-change and ops/API security report, Oct 31 2026 02:50 UTC (S1
 
 ## Audit fix rows (R100–R146, added 2026-10-30)
 
-Source: `/workspace/Project-Car-Fix-List.md` (Opus audit of `main` @ `3968b0f`, bugs + UI + layout), approved by Ben Oct 30 2026 ("get build to start working on everything in the pdf"), plus five Opus follow-up checks (R142–R146). Paths are repo-relative. Every row: write the named failing test first and run it RED on `main`, then implement until GREEN; API proof `cd apps/project-car/api && pytest -q`; web proof `cd apps/project-car/web && npm run lint && npm run typecheck && npm test && npm run build`. No row edits `.github/workflows/**`. Leave PRs #107–#111 alone.
+Source: `/workspace/Project-Car-Fix-List.md` (Opus audit of `main` @ `3968b0f`, bugs + UI + layout), approved by Ben Oct 30 2026 ("get build to start working on everything in the pdf"), plus five Opus follow-up checks (R142–R146). Paths are repo-relative. Every row: write the named failing test first and run it RED on `main` (except R142 and R143, which are regression locks that may be green when added; they still never drop an assertion), then implement until GREEN; API proof `cd apps/project-car/api && pytest -q`; web proof `cd apps/project-car/web && npm run lint && npm run typecheck && npm test && npm run build`. No row edits `.github/workflows/**`. Leave PRs #107–#111 alone.
 
 Already covered, not duplicated: fix #9 = R61 (PR #206), fix #10 = R99 (in progress). R64 is folded into R109 and R68 into R101; do not launch R64 or R68 on their own. Fix #44 (first-click test with real members) is not a build row; it waits on Ben.
 
@@ -1067,7 +1067,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Baseline: `SHOP_TZ = ZoneInfo("America/Edmonton")` and `PRICING_TZ = ZoneInfo("America/Regina")` in `apps/project-car/api/app/shop_time.py`; web `apps/project-car/web/lib/time.ts` and `apps/project-car/web/lib/calendar.ts` format in Regina. Edmonton falls back Nov 1, so inputs drift an hour from display.
 - Target: in `apps/project-car/api/app/shop_time.py`, `as_utc()` (`:22-26`) reads naive values as `PRICING_TZ` (America/Regina); remove `SHOP_TZ` (Edmonton) and switch `shop_now`, `shop_today`, `day_bounds`, `week_monday` and the seed (`apps/project-car/api/app/seed.py:535-536,706,1099`) to Regina via `SHOP_TZ_NAME = "America/Regina"` (**STAND-IN** until Ben confirms). Add `tzdata>=2026.3` to `apps/project-car/api/pyproject.toml` and log the tzdata version at startup. Fix comments and docs: `shop_time.py:1-9`, `apps/project-car/web/lib/calendar.ts:7-8`, `Docs/token-pricing.md:123`. New `apps/project-car/scripts/test-stale-tz.sh` runs the new test file with `PYTHONTZPATH` at `tzdata==2025.2` installed into a temp dir.
 - Must not get worse: API `pytest` (incl. `tests/test_shop_time.py`); web suite.
-- Proof (RED first): new `apps/project-car/api/tests/test_naive_times_are_regina.py`: `POST /bookings/quote` and `POST /bookings` with naive `2026-11-04T09:00` store `15:00Z`; same for `POST /shop-hoist-requests` and `POST /todos`, todo ICS `DTSTART;TZID=America/Regina:20261104T090000`; naive `2026-11-01T00:00`–`04:00` books 4.0 h and reserves 300.00 (4 h × 100 × 0.75 late-night × 1, standard overlay, fill 1; matches R99's 4.0000 h late-night window); `test_no_edmonton_in_app` (no `America/Edmonton` under `app/`). New `apps/project-car/api/tests/test_dashboard_today.py`: frozen at `2026-12-15T06:40:00Z` (Regina 00:40 Dec 15; Edmonton 23:40 Dec 14), a booking `2026-12-15T06:30:00Z–06:45:00Z` is inside Regina's Dec 15 `[06:00Z, +1d)` and outside Edmonton's `[07:00Z, +1d)` → it is in the dashboard's today list (membership only; RED on main). Run normally and via `bash apps/project-car/scripts/test-stale-tz.sh`: stale run RED on main, both GREEN after.
+- Proof (RED first): new `apps/project-car/api/tests/test_naive_times_are_regina.py`: `POST /bookings/quote` and `POST /bookings` with naive `2026-11-04T09:00` store `15:00Z`; same for `POST /shop-hoist-requests` and `POST /todos`, todo ICS `DTSTART;TZID=America/Regina:20261104T090000`; with `SHOP_NOW=2026-10-25T12:00:00-06:00` set in the test (frozen; no fill window reaches Nov 4), naive `2026-11-04T00:00`–`04:00` books 4.0 h and its reserve equals `quote_booking` for the explicit `2026-11-04T06:00:00Z`–`10:00:00Z` (same instants, so the same price; no hard-coded amount); `test_no_edmonton_in_app` (no `America/Edmonton` under `app/`). New `apps/project-car/api/tests/test_dashboard_today.py`: `SHOP_NOW=2026-12-15T06:40:00Z` (Regina 00:40 Dec 15; Edmonton 23:40 Dec 14). Regina today = `[2026-12-15T06:00:00Z, 2026-12-16T06:00:00Z)`; Edmonton today = `[2026-12-14T07:00:00Z, 2026-12-15T07:00:00Z)`. Use a booking `2026-12-16T05:00:00Z–05:30:00Z` (Regina 23:00 Dec 15, inside Regina's today; Edmonton 22:00 Dec 15, outside Edmonton's today which ended at `2026-12-15T07:00:00Z`) → it is in the dashboard's today list (membership only; RED on main). Run normally and via `bash apps/project-car/scripts/test-stale-tz.sh`: stale run RED on main, both GREEN after.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/shop_time.py`, `apps/project-car/api/app/seed.py` (zone lines only), `apps/project-car/api/pyproject.toml`, `apps/project-car/api/app/main.py` (startup log line only), new `apps/project-car/api/tests/test_naive_times_are_regina.py`, new `apps/project-car/api/tests/test_dashboard_today.py`, new `apps/project-car/scripts/test-stale-tz.sh`, `apps/project-car/web/lib/calendar.ts` (comment only), `Docs/token-pricing.md`
 - Depends on: after R102 (`main.py`). Web explicit offsets are R148. Also after R99 (`Docs/token-pricing.md`, quote paths).
@@ -1077,7 +1077,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Baseline: `slot_overlaps_next_day_window` / `resolve_fill_for_slot` in `apps/project-car/api/app/services/fill.py` return one factor for the booking.
 - Target: `resolve_fill_for_slot` returns the in-window interval; R99's per-segment `quote_reserve` in `apps/project-car/api/app/services/pricing.py` applies the fill factor only to segment minutes inside it. Constant `FILL_DISCOUNT_SCOPE = "window_minutes_only"` ("STAND-IN").
 - Must not get worse: API `pytest`; R99 expected numbers.
-- Proof (RED first): `apps/project-car/api/tests/test_fill_partial.py`: 2 h booking with 1 h inside the window at 0.80, standard band 1.00 → 100 + 80 = 180.00 (main gives 160.00); wholly inside → as today.
+- Proof (RED first): `apps/project-car/api/tests/test_fill_partial.py`: 2 h booking with 1 h inside the window at 0.80, standard band 1.00 with `SHOP_NOW` frozen in the test so the window is fixed: expected reserve = (1 h at the booking's band without fill) + (1 h at the same band × 0.80), computed in the test from `quote_booking` on the two 1 h halves; main charges both hours at the fill rate, so the test is RED; wholly inside → as today.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/services/fill.py` (`resolve_fill_for_slot`, `slot_overlaps_next_day_window`), `apps/project-car/api/app/services/pricing.py`, new `apps/project-car/api/tests/test_fill_partial.py`, `Docs/token-pricing.md`
 - Depends on: R99 merged.
@@ -1105,11 +1105,11 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 ### R115. Overdue visits are not counted as occupying a bay
 - Category: Correctness (fix #23)
 - Baseline: `OCCUPYING = (PENDING, CONFIRMED, ACTIVE)` in `apps/project-car/api/app/services/fill.py`.
-- Target: add `BookingStatus.OVERDUE` to `OCCUPYING`; in the Docs/backlog.md Skipped list strike only the OCCUPYING / OPEN_STATUSES sentence of the overdue bullet and leave the `late_return` exclusion.
+- Target: add `BookingStatus.OVERDUE` to `OCCUPYING`; in the Docs/backlog.md Skipped list strike only the `OCCUPYING` clause of the overdue bullet; leave `OPEN_STATUSES` and the `late_return` exclusion.
 - Must not get worse: API `pytest`.
 - Proof (RED first): `apps/project-car/api/tests/test_fill_overdue.py`: overdue booking on Bay 3 → `detect_openings` for tomorrow does not offer Bay 3's overlapping hours.
 - Size: 1 task
-- Likely files: `apps/project-car/api/app/services/fill.py` (`OCCUPYING` only), new `apps/project-car/api/tests/test_fill_overdue.py`
+- Likely files: `apps/project-car/api/app/services/fill.py` (`OCCUPYING` only), new `apps/project-car/api/tests/test_fill_overdue.py`, `Docs/backlog.md` (Skipped list line only)
 - Depends on: after R112 (same file).
 
 ### R116. With no SMTP host, accepted notices are marked "sent"
@@ -1252,7 +1252,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): Playwright `apps/project-car/web/tests/member-home.spec.ts` order check, or a pure `memberHomeSections()` in new `apps/project-car/web/lib/member-home.ts` with test.
 - Size: 1 task
 - Likely files: `apps/project-car/web/app/member/page.tsx`, new `apps/project-car/web/lib/member-home.ts`, new `apps/project-car/web/lib/member-home.test.ts`
-- Depends on: R91 merged; after R124.
+- Depends on: R91 merged; after R124. Must not break (PR #217): the member home's next-visit card and its check-in time stay visible.
 
 ### R132. Owner Today page order
 - Category: Layout (fix #34)
@@ -1300,7 +1300,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/web/lib/redirects.test.ts` cases for `/tiers` → `/settings/plans`, `/hoists` → `/settings/bays`.
 - Size: 2 tasks
 - Likely files: new `apps/project-car/web/app/settings/page.tsx`, new `apps/project-car/web/app/member/account/page.tsx`, `apps/project-car/web/lib/redirects.ts`, `apps/project-car/web/lib/redirects.test.ts`
-- Depends on: R88 and R135 merged.
+- Depends on: R88 and R135 merged. Must not break (PR #215): the member profile page and its fields stay reachable from Account.
 
 ### R138. /tools mixes tool crib and purchasing
 - Category: Layout (fix #40)
@@ -1323,7 +1323,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Target: `Principal(role="staff")` from a staff password setting (`STAFF_PASSWORD`, refused default per R102); new `apps/project-car/api/app/staff_permissions.py` `STAFF_ALLOWED` = check-in, complete, mark overdue, read schedule, create requests ("STAND-IN until Ben sets staff permissions"); dependency `require_staff_or_owner`.
 - Proof (RED first): `apps/project-car/api/tests/test_staff_role.py`: staff can check in; staff refund accept / token adjust / tier patch / member password → 403 `staff_not_allowed`; matrix walk like R101.
 - Size: 2 tasks
-- Likely files: new `apps/project-car/api/app/staff_permissions.py`, `apps/project-car/api/app/deps.py`, `apps/project-car/api/app/routers/auth.py`, `apps/project-car/api/app/routers/bookings.py`, new `apps/project-car/api/tests/test_staff_role.py`
+- Likely files: new `apps/project-car/api/app/staff_permissions.py`, `apps/project-car/api/app/config.py` (`staff_password` only), `apps/project-car/api/app/main.py` (add `STAFF_PASSWORD` to R102's startup refused-default check), `apps/project-car/api/app/deps.py`, `apps/project-car/api/app/routers/auth.py`, `apps/project-car/api/app/routers/bookings.py`, new `apps/project-car/api/tests/test_staff_role.py`
 - Depends on: R101, R118, R119 merged.
 
 ### R141. There is no staff Shift view
@@ -1373,7 +1373,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Likely files: new `apps/project-car/web/tests/a11y.spec.ts`, `apps/project-car/web/package.json` (devDependency only), `apps/project-car/web/playwright.config.ts`
 - Depends on: R126 merged.
 
-Launch rule for R100–R146: one writer per file. `gb-autolaunch` refuses a row whose Likely files overlap a row in flight, and rows whose Depends-on has not merged carry a `gb/drafts/project-car-<row>/hold` file on the box until it does. Every UI row (R107, R110, R114, R123–R141, R146) attaches before/after screenshots at 390 and 1440 with hosted proof image URLs.
+Launch rule for R100–R146: one writer per file. `gb-autolaunch` refuses a row whose Likely files overlap a row in flight, and R127–R141 stay held until Ben updates the IA freeze in `STATUS.md` (Locks) for them. Rows whose Depends-on has not merged carry a `gb/drafts/project-car-<row>/hold` file on the box until it does. Every UI row (R107, R110, R114, R123–R141, R146, and R147 for `/login`) attaches before/after screenshots at 390 and 1440 with hosted proof image URLs.
 
 ## Stand-ins pending Ben (R100+)
 
