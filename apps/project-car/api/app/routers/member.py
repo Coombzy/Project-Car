@@ -100,7 +100,13 @@ def _ics_escape(value: str) -> str:
 
 
 def _ics_utc(value: datetime) -> str:
-    return as_utc(value).strftime("%Y%m%dT%H%M%SZ")
+    # SQLite returns the stored UTC instant with no offset. as_utc() would
+    # read that bare clock as shop wall time and shift the calendar file.
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    else:
+        value = value.astimezone(timezone.utc)
+    return value.strftime("%Y%m%dT%H%M%SZ")
 
 
 def _ics_utf8_prefix(text: str, max_octets: int) -> str:

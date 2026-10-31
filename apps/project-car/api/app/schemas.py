@@ -1,11 +1,20 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationError, computed_field, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    ValidationError,
+    computed_field,
+    field_serializer,
+    field_validator,
+)
 
 from app.models import (
     ActorKind,
@@ -502,6 +511,20 @@ class PricingRuleOut(BaseModel):
     segments: list[PricingSegmentOut] = []
 
 
+def _utc_instant(value: datetime) -> str:
+    """SQLite returns a stored UTC instant with no offset.
+
+    A bare timestamp is read as shop wall time, so 10:00 Mountain Time would
+    show as 4:00 p.m. Postgres already returns an aware instant. Both paths
+    leave the wire as UTC with an offset.
+    """
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    else:
+        value = value.astimezone(timezone.utc)
+    return value.isoformat()
+
+
 class BookingOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -519,6 +542,10 @@ class BookingOut(BaseModel):
     notes: str | None
     created_at: datetime
     updated_at: datetime
+
+    @field_serializer("start_at", "end_at", when_used="json")
+    def serialize_window(self, value: datetime) -> str:
+        return _utc_instant(value)
 
     @classmethod
     def from_booking(cls, booking) -> BookingOut:
@@ -616,6 +643,10 @@ class OccupancyOut(BaseModel):
     status: BookingStatus
     own: bool
 
+    @field_serializer("start_at", "end_at", when_used="json")
+    def serialize_window(self, value: datetime) -> str:
+        return _utc_instant(value)
+
 
 class MemberScheduleOut(BaseModel):
     hoists: list[HoistOut]
@@ -647,6 +678,10 @@ class BookedHourOut(BaseModel):
     member_name: str
     vehicle_label: str
     notes: str | None
+
+    @field_serializer("hour_start", "hour_end", when_used="json")
+    def serialize_hour(self, value: datetime) -> str:
+        return _utc_instant(value)
 
 
 class HoistSnapshotOut(HoistOut):
