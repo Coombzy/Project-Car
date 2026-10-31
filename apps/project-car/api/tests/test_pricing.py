@@ -3,9 +3,10 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
+import pytest
 from fastapi.testclient import TestClient
 
-from app.services.pricing import FillFactor, quote_reserve
+from app.services.pricing import FillFactor, PricingError, quote_reserve
 from app.shop_time import PRICING_TZ, shop_now
 from tests.conftest import AUTH
 
@@ -414,3 +415,18 @@ def test_segments_in_rule() -> None:
     unrounded = sum((Decimal(segment["tokens"]) for segment in spanning_segments), Decimal("0"))
     assert unrounded.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) == spanning.final_reserve_cost
     assert spanning_rule["band_id"] == spanning.segments[0].band.id
+
+
+def test_zero_length_quote_raises_invalid_tokens() -> None:
+    """Same start and end has no band slice. Reject it before segments[0]."""
+    start = _at(2026, 9, 7, 8)
+    with pytest.raises(PricingError) as caught:
+        quote_reserve(start, start, reserved_at=start - timedelta(hours=72))
+    assert caught.value.code == "invalid_tokens"
+    with pytest.raises(PricingError) as reversed_window:
+        quote_reserve(
+            start,
+            start - timedelta(hours=1),
+            reserved_at=start - timedelta(hours=72),
+        )
+    assert reversed_window.value.code == "invalid_window"

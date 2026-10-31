@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import type { PricingRule } from "./config.ts";
 import {
@@ -98,6 +101,54 @@ describe("segment cost lines", () => {
     assert.equal(
       pricingRuleSummary(singleBand),
       "2h × 100 × 1 × 1 = 200 · Weekday day (base) · Standard",
+    );
+  });
+
+  it("test_repeat_band_rows_keep_distinct_keys", async () => {
+    // Monday 08:00–16:00 and Tuesday 08:00–16:00 are the same line. They are
+    // not adjacent, so pricing does not merge them. Keying the row by that
+    // line drops one of them.
+    const repeated = [
+      {
+        band_id: "weekday_day",
+        band_label: "Weekday day (base)",
+        band_multiplier: "1",
+        start: "2026-09-07T08:00:00-06:00",
+        end: "2026-09-07T16:00:00-06:00",
+        hours: "8",
+        tokens: "800",
+      },
+      {
+        band_id: "weekday_day",
+        band_label: "Weekday day (base)",
+        band_multiplier: "1",
+        start: "2026-09-08T08:00:00-06:00",
+        end: "2026-09-08T16:00:00-06:00",
+        hours: "8",
+        tokens: "800",
+      },
+    ];
+    const lines = segmentCostLines({ segments: repeated });
+    assert.equal(lines.length, 2);
+    assert.equal(lines[0], lines[1]);
+    assert.equal(new Set(lines).size, 1);
+
+    const webRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+    for (const rel of ["components/create-booking-form.tsx", "components/member-booking-form.tsx"]) {
+      const source = readFileSync(join(webRoot, rel), "utf8");
+      assert.equal(source.includes("key={line}"), false, `${rel} keys a segment row by the rendered line`);
+      assert.match(source, /key=\{segmentRowKey\(segment\)\}/);
+    }
+    const cost = readFileSync(join(webRoot, "components/booking-cost.tsx"), "utf8");
+    assert.match(cost, /key=\{segmentRowKey\(segment\)\}/);
+
+    const mod = (await import("./booking-segments.ts")) as {
+      segmentRowKey?: (segment: { band_id: string; start: string }) => string;
+    };
+    assert.equal(typeof mod.segmentRowKey, "function");
+    assert.deepEqual(
+      repeated.map((segment) => mod.segmentRowKey!(segment)),
+      ["weekday_day-2026-09-07T08:00:00-06:00", "weekday_day-2026-09-08T08:00:00-06:00"],
     );
   });
 });
