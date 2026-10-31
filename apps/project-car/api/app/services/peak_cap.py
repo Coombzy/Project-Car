@@ -1,8 +1,9 @@
 """Weekly peak-hour cap per member (Ben, D13).
 
-A member may hold ``PEAK_HOURS_PER_WEEK`` peak-band hours in each
-America/Regina week (Monday to Sunday). Every booking that still holds or
-used its hours counts; cancelled ones do not.
+Peak is Saturday and Sunday 08:00-16:00 Mountain Time only. A member may
+hold ``PEAK_HOURS_PER_WEEK`` of those hours in each shop week (Monday to
+Sunday). Evening, Normal, and Off-peak do not count. Cancelled bookings
+do not count.
 """
 
 from __future__ import annotations

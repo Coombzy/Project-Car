@@ -69,13 +69,14 @@ def test_ninety_minutes_is_charged_for_the_two_hours_it_holds() -> None:
     assert quote.as_rule()["hours"] == "2"
 
 
-def test_friday_evening_uses_weekend_premium_not_weekday_eve() -> None:
+def test_friday_evening_is_the_evening_band() -> None:
     start = _at(2026, 9, 11, 16)  # Friday 16:00
     end = start + timedelta(hours=1)
     reserved_at = start - timedelta(hours=72)
     quote = quote_reserve(start, end, reserved_at=reserved_at)
-    assert quote.band.id == "weekend_fri_eve"
-    assert quote.final_reserve_cost == Decimal("150.00")
+    assert quote.band.id == "weekday_eve"
+    assert quote.band.label == "Evening"
+    assert quote.final_reserve_cost == Decimal("125.00")
 
 
 def test_overlay_boundaries_when_lead_time_overlays_are_re_enabled(

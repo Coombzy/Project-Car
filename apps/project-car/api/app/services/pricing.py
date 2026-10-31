@@ -32,10 +32,11 @@ PRICING_TZ_NAME = "America/Regina"
 HOURS_QUANT = Decimal("0.0001")
 MONEY_QUANT = Decimal("0.01")
 
-WEEKDAY_DAY = ("weekday_day", "Weekday day (base)", Decimal("1.00"))
-WEEKDAY_EVE = ("weekday_eve", "Weekday evening", Decimal("1.25"))
-WEEKEND_FRI_EVE = ("weekend_fri_eve", "Weekend / Fri eve", Decimal("1.50"))
-LATE_NIGHT = ("late_night", "Late night / early morning", Decimal("0.75"))
+# One named row each. The owner edits the multiplier; these are the seeds.
+OFF_PEAK = ("late_night", "Off-peak", Decimal("0.75"))
+NORMAL = ("weekday_day", "Normal", Decimal("1.00"))
+EVENING = ("weekday_eve", "Evening", Decimal("1.25"))
+PEAK = ("weekend_fri_eve", "Peak", Decimal("1.50"))
 
 ADVANCE = ("advance", "Advance", Decimal("0.85"))
 STANDARD = ("standard", "Standard", Decimal("1.00"))
@@ -159,7 +160,7 @@ def _money_str(value: Decimal) -> str:
     return format(value.quantize(MONEY_QUANT, rounding=ROUND_HALF_UP), "f")
 
 
-BAND_ROWS = (WEEKDAY_DAY, WEEKDAY_EVE, WEEKEND_FRI_EVE, LATE_NIGHT)
+BAND_ROWS = (OFF_PEAK, NORMAL, EVENING, PEAK)
 OVERLAY_ROWS = (ADVANCE, STANDARD, LAST_MINUTE)
 MULTIPLIER_QUANT = Decimal("0.0001")
 
@@ -217,26 +218,21 @@ def _stored_overlay(session: Session | None, row: tuple[str, str, Decimal]) -> O
 
 
 def resolve_band(start_at: datetime, *, session: Session | None = None) -> Band:
-    """Band that contains the booking start in America/Regina. Half-open intervals."""
+    """Band that contains this Mountain Time hour. Intervals are half-open.
+
+    Off-peak is every day 21:00-08:00. Evening is every day 16:00-21:00.
+    Peak is Saturday and Sunday 08:00-16:00. Normal is Monday-Friday 08:00-16:00.
+    """
     local = as_utc(start_at).astimezone(PRICING_TZ)
     weekday = local.weekday()  # Mon=0
     clock = local.time()
-
-    if weekday == 5:
-        return _stored_band(session, WEEKEND_FRI_EVE)
-    if weekday == 6:
-        if clock < time(21, 0):
-            return _stored_band(session, WEEKEND_FRI_EVE)
-        return _stored_band(session, LATE_NIGHT)
-    if clock < time(8, 0):
-        return _stored_band(session, LATE_NIGHT)
-    if clock < time(16, 0):
-        return _stored_band(session, WEEKDAY_DAY)
-    if weekday == 4:
-        return _stored_band(session, WEEKEND_FRI_EVE)
-    if clock < time(21, 0):
-        return _stored_band(session, WEEKDAY_EVE)
-    return _stored_band(session, LATE_NIGHT)
+    if clock >= time(21, 0) or clock < time(8, 0):
+        return _stored_band(session, OFF_PEAK)
+    if time(16, 0) <= clock < time(21, 0):
+        return _stored_band(session, EVENING)
+    if weekday >= 5:
+        return _stored_band(session, PEAK)
+    return _stored_band(session, NORMAL)
 
 
 def resolve_overlay(

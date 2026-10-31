@@ -1,7 +1,7 @@
 """Weekly peak-hour cap (Ben, D13).
 
 A member may hold at most ``PEAK_HOURS_PER_WEEK`` (4) peak-band hours per
-America/Regina week (Monday to Sunday). Peak is the ``weekend_fri_eve`` band.
+shop week (Monday to Sunday). Peak is Saturday and Sunday 08:00-16:00 only.
 Each held hour counts on its own, so a mixed booking only counts its peak
 hours. Cancelled bookings free their hours. Over the cap is 409 ``peak_cap``.
 
@@ -81,17 +81,17 @@ def test_one_booking_over_the_cap_is_refused_outright(setup) -> None:
 
 def test_only_peak_hours_of_a_mixed_booking_count(setup) -> None:
     client, member, hoist = setup
-    # Friday 13-18: 13-16 weekday day, 16-18 peak (2).
-    friday = _book(client, member, hoist, _at(6, 13), _at(6, 18))
-    assert friday.status_code == 201, friday.text
+    # Saturday 14-18: 14-16 peak (2), 16-18 evening (does not count).
+    saturday = _book(client, member, hoist, _at(7, 14), _at(7, 18))
+    assert saturday.status_code == 201, saturday.text
 
-    # Sunday 18-22: 18-21 peak (3), 21-22 late night.
-    refused = _book(client, member, hoist, _at(8, 18), _at(8, 22))
+    # Sunday 10-13 is three more peak hours.
+    refused = _book(client, member, hoist, _at(8, 10), _at(8, 13))
     assert refused.status_code == 409, refused.text
     assert (refused.json()["error"]["used"], refused.json()["error"]["requested"]) == (2, 3)
 
-    # Sunday 19-22: 19-21 peak (2) brings Ada to exactly 4.
-    fits = _book(client, member, hoist, _at(8, 19), _at(8, 22))
+    # Sunday 10-12 is two peak hours and lands on exactly 4.
+    fits = _book(client, member, hoist, _at(8, 10), _at(8, 12))
     assert fits.status_code == 201, fits.text
 
 

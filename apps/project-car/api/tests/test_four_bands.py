@@ -15,7 +15,7 @@ from fastapi.testclient import TestClient
 from app.shop_time import PRICING_TZ
 from tests.conftest import AUTH, create_hoist, create_member, freeze_shop_clock
 
-MONDAY = datetime(2026, 11, 2, 9, 0, tzinfo=PRICING_TZ)
+MONDAY = datetime(2026, 11, 2, 6, 0, tzinfo=PRICING_TZ)
 
 
 def _at(day: int, hour: int) -> datetime:
@@ -79,6 +79,12 @@ def test_only_peak_counts_and_the_owner_can_edit_it(client: TestClient) -> None:
         },
     )
     assert peak.status_code == 201, peak.text
+    raised = client.patch(
+        "/tiers/premium",
+        headers=AUTH,
+        json={"max_simultaneous_bookings": 3},
+    )
+    assert raised.status_code == 200, raised.text
     evening = client.post(
         "/bookings",
         headers=AUTH,
