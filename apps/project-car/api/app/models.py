@@ -142,6 +142,7 @@ class TokenTransactionKind(str, enum.Enum):
     BOOKING_DEBIT = "booking_debit"
     BOOKING_REFUND = "booking_refund"
     MONTHLY_ALLOCATION = "monthly_allocation"
+    ALLOWANCE_EXPIRY = "allowance_expiry"
     ADMIN_ADJUSTMENT = "admin_adjustment"
     TOKEN_PURCHASE = "token_purchase"
 

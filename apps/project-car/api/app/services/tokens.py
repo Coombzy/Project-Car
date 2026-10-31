@@ -220,7 +220,7 @@ def _has_period_allocation(
 
 
 def grant_period_allocations(session: Session, now: datetime | None = None) -> PeriodAllocationResult:
-    """Grant each active member included_tokens once for this Regina month.
+    """Expire spendable above one allowance, then grant this Regina month.
 
     A row tagged tz=America/Regina with a period counts only for that period.
     A row with no such tag counts when created_at is in this month, including
@@ -260,14 +260,30 @@ def grant_period_allocations(session: Session, now: datetime | None = None) -> P
             continue
         if member.tier.included_tokens <= 0:
             continue
-        amount = Decimal(member.tier.included_tokens)
+        allowance = Decimal(member.tier.included_tokens)
+        # Spendable is the balance. Upcoming visits are already taken off it.
+        # A cancel after this grant can put the balance above two months until
+        # the next grant. Bought tokens are not a separate pile yet.
+        expire = Decimal(member.token_balance) - allowance
+        if expire > 0:
+            apply_ledger(
+                session,
+                member,
+                kind=TokenTransactionKind.ALLOWANCE_EXPIRY,
+                amount=-expire,
+                note=f"{period} allowance expiry",
+                meta={"period": period, "tz": PERIOD_TZ},
+            )
         apply_ledger(
             session,
             member,
             kind=TokenTransactionKind.MONTHLY_ALLOCATION,
-            amount=amount,
-            note=f"{period} {member.tier.display_name} allocation",
+            amount=allowance,
+            note=(
+                f"{period} {member.tier.display_name} allocation. "
+                "A cancel after this grant can put the balance above two months until the next grant."
+            ),
             meta={"period": period, "tz": PERIOD_TZ},
         )
-        granted.append(PeriodGrant(member_id=member.id, tier_name=member.tier_name, amount=amount))
+        granted.append(PeriodGrant(member_id=member.id, tier_name=member.tier_name, amount=allowance))
     return PeriodAllocationResult(period=period, tz=PERIOD_TZ, granted=granted, skipped=skipped)
