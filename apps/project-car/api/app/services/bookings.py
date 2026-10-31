@@ -26,6 +26,7 @@ from app.models import (
     TokenTransactionKind,
 )
 from app.services.fill import resolve_fill_for_slot
+from app.services.peak_cap import check_peak_cap
 from app.services.pricing import PricingError, quote_reserve
 from app.services.tokens import apply_ledger
 from app.shop_time import PRICING_TZ, as_utc, iter_regina_hours, shop_now
@@ -438,6 +439,8 @@ def create_booking(
             "max_simultaneous_bookings",
             "Member is already at the tier's simultaneous booking limit.",
         )
+
+    check_peak_cap(session, member.id, start_at, end_at)
 
     if Decimal(member.token_balance) < tokens:
         raise _error(400, "insufficient_tokens", "Member does not have enough tokens to reserve.")
