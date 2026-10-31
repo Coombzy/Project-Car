@@ -316,6 +316,14 @@ class Member(Base):
     token_balance: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), nullable=False, default=Decimal("0")
     )
+    # Spendable split. token_balance is the sum. The grant expires allowance
+    # only. Purchased tokens stay until a booking spends them.
+    allowance_balance: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2), nullable=False, default=Decimal("0")
+    )
+    purchased_balance: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2), nullable=False, default=Decimal("0")
+    )
     deposit_balance: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), nullable=False, default=Decimal("0")
     )
@@ -764,6 +772,14 @@ class TokenTransaction(Base):
         nullable=False,
     )
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    # The two piles that sum to amount. A booking reserve is negative on the
+    # pile it spent. A refund is positive on the pile it restores.
+    allowance_amount: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2), nullable=False, default=Decimal("0")
+    )
+    purchased_amount: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2), nullable=False, default=Decimal("0")
+    )
     note: Mapped[Optional[str]] = mapped_column(Text)
     meta: Mapped[Optional[dict]] = mapped_column(JsonObject)
     payment_ref: Mapped[Optional[str]] = mapped_column(String(120))

@@ -54,7 +54,7 @@ Two tiers. One includes more tokens per period than the other. **Names and dolla
 
 Two tiers only. **Pro** and **Weekly** are retired names — rename Pro → Premium in seed and demo `tier_name` references. Owner can still add or rename tiers later in data — this is not a schema ban.
 
-The grant button expires spendable tokens above one allowance, then adds the new allowance, in one save. Spendable is the balance after upcoming visits are already reserved. A second press that month does nothing. A `token_purchase` line stays in the ledger. Purchases are not a protected pile yet, so the cap still applies to the whole balance.
+Allowance tokens and purchased tokens are stored separately. `token_balance` is their sum. A booking spends allowance first. A cancel puts the refund back on the same piles, purchased first. The grant button expires unused allowance above one month, then adds the new allowance, in one save. Upcoming visits are already taken off the allowance pile, so they are not expired. A second press that month does nothing. Purchased tokens survive the grant. An owner adjustment lands on the allowance pile.
 
 ---
 

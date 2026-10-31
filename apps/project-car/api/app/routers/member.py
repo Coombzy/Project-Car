@@ -202,6 +202,8 @@ def member_me(session: DbSession, principal: MemberUser) -> MemberSelfOut:
         emergency_contact_name=member.emergency_contact_name,
         emergency_contact_phone=member.emergency_contact_phone,
         token_balance=member.token_balance,
+        allowance_balance=member.allowance_balance,
+        purchased_balance=member.purchased_balance,
         deposit_balance=member.deposit_balance,
         created_at=member.created_at,
         updated_at=member.updated_at,

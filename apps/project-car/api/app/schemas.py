@@ -243,6 +243,8 @@ class MemberOut(BaseModel):
     emergency_contact_name: str | None
     emergency_contact_phone: str | None
     token_balance: Decimal
+    allowance_balance: Decimal
+    purchased_balance: Decimal
     deposit_balance: Decimal
     created_at: datetime
     updated_at: datetime
@@ -381,6 +383,8 @@ class TokenTransactionOut(BaseModel):
     booking_id: UUID | None
     kind: TokenTransactionKind
     amount: Decimal
+    allowance_amount: Decimal
+    purchased_amount: Decimal
     note: str | None
     meta: dict | None = None
     payment_ref: str | None = None
