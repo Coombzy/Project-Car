@@ -181,6 +181,26 @@ def test_booked_hours_lower_discount_and_quote_uses_fill(client: TestClient) -> 
 
     slot_start, _ = pricing_clock_window(target, time(16, 0), time(18, 0))
     slot_end = slot_start + timedelta(hours=1)
+    plain = client.post(
+        "/bookings/quote",
+        headers=AUTH,
+        json={
+            "start_at": slot_start.isoformat(),
+            "end_at": slot_end.isoformat(),
+            "member_id": member["id"],
+        },
+    )
+    assert plain.status_code == 200, plain.text
+    assert plain.json()["pricing_rule"]["fill_id"] == "none"
+    bare = quote_reserve(slot_start, slot_end)
+    assert Decimal(str(plain.json()["reserved_tokens"])) == bare.final_reserve_cost
+
+    published = client.post(
+        "/fill/notify",
+        headers=AUTH,
+        json={"dry_run": False, "discount_pct": str(expected_discount), "channels": ["email"]},
+    )
+    assert published.status_code == 200, published.text
     quoted = client.post(
         "/bookings/quote",
         headers=AUTH,
@@ -194,7 +214,6 @@ def test_booked_hours_lower_discount_and_quote_uses_fill(client: TestClient) -> 
     rule = quoted.json()["pricing_rule"]
     assert rule["fill_id"] == "next_day_open"
     fill = Decimal(str(rule["fill_multiplier"]))
-    bare = quote_reserve(slot_start, slot_end)
     assert Decimal(str(quoted.json()["reserved_tokens"])) == (
         bare.final_reserve_cost * fill
     ).quantize(Decimal("0.01"))
@@ -214,6 +233,19 @@ def test_member_fill_and_next_day_quote(client: TestClient) -> None:
     target = pricing_next_day()
     start, _ = pricing_clock_window(target, time(10, 0), time(12, 0))
     end = start + timedelta(hours=1)
+    plain = client.post(
+        "/member/bookings/quote",
+        json={"start_at": start.isoformat(), "end_at": end.isoformat()},
+    )
+    assert plain.status_code == 200, plain.text
+    assert plain.json()["pricing_rule"]["fill_id"] == "none"
+
+    published = client.post(
+        "/fill/notify",
+        headers=AUTH,
+        json={"dry_run": False, "discount_pct": "25", "channels": ["email"]},
+    )
+    assert published.status_code == 200, published.text
     quoted = client.post(
         "/member/bookings/quote",
         json={"start_at": start.isoformat(), "end_at": end.isoformat()},

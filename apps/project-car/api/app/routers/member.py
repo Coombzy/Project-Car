@@ -396,6 +396,7 @@ def member_create_booking(
         end_at=body.end_at,
         notes=body.notes,
         kind=BookingKind.CUSTOMER,
+        shown_tokens=body.tokens,
     )
     return BookingOut.from_booking(booking)
 

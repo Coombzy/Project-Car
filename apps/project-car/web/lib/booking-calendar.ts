@@ -304,6 +304,8 @@ export function bookingErrorCopy(code: string, fallback: string): string {
       return AFTER_START_MESSAGE;
     case "peak_cap":
       return fallback;
+    case "price_changed":
+      return "The price changed. Nothing was booked.";
     default:
       return fallback;
   }

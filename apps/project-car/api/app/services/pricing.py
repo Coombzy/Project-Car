@@ -1,7 +1,7 @@
 """Per-hour band × overlay × fill reserve quotes (Docs/token-pricing.md).
 
 `banded_tokens = Σ over held hours (100 × that hour's band_multiplier)`
-`final_reserve_cost = banded_tokens × advance_multiplier × fill_multiplier`
+`final_reserve_cost = Σ (hour band tokens × advance_multiplier × that hour's fill)`
 
 A booking holds every America/Regina clock hour its span touches
 (`iter_regina_hours`), and each held hour is charged in full at the band that
@@ -79,6 +79,8 @@ class FillFactor:
     label: str
     multiplier: Decimal
     discount_pct: Decimal
+    window_start: datetime | None = None
+    window_end: datetime | None = None
 
 
 NO_FILL = FillFactor(
@@ -287,9 +289,21 @@ def quote_reserve(
     fill_factor = fill or NO_FILL
     base = (hours * BASE_TOKENS_PER_HOUR).quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
     banded = sum((segment.band_tokens for segment in segments), Decimal("0"))
-    final = (banded * overlay.multiplier * fill_factor.multiplier).quantize(
-        MONEY_QUANT, rounding=ROUND_HALF_UP
-    )
+    if fill_factor.window_start is not None and fill_factor.window_end is not None:
+        window_start = as_utc(fill_factor.window_start)
+        window_end = as_utc(fill_factor.window_end)
+        final = Decimal("0")
+        for segment in segments:
+            hour_fill = fill_factor.multiplier
+            if not (window_start <= as_utc(segment.start_at) < window_end):
+                hour_fill = Decimal("1")
+            final += (segment.band_tokens * overlay.multiplier * hour_fill).quantize(
+                MONEY_QUANT, rounding=ROUND_HALF_UP
+            )
+    else:
+        final = (banded * overlay.multiplier * fill_factor.multiplier).quantize(
+            MONEY_QUANT, rounding=ROUND_HALF_UP
+        )
     if final <= 0:
         raise PricingError("invalid_tokens", "Reserved tokens must be greater than zero.")
     return ReserveQuote(

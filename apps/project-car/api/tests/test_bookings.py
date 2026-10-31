@@ -72,7 +72,7 @@ def test_create_booking_reserves_tokens_and_writes_ledger(client: TestClient) ->
             "hoist_id": hoist["id"],
             "start_at": start,
             "end_at": end,
-            "tokens": "2",
+            "tokens": str(expected),
             "notes": "Turbo mock-up",
         },
     )
@@ -97,7 +97,7 @@ def test_create_booking_reserves_tokens_and_writes_ledger(client: TestClient) ->
     assert reserve_row["meta"]["pricing_rule"]["hours"] == body["pricing_rule"]["hours"]
 
 
-def test_create_booking_ignores_client_token_amount(client: TestClient) -> None:
+def test_create_booking_refuses_a_stale_total(client: TestClient) -> None:
     member = create_member(client)
     hoist = create_hoist(client)
     start = datetime_in_regina_band()
@@ -122,7 +122,7 @@ def test_create_booking_ignores_client_token_amount(client: TestClient) -> None:
     assert _dec(quote_body["token_balance"]) == Decimal("1500")
     assert _dec(quote_body["token_balance_after"]) == Decimal("1500") - expected
 
-    created = client.post(
+    stale = client.post(
         "/bookings",
         headers=AUTH,
         json={
@@ -131,6 +131,21 @@ def test_create_booking_ignores_client_token_amount(client: TestClient) -> None:
             "start_at": start.isoformat(),
             "end_at": end.isoformat(),
             "tokens": "1",
+        },
+    )
+    assert stale.status_code == 409, stale.text
+    assert stale.json()["error"]["code"] == "price_changed"
+    assert client.get("/bookings", headers=AUTH).json() == []
+
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start.isoformat(),
+            "end_at": end.isoformat(),
+            "tokens": str(expected),
         },
     )
     assert created.status_code == 201, created.text
@@ -857,7 +872,6 @@ def test_inactive_member_and_insufficient_tokens(client: TestClient) -> None:
             "hoist_id": hoist["id"],
             "start_at": start,
             "end_at": end,
-            "tokens": "1",
         },
     )
     assert poor.status_code == 400
