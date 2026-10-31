@@ -9,7 +9,13 @@ import { ShopApiError } from "../../../lib/config";
 import { handlePageError } from "../../../lib/page";
 import { getMe, getMember, listMemberTokens, listTiers } from "../../../lib/shop-api";
 import { formatShopDateTime, tokensLabel } from "../../../lib/time";
-import { adjustTokensAction, patchMemberAction, rebuildTokensAction } from "../actions";
+import {
+  adjustTokensAction,
+  patchMemberAction,
+  rebuildTokensAction,
+  recordTokenPurchaseAction,
+  setMemberPasswordAction,
+} from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -121,6 +127,46 @@ export default async function MemberDetailPage({
             </div>
             <div className="actions" style={{ alignSelf: "end" }}>
               <button type="submit">Save member</button>
+            </div>
+          </form>
+        </section>
+
+        <section className="card" style={{ marginTop: "1.2rem" }}>
+          <h2>Sign-in password</h2>
+          <p className="lede">A converted signup has no password until this is set. At least 12 characters.</p>
+          <form action={setMemberPasswordAction} className="form-grid">
+            <input type="hidden" name="id" value={member.id} />
+            <label>
+              Password
+              <input name="password" type="password" required minLength={12} autoComplete="new-password" />
+            </label>
+            <div className="actions" style={{ alignSelf: "end" }}>
+              <button type="submit">Set password</button>
+            </div>
+          </form>
+        </section>
+
+        <section className="card" style={{ marginTop: "1.2rem" }}>
+          <h2>Stand-in token purchase</h2>
+          <p className="lede">
+            GST is 5% of the before-tax amount. The payment id is a STANDIN until a processor is connected.
+          </p>
+          <form action={recordTokenPurchaseAction} className="form-grid">
+            <input type="hidden" name="id" value={member.id} />
+            <label>
+              Payment id
+              <input name="payment_id" required placeholder="STANDIN-PAYPAL-WALK" />
+            </label>
+            <label>
+              Tokens
+              <input name="tokens" required inputMode="decimal" placeholder="200.00" />
+            </label>
+            <label>
+              Before tax (CAD)
+              <input name="subtotal_cad" required inputMode="decimal" placeholder="40.00" />
+            </label>
+            <div className="actions" style={{ alignSelf: "end" }}>
+              <button type="submit">Record purchase</button>
             </div>
           </form>
         </section>
