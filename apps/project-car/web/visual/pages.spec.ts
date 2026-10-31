@@ -197,10 +197,6 @@ test.describe("owner pages", () => {
 
   for (const shot of OWNER_PAGES) {
     test(shot.name, async ({ page }) => {
-      // Owner /schedule at 768 reached the 800ms settle with the 60s clock already spent.
-      if (shot.path === "/schedule") {
-        test.setTimeout(120_000);
-      }
       await shoot(page, shot.path, shot.name, "owner");
     });
   }
