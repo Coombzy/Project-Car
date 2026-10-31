@@ -1,0 +1,10 @@
+# Member screenshots diff as text so git diff carries the bytes.
+# Without this, git diff omits the PNG bytes and git apply rejects the patch.
+apps/project-car/web/visual/screenshots/*/member-home.png diff
+apps/project-car/web/visual/screenshots/*/member-cameras.png diff
+apps/project-car/web/visual/screenshots/*/member-chat.png diff
+apps/project-car/web/visual/screenshots/*/member-chat-room.png diff
+apps/project-car/web/visual/screenshots/*/member-jobs.png diff
+apps/project-car/web/visual/screenshots/*/member-parts.png diff
+apps/project-car/web/visual/screenshots/*/member-schedule.png diff
+apps/project-car/web/visual/screenshots/*/member-profile.png diff
