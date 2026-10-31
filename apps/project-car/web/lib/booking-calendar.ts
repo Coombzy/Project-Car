@@ -352,6 +352,18 @@ export function memberBalanceCopy(
   };
 }
 
+export function extraHoursLine(
+  meta: { pricing?: unknown; purchase?: PurchaseMeta } | null | undefined,
+): string | null {
+  if (!meta || meta.purchase) {
+    return null;
+  }
+  if (typeof meta.pricing === "string" && meta.pricing.length > 0) {
+    return meta.pricing;
+  }
+  return null;
+}
+
 export function gstLine(meta: { purchase?: PurchaseMeta; pricing_rule?: unknown } | null | undefined): string | null {
   const purchase = meta?.purchase;
   if (!purchase?.gst_cad || !purchase.subtotal_cad || !purchase.total_cad) {

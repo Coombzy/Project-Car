@@ -696,10 +696,18 @@ def _extra_hour_segments(session: Session, booking: Booking) -> list[dict[str, s
                 "end_at": hour_end.isoformat(),
                 "band_id": band.id,
                 "band_label": band.label,
+                "band_multiplier": format(band.multiplier.quantize(CENTS), "f"),
                 "tokens": format(tokens, "f"),
             }
         )
     return segments
+
+
+def _extra_hours_pricing(segments: list[dict[str, str]]) -> str:
+    return " + ".join(
+        f"1h × 100 × {segment['band_multiplier']} = {segment['tokens']} · {segment['band_label']}"
+        for segment in segments
+    )
 
 
 def complete_booking(session: Session, booking_id: UUID) -> Booking:
@@ -729,7 +737,12 @@ def complete_booking(session: Session, booking_id: UUID) -> Booking:
             amount=-extra,
             booking_id=booking.id,
             note="Extra hours past the booked end",
-            meta={"reason": "extra_hours", "hours": str(len(segments)), "segments": segments},
+            meta={
+                "reason": "extra_hours",
+                "hours": str(len(segments)),
+                "segments": segments,
+                "pricing": _extra_hours_pricing(segments),
+            },
         )
     booking.reserved_tokens = Decimal("0")
     booking.status = BookingStatus.COMPLETED
