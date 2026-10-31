@@ -83,7 +83,7 @@ export async function checkInBookingAction(formData: FormData): Promise<void> {
 
 export async function completeBookingAction(formData: FormData): Promise<void> {
   try {
-    await completeBooking(String(formData.get("id") ?? ""), String(formData.get("unused_tokens") ?? "0"));
+    await completeBooking(String(formData.get("id") ?? ""));
   } catch (error) {
     fail(formData, error);
   }
