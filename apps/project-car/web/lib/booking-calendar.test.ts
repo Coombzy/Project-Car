@@ -107,6 +107,7 @@ describe("cancel, peak, gst, and the taken message", () => {
     assert.equal(early.visible, true);
     assert.equal(early.refund, 200);
     assert.match(early.label, /200/);
+    assert.match(early.confirmText, /200/);
 
     const late = memberCancelOffer(
       { status: "confirmed", startAt: "2026-11-05T20:00:00", reservedTokens: "337.51" },
