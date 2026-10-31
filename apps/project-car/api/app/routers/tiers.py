@@ -11,8 +11,9 @@ from sqlalchemy.orm import Session
 
 from app.deps import DbSession, Owner
 from app.models import MembershipTier, PricingBand, PricingOverlay
-from app.schemas import TierCreate, TierOut, TierPatch
-from app.services.pricing import PricingError, ensure_pricing_settings, quantize_multiplier
+from app.schemas import MemberRateChartOut, TierCreate, TierOut, TierPatch
+from app.services.peak_cap import PEAK_BAND_IDS, PEAK_HOURS_PER_WEEK
+from app.services.pricing import PricingError, ensure_pricing_settings, quantize_multiplier, weekly_rate_chart
 from app.services.staff import reject_ai
 from app.services.tokens import grant_period_allocations
 
@@ -97,6 +98,18 @@ def _collect_multiplier_writes(
             )
         pending.append((row, _multiplier_or_422(item.multiplier)))
     return pending
+
+
+@router.get("/tiers/rate-chart", response_model=MemberRateChartOut)
+def owner_rate_chart(session: DbSession, _owner: Owner) -> MemberRateChartOut:
+    """Same saved-band week the member chart, quote, and peak cap use."""
+    return MemberRateChartOut.model_validate(
+        weekly_rate_chart(
+            session,
+            peak_band_ids=PEAK_BAND_IDS,
+            peak_cap_hours=PEAK_HOURS_PER_WEEK,
+        )
+    )
 
 
 @router.get("/tiers/pricing", response_model=PricingSettingsOut)

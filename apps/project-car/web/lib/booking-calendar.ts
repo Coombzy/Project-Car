@@ -1,4 +1,5 @@
 import { addDays, calendarDate, parseShopInstant, zonedDateTime } from "./calendar";
+import type { RateHour } from "./rate-chart";
 import {
   AFTER_START_MESSAGE,
   BAND_SHORT,
@@ -24,11 +25,17 @@ const PEAK_BAND: BandId = "weekend_fri_eve";
 
 const OCCUPYING = new Set(["pending", "confirmed", "active", "completed", "overdue"]);
 
+export type SavedBands = {
+  hours: readonly RateHour[];
+  peakCapHours: number;
+};
+
 export type BandAt = {
   id: BandId;
   short: string;
   tokens: number;
   gutter: string;
+  countsTowardPeakCap: boolean;
 };
 
 export type BayChoice = {
@@ -86,8 +93,25 @@ function weekdayIndex(isoDate: string): number {
   return utc === 0 ? 6 : utc - 1;
 }
 
-export function bandAt(isoDate: string, hour: number): BandAt {
+function isBandId(value: string): value is BandId {
+  return value in BAND_SHORT;
+}
+
+export function bandAt(isoDate: string, hour: number, saved?: readonly RateHour[]): BandAt {
   const weekday = weekdayIndex(isoDate);
+  const row = saved?.find((item) => item.weekday === weekday && item.hour === hour);
+  if (row && isBandId(row.band_id)) {
+    const tokens = Number(row.tokens_per_hour);
+    const short = BAND_SHORT[row.band_id];
+    const shown = Number.isInteger(tokens) ? String(tokens) : row.tokens_per_hour;
+    return {
+      id: row.band_id,
+      short,
+      tokens,
+      gutter: `${short} ${shown}`,
+      countsTowardPeakCap: row.counts_toward_peak_cap,
+    };
+  }
   let id: BandId = "weekday_day";
   if (hour >= 21 || hour < 8) {
     id = "late_night";
@@ -98,7 +122,7 @@ export function bandAt(isoDate: string, hour: number): BandAt {
   }
   const tokens = BASE_TOKENS * BAND_MULTIPLIER[id];
   const short = BAND_SHORT[id];
-  return { id, short, tokens, gutter: `${short} ${tokens}` };
+  return { id, short, tokens, gutter: `${short} ${tokens}`, countsTowardPeakCap: id === PEAK_BAND };
 }
 
 export function selectionSummary(
@@ -106,6 +130,7 @@ export function selectionSummary(
   startHour: number,
   endHour: number,
   blocked: ReadonlySet<number> = new Set(),
+  saved?: readonly RateHour[],
 ): SelectionSummary {
   const hours: number[] = [];
   let note: string | null = null;
@@ -120,7 +145,7 @@ export function selectionSummary(
   }
   const groups: { short: string; tokens: number; count: number }[] = [];
   for (const hour of hours) {
-    const band = bandAt(isoDate, hour);
+    const band = bandAt(isoDate, hour, saved);
     const last = groups[groups.length - 1];
     if (last && last.short === band.short && last.tokens === band.tokens) {
       last.count += 1;
@@ -229,7 +254,9 @@ function hourInZone(instant: Date): number {
 export function peakWeek(
   bookings: { status: string; startAt: string; endAt: string }[],
   weekStart: string,
+  saved?: SavedBands,
 ): PeakUsage {
+  const cap = saved?.peakCapHours ?? PEAK_HOURS_PER_WEEK;
   const weekBegin = zonedDateTime(weekStart, 0).getTime();
   const weekEnd = zonedDateTime(addDays(weekStart, 7), 0).getTime();
   let used = 0;
@@ -242,17 +269,17 @@ export function peakWeek(
     while (cursor < end) {
       if (cursor >= weekBegin && cursor < weekEnd) {
         const instant = new Date(cursor);
-        const band = bandAt(calendarDate(instant.toISOString()), hourInZone(instant));
-        if (band.id === PEAK_BAND) {
+        const band = bandAt(calendarDate(instant.toISOString()), hourInZone(instant), saved?.hours);
+        if (band.countsTowardPeakCap) {
           used += 1;
         }
       }
       cursor += 3_600_000;
     }
   }
-  const remaining = Math.max(0, PEAK_HOURS_PER_WEEK - used);
+  const remaining = Math.max(0, cap - used);
   return {
-    cap: PEAK_HOURS_PER_WEEK,
+    cap,
     used,
     remaining,
     line: `Peak hours this week: ${used} used · ${remaining} left`,

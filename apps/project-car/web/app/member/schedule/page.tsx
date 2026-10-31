@@ -74,6 +74,7 @@ export default async function MemberSchedulePage({
         endAt: booking.end_at,
       })),
       weekStart,
+      rates ? { hours: rates.hours, peakCapHours: rates.peak_cap_hours } : undefined,
     );
     const slots: CalendarSlot[] = schedule.occupancy.map((slot) => ({
       id: slot.booking_id,
@@ -123,6 +124,7 @@ export default async function MemberSchedulePage({
             slots={slots}
             balance={me.token_balance}
             returnTo={returnTo}
+            rates={rates}
             error={params.error}
           />
         )}
