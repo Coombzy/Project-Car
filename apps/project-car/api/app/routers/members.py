@@ -11,9 +11,18 @@ from sqlalchemy.orm import selectinload
 
 from app.auth import hash_password
 from app.deps import DbSession, Owner
-from app.models import Booking, Member, MembershipTier, TokenTransaction, TokenTransactionKind
+from app.models import (
+    BillingTransaction,
+    Booking,
+    Member,
+    MembershipTier,
+    TokenTransaction,
+    TokenTransactionKind,
+)
 from app.schemas import (
     BookingOut,
+    DepositCreate,
+    DollarChargeOut,
     MemberCreate,
     MemberDetailOut,
     MemberOut,
@@ -25,7 +34,7 @@ from app.schemas import (
 )
 from app.services.bookings import lock_member
 from app.services.staff import reject_ai
-from app.services.tokens import apply_ledger, rebuild_token_balance, record_token_purchase
+from app.services.tokens import apply_ledger, rebuild_token_balance, record_deposit, record_token_purchase
 
 router = APIRouter(tags=["members"])
 
@@ -295,6 +304,66 @@ def record_member_token_purchase(
     )
     session.refresh(row)
     return TokenTransactionOut.model_validate(row)
+
+
+@router.get("/members/{member_id}/dollar-charges", response_model=list[DollarChargeOut])
+def list_dollar_charges(member_id: UUID, session: DbSession, _owner: Owner) -> list[DollarChargeOut]:
+    _member_or_404(session, member_id)
+    rows = session.scalars(
+        select(BillingTransaction)
+        .where(
+            BillingTransaction.member_id == member_id,
+            BillingTransaction.subtotal_cad.is_not(None),
+        )
+        .order_by(BillingTransaction.created_at, BillingTransaction.id)
+    ).all()
+    return [
+        DollarChargeOut(
+            id=row.id,
+            purpose=row.kind.value,
+            payment_id=row.payment_id,
+            subtotal_cad=Decimal(row.subtotal_cad or 0),
+            gst_cad=Decimal(row.gst_cad or 0),
+            total_cad=Decimal(row.total_cad or 0),
+            gst_rate=Decimal(row.gst_rate or 0),
+            created_at=row.created_at,
+        )
+        for row in rows
+    ]
+
+
+@router.post("/members/{member_id}/deposits", response_model=DollarChargeOut, status_code=201)
+def post_deposit(
+    member_id: UUID,
+    body: DepositCreate,
+    session: DbSession,
+    owner: Owner,
+) -> DollarChargeOut:
+    """Take, return, or keep a damage deposit. Stand-in payment id. No tokens."""
+    reject_ai(
+        owner,
+        code="deposit_requires_human",
+        message="An AI cannot move a deposit on its own.",
+    )
+    member = lock_member(session, member_id)
+    row = record_deposit(
+        session,
+        member,
+        action=body.action,
+        amount=body.amount,
+        payment_id=body.payment_id,
+        note=body.note,
+    )
+    return DollarChargeOut(
+        id=row.id,
+        purpose=row.kind.value,
+        payment_id=row.payment_id,
+        subtotal_cad=Decimal(row.subtotal_cad or 0),
+        gst_cad=Decimal(row.gst_cad or 0),
+        total_cad=Decimal(row.total_cad or 0),
+        gst_rate=Decimal(row.gst_rate or 0),
+        created_at=row.created_at,
+    )
 
 
 @router.post("/members/{member_id}/tokens/rebuild", response_model=MemberOut)

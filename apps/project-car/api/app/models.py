@@ -165,6 +165,10 @@ class BillingKind(str, enum.Enum):
     MANUAL = "manual"
     DEPOSIT = "deposit"
     REFUND = "refund"
+    PACK = "pack"
+    DEPOSIT_TAKEN = "deposit_taken"
+    DEPOSIT_RETURNED = "deposit_returned"
+    DEPOSIT_KEPT = "deposit_kept"
 
 
 class AccessEventType(str, enum.Enum):
@@ -881,10 +885,17 @@ class Incident(Base):
 
 
 class BillingTransaction(Base):
-    """Manual billing record only. No payment processor in v1."""
+    """A dollar row: before tax, GST, total, and a stand-in payment id.
+
+    No payment processor is connected. The payment id is whatever the owner
+    typed from PayPal until Ben supplies the real one.
+    """
 
     __tablename__ = "billing_transactions"
-    __table_args__ = (Index("ix_billing_transactions_member_created", "member_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_billing_transactions_member_created", "member_id", "created_at"),
+        Index("uq_billing_transactions_payment_id", "payment_id", unique=True),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
     member_id: Mapped[uuid.UUID] = mapped_column(
@@ -899,6 +910,11 @@ class BillingTransaction(Base):
         default=BillingKind.MANUAL,
     )
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    subtotal_cad: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2))
+    gst_cad: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2))
+    total_cad: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2))
+    gst_rate: Mapped[Optional[Decimal]] = mapped_column(Numeric(6, 4))
+    payment_id: Mapped[Optional[str]] = mapped_column(String(120))
     note: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
