@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { crc32, inflateSync } from "node:zlib";
 
 const libDir = dirname(fileURLToPath(import.meta.url));
 
@@ -59,7 +60,7 @@ function because(error: string | undefined, assertion: string): string {
   return error ? `${assertion} (${error})` : assertion;
 }
 
-const NAV_REFS = [
+const MEMBER_SHOTS = [
   "member-home",
   "member-cameras",
   "member-chat",
@@ -68,29 +69,76 @@ const NAV_REFS = [
   "member-parts",
   "member-schedule",
   "member-profile",
-];
+] as const;
 
-function refPath(width: string, name: string): string {
-  return join(libDir, "../visual/member-nav-ref", width, `${name}.b64`);
-}
+const VIEWPORT: Record<string, readonly [number, number]> = {
+  "390": [390, 844],
+  "768": [768, 1024],
+  "1440": [1440, 900],
+};
 
-function writePngFromRef(width: string, name: string): string {
-  const b64Path = refPath(width, name);
+function readRefPng(width: string, name: string): Buffer {
+  const b64Path = join(libDir, "../visual/member-nav-ref", width, `${name}.b64`);
   assert.equal(existsSync(b64Path), true, `member visual ref missing: ${width}/${name}.b64`);
-  const png = join(libDir, "../visual/screenshots", width, `${name}.png`);
-  mkdirSync(join(libDir, "../visual/screenshots", width), { recursive: true });
-  writeFileSync(png, Buffer.from(readFileSync(b64Path, "utf8"), "base64"));
-  return png;
+  return Buffer.from(readFileSync(b64Path, "utf8"), "base64");
 }
 
-function assertPngFile(png: string, label: string): void {
-  const info = statSync(png, { throwIfNoEntry: false });
-  assert.ok(info?.isFile() && info.size > 0, `${label} baseline is missing`);
-  assert.equal(
-    readFileSync(png).subarray(0, 4).toString("latin1"),
-    "\x89PNG",
-    `${label} baseline is not a PNG`,
-  );
+function assertCompletePng(png: Buffer, width: number, height: number, label: string): void {
+  const signature = "\x89PNG\r\n\x1a\n";
+  assert.equal(png.subarray(0, 8).toString("latin1"), signature, `${label} is not a PNG`);
+  let offset = 8;
+  let sawIhdr = false;
+  let sawIdat = false;
+  let sawIend = false;
+  const idat: Buffer[] = [];
+  while (offset + 12 <= png.length) {
+    const length = png.readUInt32BE(offset);
+    const type = png.subarray(offset + 4, offset + 8);
+    const dataEnd = offset + 8 + length;
+    const chunkEnd = dataEnd + 4;
+    assert.ok(chunkEnd <= png.length, `${label} truncated in ${type.toString("latin1")}`);
+    const data = png.subarray(offset + 8, dataEnd);
+    const stored = png.readUInt32BE(dataEnd);
+    const computed = crc32(Buffer.concat([type, data])) >>> 0;
+    assert.equal(computed, stored, `${label} CRC mismatch on ${type.toString("latin1")}`);
+    const kind = type.toString("latin1");
+    if (kind === "IHDR") {
+      sawIhdr = true;
+      assert.equal(data.readUInt32BE(0), width, `${label} width`);
+      assert.equal(data.readUInt32BE(4), height, `${label} height`);
+    } else if (kind === "IDAT") {
+      sawIdat = true;
+      idat.push(data);
+    } else if (kind === "IEND") {
+      sawIend = true;
+      offset = chunkEnd;
+      break;
+    }
+    offset = chunkEnd;
+  }
+  assert.equal(sawIhdr, true, `${label} missing IHDR`);
+  assert.equal(sawIdat, true, `${label} missing IDAT`);
+  assert.equal(sawIend, true, `${label} missing IEND`);
+  assert.equal(offset, png.length, `${label} has bytes after IEND`);
+  inflateSync(Buffer.concat(idat));
+}
+
+// A unified diff prefixes each added line with "+". A base64 line that
+// already starts with "++" is stored as "+++...", and a decoder that treats
+// "+++" as the file header drops it. That cut fails the IDAT CRC.
+function bytesAfterDiffHeaderDecode(text: string): Buffer {
+  const kept: string[] = [];
+  for (const line of text.split("\n")) {
+    if (line.length === 0) {
+      continue;
+    }
+    const diffLine = `+${line}`;
+    if (diffLine.startsWith("+++")) {
+      continue;
+    }
+    kept.push(diffLine.slice(1));
+  }
+  return Buffer.from(kept.join(""), "base64");
 }
 
 describe("member profile view", () => {
@@ -261,11 +309,7 @@ describe("member profile view", () => {
     assert.match(shell, /href: "\/member\/profile", current: "profile", label: "Profile"/);
   });
 
-  it("test_visual_member_pages_include_profile", () => {
-    for (const width of ["390", "768", "1440"]) {
-      const png = writePngFromRef(width, "member-profile");
-      assertPngFile(png, `member profile at ${width}`);
-    }
+  it("test_screenshot_walk_includes_member_profile", () => {
     const spec = readFileSync(join(libDir, "../visual/pages.spec.ts"), "utf8");
     const list = spec.match(/const MEMBER_PAGES: Shot\[\] = \[([\s\S]*?)\];/);
     assert.ok(list, "MEMBER_PAGES list is missing");
@@ -299,22 +343,31 @@ describe("member profile view", () => {
     }
   });
 
-  it("test_member_nav_refs_decode_before_screenshots", () => {
-    const script = readFileSync(join(libDir, "../visual/build-web.sh"), "utf8");
-    assert.match(script, /member-nav-ref/);
-    assert.match(script, /chrome-headless-shell/);
-    assert.doesNotMatch(script, /member-login/);
-    assert.doesNotMatch(script, /member-detail/);
-    for (const width of ["390", "768", "1440"]) {
-      assert.match(script, new RegExp(`(^|\\s)${width}(\\s|;|$)`, "m"), width);
-    }
-    for (const name of NAV_REFS) {
-      assert.match(script, new RegExp(`(^|\\s)${name}(\\s|;|$)`, "m"), name);
-    }
-    for (const width of ["390", "768", "1440"]) {
-      for (const name of NAV_REFS) {
-        assertPngFile(writePngFromRef(width, name), `${width}/${name}`);
+  it("test_member_nav_refs_are_complete_pngs", () => {
+    for (const [width, [px, py]] of Object.entries(VIEWPORT)) {
+      for (const name of MEMBER_SHOTS) {
+        assertCompletePng(readRefPng(width, name), px, py, `${width}/${name}`);
       }
     }
+  });
+
+  it("test_member_nav_refs_survive_unified_diff", () => {
+    for (const [width, [px, py]] of Object.entries(VIEWPORT)) {
+      for (const name of MEMBER_SHOTS) {
+        const b64Path = join(libDir, "../visual/member-nav-ref", width, `${name}.b64`);
+        const text = readFileSync(b64Path, "utf8");
+        const round = bytesAfterDiffHeaderDecode(text);
+        assertCompletePng(round, px, py, `${width}/${name}`);
+        assert.equal(round.equals(readRefPng(width, name)), true, `${width}/${name} diff decode changed bytes`);
+      }
+    }
+  });
+
+  it("test_visual_build_does_not_install_chromium", () => {
+    const script = readFileSync(join(libDir, "../visual/build-web.sh"), "utf8");
+    assert.doesNotMatch(script, /playwright install/, "visual build must not install a browser");
+    assert.doesNotMatch(script, /chrome-headless-shell/);
+    assert.doesNotMatch(script, /member-login/);
+    assert.doesNotMatch(script, /member-detail/);
   });
 });
