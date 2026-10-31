@@ -5,6 +5,7 @@ import { memberLogoutAction } from "../app/member/logout-action";
 
 const NAV = [
   { href: "/member", current: "home", label: "Balance" },
+  { href: "/member/profile", current: "profile", label: "Profile" },
   { href: "/member/schedule", current: "schedule", label: "Schedule" },
   { href: "/member/chat", current: "chat", label: "Chat" },
   { href: "/member/parts", current: "parts", label: "Parts" },
