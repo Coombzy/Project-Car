@@ -1,8 +1,8 @@
 """One month of allowance rolls over on the existing grant button.
 
-Spendable above one allowance expires, then the new allowance is added, in
-one save. A future visit already taken off the balance is not expired.
-A token_purchase line stays in the ledger. It is not a protected pile yet.
+Unused allowance above one month expires, then the new allowance is added, in
+one save. A future visit already taken off the allowance is not expired.
+Purchased tokens are a separate pile and stay through the grant.
 """
 
 from datetime import timedelta
@@ -103,8 +103,8 @@ def test_grant_does_not_expire_tokens_holding_a_future_visit(client: TestClient)
     assert _balance(client, member["id"]) == spendable + Decimal("1500")
 
 
-def test_token_purchase_line_survives_the_grant_and_is_not_protected(client: TestClient) -> None:
-    """Bought tokens are not a separate pile yet. The cap still applies to the whole balance."""
+def test_token_purchase_survives_the_grant(client: TestClient) -> None:
+    """The adjustment is allowance. The purchase is not expired with it."""
     member = create_member(
         client,
         email="pack@example.com",
@@ -125,7 +125,11 @@ def test_token_purchase_line_survives_the_grant_and_is_not_protected(client: Tes
     purchases = [row for row in rows if row["kind"] == "token_purchase"]
     assert len(purchases) == 1
     assert Decimal(str(purchases[0]["amount"])) == Decimal("500")
+    assert Decimal(str(purchases[0]["purchased_amount"])) == Decimal("500")
     expired = [row for row in rows if row["kind"] == "allowance_expiry"]
     assert len(expired) == 1
-    assert Decimal(str(expired[0]["amount"])) == Decimal("-1000")
-    assert _balance(client, member["id"]) == Decimal("3000")
+    assert Decimal(str(expired[0]["amount"])) == Decimal("-500")
+    body = client.get(f"/members/{member['id']}", headers=AUTH).json()
+    assert Decimal(str(body["purchased_balance"])) == Decimal("500")
+    assert Decimal(str(body["allowance_balance"])) == Decimal("3000")
+    assert _balance(client, member["id"]) == Decimal("3500")

@@ -40,6 +40,38 @@ CENTS = Decimal("0.01")
 TOKEN_BALANCE_FLOOR = Decimal("0")
 
 
+def piles_for_refund(
+    allowance_spent: Decimal,
+    purchased_spent: Decimal,
+    refund: Decimal,
+) -> tuple[Decimal, Decimal]:
+    """Restore a cancel onto the piles it came from, purchased first.
+
+    Spent figures are positive. The returned pair is the positive refund split
+    and sums to ``refund``.
+    """
+    purchased_back = min(Decimal(purchased_spent), Decimal(refund))
+    allowance_back = Decimal(refund) - purchased_back
+    return allowance_back, purchased_back
+
+
+def _default_piles(member: Member, kind: TokenTransactionKind, amount: Decimal) -> tuple[Decimal, Decimal]:
+    """Split a ledger amount when the caller does not name the piles.
+
+    Purchases credit the purchased pile. Grants, expiry, and positive
+    adjustments credit allowance. A spend takes allowance first, then purchased.
+    """
+    if kind == TokenTransactionKind.TOKEN_PURCHASE:
+        return Decimal("0"), amount
+    if kind in (TokenTransactionKind.MONTHLY_ALLOCATION, TokenTransactionKind.ALLOWANCE_EXPIRY):
+        return amount, Decimal("0")
+    if amount > 0:
+        return amount, Decimal("0")
+    take = -amount
+    from_allowance = min(Decimal(member.allowance_balance), take)
+    return -from_allowance, -(take - from_allowance)
+
+
 def apply_ledger(
     session: Session,
     member: Member,
@@ -50,10 +82,28 @@ def apply_ledger(
     note: str | None = None,
     meta: dict | None = None,
     payment_ref: str | None = None,
+    allowance_amount: Decimal | None = None,
+    purchased_amount: Decimal | None = None,
 ) -> TokenTransaction:
     amount = Decimal(amount)
+    if allowance_amount is None and purchased_amount is None:
+        allowance_amount, purchased_amount = _default_piles(member, kind, amount)
+    else:
+        allowance_amount = Decimal("0") if allowance_amount is None else Decimal(allowance_amount)
+        purchased_amount = Decimal("0") if purchased_amount is None else Decimal(purchased_amount)
+    if allowance_amount + purchased_amount != amount:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "pile_mismatch",
+                "message": "The allowance and purchased amounts must sum to the ledger amount.",
+            },
+        )
     balance = Decimal(member.token_balance)
-    if amount < 0 and balance + amount < TOKEN_BALANCE_FLOOR:
+    new_allowance = Decimal(member.allowance_balance) + allowance_amount
+    new_purchased = Decimal(member.purchased_balance) + purchased_amount
+    new_balance = balance + amount
+    if new_balance < TOKEN_BALANCE_FLOOR or new_allowance < TOKEN_BALANCE_FLOOR or new_purchased < TOKEN_BALANCE_FLOOR:
         raise HTTPException(
             status_code=409,
             detail={
@@ -68,12 +118,16 @@ def apply_ledger(
         booking_id=booking_id,
         kind=kind,
         amount=amount,
+        allowance_amount=allowance_amount,
+        purchased_amount=purchased_amount,
         note=note,
         meta=meta,
         payment_ref=payment_ref,
     )
     session.add(row)
-    member.token_balance = balance + amount
+    member.allowance_balance = new_allowance
+    member.purchased_balance = new_purchased
+    member.token_balance = new_balance
     session.add(member)
     try:
         session.flush()
@@ -233,8 +287,17 @@ def ledger_sum(session: Session, member_id) -> Decimal:
     return Decimal(total)
 
 
+def _pile_sum(session: Session, member_id, column) -> Decimal:
+    total = session.scalar(
+        select(func.coalesce(func.sum(column), 0)).where(TokenTransaction.member_id == member_id)
+    )
+    return Decimal(total)
+
+
 def rebuild_token_balance(session: Session, member: Member) -> Decimal:
     member.token_balance = ledger_sum(session, member.id)
+    member.allowance_balance = _pile_sum(session, member.id, TokenTransaction.allowance_amount)
+    member.purchased_balance = _pile_sum(session, member.id, TokenTransaction.purchased_amount)
     session.add(member)
     return member.token_balance
 
@@ -315,7 +378,10 @@ def _has_period_allocation(
 
 
 def grant_period_allocations(session: Session, now: datetime | None = None) -> PeriodAllocationResult:
-    """Expire spendable above one allowance, then grant this Regina month.
+    """Expire unused allowance above one month, then grant this Regina month.
+
+    Purchased tokens are a separate pile and are not expired. A booking spends
+    allowance first, so tokens already reserved are not in allowance_balance.
 
     A row tagged tz=America/Regina with a period counts only for that period.
     A row with no such tag counts when created_at is in this month, including
@@ -356,10 +422,10 @@ def grant_period_allocations(session: Session, now: datetime | None = None) -> P
         if member.tier.included_tokens <= 0:
             continue
         allowance = Decimal(member.tier.included_tokens)
-        # Spendable is the balance. Upcoming visits are already taken off it.
-        # A cancel after this grant can put the balance above two months until
-        # the next grant. Bought tokens are not a separate pile yet.
-        expire = Decimal(member.token_balance) - allowance
+        # Upcoming visits are already taken off allowance_balance. A cancel
+        # after this grant can put allowance above two months until the next
+        # grant. Purchased tokens are not part of this cap.
+        expire = Decimal(member.allowance_balance) - allowance
         if expire > 0:
             apply_ledger(
                 session,

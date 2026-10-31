@@ -24,12 +24,13 @@ from app.models import (
     IncidentSeverity,
     Member,
     MemberStatus,
+    TokenTransaction,
     TokenTransactionKind,
 )
 from app.services.fill import resolve_fill_for_slot
 from app.services.peak_cap import check_peak_cap
 from app.services.pricing import PricingError, quote_reserve
-from app.services.tokens import apply_ledger
+from app.services.tokens import apply_ledger, piles_for_refund
 from app.shop_time import PRICING_TZ, as_utc, iter_regina_hours, shop_now
 
 OPEN_STATUSES = (BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.ACTIVE)
@@ -782,6 +783,21 @@ def future_bookings_on_hoist(session: Session, hoist_id: UUID) -> list[Booking]:
     return [row for row in rows if _stored_utc(row.end_at) > now]
 
 
+def _refund_split(session: Session, booking: Booking, refund: Decimal) -> tuple[Decimal, Decimal]:
+    """Put a refund back on the piles the reserve spent, purchased first."""
+    row = session.scalar(
+        select(TokenTransaction).where(
+            TokenTransaction.booking_id == booking.id,
+            TokenTransaction.kind == TokenTransactionKind.BOOKING_RESERVE,
+        )
+    )
+    if row is None:
+        return refund, Decimal("0")
+    allowance_spent = -Decimal(row.allowance_amount)
+    purchased_spent = -Decimal(row.purchased_amount)
+    return piles_for_refund(allowance_spent, purchased_spent, refund)
+
+
 def kept_share(reserved: Decimal, keep_pct: Decimal) -> Decimal:
     """Tokens the shop keeps, rounded half up to the cent."""
     return (Decimal(reserved) * keep_pct / Decimal("100")).quantize(CENTS, rounding=ROUND_HALF_UP)
@@ -833,14 +849,18 @@ def settle_elapsed_no_shows(session: Session) -> list[Booking]:
         reserved = Decimal(booking.reserved_tokens)
         kept = kept_share(reserved, NO_SHOW_KEEP_PCT)
         if reserved - kept > 0:
+            refund = reserved - kept
+            allowance_amount, purchased_amount = _refund_split(session, booking, refund)
             apply_ledger(
                 session,
                 member,
                 kind=TokenTransactionKind.BOOKING_REFUND,
-                amount=reserved - kept,
+                amount=refund,
                 booking_id=booking.id,
-                note=f"No-show: refund {reserved - kept}, keep {kept}",
+                note=f"No-show: refund {refund}, keep {kept}",
                 meta={"policy": "no_show", "keep_pct": str(NO_SHOW_KEEP_PCT), "kept_tokens": str(kept)},
+                allowance_amount=allowance_amount,
+                purchased_amount=purchased_amount,
             )
         booking.reserved_tokens = Decimal("0")
         booking.status = BookingStatus.NO_SHOW
@@ -902,6 +922,7 @@ def cancel_booking(
     meta.update(refund_meta or {})
     refund = reserved - kept
     if refund > 0:
+        allowance_amount, purchased_amount = _refund_split(session, booking, refund)
         apply_ledger(
             session,
             member,
@@ -910,6 +931,8 @@ def cancel_booking(
             booking_id=booking.id,
             note=refund_note if kept == 0 else f"Late cancel: refund {refund}, keep {kept}",
             meta=meta or None,
+            allowance_amount=allowance_amount,
+            purchased_amount=purchased_amount,
         )
     booking.reserved_tokens = Decimal("0")
 
