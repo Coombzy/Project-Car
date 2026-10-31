@@ -44,4 +44,17 @@ describe("dashboard href path normalization", () => {
     assert.equal(dashboardHref("/member/../schedule"), "/");
     assert.equal(dashboardHref("/no-such-page"), "/");
   });
+
+  it("test_backslash_protocol_relative_stays_on_the_owner_dashboard", () => {
+    // `/\evil.com\member\nope` starts with one slash, so the `//` guard misses it.
+    // The URL parser rewrites `\` to `/` and takes evil.com as the host. That is
+    // not window.location.pathname. It must not follow the path to /member.
+    assert.equal(dashboardHref("/\\evil.com\\member\\nope"), "/");
+    assert.equal(dashboardHref("/\\@evil\\member\\nope"), "/");
+    assert.equal(dashboardHref("/\\/member/nope"), "/");
+
+    assert.equal(dashboardHref("/member/nope"), "/member");
+    assert.equal(dashboardHref("/member/../schedule"), "/");
+    assert.equal(dashboardHref("/no-such-page"), "/");
+  });
 });
