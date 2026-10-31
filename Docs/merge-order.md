@@ -43,7 +43,7 @@ Other open pull requests (finance trackers, backlog docs, and older `gb/` rows s
 | 19 | [#245](https://github.com/Coombzy/Project-Car/pull/245) | `cursor/basic-plan-price-e6d6` | Book charges the published deal, and only the total it showed. | A stale page whose total no longer matches is refused and writes nothing. |
 | 20 | [#246](https://github.com/Coombzy/Project-Car/pull/246) | `cursor/book-shown-price-e6d6` | Grant button rolls one month of allowance. | A second press that month does nothing. Unused allowance above one month expires. |
 | 21 | [#247](https://github.com/Coombzy/Project-Car/pull/247) | `cursor/grant-rollover-e6d6` | Dollar rows carry GST for token purchases and deposits. | Kept deposits are taxed at the 5% stand-in. Older dollar rows keep a null tax breakdown. |
-| 22 | [#248](https://github.com/Coombzy/Project-Car/pull/248) | `cursor/dollar-gst-row-e6d6` | Any bay is the lowest free member bay for the whole visit. | Two members booking the same hour at once are not proven safe on Postgres. SQLite tests do not show that race. |
+| 22 | [#248](https://github.com/Coombzy/Project-Car/pull/248) | `cursor/dollar-gst-row-e6d6` | Any bay is the lowest free member bay for the whole visit. | Two members booking the same hour at once is proved by the opt-in Postgres test above #263. SQLite still cannot show that race. CI does not run it. |
 | 23 | [#249](https://github.com/Coombzy/Project-Car/pull/249) | `cursor/any-bay-e6d6` | Purchased tokens survive the monthly grant. | A grant bug here would wipe tokens a member paid for. |
 | 24 | [#250](https://github.com/Coombzy/Project-Car/pull/250) | `cursor/purchased-survive-grant-e6d6` | Member Book creates and confirms in one save. | Member book confirms immediately. Owner `POST /bookings` stays pending. Mixing the two paths skips or doubles a confirm. |
 | 25 | [#251](https://github.com/Coombzy/Project-Car/pull/251) | `cursor/book-one-save-e6d6` | Member home shows allowance, purchased tokens, and peak hours. | Home figures can drift from the ledger if the cache is rebuilt wrong. |
@@ -78,7 +78,8 @@ Read bottom-up from #225 through #263. The tip's shop API, web lint, and layout 
 
 Follow-up on [#243](https://github.com/Coombzy/Project-Car/pull/243): open cells and the "Peak hours this week" line now read the saved bands, same as the chart, the quote, and the cap. The member home peak line was wired when [#251](https://github.com/Coombzy/Project-Car/pull/251) was restacked. A test edits Peak to 1.60 and checks the member chart, the owner chart, the quote, the cap, the open-cell gutter, and the peak line. Children above #243 were restacked. No merge.
 
+Follow-up above #263: two members booked Any bay for the same hour at once on local Postgres. Both had already read Bay 1 as free. With two bays, the bookings landed on Bay 1 and Bay 2. With one bay, the loser got 409 no_bay. No hour was double-booked. The existing savepoint retry held. No product code changed. The test stays opt-in so CI can keep using SQLite. No workflow file was edited.
+
 Left as they are:
 
-- Two members taking the same any-bay hour at once is still not proven on Postgres. No workflow file was edited.
 - Cancel keep, no-show, piles, GST, the stand-in processor, extra-hour charges, and signup were read against the product rules and not changed.
