@@ -4,7 +4,7 @@ import { MemberBookingCard } from "../../../components/member-booking-card";
 import { MemberShell } from "../../../components/member-shell";
 import { MonthHeatmap } from "../../../components/month-heatmap";
 import { ScheduleToolbar } from "../../../components/schedule-toolbar";
-import { peakWeek } from "../../../lib/booking-calendar";
+import { memberBalanceCopy, peakWeek } from "../../../lib/booking-calendar";
 import { TIME_LABEL } from "../../../lib/booking-words";
 import {
   addDays,
@@ -67,15 +67,14 @@ export default async function MemberSchedulePage({
 
     const ordered = sortHoists(shopHoist ? [...schedule.hoists, shopHoist] : schedule.hoists);
     const returnTo = { view, week: weekStart, month, hoist: hoistId };
-    const peak = peakWeek(
-      me.bookings.map((booking) => ({
-        status: booking.status,
-        startAt: booking.start_at,
-        endAt: booking.end_at,
-      })),
-      weekStart,
-      rates ? { hours: rates.hours, peakCapHours: rates.peak_cap_hours } : undefined,
-    );
+    const visitRows = me.bookings.map((booking) => ({
+      status: booking.status,
+      startAt: booking.start_at,
+      endAt: booking.end_at,
+    }));
+    const saved = rates ? { hours: rates.hours, peakCapHours: rates.peak_cap_hours } : undefined;
+    const peak = peakWeek(visitRows, weekStart, saved);
+    const piles = memberBalanceCopy(me.allowance_balance, me.purchased_balance, visitRows, weekStart, saved);
     const slots: CalendarSlot[] = schedule.occupancy.map((slot) => ({
       id: slot.booking_id,
       hoistId: slot.hoist_id,
@@ -96,8 +95,8 @@ export default async function MemberSchedulePage({
         </p>
         <h1>Book a bay</h1>
         <p className="lede">
-          Balance {me.token_balance} tokens. {peak.line}. Bays 1–5 book on the hour. The shop hoist is ask-first and
-          does not hold the hour.
+          Balance {piles.total} tokens · allowance {piles.allowance} · purchased {piles.purchased}. {peak.line}. Bays
+          1–5 book on the hour. The shop hoist is ask-first and does not hold the hour.
         </p>
         {loadError ? <div className="banner error">{loadError}</div> : null}
         {rates ? <RateChart rates={rates} helpHref="/member/help" /> : null}

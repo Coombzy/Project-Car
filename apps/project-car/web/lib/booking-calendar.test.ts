@@ -241,28 +241,50 @@ describe("cancel, peak, gst, and the taken message", () => {
   });
 
   it("splits allowance from purchased tokens and counts peak hours this week", () => {
-    const copy = memberBalanceCopy(
-      "1500.00",
-      "500",
-      [
-        {
-          status: "confirmed",
-          startAt: "2026-11-07T10:00:00",
-          endAt: "2026-11-07T12:00:00",
-        },
-      ],
-      "2026-11-02",
-    );
+    const visits = [
+      {
+        status: "confirmed",
+        startAt: "2026-11-07T10:00:00",
+        endAt: "2026-11-07T12:00:00",
+      },
+    ];
+    const copy = memberBalanceCopy("1500.00", "500", visits, "2026-11-02");
     assert.equal(copy.allowance, "1500");
     assert.equal(copy.purchased, "500");
     assert.equal(copy.total, "2000");
     assert.match(copy.peak, /Peak hours this week/);
     assert.match(copy.peak, /2 used/);
+    const edited = memberBalanceCopy("1500.00", "500", visits, "2026-11-02", {
+      hours: [
+        {
+          weekday: 5,
+          day_label: "Saturday",
+          hour: 10,
+          band_id: "weekend_fri_eve",
+          label: "Peak",
+          tokens_per_hour: "160",
+          counts_toward_peak_cap: true,
+        },
+        {
+          weekday: 5,
+          day_label: "Saturday",
+          hour: 11,
+          band_id: "weekday_day",
+          label: "Normal",
+          tokens_per_hour: "100",
+          counts_toward_peak_cap: false,
+        },
+      ],
+      peakCapHours: 4,
+    });
+    assert.match(edited.peak, /1 used/);
+    assert.match(edited.peak, /3 left/);
   });
 
   it("shows allowance, purchased tokens, and peak hours on the member home", () => {
     const page = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../app/member/page.tsx"), "utf8");
     assert.match(page, /memberBalanceCopy/);
+    assert.match(page, /getMemberRates/);
     assert.match(page, /Allowance/);
     assert.match(page, /Purchased/);
     assert.match(page, /Peak this week/);

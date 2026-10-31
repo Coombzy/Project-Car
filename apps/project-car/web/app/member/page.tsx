@@ -6,9 +6,10 @@ import { HoistHourStrip } from "../../components/hoist-hour-strip";
 import { MemberShell } from "../../components/member-shell";
 import { StatusPill } from "../../components/status-pill";
 import { TodoPanel } from "../../components/todo-panel";
+import { memberBalanceCopy } from "../../lib/booking-calendar";
 import { handleMemberPageError } from "../../lib/page";
-import { getMemberDashboard, getMemberMe } from "../../lib/shop-api";
-import { formatShopDateTime, tokensLabel } from "../../lib/time";
+import { getMemberDashboard, getMemberMe, getMemberRates } from "../../lib/shop-api";
+import { formatShopDateTime, mondayOf, shopTodayIso, tokensLabel } from "../../lib/time";
 import {
   createMemberTodoAction,
   deleteMemberTodoAction,
@@ -24,10 +25,26 @@ export default async function MemberHomePage({
 }) {
   const query = searchParams ? await searchParams : {};
   try {
-    const [me, dash] = await Promise.all([getMemberMe(), getMemberDashboard()]);
+    const [me, dash, rates] = await Promise.all([
+      getMemberMe(),
+      getMemberDashboard(),
+      getMemberRates().catch(() => null),
+    ]);
     const open = me.bookings.filter(
       (booking) =>
         booking.status === "pending" || booking.status === "confirmed" || booking.status === "active",
+    );
+    const saved = rates ? { hours: rates.hours, peakCapHours: rates.peak_cap_hours } : undefined;
+    const piles = memberBalanceCopy(
+      me.allowance_balance,
+      me.purchased_balance,
+      me.bookings.map((booking) => ({
+        status: booking.status,
+        startAt: booking.start_at,
+        endAt: booking.end_at,
+      })),
+      mondayOf(shopTodayIso()),
+      saved,
     );
     return (
       <MemberShell email={me.email} current="home" wide>
@@ -44,6 +61,18 @@ export default async function MemberHomePage({
           <div className="metric">
             <span className="eyebrow">Balance</span>
             <b>{tokensLabel(me.token_balance)}</b>
+          </div>
+          <div className="metric">
+            <span className="eyebrow">Allowance</span>
+            <b>{piles.allowance}</b>
+          </div>
+          <div className="metric">
+            <span className="eyebrow">Purchased</span>
+            <b>{piles.purchased}</b>
+          </div>
+          <div className="metric">
+            <span className="eyebrow">Peak this week</span>
+            <b>{piles.peak}</b>
           </div>
           <div className="metric">
             <span className="eyebrow">Tier</span>
