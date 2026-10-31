@@ -220,12 +220,19 @@ def _price_segments(
         else:
             segment_hours = duration_hours(left, right)
             consumed += segment_hours
+        # Money uses exact elapsed seconds. The hours field stays on the
+        # 0.0001 quantum so a slice list still sums to quote.hours. Pricing
+        # those quantized hours moves the cent: 40 late-night minutes plus
+        # 10 weekday minutes is 66.67, and the 0.0001h product is 66.66.
+        # The only money round is on the sum in quote_reserve.
+        seconds = _slice_seconds(left, right)
         tokens = (
-            segment_hours
+            seconds
             * BASE_TOKENS_PER_HOUR
             * band.multiplier
             * overlay.multiplier
             * fill_factor.multiplier
+            / Decimal(3600)
         )
         segments.append(
             QuoteSegment(band=band, start=left, end=right, hours=segment_hours, tokens=tokens)
@@ -336,6 +343,16 @@ def duration_hours(start_at: datetime, end_at: datetime) -> Decimal:
     seconds = Decimal(str((end_at - start_at).total_seconds()))
     hours = seconds / Decimal("3600")
     return hours.quantize(HOURS_QUANT, rounding=ROUND_HALF_UP)
+
+
+def _slice_seconds(start_at: datetime, end_at: datetime) -> Decimal:
+    """Elapsed seconds between two instants. Not the 0.0001 hour quantum."""
+    delta = as_utc(end_at) - as_utc(start_at)
+    return (
+        Decimal(delta.days) * Decimal(86400)
+        + Decimal(delta.seconds)
+        + Decimal(delta.microseconds) / Decimal("1000000")
+    )
 
 
 def quote_reserve(

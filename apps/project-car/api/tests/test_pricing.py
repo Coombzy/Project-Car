@@ -276,6 +276,26 @@ def test_partial_hour_prorates_across_a_boundary() -> None:
     assert quote.segments[1].hours == Decimal("0.5")
 
 
+def test_partial_minutes_round_once_across_a_band() -> None:
+    """40 late-night minutes plus 10 weekday minutes, standard overlay.
+
+    Exact seconds: 50 + 16.666... = 66.666..., which rounds once to 66.67.
+    Pricing each slice from hours already quantized to 0.0001 yields 66.66.
+    """
+    start = _at(2026, 9, 7, 7, 20)
+    end = _at(2026, 9, 7, 8, 10)
+    quote = quote_reserve(start, end, reserved_at=start - timedelta(hours=72))
+    assert quote.overlay.id == "standard"
+    assert quote.band.id == "late_night"
+    assert [segment.band.id for segment in quote.segments] == ["late_night", "weekday_day"]
+    assert quote.final_reserve_cost == Decimal("66.67")
+    assert quote.segments[0].tokens == Decimal("50")
+    raw = sum((segment.tokens for segment in quote.segments), Decimal("0"))
+    assert raw.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) == Decimal("66.67")
+    assert raw != quote.final_reserve_cost
+    assert sum((segment.hours for segment in quote.segments), Decimal("0")) == quote.hours
+
+
 def test_extending_by_an_hour_never_costs_less() -> None:
     days = (
         _at(2026, 9, 7, 0),  # Monday
