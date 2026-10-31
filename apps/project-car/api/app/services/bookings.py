@@ -657,6 +657,11 @@ def cancel_booking(session: Session, booking_id: UUID) -> Booking:
     # Shop work can have no member and no reserve.
     booking = _locked_booking(session, booking_id)
     member = lock_member(session, booking.member_id) if booking.member_id is not None else None
+    # Member cancel loads this row in the same session before the lock
+    # (_own_booking). A check-in can commit between those reads. The lock
+    # select then returns the identity-map copy and still says confirmed,
+    # so cancel refunds a visit that is already active.
+    session.refresh(booking)
     # Checked-in time is already in use. Cancel would return the whole reserve.
     # Complete is the path that charges for the time used.
     if booking.status == BookingStatus.ACTIVE:
