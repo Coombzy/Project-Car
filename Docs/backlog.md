@@ -859,13 +859,13 @@ Rows R55–R62 (2026-10-26): this paragraph replaces the earlier ones for anythi
 
 Rows R63–R70 (2026-10-27): this paragraph replaces the earlier ones for anything still open. Merged since that paragraph: R55 (#193), R56 (#191), R57 (#192), R58 (#195), R59 (#194) and R60 (#196). Open from before: R51 (`services/parts_requests.py`), R52 (`schemas.py`), R61 (`services/bookings.py`, two booking cards) and R62 (web `app/not-found.tsx`, `app/error.tsx`, `visual/pages.spec.ts`). Files for R63–R70: R63 and R64 (`services/bookings.py` and `tests/test_bookings.py`, in that order, after R61), R65 and R68 (`routers/members.py`, in that order), R66 (`services/chat.py`), R67 (`services/staff.py`), R69 (web `lib/fetch-timeout.ts`, `lib/shop-api.ts`), R70 (web `lib/session-cookie.ts`, `lib/session.ts`). Any three of R65, R66, R67, R69 and R70 share no file and can run together; start with R65, R66 and R67 (API only, no screenshots). None of the eight changes a page, adds an alembic revision, or needs screenshots.
 
-Rows R71–R79 (2026-10-28): this paragraph replaces the earlier ones for anything still open. R70 (#202) is the last merged row. Still open from before: R51 (`services/parts_requests.py`), R52 (`schemas.py`), R61 then R63 then R64 (`services/bookings.py`), R62 (web `app/not-found.tsx`, `app/error.tsx`), R68 (`routers/members.py`) and R69 (web `lib/fetch-timeout.ts`, `lib/shop-api.ts`). Files for R71–R79: R71 (`routers/tiers.py`), R72 then R73 (`schemas.py`, after R52, one at a time), R74 (`routers/fill.py`), R75 (`services/staff.py`), R76 (`routers/jobs.py`, `services/jobs.py`), R77 (`routers/waitlist.py`), R78 (web `lib/shop-path.ts`, `lib/shop-api.ts`, after R69), R79 (web `lib/shop-error.ts`, `lib/page.ts`). Any three of R71, R74, R75, R76, R77 and R79 share no file and can run together, and none of them touches a page, adds an alembic revision or needs screenshots. Start R71, R74 and R77, then R51, R68 and R75.
+Rows R71–R79 (2026-10-28): this paragraph replaces the earlier ones for anything still open. R70 (#202) is the last merged row. Still open from before: R51 (`services/parts_requests.py`), R52 (`schemas.py`), R61 then R63 (`services/bookings.py`; R64 is superseded by R109), R62 (web `app/not-found.tsx`, `app/error.tsx`), R69 (R68 is superseded by R101) (web `lib/fetch-timeout.ts`, `lib/shop-api.ts`). Files for R71–R79: R71 (`routers/tiers.py`), R72 then R73 (`schemas.py`, after R52, one at a time), R74 (`routers/fill.py`), R75 (`services/staff.py`), R76 (`routers/jobs.py`, `services/jobs.py`), R77 (`routers/waitlist.py`), R78 (web `lib/shop-path.ts`, `lib/shop-api.ts`, after R69), R79 (web `lib/shop-error.ts`, `lib/page.ts`). Any three of R71, R74, R75, R76, R77 and R79 share no file and can run together, and none of them touches a page, adds an alembic revision or needs screenshots. Start R71, R74 and R77, then R51, R68 and R75.
 
-## Audit fix rows (R100–R148, added 2026-10-30)
+## Audit fix rows (R100–R146, added 2026-10-30)
 
-Source: `/workspace/Project-Car-Fix-List.md` (Opus audit of `main` @ `3968b0f`, bugs + UI + layout), approved by Ben Oct 30 2026 ("get build to start working on everything in the pdf"), plus five Opus follow-up checks (R144–R148). Paths are repo-relative. Every row: write the named failing test first and run it RED on `main`, then implement until GREEN; API proof `cd apps/project-car/api && pytest -q`; web proof `cd apps/project-car/web && npm run lint && npm run typecheck && npm test && npm run build`. No row edits `.github/workflows/**`. Leave PRs #107–#111 alone.
+Source: `/workspace/Project-Car-Fix-List.md` (Opus audit of `main` @ `3968b0f`, bugs + UI + layout), approved by Ben Oct 30 2026 ("get build to start working on everything in the pdf"), plus five Opus follow-up checks (R142–R146). Paths are repo-relative. Every row: write the named failing test first and run it RED on `main`, then implement until GREEN; API proof `cd apps/project-car/api && pytest -q`; web proof `cd apps/project-car/web && npm run lint && npm run typecheck && npm test && npm run build`. No row edits `.github/workflows/**`. Leave PRs #107–#111 alone.
 
-Already covered, not duplicated: fix #9 = R61 (PR #206), fix #10 = R99 (in progress). R64 is folded into R114 and R68 into R101; do not launch R64 or R68 on their own. Fix #44 (first-click test with real members) is not a build row; it waits on Ben.
+Already covered, not duplicated: fix #9 = R61 (PR #206), fix #10 = R99 (in progress). R64 is folded into R109 and R68 into R101; do not launch R64 or R68 on their own. Fix #44 (first-click test with real members) is not a build row; it waits on Ben.
 
 Stand-in values (Ben has not decided; each is one named constant so the real value is a one-line change): AI allowlist = the actions listed in `Docs/ai-control.md`; shop time zone = `America/Regina`; booking granularity = on the hour only; partial fill discount = only minutes inside the fill window; booking caps = 24 h shop booking, 12 h member booking, 60 days ahead; staff permissions = check-in, complete, mark overdue, read schedule, create requests (no refunds, token changes, pricing, passwords, tiers). Each is marked **STAND-IN** in its row and listed under "Stand-ins pending Ben (R100+)".
 
@@ -874,7 +874,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Baseline: `accept_refund_request` in `apps/project-car/api/app/services/staff.py` reads the refund request without `with_for_update()`; `_locked_booking` in `apps/project-car/api/app/services/bookings.py` locks the booking but does not pass `populate_existing=True`, so a session that already loaded the row keeps stale `status`. Audit: 12 parallel accepts refunded one booking 9 times.
 - Target: `accept_refund_request` loads the `RefundRequest` with `select(...).with_for_update().execution_options(populate_existing=True)`, re-checks `status == pending` after the lock and returns 409 `refund_already_decided` otherwise; `_locked_booking` adds `.execution_options(populate_existing=True)`; the refund credit is written once per request (exactly one `refund` ledger row per request id).
 - Must not get worse: API `pytest`; single accept still refunds exactly once; deny path unchanged.
-- Proof (RED first): new `apps/project-car/api/tests/test_refund_lock.py`: `test_second_accept_is_409_and_one_ledger_row` (accept twice in sequence with two sessions: second is 409 `refund_already_decided`, ledger has one refund row, balance moved once); `test_locked_booking_refreshes_stale_status` (load booking in session A, change status in session B and commit, `_locked_booking` in A returns the new status). The parallel version runs under R104's Postgres mode.
+- Proof (RED first): new `apps/project-car/api/tests/test_refund_lock.py`: `test_second_accept_is_409_and_one_ledger_row` (accept twice in sequence with two sessions: second is 409 `refund_already_decided`, ledger has one refund row, balance moved once); `test_locked_booking_refreshes_stale_status` (load booking in session A, change status in session B and commit, `_locked_booking` in A returns the new status). The parallel version runs under R103's Postgres mode.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/services/staff.py` (`accept_refund_request` only), `apps/project-car/api/app/services/bookings.py` (`_locked_booking` only), new `apps/project-car/api/tests/test_refund_lock.py`
 - Depends on: none. Priority: first.
@@ -907,7 +907,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): new `apps/project-car/api/tests/test_pg_race.py`: `@pytest.mark.pg test_refund_accept_race_refunds_once` (12 parallel accepts → exactly 1 success, 11 × 409, one ledger row); `test_race_helper_releases_together` (unit, runs on SQLite). Run `bash apps/project-car/scripts/test-pg.sh` locally: the pg test is RED before R100, GREEN after.
 - Size: 2 tasks
 - Likely files: `apps/project-car/api/tests/conftest.py`, `apps/project-car/api/pyproject.toml`, new `apps/project-car/api/tests/race.py`, new `apps/project-car/api/tests/test_pg_race.py`, new `apps/project-car/scripts/test-pg.sh`, `Docs/shop-os-ci.md`
-- Depends on: R100 merged for the green race test. The CI workflow job itself needs Ben (workflows are off-limits to GB).
+- Depends on: also after R102 (`conftest.py`). R100 merged for the green race test. The CI workflow job itself needs Ben (workflows are off-limits to GB).
 
 ### R104. Accepting a fill draft repeatedly re-sends notices; chat drafts double-post
 - Category: Critical bug (fix #5)
@@ -957,7 +957,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): new `apps/project-car/api/tests/test_booking_caps.py`: shop booking of 25 h → 400 `booking_too_long` and zero `booking_hours` rows; 24 h ok; start 61 days out → 400 `booking_too_far_ahead`; member 13 h → 400.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/services/bookings.py` (`_create_shop_booking`, `create_booking` validation only), new `apps/project-car/api/tests/test_booking_caps.py`
-- Depends on: none. Not concurrently with other `bookings.py` rows.
+- Depends on: also after R100 (`bookings.py`). none. Not concurrently with other `bookings.py` rows.
 
 ### R109. Check-in is allowed while another visit is on the bay (folds R64)
 - Category: Correctness (fix #14 / R64, decided)
@@ -1047,7 +1047,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/api/tests/test_created_by.py`: AI-created booking stores `created_by_kind="ai"` and an action row; member booking stores member id; ledger rows carry the same.
 - Size: 2 tasks
 - Likely files: `apps/project-car/api/app/models.py`, new `apps/project-car/api/alembic/versions/20261031_0017_created_by.py`, `apps/project-car/api/app/services/tokens.py`, `apps/project-car/api/app/services/bookings.py` (writes of the new columns only), new `apps/project-car/api/tests/test_created_by.py`
-- Depends on: R101 merged; after R113 (bookings.py). Only migration in flight.
+- Depends on: also after R116 (`models.py`). R101 merged; after R113 (bookings.py). Only migration in flight.
 
 ### R118. Owner sessions cannot be revoked
 - Category: Security (fix #17)
@@ -1067,7 +1067,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/api/tests/test_ai_actors.py`: bot-a creates, bot-b approves → 403 `ai_cannot_approve_ai`; owner approves → ok; actor recorded as `bot-a`.
 - Size: 1 task
 - Likely files: `apps/project-car/api/app/config.py`, `apps/project-car/api/app/deps.py`, `apps/project-car/api/app/services/staff.py` (`reject_own_request`, `actor_of`), new `apps/project-car/api/tests/test_ai_actors.py`
-- Depends on: R101 merged; after R116.
+- Depends on: also after R102 (`config.py`). R101 merged; after R116.
 
 ### R120. Cancel or complete rescans every held booking
 - Category: Performance (fix #19)
@@ -1145,7 +1145,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/api/tests/test_list_search.py` (q filters by name/email; limit 501 → 422; offset pages).
 - Size: 2 tasks
 - Likely files: `apps/project-car/api/app/routers/members.py`, `apps/project-car/api/app/routers/waitlist.py`, `apps/project-car/api/app/routers/parts_requests.py`, new `apps/project-car/api/tests/test_list_search.py`, `apps/project-car/web/app/members/page.tsx`, `apps/project-car/web/app/waitlist/page.tsx`, `apps/project-car/web/app/parts/page.tsx`
-- Depends on: R101 merged (routers).
+- Depends on: also after R124 (`members/page.tsx`). R101 merged (routers).
 
 ### R129. No single Inbox for approvals
 - Category: Layout (fix #31)
@@ -1153,7 +1153,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/api/tests/test_inbox.py`: one of each pending kind → six items; decided items absent; AI and member get 403.
 - Size: 2 tasks
 - Likely files: new `apps/project-car/api/app/routers/inbox.py`, `apps/project-car/api/app/main.py`, new `apps/project-car/api/tests/test_inbox.py`, new `apps/project-car/web/app/inbox/page.tsx`, `apps/project-car/web/lib/shop-api.ts`, `apps/project-car/web/app/schedule/page.tsx`
-- Depends on: R100, R104, R105 merged (ideally R101).
+- Depends on: also after R102 (`main.py`) and R127 (`schedule/page.tsx`). R100, R104, R105 merged (ideally R101).
 
 ### R130. Member phone layout has no bottom tabs or balance chip
 - Category: Layout (fix #32)
@@ -1193,7 +1193,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/web/lib/labels.test.ts`: no JSX text in `app/**` or `components/**` contains "hoist" (case-insensitive) outside code identifiers.
 - Size: 1 task
 - Likely files: new `apps/project-car/web/lib/labels.ts`, new `apps/project-car/web/lib/labels.test.ts`, `apps/project-car/web/lib/redirects.ts`, `apps/project-car/web/components/owner-shell.tsx`, `apps/project-car/web/components/member-shell.tsx`
-- Depends on: R133 merged.
+- Depends on: also after R126 (`owner-shell.tsx`). R133 merged.
 
 ### R135. Owner nav is not grouped by task
 - Category: Layout (fix #37)
@@ -1249,7 +1249,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): `apps/project-car/web/lib/staff-nav.test.ts` (staff sees only Shift, Schedule, Inbox-requests).
 - Size: 2 tasks
 - Likely files: new `apps/project-car/web/app/staff/login/page.tsx`, new `apps/project-car/web/app/shift/page.tsx`, new `apps/project-car/web/lib/staff-nav.ts`, new `apps/project-car/web/lib/staff-nav.test.ts`, `apps/project-car/web/middleware.ts`
-- Depends on: R140, R135 merged.
+- Depends on: also after R107 (`middleware.ts`). R140, R135 merged.
 
 ### R142. Concurrency harness across every state-changing endpoint (Opus check a)
 - Category: Tests
@@ -1280,7 +1280,7 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Proof (RED first): reconcile test with a deliberately drifted balance → listed, exit 1.
 - Size: 2 tasks
 - Likely files: new `apps/project-car/api/scripts/reconcile_ledger.py`, new `apps/project-car/api/tests/test_reconcile_ledger.py`, new `apps/project-car/api/tests/test_perf_synthetic.py`, `apps/project-car/api/pyproject.toml` (marker only)
-- Depends on: R120, R128 merged for the green perf numbers.
+- Depends on: also after R103 (`pyproject.toml`). R120, R128 merged for the green perf numbers.
 
 ### R146. Accessibility scan and keyboard checks (Opus check e)
 - Category: Tests
@@ -1289,6 +1289,8 @@ Stand-in values (Ben has not decided; each is one named constant so the real val
 - Size: 2 tasks
 - Likely files: new `apps/project-car/web/tests/a11y.spec.ts`, `apps/project-car/web/package.json` (devDependency only), `apps/project-car/web/playwright.config.ts`
 - Depends on: R126 merged.
+
+Launch rule for R100–R146: one writer per file. `gb-autolaunch` refuses a row whose Likely files overlap a row in flight, and rows whose Depends-on has not merged carry a `gb/drafts/project-car-<row>/hold` file on the box until it does. Every UI row (R107, R110, R114, R123–R141, R146) attaches before/after screenshots at 390 and 1440 with hosted proof image URLs.
 
 ## Stand-ins pending Ben (R100+)
 
