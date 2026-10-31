@@ -33,7 +33,7 @@ export default async function DashboardPage({
               <h1>Shop dashboard</h1>
               <p className="lede">
                 Next 24 hours on Bays 1–6 (Bay 6 is the shop hoist; members request it). Times are
-                America/Regina. Seeded sample data — the shop is not open.
+                Mountain Time. Seeded sample data — the shop is not open.
               </p>
             </div>
             <div className="dash-metrics">
@@ -69,7 +69,7 @@ export default async function DashboardPage({
               <h2>Bays · next 24 hours</h2>
               <p className="muted">
                 Window {formatShopDateTime(dash.window_start)} – {formatShopDateTime(dash.window_end)}{" "}
-                ({dash.tz}).
+                · Mountain Time.
               </p>
             </div>
             {hoists.length === 0 ? (

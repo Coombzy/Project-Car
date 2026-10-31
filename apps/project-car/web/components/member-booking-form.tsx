@@ -124,7 +124,7 @@ export function MemberBookingForm({
       </div>
       {rule ? (
         <div className="quote-preview">
-          <p className="eyebrow">Reserve quote · America/Regina bands</p>
+          <p className="eyebrow">Reserve quote · Mountain Time</p>
           <p className="quote-math">
             {rule.hours}h × 100 × {rule.band_multiplier} × {rule.advance_multiplier}
             {rule.fill_multiplier && rule.fill_multiplier !== "1" ? ` × ${rule.fill_multiplier}` : ""} ={" "}

@@ -137,21 +137,21 @@ def _fold_ics_line(content: str) -> str:
 
 
 def _booking_ics(booking: Booking) -> str:
-    """One VEVENT. Start and end are UTC. America/Regina is the shop clock."""
+    """One VEVENT. Start and end are UTC. The shop label is Mountain Time."""
     lines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
         "PRODID:-//Project Car//Shop OS//EN",
         "CALSCALE:GREGORIAN",
         "METHOD:PUBLISH",
-        "X-WR-TIMEZONE:America/Regina",
+        "X-WR-TIMEZONE:Mountain Time",
         "BEGIN:VEVENT",
         f"UID:{booking.id}",
         f"DTSTAMP:{_ics_utc(datetime.now(timezone.utc))}",
         f"DTSTART:{_ics_utc(booking.start_at)}",
         f"DTEND:{_ics_utc(booking.end_at)}",
         f"SUMMARY:{_ics_escape(booking.hoist.name)}",
-        "COMMENT:Times are UTC. Shop local time is America/Regina.",
+        "COMMENT:Times are UTC. Shop local time is Mountain Time.",
         "END:VEVENT",
         "END:VCALENDAR",
     ]

@@ -208,7 +208,7 @@ def campaign_copy(member: Member, snapshot: FillSnapshot) -> tuple[str, str]:
     gaps_block = "\n".join(gap_lines) if gap_lines else "- (see Shop OS schedule)"
     body = (
         f"Hi {member.name},\n\n"
-        f"Customer bays have open hours tomorrow ({date_label}, America/Regina).\n"
+        f"Customer bays have open hours tomorrow ({date_label}, Mountain Time).\n"
         f"Fill discount: {discount_label(snapshot.discount_pct)}% on next-day open slots "
         f"({snapshot.open_hours} open of {snapshot.capacity_hours} bay-hours; "
         f"urgency {snapshot.urgency}).\n\n"
