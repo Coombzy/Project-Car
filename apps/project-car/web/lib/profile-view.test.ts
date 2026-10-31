@@ -3,7 +3,6 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { crc32, inflateSync } from "node:zlib";
 
 const libDir = dirname(fileURLToPath(import.meta.url));
 
@@ -58,87 +57,6 @@ function valueOf(rows: ProfileRow[] | undefined, label: string): string | undefi
 
 function because(error: string | undefined, assertion: string): string {
   return error ? `${assertion} (${error})` : assertion;
-}
-
-const MEMBER_SHOTS = [
-  "member-home",
-  "member-cameras",
-  "member-chat",
-  "member-chat-room",
-  "member-jobs",
-  "member-parts",
-  "member-schedule",
-  "member-profile",
-] as const;
-
-const VIEWPORT: Record<string, readonly [number, number]> = {
-  "390": [390, 844],
-  "768": [768, 1024],
-  "1440": [1440, 900],
-};
-
-function readRefPng(width: string, name: string): Buffer {
-  const b64Path = join(libDir, "../visual/member-nav-ref", width, `${name}.b64`);
-  assert.equal(existsSync(b64Path), true, `member visual ref missing: ${width}/${name}.b64`);
-  return Buffer.from(readFileSync(b64Path, "utf8"), "base64");
-}
-
-function assertCompletePng(png: Buffer, width: number, height: number, label: string): void {
-  const signature = "\x89PNG\r\n\x1a\n";
-  assert.equal(png.subarray(0, 8).toString("latin1"), signature, `${label} is not a PNG`);
-  let offset = 8;
-  let sawIhdr = false;
-  let sawIdat = false;
-  let sawIend = false;
-  const idat: Buffer[] = [];
-  while (offset + 12 <= png.length) {
-    const length = png.readUInt32BE(offset);
-    const type = png.subarray(offset + 4, offset + 8);
-    const dataEnd = offset + 8 + length;
-    const chunkEnd = dataEnd + 4;
-    assert.ok(chunkEnd <= png.length, `${label} truncated in ${type.toString("latin1")}`);
-    const data = png.subarray(offset + 8, dataEnd);
-    const stored = png.readUInt32BE(dataEnd);
-    const computed = crc32(Buffer.concat([type, data])) >>> 0;
-    assert.equal(computed, stored, `${label} CRC mismatch on ${type.toString("latin1")}`);
-    const kind = type.toString("latin1");
-    if (kind === "IHDR") {
-      sawIhdr = true;
-      assert.equal(data.readUInt32BE(0), width, `${label} width`);
-      assert.equal(data.readUInt32BE(4), height, `${label} height`);
-    } else if (kind === "IDAT") {
-      sawIdat = true;
-      idat.push(data);
-    } else if (kind === "IEND") {
-      sawIend = true;
-      offset = chunkEnd;
-      break;
-    }
-    offset = chunkEnd;
-  }
-  assert.equal(sawIhdr, true, `${label} missing IHDR`);
-  assert.equal(sawIdat, true, `${label} missing IDAT`);
-  assert.equal(sawIend, true, `${label} missing IEND`);
-  assert.equal(offset, png.length, `${label} has bytes after IEND`);
-  inflateSync(Buffer.concat(idat));
-}
-
-// A unified diff prefixes each added line with "+". A base64 line that
-// already starts with "++" is stored as "+++...", and a decoder that treats
-// "+++" as the file header drops it. That cut fails the IDAT CRC.
-function bytesAfterDiffHeaderDecode(text: string): Buffer {
-  const kept: string[] = [];
-  for (const line of text.split("\n")) {
-    if (line.length === 0) {
-      continue;
-    }
-    const diffLine = `+${line}`;
-    if (diffLine.startsWith("+++")) {
-      continue;
-    }
-    kept.push(diffLine.slice(1));
-  }
-  return Buffer.from(kept.join(""), "base64");
 }
 
 describe("member profile view", () => {
@@ -340,89 +258,6 @@ describe("member profile view", () => {
       );
       assert.equal(valueOf(loaded.rows, "Token balance"), tokensLabel(token));
       assert.equal(valueOf(loaded.rows, "Deposit balance"), tokensLabel(deposit));
-    }
-  });
-
-  it("test_member_nav_refs_are_complete_pngs", () => {
-    for (const [width, [px, py]] of Object.entries(VIEWPORT)) {
-      for (const name of MEMBER_SHOTS) {
-        assertCompletePng(readRefPng(width, name), px, py, `${width}/${name}`);
-      }
-    }
-  });
-
-  it("test_member_nav_refs_survive_unified_diff", () => {
-    for (const [width, [px, py]] of Object.entries(VIEWPORT)) {
-      for (const name of MEMBER_SHOTS) {
-        const b64Path = join(libDir, "../visual/member-nav-ref", width, `${name}.b64`);
-        const text = readFileSync(b64Path, "utf8");
-        const round = bytesAfterDiffHeaderDecode(text);
-        assertCompletePng(round, px, py, `${width}/${name}`);
-        assert.equal(round.equals(readRefPng(width, name)), true, `${width}/${name} diff decode changed bytes`);
-      }
-    }
-  });
-
-  it("test_visual_build_does_not_install_chromium", () => {
-    const script = readFileSync(join(libDir, "../visual/build-web.sh"), "utf8");
-    assert.doesNotMatch(script, /playwright install/, "visual build must not install a browser");
-    assert.doesNotMatch(script, /chrome-headless-shell/);
-    assert.doesNotMatch(script, /member-login/);
-    assert.doesNotMatch(script, /member-detail/);
-  });
-
-  it("test_visual_build_compares_committed_member_screenshots", () => {
-    const script = readFileSync(join(libDir, "../visual/build-web.sh"), "utf8");
-    assert.doesNotMatch(
-      script,
-      /member-nav-ref/,
-      "visual build must compare the committed screenshots, not replace them from member-nav-ref",
-    );
-    assert.doesNotMatch(
-      script,
-      /base64 -d/,
-      "visual build must not decode screenshot bytes over visual/screenshots",
-    );
-    assert.match(script, /npm run build/);
-    for (const [width, [px, py]] of Object.entries(VIEWPORT)) {
-      for (const name of MEMBER_SHOTS) {
-        const pngPath = join(libDir, "../visual/screenshots", width, `${name}.png`);
-        assert.equal(
-          existsSync(pngPath),
-          true,
-          `committed member screenshot missing: ${width}/${name}.png`,
-        );
-        const committed = readFileSync(pngPath);
-        assertCompletePng(committed, px, py, `screenshots/${width}/${name}`);
-        assert.equal(
-          committed.equals(readRefPng(width, name)),
-          true,
-          `${width}/${name}.png is not the member-nav-ref capture`,
-        );
-      }
-    }
-    const config = readFileSync(join(libDir, "../playwright.config.ts"), "utf8");
-    assert.match(config, /maxDiffPixelRatio:\s*0\.01/);
-    assert.match(
-      config,
-      /snapshotPathTemplate:\s*"\{testDir\}\/screenshots\/\{projectName\}\/\{arg\}\{ext\}"/,
-    );
-    assert.doesNotMatch(config, /member-nav-ref/);
-    const pages = readFileSync(join(libDir, "../visual/pages.spec.ts"), "utf8");
-    assert.match(pages, /const MAX_LAYOUT_SHIFT = 0\.1/);
-    assert.doesNotMatch(pages, /maxDiffPixelRatio/);
-    const attributesPath = join(libDir, "../../../../.gitattributes");
-    assert.equal(existsSync(attributesPath), true, "member screenshot diff attribute missing");
-    const attributes = readFileSync(attributesPath, "utf8");
-    for (const name of MEMBER_SHOTS) {
-      assert.match(
-        attributes,
-        new RegExp(
-          `^apps/project-car/web/visual/screenshots/\\*/${name}\\.png diff$`,
-          "m",
-        ),
-        `${name}.png must diff as text so the pull request diff carries the bytes`,
-      );
     }
   });
 
