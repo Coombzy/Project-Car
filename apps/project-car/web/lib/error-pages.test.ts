@@ -90,4 +90,37 @@ describe("shop error pages", () => {
     assert.match(pages, /toBeLessThan\(400\)/);
     assert.match(pages, /That page is not here\./);
   });
+
+  it("test_member_not_found_links_to_the_member_dashboard", async () => {
+    let dashboardHref: (pathname: string) => "/" | "/member";
+    try {
+      ({ dashboardHref } = await import("./error-pages.ts"));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      assert.fail(`lib/error-pages.ts must export dashboardHref (${message})`);
+    }
+    assert.equal(dashboardHref("/member"), "/member");
+    assert.equal(dashboardHref("/member/nope"), "/member");
+    assert.equal(dashboardHref("/member/schedule"), "/member");
+    assert.equal(dashboardHref("/no-such-page"), "/");
+    assert.equal(dashboardHref("/schedul"), "/");
+    assert.equal(dashboardHref("/membership"), "/");
+    assert.equal(dashboardHref("/members/missing"), "/");
+    assert.equal(dashboardHref("/_not-found"), "/");
+    assert.equal(dashboardHref(""), "/");
+
+    const notFound = readSource("app/not-found.tsx");
+    assert.match(notFound, /import \{ dashboardHref \} from "\.\.\/lib\/error-pages"/);
+    assert.doesNotMatch(notFound, /function dashboardHref/);
+    assert.match(notFound, /<Link href=\{dashboardHref\(pathname\)\}>Dashboard<\/Link>/);
+
+    const pages = readSource("visual/pages.spec.ts");
+    assert.match(pages, /page\.goto\("\/member\/nope", \{ waitUntil: "load" \}\)/);
+    assert.match(pages, /toHaveAttribute\("href", "\/member"\)/);
+    assert.match(pages, /This page could not be found\./);
+    // shoot() must still fail when networkidle never arrives. A Timeout
+    // swallow lets a hung shop request pass the API-error count.
+    assert.match(pages, /await page\.waitForLoadState\("networkidle"\);/);
+    assert.doesNotMatch(pages, /\/Timeout\/i\.test/);
+  });
 });
