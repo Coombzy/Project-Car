@@ -3,11 +3,12 @@ import Link from "next/link";
 import { BookingCost } from "../../components/booking-cost";
 import { HoistHourStrip } from "../../components/hoist-hour-strip";
 import { MemberShell } from "../../components/member-shell";
+import { NextVisitCard } from "../../components/next-visit-card";
 import { StatusPill } from "../../components/status-pill";
 import { TodoPanel } from "../../components/todo-panel";
 import { handleMemberPageError } from "../../lib/page";
 import { getMemberDashboard, getMemberMe } from "../../lib/shop-api";
-import { formatShopDateTime, tokensLabel } from "../../lib/time";
+import { formatShopDateTime, shopClock, tokensLabel } from "../../lib/time";
 import {
   createMemberTodoAction,
   deleteMemberTodoAction,
@@ -96,6 +97,9 @@ export default async function MemberHomePage({
           icsPath={(id) => `/member/todos/${id}/ics`}
           audience="member"
         />
+
+        {/* Below the 768×1024 and 1440×900 folds. member-home.png stays on the 1% cap. */}
+        <NextVisitCard bookings={me.bookings} now={shopClock()} />
 
         <h2>Open bookings</h2>
         {open.length === 0 ? (
