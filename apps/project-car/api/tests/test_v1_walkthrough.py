@@ -158,6 +158,9 @@ def test_v1_walkthrough(client: TestClient) -> None:
     debit = next(row for row in done["tokens"] if row["kind"] == "booking_debit")
     assert _dec(debit["amount"]) == Decimal("-225")
     assert debit["meta"]["reason"] == "extra_hours"
+    assert debit["meta"]["pricing"] == (
+        "1h × 100 × 1.00 = 100.00 · Normal + 1h × 100 × 1.25 = 125.00 · Evening"
+    )
     assert _dec(done["token_balance"]) == Decimal("722.50")
     assert _dec(done["allowance_balance"]) == Decimal("522.50")
     assert _dec(done["purchased_balance"]) == Decimal("200")
