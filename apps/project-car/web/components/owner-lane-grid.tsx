@@ -57,14 +57,14 @@ export function OwnerLaneGrid({
   saved?: readonly RateHour[];
 }) {
   const now = parseShopInstant(nowIso).getTime();
-  const hours = Array.from({ length: 18 }, (_, index) => index + 6);
+  const hours = Array.from({ length: 24 }, (_, hour) => hour);
   const phoneBookings = bookings.filter((booking) => onDay(booking, focusDay));
 
   return (
     <div className="owner-lanes">
       <style>{OWNER_LANE_CSS}</style>
       <p className="lede">
-        Times are {TIME_LABEL}. A phone lists the day. A wide screen shows the week.
+        Times are {TIME_LABEL}. A phone lists the day. A wide screen shows every hour of the week.
       </p>
       <div className="day-pills">
         {days.map((day) => (
@@ -105,7 +105,7 @@ export function OwnerLaneGrid({
           ))}
         </div>
         {hours.map((hour) => (
-          <div key={hour} className="lane-row-hours" role="row">
+          <div key={hour} className={`lane-row-hours${hour < 6 ? " night" : ""}`} role="row">
             <div className="gutter">{`${pad(hour)}:00`}</div>
             {days.map((day) => (
               <div key={day} className="day-bays">
@@ -148,7 +148,9 @@ const OWNER_LANE_CSS = `
 .owner-lanes .day-name, .owner-lanes .day-bays { flex: 1; min-width: 0; display: flex; gap: 2px; font-size: 13px; }
 .owner-lanes .lane-cell { flex: 1; min-height: 28px; overflow: hidden; border-left: 3px solid var(--line); }
 @media (min-width: 768px) {
-  .owner-list { display: none; }
   .owner-grid { display: block; }
+}
+@media (max-width: 767px) {
+  .owner-lanes .night { display: none; }
 }
 `;
