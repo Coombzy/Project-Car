@@ -19,6 +19,7 @@ export function MemberBookingCard({
   return (
     <article
       className={`booking-chip status-${slot.status}${slot.own ? "" : " occupancy-chip"}${compact ? " booking-chip-hour" : ""}`}
+      data-booking-status={own?.status ?? slot.status}
     >
       <strong>{slot.own ? "You" : "Booked"}</strong>
       <div>
