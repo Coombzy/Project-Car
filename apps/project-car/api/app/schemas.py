@@ -328,6 +328,34 @@ class TokenAdjustment(BaseModel):
     note: str | None = Field(default=None, max_length=2000)
 
 
+class DepositCreate(BaseModel):
+    action: Literal["take", "return", "keep"]
+    amount: Decimal = Field(gt=0, decimal_places=2)
+    payment_id: str = Field(min_length=1, max_length=120)
+    note: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("payment_id")
+    @classmethod
+    def strip_payment_id(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("payment id is required")
+        return stripped
+
+
+class DollarChargeOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    purpose: str
+    payment_id: str | None
+    subtotal_cad: Decimal
+    gst_cad: Decimal
+    total_cad: Decimal
+    gst_rate: Decimal
+    created_at: datetime
+
+
 class TokenPurchaseCreate(BaseModel):
     """A PayPal payment the Owner has seen land. Tokens and CAD come from that payment."""
 

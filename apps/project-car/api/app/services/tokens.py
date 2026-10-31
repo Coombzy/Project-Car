@@ -21,7 +21,14 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import Member, MemberStatus, TokenTransaction, TokenTransactionKind
+from app.models import (
+    BillingKind,
+    BillingTransaction,
+    Member,
+    MemberStatus,
+    TokenTransaction,
+    TokenTransactionKind,
+)
 from app.shop_time import PRICING_TZ, pricing_now
 
 PERIOD_TZ = "America/Regina"
@@ -110,14 +117,29 @@ def record_token_purchase(
         raise _conflict("already_credited", "That payment has already been credited.")
     subtotal = _cents(subtotal_cad)
     gst = _cents(subtotal * GST_RATE)
+    total = subtotal + gst
     purchase = {
         "payment_id": payment_id,
         "subtotal_cad": str(subtotal),
         "gst_rate": str(GST_RATE),
         "gst_cad": str(gst),
-        "total_cad": str(subtotal + gst),
+        "total_cad": str(total),
         "by": recorded_by,
     }
+    session.add(
+        BillingTransaction(
+            member_id=member.id,
+            kind=BillingKind.PACK,
+            amount=total,
+            subtotal_cad=subtotal,
+            gst_cad=gst,
+            total_cad=total,
+            gst_rate=GST_RATE,
+            payment_id=payment_id,
+            note=note or f"Token purchase {payment_id}",
+        )
+    )
+    session.flush()
     return apply_ledger(
         session,
         member,
@@ -127,6 +149,79 @@ def record_token_purchase(
         meta={"purchase": purchase},
         payment_ref=payment_id,
     )
+
+
+def record_deposit(
+    session: Session,
+    member: Member,
+    *,
+    action: str,
+    amount: Decimal,
+    payment_id: str,
+    note: str | None = None,
+) -> BillingTransaction:
+    """Move a damage deposit. Take and return charge no GST and no tokens.
+
+    Keep writes GST at the stand-in rate. The held dollars are the before-tax
+    amount. Payment ids are stand-ins until a processor is connected.
+    """
+    held_amount = _cents(amount)
+    if held_amount <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "invalid_amount", "message": "Deposit amount must be greater than zero."},
+        )
+    payment_id = payment_id.strip()
+    held = Decimal(member.deposit_balance)
+    if action == "take":
+        kind = BillingKind.DEPOSIT_TAKEN
+        charge_gst = False
+        member.deposit_balance = held + held_amount
+    elif action == "return":
+        if held_amount > held:
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "deposit_short", "message": "That is more than the deposit on file."},
+            )
+        kind = BillingKind.DEPOSIT_RETURNED
+        charge_gst = False
+        member.deposit_balance = held - held_amount
+    elif action == "keep":
+        if held_amount > held:
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "deposit_short", "message": "That is more than the deposit on file."},
+            )
+        kind = BillingKind.DEPOSIT_KEPT
+        charge_gst = True
+        member.deposit_balance = held - held_amount
+    else:
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "validation_error", "message": "Deposit action must be take, return, or keep."},
+        )
+    gst = _cents(held_amount * GST_RATE) if charge_gst else Decimal("0.00")
+    total = held_amount + gst
+    row = BillingTransaction(
+        member_id=member.id,
+        kind=kind,
+        amount=total,
+        subtotal_cad=held_amount,
+        gst_cad=gst,
+        total_cad=total,
+        gst_rate=GST_RATE if charge_gst else Decimal("0.0000"),
+        payment_id=payment_id,
+        note=note or f"Deposit {action} {payment_id}",
+    )
+    session.add(row)
+    session.add(member)
+    try:
+        session.flush()
+    except IntegrityError:
+        session.rollback()
+        raise _conflict("already_recorded", "That payment id is already on a dollar row.") from None
+    session.refresh(row)
+    return row
 
 
 def ledger_sum(session: Session, member_id) -> Decimal:
