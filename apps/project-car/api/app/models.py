@@ -1329,6 +1329,15 @@ class JobEvent(Base):
         return f"<JobEvent(id={self.id!r}, kind={self.kind!r}, job_key={self.job_key!r})>"
 
 
+class ShopSetting(Base):
+    """One shop-wide switch. Signup mode is self-serve or the waitlist fallback."""
+
+    __tablename__ = "shop_settings"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    value: Mapped[str] = mapped_column(String(64), nullable=False)
+
+
 ALL_MODELS = [
     MembershipTier,
     PricingBand,
@@ -1354,6 +1363,7 @@ ALL_MODELS = [
     PartsRequest,
     CalendarConnection,
     JobEvent,
+    ShopSetting,
 ]
 
 

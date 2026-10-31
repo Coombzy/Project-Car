@@ -22,8 +22,9 @@ export default async function MembersPage({
         <p className="eyebrow">GET /members</p>
         <h1>Members</h1>
         <p className="lede">
-          Sample roster for the Owner walkthrough. Member self-serve signup is
-          later. Token balance is the ledger cache.
+          Sample roster for the Owner walkthrough. New members sign up at{" "}
+          <Link href="/signup">/signup</Link>. The waitlist is the fallback.
+          Token balance is the ledger cache.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
 
