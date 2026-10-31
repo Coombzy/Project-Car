@@ -145,8 +145,8 @@ export default async function MemberDetailPage({
               <div className="muted">Whole or cents, e.g. 100 or -1.50</div>
             </div>
             <label>
-              Note
-              <input name="note" defaultValue="Owner adjustment" />
+              Reason
+              <input name="reason" required minLength={3} maxLength={500} />
             </label>
             <div className="actions" style={{ alignSelf: "end" }}>
               <button type="submit">Post adjustment</button>

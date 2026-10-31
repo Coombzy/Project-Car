@@ -59,7 +59,7 @@ export async function adjustTokensAction(formData: FormData): Promise<void> {
     await adjustMemberTokens(
       id,
       String(formData.get("amount") ?? ""),
-      String(formData.get("note") ?? "Owner adjustment"),
+      String(formData.get("reason") ?? "").trim(),
     );
   } catch (error) {
     bounce(`/members/${id}`, error);
