@@ -57,10 +57,17 @@ def test_v1_walkthrough(client: TestClient) -> None:
     bay = create_hoist(client, name="Bay 1")
     other = create_hoist(client, name="Bay 2")
 
-    signed = client.post(
-        "/waitlist",
-        json={"name": "Nova Hale", "email": EMAIL, "phone": "403-555-0142", "notes": "Basic"},
-    )
+    # Other waitlist tests share TestClient's default host and its eight-signup cap.
+    transport = client._transport
+    previous = transport.client
+    transport.client = ("203.0.113.44", 50000)
+    try:
+        signed = client.post(
+            "/waitlist",
+            json={"name": "Nova Hale", "email": EMAIL, "phone": "403-555-0142", "notes": "Basic"},
+        )
+    finally:
+        transport.client = previous
     assert signed.status_code == 201, signed.text
     converted = client.post(
         f"/waitlist/{signed.json()['id']}/convert",
