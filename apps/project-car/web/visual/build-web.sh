@@ -8,7 +8,8 @@ export SHOP_NOW
 export NEXT_PUBLIC_SHOP_NOW="$SHOP_NOW"
 export SHOP_API_URL="${SHOP_API_URL:-http://127.0.0.1:8000}"
 cd "$WEB"
-# GitHub Actions installs Chromium before this script. The local pre-push
-# check runs this script and then `npm run visual` with no browser install.
-npx playwright install chromium
 npm run build
+# Playwright (reuseExistingServer: false) errors when :8000/health already
+# answers, so a leftover visual run blocks the next one. Free 8000 and 3000
+# after the build, before `npm run visual`. Do not flip reuseExistingServer.
+python3 "$VISUAL/free_visual_ports.py"

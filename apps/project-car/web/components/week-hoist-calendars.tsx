@@ -93,6 +93,7 @@ export function WeekHoistCalendars({
                       <Link
                         key={hour}
                         className={`hour-slot${hour >= OPEN_HOUR_START && hour < OPEN_HOUR_END ? " is-open" : ""}`}
+                        prefetch={false}
                         href={scheduleHref(base, {
                           view: "week",
                           week: weekStart,
