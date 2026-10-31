@@ -7,6 +7,7 @@ import {
   balanceWouldGoNegative,
   bandAt,
   lowestFreeBay,
+  quotedSelectionLine,
   selectionSummary,
   type BayChoice,
   type SpanInterval,
@@ -99,6 +100,7 @@ export function BookingCalendar({ view, days, today, nowIso, hoists, slots, bala
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   const [focusHour, setFocusHour] = useState<number | null>(null);
   const [quoteTotal, setQuoteTotal] = useState<number | null>(null);
+  const [quoteLine, setQuoteLine] = useState<string | null>(null);
   const [quoteAfter, setQuoteAfter] = useState<number | null>(null);
   const [quoting, setQuoting] = useState(false);
 
@@ -135,12 +137,14 @@ export function BookingCalendar({ view, days, today, nowIso, hoists, slots, bala
   useEffect(() => {
     if (!selection || selection.hours.length === 0 || !selection.bay) {
       setQuoteTotal(null);
+      setQuoteLine(null);
       setQuoteAfter(null);
       setQuoting(false);
       return;
     }
     if (selection.bay.isShop) {
       setQuoteTotal(0);
+      setQuoteLine(null);
       setQuoteAfter(Number(balance));
       setQuoting(false);
       return;
@@ -158,14 +162,22 @@ export function BookingCalendar({ view, days, today, nowIso, hoists, slots, bala
         const body = (await response.json()) as {
           reserved_tokens?: string;
           token_balance_after?: string | null;
+          pricing_rule?: {
+            segments?: { band_label: string; band_tokens: string }[];
+            final_reserve_cost?: string;
+            fill_multiplier?: string;
+            fill_label?: string;
+          };
         };
         if (!response.ok) {
           setQuoteTotal(null);
+          setQuoteLine(null);
           setQuoteAfter(null);
           setQuoting(false);
           return;
         }
         setQuoteTotal(Number(body.reserved_tokens));
+        setQuoteLine(quotedSelectionLine(body.pricing_rule));
         setQuoteAfter(
           body.token_balance_after === null || body.token_balance_after === undefined
             ? null
@@ -176,6 +188,8 @@ export function BookingCalendar({ view, days, today, nowIso, hoists, slots, bala
         if ((fetchError as { name?: string }).name === "AbortError") {
           return;
         }
+        setQuoteTotal(null);
+        setQuoteLine(null);
         setQuoting(false);
       }
     }, 200);
@@ -292,7 +306,7 @@ export function BookingCalendar({ view, days, today, nowIso, hoists, slots, bala
                 {pad(selection.hours[0] ?? 0)}:00–{pad((selection.hours[selection.hours.length - 1] ?? 0) + 1)}:00
               </strong>
             </p>
-            <p>{quoting ? "Updating price…" : selection.line}</p>
+            <p>{quoting ? "Updating price…" : quoteLine ?? selection.line}</p>
             {selection.note ? <p>{selection.note}</p> : null}
             {selection.hoistId === "any" && selection.bay ? (
               <p>We'll put you on {selection.bay.name}, the lowest-numbered free bay. We check again when you book.</p>
