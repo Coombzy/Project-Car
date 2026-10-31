@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { parseViewParam, scheduleHref } from "../../lib/calendar";
+import { snapWholeHourWindow } from "../../lib/time";
 import { ShopApiError } from "../../lib/config";
 import {
   approveShopHoistRequest,
@@ -43,11 +44,15 @@ export async function createBookingAction(formData: FormData): Promise<void> {
   try {
     const kind = String(formData.get("kind") ?? "customer");
     const memberId = String(formData.get("member_id") ?? "").trim();
+    const window = snapWholeHourWindow(
+      String(formData.get("start_at") ?? ""),
+      String(formData.get("end_at") ?? ""),
+    );
     await createBooking({
       member_id: kind === "shop" ? memberId || null : memberId,
       hoist_id: String(formData.get("hoist_id") ?? ""),
-      start_at: String(formData.get("start_at") ?? ""),
-      end_at: String(formData.get("end_at") ?? ""),
+      start_at: window.start,
+      end_at: window.end,
       notes: String(formData.get("notes") ?? "") || null,
       kind,
     });

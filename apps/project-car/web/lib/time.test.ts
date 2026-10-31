@@ -1,7 +1,16 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { addDays, mondayOf, parseWeekParam, shopDateTimeLocal, tokensLabel } from "./time.ts";
+import {
+  addDays,
+  bayOptionLabel,
+  defaultVisitWindow,
+  mondayOf,
+  parseWeekParam,
+  shopDateTimeLocal,
+  snapWholeHourWindow,
+  tokensLabel,
+} from "./time.ts";
 
 // America/Regina is UTC−6 all year. This instant is 12:30 on Wednesday 2026-06-17,
 // so the current shop week starts Monday 2026-06-15. shopClock reads
@@ -62,6 +71,20 @@ describe("tokensLabel", () => {
     assert.equal(tokensLabel("180.50"), "180.50");
     assert.equal(tokensLabel(-1.5), "-1.50");
     assert.equal(tokensLabel("nope"), "nope");
+  });
+});
+
+describe("default visit window", () => {
+  it("at 1:43 a.m. is 10:00-11:00 the same day, and 4:30 never submits", () => {
+    const early = defaultVisitWindow(new Date("2026-11-05T07:43:00.000Z"));
+    assert.equal(early.start, "2026-11-05T10:00");
+    assert.equal(early.end, "2026-11-05T11:00");
+
+    const snapped = snapWholeHourWindow("2026-11-05T16:30", "2026-11-05T17:30");
+    assert.equal(snapped.start, "2026-11-05T17:00");
+    assert.equal(snapped.end, "2026-11-05T18:00");
+    assert.equal(snapped.start.includes(":30"), false);
+    assert.equal(bayOptionLabel({ name: "Bay 2", status: "occupied" }).includes("occupied"), false);
   });
 });
 
