@@ -7,11 +7,14 @@ datetime-local clock) would then store an hour late.
 
 from __future__ import annotations
 
+import zoneinfo
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
 import pytest
+import tzdata
 from fastapi.testclient import TestClient
 
 from app.models import Booking
@@ -22,6 +25,9 @@ UTC_MINUS_6 = timedelta(hours=-6)
 
 
 def test_edmonton_offset_stays_minus_6_after_2026_11_01() -> None:
+    # Host tzdata 2026c+ already reports UTC-6. TZPATH has to be the package.
+    package_zoneinfo = str(Path(tzdata.__file__).resolve().parent / "zoneinfo")
+    assert zoneinfo.TZPATH == (package_zoneinfo,)
     edmonton = ZoneInfo("America/Edmonton")
     after_old_fallback = datetime(2026, 11, 1, 3, 0, tzinfo=edmonton)
     mid_december = datetime(2026, 12, 15, 12, 0, tzinfo=edmonton)
