@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from datetime import datetime, timedelta, timezone
 from decimal import ROUND_HALF_UP, Decimal
@@ -31,7 +32,7 @@ from app.services.fill import resolve_fill_for_slot
 from app.services.peak_cap import check_peak_cap
 from app.services.pricing import PricingError, quote_reserve
 from app.services.tokens import apply_ledger, piles_for_refund
-from app.shop_time import PRICING_TZ, as_utc, iter_regina_hours, shop_now
+from app.shop_time import PRICING_TZ, as_utc, iter_regina_hours, shop_now, stored_utc
 
 OPEN_STATUSES = (BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.ACTIVE)
 # Overdue still occupies a tier slot until the Owner completes it. Cancel stays
@@ -48,6 +49,8 @@ HOLDING_STATUSES = (
     BookingStatus.ACTIVE,
     BookingStatus.OVERDUE,
 )
+logger = logging.getLogger(__name__)
+
 BAY_HOUR_TAKEN = "That bay already has a booking on this hour."
 NO_BAY = "No member bay is free for every hour of this visit."
 UNAVAILABLE_HOIST = (HoistStatus.MAINTENANCE, HoistStatus.LOCKED)
@@ -707,13 +710,10 @@ def complete_booking(session: Session, booking_id: UUID) -> Booking:
 def _stored_utc(value: datetime) -> datetime:
     """UTC instant for a stored timestamp or an aware clock.
 
-    Postgres returns timestamptz as aware. SQLite returns the same UTC instant
-    as a naive datetime. ``as_utc`` treats naive values as shop-local, which
-    would move a past end into the future.
+    See ``shop_time.stored_utc``. ``as_utc`` treats naive values as shop-local,
+    which would move a past end into the future.
     """
-    if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
+    return stored_utc(value)
 
 
 def _late_return(session: Session, booking_id: UUID) -> Incident | None:
@@ -829,12 +829,51 @@ REASON_MIN = 3
 REASON_MAX = 500
 
 
+def _settle_one_elapsed_no_show(session: Session, booking_id: UUID, now: datetime) -> Booking | None:
+    """Mark one elapsed confirmed visit as a no-show, or return None.
+
+    ``release_booking_hours`` raises ``HoldingHoursConflict`` when another
+    holding booking cannot own its window. The caller rolls that booking back.
+    """
+    booking = _locked_booking(session, booking_id)
+    if booking.status != BookingStatus.CONFIRMED or _stored_utc(booking.end_at) > now:
+        return None
+    member = lock_member(session, booking.member_id)
+    reserved = Decimal(booking.reserved_tokens)
+    kept = kept_share(reserved, NO_SHOW_KEEP_PCT)
+    if reserved - kept > 0:
+        refund = reserved - kept
+        allowance_amount, purchased_amount = _refund_split(session, booking, refund)
+        apply_ledger(
+            session,
+            member,
+            kind=TokenTransactionKind.BOOKING_REFUND,
+            amount=refund,
+            booking_id=booking.id,
+            note=f"No-show: refund {refund}, keep {kept}",
+            meta={"policy": "no_show", "keep_pct": str(NO_SHOW_KEEP_PCT), "kept_tokens": str(kept)},
+            allowance_amount=allowance_amount,
+            purchased_amount=purchased_amount,
+        )
+    booking.reserved_tokens = Decimal("0")
+    booking.status = BookingStatus.NO_SHOW
+    session.add(booking)
+    release_booking_hours(session, booking)
+    session.flush()
+    _set_hoist_available_if_idle(session, booking.hoist)
+    return get_booking(session, booking.id)
+
+
 def settle_elapsed_no_shows(session: Session) -> list[Booking]:
     """Turn a confirmed visit whose end has passed into a no-show.
 
     The hour is freed in this save and the reserve stays with the shop.
     A second call finds nothing new. Sweep is the same rule, kept as a
     catch-up button.
+
+    A holding-hours conflict skips that booking and leaves it unchanged.
+    Listing bookings calls this, and a read must not fail because one row
+    cannot be swept.
     """
     now = _stored_utc(shop_now())
     candidates = session.scalars(
@@ -847,33 +886,15 @@ def settle_elapsed_no_shows(session: Session) -> list[Booking]:
     ).all()
     swept: list[Booking] = []
     for booking_id in candidates:
-        booking = _locked_booking(session, booking_id)
-        if booking.status != BookingStatus.CONFIRMED or _stored_utc(booking.end_at) > now:
+        try:
+            with session.begin_nested():
+                settled = _settle_one_elapsed_no_show(session, booking_id, now)
+        except HoldingHoursConflict as exc:
+            session.expire_all()
+            logger.warning("No-show sweep left booking %s unchanged: %s", booking_id, exc)
             continue
-        member = lock_member(session, booking.member_id)
-        reserved = Decimal(booking.reserved_tokens)
-        kept = kept_share(reserved, NO_SHOW_KEEP_PCT)
-        if reserved - kept > 0:
-            refund = reserved - kept
-            allowance_amount, purchased_amount = _refund_split(session, booking, refund)
-            apply_ledger(
-                session,
-                member,
-                kind=TokenTransactionKind.BOOKING_REFUND,
-                amount=refund,
-                booking_id=booking.id,
-                note=f"No-show: refund {refund}, keep {kept}",
-                meta={"policy": "no_show", "keep_pct": str(NO_SHOW_KEEP_PCT), "kept_tokens": str(kept)},
-                allowance_amount=allowance_amount,
-                purchased_amount=purchased_amount,
-            )
-        booking.reserved_tokens = Decimal("0")
-        booking.status = BookingStatus.NO_SHOW
-        session.add(booking)
-        release_booking_hours(session, booking)
-        session.flush()
-        _set_hoist_available_if_idle(session, booking.hoist)
-        swept.append(get_booking(session, booking.id))
+        if settled is not None:
+            swept.append(settled)
     return swept
 
 
