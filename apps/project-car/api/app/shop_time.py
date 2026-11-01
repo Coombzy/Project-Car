@@ -32,6 +32,18 @@ def as_utc(value: datetime) -> datetime:
     return value.astimezone(timezone.utc)
 
 
+def stored_utc(value: datetime) -> datetime:
+    """UTC instant for a timestamp already stored on a booking.
+
+    Postgres returns timestamptz aware. SQLite returns the same UTC instant
+    with the offset removed. Naive values are that instant, not a shop wall
+    clock. ``as_utc`` would read the naive form as Regina and shift it.
+    """
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 def _frozen(zone: ZoneInfo) -> datetime | None:
     """SHOP_NOW freezes both clocks for the visual check. Unset means the real clock."""
     raw = os.environ.get("SHOP_NOW", "").strip()
