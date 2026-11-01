@@ -1,8 +1,19 @@
 from __future__ import annotations
 
-from fastapi.testclient import TestClient
+from datetime import datetime
+from uuid import UUID
 
-from tests.conftest import AUTH, create_hoist, create_member
+from fastapi.testclient import TestClient
+from sqlalchemy import select
+
+from app.models import Booking, BookingHour
+from app.seed import seed, seed_id
+from app.services.bookings import _hour_key, _stored_utc
+from app.shop_time import iter_regina_hours, shop_now
+from tests.conftest import AUTH, create_hoist, create_member, freeze_shop_clock
+
+# Same frozen instant as visual/shop-now.txt.
+SEEDED_SHOP_NOW = datetime.fromisoformat("2026-10-06T15:00:00-06:00")
 
 
 def test_dashboard_snapshot(client: TestClient) -> None:
@@ -207,6 +218,65 @@ def test_seeded_waitlist_joined_at_follows_the_frozen_shop_clock(client: TestCli
         # SQLite keeps the shop wall time and drops the offset. The Owner page
         # formats that string, so the visual check needs this exact value.
         assert WaitlistEntryOut.model_validate(row).model_dump(mode="json")["created_at"] == "2026-10-06T15:00:00"
+
+
+def test_seeded_get_bookings_sweeps_without_holding_hours_conflict(client: TestClient) -> None:
+    """Seeded GET /bookings runs the no-show sweep and must not 500.
+
+    At the visual clock, Bay 6's rack inspection
+    (ee86a633-c661-5d7a-8a94-30c39420ab36 on hoist
+    4628c30e-68e6-57bf-a2f7-ae35abd1e73a) used to raise HoldingHoursConflict.
+    SQLite had stored the shop wall clock with the offset stripped, and the
+    sweep read that naive value as UTC, so 18:00 Regina collided with the
+    in-house fab hour that really is 18:00 UTC. The afternoon turbo visit,
+    which is still in the future, must stay confirmed.
+    """
+    freeze_shop_clock(SEEDED_SHOP_NOW)
+    rack_id = seed_id("booking", "next24-shop")
+    fab_id = seed_id("booking", "today-shop")
+    afternoon_id = seed_id("booking", "today-confirmed")
+    hoist_id = seed_id("hoist", "shop")
+    assert rack_id == UUID("ee86a633-c661-5d7a-8a94-30c39420ab36")
+    assert hoist_id == UUID("4628c30e-68e6-57bf-a2f7-ae35abd1e73a")
+
+    session_gen = app_session(client)
+    session = next(session_gen)
+    try:
+        seed(session, reset=True)
+        session.commit()
+    finally:
+        session_gen.close()
+
+    listed = client.get("/bookings", headers=AUTH)
+    assert listed.status_code == 200, listed.text
+
+    session_gen = app_session(client)
+    session = next(session_gen)
+    try:
+        session.expire_all()
+        afternoon = session.get(Booking, afternoon_id)
+        rack = session.get(Booking, rack_id)
+        assert afternoon is not None and rack is not None
+        # 14:00–16:00 Regina is still open at 15:00. A UTC misread of the
+        # stored wall clock treats 16:00 as 16:00 UTC, which is already past.
+        assert _stored_utc(afternoon.end_at) > _stored_utc(shop_now())
+        wanted = iter_regina_hours(_stored_utc(rack.start_at), _stored_utc(rack.end_at))
+        owned = {
+            _hour_key(row.hour_start): row.booking_id
+            for row in session.scalars(select(BookingHour).where(BookingHour.hoist_id == hoist_id)).all()
+        }
+        for hour_start, _hour_end in wanted:
+            assert owned.get(_hour_key(hour_start)) == rack_id
+            assert owned.get(_hour_key(hour_start)) != fab_id
+    finally:
+        session_gen.close()
+
+    by_id = {row["id"]: row for row in listed.json()}
+    assert by_id[str(rack_id)]["status"] == "confirmed"
+    assert by_id[str(afternoon_id)]["status"] == "confirmed"
+    assert by_id[str(rack_id)]["start_at"].startswith("2026-10-06T18:00:00")
+    assert by_id[str(afternoon_id)]["start_at"].startswith("2026-10-06T14:00:00")
+    assert "+" not in by_id[str(rack_id)]["start_at"]
 
 
 def app_session(client: TestClient):
