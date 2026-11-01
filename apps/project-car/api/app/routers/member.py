@@ -52,7 +52,7 @@ from app.services.shop_hoist_requests import (
     list_shop_hoist_requests,
 )
 from app.services.staff import claim_job, create_tool_crib_exception
-from app.shop_time import as_utc
+from app.shop_time import as_utc, stored_utc
 
 router = APIRouter(prefix="/member", tags=["member"])
 
@@ -97,7 +97,7 @@ def _ics_escape(value: str) -> str:
 
 
 def _ics_utc(value: datetime) -> str:
-    return as_utc(value).strftime("%Y%m%dT%H%M%SZ")
+    return stored_utc(value).strftime("%Y%m%dT%H%M%SZ")
 
 
 def _ics_utf8_prefix(text: str, max_octets: int) -> str:
