@@ -12,16 +12,18 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+import logging
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
-from app.models import BookingHour, StaffAction
+from app.models import Booking, BookingHour, StaffAction
 from app.services import bookings as booking_service
+from app.shop_time import as_utc
 from tests.conftest import (
     AUTH,
     create_hoist,
@@ -205,6 +207,70 @@ def test_ai_may_sweep_and_no_show_is_final(client: TestClient) -> None:
         response = client.post(path, headers=headers)
         assert response.status_code == 400, (path, response.text)
     assert _booking(client, booking["id"])["status"] == "no_show"
+
+
+def test_get_bookings_logs_and_skips_a_holding_hours_conflict(
+    client: TestClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    """GET /bookings logs a sweep conflict and leaves that booking alone."""
+    _member, elapsed, start = _member_booking(client, hours_ahead=30, length=1)
+    quinn = create_member(client, name="Quinn", email="quinn@example.com", tier_name="premium")
+    riley = create_member(client, name="Riley", email="riley@example.com", tier_name="premium")
+    bay = create_hoist(client, name="Bay 2")
+    shared = start + timedelta(hours=10)
+    elsewhere = shared + timedelta(hours=5)
+    older = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": quinn["id"],
+            "hoist_id": bay["id"],
+            "start_at": shared.isoformat(),
+            "end_at": (shared + timedelta(hours=2)).isoformat(),
+        },
+    )
+    younger = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": riley["id"],
+            "hoist_id": bay["id"],
+            "start_at": elsewhere.isoformat(),
+            "end_at": (elsewhere + timedelta(hours=2)).isoformat(),
+        },
+    )
+    assert older.status_code == 201, older.text
+    assert younger.status_code == 201, younger.text
+    older_id = UUID(older.json()["id"])
+    younger_id = UUID(younger.json()["id"])
+
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        older_row = session.get(Booking, older_id)
+        younger_row = session.get(Booking, younger_id)
+        assert older_row is not None and younger_row is not None
+        session.execute(delete(BookingHour).where(BookingHour.booking_id.in_((older_id, younger_id))))
+        older_row.start_at = as_utc(shared)
+        older_row.end_at = as_utc(shared + timedelta(hours=2))
+        younger_row.start_at = as_utc(shared + timedelta(hours=1))
+        younger_row.end_at = as_utc(shared + timedelta(hours=3))
+        older_row.created_at = datetime(2020, 1, 1, tzinfo=timezone.utc)
+        younger_row.created_at = datetime(2020, 1, 2, tzinfo=timezone.utc)
+        session.commit()
+    finally:
+        session.close()
+
+    freeze_shop_clock(start + timedelta(hours=2))
+    with caplog.at_level(logging.WARNING, logger="app.services.bookings"):
+        listed = client.get("/bookings", headers=AUTH)
+
+    assert listed.status_code == 200, listed.text
+    stored = next(row for row in listed.json() if row["id"] == elapsed["id"])
+    assert stored["status"] == "confirmed"
+    assert _held_hours(client, elapsed["id"]) == 1
+    assert any(
+        elapsed["id"] in record.message and "unchanged" in record.message for record in caplog.records
+    )
 
 
 def test_no_show_cannot_be_refunded_through_a_refund_request(client: TestClient) -> None:
