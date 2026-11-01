@@ -7,7 +7,7 @@ type ProxyEnv = { SHOP_PROXY_SECRET?: string };
 /** Forward Cloudflare's client IP only when the shop shares a proxy secret. */
 export function loginForwardHeaders(
   headerList: HeaderList,
-  env: ProxyEnv = process.env,
+  env: ProxyEnv = { SHOP_PROXY_SECRET: process.env.SHOP_PROXY_SECRET },
 ): Record<string, string> {
   const secret = (env.SHOP_PROXY_SECRET ?? "").trim();
   const ip = (headerList.get("cf-connecting-ip") ?? "").trim();
