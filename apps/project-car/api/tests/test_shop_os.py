@@ -9,7 +9,7 @@ from sqlalchemy import select
 from app.models import Booking, BookingHour
 from app.seed import seed, seed_id
 from app.services.bookings import _hour_key, _stored_utc
-from app.shop_time import iter_regina_hours, shop_now
+from app.shop_time import SHOP_TZ, iter_regina_hours, shop_now
 from tests.conftest import AUTH, create_hoist, create_member, freeze_shop_clock
 
 # Same frozen instant as visual/shop-now.txt.
@@ -274,9 +274,12 @@ def test_seeded_get_bookings_sweeps_without_holding_hours_conflict(client: TestC
     by_id = {row["id"]: row for row in listed.json()}
     assert by_id[str(rack_id)]["status"] == "confirmed"
     assert by_id[str(afternoon_id)]["status"] == "confirmed"
-    assert by_id[str(rack_id)]["start_at"].startswith("2026-10-06T18:00:00")
-    assert by_id[str(afternoon_id)]["start_at"].startswith("2026-10-06T14:00:00")
-    assert "+" not in by_id[str(rack_id)]["start_at"]
+    # Wire times are UTC with an offset. 18:00 and 14:00 are the shop hours.
+    rack_start = datetime.fromisoformat(by_id[str(rack_id)]["start_at"])
+    afternoon_start = datetime.fromisoformat(by_id[str(afternoon_id)]["start_at"])
+    assert rack_start.tzinfo is not None and afternoon_start.tzinfo is not None
+    assert rack_start.astimezone(SHOP_TZ).hour == 18
+    assert afternoon_start.astimezone(SHOP_TZ).hour == 14
 
 
 def app_session(client: TestClient):
