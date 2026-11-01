@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from uuid import UUID
 
 from app.models import Booking, BookingKind, BookingStatus
-from app.shop_time import as_utc, iter_regina_hours
+from app.shop_time import as_utc, iter_regina_hours, stored_utc
 
 NO_VEHICLE = "No vehicle on file"
 OPEN_HOUR_STATUSES = (
@@ -35,24 +35,18 @@ def booking_member_name(booking: Booking) -> str:
     return "Shop"
 
 
-def _stored_utc(value: datetime) -> datetime:
-    """Naive timestamps are UTC instants. Aware timestamps are converted to UTC.
-
-    SQLite returns the UTC instant with no offset. ``as_utc`` would read that
-    as shop wall time and move the dashboard hour by six.
-    """
-    if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
-
-
 def booking_overlaps_window(booking: Booking, window_start: datetime, window_end: datetime) -> bool:
-    """True when a booking overlaps [window_start, window_end)."""
+    """True when a booking overlaps [window_start, window_end).
+
+    Booking instants are UTC. SQLite stores that instant with no offset, so
+    they go through ``stored_utc``. Window bounds may still be shop-local.
+    ``as_utc`` would read the bare clock as shop wall time and move the hour.
+    """
     if booking.status not in OPEN_HOUR_STATUSES:
         return False
-    return _stored_utc(booking.start_at) < as_utc(window_end) and _stored_utc(booking.end_at) > as_utc(
-        window_start
-    )
+    start_at = stored_utc(booking.start_at)
+    end_at = stored_utc(booking.end_at)
+    return start_at < as_utc(window_end) and end_at > as_utc(window_start)
 
 
 def expand_booked_hours(
@@ -72,8 +66,8 @@ def expand_booked_hours(
             continue
         if member_id is not None and booking.member_id != member_id:
             continue
-        overlap_start = max(_stored_utc(booking.start_at), as_utc(window_start))
-        overlap_end = min(_stored_utc(booking.end_at), as_utc(window_end))
+        overlap_start = max(stored_utc(booking.start_at), as_utc(window_start))
+        overlap_end = min(stored_utc(booking.end_at), as_utc(window_end))
         if overlap_end <= overlap_start:
             continue
         hoist = getattr(booking, "hoist", None)
