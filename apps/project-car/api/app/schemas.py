@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Literal
 from uuid import UUID
@@ -38,6 +38,20 @@ from app.services.plan_price import (
     total_with_gst,
 )
 from app.services.tokens import GST_RATE
+from app.shop_time import SHOP_TZ
+
+
+def _shop_wall(value: datetime) -> datetime:
+    """Regina wall clock with no offset.
+
+    Stored booking instants are UTC, including SQLite's offset-less form.
+    The calendar treats an offset-less string as shop wall time.
+    """
+    if value.tzinfo is None:
+        aware = value.replace(tzinfo=timezone.utc)
+    else:
+        aware = value.astimezone(timezone.utc)
+    return aware.astimezone(SHOP_TZ).replace(tzinfo=None)
 
 
 def _blank_to_none(value: str | None) -> str | None:
@@ -538,8 +552,8 @@ class BookingOut(BaseModel):
             hoist_id=booking.hoist_id,
             hoist_name=hoist.name if hoist is not None else "Unknown hoist",
             kind=booking.kind,
-            start_at=booking.start_at,
-            end_at=booking.end_at,
+            start_at=_shop_wall(booking.start_at),
+            end_at=_shop_wall(booking.end_at),
             status=booking.status,
             reserved_tokens=booking.reserved_tokens,
             pricing_rule=rule,

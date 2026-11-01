@@ -274,6 +274,11 @@ def _make_booking(
     notes: str,
     kind: BookingKind = BookingKind.CUSTOMER,
 ) -> Booking:
+    # Store the UTC instant. SQLite drops the offset. A Regina-aware value
+    # would come back as a naive wall clock, and the no-show sweep would read
+    # it as UTC and try to reclaim hours another booking already owns.
+    start = as_utc(start)
+    end = as_utc(end)
     if kind == BookingKind.SHOP:
         tokens = Decimal("0")
         rule = None
