@@ -9,19 +9,19 @@ from app.services.hours import booking_overlaps_window, expand_booked_hours
 from app.shop_time import PRICING_TZ, next_24h_bounds
 
 
-def test_naive_local_afternoon_overlaps_utc_window() -> None:
+def test_naive_utc_afternoon_overlaps_window() -> None:
+    """16:00–18:00 Regina is stored as 22:00–00:00 UTC with no offset."""
     window_start, window_end = next_24h_bounds(datetime(2026, 9, 6, 14, 45, tzinfo=PRICING_TZ))
     booking = SimpleNamespace(
         status=BookingStatus.CONFIRMED,
-        start_at=datetime(2026, 9, 6, 16, 0, 0),
-        end_at=datetime(2026, 9, 6, 18, 0, 0),
+        start_at=datetime(2026, 9, 6, 22, 0, 0),
+        end_at=datetime(2026, 9, 7, 0, 0, 0),
     )
     assert booking_overlaps_window(booking, window_start, window_end)
-    # Naive SQL against a UTC bound would drop this row (18:00 < 20:45Z).
-    assert booking.end_at < window_start.replace(tzinfo=None)
+    assert booking.start_at > window_start.replace(tzinfo=None)
 
 
-def test_expand_booked_hours_keeps_naive_local_seed_slots() -> None:
+def test_expand_booked_hours_keeps_naive_utc_seed_slots() -> None:
     now = datetime(2026, 9, 6, 14, 45, tzinfo=PRICING_TZ)
     window_start, window_end = next_24h_bounds(now)
     hoist_id = uuid4()
@@ -33,8 +33,8 @@ def test_expand_booked_hours_keeps_naive_local_seed_slots() -> None:
         member=SimpleNamespace(name="Ada Reyes"),
         kind=BookingKind.CUSTOMER,
         status=BookingStatus.CONFIRMED,
-        start_at=datetime(2026, 9, 6, 16, 0, 0),
-        end_at=datetime(2026, 9, 6, 18, 0, 0),
+        start_at=datetime(2026, 9, 6, 22, 0, 0),
+        end_at=datetime(2026, 9, 7, 0, 0, 0),
         notes="1992 Miata — turbo mock-up",
     )
     hours = expand_booked_hours([booking], window_start, window_end)
@@ -45,11 +45,12 @@ def test_expand_booked_hours_keeps_naive_local_seed_slots() -> None:
 
 
 def test_past_naive_morning_slot_is_outside_afternoon_window() -> None:
+    """09:00–11:00 Regina is stored as 15:00–17:00 UTC."""
     window_start, window_end = next_24h_bounds(datetime(2026, 9, 6, 14, 45, tzinfo=PRICING_TZ))
     booking = SimpleNamespace(
         status=BookingStatus.CONFIRMED,
-        start_at=datetime(2026, 9, 6, 9, 0, 0),
-        end_at=datetime(2026, 9, 6, 11, 0, 0),
+        start_at=datetime(2026, 9, 6, 15, 0, 0),
+        end_at=datetime(2026, 9, 6, 17, 0, 0),
     )
     assert booking_overlaps_window(booking, window_start, window_end) is False
     assert (
