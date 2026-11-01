@@ -858,7 +858,15 @@ def test_accept_refund_after_overdue_denies_the_request(client: TestClient) -> N
 
 
 def test_accept_refund_after_cancel_denies_the_request(client: TestClient) -> None:
-    member, booking, request_id = _checked_in_with_refund(client, "ada@example.com")
+    # A checked-in visit is 400 cancel_after_check_in, so this case stays on a
+    # confirmed visit. Accept after that cancel still denies the request.
+    member = create_member(client, email="ada@example.com")
+    bay = create_hoist(client, name="Bay 1")
+    booking = _owner_booking(client, member["id"], bay["id"], hours_from_now=6)
+    assert client.post(f"/bookings/{booking['id']}/confirm", headers=AUTH).status_code == 200
+    filed = client.post("/refund-requests", headers=AUTH, json={"booking_id": booking["id"]})
+    assert filed.status_code == 201, filed.text
+    request_id = filed.json()["id"]
     cancelled = client.post(f"/bookings/{booking['id']}/cancel", headers=AUTH)
     assert cancelled.status_code == 200, cancelled.text
     assert cancelled.json()["status"] == "cancelled"
