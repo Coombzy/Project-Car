@@ -26,7 +26,7 @@ from app.models import (
     HoistStatus,
 )
 from app.services.pricing import MONEY_QUANT, NO_FILL, FillFactor, duration_hours
-from app.shop_time import as_utc, pricing_clock_window, pricing_next_day
+from app.shop_time import as_utc, pricing_clock_window, pricing_next_day, stored_utc
 
 FILL_TZ_NAME = "America/Regina"
 HOURS_QUANT = Decimal("0.0001")
@@ -263,7 +263,12 @@ def detect_openings(
     for booking in bookings:
         if booking.hoist_id not in by_hoist:
             continue
-        clipped = clip_interval(booking.start_at, booking.end_at, window_start, window_end)
+        clipped = clip_interval(
+            stored_utc(booking.start_at),
+            stored_utc(booking.end_at),
+            window_start,
+            window_end,
+        )
         if clipped is None:
             continue
         by_hoist[booking.hoist_id].append(clipped)
