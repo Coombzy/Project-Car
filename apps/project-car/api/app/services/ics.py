@@ -82,6 +82,10 @@ def _fmt(value: datetime) -> str:
     return local.strftime("%Y%m%dT%H%M%S")
 
 
+def _fmt_utc(value: datetime) -> str:
+    return as_utc(value).strftime("%Y%m%dT%H%M%S") + "Z"
+
+
 def todo_ics(todo: Todo, *, prodid: str = "-//Project Car//Shop OS//EN") -> str:
     stamp = datetime.now(PRICING_TZ)
     start = todo.due_at or stamp
@@ -105,7 +109,7 @@ def todo_ics(todo: Todo, *, prodid: str = "-//Project Car//Shop OS//EN") -> str:
         "END:VTIMEZONE",
         "BEGIN:VEVENT",
         f"UID:{uid}",
-        f"DTSTAMP:{_fmt(stamp)}",
+        f"DTSTAMP:{_fmt_utc(stamp)}",
         f"DTSTART;TZID=America/Regina:{_fmt(start)}",
         f"DTEND;TZID=America/Regina:{_fmt(end)}",
         _fold(todo.title, name="SUMMARY"),
