@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
@@ -117,6 +117,10 @@ describe("ui proof chrome gate", () => {
     assert.deepEqual(gate.playwrightCacheRoots({ PLAYWRIGHT_BROWSERS_PATH: "0" }, "linux", home), [
       join(home, ".cache", "ms-playwright"),
     ]);
+    assert.deepEqual(
+      gate.playwrightCacheRoots({ LOCALAPPDATA: join(home, "Local") }, "win32", home),
+      [join(home, "Local", "ms-playwright")],
+    );
   });
 
   it("test_ui_proof_playwright_cache_file_counts_as_chromium", async () => {
@@ -128,6 +132,28 @@ describe("ui proof chrome gate", () => {
       writeFileSync(binary, "");
       assert.equal(gate.findChrome({ files: [], directories: [dir] }), binary);
       assert.equal(gate.findChrome({ files: [join(dir, "missing")], directories: [] }), null);
+      const real = join(dir, "real-chrome");
+      const link = join(dir, "chromium-9", "chrome-linux", "chrome");
+      writeFileSync(real, "");
+      mkdirSync(dirname(link), { recursive: true });
+      symlinkSync(real, link);
+      assert.equal(gate.findChrome({ files: [], directories: [join(dir, "chromium-9")] }), link);
+      const linux64 = join(dir, "chromium-1208", "chrome-linux64", "chrome");
+      mkdirSync(dirname(linux64), { recursive: true });
+      writeFileSync(linux64, "");
+      assert.equal(gate.findChrome({ files: [], directories: [join(dir, "chromium-1208")] }), linux64);
+      const mac = join(
+        dir,
+        "chromium-mac",
+        "chrome-mac-arm64",
+        "Google Chrome for Testing.app",
+        "Contents",
+        "MacOS",
+        "Google Chrome for Testing",
+      );
+      mkdirSync(dirname(mac), { recursive: true });
+      writeFileSync(mac, "");
+      assert.equal(gate.findChrome({ files: [], directories: [join(dir, "chromium-mac")] }), mac);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

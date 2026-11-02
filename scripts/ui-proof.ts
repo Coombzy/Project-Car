@@ -1,7 +1,8 @@
 /**
  * UI proof browser gate.
  *
- * Missing Chrome/Chromium prints SKIPPED and exits 0, including when CI=true.
+ * Missing Chrome/Chromium when CI=true exits 1 and names every path searched.
+ * With CI unset, the same miss prints SKIPPED and exits 0.
  * A found browser runs `playwright test` from apps/project-car/web.
  */
 import { spawnSync } from "node:child_process";
@@ -17,6 +18,8 @@ const CHROME_FILE_NAMES = new Set([
   "Chromium",
   "google-chrome",
   "google-chrome-stable",
+  "Google Chrome",
+  "Google Chrome for Testing",
 ]);
 
 const MAX_WALK_DEPTH = 8;
@@ -121,7 +124,7 @@ function walkChrome(root: string, depth: number): string | null {
       }
       continue;
     }
-    if (entry.isFile() && CHROME_FILE_NAMES.has(entry.name)) {
+    if (CHROME_FILE_NAMES.has(entry.name) && isRegularFile(full)) {
       return full;
     }
   }
@@ -184,6 +187,15 @@ function main(): number {
   const plan = searchPlan(env);
   const found = findChrome(plan);
   if (!found) {
+    if (env.CI === "true") {
+      const lines = [
+        "Chrome/Chromium not found. CI=true requires a browser so screens are checked.",
+        "Paths searched:",
+        ...pathsSearched(plan).map((path) => `- ${path}`),
+      ];
+      process.stderr.write(`${lines.join("\n")}\n`);
+      return 1;
+    }
     process.stdout.write("SKIPPED\n");
     return 0;
   }
