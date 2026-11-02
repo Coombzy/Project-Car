@@ -9,6 +9,7 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
+from app.auth import _account_backoff_seconds
 from app.config import get_settings
 from app.main import create_app
 
@@ -146,6 +147,14 @@ def test_client_ip_header_ignored_from_untrusted_peer(
     finally:
         _restore_peer(client, previous)
         get_settings.cache_clear()
+
+
+def test_account_backoff_caps_before_float_overflow() -> None:
+    """A long streak stays at 15 minutes. The shift must not overflow float."""
+    assert _account_backoff_seconds(5) == 60
+    assert _account_backoff_seconds(8) == 480
+    assert _account_backoff_seconds(9) == 15 * 60
+    assert _account_backoff_seconds(5 + 1019) == 15 * 60
 
 
 def test_xff_rejected_as_client_ip_header_at_startup(monkeypatch: pytest.MonkeyPatch) -> None:

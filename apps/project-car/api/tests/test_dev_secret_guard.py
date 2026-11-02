@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from app.auth import shop_dev_mode
 from app.config import get_settings
 from app.main import create_app
 
@@ -131,6 +132,37 @@ def test_env_example_placeholders_fail_check(monkeypatch: pytest.MonkeyPatch) ->
             create_app()
         monkeypatch.setenv("SHOP_DEV_MODE", "1")
         get_settings.cache_clear()
+        create_app()
+    finally:
+        get_settings.cache_clear()
+
+
+def test_dotenv_dev_mode_boots_without_process_export(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """`cp .env.example .env` then uvicorn does not export the file.
+
+    Settings still loads SHOP_DEV_MODE from that file. The startup guard,
+    cookies, and /docs follow the same flag, so the example file boots.
+    """
+    (tmp_path / ".env").write_text(EXAMPLE.read_text())
+    monkeypatch.chdir(tmp_path)
+    for key in (
+        "SHOP_DEV_MODE",
+        "OWNER_PASSWORD",
+        "OWNER_API_SECRET",
+        "AI_API_SECRET",
+        "SESSION_SECRET",
+        "MEMBER_DEMO_PASSWORD",
+        "SHOP_PROXY_SECRET",
+        "COOKIE_SECURE",
+    ):
+        monkeypatch.delenv(key, raising=False)
+    get_settings.cache_clear()
+    try:
+        loaded = get_settings()
+        assert loaded.shop_dev_mode is True
+        assert shop_dev_mode() is True
         create_app()
     finally:
         get_settings.cache_clear()
