@@ -123,3 +123,33 @@ def test_launch_checklist_does_not_treat_closed_work_as_not_started() -> None:
     ) in text
     assert "[#225](https://github.com/Coombzy/Project-Car/pull/225) and [#233](https://github.com/Coombzy/Project-Car/pull/233) are merged." in text
     assert "[#259](https://github.com/Coombzy/Project-Car/pull/259) is still open." in text
+
+
+_ANY_BAY_LINK = "[#264](https://github.com/Coombzy/Project-Car/pull/264)"
+
+
+def test_any_bay_docs_record_the_lost_insert_proof() -> None:
+    """The race note names the opt-in proof and the CI retry.
+
+    Closed and merged pull requests stay closed and merged. This pull request
+    is open and is not a table row.
+    """
+    merge = MERGE.read_text()
+    checklist = CHECKLIST.read_text()
+    chain = _rows(merge, "| Order | PR | Base | State | Purpose | Risk |")
+    bay = next(row for row in chain if _pr_number(row[1]) == 248)
+    assert bay[3] == "Closed"
+    assert f"opt-in Postgres test in {_ANY_BAY_LINK}" in bay[5]
+    assert "lost-insert retry" in bay[5]
+    assert "not proven" not in bay[5].lower()
+    assert "still not proven on Postgres" not in merge
+    assert f"Follow-up in {_ANY_BAY_LINK}" in merge
+    assert "CI skips the live race and runs the lost-insert retry on SQLite." in merge
+
+    assert "A Postgres race between two members is not proven." not in checklist
+    assert "Not proven. No workflow or CI change in this stack." not in checklist
+    assert f"opt-in Postgres test in {_ANY_BAY_LINK}" in checklist
+    assert "CI runs the lost-insert retry and skips the live race." in checklist
+    assert "(`ANY_BAY_POSTGRES=1`). CI does not start Postgres. No workflow change." in checklist
+    assert "in PR" not in checklist
+    assert f"{_ANY_BAY_LINK} is open. It is not a table row." in checklist
