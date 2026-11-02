@@ -1,5 +1,7 @@
 """Project Car shop OS API."""
 
+# Probe: API-only diff on the fixed #290 gate.
+
 from __future__ import annotations
 
 import os
