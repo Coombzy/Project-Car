@@ -60,6 +60,51 @@ def test_adjust_records_reason_and_actor(client: TestClient) -> None:
     assert row["note"] == REASON
 
 
+def test_negative_adjustment_stays_on_the_allowance_pile(client: TestClient) -> None:
+    """An owner debit lands on allowance. It does not spend purchased tokens.
+
+    Docs/token-pricing.md: an owner adjustment lands on the allowance pile.
+    A debit larger than allowance and smaller than allowance plus purchased
+    is 409 would_go_negative and leaves the purchased pile alone.
+    """
+    member = create_member(
+        client,
+        email="adjust-piles@example.com",
+        allocate_tokens=False,
+    )
+    credited = _adjust(client, member["id"], {"amount": "40.00", "reason": REASON})
+    assert credited.status_code == 201, credited.text
+    bought = client.post(
+        f"/members/{member['id']}/token-purchases",
+        headers=AUTH,
+        json={"payment_id": "STANDIN-PAYPAL-ADJUST", "tokens": "500.00", "subtotal_cad": "40.00"},
+    )
+    assert bought.status_code == 201, bought.text
+    before = client.get(f"/members/{member['id']}", headers=AUTH).json()
+    assert Decimal(str(before["allowance_balance"])) == Decimal("40.00")
+    assert Decimal(str(before["purchased_balance"])) == Decimal("500.00")
+    ledger_before = _ledger(client, member["id"])
+
+    refused = _adjust(client, member["id"], {"amount": "-50.00", "reason": REASON})
+    assert refused.status_code == 409, refused.text
+    assert refused.json()["error"]["code"] == "would_go_negative"
+    held = client.get(f"/members/{member['id']}", headers=AUTH).json()
+    assert Decimal(str(held["allowance_balance"])) == Decimal("40.00")
+    assert Decimal(str(held["purchased_balance"])) == Decimal("500.00")
+    assert Decimal(str(held["token_balance"])) == Decimal("540.00")
+    assert _ledger(client, member["id"]) == ledger_before
+
+    accepted = _adjust(client, member["id"], {"amount": "-40.00", "reason": REASON})
+    assert accepted.status_code == 201, accepted.text
+    row = accepted.json()
+    assert Decimal(str(row["allowance_amount"])) == Decimal("-40.00")
+    assert Decimal(str(row["purchased_amount"])) == Decimal("0.00")
+    after = client.get(f"/members/{member['id']}", headers=AUTH).json()
+    assert Decimal(str(after["allowance_balance"])) == Decimal("0.00")
+    assert Decimal(str(after["purchased_balance"])) == Decimal("500.00")
+    assert Decimal(str(after["token_balance"])) == Decimal("500.00")
+
+
 def test_adjust_below_zero_is_refused(client: TestClient) -> None:
     member = create_member(client, email="floor@example.com")
     balance = _balance(client, member["id"])
