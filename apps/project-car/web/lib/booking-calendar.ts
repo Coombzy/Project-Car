@@ -24,7 +24,7 @@ const FREE_CANCEL_MS = 24 * 60 * 60 * 1000;
 const LATE_KEEP_PCT = 50;
 const PEAK_BAND: BandId = "weekend_fri_eve";
 
-const OCCUPYING = new Set(["pending", "confirmed", "active", "completed", "overdue"]);
+const OCCUPYING = new Set(["pending", "confirmed", "active", "overdue"]);
 
 export type SavedBands = {
   hours: readonly RateHour[];
