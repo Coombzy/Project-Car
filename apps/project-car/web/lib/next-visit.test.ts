@@ -161,6 +161,36 @@ describe("nextVisit", () => {
     assert.equal(visit.checkInOpensLabel, "Check-in opens at 19:45");
   });
 
+  it("test_next_visit_reads_a_naive_shop_timestamp_as_america_regina", async () => {
+    // Seed rows are shop-local wall times with no offset. The visual clock is
+    // 15:00 Regina on Tue Oct 6, so 14:00–16:00 is still the next visit.
+    const now = new Date("2026-10-06T15:00:00-06:00");
+    const helper = await loadNextVisit();
+    const underway = booking({
+      id: "today",
+      hoist_name: "Bay 1",
+      start_at: "2026-10-06T14:00:00",
+      end_at: "2026-10-06T16:00:00",
+      status: "confirmed",
+    });
+    const later = booking({
+      id: "wednesday",
+      hoist_name: "Bay 3",
+      start_at: "2026-10-07T09:00:00",
+      end_at: "2026-10-07T12:00:00",
+      status: "confirmed",
+    });
+    const visit = helper.nextVisit([later, underway], now);
+    assert.ok(visit, "a naive in-progress shop visit is the next visit");
+    assert.equal(visit.id, "today");
+    assert.equal(visit.bay, "Bay 1");
+    assert.equal(visit.status, "confirmed");
+    assert.equal(visit.dayLabel, "Tue, Oct 6");
+    assert.equal(visit.timeLabel, "14:00–16:00");
+    assert.equal(visit.checkInOpensLabel, "Check-in opens at 13:45");
+    assert.equal(visit.opensAt, "2026-10-06T19:45:00.000Z");
+  });
+
   it("test_next_visit_check_in_opens_15_minutes_before_an_in_progress_visit", async () => {
     const source = readFileSync(join(libDir, "next-visit.ts"), "utf8");
     assert.match(
