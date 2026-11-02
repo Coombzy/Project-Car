@@ -372,23 +372,27 @@ def member_create_booking(
     principal: MemberUser,
 ) -> BookingOut | ShopHoistRequestOut:
     _own_member(session, principal)
-    hoist = session.get(Hoist, body.hoist_id)
-    if hoist is not None and hoist.is_shop:
-        row = create_shop_hoist_request(
-            session,
-            member_id=principal.member_id,
-            hoist_id=body.hoist_id,
-            start_at=body.start_at,
-            end_at=body.end_at,
-            notes=body.notes,
-            created_by_kind=ActorKind.HUMAN,
-            created_by_id=str(principal.member_id),
-        )
-        return ShopHoistRequestOut.from_row(row)
+    hoist_id = body.hoist_id
+    if hoist_id is None:
+        hoist_id = booking_service.pick_member_bay(session, body.start_at, body.end_at).id
+    else:
+        hoist = session.get(Hoist, hoist_id)
+        if hoist is not None and hoist.is_shop:
+            row = create_shop_hoist_request(
+                session,
+                member_id=principal.member_id,
+                hoist_id=hoist_id,
+                start_at=body.start_at,
+                end_at=body.end_at,
+                notes=body.notes,
+                created_by_kind=ActorKind.HUMAN,
+                created_by_id=str(principal.member_id),
+            )
+            return ShopHoistRequestOut.from_row(row)
     booking = booking_service.create_booking(
         session,
         member_id=principal.member_id,
-        hoist_id=body.hoist_id,
+        hoist_id=hoist_id,
         start_at=body.start_at,
         end_at=body.end_at,
         notes=body.notes,

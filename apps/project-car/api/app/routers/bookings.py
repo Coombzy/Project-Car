@@ -112,8 +112,11 @@ def list_owner_shop_hoist_requests(
 def create_booking(
     body: BookingCreate, session: DbSession, owner: Owner
 ) -> BookingOut | ShopHoistRequestOut:
-    if body.kind == BookingKind.CUSTOMER:
-        hoist = session.get(Hoist, body.hoist_id)
+    hoist_id = body.hoist_id
+    if body.kind == BookingKind.CUSTOMER and hoist_id is None:
+        hoist_id = booking_service.pick_member_bay(session, body.start_at, body.end_at).id
+    elif body.kind == BookingKind.CUSTOMER:
+        hoist = session.get(Hoist, hoist_id)
         if hoist is not None and hoist.is_shop:
             if body.member_id is None:
                 raise HTTPException(
@@ -135,7 +138,7 @@ def create_booking(
     booking = booking_service.create_booking(
         session,
         member_id=body.member_id,
-        hoist_id=body.hoist_id,
+        hoist_id=hoist_id,
         start_at=body.start_at,
         end_at=body.end_at,
         notes=body.notes,

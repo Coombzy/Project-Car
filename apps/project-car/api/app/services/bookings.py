@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime, timedelta, timezone
 from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID
@@ -55,6 +56,7 @@ HOLDING_STATUSES = (
 )
 BAY_HOUR_TAKEN = "That bay already has a booking on this hour."
 UNAVAILABLE_HOIST = (HoistStatus.MAINTENANCE, HoistStatus.LOCKED)
+_BAY_NUMBER = re.compile(r"^Bay (\d+)$")
 # Stand-in until Ben sets how early check-in may open. Needs from Ben.
 CHECK_IN_EARLY_MINUTES = 15
 
@@ -339,11 +341,40 @@ def preview_reserve(
     return quote, balance, balance - quote.final_reserve_cost
 
 
+def pick_member_bay(session: Session, start_at: datetime, end_at: datetime) -> Hoist:
+    """Lowest-numbered member bay that is free for every hour of the visit.
+
+    Bay 6, the shop hoist, is never a candidate. A bay that has lost any hour
+    of the visit is skipped for the next number, in this same save.
+    """
+    start_at = as_utc(start_at)
+    end_at = as_utc(end_at)
+    numbered: list[tuple[int, str, Hoist]] = []
+    for hoist in session.scalars(select(Hoist).where(Hoist.is_shop.is_(False))).all():
+        match = _BAY_NUMBER.match(hoist.name)
+        if match is None:
+            continue
+        numbered.append((int(match.group(1)), hoist.name, hoist))
+    for _number, _name, hoist in sorted(numbered, key=lambda item: (item[0], item[1])):
+        if hoist.status in UNAVAILABLE_HOIST:
+            continue
+        if hoist_has_overlap(
+            session,
+            hoist.id,
+            start_at,
+            end_at,
+            statuses=HOLDING_STATUSES,
+        ):
+            continue
+        return hoist
+    raise _error(409, "no_free_bay", "No member bay is free for every hour of the visit.")
+
+
 def create_booking(
     session: Session,
     *,
     member_id: UUID | None,
-    hoist_id: UUID,
+    hoist_id: UUID | None,
     start_at: datetime,
     end_at: datetime,
     notes: str | None,
@@ -354,6 +385,8 @@ def create_booking(
     end_at = as_utc(end_at)
     reject_start_in_past(start_at)
 
+    if hoist_id is None:
+        raise _error(404, "not_found", "Hoist not found.")
     hoist = session.get(Hoist, hoist_id)
     if hoist is None:
         raise _error(404, "not_found", "Hoist not found.")
