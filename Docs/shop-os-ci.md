@@ -17,7 +17,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Git-only** | CI runs on GitHub-hosted runners against this repo. It never SSHs to Doc, never curls production with write tokens, and never uploads Worker `projectcar-brochure`. |
 | **Green CI does not move Doc** | Doc is **unfrozen** at `795f301` / BUILD_ID `vQRsAOI0JtWYZ_ogRUjgG` (was `4cf8924` / `5swmVz-T2CqKEQzTk1ifU`). **#36** / **#69** / **#88** are live on Doc. A green Shop OS CI check is **not** a pull to finance tip `6366d62`. A further checkout move is a new Ben GO (`doc-unfreeze.md`). Lid-restore is process wake only (`doc-lid-restore.md`). |
 | **No production credentials** | Workflow uses public install only (`pip` / `npm ci`). No GitHub Actions secrets. No Doc `.env`, no tunnel tokens, no Cloudflare API tokens, no `GOOGLE_OAUTH_*`, no Stripe. |
-| **Path-filtered** | On a pull request, heavy steps run when the diff touches `apps/project-car/**` or `.github/workflows/shop-os-ci.yml`. A push to `main` runs every step. Docs-only / brochure / finance PRs do **not** pay this tax, and the required check names still report success. |
+| **Path-filtered** | On a pull request, each job runs its heavy steps for its own area. shop-api runs for `apps/project-car/**` except text and images, and still runs for Markdown under `apps/project-car/` because pytest reads the API and web READMEs and every `.md` under web. shop-web may skip an API-only diff, and it skips Markdown, text, and images. Screenshots still run for an API change, and for screenshot PNGs under `web/visual/`. A change to `.github/workflows/shop-os-ci.yml` runs every heavy step. A push to `main` runs every step. Docs outside `apps/project-car/`, the repo-root README, brochure, and finance PRs do **not** pay this tax, and the required check names still report success. |
 | **Not a live probe** | Lookout `projectcar-api-health-watch` and public `GET /health` stay ops. This workflow does not replace them. |
 
 ---
@@ -63,7 +63,7 @@ on:
 
 | Event | When |
 |-------|------|
-| **`pull_request`** | Required. Heavy steps run when the pull request touches `apps/project-car/**` or this workflow file. |
+| **`pull_request`** | Required. shop-api runs for `apps/project-car/**` including Markdown, and skips text and images. shop-web skips an API-only diff and skips Markdown, text, and images. Screenshots still run for an API change. All three run when this workflow file changes. |
 | **`push` to `main`** | Optional confirm after merge. Runs every step. |
 
 A `git diff --name-only` step inside each job applies that filter on pull requests, and the job still reports success for `shop-api pytest` and `shop-web lint / typecheck / build` when the heavy steps are skipped.
@@ -146,7 +146,7 @@ Read the failed **job** first (`shop-api` vs `shop-web`), then the step.
 | `next build` fail | Compile / Next config / missing types after `tsc` | `npm run build`. Pages are `force-dynamic` — a build fail is **not** “API is down.” |
 | `shop-web layout-shift / screenshots` fail | Layout shift above 0.1, or a screenshot past the 1% pixel ratio | Reproduce with the visual commands below. Update a reference PNG only when the page change is intended. |
 | `npm ci` / pip install fail | Lockfile / PyPI / npm registry | Re-run once. If persistent, pin/lock in git. Still no secrets. |
-| Heavy steps **skipped** | Path filter | Expected when the PR does not touch `apps/project-car/**` or this workflow file. The job still finishes green. |
+| Heavy steps **skipped** | Path filter | Expected when the PR misses that job's area (shop-web on an API-only diff; Markdown, text, and images, except screenshot PNGs for the visual job). Screenshots are not skipped for an API change. shop-api is not skipped for Markdown under `apps/project-car/`. The job still finishes green. |
 | Public `api.` / `ops.` 530 / 1033 | Doc lid-close | **Not this workflow.** `doc-lid-restore.md`. |
 
 Do **not**:
