@@ -1,5 +1,7 @@
 """Project Car shop OS API."""
 
+# Probe: API-only diff after screenshot skip.
+
 from __future__ import annotations
 
 import os
