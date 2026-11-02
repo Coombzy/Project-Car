@@ -201,7 +201,7 @@ Every `booking_reserve` (and the matching debit / refund rows) stores the math. 
 
 ## UX must-haves (non-optional)
 
-1. **Create booking.** Show `(hours × 100) × band × overlay × fill = total`, balance **before** and **after**, plus **band label**, **overlay label**, and **fill label** when fill ≠ 1.0, before confirm / reserve.
+1. **Create booking.** Show each held hour at its band, then the standard overlay and that hour's fill, and the total. Balance **before** and **after**, plus **band label**, **overlay label**, and **fill label** when fill ≠ 1.0, before confirm / reserve.
 2. **Weekly hour-slot cells.** Band color + token-cost badge on the booking in the hour grid. Overlay chip when overlay ≠ 1.0. Fill chip when fill ≠ 1.0. Month view is density-only (booked hours vs 08:00–21:00), not a second price surface.
 3. **Member detail.** Balance + recent ledger. **At-risk** when open reserved tokens **>** remaining (cached) free balance.
 4. **Cancel / complete.** Show refund or debit **inline** (the locked reserved amount).
@@ -215,15 +215,16 @@ Existing Owner chrome stays: hoist overlap, reserve → debit / refund, token-at
 
 Tuesday 17:00 start, **2-hour** slot, reserved **20 hours** ahead.
 
+- Hours held: 17:00 and 18:00, both Evening
 - Base: `2 × 100` = **200**
-- Band: `weekday_eve` **1.25×**
-- Overlay: 48h–7d **1.0×**
-- Fill: none **1.0×**
-- Total: `200 × 1.25 × 1.0 × 1.0 = 250` tokens reserved
+- Band: Evening **1.25×** on each hour → 125 + 125 = **250**
+- Overlay: standard **1×**. The 20-hour lead does not change the price.
+- Fill: none **1×**
+- Total: **250** tokens reserved
 
-Same 2-hour slot reserved **30 hours** ahead: overlay **1.25×** → `200 × 1.25 × 1.25 × 1.0 = 312.50`.
+The same 2-hour slot reserved **30 hours** ahead is still **250**. Last-minute 1.25 is stored and does not apply.
 
-Same last-minute slot on **tomorrow** when customer bays are fully open (25% fill): `200 × 1.25 × 1.25 × 0.75 = 234.38`.
+The same Tuesday 17:00–19:00 slot on **tomorrow**, when the live next-day fill is 25% and both hours take it: `125 × 0.75 + 125 × 0.75 = 187.50`.
 
 ---
 
