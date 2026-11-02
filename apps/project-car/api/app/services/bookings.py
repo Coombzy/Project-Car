@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -28,7 +28,13 @@ from app.models import (
 )
 from app.services.fill import resolve_fill_for_slot
 from app.services.peak_cap import check_peak_cap
-from app.services.pricing import PricingError, quote_reserve
+from app.services.pricing import (
+    BASE_TOKENS_PER_HOUR,
+    MONEY_QUANT,
+    PricingError,
+    quote_reserve,
+    resolve_band,
+)
 from app.services.tokens import apply_ledger, piles_for_refund
 from app.shop_time import as_utc, iter_regina_hours, shop_now
 
@@ -532,6 +538,32 @@ def check_in_booking(session: Session, booking_id: UUID) -> Booking:
     return get_booking(session, booking.id)
 
 
+def _overtime_hours(session: Session, end_at: datetime, now: datetime) -> list[dict[str, str]]:
+    """One entry per whole hour past the booked end, priced at that hour's band.
+
+    A partial hour is not charged. The reserve already covers time inside the visit.
+    """
+    end = _stored_utc(end_at)
+    current = _stored_utc(now)
+    if current <= end:
+        return []
+    whole = int((current - end).total_seconds() // 3600)
+    hours: list[dict[str, str]] = []
+    for index in range(whole):
+        start = end + timedelta(hours=index)
+        band = resolve_band(start, session=session)
+        tokens = (BASE_TOKENS_PER_HOUR * band.multiplier).quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
+        hours.append(
+            {
+                "start_at": start.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "band_id": band.id,
+                "band_label": band.label,
+                "tokens": format(tokens, "f"),
+            }
+        )
+    return hours
+
+
 def complete_booking(
     session: Session,
     booking_id: UUID,
@@ -539,7 +571,7 @@ def complete_booking(
     unused_tokens: Decimal = Decimal("0"),
 ) -> Booking:
     # Lock the booking, then the member, before the status check. A second
-    # complete waits, sees the new status, and does not write another refund.
+    # complete waits, sees the new status, and does not write another debit.
     # Shop work can have no member and no reserve.
     booking = _locked_booking(session, booking_id)
     member = lock_member(session, booking.member_id) if booking.member_id is not None else None
@@ -550,36 +582,35 @@ def complete_booking(
             "Only an active or overdue booking can be completed.",
         )
 
+    # Time inside the visit is not refunded (Ben, D16). The reserve stands.
     unused = Decimal(unused_tokens)
-    reserved = Decimal(booking.reserved_tokens)
-    if unused < 0 or unused > reserved:
-        raise _error(400, "invalid_refund", "Unused tokens must be between 0 and the reserved amount.")
-
-    used = reserved - unused
-    meta = {"pricing_rule": booking.pricing_rule} if booking.pricing_rule else None
-    if reserved > 0:
-        # Same split as cancel: purchased tokens come back first, then allowance.
-        # The debit below spends allowance first, so used time stays on allowance.
-        allowance_amount, purchased_amount = _refund_split(session, booking, reserved)
-        apply_ledger(
-            session,
-            member,
-            kind=TokenTransactionKind.BOOKING_REFUND,
-            amount=reserved,
-            booking_id=booking.id,
-            note="Release reserved tokens",
-            meta=meta,
-            allowance_amount=allowance_amount,
-            purchased_amount=purchased_amount,
+    if unused != 0:
+        raise _error(
+            400,
+            "unused_not_refundable",
+            "Time inside the visit is not refunded.",
         )
-        if used > 0:
+
+    if booking.kind == BookingKind.CUSTOMER and member is not None:
+        hours = _overtime_hours(session, booking.end_at, shop_now())
+        cost = sum((Decimal(hour["tokens"]) for hour in hours), Decimal("0"))
+        if cost > 0 and Decimal(member.token_balance) < cost:
+            raise _error(
+                409,
+                "insufficient_tokens",
+                "That finish cannot pay for the hours past the booked end. The visit stays open.",
+            )
+        if cost > 0:
+            meta: dict = {"overtime": {"hours": hours}}
+            if booking.pricing_rule:
+                meta["pricing_rule"] = booking.pricing_rule
             apply_ledger(
                 session,
                 member,
                 kind=TokenTransactionKind.BOOKING_DEBIT,
-                amount=-used,
+                amount=-cost,
                 booking_id=booking.id,
-                note="Debit used tokens",
+                note="Debit whole hours past the booked end",
                 meta=meta,
             )
 

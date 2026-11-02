@@ -3,7 +3,7 @@
 Allowance and purchased tokens are separate. The grant expires only unused
 allowance above one month. A booking spends allowance first. A full cancel
 puts those tokens back on the same piles, purchased first. Completing a visit
-returns the unused part of a mixed reserve the same way.
+does not refund time inside the booking.
 """
 
 from datetime import datetime, timedelta
@@ -148,12 +148,11 @@ def test_booking_spends_allowance_before_purchased_tokens(client: TestClient) ->
 
 
 def test_complete_returns_unused_purchased_tokens_before_allowance(client: TestClient) -> None:
-    """A mixed reserve returns unused tokens purchased-first, the same split as cancel.
+    """Time inside the visit is not refunded, including a mixed reserve.
 
-    One off-peak hour is 75 tokens. Spending 40 allowance and 35 purchased,
-    then completing with 40 unused, must leave allowance 5 and purchased 500.
-    Putting the whole release on allowance and debiting the used 35 from
-    allowance leaves allowance 40 and purchased 465.
+    One off-peak hour is 75 tokens, 40 allowance and 35 purchased. Posting
+    unused_tokens 40 must not put those 35 purchased tokens back. The visit
+    stays active and both piles stay where the reserve left them.
     """
     start = datetime(2026, 11, 4, 22, 0, tzinfo=REGINA)
     end = start + timedelta(hours=1)
@@ -194,8 +193,13 @@ def test_complete_returns_unused_purchased_tokens_before_allowance(client: TestC
         headers=AUTH,
         json={"unused_tokens": "40"},
     )
-    assert completed.status_code == 200, completed.text
+    assert completed.status_code == 422, completed.text
+    assert completed.json()["error"]["code"] == "validation_error"
+    stored = client.get("/bookings", headers=AUTH)
+    assert stored.status_code == 200, stored.text
+    row = next(item for item in stored.json() if item["id"] == booking["id"])
+    assert row["status"] == "active"
     done = _member(client, member["id"])
-    assert _balance(done, "allowance_balance") == Decimal("5")
-    assert _balance(done, "purchased_balance") == Decimal("500")
-    assert _balance(done, "token_balance") == Decimal("505")
+    assert _balance(done, "allowance_balance") == Decimal("0")
+    assert _balance(done, "purchased_balance") == Decimal("465")
+    assert _balance(done, "token_balance") == Decimal("465")

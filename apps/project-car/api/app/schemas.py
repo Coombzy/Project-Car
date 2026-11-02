@@ -626,7 +626,14 @@ class BookingCancel(BaseModel):
 class BookingComplete(BaseModel):
     # Only 0 is accepted: unused time is never refunded once a visit has
     # started (Ben, D16). The Owner web form still posts 0.
-    unused_tokens: Decimal = Field(default=Decimal("0"), ge=0)
+    unused_tokens: Decimal = Field(default=Decimal("0"), ge=0, le=0)
+
+    @field_validator("unused_tokens")
+    @classmethod
+    def unused_time_is_not_refunded(cls, value: Decimal) -> Decimal:
+        if value != 0:
+            raise ValueError("Time inside the visit is not refunded.")
+        return value
 
 
 class MemberBookingCreate(BaseModel):

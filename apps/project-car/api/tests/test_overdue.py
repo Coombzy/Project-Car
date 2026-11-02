@@ -7,7 +7,7 @@ stays held. A later Owner complete settles the reserve and releases the hour.
 from __future__ import annotations
 
 from datetime import timedelta
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID
 
 from fastapi.testclient import TestClient
@@ -28,7 +28,7 @@ from app.models import (
     TokenTransactionKind,
 )
 from app.services.bookings import _stored_utc
-from app.services.pricing import quote_reserve
+from app.services.pricing import BASE_TOKENS_PER_HOUR, quote_reserve, resolve_band
 from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
 from tests.conftest import AUTH, create_hoist, create_member, login_member
@@ -324,17 +324,21 @@ def test_overdue_stores_one_late_return_and_moves_no_money(client: TestClient) -
     stored = _booking(client, booking_id)
     assert stored.status == BookingStatus.COMPLETED
     assert Decimal(stored.reserved_tokens) == Decimal("0")
+    # The visit ended about an hour ago. The reserve stands. One whole hour
+    # past that end is a booking_debit at that hour's band.
+    extra = (BASE_TOKENS_PER_HOUR * resolve_band(end).multiplier).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
     settled = _token_rows(client, booking_id)
     assert sorted(row.kind.value for row in settled) == [
         "booking_debit",
-        "booking_refund",
         "booking_reserve",
     ]
     debit = next(row for row in settled if row.kind.value == "booking_debit")
-    assert Decimal(debit.amount) == -reserved
+    assert Decimal(debit.amount) == -extra
     assert _count(client, BillingTransaction) == 0
     assert len(_incidents(client, booking_id)) == 1
-    assert _balance(client, ada["id"]) == balance
+    assert _balance(client, ada["id"]) == balance - extra
     hoists = {row["name"]: row for row in client.get("/hoists", headers=AUTH).json()}
     assert hoists["Bay 1"]["status"] == "available"
 

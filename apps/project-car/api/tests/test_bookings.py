@@ -577,20 +577,22 @@ def test_check_in_complete_debits_and_cancel_refunds(client: TestClient) -> None
     assert checked.json()["status"] == "active"
     assert client.get("/hoists", headers=AUTH).json()[0]["status"] == "occupied"
 
-    unused = Decimal("1")
+    # D16: time inside the visit is not refunded. The reserve is the charge.
     completed = client.post(
         f"/bookings/{booking['id']}/complete",
         headers=AUTH,
-        json={"unused_tokens": "1"},
+        json={"unused_tokens": "0"},
     )
     assert completed.status_code == 200, completed.text
     assert completed.json()["status"] == "completed"
-    used = expected - unused
+    used = expected
     assert _dec(client.get(f"/members/{member['id']}", headers=AUTH).json()["token_balance"]) == Decimal("1500") - used
     assert client.get("/hoists", headers=AUTH).json()[0]["status"] == "available"
     complete_ledger = client.get(f"/members/{member['id']}/tokens", headers=AUTH).json()
-    refund = next(row for row in complete_ledger if row["kind"] == "booking_refund")
-    assert refund["meta"]["pricing_rule"]["final_reserve_cost"] == str(expected)
+    assert [row for row in complete_ledger if row["kind"] == "booking_refund"] == []
+    assert [row for row in complete_ledger if row["kind"] == "booking_debit"] == []
+    reserve = next(row for row in complete_ledger if row["kind"] == "booking_reserve")
+    assert reserve["meta"]["pricing_rule"]["final_reserve_cost"] == str(expected)
 
     other_start, other_end = _window(8)
     other_expected = _expected_reserve(client, other_start, other_end, member["id"])
@@ -749,8 +751,7 @@ def test_booking_debits_tokens_and_cancel_returns_them(client: TestClient) -> No
 
     spent_start, spent_end = _window_inside_check_in()
     reserved = _expected_reserve(client, spent_start, spent_end, member["id"])
-    unused = Decimal("1")
-    assert reserved > unused
+    assert reserved > 0
     spent = client.post(
         "/bookings",
         headers=AUTH,
@@ -765,30 +766,28 @@ def test_booking_debits_tokens_and_cancel_returns_them(client: TestClient) -> No
     spent_id = spent.json()["id"]
     assert client.post(f"/bookings/{spent_id}/confirm", headers=AUTH).status_code == 200
     assert client.post(f"/bookings/{spent_id}/check-in", headers=AUTH).status_code == 200
-    used = reserved - unused
+    # The visit is still inside its end, so the reserve stands and no debit is added.
     completed = client.post(
         f"/bookings/{spent_id}/complete",
         headers=AUTH,
-        json={"unused_tokens": str(unused)},
+        json={"unused_tokens": "0"},
     )
     assert completed.status_code == 200, completed.text
     assert completed.json()["status"] == "completed"
     ledger = _ledger(client, member["id"])
-    debits = _rows(ledger, kind="booking_debit", booking_id=spent_id)
-    releases = _rows(ledger, kind="booking_refund", booking_id=spent_id)
-    assert len(debits) == 1
-    assert _dec(debits[0]["amount"]) == -used
-    assert debits[0]["meta"]["pricing_rule"]["final_reserve_cost"] == str(reserved)
-    assert len(releases) == 1
-    assert _dec(releases[0]["amount"]) == reserved
-    assert _balance(client, member["id"]) == opening - used
+    assert _rows(ledger, kind="booking_debit", booking_id=spent_id) == []
+    assert _rows(ledger, kind="booking_refund", booking_id=spent_id) == []
+    reserve_row = _rows(ledger, kind="booking_reserve", booking_id=spent_id)
+    assert len(reserve_row) == 1
+    assert reserve_row[0]["meta"]["pricing_rule"]["final_reserve_cost"] == str(reserved)
+    assert _balance(client, member["id"]) == opening - reserved
 
     denied = client.post(f"/bookings/{spent_id}/cancel", headers=AUTH)
     assert denied.status_code == 400
     assert denied.json()["error"]["code"] == "invalid_transition"
-    assert len(_rows(_ledger(client, member["id"]), kind="booking_debit", booking_id=spent_id)) == 1
-    assert _dec(_rows(_ledger(client, member["id"]), kind="booking_debit", booking_id=spent_id)[0]["amount"]) == -used
-    assert _balance(client, member["id"]) == opening - used
+    assert _rows(_ledger(client, member["id"]), kind="booking_debit", booking_id=spent_id) == []
+    assert _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=spent_id) == []
+    assert _balance(client, member["id"]) == opening - reserved
 
 
 def test_tier_rules_enforced(client: TestClient) -> None:
@@ -1354,6 +1353,8 @@ def _watch_refund_loads(monkeypatch, events: list[tuple[str, str, bool]]) -> Non
     def spy_add(self, instance, *args, **kwargs):
         if isinstance(instance, TokenTransaction) and instance.kind == TokenTransactionKind.BOOKING_REFUND:
             events.append(("refund", "", False))
+        if isinstance(instance, TokenTransaction) and instance.kind == TokenTransactionKind.BOOKING_DEBIT:
+            events.append(("debit", "", False))
         return original_add(self, instance, *args, **kwargs)
 
     monkeypatch.setattr(Session, "scalars", spy_scalars)
@@ -1426,18 +1427,17 @@ def test_second_cancel_locks_then_refunds_once(client: TestClient, monkeypatch) 
 
 
 def test_second_complete_locks_then_refunds_once(client: TestClient, monkeypatch) -> None:
-    """Complete locks the booking and the member before the unused-token refund.
+    """Complete locks the booking and the member before the overtime debit.
 
-    A second complete is 400 invalid_transition and the ledger keeps one refund.
-    Red on main: the load has no FOR UPDATE, so two overlapping completes with
-    unused_tokens can each insert booking_refund.
+    Time inside the visit is not refunded. A second complete is 400
+    invalid_transition and the ledger keeps one booking_debit. The load asks
+    for FOR UPDATE, so two overlapping completes cannot each insert a debit.
     """
     member = create_member(client, email="ada.complete-lock@example.com")
     hoist = create_hoist(client, name="Bay 1")
     start, end = _window_inside_check_in()
     reserved = _expected_reserve(client, start, end, member["id"])
-    unused = Decimal("1")
-    assert reserved > unused
+    assert reserved > 0
     created = client.post(
         "/bookings",
         headers=AUTH,
@@ -1452,31 +1452,45 @@ def test_second_complete_locks_then_refunds_once(client: TestClient, monkeypatch
     booking_id = created.json()["id"]
     assert client.post(f"/bookings/{booking_id}/confirm", headers=AUTH).status_code == 200
     assert client.post(f"/bookings/{booking_id}/check-in", headers=AUTH).status_code == 200
-    opening = Decimal("1500")
-    used = reserved - unused
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        row = session.get(Booking, UUID(booking_id))
+        assert row is not None
+        row.end_at = as_utc(shop_now() - timedelta(hours=2))
+        row.start_at = row.end_at - timedelta(hours=1)
+        session.commit()
+    finally:
+        session.close()
 
     events: list[tuple[str, str, bool]] = []
     _watch_refund_loads(monkeypatch, events)
     completed = client.post(
         f"/bookings/{booking_id}/complete",
         headers=AUTH,
-        json={"unused_tokens": str(unused)},
+        json={"unused_tokens": "0"},
     )
     assert completed.status_code == 200, completed.text
     assert completed.json()["status"] == "completed"
-    _assert_locks_before_refund(events, "complete_booking")
+    booking_at = _for_update_at(events, "bookings")
+    member_at = _for_update_at(events, "members")
+    debit_at = [index for index, (kind, _sql, _locked) in enumerate(events) if kind == "debit"]
+    assert booking_at, "complete_booking booking select has no FOR UPDATE on the postgresql dialect"
+    assert member_at, "complete_booking member select has no FOR UPDATE on the postgresql dialect"
+    assert debit_at, "complete_booking wrote no booking_debit"
+    assert booking_at[0] < member_at[0] < debit_at[0]
 
     again = client.post(
         f"/bookings/{booking_id}/complete",
         headers=AUTH,
-        json={"unused_tokens": str(unused)},
+        json={"unused_tokens": "0"},
     )
     assert again.status_code == 400, again.text
     assert again.json()["error"]["code"] == "invalid_transition"
+    debits = _rows(_ledger(client, member["id"]), kind="booking_debit", booking_id=booking_id)
     refunds = _rows(_ledger(client, member["id"]), kind="booking_refund", booking_id=booking_id)
-    assert len(refunds) == 1
-    assert _dec(refunds[0]["amount"]) == reserved
-    assert _balance(client, member["id"]) == opening - used
+    assert len(debits) == 1
+    assert refunds == []
+    assert _balance(client, member["id"]) == Decimal("1500") - reserved + _dec(debits[0]["amount"])
 
 
 def _assert_cancel_refunds_once(
