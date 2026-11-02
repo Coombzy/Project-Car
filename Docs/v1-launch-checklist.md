@@ -1,6 +1,6 @@
 # v1 launch checklist
 
-**Status:** Checked 2026-11-02. [#225](https://github.com/Coombzy/Project-Car/pull/225) and [#233](https://github.com/Coombzy/Project-Car/pull/233) are merged. [#259](https://github.com/Coombzy/Project-Car/pull/259) is still open. [#222](https://github.com/Coombzy/Project-Car/pull/222) is closed (2026-10-31), not merged. Do not reopen it. Every other pull request named in `merge-order.md` is closed and was not merged.
+**Status:** Checked 2026-11-02. [#225](https://github.com/Coombzy/Project-Car/pull/225) and [#233](https://github.com/Coombzy/Project-Car/pull/233) are merged. [#259](https://github.com/Coombzy/Project-Car/pull/259) is still open. [#222](https://github.com/Coombzy/Project-Car/pull/222) is closed (2026-10-31), not merged. Do not reopen it. Every other pull request in the `merge-order.md` tables is closed and was not merged.
 **Related:** `merge-order.md`, `token-pricing.md`
 
 **Merged** means that pull request is on `main`. **Closed** means it was closed and not merged. **Open** means it is still open. **Waiting on Ben** means the real value is not confirmed. The shop is not open. There is no Stripe. Do not merge a closed or already-merged pull request from this file.
