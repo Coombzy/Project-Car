@@ -1,20 +1,12 @@
 import { redirect } from "next/navigation";
 
-import { ShopApiError } from "./config";
 import { clearMemberSessionCookie, clearSessionCookie } from "./session";
+import { shopErrorMessage, isOwnerSessionError, isMemberSessionError } from "./shop-error";
 
-export function shopErrorMessage(
-  error: unknown,
-  fallback = "Something went wrong talking to the shop API.",
-): string {
-  if (error instanceof ShopApiError) {
-    return error.message;
-  }
-  return fallback;
-}
+export { shopErrorMessage };
 
 export async function handlePageError(error: unknown): Promise<string> {
-  if (error instanceof ShopApiError && error.status === 401) {
+  if (isOwnerSessionError(error)) {
     await clearSessionCookie();
     redirect("/login?reason=session");
   }
@@ -22,7 +14,7 @@ export async function handlePageError(error: unknown): Promise<string> {
 }
 
 export async function handleMemberPageError(error: unknown): Promise<string> {
-  if (error instanceof ShopApiError && (error.status === 401 || error.status === 403)) {
+  if (isMemberSessionError(error)) {
     await clearMemberSessionCookie();
     redirect("/member/login?reason=session");
   }
