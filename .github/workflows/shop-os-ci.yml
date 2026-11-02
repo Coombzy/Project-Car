@@ -2,12 +2,10 @@
 # Plan / runbook: Docs/shop-os-ci.md
 # Does not SSH to Doc, does not deploy Worker projectcar-brochure,
 # does not use production / tunnel / Cloudflare secrets.
-# Heavy steps are gated inside each job. There is no job-level if and no paths filter,
-# so a docs-only pull request still reports the required check names as success.
-# On a pull request, each job runs its heavy steps only when that job's area changed.
-# Markdown, text, and images do not count, except screenshot PNGs under web/visual/.
-# shop-api also runs for every other file under apps/project-car/web/, because API tests read them.
-# A push to main runs every step. Superseded pull request runs cancel; main pushes do not.
+# Heavy steps are gated inside each job. There is no workflow-level paths filter
+# and no job-level if, so a docs-only pull request still reports the required
+# check names as success. Each job's detect step chooses its own paths.
+# A push to main runs every step. Superseded pull-request runs cancel; main does not.
 name: Shop OS CI
 
 on:
@@ -68,8 +66,13 @@ jobs:
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
             case "${path}" in
+              # pytest reads markdown under api/ and web/, and shop-web
+              # .tsx, .html, .ts, and package.json. Other docs stay skipped.
+              apps/project-car/api/*.md|apps/project-car/web/*.md) shop=true; break ;;
               *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg) continue ;;
-              .github/workflows/shop-os-ci.yml|apps/project-car/api/*|apps/project-car/web/*) shop=true; break ;;
+              .github/workflows/shop-os-ci.yml|apps/project-car/api/*) shop=true; break ;;
+              apps/project-car/web/*.tsx|apps/project-car/web/*.html|apps/project-car/web/*.ts|apps/project-car/web/package.json) shop=true; break ;;
+              apps/project-car/web/*) continue ;;
               apps/project-car/*) shop=true; break ;;
             esac
           done <<< "${changed}"
