@@ -74,3 +74,47 @@ def fill_draft_flow(
     result.passed = True
     result.steps = list(api.steps)
     return result
+
+
+def shop_hoist_flow(
+    model: Model,
+    api: ApiClient,
+    member_id: str,
+    hoist_id: str,
+    start_at: str,
+    end_at: str,
+) -> FlowResult:
+    """Create a shop hoist request via the AI model, then attempt approval.
+
+    Steps:
+
+    1. Ask the model for shop hoist request notes.
+    2. POST ``/shop-hoist-requests`` with ``member_id``, ``hoist_id``,
+       ``start_at``, ``end_at``, and ``notes``.  Must return **201**.
+    3. POST ``/shop-hoist-requests/{id}/approve`` as the same AI.
+       Must return **403** with ``error.code == "cannot_approve_own_request"``.
+
+    Stops at the first miss and returns ``passed=False``.
+    """
+    result = FlowResult(name="shop_hoist")
+    notes = model.complete([{"role": "user", "content": "Write shop hoist request notes"}])
+    status, body = api.call(
+        "POST",
+        "/shop-hoist-requests",
+        json={
+            "member_id": member_id,
+            "hoist_id": hoist_id,
+            "start_at": start_at,
+            "end_at": end_at,
+            "notes": notes,
+        },
+    )
+    if not expect_step(status, body, 201):
+        return result
+    request_id = body["id"]
+    status, body = api.call("POST", f"/shop-hoist-requests/{request_id}/approve")
+    if not expect_step(status, body, 403, "cannot_approve_own_request"):
+        return result
+    result.passed = True
+    result.steps = list(api.steps)
+    return result
