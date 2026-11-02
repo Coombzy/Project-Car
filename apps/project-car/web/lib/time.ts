@@ -194,8 +194,27 @@ function snapWholeHour(value: string): string {
   return hourStamp(date, hour);
 }
 
+function oneHourLater(stamp: string): string {
+  const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/.exec(stamp);
+  if (!match) {
+    return stamp;
+  }
+  let date = match[1];
+  let hour = Number(match[2]) + 1;
+  if (hour >= 24) {
+    date = addDays(date, 1);
+    hour = 0;
+  }
+  return hourStamp(date, hour);
+}
+
 export function snapWholeHourWindow(start: string, end: string): { start: string; end: string } {
-  return { start: snapWholeHour(start), end: snapWholeHour(end) };
+  const snappedStart = snapWholeHour(start);
+  let snappedEnd = snapWholeHour(end);
+  if (snappedEnd <= snappedStart) {
+    snappedEnd = oneHourLater(snappedStart);
+  }
+  return { start: snappedStart, end: snappedEnd };
 }
 
 export function bayOptionLabel(hoist: { name: string; status: string; is_shop?: boolean }): string {

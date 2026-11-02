@@ -84,6 +84,12 @@ describe("default visit window", () => {
     assert.equal(snapped.start, "2026-11-05T17:00");
     assert.equal(snapped.end, "2026-11-05T18:00");
     assert.equal(snapped.start.includes(":30"), false);
+    const tight = snapWholeHourWindow("2026-11-05T16:30", "2026-11-05T17:00");
+    assert.equal(tight.start, "2026-11-05T17:00");
+    assert.equal(tight.end, "2026-11-05T18:00");
+    const midnight = snapWholeHourWindow("2026-11-05T23:30", "2026-11-06T00:00");
+    assert.equal(midnight.start, "2026-11-06T00:00");
+    assert.equal(midnight.end, "2026-11-06T01:00");
     assert.equal(bayOptionLabel({ name: "Bay 2", status: "occupied" }).includes("occupied"), false);
   });
 });
