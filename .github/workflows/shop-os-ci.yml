@@ -69,7 +69,7 @@ jobs:
               # pytest reads markdown under api/ and web/, and shop-web
               # .tsx, .html, .ts, and package.json. Other docs stay skipped.
               apps/project-car/api/*.md|apps/project-car/web/*.md) shop=true; break ;;
-              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg) continue ;;
+              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg|*.webp|*.SVG) continue ;;
               .github/workflows/shop-os-ci.yml|apps/project-car/api/*) shop=true; break ;;
               apps/project-car/web/*.tsx|apps/project-car/web/*.html|apps/project-car/web/*.ts|apps/project-car/web/package.json) shop=true; break ;;
               apps/project-car/web/*) continue ;;
@@ -139,7 +139,7 @@ jobs:
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
             case "${path}" in
-              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg) continue ;;
+              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg|*.webp|*.SVG) continue ;;
               .github/workflows/shop-os-ci.yml|apps/project-car/web/*) shop=true; break ;;
               apps/project-car/api/*) continue ;;
               apps/project-car/*) shop=true; break ;;
@@ -218,8 +218,10 @@ jobs:
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
             case "${path}" in
+              # Screenshot PNGs and the baked clock run this job. Markdown and other images do not.
+              apps/project-car/web/visual/*.png|apps/project-car/web/visual/shop-now.txt) shop=true; break ;;
+              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg|*.webp|*.SVG) continue ;;
               apps/project-car/web/visual/*) shop=true; break ;;
-              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg) continue ;;
               .github/workflows/shop-os-ci.yml|apps/project-car/*) shop=true; break ;;
             esac
           done <<< "${changed}"
