@@ -230,6 +230,106 @@ def _contains_key(node: object, key: str) -> bool:
     return False
 
 
+def _detect_script(workflow: dict, job_name: str) -> str:
+    for job in workflow["jobs"].values():
+        if job["name"] != job_name:
+            continue
+        detect = [step for step in job["steps"] if step.get("id") == "shop_changes"]
+        assert len(detect) == 1, job_name
+        script = detect[0]["run"]
+        assert isinstance(script, str)
+        return script
+    raise AssertionError(job_name)
+
+
+def _detect_shop(script: str, paths: tuple[str, ...]) -> str:
+    """Run one job's detect step as a pull request with a fixed changed list."""
+    assignment = f'changed="$({DIFF_COMMAND})"'
+    assert assignment in script
+    if paths:
+        quoted = " ".join("'" + path.replace("'", "'\\''") + "'" for path in paths)
+        replacement = f"changed=$(printf '%s\\n' {quoted})"
+    else:
+        replacement = 'changed=""'
+    patched = script.replace(assignment, replacement, 1)
+    base = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"],
+        cwd=ROOT,
+        text=True,
+    ).strip()
+    with tempfile.NamedTemporaryFile(mode="w+", delete=False) as handle:
+        output_path = handle.name
+    try:
+        env = os.environ.copy()
+        env["GITHUB_EVENT_NAME"] = "pull_request"
+        env["SHOP_BASE_SHA"] = base
+        env["GITHUB_OUTPUT"] = output_path
+        completed = subprocess.run(
+            ["bash", "-c", patched],
+            cwd=ROOT,
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert completed.returncode == 0, completed.stderr
+        written = Path(output_path).read_text(encoding="utf-8")
+    finally:
+        Path(output_path).unlink(missing_ok=True)
+    flags = re.findall(r"(?m)^shop=(true|false)$", written)
+    assert flags, written
+    return flags[-1]
+
+
+def _assert_readme_only_change_sets_shop_true(workflow: dict) -> None:
+    """Pytest reads shop-app markdown and shop-web sources, so those diffs set shop=true.
+
+    A README under api/ or web/ sets shop=true for shop-api pytest only.
+    A shop-web .tsx, .html, .ts, or package.json change does too. Other docs,
+    and the lint and visual jobs for markdown, still leave shop=false.
+    """
+    shop_api = _detect_script(workflow, "shop-api pytest")
+    shop_web = _detect_script(workflow, "shop-web lint / typecheck / build")
+    visual = _detect_script(workflow, VISUAL_CHECK_NAME)
+    readme_only = (
+        "apps/project-car/api/README.md",
+        "apps/project-car/web/README.md",
+        "apps/project-car/api/docs/guide.md",
+        "apps/project-car/web/lib/notes.md",
+    )
+    for path in readme_only:
+        assert _detect_shop(shop_api, (path,)) == "true", path
+        assert _detect_shop(shop_web, (path,)) == "false", path
+        assert _detect_shop(visual, (path,)) == "false", path
+
+    other_docs = (
+        "Docs/shop-os-ci.md",
+        "README.md",
+        "apps/project-car/ci-path-probe.md",
+        "apps/website/README.md",
+        "apps/project-car/api/notes.txt",
+    )
+    for path in other_docs:
+        assert _detect_shop(shop_api, (path,)) == "false", path
+        assert _detect_shop(shop_web, (path,)) == "false", path
+        assert _detect_shop(visual, (path,)) == "false", path
+
+    assert _detect_shop(shop_api, ("apps/project-car/api/app/main.py",)) == "true"
+    assert _detect_shop(shop_web, ("apps/project-car/web/app/page.tsx",)) == "true"
+    # Pytest reads these shop-web paths, so a page.tsx-only diff must set shop=true.
+    shop_web_sources = (
+        "apps/project-car/web/app/page.tsx",
+        "apps/project-car/web/components/owner-demo-banner.tsx",
+        "apps/project-car/web/public/offline.html",
+        "apps/project-car/web/lib/placeholders.ts",
+        "apps/project-car/web/package.json",
+        "apps/project-car/web/visual/pages.spec.ts",
+        "apps/project-car/web/playwright.config.ts",
+    )
+    for path in shop_web_sources:
+        assert _detect_shop(shop_api, (path,)) == "true", path
+
+
 def test_shop_os_ci_path_filter_keeps_required_check_names() -> None:
     text = WORKFLOW.read_text(encoding="utf-8")
     workflow = parse_workflow_yaml(text)
@@ -306,6 +406,8 @@ def test_shop_os_ci_path_filter_keeps_required_check_names() -> None:
             matched = [step for step in steps if step.get("run") == command]
             assert len(matched) == 1, command
             assert matched[0]["if"] == GATE_IF
+
+    _assert_readme_only_change_sets_shop_true(workflow)
 
 
 def _job_script(job_name: str) -> str:
@@ -470,3 +572,95 @@ def test_api_only_runs_screenshots_skips_web_build_and_reuses_baselines() -> Non
         assert applied.returncode == 0, applied.stderr
         assert "stored screenshot baselines" in applied.stdout
         assert committed.read_bytes() == b"from-main"
+
+
+def _detect_on_push(script: str) -> str:
+    """A push must set shop=true before the pull-request base sha is checked."""
+    with tempfile.NamedTemporaryFile(mode="w+", delete=False) as handle:
+        output_path = handle.name
+    try:
+        env = os.environ.copy()
+        env["GITHUB_EVENT_NAME"] = "push"
+        env["GITHUB_OUTPUT"] = output_path
+        env["SHOP_BASE_SHA"] = "not-a-sha"
+        completed = subprocess.run(
+            ["bash", "-c", script],
+            cwd=ROOT,
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert completed.returncode == 0, completed.stderr
+        written = Path(output_path).read_text(encoding="utf-8")
+    finally:
+        Path(output_path).unlink(missing_ok=True)
+    flags = re.findall(r"(?m)^shop=(true|false)$", written)
+    assert flags, written
+    return flags[-1]
+
+
+def test_visual_markdown_and_other_images_skip_heavy_steps() -> None:
+    """Screenshot PNGs are the image exception. Other images, and markdown, are not.
+
+    `apps/project-car/web/visual/README.md` is markdown under shop-web, so shop-api
+    pytest still runs and the visual job does not. `.webp` and `.SVG` are images,
+    so none of the three jobs run their heavy steps for them. `shop-now.txt` still
+    runs the visual job because the screenshot build bakes that clock in.
+    """
+    text = WORKFLOW.read_text(encoding="utf-8")
+    workflow = parse_workflow_yaml(text)
+    jobs = workflow["jobs"]
+    assert jobs["shop-api"]["timeout-minutes"] == 10
+    assert jobs["shop-web"]["timeout-minutes"] == 10
+    assert workflow["concurrency"]["cancel-in-progress"] == (
+        "${{ github.event_name == 'pull_request' }}"
+    )
+    visual_job = jobs["shop-web-visual"]
+    cache = [step for step in visual_job["steps"] if step.get("id") == "pw_cache"]
+    assert len(cache) == 1
+    assert cache[0]["uses"] == "actions/cache@v4"
+    assert cache[0]["with"]["path"] == "~/.cache/ms-playwright"
+    install = [step for step in visual_job["steps"] if step.get("name") == "Install Playwright Chromium"]
+    assert len(install) == 1
+    assert "npx playwright install-deps chromium" in install[0]["run"]
+    assert "npx playwright install --with-deps chromium" in install[0]["run"]
+
+    shop_api = _detect_script(workflow, "shop-api pytest")
+    shop_web = _detect_script(workflow, "shop-web lint / typecheck / build")
+    visual = _detect_script(workflow, VISUAL_CHECK_NAME)
+    for script in (shop_api, shop_web, visual):
+        assert _detect_on_push(script) == "true"
+
+    readme = "apps/project-car/web/visual/README.md"
+    assert _detect_shop(shop_api, (readme,)) == "true"
+    assert _detect_shop(shop_web, (readme,)) == "false"
+    assert _detect_shop(visual, (readme,)) == "false"
+
+    png = "apps/project-car/web/visual/screenshots/390/home.png"
+    assert _detect_shop(visual, (png,)) == "true"
+    assert _detect_shop(shop_api, (png,)) == "false"
+    assert _detect_shop(shop_web, (png,)) == "false"
+
+    clock = "apps/project-car/web/visual/shop-now.txt"
+    assert _detect_shop(visual, (clock,)) == "true"
+    assert _detect_shop(shop_api, (clock,)) == "false"
+    assert _detect_shop(shop_web, (clock,)) == "false"
+
+    spec = "apps/project-car/web/visual/pages.spec.ts"
+    assert _detect_shop(shop_api, (spec,)) == "true"
+    assert _detect_shop(shop_web, (spec,)) == "true"
+    assert _detect_shop(visual, (spec,)) == "true"
+
+    images = (
+        "apps/project-car/api/icon.SVG",
+        "apps/project-car/web/public/mark.SVG",
+        "apps/project-car/web/visual/mark.SVG",
+        "apps/project-car/web/logo.webp",
+        "apps/project-car/web/visual/logo.webp",
+        "apps/project-car/logo.webp",
+    )
+    for path in images:
+        assert _detect_shop(shop_api, (path,)) == "false", path
+        assert _detect_shop(shop_web, (path,)) == "false", path
+        assert _detect_shop(visual, (path,)) == "false", path

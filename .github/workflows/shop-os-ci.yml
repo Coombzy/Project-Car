@@ -2,18 +2,16 @@
 # Plan / runbook: Docs/shop-os-ci.md
 # Does not SSH to Doc, does not deploy Worker projectcar-brochure,
 # does not use production / tunnel / Cloudflare secrets.
-# Heavy steps are gated inside each job. There is no job-level if and no paths filter,
-# so a docs-only pull request still reports the required check names as success.
-# On a pull request, each job runs its heavy steps only when that job's area changed.
-# Markdown, text, and images do not count, except screenshot PNGs under web/visual/.
-# shop-api also runs for every other file under apps/project-car/web/, because API tests read them.
-# shop-api still runs for Markdown under apps/project-car/ (the API and web READMEs,
-# and every .md under web). Text and images stay skipped. Docs and the repo-root README do not.
+# Heavy steps are gated inside each job. There is no workflow-level paths filter
+# and no job-level if, so a docs-only pull request still reports the required
+# check names as success. Each job's detect step chooses its own paths.
+# shop-api runs for Markdown under apps/project-car/api and apps/project-car/web,
+# and for the shop-web sources pytest reads. Other docs, text, and images stay skipped.
 # An API-only diff skips the web build. Screenshots still run, because the visual job
 # logs into this pull request's API.
 # Screenshot baselines are the pngs from main's latest green run, when that cache exists.
 # Storing them on main is skipped when this commit's cache key already exists.
-# A push to main runs every step. Superseded pull request runs cancel; main pushes do not.
+# A push to main runs every step. Superseded pull-request runs cancel; main does not.
 name: Shop OS CI
 
 on:
@@ -74,8 +72,13 @@ jobs:
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
             case "${path}" in
-              *.txt|*.png|*.jpg|*.jpeg|*.svg) continue ;;
-              .github/workflows/shop-os-ci.yml|apps/project-car/api/*|apps/project-car/web/*) shop=true; break ;;
+              # pytest reads markdown under api/ and web/, and shop-web
+              # .tsx, .html, .ts, and package.json. Other docs stay skipped.
+              apps/project-car/api/*.md|apps/project-car/web/*.md) shop=true; break ;;
+              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg|*.webp|*.SVG) continue ;;
+              .github/workflows/shop-os-ci.yml|apps/project-car/api/*) shop=true; break ;;
+              apps/project-car/web/*.tsx|apps/project-car/web/*.html|apps/project-car/web/*.ts|apps/project-car/web/package.json) shop=true; break ;;
+              apps/project-car/web/*) continue ;;
               apps/project-car/*) shop=true; break ;;
             esac
           done <<< "${changed}"
@@ -157,7 +160,7 @@ jobs:
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
             case "${path}" in
-              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg) continue ;;
+              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg|*.webp|*.SVG) continue ;;
               .github/workflows/shop-os-ci.yml|apps/project-car/web/*) shop=true; break ;;
               apps/project-car/api/*) continue ;;
               apps/project-car/*) shop=true; break ;;
@@ -246,10 +249,11 @@ jobs:
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
             case "${path}" in
+              # Screenshot PNGs and the baked clock run this job. Markdown and other images do not.
+              apps/project-car/web/visual/*.png|apps/project-car/web/visual/shop-now.txt) shop=true; break ;;
+              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg|*.webp|*.SVG) continue ;;
               apps/project-car/web/visual/*) shop=true; break ;;
-              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg) continue ;;
-              .github/workflows/shop-os-ci.yml) shop=true; break ;;
-              apps/project-car/*) shop=true; break ;;
+              .github/workflows/shop-os-ci.yml|apps/project-car/*) shop=true; break ;;
             esac
           done <<< "${changed}"
           echo "shop=${shop}" >> "${GITHUB_OUTPUT}"
