@@ -72,6 +72,30 @@ def test_deposit_round_trip_moves_no_tokens_and_no_gst(client: TestClient) -> No
     assert _tokens(client, member["id"]) == before
 
 
+def test_token_purchase_with_deposit_payment_id_is_already_credited(client: TestClient) -> None:
+    """A payment id already on a deposit row must not credit tokens or a second dollar row."""
+    member = create_member(client, email="shared-pay@example.com", allocate_tokens=False)
+    before = _tokens(client, member["id"])
+    taken = client.post(
+        f"/members/{member['id']}/deposits",
+        headers=AUTH,
+        json={"action": "take", "amount": "50.00", "payment_id": "STANDIN-PAY-1"},
+    )
+    assert taken.status_code == 201, taken.text
+    charges_after_deposit = _charges(client, member["id"])
+    assert len(charges_after_deposit) == 1
+
+    purchase = client.post(
+        f"/members/{member['id']}/token-purchases",
+        headers=AUTH,
+        json={"payment_id": "STANDIN-PAY-1", "tokens": "100", "subtotal_cad": "40.00"},
+    )
+    assert purchase.status_code == 409, purchase.text
+    assert purchase.json()["error"]["code"] == "already_credited"
+    assert _tokens(client, member["id"]) == before
+    assert _charges(client, member["id"]) == charges_after_deposit
+
+
 def test_kept_deposit_writes_five_percent_gst(client: TestClient) -> None:
     member = create_member(client, email="kept@example.com", allocate_tokens=False)
     before = _tokens(client, member["id"])
