@@ -49,11 +49,13 @@ describe("parseJobForm", () => {
     }
   });
 
-  it("refuses a zero bounty", () => {
+  it("accepts a zero bounty", () => {
     for (const bounty of ["0", "0.0", "0.00"]) {
       assert.deepEqual(parseJobForm({ title: "Sweep the bay", notes: "", bounty }), {
-        ok: false,
-        error: BOUNTY_ERROR,
+        ok: true,
+        title: "Sweep the bay",
+        notes: null,
+        token_bounty: "0",
       });
     }
   });

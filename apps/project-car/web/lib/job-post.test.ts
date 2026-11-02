@@ -18,12 +18,14 @@ const BOUNTY_ERROR =
   "A job bounty is 0 to 10,000 tokens, with at most two decimal places.";
 
 describe("postJobAction redirect", () => {
-  it("keeps bounty 1.5 and 10000 and refuses 0, -1, 1.555 and 10000.01", () => {
+  it("accepts bounty 0, 1.5 and 10000 and refuses -1, 1.555 and 10000.01", () => {
     assert.equal(JOB_BOUNTY_CAP, 10_000);
     for (const bounty of ["0", "0.0", "0.00"]) {
       assert.deepEqual(parseJobForm({ title: "Sweep the bay", bounty }), {
-        ok: false,
-        error: BOUNTY_ERROR,
+        ok: true,
+        title: "Sweep the bay",
+        notes: null,
+        token_bounty: "0",
       });
     }
     assert.deepEqual(parseJobForm({ title: "Sweep the bay", bounty: "1.5" }), {
@@ -68,6 +70,9 @@ describe("postJobAction redirect", () => {
   it("removes the visual scope lock without refusing bounty 1.5 or 10000", () => {
     assert.equal(JOB_BOUNTY_CAP, 10_000);
     for (const [bounty, token] of [
+      ["0", "0"],
+      ["0.0", "0"],
+      ["0.00", "0"],
       ["0.01", "0.01"],
       ["1.5", "1.5"],
       ["10000", "10000"],
@@ -80,7 +85,7 @@ describe("postJobAction redirect", () => {
         token_bounty: token,
       });
     }
-    for (const bounty of ["0", "0.0", "0.00", "-1", "1.555", "10000.01"]) {
+    for (const bounty of ["-1", "1.555", "10000.01"]) {
       assert.deepEqual(parseJobForm({ title: "Sweep the bay", bounty }), {
         ok: false,
         error: BOUNTY_ERROR,
