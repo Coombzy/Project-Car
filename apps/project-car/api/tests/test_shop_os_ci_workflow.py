@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import os
 import re
 import subprocess
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -354,3 +356,84 @@ def test_shop_api_runs_for_booking_cancel_and_owner_booking_card() -> None:
         ],
     )
     assert list(skipped.values()) == ["false", "false", "false"]
+
+
+def test_api_only_skips_screenshots_and_uses_stored_baselines() -> None:
+    """API-only diffs skip the web build and screenshots. Baselines come from main's green run."""
+    api_path = "apps/project-car/api/app/__init__.py"
+    web_paths = (
+        "apps/project-car/web/lib/booking-cancel.test.ts",
+        "apps/project-car/web/components/owner-booking-card.tsx",
+    )
+    shared_path = "apps/project-car/shared/contract.json"
+    workflow_path = ".github/workflows/shop-os-ci.yml"
+    doc_path = "apps/project-car/web/README.md"
+    jobs = (
+        "shop-api pytest",
+        "shop-web lint / typecheck / build",
+        "shop-web layout-shift / screenshots",
+    )
+    flags = {
+        name: _shop_flags(_job_script(name), [api_path, *web_paths, shared_path, workflow_path, doc_path])
+        for name in jobs
+    }
+    assert flags["shop-api pytest"][api_path] == "true"
+    assert flags["shop-web lint / typecheck / build"][api_path] == "false"
+    assert flags["shop-web layout-shift / screenshots"][api_path] == "false"
+    for path in web_paths:
+        assert flags["shop-api pytest"][path] == "true", path
+        assert flags["shop-web lint / typecheck / build"][path] == "true", path
+        assert flags["shop-web layout-shift / screenshots"][path] == "true", path
+    for path in (shared_path, workflow_path):
+        for name in jobs:
+            assert flags[name][path] == "true", (name, path)
+    for name in jobs:
+        assert flags[name][doc_path] == "false", name
+
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "cache: pip" in text
+    assert "cache: npm" in text
+    assert "shop-api-venv-" in text
+    assert "shop-web-modules-" in text
+    assert "shop-web-screenshot-baselines-" in text
+    assert "bash visual/apply-baselines.sh" in text
+    assert "actions/cache/restore@v4" in text
+    assert "actions/cache/save@v4" in text
+    apply = ROOT / "apps" / "project-car" / "web" / "visual" / "apply-baselines.sh"
+    script = apply.read_text(encoding="utf-8")
+    assert "git checkout" not in script
+    assert "npm run build" not in script
+    assert "no stored screenshot baseline" in script
+
+    with tempfile.TemporaryDirectory() as temporary:
+        visual = Path(temporary)
+        shots = visual / "screenshots" / "390"
+        shots.mkdir(parents=True)
+        committed = shots / "home.png"
+        committed.write_bytes(b"committed")
+        probe_env = os.environ.copy()
+        probe_env["VISUAL_DIR"] = str(visual)
+        probe_env["GITHUB_EVENT_NAME"] = "pull_request"
+        missing = subprocess.run(
+            ["sh", str(apply)],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=probe_env,
+        )
+        assert missing.returncode == 0, missing.stderr
+        assert "no stored screenshot baseline" in missing.stdout
+        assert committed.read_bytes() == b"committed"
+        baseline = visual / "screenshot-baselines" / "390"
+        baseline.mkdir(parents=True)
+        (baseline / "home.png").write_bytes(b"from-main")
+        applied = subprocess.run(
+            ["sh", str(apply)],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=probe_env,
+        )
+        assert applied.returncode == 0, applied.stderr
+        assert "stored screenshot baselines" in applied.stdout
+        assert committed.read_bytes() == b"from-main"
