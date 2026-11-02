@@ -26,7 +26,7 @@ from app.models import (
     HoistStatus,
 )
 from app.services.pricing import MONEY_QUANT, NO_FILL, FillFactor, duration_hours
-from app.shop_time import as_utc, pricing_clock_window, pricing_next_day
+from app.shop_time import as_utc, pricing_clock_window, pricing_next_day, stored_utc
 
 FILL_TZ_NAME = "America/Regina"
 HOURS_QUANT = Decimal("0.0001")
@@ -81,6 +81,8 @@ class FillSnapshot:
             label=f"Fill the gaps {discount_label(self.discount_pct)}%",
             multiplier=self.fill_multiplier,
             discount_pct=self.discount_pct,
+            window_start=self.window_start,
+            window_end=self.window_end,
         )
 
 
@@ -420,11 +422,30 @@ def resolve_fill_for_slot(
     now: datetime | None = None,
     settings: Settings | None = None,
 ) -> FillFactor:
-    """Fill applies only to slots that overlap next-day customer-bay hours."""
+    """A published next-day deal discounts hours inside its window only.
+
+    The live preview can show a percent with no ``fill_offers`` row. That
+    percent is not a price. Hours outside the published window stay at the band.
+    """
     if not slot_overlaps_next_day_window(start_at, end_at, now=now, settings=settings):
         return NO_FILL
+    offer = published_offer(session, pricing_next_day(now))
+    if offer is None:
+        return NO_FILL
     snapshot = snapshot_next_day(session, now=now, settings=settings)
-    return snapshot.as_factor()
+    factor = snapshot.as_factor()
+    if factor.id == "none":
+        return NO_FILL
+    # The offer row is the locked window. SQLite returns that UTC instant
+    # naive; as_utc would read it as shop-local and slide the discount.
+    return FillFactor(
+        id=factor.id,
+        label=factor.label,
+        multiplier=factor.multiplier,
+        discount_pct=factor.discount_pct,
+        window_start=stored_utc(offer.window_start),
+        window_end=stored_utc(offer.window_end),
+    )
 
 
 def upsert_published_offer(session: Session, snapshot: FillSnapshot) -> FillOffer:
