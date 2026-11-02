@@ -66,6 +66,8 @@ jobs:
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
             case "${path}" in
+              # pytest reads markdown under api/ and web/. Other docs stay skipped.
+              apps/project-car/api/*.md|apps/project-car/web/*.md) shop=true; break ;;
               *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg) continue ;;
               .github/workflows/shop-os-ci.yml|apps/project-car/api/*) shop=true; break ;;
               apps/project-car/web/*) continue ;;

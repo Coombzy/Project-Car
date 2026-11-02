@@ -1,7 +1,7 @@
 # Shop OS CI — GitHub Actions quality gate
 
 **Status:** Living ops (git-only quality gate)  
-**Updated:** 2026-10-03  
+**Updated:** 2026-11-02  
 **Related:** `STATUS.md`, `deployment-guide.md`, `doc-lid-restore.md` (process wake only), `doc-unfreeze.md` (Ben GO pull — **not** this file), `api-stay-up.md`, `shop-web-stay-up.md`, `ai-agents-constitution.md`, `.github/workflows/shop-os-ci.yml`, `apps/project-car/api/README.md`, `apps/project-car/web/README.md`
 
 Plan + runbook for GitHub Actions on **`apps/project-car`**. Merging this file (and the workflow) is a **git-only** quality gate. It is **not** a Doc deploy, **not** a tunnel/live-secret change, **not** a Cloudflare Worker upload, and **not** a license to `git pull` or rebuild shop-web on Doc.
@@ -17,7 +17,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Git-only** | CI runs on GitHub-hosted runners against this repo. It never SSHs to Doc, never curls production with write tokens, and never uploads Worker `projectcar-brochure`. |
 | **Green CI does not move Doc** | Doc is **unfrozen** at `795f301` / BUILD_ID `vQRsAOI0JtWYZ_ogRUjgG` (was `4cf8924` / `5swmVz-T2CqKEQzTk1ifU`). **#36** / **#69** / **#88** are live on Doc. A green Shop OS CI check is **not** a pull to finance tip `6366d62`. A further checkout move is a new Ben GO (`doc-unfreeze.md`). Lid-restore is process wake only (`doc-lid-restore.md`). |
 | **No production credentials** | Workflow uses public install only (`pip` / `npm ci`). No GitHub Actions secrets. No Doc `.env`, no tunnel tokens, no Cloudflare API tokens, no `GOOGLE_OAUTH_*`, no Stripe. |
-| **Path-filtered** | On a pull request, each job gates its own heavy steps. Doc files (`*.md`, `*.txt`, images) do not run them, except screenshot baselines under `apps/project-car/web/visual/`, which still run the visual job. `shop-api pytest` runs for `apps/project-car/api/**`, this workflow file, and any other non-doc `apps/project-car/**` path outside `api/` and `web/`. `shop-web lint / typecheck / build` runs for `apps/project-car/web/**`, this workflow file, and those same shared paths. `shop-web layout-shift / screenshots` runs for any non-doc path under `apps/project-car/**` or this workflow file. A push to `main` runs every step. Docs-only / brochure / finance PRs do **not** pay this tax, and the required check names still report success. There is no job-level `if` and no `paths` key on the trigger. |
+| **Path-filtered** | On a pull request, each job gates its own heavy steps. Doc files (`*.md`, `*.txt`, images) do not run them, except screenshot baselines under `apps/project-car/web/visual/`, which still run the visual job, and markdown under `apps/project-car/api/` or `apps/project-car/web/`, which runs `shop-api pytest`. Those files are read by `test_public_docs_omit_demo_login` (both READMEs) and `test_public_pages_do_not_say_the_shop_is_open` (every `.md` under shop-web). Other markdown (`Docs/`, the repo root, brochure, and `apps/project-car/*.md` outside `api/` and `web/`) still skips every heavy step. `shop-api pytest` also runs for non-doc `apps/project-car/api/**`, this workflow file, and any other non-doc `apps/project-car/**` path outside `api/` and `web/`. `shop-web lint / typecheck / build` runs for non-doc `apps/project-car/web/**`, this workflow file, and those same shared paths. It does not run for markdown. `shop-web layout-shift / screenshots` runs for any non-doc path under `apps/project-car/**` or this workflow file. A push to `main` runs every step. Docs-only / brochure / finance PRs do **not** pay this tax, and the required check names still report success. There is no job-level `if` and no `paths` key on the trigger. |
 | **Not a live probe** | Lookout `projectcar-api-health-watch` and public `GET /health` stay ops. This workflow does not replace them. |
 
 ---
@@ -146,7 +146,7 @@ Read the failed **job** first (`shop-api` vs `shop-web`), then the step.
 | `next build` fail | Compile / Next config / missing types after `tsc` | `npm run build`. Pages are `force-dynamic` — a build fail is **not** “API is down.” |
 | `shop-web layout-shift / screenshots` fail | Layout shift above 0.1, or a screenshot past the 1% pixel ratio | Reproduce with the visual commands below. Update a reference PNG only when the page change is intended. |
 | `npm ci` / pip install fail | Lockfile / PyPI / npm registry | Re-run once. If persistent, pin/lock in git. Still no secrets. |
-| Heavy steps **skipped** | Path filter | Expected when that job's paths are absent (docs-only, brochure, finance, or the other app for api vs web). The job still finishes green. The check name is success, not skipped. |
+| Heavy steps **skipped** | Path filter | Expected when that job's paths are absent (docs-only, brochure, finance, or the other app for api vs web). Markdown under `apps/project-car/api/` or `apps/project-car/web/` still runs `shop-api pytest`. The job still finishes green. The check name is success, not skipped. |
 | Public `api.` / `ops.` 530 / 1033 | Doc lid-close | **Not this workflow.** `doc-lid-restore.md`. |
 
 Do **not**:
