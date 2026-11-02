@@ -58,12 +58,17 @@ def piles_for_refund(
 def _default_piles(member: Member, kind: TokenTransactionKind, amount: Decimal) -> tuple[Decimal, Decimal]:
     """Split a ledger amount when the caller does not name the piles.
 
-    Purchases credit the purchased pile. Grants, expiry, and positive
-    adjustments credit allowance. A spend takes allowance first, then purchased.
+    Purchases credit the purchased pile. Grants, expiry, and owner adjustments
+    land on allowance, including a negative adjustment. A booking spend takes
+    allowance first, then purchased.
     """
     if kind == TokenTransactionKind.TOKEN_PURCHASE:
         return Decimal("0"), amount
-    if kind in (TokenTransactionKind.MONTHLY_ALLOCATION, TokenTransactionKind.ALLOWANCE_EXPIRY):
+    if kind in (
+        TokenTransactionKind.MONTHLY_ALLOCATION,
+        TokenTransactionKind.ALLOWANCE_EXPIRY,
+        TokenTransactionKind.ADMIN_ADJUSTMENT,
+    ):
         return amount, Decimal("0")
     if amount > 0:
         return amount, Decimal("0")
