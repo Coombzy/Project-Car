@@ -37,7 +37,6 @@ def test_all_models_import() -> None:
         "parts_requests",
         "calendar_connections",
         "job_events",
-        "shop_settings",
     ]
 
 

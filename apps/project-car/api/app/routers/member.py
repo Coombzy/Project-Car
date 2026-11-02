@@ -32,7 +32,6 @@ from app.schemas import (
     HoistOut,
     MemberBookingCreate,
     MemberBookingQuoteRequest,
-    MemberTokenPurchaseCreate,
     MemberDashboardOut,
     MemberScheduleOut,
     MemberSelfOut,
@@ -53,7 +52,7 @@ from app.services.shop_hoist_requests import (
     list_shop_hoist_requests,
 )
 from app.services.staff import claim_job, create_tool_crib_exception
-from app.shop_time import as_utc, stored_utc
+from app.shop_time import as_utc
 
 router = APIRouter(prefix="/member", tags=["member"])
 
@@ -98,9 +97,7 @@ def _ics_escape(value: str) -> str:
 
 
 def _ics_utc(value: datetime) -> str:
-    # SQLite returns the stored UTC instant with no offset. as_utc() would
-    # read that naive value as shop-local and shift the calendar file.
-    return stored_utc(value).strftime("%Y%m%dT%H%M%SZ")
+    return as_utc(value).strftime("%Y%m%dT%H%M%SZ")
 
 
 def _ics_utf8_prefix(text: str, max_octets: int) -> str:
@@ -192,8 +189,6 @@ def member_me(session: DbSession, principal: MemberUser) -> MemberSelfOut:
         emergency_contact_name=member.emergency_contact_name,
         emergency_contact_phone=member.emergency_contact_phone,
         token_balance=member.token_balance,
-        allowance_balance=member.allowance_balance,
-        purchased_balance=member.purchased_balance,
         deposit_balance=member.deposit_balance,
         created_at=member.created_at,
         updated_at=member.updated_at,
@@ -367,32 +362,27 @@ def member_create_booking(
     principal: MemberUser,
 ) -> BookingOut | ShopHoistRequestOut:
     _own_member(session, principal)
-    hoist_id = body.hoist_id
-    if hoist_id is None:
-        hoist_id = booking_service.pick_member_bay(session, body.start_at, body.end_at).id
-    else:
-        hoist = session.get(Hoist, hoist_id)
-        if hoist is not None and hoist.is_shop:
-            row = create_shop_hoist_request(
-                session,
-                member_id=principal.member_id,
-                hoist_id=hoist_id,
-                start_at=body.start_at,
-                end_at=body.end_at,
-                notes=body.notes,
-                created_by_kind=ActorKind.HUMAN,
-                created_by_id=str(principal.member_id),
-            )
-            return ShopHoistRequestOut.from_row(row)
+    hoist = session.get(Hoist, body.hoist_id)
+    if hoist is not None and hoist.is_shop:
+        row = create_shop_hoist_request(
+            session,
+            member_id=principal.member_id,
+            hoist_id=body.hoist_id,
+            start_at=body.start_at,
+            end_at=body.end_at,
+            notes=body.notes,
+            created_by_kind=ActorKind.HUMAN,
+            created_by_id=str(principal.member_id),
+        )
+        return ShopHoistRequestOut.from_row(row)
     booking = booking_service.create_booking(
         session,
         member_id=principal.member_id,
-        hoist_id=hoist_id,
+        hoist_id=body.hoist_id,
         start_at=body.start_at,
         end_at=body.end_at,
         notes=body.notes,
         kind=BookingKind.CUSTOMER,
-        quoted_tokens=body.tokens,
     )
     return BookingOut.from_booking(booking)
 
@@ -470,22 +460,3 @@ def member_create_tool_crib_exception(
 @router.post("/jobs/{job_id}/claim", response_model=ShopJobOut)
 def member_claim_job(job_id: UUID, session: DbSession, principal: MemberUser) -> ShopJobOut:
     return ShopJobOut.model_validate(claim_job(session, job_id, principal.member_id))
-
-
-@router.post("/token-purchases", response_model=TokenTransactionOut, status_code=201)
-def member_buy_tokens(
-    body: MemberTokenPurchaseCreate,
-    session: DbSession,
-    principal: MemberUser,
-) -> TokenTransactionOut:
-    """Members do not credit tokens. The owner records a purchase the owner has seen."""
-    del body, session, principal
-    raise HTTPException(
-        status_code=403,
-        detail={
-            "code": "owner_records_purchases",
-            "message": (
-                "A member cannot credit tokens. The owner records a purchase the owner has seen."
-            ),
-        },
-    )

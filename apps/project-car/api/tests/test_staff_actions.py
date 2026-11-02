@@ -462,7 +462,7 @@ def test_ai_cannot_refund_charge_or_say_the_shop_is_open(client: TestClient) -> 
     adjust = client.post(
         f"/members/{member['id']}/tokens",
         headers=AI,
-        json={"amount": "10", "note": "no", "reason": "Owner correction"},
+        json={"amount": "10", "note": "no"},
     )
     assert adjust.status_code == 403
     assert adjust.json()["error"]["code"] == "token_change_requires_human"

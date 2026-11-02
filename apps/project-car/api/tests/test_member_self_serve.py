@@ -94,7 +94,7 @@ def test_member_book_confirm_cancel_and_ledger(client: TestClient) -> None:
             "hoist_id": hoist["id"],
             "start_at": start,
             "end_at": end,
-            "tokens": format(expected, "f"),
+            "tokens": "1",
             "notes": "Turbo mock-up",
         },
     )
@@ -169,7 +169,7 @@ def test_member_insufficient_tokens(client: TestClient) -> None:
     client.post(
         f"/members/{broke['id']}/tokens",
         headers=AUTH,
-        json={"amount": "-1000", "note": "wipe", "reason": "wipe the demo balance"},
+        json={"amount": "-1000", "note": "wipe"},
     )
     start, end = _window(4)
     login_member(client, "morgan@example.com")

@@ -40,7 +40,6 @@ from app.services.bookings import (
     preview_reserve,
     reject_start_in_past,
 )
-from app.services.peak_cap import check_peak_cap
 from app.services.staff import actor_of, record_action, reject_own_request
 from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
@@ -213,10 +212,6 @@ def approve_shop_hoist_request(
             "hoist_overlap",
             "That hour is already booked. This approval did not take tokens.",
         )
-
-    # Peak is Saturday and Sunday 08:00–16:00. The stored instant is UTC.
-    # as_utc of a naive SQLite value would read it as shop-local and miss the cap.
-    check_peak_cap(session, member.id, _stored_utc(row.start_at), _stored_utc(row.end_at))
 
     booking = Booking(
         member_id=member.id,

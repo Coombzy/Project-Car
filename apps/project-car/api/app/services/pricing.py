@@ -1,14 +1,12 @@
-"""Per-hour band × overlay × fill reserve quotes (Docs/token-pricing.md).
+"""Duration × band × overlay × fill reserve quotes (Docs/token-pricing.md).
 
-`banded_tokens = Σ over held hours (100 × that hour's band_multiplier)`
-`final_reserve_cost = Σ (hour band tokens × advance_multiplier × that hour's fill)`
+`base_tokens = hours × 100`
+`final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier × fill_multiplier`
 
-A booking holds every America/Regina clock hour its span touches
-(`iter_regina_hours`), and each held hour is charged in full at the band that
-contains it (Ben, 2026-10-30). The lead-time overlay is off
-(`LEAD_TIME_OVERLAYS_ENABLED`), so only the Owner-editable `standard` row
-applies. Fill is an explicit next-day factor (default 1.0). Cancel / complete
-must reuse the locked quote — never re-run this table.
+Bands are looked up in America/Regina from the booking **start**. Overlay is
+measured at reserve time (now → start). Fill is an explicit next-day factor
+(default 1.0) — it does not change locked band / overlay math. Cancel /
+complete must reuse the locked quote — never re-run this table.
 
 The tuples below are the seeded defaults. `quote_reserve` reads
 `pricing_bands` and `pricing_overlays` when a session is passed. A call
@@ -22,34 +20,24 @@ from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import PricingBand, PricingOverlay
-from app.shop_time import PRICING_TZ, as_utc, iter_regina_hours, shop_now
+from app.shop_time import PRICING_TZ, as_utc, shop_now
 
 BASE_TOKENS_PER_HOUR = Decimal("100")
 PRICING_TZ_NAME = "America/Regina"
 HOURS_QUANT = Decimal("0.0001")
 MONEY_QUANT = Decimal("0.01")
 
-# One named row each. The owner edits the multiplier; these are the seeds.
-OFF_PEAK = ("late_night", "Off-peak", Decimal("0.75"))
-NORMAL = ("weekday_day", "Normal", Decimal("1.00"))
-EVENING = ("weekday_eve", "Evening", Decimal("1.25"))
-PEAK = ("weekend_fri_eve", "Peak", Decimal("1.50"))
+WEEKDAY_DAY = ("weekday_day", "Weekday day (base)", Decimal("1.00"))
+WEEKDAY_EVE = ("weekday_eve", "Weekday evening", Decimal("1.25"))
+WEEKEND_FRI_EVE = ("weekend_fri_eve", "Weekend / Fri eve", Decimal("1.50"))
+LATE_NIGHT = ("late_night", "Late night / early morning", Decimal("0.75"))
 
 ADVANCE = ("advance", "Advance", Decimal("0.85"))
 STANDARD = ("standard", "Standard", Decimal("1.00"))
 LAST_MINUTE = ("last_minute", "Last-minute", Decimal("1.25"))
-
-# Ben, D6 + D7: no 7-days-ahead discount and no last-minute surcharge. While
-# False every booking takes the `standard` overlay row; the `advance` and
-# `last_minute` rows stay stored and editable but price nothing.
-LEAD_TIME_OVERLAYS_ENABLED = False
-
-MIXED_BAND_ID = "mixed"
-MIXED_BAND_LABEL = "Mixed bands (per hour)"
 
 
 class PricingError(ValueError):
@@ -79,8 +67,6 @@ class FillFactor:
     label: str
     multiplier: Decimal
     discount_pct: Decimal
-    window_start: datetime | None = None
-    window_end: datetime | None = None
 
 
 NO_FILL = FillFactor(
@@ -92,27 +78,6 @@ NO_FILL = FillFactor(
 
 
 @dataclass(frozen=True)
-class HourSegment:
-    start_at: datetime
-    end_at: datetime
-    band: Band
-
-    @property
-    def band_tokens(self) -> Decimal:
-        return BASE_TOKENS_PER_HOUR * self.band.multiplier
-
-    def as_rule(self) -> dict[str, str]:
-        return {
-            "start_at": self.start_at.isoformat(),
-            "end_at": self.end_at.isoformat(),
-            "band_id": self.band.id,
-            "band_label": self.band.label,
-            "band_multiplier": _factor_str(self.band.multiplier),
-            "band_tokens": _factor_str(self.band_tokens),
-        }
-
-
-@dataclass(frozen=True)
 class ReserveQuote:
     hours: Decimal
     band: Band
@@ -121,13 +86,8 @@ class ReserveQuote:
     final_reserve_cost: Decimal
     fill: FillFactor = NO_FILL
     tz: str = PRICING_TZ_NAME
-    segments: tuple[HourSegment, ...] = ()
 
-    @property
-    def banded_tokens(self) -> Decimal:
-        return sum((segment.band_tokens for segment in self.segments), Decimal("0"))
-
-    def as_rule(self) -> dict[str, object]:
+    def as_rule(self) -> dict[str, str]:
         return {
             "band_id": self.band.id,
             "band_label": self.band.label,
@@ -141,13 +101,11 @@ class ReserveQuote:
             "fill_discount_pct": _factor_str(self.fill.discount_pct),
             "hours": _factor_str(self.hours),
             "base_tokens": _factor_str(self.base_tokens),
-            "banded_tokens": _factor_str(self.banded_tokens),
             "final_reserve_cost": _money_str(self.final_reserve_cost),
             "tz": self.tz,
-            "segments": [segment.as_rule() for segment in self.segments],
         }
 
-    def ledger_meta(self) -> dict[str, dict[str, object]]:
+    def ledger_meta(self) -> dict[str, dict[str, str]]:
         return {"pricing_rule": self.as_rule()}
 
 
@@ -163,7 +121,7 @@ def _money_str(value: Decimal) -> str:
     return format(value.quantize(MONEY_QUANT, rounding=ROUND_HALF_UP), "f")
 
 
-BAND_ROWS = (OFF_PEAK, NORMAL, EVENING, PEAK)
+BAND_ROWS = (WEEKDAY_DAY, WEEKDAY_EVE, WEEKEND_FRI_EVE, LATE_NIGHT)
 OVERLAY_ROWS = (ADVANCE, STANDARD, LAST_MINUTE)
 MULTIPLIER_QUANT = Decimal("0.0001")
 
@@ -221,21 +179,26 @@ def _stored_overlay(session: Session | None, row: tuple[str, str, Decimal]) -> O
 
 
 def resolve_band(start_at: datetime, *, session: Session | None = None) -> Band:
-    """Band that contains this Mountain Time hour. Intervals are half-open.
-
-    Off-peak is every day 21:00-08:00. Evening is every day 16:00-21:00.
-    Peak is Saturday and Sunday 08:00-16:00. Normal is Monday-Friday 08:00-16:00.
-    """
+    """Band that contains the booking start in America/Regina. Half-open intervals."""
     local = as_utc(start_at).astimezone(PRICING_TZ)
     weekday = local.weekday()  # Mon=0
     clock = local.time()
-    if clock >= time(21, 0) or clock < time(8, 0):
-        return _stored_band(session, OFF_PEAK)
-    if time(16, 0) <= clock < time(21, 0):
-        return _stored_band(session, EVENING)
-    if weekday >= 5:
-        return _stored_band(session, PEAK)
-    return _stored_band(session, NORMAL)
+
+    if weekday == 5:
+        return _stored_band(session, WEEKEND_FRI_EVE)
+    if weekday == 6:
+        if clock < time(21, 0):
+            return _stored_band(session, WEEKEND_FRI_EVE)
+        return _stored_band(session, LATE_NIGHT)
+    if clock < time(8, 0):
+        return _stored_band(session, LATE_NIGHT)
+    if clock < time(16, 0):
+        return _stored_band(session, WEEKDAY_DAY)
+    if weekday == 4:
+        return _stored_band(session, WEEKEND_FRI_EVE)
+    if clock < time(21, 0):
+        return _stored_band(session, WEEKDAY_EVE)
+    return _stored_band(session, LATE_NIGHT)
 
 
 def resolve_overlay(
@@ -245,8 +208,6 @@ def resolve_overlay(
     session: Session | None = None,
 ) -> Overlay:
     """Advance overlay from reserve time → start. Docs/token-pricing.md boundaries."""
-    if not LEAD_TIME_OVERLAYS_ENABLED:
-        return _stored_overlay(session, STANDARD)
     delta = as_utc(start_at) - as_utc(reserved_at)
     if delta >= timedelta(days=7):
         return _stored_overlay(session, ADVANCE)
@@ -275,12 +236,8 @@ def quote_reserve(
 ) -> ReserveQuote:
     if session is not None:
         ensure_pricing_settings(session)
-    duration_hours(start_at, end_at)
-    segments = tuple(
-        HourSegment(start_at=hour_start, end_at=hour_end, band=resolve_band(hour_start, session=session))
-        for hour_start, hour_end in iter_regina_hours(start_at, end_at)
-    )
-    hours = Decimal(len(segments))
+    hours = duration_hours(start_at, end_at)
+    band = resolve_band(start_at, session=session)
     overlay = resolve_overlay(
         start_at=start_at,
         reserved_at=reserved_at or shop_now(),
@@ -288,105 +245,16 @@ def quote_reserve(
     )
     fill_factor = fill or NO_FILL
     base = (hours * BASE_TOKENS_PER_HOUR).quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
-    banded = sum((segment.band_tokens for segment in segments), Decimal("0"))
-    if fill_factor.window_start is not None and fill_factor.window_end is not None:
-        window_start = as_utc(fill_factor.window_start)
-        window_end = as_utc(fill_factor.window_end)
-        final = Decimal("0")
-        for segment in segments:
-            hour_fill = fill_factor.multiplier
-            if not (window_start <= as_utc(segment.start_at) < window_end):
-                hour_fill = Decimal("1")
-            final += (segment.band_tokens * overlay.multiplier * hour_fill).quantize(
-                MONEY_QUANT, rounding=ROUND_HALF_UP
-            )
-    else:
-        final = (banded * overlay.multiplier * fill_factor.multiplier).quantize(
-            MONEY_QUANT, rounding=ROUND_HALF_UP
-        )
+    final = (base * band.multiplier * overlay.multiplier * fill_factor.multiplier).quantize(
+        MONEY_QUANT, rounding=ROUND_HALF_UP
+    )
     if final <= 0:
         raise PricingError("invalid_tokens", "Reserved tokens must be greater than zero.")
     return ReserveQuote(
         hours=hours,
-        band=_summary_band(segments, banded=banded, base=base),
+        band=band,
         overlay=overlay,
         fill=fill_factor,
         base_tokens=base,
         final_reserve_cost=final,
-        segments=segments,
-    )
-
-
-RATE_CHART_NOTE = "Only Peak counts toward the 4-hour weekly cap."
-RATE_DAY_LABELS = (
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-)
-
-
-def tokens_per_hour_label(multiplier: Decimal) -> str:
-    amount = (BASE_TOKENS_PER_HOUR * Decimal(multiplier)).quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
-    if amount == amount.to_integral_value():
-        return str(int(amount))
-    return format(amount, "f")
-
-
-def weekly_rate_chart(
-    session: Session,
-    *,
-    peak_band_ids: frozenset[str],
-    peak_cap_hours: int,
-) -> dict[str, object]:
-    """One cell per hour of a shop week, using the saved band rows."""
-    ensure_pricing_settings(session)
-    stored = session.scalars(select(PricingBand).order_by(PricingBand.sort_order, PricingBand.id)).all()
-    monday = datetime(2026, 11, 2, tzinfo=PRICING_TZ)
-    hours: list[dict[str, object]] = []
-    for day in range(7):
-        for hour in range(24):
-            start = monday + timedelta(days=day, hours=hour)
-            band = resolve_band(start, session=session)
-            hours.append(
-                {
-                    "weekday": day,
-                    "day_label": RATE_DAY_LABELS[day],
-                    "hour": hour,
-                    "band_id": band.id,
-                    "label": band.label,
-                    "tokens_per_hour": tokens_per_hour_label(band.multiplier),
-                    "counts_toward_peak_cap": band.id in peak_band_ids,
-                }
-            )
-    bands = [
-        {
-            "id": row.id,
-            "label": row.label,
-            "multiplier": format(Decimal(row.multiplier), "f"),
-            "tokens_per_hour": tokens_per_hour_label(Decimal(row.multiplier)),
-        }
-        for row in stored
-    ]
-    return {
-        "tz_label": "Mountain Time",
-        "peak_cap_hours": peak_cap_hours,
-        "note": RATE_CHART_NOTE,
-        "bands": bands,
-        "hours": hours,
-    }
-
-
-def _summary_band(segments: tuple[HourSegment, ...], *, banded: Decimal, base: Decimal) -> Band:
-    """The one band every hour shares, or ``mixed`` at the effective multiplier."""
-    ids = {segment.band.id for segment in segments}
-    if len(ids) == 1:
-        return segments[0].band
-    return Band(
-        id=MIXED_BAND_ID,
-        label=MIXED_BAND_LABEL,
-        multiplier=(banded / base).quantize(MULTIPLIER_QUANT, rounding=ROUND_HALF_UP),
     )

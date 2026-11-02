@@ -3,10 +3,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-import pytest
 from fastapi.testclient import TestClient
 
-from app.services import pricing
 from app.services.pricing import FillFactor, quote_reserve
 from app.shop_time import PRICING_TZ, shop_now
 from tests.conftest import AUTH
@@ -42,7 +40,7 @@ def test_one_hour_premium_weekday_evening() -> None:
     assert quote.final_reserve_cost == Decimal("125.00")
 
 
-def test_last_minute_booking_pays_the_band_only() -> None:
+def test_overlay_on_top_of_premium_band() -> None:
     start = _at(2026, 9, 8, 17)
     end = start + timedelta(hours=2)
     reserved_at = start - timedelta(hours=30)
@@ -50,39 +48,35 @@ def test_last_minute_booking_pays_the_band_only() -> None:
     assert quote.hours == Decimal("2")
     assert quote.base_tokens == Decimal("200.00")
     assert quote.band.id == "weekday_eve"
-    assert quote.overlay.id == "standard"
-    assert quote.final_reserve_cost == Decimal("250.00")
+    assert quote.overlay.id == "last_minute"
+    assert quote.final_reserve_cost == Decimal("312.50")
     rule = quote.as_rule()
-    assert rule["final_reserve_cost"] == "250.00"
-    assert rule["advance_multiplier"] == "1"
+    assert rule["final_reserve_cost"] == "312.50"
+    assert rule["advance_multiplier"] == "1.25"
 
 
-def test_ninety_minutes_is_charged_for_the_two_hours_it_holds() -> None:
+def test_ninety_minutes_is_one_and_a_half_hours() -> None:
     start = _at(2026, 9, 8, 10)
     end = start + timedelta(minutes=90)
     reserved_at = start - timedelta(hours=72)
     quote = quote_reserve(start, end, reserved_at=reserved_at)
-    assert quote.hours == Decimal("2")
-    assert quote.base_tokens == Decimal("200.00")
+    assert quote.hours == Decimal("1.5000")
+    assert quote.base_tokens == Decimal("150.00")
     assert quote.band.id == "weekday_day"
-    assert quote.final_reserve_cost == Decimal("200.00")
-    assert quote.as_rule()["hours"] == "2"
+    assert quote.final_reserve_cost == Decimal("150.00")
+    assert quote.as_rule()["hours"] == "1.5"
 
 
-def test_friday_evening_is_the_evening_band() -> None:
+def test_friday_evening_uses_weekend_premium_not_weekday_eve() -> None:
     start = _at(2026, 9, 11, 16)  # Friday 16:00
     end = start + timedelta(hours=1)
     reserved_at = start - timedelta(hours=72)
     quote = quote_reserve(start, end, reserved_at=reserved_at)
-    assert quote.band.id == "weekday_eve"
-    assert quote.band.label == "Evening"
-    assert quote.final_reserve_cost == Decimal("125.00")
+    assert quote.band.id == "weekend_fri_eve"
+    assert quote.final_reserve_cost == Decimal("150.00")
 
 
-def test_overlay_boundaries_when_lead_time_overlays_are_re_enabled(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(pricing, "LEAD_TIME_OVERLAYS_ENABLED", True)
+def test_overlay_boundaries_seven_days_and_forty_eight_hours() -> None:
     start = _at(2026, 9, 15, 10)
     end = start + timedelta(hours=1)
     exactly_week = quote_reserve(start, end, reserved_at=start - timedelta(days=7))
@@ -97,7 +91,7 @@ def test_overlay_boundaries_when_lead_time_overlays_are_re_enabled(
     assert just_under_48.final_reserve_cost == Decimal("125.00")
 
 
-def test_fill_factor_stacks_on_band() -> None:
+def test_fill_factor_stacks_on_band_and_overlay() -> None:
     start = _at(2026, 9, 8, 17)
     end = start + timedelta(hours=2)
     reserved_at = start - timedelta(hours=30)
@@ -109,15 +103,15 @@ def test_fill_factor_stacks_on_band() -> None:
     )
     quote = quote_reserve(start, end, reserved_at=reserved_at, fill=fill)
     assert quote.band.multiplier == Decimal("1.25")
-    assert quote.overlay.multiplier == Decimal("1.00")
+    assert quote.overlay.multiplier == Decimal("1.25")
     assert quote.fill.multiplier == Decimal("0.75")
-    assert quote.final_reserve_cost == Decimal("187.50")
+    assert quote.final_reserve_cost == Decimal("234.38")
     rule = quote.as_rule()
     assert rule["fill_multiplier"] == "0.75"
     assert rule["fill_discount_pct"] == "25"
-    assert rule["advance_multiplier"] == "1"
+    assert rule["advance_multiplier"] == "1.25"
     unchanged = quote_reserve(start, end, reserved_at=reserved_at)
-    assert unchanged.final_reserve_cost == Decimal("250.00")
+    assert unchanged.final_reserve_cost == Decimal("312.50")
     assert unchanged.fill.id == "none"
 
 

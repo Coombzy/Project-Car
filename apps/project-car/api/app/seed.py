@@ -17,8 +17,8 @@ Weekly or Pro seed rows are dropped (Pro members move to Premium).
 Default (no flag) upserts the demo IDs and rebuilds this week's sample
 bookings so a fresh or existing demo DB is never an empty shell.
 
-Reserve cost is computed per held hour (`app/services/pricing.py`):
-`final_reserve_cost = Σ(100 × hour band_multiplier) × advance_multiplier × fill_multiplier`.
+Reserve cost is computed from duration (`Docs/token-pricing.md`):
+`final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier × fill_multiplier`.
 Demo bookings use that engine. Not live prices.
 
 This is sample data for localhost prospect walkthroughs. The shop is not
@@ -76,12 +76,11 @@ from app.models import (
     WaitlistEntry,
 )
 from app.services.fill import resolve_fill_for_slot
-from app.services.plan_price import BASIC_MONTHLY_CAD, PREMIUM_MONTHLY_CAD, tier_notes
 from app.services.pricing import BASE_TOKENS_PER_HOUR, ensure_pricing_settings, quote_reserve
 from app.services.tokens import apply_ledger, rebuild_token_balance
 from app.services.bookings import HOLDING_STATUSES, claim_booking_hours
-from app.services.hours import OPEN_HOUR_STATUSES
-from app.shop_time import PRICING_TZ, SHOP_TZ, as_utc, next_24h_bounds, shop_now, stored_utc
+from app.services.hours import booking_overlaps_window
+from app.shop_time import PRICING_TZ, SHOP_TZ, as_utc, next_24h_bounds, shop_now
 
 SEED_NS = UUID("a11ce000-5e1d-4000-8000-000000000001")
 
@@ -105,33 +104,32 @@ def seed_id(*parts: str) -> UUID:
 
 
 # Two tiers only. included_tokens are period allotments (Owner-editable
-# placeholders). Dollar prices are stand-in settings on the row. Basic is
-# 500 CAD/month before GST. Premium stays 750 until Ben confirms it.
+# placeholders). Dollar prices here are leftover demo numbers, not live.
 PLACEHOLDER_TIERS = [
     {
         "name": "basic",
         "display_name": "Basic",
-        "price": BASIC_MONTHLY_CAD,
+        "price": Decimal("150.00"),
         "included_tokens": 1000,
         "booking_window_days": 14,
         "max_simultaneous_bookings": 1,
-        "notes": tier_notes(
-            premium=False,
-            included_tokens=1000,
-            base_tokens_per_hour=BASE_TOKENS_PER_HOUR,
+        "notes": (
+            "Placeholder. Owner can edit. Not live pricing. "
+            "Allotment 1000 tokens/period. Base hoist rate is "
+            f"{BASE_TOKENS_PER_HOUR} tokens/hour."
         ),
     },
     {
         "name": "premium",
         "display_name": "Premium",
-        "price": PREMIUM_MONTHLY_CAD,
+        "price": Decimal("250.00"),
         "included_tokens": 1500,
         "booking_window_days": 21,
         "max_simultaneous_bookings": 2,
-        "notes": tier_notes(
-            premium=True,
-            included_tokens=1500,
-            base_tokens_per_hour=BASE_TOKENS_PER_HOUR,
+        "notes": (
+            "Placeholder. Owner can edit. Not live pricing. "
+            "Allotment 1500 tokens/period. Base hoist rate is "
+            f"{BASE_TOKENS_PER_HOUR} tokens/hour."
         ),
     },
 ]
@@ -272,13 +270,9 @@ def _make_booking(
     end: datetime,
     status: BookingStatus,
     notes: str,
+    unused: Decimal = Decimal("0"),
     kind: BookingKind = BookingKind.CUSTOMER,
 ) -> Booking:
-    # Store the UTC instant. SQLite drops the offset. A Regina-aware value
-    # would come back as a naive wall clock, and the no-show sweep would read
-    # it as UTC and try to reclaim hours another booking already owns.
-    start = as_utc(start)
-    end = as_utc(end)
     if kind == BookingKind.SHOP:
         tokens = Decimal("0")
         rule = None
@@ -287,9 +281,9 @@ def _make_booking(
         if member is None:
             raise ValueError("Customer demo bookings need a member.")
         quote = quote_reserve(
-            as_utc(start),
-            as_utc(end),
-            fill=resolve_fill_for_slot(session, as_utc(start), as_utc(end)),
+            start,
+            end,
+            fill=resolve_fill_for_slot(session, start, end),
             session=session,
         )
         tokens = quote.final_reserve_cost
@@ -299,8 +293,8 @@ def _make_booking(
         id=seed_id("booking", key),
         member_id=member.id if member is not None else None,
         hoist_id=hoist.id,
-        start_at=as_utc(start),
-        end_at=as_utc(end),
+        start_at=start,
+        end_at=end,
         kind=kind,
         status=BookingStatus.PENDING,
         reserved_tokens=tokens,
@@ -310,18 +304,6 @@ def _make_booking(
     session.add(booking)
     session.flush()
     if kind == BookingKind.CUSTOMER and member is not None and tokens > 0:
-        # Balances never go below zero. How many sample hours land depends on
-        # the clock, so cover any shortfall instead of skipping the booking.
-        shortfall = tokens - Decimal(member.token_balance)
-        if shortfall > 0:
-            apply_ledger(
-                session,
-                member,
-                kind=TokenTransactionKind.ADMIN_ADJUSTMENT,
-                amount=shortfall,
-                note="Demo top-up so the sample reserve fits",
-                meta={"override": {"reason": "Demo seed top-up", "by": "seed"}},
-            )
         apply_ledger(
             session,
             member,
@@ -337,7 +319,27 @@ def _make_booking(
         hoist.status = HoistStatus.OCCUPIED
         session.add(hoist)
     elif status == BookingStatus.COMPLETED:
-        # The reserve stands as the charge (D16); completion writes no row.
+        used = tokens - unused
+        if kind == BookingKind.CUSTOMER and member is not None and tokens > 0:
+            apply_ledger(
+                session,
+                member,
+                kind=TokenTransactionKind.BOOKING_REFUND,
+                amount=tokens,
+                booking_id=booking.id,
+                note="Demo release reserve",
+                meta=meta,
+            )
+            if used > 0:
+                apply_ledger(
+                    session,
+                    member,
+                    kind=TokenTransactionKind.BOOKING_DEBIT,
+                    amount=-used,
+                    booking_id=booking.id,
+                    note="Demo debit",
+                    meta=meta,
+                )
         booking.reserved_tokens = Decimal("0")
         booking.status = BookingStatus.COMPLETED
     elif status == BookingStatus.CANCELLED:
@@ -465,19 +467,11 @@ def _seed_chat_threads(session: Session, *, ada: Member, riley: Member) -> None:
 
 
 def _hoist_busy(session: Session, hoist_id: UUID, start: datetime, end: datetime) -> bool:
-    """True when this bay already holds any instant in [start, end).
-
-    Seed stores the UTC instant. SQLite hands it back naive, and ``as_utc``
-    would read that as Edmonton. In winter that misses a real clash, then
-    ``claim_booking_hours`` hits the unique bay-hour lock.
-    """
     start_utc = as_utc(start)
     end_utc = as_utc(end)
     rows = session.scalars(select(Booking).where(Booking.hoist_id == hoist_id)).all()
     for row in rows:
-        if row.status not in OPEN_HOUR_STATUSES:
-            continue
-        if stored_utc(row.start_at) < end_utc and stored_utc(row.end_at) > start_utc:
+        if booking_overlaps_window(row, start_utc, end_utc):
             return True
     return False
 
@@ -843,7 +837,7 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     monday = today - timedelta(days=today.weekday())
 
     # Fill this calendar week so the Owner schedule is never an empty grid.
-    # Past days are completed (reserve charged) or cancelled (reserve refunded). Today and future hold reserve.
+    # Past days are completed/cancelled (reserve released). Today and future hold reserve.
     # reserved_tokens come from quote_reserve (hours × 100 × band × overlay × fill).
     week_slots = [
         {

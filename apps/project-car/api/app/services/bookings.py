@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import re
 from datetime import datetime, timedelta, timezone
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -24,19 +23,11 @@ from app.models import (
     IncidentSeverity,
     Member,
     MemberStatus,
-    TokenTransaction,
     TokenTransactionKind,
 )
 from app.services.fill import resolve_fill_for_slot
-from app.services.peak_cap import check_peak_cap
-from app.services.pricing import (
-    BASE_TOKENS_PER_HOUR,
-    MONEY_QUANT,
-    PricingError,
-    quote_reserve,
-    resolve_band,
-)
-from app.services.tokens import apply_ledger, piles_for_refund
+from app.services.pricing import PricingError, quote_reserve
+from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, iter_regina_hours, shop_now
 
 OPEN_STATUSES = (BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.ACTIVE)
@@ -56,7 +47,6 @@ HOLDING_STATUSES = (
 )
 BAY_HOUR_TAKEN = "That bay already has a booking on this hour."
 UNAVAILABLE_HOIST = (HoistStatus.MAINTENANCE, HoistStatus.LOCKED)
-_BAY_NUMBER = re.compile(r"^Bay (\d+)$")
 # Stand-in until Ben sets how early check-in may open. Needs from Ben.
 CHECK_IN_EARLY_MINUTES = 15
 
@@ -341,52 +331,20 @@ def preview_reserve(
     return quote, balance, balance - quote.final_reserve_cost
 
 
-def pick_member_bay(session: Session, start_at: datetime, end_at: datetime) -> Hoist:
-    """Lowest-numbered member bay that is free for every hour of the visit.
-
-    Bay 6, the shop hoist, is never a candidate. A bay that has lost any hour
-    of the visit is skipped for the next number, in this same save.
-    """
-    start_at = as_utc(start_at)
-    end_at = as_utc(end_at)
-    numbered: list[tuple[int, str, Hoist]] = []
-    for hoist in session.scalars(select(Hoist).where(Hoist.is_shop.is_(False))).all():
-        match = _BAY_NUMBER.match(hoist.name)
-        if match is None:
-            continue
-        numbered.append((int(match.group(1)), hoist.name, hoist))
-    for _number, _name, hoist in sorted(numbered, key=lambda item: (item[0], item[1])):
-        if hoist.status in UNAVAILABLE_HOIST:
-            continue
-        if hoist_has_overlap(
-            session,
-            hoist.id,
-            start_at,
-            end_at,
-            statuses=HOLDING_STATUSES,
-        ):
-            continue
-        return hoist
-    raise _error(409, "no_free_bay", "No member bay is free for every hour of the visit.")
-
-
 def create_booking(
     session: Session,
     *,
     member_id: UUID | None,
-    hoist_id: UUID | None,
+    hoist_id: UUID,
     start_at: datetime,
     end_at: datetime,
     notes: str | None,
     kind: BookingKind = BookingKind.CUSTOMER,
-    quoted_tokens: Decimal | None = None,
 ) -> Booking:
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
     reject_start_in_past(start_at)
 
-    if hoist_id is None:
-        raise _error(404, "not_found", "Hoist not found.")
     hoist = session.get(Hoist, hoist_id)
     if hoist is None:
         raise _error(404, "not_found", "Hoist not found.")
@@ -412,12 +370,6 @@ def create_booking(
     except PricingError as exc:
         raise _error(400, exc.code, exc.message) from exc
     tokens = quote.final_reserve_cost
-    if quoted_tokens is not None and Decimal(quoted_tokens) != tokens:
-        raise _error(
-            409,
-            "quote_mismatch",
-            "The booked total does not match the total shown. Nothing was saved.",
-        )
     rule = quote.as_rule()
     meta = quote.ledger_meta()
 
@@ -450,10 +402,6 @@ def create_booking(
 
     if Decimal(member.token_balance) < tokens:
         raise _error(400, "insufficient_tokens", "Member does not have enough tokens to reserve.")
-
-    # Peak is Saturday and Sunday 08:00–16:00. Four hours a week. Shop work
-    # does not reach this path. A miss writes nothing.
-    check_peak_cap(session, member.id, start_at, end_at)
 
     _reject_if_bay_hour_taken(session, hoist.id, start_at, end_at)
 
@@ -578,32 +526,6 @@ def check_in_booking(session: Session, booking_id: UUID) -> Booking:
     return get_booking(session, booking.id)
 
 
-def _overtime_hours(session: Session, end_at: datetime, now: datetime) -> list[dict[str, str]]:
-    """One entry per whole hour past the booked end, priced at that hour's band.
-
-    A partial hour is not charged. The reserve already covers time inside the visit.
-    """
-    end = _stored_utc(end_at)
-    current = _stored_utc(now)
-    if current <= end:
-        return []
-    whole = int((current - end).total_seconds() // 3600)
-    hours: list[dict[str, str]] = []
-    for index in range(whole):
-        start = end + timedelta(hours=index)
-        band = resolve_band(start, session=session)
-        tokens = (BASE_TOKENS_PER_HOUR * band.multiplier).quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
-        hours.append(
-            {
-                "start_at": start.astimezone(timezone.utc).isoformat().replace("+00:00", "Z"),
-                "band_id": band.id,
-                "band_label": band.label,
-                "tokens": format(tokens, "f"),
-            }
-        )
-    return hours
-
-
 def complete_booking(
     session: Session,
     booking_id: UUID,
@@ -611,7 +533,7 @@ def complete_booking(
     unused_tokens: Decimal = Decimal("0"),
 ) -> Booking:
     # Lock the booking, then the member, before the status check. A second
-    # complete waits, sees the new status, and does not write another debit.
+    # complete waits, sees the new status, and does not write another refund.
     # Shop work can have no member and no reserve.
     booking = _locked_booking(session, booking_id)
     member = lock_member(session, booking.member_id) if booking.member_id is not None else None
@@ -622,35 +544,31 @@ def complete_booking(
             "Only an active or overdue booking can be completed.",
         )
 
-    # Time inside the visit is not refunded (Ben, D16). The reserve stands.
     unused = Decimal(unused_tokens)
-    if unused != 0:
-        raise _error(
-            400,
-            "unused_not_refundable",
-            "Time inside the visit is not refunded.",
-        )
+    reserved = Decimal(booking.reserved_tokens)
+    if unused < 0 or unused > reserved:
+        raise _error(400, "invalid_refund", "Unused tokens must be between 0 and the reserved amount.")
 
-    if booking.kind == BookingKind.CUSTOMER and member is not None:
-        hours = _overtime_hours(session, booking.end_at, shop_now())
-        cost = sum((Decimal(hour["tokens"]) for hour in hours), Decimal("0"))
-        if cost > 0 and Decimal(member.token_balance) < cost:
-            raise _error(
-                409,
-                "insufficient_tokens",
-                "That finish cannot pay for the hours past the booked end. The visit stays open.",
-            )
-        if cost > 0:
-            meta: dict = {"overtime": {"hours": hours}}
-            if booking.pricing_rule:
-                meta["pricing_rule"] = booking.pricing_rule
+    used = reserved - unused
+    meta = {"pricing_rule": booking.pricing_rule} if booking.pricing_rule else None
+    if reserved > 0:
+        apply_ledger(
+            session,
+            member,
+            kind=TokenTransactionKind.BOOKING_REFUND,
+            amount=reserved,
+            booking_id=booking.id,
+            note="Release reserved tokens",
+            meta=meta,
+        )
+        if used > 0:
             apply_ledger(
                 session,
                 member,
                 kind=TokenTransactionKind.BOOKING_DEBIT,
-                amount=-cost,
+                amount=-used,
                 booking_id=booking.id,
-                note="Debit whole hours past the booked end",
+                note="Debit used tokens",
                 meta=meta,
             )
 
@@ -733,21 +651,6 @@ def mark_overdue(session: Session, booking_id: UUID) -> tuple[Booking, bool]:
     return get_booking(session, booking.id), changed
 
 
-def _refund_split(session: Session, booking: Booking, refund: Decimal) -> tuple[Decimal, Decimal]:
-    """Put a refund back on the piles the reserve spent, purchased first."""
-    row = session.scalar(
-        select(TokenTransaction).where(
-            TokenTransaction.booking_id == booking.id,
-            TokenTransaction.kind == TokenTransactionKind.BOOKING_RESERVE,
-        )
-    )
-    if row is None:
-        return refund, Decimal("0")
-    allowance_spent = -Decimal(row.allowance_amount)
-    purchased_spent = -Decimal(row.purchased_amount)
-    return piles_for_refund(allowance_spent, purchased_spent, refund)
-
-
 def cancel_booking(session: Session, booking_id: UUID) -> Booking:
     # Lock the booking, then the member, before the status check. A second
     # cancel waits, sees the new status, and does not write another refund.
@@ -772,7 +675,6 @@ def cancel_booking(session: Session, booking_id: UUID) -> Booking:
     reserved = Decimal(booking.reserved_tokens)
     meta = {"pricing_rule": booking.pricing_rule} if booking.pricing_rule else None
     if reserved > 0:
-        allowance_amount, purchased_amount = _refund_split(session, booking, reserved)
         apply_ledger(
             session,
             member,
@@ -781,8 +683,6 @@ def cancel_booking(session: Session, booking_id: UUID) -> Booking:
             booking_id=booking.id,
             note="Refund reserve on cancel",
             meta=meta,
-            allowance_amount=allowance_amount,
-            purchased_amount=purchased_amount,
         )
         booking.reserved_tokens = Decimal("0")
 
