@@ -24,9 +24,14 @@ HEAVY_COMMANDS = {
     "shop-web layout-shift / screenshots": ("npm run visual",),
 }
 GATE_IF = "steps.shop_changes.outputs.shop == 'true'"
-BASELINE_SAVE_IF = (
+BASELINE_PREPARE_IF = (
     "steps.shop_changes.outputs.shop == 'true' && "
     "github.event_name == 'push' && github.ref == 'refs/heads/main'"
+)
+BASELINE_STORE_IF = (
+    "steps.shop_changes.outputs.shop == 'true' && "
+    "github.event_name == 'push' && github.ref == 'refs/heads/main' && "
+    "steps.screenshot_baselines.outputs.cache-hit != 'true'"
 )
 PUSH_GUARD = 'if [ "${GITHUB_EVENT_NAME}" = "push" ]; then'
 DIFF_COMMAND = 'git diff --name-only --no-renames "${base}" HEAD'
@@ -282,9 +287,21 @@ def test_shop_os_ci_path_filter_keeps_required_check_names() -> None:
         assert "shop=true" in script[: script.index(DIFF_COMMAND)]
         for step in steps[2:]:
             step_if = step.get("if")
-            assert step_if in {GATE_IF, BASELINE_SAVE_IF}, step.get("name")
-            if step.get("name") in {"Prepare screenshot baselines", "Store screenshot baselines"}:
-                assert step_if == BASELINE_SAVE_IF
+            assert step_if in {GATE_IF, BASELINE_PREPARE_IF, BASELINE_STORE_IF}, step.get("name")
+            if step.get("name") == "Prepare screenshot baselines":
+                assert step_if == BASELINE_PREPARE_IF
+            if step.get("name") == "Store screenshot baselines":
+                assert step_if == BASELINE_STORE_IF
+                assert step.get("uses") == "actions/cache/save@v4"
+        if job["name"] == VISUAL_CHECK_NAME:
+            restore = [step for step in steps if step.get("name") == "Restore screenshot baselines"]
+            store = [step for step in steps if step.get("name") == "Store screenshot baselines"]
+            assert len(restore) == 1 and len(store) == 1
+            assert restore[0].get("id") == "screenshot_baselines"
+            assert restore[0]["if"] == GATE_IF
+            baseline_key = "shop-web-screenshot-baselines-${{ github.sha }}"
+            assert restore[0]["with"]["key"] == baseline_key
+            assert store[0]["with"]["key"] == baseline_key
         for command in HEAVY_COMMANDS[job["name"]]:
             matched = [step for step in steps if step.get("run") == command]
             assert len(matched) == 1, command
@@ -354,19 +371,27 @@ def test_shop_api_runs_for_booking_cancel_and_owner_booking_card() -> None:
     assert flags["apps/project-car/web/components/owner-booking-card.tsx"] == "true"
     missed = [path for path, flag in flags.items() if flag != "true"]
     assert missed == []
-    skipped = _shop_flags(
+    readmes = _shop_flags(
         script,
         [
             "apps/project-car/web/README.md",
             "apps/project-car/api/README.md",
+            "apps/project-car/web/copy/hours.md",
             "apps/project-car/web/visual/screenshots/390/home.png",
+            "Docs/shop-os-ci.md",
+            "README.md",
         ],
     )
-    assert list(skipped.values()) == ["false", "false", "false"]
+    assert readmes["apps/project-car/web/README.md"] == "true"
+    assert readmes["apps/project-car/api/README.md"] == "true"
+    assert readmes["apps/project-car/web/copy/hours.md"] == "true"
+    assert readmes["apps/project-car/web/visual/screenshots/390/home.png"] == "false"
+    assert readmes["Docs/shop-os-ci.md"] == "false"
+    assert readmes["README.md"] == "false"
 
 
-def test_api_only_skips_screenshots_and_uses_stored_baselines() -> None:
-    """API-only diffs skip the web build and screenshots. Baselines come from main's green run."""
+def test_api_only_runs_screenshots_skips_web_build_and_reuses_baselines() -> None:
+    """API-only diffs skip the web build and still render screenshots. Baselines come from main."""
     api_path = "apps/project-car/api/app/__init__.py"
     web_paths = (
         "apps/project-car/web/lib/booking-cancel.test.ts",
@@ -386,7 +411,7 @@ def test_api_only_skips_screenshots_and_uses_stored_baselines() -> None:
     }
     assert flags["shop-api pytest"][api_path] == "true"
     assert flags["shop-web lint / typecheck / build"][api_path] == "false"
-    assert flags["shop-web layout-shift / screenshots"][api_path] == "false"
+    assert flags["shop-web layout-shift / screenshots"][api_path] == "true"
     for path in web_paths:
         assert flags["shop-api pytest"][path] == "true", path
         assert flags["shop-web lint / typecheck / build"][path] == "true", path
@@ -394,8 +419,9 @@ def test_api_only_skips_screenshots_and_uses_stored_baselines() -> None:
     for path in (shared_path, workflow_path):
         for name in jobs:
             assert flags[name][path] == "true", (name, path)
-    for name in jobs:
-        assert flags[name][doc_path] == "false", name
+    assert flags["shop-api pytest"][doc_path] == "true"
+    assert flags["shop-web lint / typecheck / build"][doc_path] == "false"
+    assert flags["shop-web layout-shift / screenshots"][doc_path] == "false"
 
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "cache: pip" in text
