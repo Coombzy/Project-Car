@@ -36,7 +36,20 @@ export type NextVisit = {
 };
 
 function instant(iso: string): number {
-  return new Date(iso).getTime();
+  return new Date(withShopOffset(iso)).getTime();
+}
+
+// America/Regina is UTC−6 all year. Seed and datetime-local rows omit the
+// offset; reading them as host-local UTC drops a visit that is still underway.
+function withShopOffset(iso: string): string {
+  if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(iso)) {
+    return iso;
+  }
+  const match = iso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?/);
+  if (!match) {
+    return iso;
+  }
+  return `${match[1]}T${match[2]}:${match[3]}:${match[4] ?? "00"}-06:00`;
 }
 
 function shopDay(date: Date): string {
