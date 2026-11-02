@@ -40,7 +40,7 @@ _ASCII_200_ON_MAIN = (
     "END:VTIMEZONE\r\n"
     "BEGIN:VEVENT\r\n"
     "UID:todo-00000000-0000-4000-8000-000000000036@projectcar.ca\r\n"
-    "DTSTAMP:20260615T153000\r\n"
+    "DTSTAMP:20260615T213000Z\r\n"
     "DTSTART;TZID=America/Regina:20260615T153000\r\n"
     "DTEND;TZID=America/Regina:20260615T163000\r\n"
     "SUMMARY:"
@@ -166,6 +166,14 @@ def test_folded_multibyte_keeps_escapes() -> None:
     summary = _line_starting(body, b"SUMMARY:")
     assert len(summary) <= 75, f"SUMMARY is {len(summary)} octets"
     _assert_folded(body, "SUMMARY", title)
+
+
+def test_dtstamp_is_utc_with_z(monkeypatch: pytest.MonkeyPatch) -> None:
+    """RFC 5545 §3.8.4: DTSTAMP MUST be UTC (YYYYMMDDTHHMMSSZ)."""
+    _freeze_stamp(monkeypatch)
+    body = _calendar("simple title")
+    line = _line_starting(body, b"DTSTAMP:")
+    assert line == b"DTSTAMP:20260615T213000Z"
 
 
 def test_ascii_200_title_matches_main_bytes(monkeypatch: pytest.MonkeyPatch) -> None:
