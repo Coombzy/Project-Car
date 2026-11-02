@@ -2,15 +2,19 @@
 
 Allowance and purchased tokens are separate. The grant expires only unused
 allowance above one month. A booking spends allowance first. A full cancel
-puts those tokens back on the same piles.
+puts those tokens back on the same piles, purchased first. Completing a visit
+returns the unused part of a mixed reserve the same way.
 """
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from fastapi.testclient import TestClient
 
-from tests.conftest import AUTH, create_hoist, create_member, next_hour
+from tests.conftest import AUTH, create_hoist, create_member, freeze_shop_clock, next_hour
+
+REGINA = ZoneInfo("America/Regina")
 
 REASON = "Owner set the balance for this grant"
 
@@ -141,3 +145,57 @@ def test_booking_spends_allowance_before_purchased_tokens(client: TestClient) ->
     assert _balance(restored, "allowance_balance") == Decimal("40")
     assert _balance(restored, "purchased_balance") == Decimal("500")
     assert _balance(restored, "token_balance") == Decimal("540")
+
+
+def test_complete_returns_unused_purchased_tokens_before_allowance(client: TestClient) -> None:
+    """A mixed reserve returns unused tokens purchased-first, the same split as cancel.
+
+    One off-peak hour is 75 tokens. Spending 40 allowance and 35 purchased,
+    then completing with 40 unused, must leave allowance 5 and purchased 500.
+    Putting the whole release on allowance and debiting the used 35 from
+    allowance leaves allowance 40 and purchased 465.
+    """
+    start = datetime(2026, 11, 4, 22, 0, tzinfo=REGINA)
+    end = start + timedelta(hours=1)
+    freeze_shop_clock(start - timedelta(minutes=10))
+    member = create_member(
+        client,
+        email="complete-piles@example.com",
+        tier_name="premium",
+        allocate_tokens=False,
+    )
+    hoist = create_hoist(client, name="Bay 1")
+    _adjust(client, member["id"], "40")
+    _buy(client, member["id"], "500", "STANDIN-PAYPAL-COMPLETE")
+    booked = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start.isoformat(),
+            "end_at": end.isoformat(),
+        },
+    )
+    assert booked.status_code == 201, booked.text
+    booking = booked.json()
+    assert Decimal(str(booking["reserved_tokens"])) == Decimal("75")
+    held = _member(client, member["id"])
+    assert _balance(held, "allowance_balance") == Decimal("0")
+    assert _balance(held, "purchased_balance") == Decimal("465")
+
+    confirmed = client.post(f"/bookings/{booking['id']}/confirm", headers=AUTH)
+    assert confirmed.status_code == 200, confirmed.text
+    checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)
+    assert checked.status_code == 200, checked.text
+
+    completed = client.post(
+        f"/bookings/{booking['id']}/complete",
+        headers=AUTH,
+        json={"unused_tokens": "40"},
+    )
+    assert completed.status_code == 200, completed.text
+    done = _member(client, member["id"])
+    assert _balance(done, "allowance_balance") == Decimal("5")
+    assert _balance(done, "purchased_balance") == Decimal("500")
+    assert _balance(done, "token_balance") == Decimal("505")
