@@ -14,6 +14,9 @@ FORBIDDEN = (
     "Fractional hours are allowed",
     "Spanning bands does not split the slot",
     "final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier × fill_multiplier",
+    "312.50",
+    "234.38",
+    "200 × 1.25 × 1.25",
 )
 
 REQUIRED = (
