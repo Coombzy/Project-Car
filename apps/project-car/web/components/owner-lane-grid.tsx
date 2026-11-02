@@ -9,7 +9,7 @@ import { weekdayLabel } from "../lib/time";
 import { OwnerBookingCard } from "./owner-booking-card";
 import type { ScheduleReturn } from "./schedule-return-fields";
 
-const OCCUPYING = new Set(["pending", "confirmed", "active", "completed", "overdue", "no_show"]);
+const OCCUPYING = new Set(["pending", "confirmed", "active", "completed", "overdue"]);
 
 function pad(hour: number): string {
   return String(hour).padStart(2, "0");

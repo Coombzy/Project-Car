@@ -99,6 +99,7 @@ export default async function MemberSchedulePage({
           1–5 book on the hour. The shop hoist is ask-first and does not hold the hour.
         </p>
         {loadError ? <div className="banner error">{loadError}</div> : null}
+        {params.error ? <div className="banner error">{params.error}</div> : null}
         {rates ? <RateChart rates={rates} helpHref="/member/help" /> : null}
 
         <ScheduleToolbar base="/member/schedule" view={view} weekStart={weekStart} month={month} hoist={hoistId} />
@@ -124,7 +125,6 @@ export default async function MemberSchedulePage({
             balance={me.token_balance}
             returnTo={returnTo}
             rates={rates}
-            error={params.error}
           />
         )}
 

@@ -342,7 +342,7 @@ describe("member schedule errors", () => {
   it("shows an action error on the month view and when there are no bays", () => {
     const page = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../app/member/schedule/page.tsx"), "utf8");
     const bannerAt = page.indexOf('params.error ? <div className="banner error">{params.error}</div>');
-    const monthAt = page.indexOf('view === "month"');
+    const monthAt = page.indexOf('view === "month" ? (');
     const emptyAt = page.indexOf("No bays yet.");
     assert.notEqual(bannerAt, -1);
     assert.ok(bannerAt < monthAt);
