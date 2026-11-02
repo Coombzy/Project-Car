@@ -172,7 +172,13 @@ def hoist_has_overlap(
     exclude_id: UUID | None = None,
     statuses: tuple[BookingStatus, ...] = OVERLAP_STATUSES,
 ) -> bool:
-    """True when this hoist already holds any instant in [start_at, end_at)."""
+    """True when this hoist already holds any instant in [start_at, end_at).
+
+    An active or overdue visit claims each Regina hour it has entered past the
+    booked end before this check. That hour is taken even though ``end_at``
+    still shows the booked end.
+    """
+    claim_entered_overrun_hours(session)
     stmt = select(Booking.id).where(
         Booking.hoist_id == hoist_id,
         Booking.status.in_(statuses),
@@ -181,7 +187,9 @@ def hoist_has_overlap(
     )
     if exclude_id is not None:
         stmt = stmt.where(Booking.id != exclude_id)
-    return session.scalars(stmt).first() is not None
+    if session.scalars(stmt).first() is not None:
+        return True
+    return _hour_row_overlaps(session, hoist_id, start_at, end_at, exclude_id)
 
 
 def _reject_if_bay_hour_taken(
@@ -246,6 +254,150 @@ def _add_missing_hours(session: Session, booking: Booking) -> None:
             )
         )
     session.flush()
+
+
+def _entered_overrun_starts(booking: Booking, now: datetime) -> list[datetime]:
+    """Regina hours this visit has entered after its booked end."""
+    end = _stored_utc(booking.end_at)
+    if now <= end:
+        return []
+    return [hour_start for hour_start, _hour_end in iter_regina_hours(end, now)]
+
+
+def _hour_row_overlaps(
+    session: Session,
+    hoist_id: UUID,
+    start_at: datetime,
+    end_at: datetime,
+    exclude_id: UUID | None,
+) -> bool:
+    """True when a BookingHour on this hoist covers a Regina hour of the window.
+
+    Callers pass either an aware instant or a stored UTC value. SQLite hands
+    back the stored instant with no offset. ``as_utc`` would read that as
+    shop-local and shift the hour.
+    """
+    wanted = {
+        _hour_key(hour_start)
+        for hour_start, _hour_end in iter_regina_hours(_stored_utc(start_at), _stored_utc(end_at))
+    }
+    if not wanted:
+        return False
+    rows = session.scalars(select(BookingHour).where(BookingHour.hoist_id == hoist_id)).all()
+    for row in rows:
+        if exclude_id is not None and row.booking_id == exclude_id:
+            continue
+        if _hour_key(row.hour_start) in wanted:
+            return True
+    return False
+
+
+def _window_hits_overrun_hour(
+    session: Session,
+    hoist_id: UUID,
+    start_at: datetime,
+    end_at: datetime,
+) -> bool:
+    """True when the window includes an hour an in-progress visit entered past its end."""
+    wanted = {
+        _hour_key(hour_start)
+        for hour_start, _hour_end in iter_regina_hours(_stored_utc(start_at), _stored_utc(end_at))
+    }
+    if not wanted:
+        return False
+    rows = session.scalars(select(BookingHour).where(BookingHour.hoist_id == hoist_id)).all()
+    if not rows:
+        return False
+    owner_ids = {row.booking_id for row in rows}
+    ends = {
+        booking.id: _hour_key(_stored_utc(booking.end_at))
+        for booking in session.scalars(select(Booking).where(Booking.id.in_(owner_ids))).all()
+    }
+    for row in rows:
+        key = _hour_key(row.hour_start)
+        end_key = ends.get(row.booking_id)
+        if key in wanted and end_key is not None and key >= end_key:
+            return True
+    return False
+
+
+def _all_member_bays_hit_overrun(session: Session, start_at: datetime, end_at: datetime) -> bool:
+    """True when every bookable member bay is already in an entered overrun hour."""
+    bays = _member_bays_lowest_first(session)
+    if not bays:
+        return False
+    return all(_window_hits_overrun_hour(session, bay.id, start_at, end_at) for bay in bays)
+
+
+def _reject_booked_overrun(
+    session: Session,
+    hoist_id: UUID | None,
+    start_at: datetime,
+    end_at: datetime,
+    *,
+    kind: BookingKind,
+) -> None:
+    """Refuse a window that includes an hour an in-progress visit has entered.
+
+    ``get_db`` rolls the session back on HTTPException. Commit the claim first
+    so the visit keeps the hour after the refusal.
+    """
+    if hoist_id is not None:
+        blocked = _window_hits_overrun_hour(session, hoist_id, start_at, end_at)
+    elif kind == BookingKind.CUSTOMER:
+        blocked = _all_member_bays_hit_overrun(session, start_at, end_at)
+    else:
+        blocked = False
+    if not blocked:
+        return
+    session.commit()
+    raise _error(409, "hoist_overlap", BAY_HOUR_TAKEN)
+
+
+def claim_entered_overrun_hours(session: Session) -> None:
+    """Claim each Regina hour an active or overdue visit has entered past its end.
+
+    The row is the lock ``create_booking`` and any-bay already use. An hour
+    another booking owns stays with that owner. This visit is not debited for
+    an hour it does not own.
+    """
+    now = _stored_utc(shop_now())
+    visits = session.scalars(
+        select(Booking)
+        .where(Booking.status.in_((BookingStatus.ACTIVE, BookingStatus.OVERDUE)))
+        .order_by(Booking.created_at, Booking.id)
+    ).all()
+    if not visits:
+        return
+    taken = {
+        (row.hoist_id, _hour_key(row.hour_start))
+        for row in session.scalars(select(BookingHour)).all()
+    }
+    for booking in visits:
+        for hour_start in _entered_overrun_starts(booking, now):
+            key = (booking.hoist_id, _hour_key(hour_start))
+            if key in taken:
+                continue
+            try:
+                with session.begin_nested():
+                    session.add(
+                        BookingHour(
+                            booking_id=booking.id,
+                            hoist_id=booking.hoist_id,
+                            hour_start=hour_start,
+                        )
+                    )
+                    session.flush()
+            except IntegrityError:
+                continue
+            taken.add(key)
+
+
+def _owned_hour_keys(session: Session, booking: Booking) -> set[datetime]:
+    rows = session.scalars(
+        select(BookingHour.hour_start).where(BookingHour.booking_id == booking.id)
+    ).all()
+    return {_hour_key(hour_start) for hour_start in rows}
 
 
 def claim_booking_hours(session: Session, booking: Booking) -> None:
@@ -493,6 +645,8 @@ def create_booking(
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
     settle_elapsed_no_shows(session)
+    claim_entered_overrun_hours(session)
+    _reject_booked_overrun(session, hoist_id, start_at, end_at, kind=kind)
     reject_start_in_past(start_at)
     reject_off_grid(start_at, end_at)
 
@@ -712,8 +866,11 @@ def _extra_hour_segments(session: Session, booking: Booking) -> list[dict[str, s
     end = _stored_utc(booking.end_at)
     if now <= end:
         return []
+    owned = _owned_hour_keys(session, booking)
     segments: list[dict[str, str]] = []
     for hour_start, hour_end in iter_regina_hours(end, now):
+        if _hour_key(hour_start) not in owned:
+            continue
         band = resolve_band(hour_start, session=session)
         tokens = (BASE_TOKENS_PER_HOUR * band.multiplier).quantize(CENTS, rounding=ROUND_HALF_UP)
         segments.append(
@@ -752,6 +909,7 @@ def complete_booking(session: Session, booking_id: UUID) -> Booking:
             "invalid_transition",
             "Only an active or overdue booking can be completed.",
         )
+    claim_entered_overrun_hours(session)
     segments = _extra_hour_segments(session, booking)
     extra = sum((Decimal(segment["tokens"]) for segment in segments), Decimal("0"))
     if extra > 0 and booking.member_id is not None:

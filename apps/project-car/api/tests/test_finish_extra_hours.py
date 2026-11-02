@@ -16,8 +16,9 @@ from uuid import UUID
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
-from app.models import Incident, TokenTransaction
-from app.shop_time import PRICING_TZ
+from app.models import BookingHour, Incident, TokenTransaction
+from app.services.bookings import _hour_key
+from app.shop_time import PRICING_TZ, as_utc
 from tests.conftest import AUTH, create_hoist, create_member, freeze_shop_clock
 
 CLEAR_ALLOWANCE = "Clear the remaining allowance before checkout"
@@ -183,6 +184,60 @@ def test_shop_work_after_the_end_charges_nothing(client: TestClient) -> None:
         assert rows == []
     finally:
         session.close()
+
+
+def _held_hour_keys(client: TestClient, booking_id: str) -> set[datetime]:
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        rows = session.scalars(select(BookingHour).where(BookingHour.booking_id == UUID(booking_id))).all()
+        return {_hour_key(row.hour_start) for row in rows}
+    finally:
+        session.close()
+
+
+def test_overrun_hours_stay_on_the_visit_and_block_the_bay(client: TestClient) -> None:
+    """A checked-in visit holds each hour it has entered past the booked end.
+
+    At 12:20 a 10:00–11:00 visit owns 11:00 and 12:00. Another member cannot
+    book 11:00–12:00 on that bay. Finishing charges those two hours.
+    """
+    freeze_shop_clock(_at(9, 50))
+    member_a = create_member(client, email="ada.overrun@example.com")
+    member_b = create_member(client, name="Bea", email="bea.overrun@example.com")
+    hoist = create_hoist(client)
+    booking = _book_and_check_in(client, member_a, hoist, _at(10), _at(11))
+    freeze_shop_clock(_at(12, 20))
+
+    refused = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member_b["id"],
+            "hoist_id": hoist["id"],
+            "start_at": _at(11).isoformat(),
+            "end_at": _at(12).isoformat(),
+        },
+    )
+
+    assert refused.status_code == 409, refused.text
+    assert refused.json()["error"]["code"] == "hoist_overlap"
+    assert _balance(client, member_b["id"]) == Decimal("1500")
+    assert _held_hour_keys(client, booking["id"]) == {
+        _hour_key(as_utc(_at(10))),
+        _hour_key(as_utc(_at(11))),
+        _hour_key(as_utc(_at(12))),
+    }
+
+    done = client.post(f"/bookings/{booking['id']}/complete", headers=AUTH)
+
+    assert done.status_code == 200, done.text
+    assert done.json()["status"] == "completed"
+    assert _balance(client, member_a["id"]) == Decimal("1200")
+    debits = [row for row in _ledger(client, member_a["id"]) if row["kind"] == "booking_debit"]
+    assert len(debits) == 1
+    assert Decimal(str(debits[0]["amount"])) == Decimal("-200")
+    charged = {_hour_key(datetime.fromisoformat(segment["start_at"])) for segment in debits[0]["meta"]["segments"]}
+    assert charged == {_hour_key(as_utc(_at(11))), _hour_key(as_utc(_at(12)))}
 
 
 def test_overdue_note_does_not_say_the_visit_was_free(client: TestClient) -> None:
