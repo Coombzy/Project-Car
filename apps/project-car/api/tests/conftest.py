@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from datetime import datetime, timedelta
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -16,6 +17,22 @@ from app.seed import PLACEHOLDER_TIERS
 from app.shop_time import shop_now
 
 AUTH = {"Authorization": "Bearer dev-owner-secret"}
+
+
+def seed_placeholder_tiers(session) -> None:
+    if session.get(MembershipTier, "basic") is not None:
+        return
+    for payload in PLACEHOLDER_TIERS:
+        session.add(MembershipTier(**payload))
+    session.commit()
+
+
+@pytest.fixture(autouse=True)
+def _clear_login_failures():
+    """Login lockout is one in-process bucket per client IP. Tests share an IP."""
+    clear_login_failures()
+    yield
+    clear_login_failures()
 
 
 @pytest.fixture(autouse=True)
@@ -43,22 +60,6 @@ def check_in_open_start() -> datetime:
     start = next_hour()
     freeze_shop_clock(start - timedelta(minutes=10))
     return start
-
-
-def seed_placeholder_tiers(session) -> None:
-    if session.get(MembershipTier, "basic") is not None:
-        return
-    for payload in PLACEHOLDER_TIERS:
-        session.add(MembershipTier(**payload))
-    session.commit()
-
-
-@pytest.fixture(autouse=True)
-def _clear_login_failures():
-    """Login lockout is one in-process bucket per client IP. Tests share an IP."""
-    clear_login_failures()
-    yield
-    clear_login_failures()
 
 
 @pytest.fixture

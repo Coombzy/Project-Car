@@ -8,7 +8,6 @@ a pending request until a person or an AI approves it.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from decimal import Decimal
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
@@ -33,8 +32,8 @@ from app.schemas import (
     HoistOut,
     MemberBookingCreate,
     MemberBookingQuoteRequest,
-    MemberTokenPurchaseCreate,
     MemberDashboardOut,
+    MemberRateChartOut,
     MemberScheduleOut,
     MemberSelfOut,
     OccupancyOut,
@@ -43,24 +42,26 @@ from app.schemas import (
     ShopJobOut,
     ToolCribExceptionCreate,
     ToolCribExceptionOut,
+    MemberTokenPurchaseCreate,
     TokenTransactionOut,
 )
 from app.routers.dashboard import member_dashboard_payload
+from app.routers.members import MAX_TOKEN_ADJUSTMENT
 from app.services import bookings as booking_service
-from app.services.payments import get_payment_processor
-from app.services.tokens import record_token_purchase
 from app.services.fill import snapshot_next_day
+from app.services.payments import get_payment_processor
+from app.services.peak_cap import PEAK_BAND_IDS, PEAK_HOURS_PER_WEEK
+from app.services.pricing import weekly_rate_chart
 from app.services.shop_hoist_requests import (
     create_shop_hoist_request,
     get_shop_hoist,
     list_shop_hoist_requests,
 )
 from app.services.staff import claim_job, create_tool_crib_exception
+from app.services.tokens import record_token_purchase
 from app.shop_time import as_utc, stored_utc
 
 router = APIRouter(prefix="/member", tags=["member"])
-
-MAX_TOKEN_ADJUSTMENT = Decimal("1000000")
 
 
 def _forbidden(message: str = "Members can only act on their own bookings.") -> HTTPException:
@@ -104,7 +105,7 @@ def _ics_escape(value: str) -> str:
 
 def _ics_utc(value: datetime) -> str:
     # SQLite returns the stored UTC instant with no offset. as_utc() would
-    # read that naive value as shop-local and shift the calendar file.
+    # read that bare clock as shop wall time and shift the calendar file.
     return stored_utc(value).strftime("%Y%m%dT%H%M%SZ")
 
 
@@ -145,29 +146,40 @@ def _fold_ics_line(content: str) -> str:
 
 
 def _booking_ics(booking: Booking) -> str:
-    """One VEVENT. Start and end are UTC. America/Regina is the shop clock."""
+    """One VEVENT. Start and end are UTC. The shop label is Mountain Time."""
     lines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
         "PRODID:-//Project Car//Shop OS//EN",
         "CALSCALE:GREGORIAN",
         "METHOD:PUBLISH",
-        "X-WR-TIMEZONE:America/Regina",
+        "X-WR-TIMEZONE:Mountain Time",
         "BEGIN:VEVENT",
         f"UID:{booking.id}",
         f"DTSTAMP:{_ics_utc(datetime.now(timezone.utc))}",
         f"DTSTART:{_ics_utc(booking.start_at)}",
         f"DTEND:{_ics_utc(booking.end_at)}",
         f"SUMMARY:{_ics_escape(booking.hoist.name)}",
-        "COMMENT:Times are UTC. Shop local time is America/Regina.",
+        "COMMENT:Times are UTC. Shop local time is Mountain Time.",
         "END:VEVENT",
         "END:VCALENDAR",
     ]
     return "\r\n".join(_fold_ics_line(line) for line in lines) + "\r\n"
 
 
+@router.get("/rates", response_model=MemberRateChartOut)
+def member_rates(session: DbSession, _principal: MemberUser) -> MemberRateChartOut:
+    chart = weekly_rate_chart(
+        session,
+        peak_band_ids=PEAK_BAND_IDS,
+        peak_cap_hours=PEAK_HOURS_PER_WEEK,
+    )
+    return MemberRateChartOut.model_validate(chart)
+
+
 @router.get("/me", response_model=MemberSelfOut)
 def member_me(session: DbSession, principal: MemberUser) -> MemberSelfOut:
+    booking_service.settle_elapsed_no_shows(session)
     member = session.scalars(
         select(Member)
         .options(
@@ -212,6 +224,7 @@ def member_me(session: DbSession, principal: MemberUser) -> MemberSelfOut:
 
 @router.get("/dashboard", response_model=MemberDashboardOut)
 def member_dashboard(session: DbSession, principal: MemberUser) -> MemberDashboardOut:
+    booking_service.settle_elapsed_no_shows(session)
     return member_dashboard_payload(session, principal)
 
 
@@ -244,6 +257,7 @@ def member_bookings(
     window_end: datetime | None = Query(default=None),
     limit: int = Query(default=200, ge=1, le=500),
 ) -> list[BookingOut]:
+    booking_service.settle_elapsed_no_shows(session)
     stmt = (
         select(Booking)
         .options(selectinload(Booking.member), selectinload(Booking.hoist))
@@ -268,6 +282,7 @@ def member_schedule(
     window_start: datetime | None = Query(default=None),
     window_end: datetime | None = Query(default=None),
 ) -> MemberScheduleOut:
+    booking_service.settle_elapsed_no_shows(session)
     hoists = _customer_hoists(session)
     hoist_ids = [row.id for row in hoists]
     stmt = (
@@ -352,6 +367,11 @@ def member_create_shop_hoist_request(
     session: DbSession,
     principal: MemberUser,
 ) -> ShopHoistRequestOut:
+    if body.hoist_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "hoist_required", "message": "A shop hoist request needs a bay."},
+        )
     row = create_shop_hoist_request(
         session,
         member_id=principal.member_id,
@@ -372,7 +392,7 @@ def member_create_booking(
     principal: MemberUser,
 ) -> BookingOut | ShopHoistRequestOut:
     _own_member(session, principal)
-    hoist = session.get(Hoist, body.hoist_id)
+    hoist = session.get(Hoist, body.hoist_id) if body.hoist_id is not None else None
     if hoist is not None and hoist.is_shop:
         row = create_shop_hoist_request(
             session,
@@ -393,6 +413,8 @@ def member_create_booking(
         end_at=body.end_at,
         notes=body.notes,
         kind=BookingKind.CUSTOMER,
+        shown_tokens=body.tokens,
+        confirm=True,
     )
     return BookingOut.from_booking(booking)
 
@@ -414,7 +436,7 @@ def member_cancel_booking(
     principal: MemberUser,
 ) -> BookingOut:
     _own_booking(session, principal, booking_id)
-    return BookingOut.from_booking(booking_service.cancel_booking(session, booking_id))
+    return BookingOut.from_booking(booking_service.cancel_booking(session, booking_id, by_member=True))
 
 
 @router.get("/bookings/{booking_id}/ics")

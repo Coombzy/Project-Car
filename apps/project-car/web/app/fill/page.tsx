@@ -16,7 +16,7 @@ export default async function FillPage({
     const [me, preview, outbox] = await Promise.all([getMe(), previewFill(), listFillOutbox()]);
     return (
       <OwnerShell email={me.email} current="fill">
-        <p className="eyebrow">GET /fill/preview · America/Regina</p>
+        <p className="eyebrow">GET /fill/preview · Mountain Time</p>
         <h1>Fill the gaps</h1>
         <p className="lede">
           Next-day open hours on customer bays only (shop hoist excluded). Discount

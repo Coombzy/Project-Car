@@ -76,7 +76,7 @@ export function TodoPanel({
           <input name="notes" maxLength={2000} placeholder="Optional" />
         </label>
         <label>
-          Due (America/Regina)
+          Due (Mountain Time)
           <input name="due_at" type="datetime-local" defaultValue="" min={shopDateTimeLocal()} />
         </label>
         <div className="actions">

@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 
 from app.models import Booking
 from app.shop_time import as_utc, shop_now
-from tests.conftest import AUTH, create_hoist, create_member
+from tests.conftest import AUTH, check_in_open_start, create_hoist, create_member
 
 _HOIST_FIELDS = ("id", "name", "location_label", "status", "is_shop", "created_at", "updated_at")
 
@@ -26,7 +26,7 @@ def _stored(client: TestClient, hoist_id: str) -> dict:
 
 
 def _window_inside_check_in() -> tuple[str, str]:
-    start = shop_now() + timedelta(minutes=10)
+    start = check_in_open_start()
     end = start + timedelta(hours=2)
     return start.isoformat(), end.isoformat()
 

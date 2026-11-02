@@ -18,6 +18,7 @@ from app.models import (
     StaffSubject,
 )
 from app.schemas import (
+    BookingCancel,
     BookingComplete,
     BookingCreate,
     BookingOut,
@@ -70,6 +71,7 @@ def list_bookings(
     window_start: datetime | None = Query(default=None),
     window_end: datetime | None = Query(default=None),
 ) -> list[BookingOut]:
+    booking_service.settle_elapsed_no_shows(session)
     rows = session.scalars(
         _list_query(
             hoist_id=hoist_id,
@@ -112,7 +114,7 @@ def list_owner_shop_hoist_requests(
 def create_booking(
     body: BookingCreate, session: DbSession, owner: Owner
 ) -> BookingOut | ShopHoistRequestOut:
-    if body.kind == BookingKind.CUSTOMER:
+    if body.kind == BookingKind.CUSTOMER and body.hoist_id is not None:
         hoist = session.get(Hoist, body.hoist_id)
         if hoist is not None and hoist.is_shop:
             if body.member_id is None:
@@ -140,6 +142,7 @@ def create_booking(
         end_at=body.end_at,
         notes=body.notes,
         kind=body.kind,
+        shown_tokens=body.tokens,
     )
     return BookingOut.from_booking(booking)
 
@@ -152,6 +155,21 @@ def confirm_booking(booking_id: UUID, session: DbSession, _owner: Owner) -> Book
 @router.post("/bookings/{booking_id}/check-in", response_model=BookingOut)
 def check_in_booking(booking_id: UUID, session: DbSession, _owner: Owner) -> BookingOut:
     return BookingOut.from_booking(booking_service.check_in_booking(session, booking_id))
+
+
+@router.post("/bookings/sweep-no-shows", response_model=list[BookingOut])
+def sweep_no_shows(session: DbSession, owner: Owner) -> list[BookingOut]:
+    """Owner or approved bot. Confirmed bookings past their end with no check-in."""
+    swept = booking_service.sweep_no_shows(session)
+    for booking in swept:
+        record_action(
+            session,
+            principal=owner,
+            action="no_show",
+            request_id=booking.id,
+            subject=StaffSubject.BOOKING,
+        )
+    return [BookingOut.from_booking(booking) for booking in swept]
 
 
 @router.post("/bookings/{booking_id}/overdue", response_model=BookingOut)
@@ -181,17 +199,35 @@ def complete_booking(
         code="refund_requires_human",
         message="A refund is not applied until a human accepts it.",
     )
-    unused = body.unused_tokens if body is not None else Decimal("0")
-    return BookingOut.from_booking(
-        booking_service.complete_booking(session, booking_id, unused_tokens=unused)
-    )
+    if body is not None and body.unused_tokens > 0:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "unused_refund_not_allowed",
+                "message": "Completing a visit charges the full reserve. Unused time is not refunded.",
+            },
+        )
+    return BookingOut.from_booking(booking_service.complete_booking(session, booking_id))
 
 
 @router.post("/bookings/{booking_id}/cancel", response_model=BookingOut)
-def cancel_booking(booking_id: UUID, session: DbSession, owner: Owner) -> BookingOut:
+def cancel_booking(
+    booking_id: UUID,
+    session: DbSession,
+    owner: Owner,
+    body: BookingCancel | None = None,
+) -> BookingOut:
     reject_ai(
         owner,
         code="refund_requires_human",
         message="A refund is not applied until a human accepts it.",
     )
-    return BookingOut.from_booking(booking_service.cancel_booking(session, booking_id))
+    return BookingOut.from_booking(
+        booking_service.cancel_booking(
+            session,
+            booking_id,
+            reason=body.reason if body is not None else None,
+            require_reason=True,
+            actor=owner.email,
+        )
+    )

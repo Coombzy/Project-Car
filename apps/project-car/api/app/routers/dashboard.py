@@ -86,8 +86,8 @@ def _hoist_snapshots(
 
 
 def _window_bookings(session, window_start, window_end) -> list[Booking]:
-    # SQLite may persist naive shop-local clocks; Postgres persists aware UTC.
-    # Widen the SQL window, then keep rows that overlap after as_utc().
+    # SQLite returns a stored UTC instant with no offset. Widen the SQL window,
+    # then keep rows that overlap once that naive value is read as UTC.
     start = as_utc(window_start)
     end = as_utc(window_end)
     pad = timedelta(hours=24)

@@ -13,12 +13,11 @@ from app.models import Todo, TodoStatus
 from app.seed import seed
 from app.services.ics import todo_ics
 from app.services.pricing import BASE_TOKENS_PER_HOUR
-from app.shop_time import pricing_now
-from tests.conftest import AUTH, create_hoist, create_member, login_member
+from tests.conftest import AUTH, create_hoist, create_member, login_member, next_hour
 
 
 def _window(hours_from_now: int, length_hours: float = 2) -> tuple[str, str]:
-    start = pricing_now() + timedelta(hours=hours_from_now)
+    start = next_hour(hours_from_now)
     end = start + timedelta(hours=length_hours)
     return start.isoformat(), end.isoformat()
 
@@ -231,21 +230,13 @@ def test_member_below_one_base_hour_is_token_at_risk(client: TestClient) -> None
     short = client.post(
         f"/members/{below['id']}/tokens",
         headers=AUTH,
-        json={
-            "amount": str(one_base_hour - Decimal("1")),
-            "note": "One token under a base hour",
-            "reason": "One token under a base hour",
-        },
+        json={"amount": str(one_base_hour - Decimal("1")), "note": "One token under a base hour", "reason": "One token under a base hour"},
     )
     assert short.status_code == 201, short.text
     full = client.post(
         f"/members/{exact['id']}/tokens",
         headers=AUTH,
-        json={
-            "amount": str(one_base_hour),
-            "note": "Exactly one base hour",
-            "reason": "Exactly one base hour",
-        },
+        json={"amount": str(one_base_hour), "note": "Exactly one base hour", "reason": "Exactly one base hour"},
     )
     assert full.status_code == 201, full.text
 
