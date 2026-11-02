@@ -15,3 +15,5 @@ describe("primaryCamera", () => {
     assert.equal(new Set(ids).size, ids.length);
   });
 });
+
+// ci-path-probe
