@@ -73,7 +73,6 @@ def test_create_booking_reserves_tokens_and_writes_ledger(client: TestClient) ->
             "hoist_id": hoist["id"],
             "start_at": start,
             "end_at": end,
-            "tokens": "2",
             "notes": "Turbo mock-up",
         },
     )
@@ -98,7 +97,7 @@ def test_create_booking_reserves_tokens_and_writes_ledger(client: TestClient) ->
     assert reserve_row["meta"]["pricing_rule"]["hours"] == body["pricing_rule"]["hours"]
 
 
-def test_create_booking_ignores_client_token_amount(client: TestClient) -> None:
+def test_create_booking_refuses_a_client_total_that_differs(client: TestClient) -> None:
     member = create_member(client)
     hoist = create_hoist(client)
     start = datetime_in_regina_band()
@@ -123,6 +122,7 @@ def test_create_booking_ignores_client_token_amount(client: TestClient) -> None:
     assert _dec(quote_body["token_balance"]) == Decimal("1500")
     assert _dec(quote_body["token_balance_after"]) == Decimal("1500") - expected
 
+    before = _balance(client, member["id"])
     created = client.post(
         "/bookings",
         headers=AUTH,
@@ -134,9 +134,10 @@ def test_create_booking_ignores_client_token_amount(client: TestClient) -> None:
             "tokens": "1",
         },
     )
-    assert created.status_code == 201, created.text
-    assert _dec(created.json()["reserved_tokens"]) == expected
-    assert created.json()["pricing_rule"]["base_tokens"] == "100"
+    assert created.status_code == 409, created.text
+    assert created.json()["error"]["code"] == "quote_mismatch"
+    assert _balance(client, member["id"]) == before
+    assert [row for row in _ledger(client, member["id"]) if row["kind"] == "booking_reserve"] == []
 
 
 def datetime_in_regina_band():
@@ -874,7 +875,6 @@ def test_inactive_member_and_insufficient_tokens(client: TestClient) -> None:
             "hoist_id": hoist["id"],
             "start_at": start,
             "end_at": end,
-            "tokens": "1",
         },
     )
     assert poor.status_code == 400

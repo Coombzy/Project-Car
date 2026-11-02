@@ -140,6 +140,7 @@ def create_booking(
         end_at=body.end_at,
         notes=body.notes,
         kind=body.kind,
+        quoted_tokens=body.tokens,
     )
     return BookingOut.from_booking(booking)
 

@@ -599,7 +599,10 @@ class BookingCreate(BaseModel):
     start_at: datetime
     end_at: datetime
     kind: BookingKind = BookingKind.CUSTOMER
-    tokens: Decimal | None = Field(default=None, description="Ignored. Server computes reserve from duration.")
+    tokens: Decimal | None = Field(
+        default=None,
+        description="Shown total. Omit to accept the server quote. A different total is refused.",
+    )
     notes: str | None = Field(default=None, max_length=2000)
 
 
@@ -640,7 +643,10 @@ class MemberBookingCreate(BaseModel):
     hoist_id: UUID | None = None
     start_at: datetime
     end_at: datetime
-    tokens: Decimal | None = Field(default=None, description="Ignored. Server computes reserve from duration.")
+    tokens: Decimal | None = Field(
+        default=None,
+        description="Shown total. Omit to accept the server quote. A different total is refused.",
+    )
     notes: str | None = Field(default=None, max_length=2000)
 
 

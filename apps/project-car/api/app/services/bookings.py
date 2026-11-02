@@ -348,6 +348,7 @@ def create_booking(
     end_at: datetime,
     notes: str | None,
     kind: BookingKind = BookingKind.CUSTOMER,
+    quoted_tokens: Decimal | None = None,
 ) -> Booking:
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
@@ -378,6 +379,12 @@ def create_booking(
     except PricingError as exc:
         raise _error(400, exc.code, exc.message) from exc
     tokens = quote.final_reserve_cost
+    if quoted_tokens is not None and Decimal(quoted_tokens) != tokens:
+        raise _error(
+            409,
+            "quote_mismatch",
+            "The booked total does not match the total shown. Nothing was saved.",
+        )
     rule = quote.as_rule()
     meta = quote.ledger_meta()
 
