@@ -80,8 +80,8 @@ from app.services.plan_price import BASIC_MONTHLY_CAD, PREMIUM_MONTHLY_CAD, tier
 from app.services.pricing import BASE_TOKENS_PER_HOUR, ensure_pricing_settings, quote_reserve
 from app.services.tokens import apply_ledger, rebuild_token_balance
 from app.services.bookings import HOLDING_STATUSES, claim_booking_hours
-from app.services.hours import booking_overlaps_window
-from app.shop_time import PRICING_TZ, SHOP_TZ, as_utc, next_24h_bounds, shop_now
+from app.services.hours import OPEN_HOUR_STATUSES
+from app.shop_time import PRICING_TZ, SHOP_TZ, as_utc, next_24h_bounds, shop_now, stored_utc
 
 SEED_NS = UUID("a11ce000-5e1d-4000-8000-000000000001")
 
@@ -465,11 +465,19 @@ def _seed_chat_threads(session: Session, *, ada: Member, riley: Member) -> None:
 
 
 def _hoist_busy(session: Session, hoist_id: UUID, start: datetime, end: datetime) -> bool:
+    """True when this bay already holds any instant in [start, end).
+
+    Seed stores the UTC instant. SQLite hands it back naive, and ``as_utc``
+    would read that as Edmonton. In winter that misses a real clash, then
+    ``claim_booking_hours`` hits the unique bay-hour lock.
+    """
     start_utc = as_utc(start)
     end_utc = as_utc(end)
     rows = session.scalars(select(Booking).where(Booking.hoist_id == hoist_id)).all()
     for row in rows:
-        if booking_overlaps_window(row, start_utc, end_utc):
+        if row.status not in OPEN_HOUR_STATUSES:
+            continue
+        if stored_utc(row.start_at) < end_utc and stored_utc(row.end_at) > start_utc:
             return True
     return False
 
