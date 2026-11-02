@@ -1,7 +1,8 @@
 """A pull request title and body must not name a backlog row.
 
 pBay names a row as the word "row" plus a number. Project Car names a row as
-an R or a C followed by digits. Either form in the title or the body fails.
+an R or a C, digits, and an optional letter. A difficulty tag is not a row.
+Either form in the title or the body fails.
 """
 
 from __future__ import annotations
@@ -36,3 +37,32 @@ def test_row_word_without_a_number_is_not_a_backlog_row() -> None:
     assert backlog_row_named("store a row", "token credit stays later") is None
     assert backlog_row_named("arrow 12", "row12") is None
     assert backlog_row_named("r12 stays lowercase", "c3 stays lowercase") is None
+
+
+def test_difficulty_tag_is_not_a_backlog_row() -> None:
+    title = "Refresh schedule screenshots for the week booking calendar [D2 · S1 C2 R1 T2]"
+    assert backlog_row_named(title, "Row: none") is None
+    assert backlog_row_named(title, "Difficulty: [D2 · S1 C2 R1 T2]") is None
+
+
+def test_row_id_still_wins_when_a_difficulty_tag_is_present() -> None:
+    assert (
+        backlog_row_named("R12: Owner queue shows pending requests [D4 · S3 C4 R3 T2]", "")
+        == "R12"
+    )
+    assert (
+        backlog_row_named("[D4 · S3 C4 R3 T2] R12: Owner queue shows pending requests", "")
+        == "R12"
+    )
+
+
+def test_letter_suffixed_project_car_row_ids_are_named() -> None:
+    assert (
+        backlog_row_named("R91a: Next visit picks the earliest visit still on the clock", "")
+        == "R91a"
+    )
+    assert backlog_row_named("R91b: Member home shows the next visit", "") == "R91b"
+    assert (
+        backlog_row_named("R91b: Member home shows the next visit [D4 · S3 C3 R4 T2]", "")
+        == "R91b"
+    )
