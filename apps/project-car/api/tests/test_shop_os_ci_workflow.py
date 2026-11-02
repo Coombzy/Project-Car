@@ -24,6 +24,10 @@ HEAVY_COMMANDS = {
     "shop-web layout-shift / screenshots": ("npm run visual",),
 }
 GATE_IF = "steps.shop_changes.outputs.shop == 'true'"
+BASELINE_SAVE_IF = (
+    "steps.shop_changes.outputs.shop == 'true' && "
+    "github.event_name == 'push' && github.ref == 'refs/heads/main'"
+)
 PUSH_GUARD = 'if [ "${GITHUB_EVENT_NAME}" = "push" ]; then'
 DIFF_COMMAND = 'git diff --name-only --no-renames "${base}" HEAD'
 
@@ -277,7 +281,10 @@ def test_shop_os_ci_path_filter_keeps_required_check_names() -> None:
         assert script.index(PUSH_GUARD) < script.index(DIFF_COMMAND)
         assert "shop=true" in script[: script.index(DIFF_COMMAND)]
         for step in steps[2:]:
-            assert step.get("if") == GATE_IF, step.get("name")
+            step_if = step.get("if")
+            assert step_if in {GATE_IF, BASELINE_SAVE_IF}, step.get("name")
+            if step.get("name") in {"Prepare screenshot baselines", "Store screenshot baselines"}:
+                assert step_if == BASELINE_SAVE_IF
         for command in HEAVY_COMMANDS[job["name"]]:
             matched = [step for step in steps if step.get("run") == command]
             assert len(matched) == 1, command
