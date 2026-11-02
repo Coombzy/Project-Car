@@ -1,0 +1,5 @@
+---
+description: Hard rules for every agent in this repo
+alwaysApply: true
+---
+Read AGENTS.md at the repo root first and follow it. In short: own branch + PR to main only; never push to main, force-push or merge; never edit .github/workflows; never skip, weaken or delete tests/checks or raise visual thresholds; no deploys, DNS, Cloudflare, production credentials or Stripe; don't set `passes` true or stamp v1; don't invent ids or rates; stay inside the files your brief names and explain any extra file in the PR body; never commit or print secrets.
