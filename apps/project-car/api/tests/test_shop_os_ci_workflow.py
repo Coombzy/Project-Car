@@ -387,10 +387,12 @@ def test_shop_os_ci_path_filter_keeps_required_check_names() -> None:
         assert "shop=true" in script[: script.index(DIFF_COMMAND)]
         for step in steps[2:]:
             step_if = step.get("if")
-            assert step_if in {GATE_IF, BASELINE_PREPARE_IF, BASELINE_STORE_IF}, step.get("name")
-            if step.get("name") == "Prepare screenshot baselines":
+            name = step.get("name")
+            if name not in {"Prepare screenshot baselines", "Store screenshot baselines"}:
+                assert step_if == GATE_IF, name
+            if name == "Prepare screenshot baselines":
                 assert step_if == BASELINE_PREPARE_IF
-            if step.get("name") == "Store screenshot baselines":
+            if name == "Store screenshot baselines":
                 assert step_if == BASELINE_STORE_IF
                 assert step.get("uses") == "actions/cache/save@v4"
         if job["name"] == VISUAL_CHECK_NAME:
@@ -530,6 +532,12 @@ def test_api_only_runs_screenshots_skips_web_build_and_reuses_baselines() -> Non
     assert "cache: npm" in text
     assert "shop-api-venv-" in text
     assert "shop-web-modules-" in text
+    modules_key = (
+        "shop-web-modules-${{ runner.os }}-${{ hashFiles("
+        "'apps/project-car/web/package-lock.json', "
+        "'apps/project-car/web/package.json') }}"
+    )
+    assert text.count(modules_key) == 2
     assert "shop-web-screenshot-baselines-" in text
     assert "bash visual/apply-baselines.sh" in text
     assert "actions/cache/restore@v4" in text
@@ -549,6 +557,7 @@ def test_api_only_runs_screenshots_skips_web_build_and_reuses_baselines() -> Non
         probe_env = os.environ.copy()
         probe_env["VISUAL_DIR"] = str(visual)
         probe_env["GITHUB_EVENT_NAME"] = "pull_request"
+        probe_env.pop("SHOP_BASE_SHA", None)
         missing = subprocess.run(
             ["sh", str(apply)],
             check=False,
@@ -572,6 +581,85 @@ def test_api_only_runs_screenshots_skips_web_build_and_reuses_baselines() -> Non
         assert applied.returncode == 0, applied.stderr
         assert "stored screenshot baselines" in applied.stdout
         assert committed.read_bytes() == b"from-main"
+
+        committed.write_bytes(b"checkout-on-push")
+        (baseline / "home.png").write_bytes(b"baseline-on-push")
+        push_env = probe_env.copy()
+        push_env["GITHUB_EVENT_NAME"] = "push"
+        push_env.pop("SHOP_BASE_SHA", None)
+        pushed = subprocess.run(
+            ["sh", str(apply)],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=push_env,
+        )
+        assert pushed.returncode == 0, pushed.stderr
+        assert "push compares against the screenshots in this checkout" in pushed.stdout
+        assert committed.read_bytes() == b"checkout-on-push"
+        assert (baseline / "home.png").read_bytes() == b"baseline-on-push"
+
+    screenshot = "apps/project-car/web/visual/screenshots/390/home.png"
+    with tempfile.TemporaryDirectory() as repo_dir:
+        repo = Path(repo_dir)
+        checkout = repo / screenshot
+        checkout.parent.mkdir(parents=True)
+        checkout.write_bytes(b"base-png")
+        git_env = os.environ.copy()
+        git_base = [
+            "git",
+            "-C",
+            str(repo),
+            "-c",
+            "user.name=Project Car",
+            "-c",
+            "user.email=project-car@example.com",
+            "-c",
+            "commit.gpgsign=false",
+        ]
+
+        def git(*args: str) -> subprocess.CompletedProcess[str]:
+            return subprocess.run(
+                [*git_base, *args],
+                check=False,
+                capture_output=True,
+                text=True,
+                env=git_env,
+            )
+
+        init = git("init")
+        assert init.returncode == 0, init.stderr
+        assert git("add", screenshot).returncode == 0
+        base_commit = git("commit", "-m", "base screenshot")
+        assert base_commit.returncode == 0, base_commit.stderr
+        base_sha = git("rev-parse", "HEAD")
+        assert base_sha.returncode == 0, base_sha.stderr
+        checkout.write_bytes(b"pr-png")
+        assert git("add", screenshot).returncode == 0
+        pr_commit = git("commit", "-m", "edit screenshot")
+        assert pr_commit.returncode == 0, pr_commit.stderr
+        changed = git("diff", "--name-only", "--no-renames", base_sha.stdout.strip(), "HEAD")
+        assert changed.returncode in {0, 1}, changed.stderr
+        assert screenshot in changed.stdout
+        visual_dir = repo / "apps" / "project-car" / "web" / "visual"
+        stored = visual_dir / "screenshot-baselines" / "390" / "home.png"
+        stored.parent.mkdir(parents=True)
+        stored.write_bytes(b"stored-baseline")
+        pr_env = os.environ.copy()
+        pr_env["VISUAL_DIR"] = str(visual_dir)
+        pr_env["GITHUB_EVENT_NAME"] = "pull_request"
+        pr_env["SHOP_BASE_SHA"] = base_sha.stdout.strip()
+        edited = subprocess.run(
+            ["sh", str(apply)],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=pr_env,
+        )
+        assert edited.returncode == 0, edited.stderr
+        assert "pull request edits screenshot baselines" in edited.stdout
+        assert checkout.read_bytes() == b"pr-png"
+        assert stored.read_bytes() == b"stored-baseline"
 
 
 def _detect_on_push(script: str) -> str:

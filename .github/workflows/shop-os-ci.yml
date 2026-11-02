@@ -181,7 +181,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: apps/project-car/web/node_modules
-          key: shop-web-modules-${{ runner.os }}-${{ hashFiles('apps/project-car/web/package-lock.json') }}
+          key: shop-web-modules-${{ runner.os }}-${{ hashFiles('apps/project-car/web/package-lock.json', 'apps/project-car/web/package.json') }}
 
       - name: Install shop-web
         if: steps.shop_changes.outputs.shop == 'true'
@@ -286,7 +286,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: apps/project-car/web/node_modules
-          key: shop-web-modules-${{ runner.os }}-${{ hashFiles('apps/project-car/web/package-lock.json') }}
+          key: shop-web-modules-${{ runner.os }}-${{ hashFiles('apps/project-car/web/package-lock.json', 'apps/project-car/web/package.json') }}
 
       - name: Install shop-api (dev extras)
         if: steps.shop_changes.outputs.shop == 'true'
