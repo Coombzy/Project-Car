@@ -8,6 +8,7 @@ or send mail.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from decimal import Decimal
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -219,7 +220,14 @@ def decide_tool_crib_exception(
 
 
 def create_job(session: Session, *, title: str, notes: str | None, token_bounty) -> ShopJob:
-    row = ShopJob(title=title.strip(), notes=notes, token_bounty=token_bounty, status=ShopJobStatus.OPEN)
+    bounty = Decimal(str(token_bounty))
+    if bounty < 0 or bounty > 10000 or bounty != bounty.quantize(Decimal("0.01")):
+        raise _error(
+            422,
+            "invalid_bounty",
+            "A job bounty is 0 to 10,000 tokens, with at most two decimals.",
+        )
+    row = ShopJob(title=title.strip(), notes=notes, token_bounty=bounty, status=ShopJobStatus.OPEN)
     session.add(row)
     session.flush()
     return row
