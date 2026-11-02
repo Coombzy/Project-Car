@@ -66,10 +66,20 @@ jobs:
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
             case "${path}" in
-              # pytest reads markdown under api/ and web/, and shop-web
-              # .tsx, .html, .ts, and package.json. Other docs stay skipped.
-              apps/project-car/api/*.md|apps/project-car/web/*.md) shop=true; break ;;
-              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg|*.webp|*.SVG) continue ;;
+              # In bash case, * matches slashes, so *.md is every markdown
+              # path. Skip pytest only for repo-root *.md and for docs/**
+              # and Docs/**. Markdown anywhere else runs pytest, including
+              # a README under the app (shop-api/**/README.md). *.txt and
+              # images stay skipped. shop-web .tsx, .html, .ts, and
+              # package.json still run pytest below.
+              docs/*|Docs/*) continue ;;
+              *.txt|*.png|*.jpg|*.jpeg|*.svg|*.webp|*.SVG) continue ;;
+              *.md)
+                case "${path}" in
+                  */*) shop=true; break ;;
+                  *) continue ;;
+                esac
+                ;;
               .github/workflows/shop-os-ci.yml|apps/project-car/api/*) shop=true; break ;;
               apps/project-car/web/*.tsx|apps/project-car/web/*.html|apps/project-car/web/*.ts|apps/project-car/web/package.json) shop=true; break ;;
               apps/project-car/web/*) continue ;;
