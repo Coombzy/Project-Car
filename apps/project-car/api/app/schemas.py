@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from decimal import Decimal
 from typing import Literal
@@ -122,6 +123,9 @@ _TIER_BOOKING_WINDOW_DAYS_MAX = 365
 _TIER_MAX_SIMULTANEOUS_BOOKINGS_MAX = 20
 
 
+_TIER_NAME_RE = re.compile(r"[a-z0-9][a-z0-9_-]{0,63}")
+
+
 class TierCreate(BaseModel):
     name: str = Field(min_length=1, max_length=64)
     display_name: str = Field(min_length=1, max_length=120)
@@ -134,7 +138,12 @@ class TierCreate(BaseModel):
     @field_validator("name")
     @classmethod
     def normalize_name(cls, value: str) -> str:
-        return value.strip().lower()
+        name = value.strip().lower()
+        if name == "pricing":
+            raise ValueError("name cannot be 'pricing' (reserved route)")
+        if not _TIER_NAME_RE.fullmatch(name):
+            raise ValueError("name must be 1-64 chars of a-z, 0-9, '-' or '_', starting with a letter or digit")
+        return name
 
     @field_validator("display_name", mode="before")
     @classmethod
