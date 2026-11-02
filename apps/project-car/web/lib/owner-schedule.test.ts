@@ -25,4 +25,16 @@ describe("owner schedule", () => {
     assert.equal(wide.includes(".owner-list { display: none; }"), false);
     assert.match(wide, /\.owner-grid \{ display: block; \}/);
   });
+
+  it("draws a no-show hour as open on the week grid", () => {
+    const occupying = source.match(/const OCCUPYING = new Set\(\[([^\]]*)\]\)/);
+    assert.ok(occupying);
+    assert.equal(occupying[1].includes("no_show"), false);
+    assert.match(occupying[1], /"pending"/);
+    assert.match(occupying[1], /"confirmed"/);
+    assert.match(occupying[1], /"active"/);
+    assert.match(occupying[1], /"completed"/);
+    assert.match(occupying[1], /"overdue"/);
+    assert.match(source, /phoneBookings = bookings\.filter\(\(booking\) => onDay\(booking, focusDay\)\)/);
+  });
 });
