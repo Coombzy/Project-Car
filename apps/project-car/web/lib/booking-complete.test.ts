@@ -34,29 +34,20 @@ function attr(tag: string, name: string): string | null {
 }
 
 describe("owner complete booking", () => {
-  it("test_complete_card_posts_owner_unused_tokens", () => {
+  it("test_complete_card_posts_zero_unused_tokens", () => {
     const card = readFileSync(cardPath, "utf8");
     const form = activeCompleteForm(card);
     const unused = inputTag(form, "unused_tokens");
 
-    assert.equal(
-      attr(unused, "type"),
-      "number",
-      `unused tokens must be a number input, not a hidden 0 (tag: ${unused})`,
-    );
-    assert.equal(attr(unused, "defaultValue"), "0", "unused tokens must default to 0");
-    assert.equal(attr(unused, "min"), "0", "unused tokens cannot go below 0");
-    assert.equal(
-      attr(unused, "max"),
-      "booking.reserved_tokens",
-      "unused tokens must max at the booking reserve",
-    );
-    assert.equal(attr(unused, "step"), "0.01", "unused tokens must allow hundredths");
-    assert.equal(attr(unused, "value"), null, "unused tokens must stay editable");
-    assert.doesNotMatch(unused, /\btype="hidden"/);
+    assert.equal(attr(unused, "type"), "hidden", `unused tokens must be pinned at 0 (tag: ${unused})`);
+    assert.equal(attr(unused, "value"), "0", "complete must post unused_tokens 0");
+    assert.equal(attr(unused, "defaultValue"), null, "unused tokens must not be an editable default");
+    assert.equal(attr(unused, "max"), null, "unused tokens must not offer the reserve as a max");
+    assert.doesNotMatch(unused, /reserved_tokens/);
+    assert.doesNotMatch(form, /type="number"/);
+    assert.doesNotMatch(form, /Unused/);
     assert.match(form, /action=\{completeBookingAction\}/);
     assert.match(form, />\s*Complete\s*</);
-    assert.match(form, /Unused/);
 
     const cancelAt = card.indexOf("action={cancelBookingAction}");
     assert.notEqual(cancelAt, -1, "cancel action is missing");
