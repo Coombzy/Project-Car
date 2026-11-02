@@ -553,6 +553,9 @@ def complete_booking(
     used = reserved - unused
     meta = {"pricing_rule": booking.pricing_rule} if booking.pricing_rule else None
     if reserved > 0:
+        # Same split as cancel: purchased tokens come back first, then allowance.
+        # The debit below spends allowance first, so used time stays on allowance.
+        allowance_amount, purchased_amount = _refund_split(session, booking, reserved)
         apply_ledger(
             session,
             member,
@@ -561,6 +564,8 @@ def complete_booking(
             booking_id=booking.id,
             note="Release reserved tokens",
             meta=meta,
+            allowance_amount=allowance_amount,
+            purchased_amount=purchased_amount,
         )
         if used > 0:
             apply_ledger(
