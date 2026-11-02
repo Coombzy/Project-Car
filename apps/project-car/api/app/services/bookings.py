@@ -27,6 +27,7 @@ from app.models import (
     TokenTransactionKind,
 )
 from app.services.fill import resolve_fill_for_slot
+from app.services.peak_cap import check_peak_cap
 from app.services.pricing import PricingError, quote_reserve
 from app.services.tokens import apply_ledger, piles_for_refund
 from app.shop_time import as_utc, iter_regina_hours, shop_now
@@ -403,6 +404,10 @@ def create_booking(
 
     if Decimal(member.token_balance) < tokens:
         raise _error(400, "insufficient_tokens", "Member does not have enough tokens to reserve.")
+
+    # Peak is Saturday and Sunday 08:00–16:00. Four hours a week. Shop work
+    # does not reach this path. A miss writes nothing.
+    check_peak_cap(session, member.id, start_at, end_at)
 
     _reject_if_bay_hour_taken(session, hoist.id, start_at, end_at)
 
