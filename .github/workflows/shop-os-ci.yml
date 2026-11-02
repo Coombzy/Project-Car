@@ -6,6 +6,7 @@
 # so a docs-only pull request still reports the required check names as success.
 # On a pull request, each job runs its heavy steps only when that job's area changed.
 # Markdown, text, and images do not count, except screenshot PNGs under web/visual/.
+# shop-api also runs for every other file under apps/project-car/web/, because API tests read them.
 # A push to main runs every step. Superseded pull request runs cancel; main pushes do not.
 name: Shop OS CI
 
@@ -68,8 +69,7 @@ jobs:
             [ -n "${path}" ] || continue
             case "${path}" in
               *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg) continue ;;
-              .github/workflows/shop-os-ci.yml|apps/project-car/api/*|apps/project-car/web/lib/placeholders.ts) shop=true; break ;;
-              apps/project-car/web/*) continue ;;
+              .github/workflows/shop-os-ci.yml|apps/project-car/api/*|apps/project-car/web/*) shop=true; break ;;
               apps/project-car/*) shop=true; break ;;
             esac
           done <<< "${changed}"
