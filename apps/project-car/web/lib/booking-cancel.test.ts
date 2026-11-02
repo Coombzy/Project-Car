@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-// Path-gate probe: a web source edit runs the web job and the visual job.
+// Path-gate probe: a web source edit runs pytest, the web job, and the visual job.
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
