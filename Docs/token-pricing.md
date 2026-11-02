@@ -13,28 +13,29 @@ This file is the lock. Owner booking now computes reserve in the API. Do not inv
 
 ## Stack (locked)
 
-1. **PRIMARY — rate band.** Time-of-day / day-of-week in shop local TZ `America/Regina`. Owner-editable settings table.
-2. **OVERLAY — advance / last-minute.** Applied at **reserve time** on top of the band rate.
-3. **FILL — next-day open-hour factor.** Explicit extra multiplier. Default **1.0**. Does **not** change band or overlay math.
-4. **UI must show the math.** Band + overlay + fill (when it applies) + total before confirm. Existing Shop OS UX must-haves stay (below).
+1. **PRIMARY — rate band.** Time-of-day / day-of-week in shop local TZ `America/Regina`. Owner-editable settings table. Each held hour uses the band that contains that hour.
+2. **OVERLAY — stored advance / last-minute rows.** Lead-time overlays are stored and price nothing. Every reserve uses the standard row (×1).
+3. **FILL — published next-day factor.** Default **1.0**. A published deal discounts only the hours inside its window. It does **not** change band or overlay math.
+4. **UI must show the math.** Each held hour, the standard overlay, fill when a published deal applies, and the total before confirm. Existing Shop OS UX must-haves stay (below).
 
 ```
+hours = count of America/Regina clock hours the visit touches
 base_tokens = hours × 100
-final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier × fill_multiplier
+final_reserve_cost = Σ (100 × that hour's band_multiplier × advance_multiplier × that hour's fill)
 ```
 
-**`base_tokens` is duration × 100.** One hundred tokens per hour of hoist time. Not an arbitrary Owner-entered reserve amount.
+**`base_tokens` is one hundred tokens for each clock hour the visit touches.** Not a fraction of an hour, and not an arbitrary Owner-entered reserve amount.
 
-`hours` is the booking duration (end − start) in shop-local time. Fractional hours are allowed (`1.5` → `150`). Order is locked: duration base, then band, then overlay, then fill. Band and overlay stay the locked tables below — fill is a separate factor, never folded into either. Show the factors and the total before confirm. Lock the same numbers onto the reserve ledger row (`pricing_rule` in meta). Cancel / complete **refund or debit that reserved amount** — do not reprice if bands, overlays, or fill offers change later.
+A visit holds every America/Regina clock hour its span touches, and each of those hours is a full hour. A 90-minute weekday-day visit (10:00–11:30) holds two hours and costs 200. A span from 16:59 to 17:01 holds the 16:00 hour and the 17:00 hour and costs 250. `advance_multiplier` is 1. Fill on an hour is 1 unless a published next-day deal covers that hour. Show the factors and the total before confirm. Lock the same numbers onto the reserve ledger row (`pricing_rule` in meta). Cancel refunds that reserved amount. A finish keeps it. Do not reprice if bands, overlays, or fill offers change later.
 
-Bands and overlay never replace the append-only ledger. Owner create (`POST /bookings`) computes this in the API and ignores any client `tokens` field.
+Bands and overlay never replace the append-only ledger. Owner create (`POST /bookings`) computes this in the API. Omitting the total uses the server quote. A booked total that differs from the server quote is refused (`quote_mismatch`) and writes nothing.
 
 ---
 
 ## Still true from Shop OS §5
 
 - Append-only token ledger. Never edit history.
-- Create **reserves** (`booking_reserve`) → complete **debits** used (`booking_debit`) and **refunds** unused reserve (`booking_refund`) → cancel refunds remaining reserve.
+- Create **reserves** (`booking_reserve`). Cancel refunds that reserve (`booking_refund`). A finish does not refund unused time inside the visit. It keeps the booked charge. Hours past the booked end are a separate `booking_debit` (see overdue, below).
 - `member.token_balance` is a **cache** of the ledger. Ledger wins.
 - Tier `included_tokens`, `booking_window_days`, and `max_simultaneous_bookings` stay enforced.
 - Overdue does **not** auto-charge money. Marking a visit overdue moves no tokens. Finishing it keeps the booked charge and adds one `booking_debit` for each whole hour past the booked end, at that hour's band. Time still inside the booking is not refunded. A finish that cannot pay for those extra hours is refused and the visit stays open.
@@ -123,9 +124,9 @@ Screens, emails, and calendar files say Mountain Time. The clock itself is `Amer
 
 ---
 
-## Default advance overlay (on top of band)
+## Default advance overlay (stored; not applied)
 
-Measured at **reserve time**: now → booking start, shop TZ.
+Stored breakpoints, measured from reserve time to the start. These rows do not change the price.
 
 | Ahead of start | × | Label |
 |----------------|---|-------|
@@ -133,9 +134,9 @@ Measured at **reserve time**: now → booking start, shop TZ.
 | 48 hours – 7 days | **1.0** | Standard |
 | < 48 hours | **1.25** | Last-minute |
 
-Boundaries: exactly 7 days → 0.85×; exactly 48 hours → 1.0×.
+Boundaries, if the rows are turned back on: exactly 7 days → 0.85×; exactly 48 hours → 1.0×.
 
-Same rule: Owner-editable placeholders, not public prices.
+Lead-time overlays are stored and price nothing. Every reserve uses the standard row (×1). The 0.85 advance row and the 1.25 last-minute row stay editable and do not change a quote. Do not turn the 1.25 surcharge back on from this page. Same rule: Owner-editable placeholders, not public prices.
 
 ---
 
@@ -164,7 +165,7 @@ fill_multiplier = 1 − discount_pct / 100
 | half empty | **17.5%** | **0.825** | medium |
 | fully empty | **25%** | **0.75** | high |
 
-Owner can override the discount in that 10–25% band when previewing / sending. Publishing a campaign **locks** that day's factor onto a `fill_offers` row; quotes then reuse the published number until the day rolls. Without a published offer, quotes use the live opening math.
+Owner can override the discount in that 10–25% band when previewing / sending. Publishing a campaign **locks** that day's factor onto a `fill_offers` row; quotes then reuse the published number until the day rolls. Without a published offer, a quote charges the plain band price. The live preview can still show a percent; that percent is not the price.
 
 **When fill applies:** only a **published** deal, and only on held hours inside tomorrow's fill window (08:00–21:00). Hours outside that window keep their band price. A day with no published deal charges the plain band price, even if the live preview shows a percent. Book sends the total it showed. A different total is refused and writes nothing. Same-day and later-week slots stay `fill_multiplier = 1`. Shop work never takes fill (no tokens).
 
@@ -182,16 +183,16 @@ Every `booking_reserve` (and the matching debit / refund rows) stores the math. 
     "band_id": "weekday_eve",
     "band_label": "Weekday evening",
     "band_multiplier": "1.25",
-    "overlay_id": "last_minute",
-    "overlay_label": "Last-minute",
-    "advance_multiplier": "1.25",
+    "overlay_id": "standard",
+    "overlay_label": "Standard",
+    "advance_multiplier": "1",
     "fill_id": "none",
     "fill_label": "No fill",
     "fill_multiplier": "1",
     "fill_discount_pct": "0",
     "hours": "2",
     "base_tokens": "200",
-    "final_reserve_cost": "312.50",
+    "final_reserve_cost": "250.00",
     "tz": "America/Regina"
   }
 }
@@ -203,7 +204,7 @@ Every `booking_reserve` (and the matching debit / refund rows) stores the math. 
 
 ## UX must-haves (non-optional)
 
-1. **Create booking.** Show `(hours × 100) × band × overlay × fill = total`, balance **before** and **after**, plus **band label**, **overlay label**, and **fill label** when fill ≠ 1.0, before confirm / reserve.
+1. **Create booking.** Show each held hour at its band, then × standard overlay × that hour's fill, and the total. Balance **before** and **after**, plus **band label**, **overlay label**, and **fill label** when fill ≠ 1.0, before confirm / reserve.
 2. **Weekly hour-slot cells.** Band color + token-cost badge on the booking in the hour grid. Overlay chip when overlay ≠ 1.0. Fill chip when fill ≠ 1.0. Month view is density-only (booked hours vs 08:00–21:00), not a second price surface.
 3. **Member detail.** Balance + recent ledger. **At-risk** when open reserved tokens **>** remaining (cached) free balance.
 4. **Cancel / complete.** Show refund or debit **inline** (the locked reserved amount).
@@ -217,15 +218,18 @@ Existing Owner chrome stays: hoist overlap, reserve → debit / refund, token-at
 
 Tuesday 17:00 start, **2-hour** slot, reserved **20 hours** ahead.
 
+- Hours held: 17:00 and 18:00, both Evening
 - Base: `2 × 100` = **200**
-- Band: `weekday_eve` **1.25×**
-- Overlay: 48h–7d **1.0×**
-- Fill: none **1.0×**
-- Total: `200 × 1.25 × 1.0 × 1.0 = 250` tokens reserved
+- Band: Evening **1.25×** on each hour → 125 + 125 = **250**
+- Overlay: standard **1×**. The 20-hour lead does not change the price.
+- Fill: none **1×**
+- Total: **250** tokens reserved
 
-Same 2-hour slot reserved **30 hours** ahead: overlay **1.25×** → `200 × 1.25 × 1.25 × 1.0 = 312.50`.
+The same 2-hour slot reserved **30 hours** ahead is still **250**. Last-minute 1.25 is stored and does not apply.
 
-Same last-minute slot on **tomorrow** when customer bays are fully open (25% fill): `200 × 1.25 × 1.25 × 0.75 = 234.38`.
+The same Tuesday 17:00–19:00 slot on **tomorrow**, with a published 25% fill and both hours inside 08:00–21:00: `125 × 0.75 + 125 × 0.75 = 187.50`.
+
+A published 25% fill on tomorrow 20:00–22:00 discounts only 20:00–21:00 (Evening 125 × 0.75 = 93.75). The 21:00 hour is outside the window and stays Off-peak 75. Total **168.75**.
 
 ---
 
