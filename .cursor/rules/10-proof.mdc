@@ -1,0 +1,5 @@
+---
+description: How to test and prove a change
+alwaysApply: true
+---
+Use the commands in AGENTS.md "Commands" (repo scripts under scripts/ first). While working, run only the tests related to your files; run the full check once before opening the PR. Commit the failing test first (RED), then the fix (GREEN). For UI changes, attach before/after screenshots at 390 and 1440 px as hosted images in the PR body; only update reference screenshots for pages you changed.
