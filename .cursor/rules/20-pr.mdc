@@ -1,0 +1,5 @@
+---
+description: Pull request title and body format
+alwaysApply: true
+---
+PR title = row heading + difficulty tag `[D# · S# C# R# T#]` (each 1–9; D = highest). PR body: use .github/pull_request_template.md if present; otherwise include Row, Difficulty, Agent id, Files, Tests run, Proof (RED sha, GREEN sha, screenshots) and one `IF:` line per checkable merge condition. Open the PR ready for review. Do not merge.
