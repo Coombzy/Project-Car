@@ -27,7 +27,7 @@
 | Weekly rate chart on the member booking screen | [#243](https://github.com/Coombzy/Project-Car/pull/243) | **In PR** |
 | Cancel 24 hours or more is free. Inside 24 hours keeps 50%. No refund once a visit starts. No-show keeps 100% when it is settled. | [#231](https://github.com/Coombzy/Project-Car/pull/231), [#239](https://github.com/Coombzy/Project-Car/pull/239), [#252](https://github.com/Coombzy/Project-Car/pull/252). Member home, dashboard, bookings, and schedule settle a missed hour ([#259](https://github.com/Coombzy/Project-Car/pull/259)). | **In PR** |
 | Allowance and purchased piles. Spend allowance first. Purchased tokens survive the grant. Home shows both piles and peak hours this week. | [#246](https://github.com/Coombzy/Project-Car/pull/246), [#249](https://github.com/Coombzy/Project-Car/pull/249), [#251](https://github.com/Coombzy/Project-Car/pull/251) | **In PR** |
-| Any bay is the lowest free member bay for the whole visit | [#248](https://github.com/Coombzy/Project-Car/pull/248). A Postgres race between two members is not proven. | **In PR** |
+| Any bay is the lowest free member bay for the whole visit | [#248](https://github.com/Coombzy/Project-Car/pull/248). Two members at once is the opt-in Postgres test in [#264](https://github.com/Coombzy/Project-Car/pull/264). CI runs the lost-insert retry and skips the live race. | **In PR** |
 | Owner week shows every hour. Phone is a day list. | [#235](https://github.com/Coombzy/Project-Car/pull/235), [#253](https://github.com/Coombzy/Project-Car/pull/253). Member calendar is week on desktop and day on a phone ([#234](https://github.com/Coombzy/Project-Car/pull/234)). | **In PR** |
 | Close a bay with a written reason and refund future bookings | API [#230](https://github.com/Coombzy/Project-Car/pull/230), form [#254](https://github.com/Coombzy/Project-Car/pull/254) | **In PR** |
 | Manual token change requires a written reason | API [#229](https://github.com/Coombzy/Project-Car/pull/229), form [#257](https://github.com/Coombzy/Project-Car/pull/257). Balance cannot go below zero. | **In PR** |
@@ -47,4 +47,4 @@
 | Say whether a live unpublished fill percent should ever price a booking. Today only a published deal does. | **Waiting on Ben** |
 | Open the shop and turn on live billing | **Waiting on Ben**. No Stripe in this stack. |
 | Month view as bookable lanes | Not in this stack. Month stays the density heatmap. |
-| Prove two members cannot take the same any-bay hour on Postgres | Not proven. No workflow or CI change in this stack. |
+| Prove two members cannot take the same any-bay hour on Postgres | Proved by the opt-in test in [#264](https://github.com/Coombzy/Project-Car/pull/264) (`ANY_BAY_POSTGRES=1`). CI does not start Postgres. No workflow change. |

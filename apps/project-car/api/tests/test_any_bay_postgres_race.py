@@ -1,11 +1,13 @@
-"""Two members book Any bay for one hour at the same time, on real Postgres.
+"""Two members book Any bay for one hour at the same time.
 
-SQLite runs one statement at a time, so the rest of the suite cannot show this
-race. The test is skipped unless ANY_BAY_POSTGRES=1. Point
-ANY_BAY_POSTGRES_URL at a database you can wipe, or accept the local default.
-Both requests read the first bay as free, then both try to take that hour.
-One booking owns it. The other takes the next member bay, or 409 no_bay when
-no bay is left. The shop hoist is never used.
+SQLite runs one statement at a time, so the live race is skipped unless
+ANY_BAY_POSTGRES=1. Point ANY_BAY_POSTGRES_URL at a database you can wipe, or
+accept the local default. Both requests read the first bay as free, then both
+try to take that hour. One booking owns it. The other takes the next member
+bay, or 409 no_bay when no bay is left. The shop hoist is never used.
+
+CI stays on SQLite. It still forces the overlap check clear so the unique
+hour row is what loses Bay 1, and the visit has to land on the next bay.
 """
 
 from __future__ import annotations
@@ -13,11 +15,13 @@ from __future__ import annotations
 import os
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
+from unittest.mock import patch
 
 import httpx
 import pytest
 import uvicorn
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
@@ -29,9 +33,9 @@ from app.models import Base
 from app.services import bookings as booking_service
 from app.services.pricing import ensure_pricing_settings
 from app.shop_time import PRICING_TZ
-from tests.conftest import AUTH, freeze_shop_clock, seed_placeholder_tiers
+from tests.conftest import AUTH, create_hoist, create_member, freeze_shop_clock, next_hour, seed_placeholder_tiers
 
-pytestmark = pytest.mark.skipif(
+_needs_postgres = pytest.mark.skipif(
     os.environ.get("ANY_BAY_POSTGRES") != "1",
     reason="Opt-in Postgres race. Set ANY_BAY_POSTGRES=1. CI stays on SQLite.",
 )
@@ -179,6 +183,23 @@ def _overlapping_pairs(session) -> list[tuple]:
     return list(rows)
 
 
+def _reserve_counts(session) -> dict[str, int]:
+    rows = session.execute(
+        text(
+            """
+            SELECT m.email, count(t.id)
+            FROM members m
+            LEFT JOIN token_transactions t
+              ON t.member_id = m.id
+             AND t.kind = 'booking_reserve'
+            GROUP BY m.email
+            ORDER BY m.email
+            """
+        )
+    ).all()
+    return {email: count for email, count in rows}
+
+
 def _duplicate_hours(session) -> list[tuple]:
     rows = session.execute(
         text(
@@ -272,6 +293,76 @@ def _prepare(base: str, bay_count: int) -> tuple[list[str], datetime, datetime]:
     return cookies, start, end
 
 
+def _book(client: TestClient, member_id: str, start, end, **extra) -> httpx.Response:
+    body = {
+        "member_id": member_id,
+        "start_at": start.isoformat(),
+        "end_at": end.isoformat(),
+        **extra,
+    }
+    return client.post("/bookings", headers=AUTH, json=body)
+
+
+def test_any_bay_takes_the_next_bay_when_the_hour_insert_loses(client: TestClient) -> None:
+    """The overlap read already said Bay 1 was free. The hour insert loses it.
+
+    CI can show this without two transactions. A held hour plus a forced-clear
+    overlap check is the same conflict the Postgres race hits. The savepoint
+    must roll that attempt back and use Bay 2. With both bays lost, the answer
+    is 409 no_bay, and Bay 6 stays unused.
+    """
+    patched = client.patch(
+        "/tiers/premium",
+        headers=AUTH,
+        json={"max_simultaneous_bookings": 3},
+    )
+    assert patched.status_code == 200, patched.text
+    holder = create_member(client, email="holds@example.com", tier_name="premium")
+    loser = create_member(client, email="loses@example.com", tier_name="premium")
+    alone = create_member(client, email="alone@example.com", tier_name="premium")
+    later = create_member(client, email="later@example.com", tier_name="premium")
+    bay1 = create_hoist(client, name="Bay 1")
+    create_hoist(client, name="Bay 2")
+    create_hoist(client, name="Bay 6", is_shop=True)
+    start = next_hour(48)
+    end = start + timedelta(hours=1)
+    held = _book(client, holder["id"], start, end, hoist_id=bay1["id"])
+    assert held.status_code == 201, held.text
+
+    with patch("app.services.bookings.hoist_has_overlap", return_value=False):
+        chosen = _book(client, loser["id"], start, end)
+    assert chosen.status_code == 201, chosen.text
+    assert chosen.json()["hoist_name"] == "Bay 2"
+    assert chosen.json()["status"] == "pending"
+
+    with patch("app.services.bookings.hoist_has_overlap", return_value=False):
+        refused = _book(client, alone["id"], start, end)
+    assert refused.status_code == 409, refused.text
+    assert refused.json()["error"]["code"] == "no_bay"
+    names = {row["hoist_name"] for row in client.get("/bookings", headers=AUTH).json()}
+    assert names == {"Bay 1", "Bay 2"}
+
+    # A later day: Bay 1 is free for the first hour and taken for the second.
+    # The overlap read is forced clear. The first hour must not stay on Bay 1
+    # after the second hour loses, and the whole visit lands on Bay 2.
+    far = next_hour(80)
+    partial = _book(
+        client,
+        holder["id"],
+        far + timedelta(hours=1),
+        far + timedelta(hours=2),
+        hoist_id=bay1["id"],
+    )
+    assert partial.status_code == 201, partial.text
+    before = len(client.get("/bookings", headers=AUTH).json())
+    with patch("app.services.bookings.hoist_has_overlap", return_value=False):
+        moved = _book(client, later["id"], far, far + timedelta(hours=2))
+    assert moved.status_code == 201, moved.text
+    assert moved.json()["hoist_name"] == "Bay 2"
+    assert len(client.get("/bookings", headers=AUTH).json()) == before + 1
+
+
+@_needs_postgres
 def test_two_concurrent_any_bay_bookings_take_different_bays(race_server) -> None:
     cookies, start, end = _prepare(race_server["base"], bay_count=2)
     responses = _book_together(race_server["base"], cookies, start, end)
@@ -287,10 +378,15 @@ def test_two_concurrent_any_bay_bookings_take_different_bays(race_server) -> Non
         assert _holding_names(session) == ["Bay 1", "Bay 2"]
         assert _overlapping_pairs(session) == []
         assert _duplicate_hours(session) == []
+        assert _reserve_counts(session) == {
+            "race-one@example.com": 1,
+            "race-two@example.com": 1,
+        }
     finally:
         session.close()
 
 
+@_needs_postgres
 def test_two_concurrent_any_bay_bookings_on_one_bay_return_no_bay(race_server) -> None:
     cookies, start, end = _prepare(race_server["base"], bay_count=1)
     responses = _book_together(race_server["base"], cookies, start, end)
@@ -305,5 +401,9 @@ def test_two_concurrent_any_bay_bookings_on_one_bay_return_no_bay(race_server) -
         assert _holding_names(session) == ["Bay 1"]
         assert _overlapping_pairs(session) == []
         assert _duplicate_hours(session) == []
+        counts = _reserve_counts(session)
+        assert set(counts) == {"race-one@example.com", "race-two@example.com"}
+        assert sorted(counts.values()) == [0, 1]
+        assert counts[by_code[201].json()["member_name"]] == 1
     finally:
         session.close()
