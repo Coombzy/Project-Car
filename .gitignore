@@ -26,3 +26,6 @@ blob-report/
 .DS_Store
 .idea/
 .vscode/
+
+# Agent proof records
+.agent-proof/
