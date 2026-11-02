@@ -56,7 +56,7 @@ def test_member_detail_and_admin_tokens(client: TestClient) -> None:
     adjusted = client.post(
         f"/members/{member['id']}/tokens",
         headers=AUTH,
-        json={"amount": "-1.5", "note": "Owner correction"},
+        json={"amount": "-1.5", "note": "Owner correction", "reason": "Owner correction"},
     )
     assert adjusted.status_code == 201
     assert adjusted.json()["kind"] == "admin_adjustment"
@@ -76,7 +76,7 @@ def test_rebuild_token_balance_route_matches_ledger(client: TestClient) -> None:
     adjusted = client.post(
         f"/members/{member_id}/tokens",
         headers=AUTH,
-        json={"amount": "-1.5", "note": "Owner correction"},
+        json={"amount": "-1.5", "note": "Owner correction", "reason": "Owner correction"},
     )
     assert adjusted.status_code == 201, adjusted.text
 

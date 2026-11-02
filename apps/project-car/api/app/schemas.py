@@ -1,11 +1,20 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    ValidationError,
+    computed_field,
+    field_serializer,
+    field_validator,
+)
 
 from app.models import (
     ActorKind,
@@ -30,6 +39,15 @@ from app.models import (
     ToolCribEvent,
     ToolCribEventKind,
 )
+from app.services.plan_price import (
+    PLAN_CURRENCY,
+    PLAN_PERIOD,
+    gst_on,
+    price_mark as stored_price_mark,
+    total_with_gst,
+)
+from app.services.tokens import GST_RATE
+from app.shop_time import stored_utc
 
 
 def _blank_to_none(value: str | None) -> str | None:
@@ -100,16 +118,59 @@ class PrincipalOut(BaseModel):
     member_id: UUID | None = None
 
 
-class TierOut(BaseModel):
+class PlanPriceOut(BaseModel):
+    """Monthly CAD price from the tier row, plus GST from the stored rate."""
+
     model_config = ConfigDict(from_attributes=True)
+
+    price: Decimal
+    notes: str | None = None
+
+    @computed_field
+    @property
+    def currency(self) -> str:
+        return PLAN_CURRENCY
+
+    @computed_field
+    @property
+    def billing_period(self) -> str:
+        return PLAN_PERIOD
+
+    @computed_field
+    @property
+    def gst_rate(self) -> Decimal:
+        return GST_RATE
+
+    @computed_field
+    @property
+    def gst_cad(self) -> Decimal:
+        return gst_on(self.price)
+
+    @computed_field
+    @property
+    def total_cad(self) -> Decimal:
+        return total_with_gst(self.price)
+
+    @computed_field
+    @property
+    def price_mark(self) -> str | None:
+        return stored_price_mark(self.notes)
+
+
+class PlanOfferOut(PlanPriceOut):
+    """Signup payload. The price is the saved tier row, not a copy in the page."""
 
     name: str
     display_name: str
-    price: Decimal
+    included_tokens: int
+
+
+class TierOut(PlanPriceOut):
+    name: str
+    display_name: str
     included_tokens: int
     booking_window_days: int
     max_simultaneous_bookings: int
-    notes: str | None
     created_at: datetime
     updated_at: datetime
 
@@ -192,6 +253,8 @@ class MemberOut(BaseModel):
     emergency_contact_name: str | None
     emergency_contact_phone: str | None
     token_balance: Decimal
+    allowance_balance: Decimal
+    purchased_balance: Decimal
     deposit_balance: Decimal
     created_at: datetime
     updated_at: datetime
@@ -272,7 +335,70 @@ class MemberPatch(BaseModel):
 
 class TokenAdjustment(BaseModel):
     amount: Decimal
+    # Required; checked in the router so a missing reason is 422 reason_required.
+    reason: str | None = None
     note: str | None = Field(default=None, max_length=2000)
+
+
+class DepositCreate(BaseModel):
+    action: Literal["take", "return", "keep"]
+    amount: Decimal = Field(gt=0, decimal_places=2)
+    payment_id: str = Field(min_length=1, max_length=120)
+    note: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("payment_id")
+    @classmethod
+    def strip_payment_id(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("payment id is required")
+        return stripped
+
+
+class DollarChargeOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    purpose: str
+    payment_id: str | None
+    subtotal_cad: Decimal
+    gst_cad: Decimal
+    total_cad: Decimal
+    gst_rate: Decimal
+    created_at: datetime
+
+
+class TokenPurchaseCreate(BaseModel):
+    """A PayPal payment the Owner has seen land. Tokens and CAD come from that payment."""
+
+    payment_id: str = Field(min_length=1, max_length=120)
+    tokens: Decimal = Field(gt=0, decimal_places=2)
+    subtotal_cad: Decimal = Field(ge=0, decimal_places=2)
+    note: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("payment_id")
+    @classmethod
+    def strip_payment_id(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("payment_id cannot be blank.")
+        return stripped
+
+
+class MemberTokenPurchaseCreate(BaseModel):
+    """A member buying tokens. The payment adapter collects the stand-in id."""
+
+    payment_id: str | None = Field(default=None, max_length=120)
+    tokens: Decimal = Field(gt=0, decimal_places=2)
+    subtotal_cad: Decimal = Field(gt=0, decimal_places=2)
+
+    @field_validator("payment_id")
+    @classmethod
+    def strip_member_payment_id(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        return stripped or None
 
 
 class TokenTransactionOut(BaseModel):
@@ -283,8 +409,11 @@ class TokenTransactionOut(BaseModel):
     booking_id: UUID | None
     kind: TokenTransactionKind
     amount: Decimal
+    allowance_amount: Decimal
+    purchased_amount: Decimal
     note: str | None
     meta: dict | None = None
+    payment_ref: str | None = None
     created_at: datetime
 
 
@@ -325,6 +454,9 @@ class HoistPatch(BaseModel):
     location_label: str | None = Field(default=None, max_length=120)
     status: HoistStatus | None = None
     is_shop: bool | None = None
+    # Closing a bay (maintenance / locked) with future bookings needs both.
+    cancel_bookings: bool = False
+    reason: str | None = None
 
     @field_validator("name", mode="before")
     @classmethod
@@ -342,6 +474,40 @@ class HoistPatch(BaseModel):
         return value.strip()
 
 
+class MemberRateBandOut(BaseModel):
+    id: str
+    label: str
+    multiplier: str
+    tokens_per_hour: str
+
+
+class MemberRateHourOut(BaseModel):
+    weekday: int
+    day_label: str
+    hour: int
+    band_id: str
+    label: str
+    tokens_per_hour: str
+    counts_toward_peak_cap: bool
+
+
+class MemberRateChartOut(BaseModel):
+    tz_label: str
+    peak_cap_hours: int
+    note: str
+    bands: list[MemberRateBandOut]
+    hours: list[MemberRateHourOut]
+
+
+class PricingSegmentOut(BaseModel):
+    start_at: datetime
+    end_at: datetime
+    band_id: str
+    band_label: str
+    band_multiplier: str
+    band_tokens: str
+
+
 class PricingRuleOut(BaseModel):
     band_id: str
     band_label: str
@@ -355,8 +521,25 @@ class PricingRuleOut(BaseModel):
     fill_discount_pct: str = "0"
     hours: str
     base_tokens: str
+    # Older bookings were priced from the start band and carry no segments.
+    banded_tokens: str | None = None
     final_reserve_cost: str
     tz: str
+    segments: list[PricingSegmentOut] = []
+
+
+def _utc_instant(value: datetime) -> str:
+    """SQLite returns a stored UTC instant with no offset.
+
+    A bare timestamp is read as shop wall time, so 10:00 Mountain Time would
+    show as 4:00 p.m. Postgres already returns an aware instant. Both paths
+    leave the wire as UTC with an offset.
+    """
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    else:
+        value = value.astimezone(timezone.utc)
+    return value.isoformat()
 
 
 class BookingOut(BaseModel):
@@ -377,6 +560,10 @@ class BookingOut(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    @field_serializer("start_at", "end_at", when_used="json")
+    def serialize_window(self, value: datetime) -> str:
+        return _utc_instant(value)
+
     @classmethod
     def from_booking(cls, booking) -> BookingOut:
         hoist = getattr(booking, "hoist", None)
@@ -395,8 +582,8 @@ class BookingOut(BaseModel):
             hoist_id=booking.hoist_id,
             hoist_name=hoist.name if hoist is not None else "Unknown hoist",
             kind=booking.kind,
-            start_at=booking.start_at,
-            end_at=booking.end_at,
+            start_at=stored_utc(booking.start_at),
+            end_at=stored_utc(booking.end_at),
             status=booking.status,
             reserved_tokens=booking.reserved_tokens,
             pricing_rule=rule,
@@ -408,7 +595,7 @@ class BookingOut(BaseModel):
 
 class BookingCreate(BaseModel):
     member_id: UUID | None = None
-    hoist_id: UUID
+    hoist_id: UUID | None = None
     start_at: datetime
     end_at: datetime
     kind: BookingKind = BookingKind.CUSTOMER
@@ -430,12 +617,20 @@ class BookingQuoteOut(BaseModel):
     token_balance_after: Decimal | None = None
 
 
+class BookingCancel(BaseModel):
+    """Owner cancel. A written reason is required when the cancel refunds."""
+
+    reason: str | None = None
+
+
 class BookingComplete(BaseModel):
+    # Only 0 is accepted: unused time is never refunded once a visit has
+    # started (Ben, D16). The Owner web form still posts 0.
     unused_tokens: Decimal = Field(default=Decimal("0"), ge=0)
 
 
 class MemberBookingCreate(BaseModel):
-    hoist_id: UUID
+    hoist_id: UUID | None = None
     start_at: datetime
     end_at: datetime
     tokens: Decimal | None = Field(default=None, description="Ignored. Server computes reserve from duration.")
@@ -464,6 +659,10 @@ class OccupancyOut(BaseModel):
     end_at: datetime
     status: BookingStatus
     own: bool
+
+    @field_serializer("start_at", "end_at", when_used="json")
+    def serialize_window(self, value: datetime) -> str:
+        return _utc_instant(value)
 
 
 class MemberScheduleOut(BaseModel):
@@ -496,6 +695,10 @@ class BookedHourOut(BaseModel):
     member_name: str
     vehicle_label: str
     notes: str | None
+
+    @field_serializer("hour_start", "hour_end", when_used="json")
+    def serialize_hour(self, value: datetime) -> str:
+        return _utc_instant(value)
 
 
 class HoistSnapshotOut(HoistOut):

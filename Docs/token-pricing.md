@@ -37,7 +37,7 @@ Bands and overlay never replace the append-only ledger. Owner create (`POST /boo
 - Create **reserves** (`booking_reserve`) → complete **debits** used (`booking_debit`) and **refunds** unused reserve (`booking_refund`) → cancel refunds remaining reserve.
 - `member.token_balance` is a **cache** of the ledger. Ledger wins.
 - Tier `included_tokens`, `booking_window_days`, and `max_simultaneous_bookings` stay enforced.
-- Overdue does **not** auto-charge money.
+- Overdue does **not** auto-charge money. Marking a visit overdue moves no tokens. Finishing it keeps the booked charge and adds one `booking_debit` for each whole hour past the booked end, at that hour's band. Time still inside the booking is not refunded. A finish that cannot pay for those extra hours is refused and the visit stays open.
 - Two membership tiers in seed (not three). Allotments below.
 - **Six hoists** in seed. Exactly one is the **shop hoist** (`is_shop`). v1 choice **(A)** — Owner-only; customers cannot book it. See below.
 
@@ -45,14 +45,16 @@ Bands and overlay never replace the append-only ledger. Owner create (`POST /boo
 
 ## Membership allotments (two tiers)
 
-Two tiers. One includes more tokens per period than the other. **Names and dollar prices stay Owner-editable.** Included-token counts below are **Owner-editable placeholders, not public prices.** Do not put them on projectcar.ca.
+Two tiers. One includes more tokens per period than the other. **Names and dollar prices stay Owner-editable.** Included-token counts below are **Owner-editable placeholders.** Dollar prices are stand-in settings on the tier row (`membership_tiers.price`), shown on the shop signup and plan screens. GST is the same five percent stand-in used on token purchases, added on top of the stored monthly price. These are not brochure prices and not live billing. The shop is not open.
 
-| Placeholder name | `included_tokens` / period |
-|------------------|----------------------------|
-| Basic | **1000** |
-| Premium | **1500** |
+| Placeholder name | `included_tokens` / period | Monthly price (CAD, before GST) |
+|------------------|----------------------------|----------------------------------|
+| Basic | **1000** | **500** stand-in. Owner can edit. |
+| Premium | **1500** | **750** stand-in until Ben confirms. |
 
 Two tiers only. **Pro** and **Weekly** are retired names — rename Pro → Premium in seed and demo `tier_name` references. Owner can still add or rename tiers later in data — this is not a schema ban.
+
+Allowance tokens and purchased tokens are stored separately. `token_balance` is their sum. A booking spends allowance first. A cancel puts the refund back on the same piles, purchased first. The grant button expires unused allowance above one month, then adds the new allowance, in one save. Upcoming visits are already taken off the allowance pile, so they are not expired. A second press that month does nothing. Purchased tokens survive the grant. An owner adjustment lands on the allowance pile.
 
 ---
 
@@ -76,7 +78,7 @@ How (A) is encoded:
 1. `hoists.is_shop` — boolean. Seed and API allow **exactly one** shop hoist.
 2. `bookings.kind` — `customer` (default) or `shop`. `kind=shop` is the Owner-only shop-work path. It may omit `member_id` and does **not** reserve member tokens.
 3. Shop work (`kind=shop`) can only be created on the shop hoist.
-4. A **customer** use of the shop hoist is a pending request, not a booking. It does not reserve tokens until a person or an AI approves it. Bays 1–5 stay a direct booking.
+4. A **customer** use of the shop hoist is a pending request, not a booking. It does not reserve tokens until a person or an AI approves it. Bays 1–5 stay a direct booking. Omitting the bay picks the lowest-numbered member bay that is free for every hour of the visit. Bay 6 is never that pick. The saved booking names the bay. A lost hour tries the next bay in the same save.
 
 Owner schedule shows the shop hoist and `kind=shop` chips so the week grid matches this rule. Re-seed notes: 6 bays + one Owner-only shop hoist.
 
@@ -95,32 +97,29 @@ Member self-serve UI is **live on Doc demo, `https://ops.projectcar.ca/member`, 
 
 ---
 
-## Default bands (Owner-editable placeholders)
+## Default bands (Owner-editable)
 
-Hours are **approximate defaults**. Multipliers are placeholders Ben can edit in the settings table. Do not treat them as public prices.
+Base is **100 tokens per hour**. Each band is one named row the owner can edit. Do not treat these multipliers as a public price list.
 
-**Fri-evening ambiguity (resolved for the default table):** “after ~16:00 or ~18:00” — default is **Fri 16:00–24:00** at weekend/Fri-eve premium **1.5×**, not the weekday-eve **1.25×**.
+Intervals are half-open `[start, end)` in Mountain Time (the shop clock, permanent UTC−6). Each held hour uses the band that contains that hour.
 
-Intervals are half-open `[start, end)` in `America/Regina`. Price a booking from the band that contains its **start**. Spanning bands does not split the slot in v1.
+| Band id | When (Mountain Time) | × | Tokens/hr | Label |
+|---------|----------------------|---|-----------|-------|
+| `late_night` | Every day 21:00–08:00 | **0.75** | 75 | Off-peak |
+| `weekday_day` | Mon–Fri 08:00–16:00 | **1.00** | 100 | Normal |
+| `weekday_eve` | Every day 16:00–21:00, including Fri, Sat, and Sun | **1.25** | 125 | Evening |
+| `weekend_fri_eve` | Sat–Sun 08:00–16:00 only | **1.50** | 150 | Peak |
 
-| Band id | When (`America/Regina`) | × | Label |
-|---------|-------------------------|---|-------|
-| `weekday_day` | Mon–Fri 08:00–16:00 | **1.0** | Weekday day (base) |
-| `weekday_eve` | Mon–Thu 16:00–21:00 | **1.25** | Weekday evening |
-| `weekend_fri_eve` | Fri 16:00–24:00; Sat all day; Sun 00:00–21:00 | **1.5** | Weekend / Fri eve |
-| `late_night` | Mon–Thu 21:00–08:00 next day; Sun 21:00–Mon 08:00 | **0.75** | Late night / early morning |
+Only **Peak** counts toward the 4-hour weekly peak cap.
 
 Week grid (same defaults):
 
 | | 00:00–08:00 | 08:00–16:00 | 16:00–21:00 | 21:00–24:00 |
 |---|---|---|---|---|
-| Mon | 0.75 (`late_night`, Sun→Mon) | 1.0 | 1.25 | 0.75 |
-| Tue–Thu | 0.75 | 1.0 | 1.25 | 0.75 |
-| Fri | 0.75 (Thu night) | 1.0 | **1.5** | **1.5** |
-| Sat | 1.5 | 1.5 | 1.5 | 1.5 |
-| Sun | 1.5 | 1.5 | 1.5 | 0.75 (Sun→Mon) |
+| Mon–Fri | 0.75 Off-peak | 1.00 Normal | 1.25 Evening | 0.75 Off-peak |
+| Sat–Sun | 0.75 Off-peak | **1.50 Peak** | 1.25 Evening | 0.75 Off-peak |
 
-Shop OS month/week calendars label days and hour slots in `America/Regina`. Naive `datetime-local` values still use the existing `shop_time` helper `SHOP_TZ` = `America/Edmonton` so create/quote stay honest with the API. Band and overlay math use `PRICING_TZ` = `America/Regina`. During Mountain Daylight both are UTC−6, so clock times match. In winter Edmonton is UTC−7 and Regina stays UTC−6 — the engine converts the stored UTC instant to Regina before picking a band.
+Screens, emails, and calendar files say Mountain Time. The clock itself is `America/Regina` so Alberta stays UTC−6 year-round.
 
 ---
 
@@ -167,7 +166,7 @@ fill_multiplier = 1 − discount_pct / 100
 
 Owner can override the discount in that 10–25% band when previewing / sending. Publishing a campaign **locks** that day's factor onto a `fill_offers` row; quotes then reuse the published number until the day rolls. Without a published offer, quotes use the live opening math.
 
-**When fill applies:** the booking window overlaps tomorrow's fill window **and** there are openings (or a published offer). Same-day and later-week slots stay `fill_multiplier = 1`. Shop work never takes fill (no tokens).
+**When fill applies:** only a **published** deal, and only on held hours inside tomorrow's fill window (08:00–21:00). Hours outside that window keep their band price. A day with no published deal charges the plain band price, even if the live preview shows a percent. Book sends the total it showed. A different total is refused and writes nothing. Same-day and later-week slots stay `fill_multiplier = 1`. Shop work never takes fill (no tokens).
 
 Notify **active members** over a durable **notification outbox** (not the public brochure). v1 email path: SMTP when `SMTP_HOST` is set, otherwise an in-process stub that records `sent`. SMS and push are stub adapters (`sms_not_configured` / `push_not_configured`) so Twilio / Inbox can plug in later. Dry-run / send stays on **management** (`ops.` intended; `app.` temporary alias; Doc Shop OS `/fill` today). No DNS cut here. Do not ship fill UI or live prices on `projectcar.ca` Pages.
 

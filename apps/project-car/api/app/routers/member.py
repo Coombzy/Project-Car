@@ -8,6 +8,7 @@ a pending request until a person or an AI approves it.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from decimal import Decimal
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
@@ -32,6 +33,7 @@ from app.schemas import (
     HoistOut,
     MemberBookingCreate,
     MemberBookingQuoteRequest,
+    MemberTokenPurchaseCreate,
     MemberDashboardOut,
     MemberScheduleOut,
     MemberSelfOut,
@@ -45,6 +47,8 @@ from app.schemas import (
 )
 from app.routers.dashboard import member_dashboard_payload
 from app.services import bookings as booking_service
+from app.services.payments import get_payment_processor
+from app.services.tokens import record_token_purchase
 from app.services.fill import snapshot_next_day
 from app.services.shop_hoist_requests import (
     create_shop_hoist_request,
@@ -52,9 +56,11 @@ from app.services.shop_hoist_requests import (
     list_shop_hoist_requests,
 )
 from app.services.staff import claim_job, create_tool_crib_exception
-from app.shop_time import as_utc
+from app.shop_time import as_utc, stored_utc
 
 router = APIRouter(prefix="/member", tags=["member"])
+
+MAX_TOKEN_ADJUSTMENT = Decimal("1000000")
 
 
 def _forbidden(message: str = "Members can only act on their own bookings.") -> HTTPException:
@@ -97,7 +103,9 @@ def _ics_escape(value: str) -> str:
 
 
 def _ics_utc(value: datetime) -> str:
-    return as_utc(value).strftime("%Y%m%dT%H%M%SZ")
+    # SQLite returns the stored UTC instant with no offset. as_utc() would
+    # read that naive value as shop-local and shift the calendar file.
+    return stored_utc(value).strftime("%Y%m%dT%H%M%SZ")
 
 
 def _ics_utf8_prefix(text: str, max_octets: int) -> str:
@@ -189,6 +197,8 @@ def member_me(session: DbSession, principal: MemberUser) -> MemberSelfOut:
         emergency_contact_name=member.emergency_contact_name,
         emergency_contact_phone=member.emergency_contact_phone,
         token_balance=member.token_balance,
+        allowance_balance=member.allowance_balance,
+        purchased_balance=member.purchased_balance,
         deposit_balance=member.deposit_balance,
         created_at=member.created_at,
         updated_at=member.updated_at,
@@ -460,3 +470,36 @@ def member_create_tool_crib_exception(
 @router.post("/jobs/{job_id}/claim", response_model=ShopJobOut)
 def member_claim_job(job_id: UUID, session: DbSession, principal: MemberUser) -> ShopJobOut:
     return ShopJobOut.model_validate(claim_job(session, job_id, principal.member_id))
+
+
+@router.post("/token-purchases", response_model=TokenTransactionOut, status_code=201)
+def member_buy_tokens(
+    body: MemberTokenPurchaseCreate,
+    session: DbSession,
+    principal: MemberUser,
+) -> TokenTransactionOut:
+    """Collect through the payment adapter, then credit the purchased pile."""
+    if body.tokens >= MAX_TOKEN_ADJUSTMENT:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "invalid_tokens", "message": "A purchase must be under 1,000,000 tokens."},
+        )
+    processor = get_payment_processor()
+    receipt = processor.collect(
+        member_id=principal.member_id,
+        tokens=body.tokens,
+        subtotal_cad=body.subtotal_cad,
+        payment_id=body.payment_id,
+    )
+    member = booking_service.lock_member(session, principal.member_id)
+    row = record_token_purchase(
+        session,
+        member,
+        payment_id=receipt.payment_id,
+        tokens=body.tokens,
+        subtotal_cad=receipt.subtotal_cad,
+        recorded_by=member.email,
+        processor=receipt.processor,
+    )
+    session.refresh(row)
+    return TokenTransactionOut.model_validate(row)

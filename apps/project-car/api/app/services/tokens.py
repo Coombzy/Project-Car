@@ -13,16 +13,63 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID
 
+from fastapi import HTTPException
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import Member, MemberStatus, TokenTransaction, TokenTransactionKind
+from app.models import (
+    BillingKind,
+    BillingTransaction,
+    Member,
+    MemberStatus,
+    TokenTransaction,
+    TokenTransactionKind,
+)
 from app.shop_time import PRICING_TZ, pricing_now
 
 PERIOD_TZ = "America/Regina"
+# Ben, D15: GST applies to every money transaction. Stand-in rate until his
+# accountant confirms it.
+GST_RATE = Decimal("0.05")
+CENTS = Decimal("0.01")
+# Ben, D10: no balance goes below zero, ever. There is no Owner allow path.
+TOKEN_BALANCE_FLOOR = Decimal("0")
+
+
+def piles_for_refund(
+    allowance_spent: Decimal,
+    purchased_spent: Decimal,
+    refund: Decimal,
+) -> tuple[Decimal, Decimal]:
+    """Restore a cancel onto the piles it came from, purchased first.
+
+    Spent figures are positive. The returned pair is the positive refund split
+    and sums to ``refund``.
+    """
+    purchased_back = min(Decimal(purchased_spent), Decimal(refund))
+    allowance_back = Decimal(refund) - purchased_back
+    return allowance_back, purchased_back
+
+
+def _default_piles(member: Member, kind: TokenTransactionKind, amount: Decimal) -> tuple[Decimal, Decimal]:
+    """Split a ledger amount when the caller does not name the piles.
+
+    Purchases credit the purchased pile. Grants, expiry, and positive
+    adjustments credit allowance. A spend takes allowance first, then purchased.
+    """
+    if kind == TokenTransactionKind.TOKEN_PURCHASE:
+        return Decimal("0"), amount
+    if kind in (TokenTransactionKind.MONTHLY_ALLOCATION, TokenTransactionKind.ALLOWANCE_EXPIRY):
+        return amount, Decimal("0")
+    if amount > 0:
+        return amount, Decimal("0")
+    take = -amount
+    from_allowance = min(Decimal(member.allowance_balance), take)
+    return -from_allowance, -(take - from_allowance)
 
 
 def apply_ledger(
@@ -34,20 +81,203 @@ def apply_ledger(
     booking_id=None,
     note: str | None = None,
     meta: dict | None = None,
+    payment_ref: str | None = None,
+    allowance_amount: Decimal | None = None,
+    purchased_amount: Decimal | None = None,
 ) -> TokenTransaction:
     amount = Decimal(amount)
+    if allowance_amount is None and purchased_amount is None:
+        allowance_amount, purchased_amount = _default_piles(member, kind, amount)
+    else:
+        allowance_amount = Decimal("0") if allowance_amount is None else Decimal(allowance_amount)
+        purchased_amount = Decimal("0") if purchased_amount is None else Decimal(purchased_amount)
+    if allowance_amount + purchased_amount != amount:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "pile_mismatch",
+                "message": "The allowance and purchased amounts must sum to the ledger amount.",
+            },
+        )
+    balance = Decimal(member.token_balance)
+    new_allowance = Decimal(member.allowance_balance) + allowance_amount
+    new_purchased = Decimal(member.purchased_balance) + purchased_amount
+    new_balance = balance + amount
+    if new_balance < TOKEN_BALANCE_FLOOR or new_allowance < TOKEN_BALANCE_FLOOR or new_purchased < TOKEN_BALANCE_FLOOR:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "would_go_negative",
+                "message": "That would take the balance below zero.",
+                "balance": str(balance),
+                "amount": str(amount),
+            },
+        )
     row = TokenTransaction(
         member_id=member.id,
         booking_id=booking_id,
         kind=kind,
         amount=amount,
+        allowance_amount=allowance_amount,
+        purchased_amount=purchased_amount,
         note=note,
         meta=meta,
+        payment_ref=payment_ref,
     )
     session.add(row)
-    member.token_balance = Decimal(member.token_balance) + amount
+    member.allowance_balance = new_allowance
+    member.purchased_balance = new_purchased
+    member.token_balance = new_balance
     session.add(member)
+    try:
+        session.flush()
+    except IntegrityError:
+        # The unique indexes are the last guard: one reserve, refund and debit
+        # per booking, and one credit per payment id. The rollback also undoes
+        # the cache move above.
+        session.rollback()
+        if payment_ref is not None:
+            raise _conflict("already_credited", "That payment has already been credited.") from None
+        raise _conflict(
+            "duplicate_ledger_entry",
+            f"This booking already has a {kind.value} ledger row.",
+        ) from None
+    return row
+
+
+def _conflict(code: str, message: str) -> HTTPException:
+    return HTTPException(status_code=409, detail={"code": code, "message": message})
+
+
+def _cents(value: Decimal) -> Decimal:
+    return Decimal(value).quantize(CENTS, rounding=ROUND_HALF_UP)
+
+
+def record_token_purchase(
+    session: Session,
+    member: Member,
+    *,
+    payment_id: str,
+    tokens: Decimal,
+    subtotal_cad: Decimal,
+    recorded_by: str,
+    note: str | None = None,
+    processor: str | None = None,
+) -> TokenTransaction:
+    """Credit paid tokens once per payment id, with GST on the CAD subtotal."""
+    already = session.scalar(
+        select(TokenTransaction.id).where(TokenTransaction.payment_ref == payment_id)
+    )
+    if already is not None:
+        raise _conflict("already_credited", "That payment has already been credited.")
+    subtotal = _cents(subtotal_cad)
+    gst = _cents(subtotal * GST_RATE)
+    total = subtotal + gst
+    purchase = {
+        "payment_id": payment_id,
+        "subtotal_cad": str(subtotal),
+        "gst_rate": str(GST_RATE),
+        "gst_cad": str(gst),
+        "total_cad": str(total),
+        "by": recorded_by,
+    }
+    if processor:
+        purchase["processor"] = processor
+    session.add(
+        BillingTransaction(
+            member_id=member.id,
+            kind=BillingKind.PACK,
+            amount=total,
+            subtotal_cad=subtotal,
+            gst_cad=gst,
+            total_cad=total,
+            gst_rate=GST_RATE,
+            payment_id=payment_id,
+            note=note or f"Token purchase {payment_id}",
+        )
+    )
     session.flush()
+    return apply_ledger(
+        session,
+        member,
+        kind=TokenTransactionKind.TOKEN_PURCHASE,
+        amount=Decimal(tokens),
+        note=note or f"Token purchase {payment_id}",
+        meta={"purchase": purchase},
+        payment_ref=payment_id,
+    )
+
+
+def record_deposit(
+    session: Session,
+    member: Member,
+    *,
+    action: str,
+    amount: Decimal,
+    payment_id: str,
+    note: str | None = None,
+) -> BillingTransaction:
+    """Move a damage deposit. Take and return charge no GST and no tokens.
+
+    Keep writes GST at the stand-in rate. The held dollars are the before-tax
+    amount. Payment ids are stand-ins until a processor is connected.
+    """
+    held_amount = _cents(amount)
+    if held_amount <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "invalid_amount", "message": "Deposit amount must be greater than zero."},
+        )
+    payment_id = payment_id.strip()
+    held = Decimal(member.deposit_balance)
+    if action == "take":
+        kind = BillingKind.DEPOSIT_TAKEN
+        charge_gst = False
+        member.deposit_balance = held + held_amount
+    elif action == "return":
+        if held_amount > held:
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "deposit_short", "message": "That is more than the deposit on file."},
+            )
+        kind = BillingKind.DEPOSIT_RETURNED
+        charge_gst = False
+        member.deposit_balance = held - held_amount
+    elif action == "keep":
+        if held_amount > held:
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "deposit_short", "message": "That is more than the deposit on file."},
+            )
+        kind = BillingKind.DEPOSIT_KEPT
+        charge_gst = True
+        member.deposit_balance = held - held_amount
+    else:
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "validation_error", "message": "Deposit action must be take, return, or keep."},
+        )
+    gst = _cents(held_amount * GST_RATE) if charge_gst else Decimal("0.00")
+    total = held_amount + gst
+    row = BillingTransaction(
+        member_id=member.id,
+        kind=kind,
+        amount=total,
+        subtotal_cad=held_amount,
+        gst_cad=gst,
+        total_cad=total,
+        gst_rate=GST_RATE if charge_gst else Decimal("0.0000"),
+        payment_id=payment_id,
+        note=note or f"Deposit {action} {payment_id}",
+    )
+    session.add(row)
+    session.add(member)
+    try:
+        session.flush()
+    except IntegrityError:
+        session.rollback()
+        raise _conflict("already_recorded", "That payment id is already on a dollar row.") from None
+    session.refresh(row)
     return row
 
 
@@ -60,8 +290,17 @@ def ledger_sum(session: Session, member_id) -> Decimal:
     return Decimal(total)
 
 
+def _pile_sum(session: Session, member_id, column) -> Decimal:
+    total = session.scalar(
+        select(func.coalesce(func.sum(column), 0)).where(TokenTransaction.member_id == member_id)
+    )
+    return Decimal(total)
+
+
 def rebuild_token_balance(session: Session, member: Member) -> Decimal:
     member.token_balance = ledger_sum(session, member.id)
+    member.allowance_balance = _pile_sum(session, member.id, TokenTransaction.allowance_amount)
+    member.purchased_balance = _pile_sum(session, member.id, TokenTransaction.purchased_amount)
     session.add(member)
     return member.token_balance
 
@@ -142,7 +381,10 @@ def _has_period_allocation(
 
 
 def grant_period_allocations(session: Session, now: datetime | None = None) -> PeriodAllocationResult:
-    """Grant each active member included_tokens once for this Regina month.
+    """Expire unused allowance above one month, then grant this Regina month.
+
+    Purchased tokens are a separate pile and are not expired. A booking spends
+    allowance first, so tokens already reserved are not in allowance_balance.
 
     A row tagged tz=America/Regina with a period counts only for that period.
     A row with no such tag counts when created_at is in this month, including
@@ -182,14 +424,30 @@ def grant_period_allocations(session: Session, now: datetime | None = None) -> P
             continue
         if member.tier.included_tokens <= 0:
             continue
-        amount = Decimal(member.tier.included_tokens)
+        allowance = Decimal(member.tier.included_tokens)
+        # Upcoming visits are already taken off allowance_balance. A cancel
+        # after this grant can put allowance above two months until the next
+        # grant. Purchased tokens are not part of this cap.
+        expire = Decimal(member.allowance_balance) - allowance
+        if expire > 0:
+            apply_ledger(
+                session,
+                member,
+                kind=TokenTransactionKind.ALLOWANCE_EXPIRY,
+                amount=-expire,
+                note=f"{period} allowance expiry",
+                meta={"period": period, "tz": PERIOD_TZ},
+            )
         apply_ledger(
             session,
             member,
             kind=TokenTransactionKind.MONTHLY_ALLOCATION,
-            amount=amount,
-            note=f"{period} {member.tier.display_name} allocation",
+            amount=allowance,
+            note=(
+                f"{period} {member.tier.display_name} allocation. "
+                "A cancel after this grant can put the balance above two months until the next grant."
+            ),
             meta={"period": period, "tz": PERIOD_TZ},
         )
-        granted.append(PeriodGrant(member_id=member.id, tier_name=member.tier_name, amount=amount))
+        granted.append(PeriodGrant(member_id=member.id, tier_name=member.tier_name, amount=allowance))
     return PeriodAllocationResult(period=period, tz=PERIOD_TZ, granted=granted, skipped=skipped)

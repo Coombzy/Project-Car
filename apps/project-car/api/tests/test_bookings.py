@@ -865,7 +865,7 @@ def test_inactive_member_and_insufficient_tokens(client: TestClient) -> None:
     client.post(
         f"/members/{broke['id']}/tokens",
         headers=AUTH,
-        json={"amount": "-1000", "note": "wipe"},
+        json={"amount": "-1000", "note": "wipe", "reason": "wipe the demo balance"},
     )
     poor = client.post(
         "/bookings",
@@ -903,8 +903,8 @@ def test_ninety_minute_booking_via_api(client: TestClient) -> None:
     )
     assert created.status_code == 201, created.text
     body = created.json()
-    assert body["pricing_rule"]["hours"] == "1.5"
-    assert body["pricing_rule"]["base_tokens"] == "150"
+    assert body["pricing_rule"]["hours"] == "2"
+    assert body["pricing_rule"]["base_tokens"] == "200"
     assert _dec(body["reserved_tokens"]) == quote_reserve(start, end).final_reserve_cost
 
 
@@ -1284,7 +1284,7 @@ def test_second_one_hour_create_stops_at_one_base_hour(client: TestClient) -> No
     adjusted = client.post(
         f"/members/{member['id']}/tokens",
         headers=AUTH,
-        json={"amount": "-1400", "note": "leave one base hour"},
+        json={"amount": "-1400", "note": "leave one base hour", "reason": "leave one base hour"},
     )
     assert adjusted.status_code == 201, adjusted.text
     assert _balance(client, member["id"]) == Decimal("100")

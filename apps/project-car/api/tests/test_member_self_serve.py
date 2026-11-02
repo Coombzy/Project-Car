@@ -169,7 +169,7 @@ def test_member_insufficient_tokens(client: TestClient) -> None:
     client.post(
         f"/members/{broke['id']}/tokens",
         headers=AUTH,
-        json={"amount": "-1000", "note": "wipe"},
+        json={"amount": "-1000", "note": "wipe", "reason": "wipe the demo balance"},
     )
     start, end = _window(4)
     login_member(client, "morgan@example.com")

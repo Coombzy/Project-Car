@@ -23,11 +23,12 @@ from app.models import (
     IncidentSeverity,
     Member,
     MemberStatus,
+    TokenTransaction,
     TokenTransactionKind,
 )
 from app.services.fill import resolve_fill_for_slot
 from app.services.pricing import PricingError, quote_reserve
-from app.services.tokens import apply_ledger
+from app.services.tokens import apply_ledger, piles_for_refund
 from app.shop_time import as_utc, iter_regina_hours, shop_now
 
 OPEN_STATUSES = (BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.ACTIVE)
@@ -651,6 +652,21 @@ def mark_overdue(session: Session, booking_id: UUID) -> tuple[Booking, bool]:
     return get_booking(session, booking.id), changed
 
 
+def _refund_split(session: Session, booking: Booking, refund: Decimal) -> tuple[Decimal, Decimal]:
+    """Put a refund back on the piles the reserve spent, purchased first."""
+    row = session.scalar(
+        select(TokenTransaction).where(
+            TokenTransaction.booking_id == booking.id,
+            TokenTransaction.kind == TokenTransactionKind.BOOKING_RESERVE,
+        )
+    )
+    if row is None:
+        return refund, Decimal("0")
+    allowance_spent = -Decimal(row.allowance_amount)
+    purchased_spent = -Decimal(row.purchased_amount)
+    return piles_for_refund(allowance_spent, purchased_spent, refund)
+
+
 def cancel_booking(session: Session, booking_id: UUID) -> Booking:
     # Lock the booking, then the member, before the status check. A second
     # cancel waits, sees the new status, and does not write another refund.
@@ -675,6 +691,7 @@ def cancel_booking(session: Session, booking_id: UUID) -> Booking:
     reserved = Decimal(booking.reserved_tokens)
     meta = {"pricing_rule": booking.pricing_rule} if booking.pricing_rule else None
     if reserved > 0:
+        allowance_amount, purchased_amount = _refund_split(session, booking, reserved)
         apply_ledger(
             session,
             member,
@@ -683,6 +700,8 @@ def cancel_booking(session: Session, booking_id: UUID) -> Booking:
             booking_id=booking.id,
             note="Refund reserve on cancel",
             meta=meta,
+            allowance_amount=allowance_amount,
+            purchased_amount=purchased_amount,
         )
         booking.reserved_tokens = Decimal("0")
 

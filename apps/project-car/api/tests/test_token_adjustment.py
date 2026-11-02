@@ -45,7 +45,7 @@ def test_over_scale_or_capped_adjustment_is_400_and_writes_no_row(
     response = client.post(
         f"/members/{member_id}/tokens",
         headers=AUTH,
-        json={"amount": amount},
+        json={"amount": amount, "reason": "Owner correction"},
     )
     assert response.status_code == 400, (
         f"{amount} -> {response.status_code} "
@@ -66,7 +66,7 @@ def test_cent_and_whole_adjustments_are_201(client: TestClient) -> None:
         response = client.post(
             f"/members/{member_id}/tokens",
             headers=AUTH,
-            json={"amount": amount},
+            json={"amount": amount, "reason": "Owner correction"},
         )
         assert response.status_code == 201, response.text
         body = response.json()
@@ -93,7 +93,7 @@ def test_ai_refusal_precedes_invalid_token_amount(client: TestClient) -> None:
     response = client.post(
         f"/members/{member_id}/tokens",
         headers=AI,
-        json={"amount": "0.0001"},
+        json={"amount": "0.0001", "reason": "Owner correction"},
     )
     assert response.status_code == 403, response.text
     assert response.json()["error"]["code"] == "token_change_requires_human"
@@ -143,7 +143,7 @@ def test_adjust_member_tokens_locks_the_member_for_update(client: TestClient, mo
     response = client.post(
         f"/members/{member['id']}/tokens",
         headers=AUTH,
-        json={"amount": "10.00", "note": "lock check"},
+        json={"amount": "10.00", "note": "lock check", "reason": "lock check"},
     )
     assert response.status_code == 201, response.text
     assert response.json()["kind"] == "admin_adjustment"
@@ -162,7 +162,7 @@ def test_two_adjustments_in_a_row_match_the_ledger_sum(client: TestClient) -> No
         response = client.post(
             f"/members/{member_id}/tokens",
             headers=AUTH,
-            json={"amount": format(amount, "f"), "note": "sequential"},
+            json={"amount": format(amount, "f"), "note": "sequential", "reason": "sequential"},
         )
         assert response.status_code == 201, response.text
         assert response.json()["kind"] == "admin_adjustment"
@@ -184,7 +184,7 @@ def test_unknown_member_adjustment_is_still_404(client: TestClient) -> None:
     response = client.post(
         f"/members/{missing}/tokens",
         headers=AUTH,
-        json={"amount": "1.00", "note": "missing"},
+        json={"amount": "1.00", "note": "missing", "reason": "missing"},
     )
     assert response.status_code == 404, response.text
     body = response.json()
