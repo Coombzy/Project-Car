@@ -8,7 +8,6 @@ a pending request until a person or an AI approves it.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from decimal import Decimal
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
@@ -47,8 +46,6 @@ from app.schemas import (
 )
 from app.routers.dashboard import member_dashboard_payload
 from app.services import bookings as booking_service
-from app.services.payments import get_payment_processor
-from app.services.tokens import record_token_purchase
 from app.services.fill import snapshot_next_day
 from app.services.shop_hoist_requests import (
     create_shop_hoist_request,
@@ -59,8 +56,6 @@ from app.services.staff import claim_job, create_tool_crib_exception
 from app.shop_time import as_utc, stored_utc
 
 router = APIRouter(prefix="/member", tags=["member"])
-
-MAX_TOKEN_ADJUSTMENT = Decimal("1000000")
 
 
 def _forbidden(message: str = "Members can only act on their own bookings.") -> HTTPException:
@@ -483,28 +478,14 @@ def member_buy_tokens(
     session: DbSession,
     principal: MemberUser,
 ) -> TokenTransactionOut:
-    """Collect through the payment adapter, then credit the purchased pile."""
-    if body.tokens >= MAX_TOKEN_ADJUSTMENT:
-        raise HTTPException(
-            status_code=400,
-            detail={"code": "invalid_tokens", "message": "A purchase must be under 1,000,000 tokens."},
-        )
-    processor = get_payment_processor()
-    receipt = processor.collect(
-        member_id=principal.member_id,
-        tokens=body.tokens,
-        subtotal_cad=body.subtotal_cad,
-        payment_id=body.payment_id,
+    """Members do not credit tokens. The owner records a purchase the owner has seen."""
+    del body, session, principal
+    raise HTTPException(
+        status_code=403,
+        detail={
+            "code": "owner_records_purchases",
+            "message": (
+                "A member cannot credit tokens. The owner records a purchase the owner has seen."
+            ),
+        },
     )
-    member = booking_service.lock_member(session, principal.member_id)
-    row = record_token_purchase(
-        session,
-        member,
-        payment_id=receipt.payment_id,
-        tokens=body.tokens,
-        subtotal_cad=receipt.subtotal_cad,
-        recorded_by=member.email,
-        processor=receipt.processor,
-    )
-    session.refresh(row)
-    return TokenTransactionOut.model_validate(row)
