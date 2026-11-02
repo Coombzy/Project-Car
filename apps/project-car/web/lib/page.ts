@@ -1,22 +1,21 @@
 import { redirect } from "next/navigation";
 
-import { clearMemberSessionCookie, clearSessionCookie } from "./session";
 import { shopErrorMessage, isOwnerSessionError, isMemberSessionError } from "./shop-error";
 
 export { shopErrorMessage };
 
+// Cookie writes are rejected during a Server Component render. Send the
+// browser to a route handler that deletes the dead session, then to login.
 export async function handlePageError(error: unknown): Promise<string> {
   if (isOwnerSessionError(error)) {
-    await clearSessionCookie();
-    redirect("/login?reason=session");
+    redirect("/session/expired");
   }
   return shopErrorMessage(error);
 }
 
 export async function handleMemberPageError(error: unknown): Promise<string> {
   if (isMemberSessionError(error)) {
-    await clearMemberSessionCookie();
-    redirect("/member/login?reason=session");
+    redirect("/member/session/expired");
   }
   return shopErrorMessage(error);
 }
