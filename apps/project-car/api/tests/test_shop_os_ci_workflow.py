@@ -273,9 +273,11 @@ def _detect_shop(script: str, paths: tuple[str, ...]) -> str:
 
 
 def _assert_readme_only_change_sets_shop_true(workflow: dict) -> None:
-    """Pytest reads shop-app markdown, so a README-only change must set shop=true.
+    """Pytest reads shop-app markdown and shop-web sources, so those diffs set shop=true.
 
-    Other docs, and the lint and visual jobs, still leave shop=false.
+    A README under api/ or web/ sets shop=true for shop-api pytest only.
+    A shop-web .tsx, .html, .ts, or package.json change does too. Other docs,
+    and the lint and visual jobs for markdown, still leave shop=false.
     """
     shop_api = _detect_script(workflow, "shop-api pytest")
     shop_web = _detect_script(workflow, "shop-web lint / typecheck / build")
@@ -305,7 +307,18 @@ def _assert_readme_only_change_sets_shop_true(workflow: dict) -> None:
 
     assert _detect_shop(shop_api, ("apps/project-car/api/app/main.py",)) == "true"
     assert _detect_shop(shop_web, ("apps/project-car/web/app/page.tsx",)) == "true"
-    assert _detect_shop(shop_api, ("apps/project-car/web/app/page.tsx",)) == "false"
+    # Pytest reads these shop-web paths, so a page.tsx-only diff must set shop=true.
+    shop_web_sources = (
+        "apps/project-car/web/app/page.tsx",
+        "apps/project-car/web/components/owner-demo-banner.tsx",
+        "apps/project-car/web/public/offline.html",
+        "apps/project-car/web/lib/placeholders.ts",
+        "apps/project-car/web/package.json",
+        "apps/project-car/web/visual/pages.spec.ts",
+        "apps/project-car/web/playwright.config.ts",
+    )
+    for path in shop_web_sources:
+        assert _detect_shop(shop_api, (path,)) == "true", path
 
 
 def test_shop_os_ci_path_filter_keeps_required_check_names() -> None:
