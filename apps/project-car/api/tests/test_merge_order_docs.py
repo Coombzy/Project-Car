@@ -123,3 +123,11 @@ def test_launch_checklist_does_not_treat_closed_work_as_not_started() -> None:
     ) in text
     assert "[#225](https://github.com/Coombzy/Project-Car/pull/225) and [#233](https://github.com/Coombzy/Project-Car/pull/233) are merged." in text
     assert "[#259](https://github.com/Coombzy/Project-Car/pull/259) is still open." in text
+    assert (
+        "Every other pull request named in `merge-order.md` is closed and was not merged."
+        not in text
+    )
+    assert (
+        "Every other pull request in the `merge-order.md` tables is closed and was not merged."
+        in text
+    )
