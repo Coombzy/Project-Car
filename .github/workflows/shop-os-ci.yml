@@ -5,8 +5,8 @@
 # Heavy steps are gated inside each job. There is no workflow-level paths filter
 # and no job-level if, so a docs-only pull request still reports the required
 # check names as success. Each job's detect step chooses its own paths.
-# shop-api runs for Markdown under apps/project-car/api and apps/project-car/web,
-# and for the shop-web sources pytest reads. Other docs, text, and images stay skipped.
+# shop-api runs for markdown that is not a repo-root file and not under docs/ or Docs/,
+# and for the shop-web sources pytest reads. Text and images stay skipped.
 # An API-only diff skips the web build. Screenshots still run, because the visual job
 # logs into this pull request's API.
 # Screenshot baselines are the pngs from main's latest green run, when that cache exists.
@@ -72,10 +72,20 @@ jobs:
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
             case "${path}" in
-              # pytest reads markdown under api/ and web/, and shop-web
-              # .tsx, .html, .ts, and package.json. Other docs stay skipped.
-              apps/project-car/api/*.md|apps/project-car/web/*.md) shop=true; break ;;
-              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg|*.webp|*.SVG) continue ;;
+              # In bash case, * matches slashes, so *.md is every markdown
+              # path. Skip pytest only for repo-root *.md and for docs/**
+              # and Docs/**. Markdown anywhere else runs pytest, including
+              # a README under the app (shop-api/**/README.md). *.txt and
+              # images stay skipped. shop-web .tsx, .html, .ts, and
+              # package.json still run pytest below.
+              docs/*|Docs/*) continue ;;
+              *.txt|*.png|*.jpg|*.jpeg|*.svg|*.webp|*.SVG) continue ;;
+              *.md)
+                case "${path}" in
+                  */*) shop=true; break ;;
+                  *) continue ;;
+                esac
+                ;;
               .github/workflows/shop-os-ci.yml|apps/project-car/api/*) shop=true; break ;;
               apps/project-car/web/*.tsx|apps/project-car/web/*.html|apps/project-car/web/*.ts|apps/project-car/web/package.json) shop=true; break ;;
               apps/project-car/web/*) continue ;;
