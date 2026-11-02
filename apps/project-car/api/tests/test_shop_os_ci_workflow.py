@@ -273,34 +273,46 @@ def _detect_shop(script: str, paths: tuple[str, ...]) -> str:
 
 
 def _assert_readme_only_change_sets_shop_true(workflow: dict) -> None:
-    """Pytest reads shop-app markdown and shop-web sources, so those diffs set shop=true.
+    """shop-api pytest skips markdown only for repo-root *.md and docs/**.
 
-    A README under api/ or web/ sets shop=true for shop-api pytest only.
-    A shop-web .tsx, .html, .ts, or package.json change does too. Other docs,
-    and the lint and visual jobs for markdown, still leave shop=false.
+    A README under the app sets shop=true, including shop-api/**/README.md
+    and markdown outside api/ and web/. So does any other markdown that is
+    not a repo-root *.md file and not under docs/ or Docs/. The api/docs/
+    tree is the API package, not the repo docs tree, so it still runs.
+    shop-web and the visual job stay false for markdown. *.txt and images
+    stay false for shop-api.
     """
     shop_api = _detect_script(workflow, "shop-api pytest")
     shop_web = _detect_script(workflow, "shop-web lint / typecheck / build")
     visual = _detect_script(workflow, VISUAL_CHECK_NAME)
-    readme_only = (
+    runs_pytest = (
         "apps/project-car/api/README.md",
-        "apps/project-car/web/README.md",
+        "apps/project-car/api/app/README.md",
         "apps/project-car/api/docs/guide.md",
+        "apps/project-car/web/README.md",
         "apps/project-car/web/lib/notes.md",
+        "apps/project-car/web/visual/README.md",
+        "apps/project-car/ci-path-probe.md",
+        "apps/website/README.md",
+        "apps/website/html/page.md",
+        "skills/note.md",
+        ".github/pull_request_template.md",
     )
-    for path in readme_only:
+    for path in runs_pytest:
         assert _detect_shop(shop_api, (path,)) == "true", path
         assert _detect_shop(shop_web, (path,)) == "false", path
         assert _detect_shop(visual, (path,)) == "false", path
 
-    other_docs = (
-        "Docs/shop-os-ci.md",
+    skips_pytest = (
         "README.md",
-        "apps/project-car/ci-path-probe.md",
-        "apps/website/README.md",
+        "AGENTS.md",
+        "Docs/shop-os-ci.md",
+        "Docs/nested/note.md",
+        "docs/guide.md",
+        "docs/nested/note.md",
         "apps/project-car/api/notes.txt",
     )
-    for path in other_docs:
+    for path in skips_pytest:
         assert _detect_shop(shop_api, (path,)) == "false", path
         assert _detect_shop(shop_web, (path,)) == "false", path
         assert _detect_shop(visual, (path,)) == "false", path
