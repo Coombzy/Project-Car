@@ -29,3 +29,6 @@ blob-report/
 
 # Agent proof records
 .agent-proof/
+
+# proof-shots output (host the images, never commit)
+.proof-shots/
