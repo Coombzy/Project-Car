@@ -162,6 +162,8 @@ def sweep_no_shows(session: DbSession, owner: Owner) -> list[BookingOut]:
     """Owner or approved bot. Confirmed bookings past their end with no check-in."""
     swept = booking_service.sweep_no_shows(session)
     for booking in swept:
+        if booking.status != BookingStatus.NO_SHOW:
+            continue
         record_action(
             session,
             principal=owner,

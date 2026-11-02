@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -22,6 +22,7 @@ from tests.conftest import (
     check_in_open_start,
     create_hoist,
     create_member,
+    freeze_shop_clock,
     next_hour,
 )
 
@@ -154,6 +155,38 @@ def test_close_with_cancel_refunds_in_full_and_notifies_each_member_once(client:
     assert Decimal(ada_notice["payload"]["refunded_tokens"]) == ada_reserved
     assert ada_notice["payload"]["reason"] == REASON
     assert "Mountain Time" in ada_notice["body"]
+
+
+def test_close_leaves_a_started_visit_and_refunds_only_the_later_booking(client: TestClient) -> None:
+    """A visit that has started stays. A later booking on that bay is cancelled and refunded."""
+    member = create_member(client)
+    hoist = create_hoist(client)
+    started = _book(client, member, hoist, hours_ahead=4)
+    later = _book(client, member, hoist, hours_ahead=30)
+    start = datetime.fromisoformat(started["start_at"])
+    freeze_shop_clock(start + timedelta(minutes=30))
+    before = _balance(client, member["id"])
+    later_reserved = Decimal(later["reserved_tokens"])
+
+    response = client.patch(
+        f"/hoists/{hoist['id']}",
+        headers=AUTH,
+        json={"status": "maintenance", "cancel_bookings": True, "reason": REASON},
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["status"] == "maintenance"
+    stored_started = _booking(client, started["id"])
+    assert stored_started["status"] == "confirmed"
+    assert Decimal(stored_started["reserved_tokens"]) == Decimal(started["reserved_tokens"])
+    stored_later = _booking(client, later["id"])
+    assert stored_later["status"] == "cancelled"
+    assert Decimal(stored_later["reserved_tokens"]) == 0
+    assert _balance(client, member["id"]) == before + later_reserved
+    notices = _bay_notices(client)
+    assert [row["member_id"] for row in notices] == [member["id"]]
+    assert notices[0]["payload"]["booking_ids"] == [later["id"]]
+    assert Decimal(notices[0]["payload"]["refunded_tokens"]) == later_reserved
 
 
 def test_close_leaves_active_visits_and_past_rows_alone(client: TestClient) -> None:

@@ -266,6 +266,11 @@ def claim_booking_hours(session: Session, booking: Booking) -> None:
         raise _error(409, "hoist_overlap", BAY_HOUR_TAKEN) from None
 
 
+def _delete_booking_hours(session: Session, booking: Booking) -> None:
+    session.execute(delete(BookingHour).where(BookingHour.booking_id == booking.id))
+    session.flush()
+
+
 def release_booking_hours(session: Session, booking: Booking) -> None:
     """Free cancelled or completed hours so another booking can take them.
 
@@ -274,9 +279,27 @@ def release_booking_hours(session: Session, booking: Booking) -> None:
     every remaining holding booking can own its whole window. A conflict
     raises ``HoldingHoursConflict`` and the caller rolls back.
     """
-    session.execute(delete(BookingHour).where(BookingHour.booking_id == booking.id))
-    session.flush()
+    _delete_booking_hours(session, booking)
     backfill_holding_booking_hours(session)
+
+
+def _release_hours_for_settlement(session: Session, booking: Booking) -> None:
+    """Free this booking's hours without undoing the settlement.
+
+    Backfill still fills other holds when every one of them can own its
+    window. A ``HoldingHoursConflict`` is about a different booking: that
+    booking stays as it is, and this booking's hours stay freed.
+    """
+    _delete_booking_hours(session, booking)
+    try:
+        with session.begin_nested():
+            backfill_holding_booking_hours(session)
+    except HoldingHoursConflict as exc:
+        logger.warning(
+            "No-show sweep freed booking %s and left a different holding-hours conflict unchanged: %s",
+            booking.id,
+            exc,
+        )
 
 
 def backfill_holding_booking_hours(session: Session) -> None:
@@ -824,7 +847,11 @@ def mark_overdue(session: Session, booking_id: UUID) -> tuple[Booking, bool]:
 
 
 def future_bookings_on_hoist(session: Session, hoist_id: UUID) -> list[Booking]:
-    """Pending or confirmed bookings on this bay that have not ended yet."""
+    """Pending or confirmed bookings on this bay that have not started.
+
+    A visit whose start has passed stays, the same as an active or overdue
+    visit. Closing the bay cancels only the rows this returns.
+    """
     now = _stored_utc(shop_now())
     rows = session.scalars(
         select(Booking)
@@ -834,7 +861,7 @@ def future_bookings_on_hoist(session: Session, hoist_id: UUID) -> list[Booking]:
         )
         .order_by(Booking.start_at, Booking.id)
     ).all()
-    return [row for row in rows if _stored_utc(row.end_at) > now]
+    return [row for row in rows if _stored_utc(row.start_at) > now and _stored_utc(row.end_at) > now]
 
 
 def _refund_split(session: Session, booking: Booking, refund: Decimal) -> tuple[Decimal, Decimal]:
@@ -879,14 +906,26 @@ REASON_MAX = 500
 
 
 def _settle_one_elapsed_no_show(session: Session, booking_id: UUID, now: datetime) -> Booking | None:
-    """Mark one elapsed confirmed visit as a no-show, or return None.
+    """Settle one elapsed hold, or return None.
 
-    ``release_booking_hours`` raises ``HoldingHoursConflict`` when another
-    holding booking cannot own its window. The caller rolls that booking back.
+    A pending or confirmed member visit becomes a no-show. The reserve stays
+    with the shop and this booking's hour is freed. A memberless shop hold
+    becomes cancelled, with no ledger row. A conflict on a different booking
+    does not undo this settlement.
     """
     booking = _locked_booking(session, booking_id)
-    if booking.status != BookingStatus.CONFIRMED or _stored_utc(booking.end_at) > now:
+    if booking.status not in (BookingStatus.PENDING, BookingStatus.CONFIRMED):
         return None
+    if _stored_utc(booking.end_at) > now:
+        return None
+    if booking.member_id is None:
+        booking.reserved_tokens = Decimal("0")
+        booking.status = BookingStatus.CANCELLED
+        session.add(booking)
+        _release_hours_for_settlement(session, booking)
+        session.flush()
+        _set_hoist_available_if_idle(session, booking.hoist)
+        return get_booking(session, booking.id)
     member = lock_member(session, booking.member_id)
     reserved = Decimal(booking.reserved_tokens)
     kept = kept_share(reserved, NO_SHOW_KEEP_PCT)
@@ -907,41 +946,34 @@ def _settle_one_elapsed_no_show(session: Session, booking_id: UUID, now: datetim
     booking.reserved_tokens = Decimal("0")
     booking.status = BookingStatus.NO_SHOW
     session.add(booking)
-    release_booking_hours(session, booking)
+    _release_hours_for_settlement(session, booking)
     session.flush()
     _set_hoist_available_if_idle(session, booking.hoist)
     return get_booking(session, booking.id)
 
 
 def settle_elapsed_no_shows(session: Session) -> list[Booking]:
-    """Turn a confirmed visit whose end has passed into a no-show.
+    """Settle a pending or confirmed hold whose end has passed.
 
-    The hour is freed in this save and the reserve stays with the shop.
-    A second call finds nothing new. Sweep is the same rule, kept as a
-    catch-up button.
+    A member visit becomes a no-show: the hour is freed and the reserve stays
+    with the shop. A memberless shop hold is cancelled and no token row is
+    written. A second call finds nothing new. Sweep is the same rule, kept as
+    a catch-up button.
 
-    A holding-hours conflict skips that booking and leaves it unchanged.
+    A holding-hours conflict on a different booking does not undo this one.
     Listing bookings calls this, and a read must not fail because one row
     cannot be swept.
     """
     now = _stored_utc(shop_now())
     candidates = session.scalars(
         select(Booking.id)
-        .where(
-            Booking.status == BookingStatus.CONFIRMED,
-            Booking.member_id.is_not(None),
-        )
+        .where(Booking.status.in_((BookingStatus.PENDING, BookingStatus.CONFIRMED)))
         .order_by(Booking.end_at, Booking.id)
     ).all()
     swept: list[Booking] = []
     for booking_id in candidates:
-        try:
-            with session.begin_nested():
-                settled = _settle_one_elapsed_no_show(session, booking_id, now)
-        except HoldingHoursConflict as exc:
-            session.expire_all()
-            logger.warning("No-show sweep left booking %s unchanged: %s", booking_id, exc)
-            continue
+        with session.begin_nested():
+            settled = _settle_one_elapsed_no_show(session, booking_id, now)
         if settled is not None:
             swept.append(settled)
     return swept
@@ -1030,7 +1062,7 @@ def cancel_booking(
 
 
 def sweep_no_shows(session: Session) -> list[Booking]:
-    """Catch-up for confirmed member visits that ended without a check-in.
+    """Catch-up for holds that ended without a check-in.
 
     The same save as ``settle_elapsed_no_shows``. A second sweep does nothing.
     """

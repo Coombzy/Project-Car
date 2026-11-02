@@ -143,6 +143,23 @@ describe("any bay", () => {
     assert.equal(submittedHoistId("b2", "b2"), "b2");
   });
 
+  it("leaves a bay free once its visit is completed", () => {
+    const chosen = lowestFreeBay(
+      BAYS,
+      [
+        {
+          hoistId: "b1",
+          startAt: "2026-06-18T14:00:00",
+          endAt: "2026-06-18T16:00:00",
+          status: "completed",
+        },
+      ],
+      "2026-06-18T14:00:00",
+      "2026-06-18T16:00:00",
+    );
+    assert.equal(chosen?.id, "b1");
+  });
+
   it("returns none when every member bay is taken or closed", () => {
     const chosen = lowestFreeBay(
       BAYS,

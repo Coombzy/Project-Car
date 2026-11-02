@@ -1137,14 +1137,15 @@ def test_past_start_is_rejected(client: TestClient) -> None:
     assert late.json()["error"]["code"] == "check_in_too_late"
     assert _stored_booking(client, first)["status"] == "no_show"
     assert _hoist_status(client, hoist["id"]) != "occupied"
-    # The other past visit has already started, so Cancel is not a refund.
+    # The other past visit also ended. The sweep keeps its reserve as a no-show.
+    assert _stored_booking(client, second)["status"] == "no_show"
     refused = client.post(
         f"/bookings/{second}/cancel",
         headers=AUTH,
         json={"reason": "Owner cancelled this visit"},
     )
     assert refused.status_code == 400, refused.text
-    assert refused.json()["error"]["code"] == "cancel_after_start"
+    assert refused.json()["error"]["code"] == "invalid_transition"
     assert _balance(client, member["id"]) == opening - reserved - reserved
 
 

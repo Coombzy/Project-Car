@@ -21,7 +21,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
 
-from app.models import Booking, BookingHour, StaffAction
+from app.models import Booking, BookingHour, StaffAction, TokenTransaction
 from app.services import bookings as booking_service
 from app.shop_time import as_utc
 from tests.conftest import (
@@ -209,10 +209,133 @@ def test_ai_may_sweep_and_no_show_is_final(client: TestClient) -> None:
     assert _booking(client, booking["id"])["status"] == "no_show"
 
 
+def _token_rows(client: TestClient, booking_id: str) -> list[TokenTransaction]:
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        return list(
+            session.scalars(select(TokenTransaction).where(TokenTransaction.booking_id == UUID(booking_id))).all()
+        )
+    finally:
+        session.close()
+
+
+def test_elapsed_pending_member_hold_becomes_a_no_show(client: TestClient) -> None:
+    """Once the end has passed, a pending member hold is a no-show and the hour is free.
+
+    The reserve stays with the shop. Cancel is not the way that row is settled.
+    A visit that has started but not ended is still pending and cannot be cancelled.
+    """
+    member = create_member(client)
+    hoist = create_hoist(client)
+    start = next_hour(4)
+    created = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start.isoformat(),
+            "end_at": (start + timedelta(hours=1)).isoformat(),
+        },
+    )
+    assert created.status_code == 201, created.text
+    booking = created.json()
+    assert booking["status"] == "pending"
+    before = _balance(client, member["id"])
+    reserved = Decimal(booking["reserved_tokens"])
+    assert reserved > 0
+
+    freeze_shop_clock(start + timedelta(minutes=30))
+    assert _booking(client, booking["id"])["status"] == "pending"
+    refused = client.post(
+        f"/bookings/{booking['id']}/cancel",
+        headers=AUTH,
+        json={"reason": "Owner cancelled this visit"},
+    )
+    assert refused.status_code == 400, refused.text
+    assert refused.json()["error"]["code"] == "cancel_after_start"
+    assert _held_hours(client, booking["id"]) == 1
+    assert _balance(client, member["id"]) == before
+
+    freeze_shop_clock(start + timedelta(hours=1, minutes=1))
+    listed = client.get("/bookings", headers=AUTH)
+    assert listed.status_code == 200, listed.text
+    stored = next(row for row in listed.json() if row["id"] == booking["id"])
+    assert stored["status"] == "no_show"
+    assert Decimal(stored["reserved_tokens"]) == 0
+    assert _balance(client, member["id"]) == before
+    assert _refunds(client, member["id"]) == []
+    assert _held_hours(client, booking["id"]) == 0
+    assert len(_token_rows(client, booking["id"])) == 1
+
+    settled = client.post(
+        f"/bookings/{booking['id']}/cancel",
+        headers=AUTH,
+        json={"reason": "Owner cancelled this visit"},
+    )
+    assert settled.status_code == 400, settled.text
+    assert settled.json()["error"]["code"] == "invalid_transition"
+    assert _booking(client, booking["id"])["status"] == "no_show"
+
+
+def test_elapsed_memberless_shop_hold_is_released_without_a_ledger_row(client: TestClient) -> None:
+    """A shop hold with no member, pending or confirmed, ends as cancelled.
+
+    The hour is freed and no token row is written.
+    """
+    shop = create_hoist(client, name="Shop", location_label="Internal", is_shop=True)
+    pending_start = next_hour(4)
+    pending = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "kind": "shop",
+            "hoist_id": shop["id"],
+            "start_at": pending_start.isoformat(),
+            "end_at": (pending_start + timedelta(hours=1)).isoformat(),
+            "notes": "Pending rack check",
+        },
+    )
+    assert pending.status_code == 201, pending.text
+    assert pending.json()["status"] == "pending"
+    assert pending.json()["member_id"] is None
+    confirmed_start = pending_start + timedelta(hours=3)
+    confirmed = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "kind": "shop",
+            "hoist_id": shop["id"],
+            "start_at": confirmed_start.isoformat(),
+            "end_at": (confirmed_start + timedelta(hours=1)).isoformat(),
+            "notes": "Confirmed rack check",
+        },
+    )
+    assert confirmed.status_code == 201, confirmed.text
+    confirmed_id = confirmed.json()["id"]
+    assert client.post(f"/bookings/{confirmed_id}/confirm", headers=AUTH).status_code == 200
+
+    freeze_shop_clock(confirmed_start + timedelta(hours=1, minutes=1))
+    listed = client.get("/bookings", headers=AUTH)
+    assert listed.status_code == 200, listed.text
+    for booking_id in (pending.json()["id"], confirmed_id):
+        stored = next(row for row in listed.json() if row["id"] == booking_id)
+        assert stored["status"] == "cancelled"
+        assert stored["member_id"] is None
+        assert Decimal(stored["reserved_tokens"]) == 0
+        assert _held_hours(client, booking_id) == 0
+        assert _token_rows(client, booking_id) == []
+    assert _no_show_actions(client) == []
+
+
 def test_get_bookings_logs_and_skips_a_holding_hours_conflict(
     client: TestClient, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """GET /bookings logs a sweep conflict and leaves that booking alone."""
+    """GET /bookings still returns 200 when another bay's hours conflict.
+
+    The elapsed visit becomes a no-show and its hour is freed. The overlapping
+    pair on the other bay is what stays unchanged.
+    """
     _member, elapsed, start = _member_booking(client, hours_ahead=30, length=1)
     quinn = create_member(client, name="Quinn", email="quinn@example.com", tier_name="premium")
     riley = create_member(client, name="Riley", email="riley@example.com", tier_name="premium")
@@ -260,16 +383,31 @@ def test_get_bookings_logs_and_skips_a_holding_hours_conflict(
     finally:
         session.close()
 
+    overlap = {
+        str(older_id): (as_utc(shared).isoformat(), as_utc(shared + timedelta(hours=2)).isoformat()),
+        str(younger_id): (
+            as_utc(shared + timedelta(hours=1)).isoformat(),
+            as_utc(shared + timedelta(hours=3)).isoformat(),
+        ),
+    }
     freeze_shop_clock(start + timedelta(hours=2))
     with caplog.at_level(logging.WARNING, logger="app.services.bookings"):
         listed = client.get("/bookings", headers=AUTH)
 
     assert listed.status_code == 200, listed.text
     stored = next(row for row in listed.json() if row["id"] == elapsed["id"])
-    assert stored["status"] == "confirmed"
-    assert _held_hours(client, elapsed["id"]) == 1
+    assert stored["status"] == "no_show"
+    assert Decimal(stored["reserved_tokens"]) == 0
+    assert _held_hours(client, elapsed["id"]) == 0
+    for booking_id, (window_start, window_end) in overlap.items():
+        row = next(item for item in listed.json() if item["id"] == booking_id)
+        assert row["status"] == "pending"
+        assert row["hoist_id"] == bay["id"]
+        assert row["start_at"] == window_start
+        assert row["end_at"] == window_end
+        assert _held_hours(client, booking_id) == 0
     assert any(
-        elapsed["id"] in record.message and "unchanged" in record.message for record in caplog.records
+        str(older_id) in record.message or str(younger_id) in record.message for record in caplog.records
     )
 
 
