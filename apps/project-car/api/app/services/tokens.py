@@ -164,11 +164,20 @@ def record_token_purchase(
     note: str | None = None,
     processor: str | None = None,
 ) -> TokenTransaction:
-    """Credit paid tokens once per payment id, with GST on the CAD subtotal."""
+    """Credit paid tokens once per payment id, with GST on the CAD subtotal.
+
+    A payment id already on a token row or a dollar row is already_credited.
+    The unique index on billing_transactions.payment_id is the race guard.
+    """
     already = session.scalar(
         select(TokenTransaction.id).where(TokenTransaction.payment_ref == payment_id)
     )
     if already is not None:
+        raise _conflict("already_credited", "That payment has already been credited.")
+    billed = session.scalar(
+        select(BillingTransaction.id).where(BillingTransaction.payment_id == payment_id)
+    )
+    if billed is not None:
         raise _conflict("already_credited", "That payment has already been credited.")
     subtotal = _cents(subtotal_cad)
     gst = _cents(subtotal * GST_RATE)
@@ -196,7 +205,11 @@ def record_token_purchase(
             note=note or f"Token purchase {payment_id}",
         )
     )
-    session.flush()
+    try:
+        session.flush()
+    except IntegrityError:
+        session.rollback()
+        raise _conflict("already_credited", "That payment has already been credited.") from None
     return apply_ledger(
         session,
         member,
