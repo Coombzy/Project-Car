@@ -17,7 +17,7 @@ Do **not** invent Stripe, a shop opening, a shipped Member host migration, a rem
 | **Git-only** | CI runs on GitHub-hosted runners against this repo. It never SSHs to Doc, never curls production with write tokens, and never uploads Worker `projectcar-brochure`. |
 | **Green CI does not move Doc** | Doc is **unfrozen** at `795f301` / BUILD_ID `vQRsAOI0JtWYZ_ogRUjgG` (was `4cf8924` / `5swmVz-T2CqKEQzTk1ifU`). **#36** / **#69** / **#88** are live on Doc. A green Shop OS CI check is **not** a pull to finance tip `6366d62`. A further checkout move is a new Ben GO (`doc-unfreeze.md`). Lid-restore is process wake only (`doc-lid-restore.md`). |
 | **No production credentials** | Workflow uses public install only (`pip` / `npm ci`). No GitHub Actions secrets. No Doc `.env`, no tunnel tokens, no Cloudflare API tokens, no `GOOGLE_OAUTH_*`, no Stripe. |
-| **Path-filtered** | On a pull request, heavy steps run when the diff touches `apps/project-car/**` or `.github/workflows/shop-os-ci.yml`. A push to `main` runs every step. Docs-only / brochure / finance PRs do **not** pay this tax, and the required check names still report success. |
+| **Path-filtered** | On a pull request, each job gates its own heavy steps. Doc files (`*.md`, `*.txt`, images) do not run them, except screenshot baselines under `apps/project-car/web/visual/`, which still run the visual job. `shop-api pytest` runs for `apps/project-car/api/**`, this workflow file, and any other non-doc `apps/project-car/**` path outside `api/` and `web/`. `shop-web lint / typecheck / build` runs for `apps/project-car/web/**`, this workflow file, and those same shared paths. `shop-web layout-shift / screenshots` runs for any non-doc path under `apps/project-car/**` or this workflow file. A push to `main` runs every step. Docs-only / brochure / finance PRs do **not** pay this tax, and the required check names still report success. There is no job-level `if` and no `paths` key on the trigger. |
 | **Not a live probe** | Lookout `projectcar-api-health-watch` and public `GET /health` stay ops. This workflow does not replace them. |
 
 ---
@@ -63,10 +63,10 @@ on:
 
 | Event | When |
 |-------|------|
-| **`pull_request`** | Required. Heavy steps run when the pull request touches `apps/project-car/**` or this workflow file. |
-| **`push` to `main`** | Optional confirm after merge. Runs every step. |
+| **`pull_request`** | Required. Each job runs its heavy steps only for the paths in the path-filter lock above. |
+| **`push` to `main`** | Optional confirm after merge. Runs every step. Superseded pull-request runs cancel; a push to `main` does not. |
 
-A `git diff --name-only` step inside each job applies that filter on pull requests, and the job still reports success for `shop-api pytest` and `shop-web lint / typecheck / build` when the heavy steps are skipped.
+A `git diff --name-only` step inside each job applies that filter on pull requests. The job still reports success for `shop-api pytest`, `shop-web lint / typecheck / build`, and `shop-web layout-shift / screenshots` when its heavy steps are skipped.
 
 `workflow_dispatch` is **not** required. Re-run the check from the Actions / PR Checks UI.
 
@@ -76,7 +76,7 @@ Permissions: `contents: read` only. No `pull-requests: write`, no packages, no i
 
 ## Jobs
 
-Three jobs on `ubuntu-latest`. No shared cache of secrets. No service containers for pytest (`next build` in the lint job does not boot uvicorn). The visual job boots a loopback API on sqlite for screenshots only. It does not deploy.
+Three jobs on `ubuntu-latest`. `shop-api pytest` and `shop-web lint / typecheck / build` stop after 10 minutes. The visual job stops after 30. No shared cache of secrets. No service containers for pytest (`next build` in the lint job does not boot uvicorn). The visual job boots a loopback API on sqlite for screenshots only. It does not deploy. pip and npm caches stay. The visual job also caches Playwright's Chromium under `~/.cache/ms-playwright`, keyed by the installed Playwright version.
 
 ### shop-api
 
@@ -109,7 +109,7 @@ Separate job. The check name is `shop-web layout-shift / screenshots`. `shop-api
 | Step | Command / action |
 |------|------------------|
 | Install | shop-api `pip install -e ".[dev]"` and shop-web `npm ci` |
-| Browser | `npx playwright install --with-deps chromium` |
+| Browser | Playwright Chromium from `~/.cache/ms-playwright` when the version key hits; otherwise `npx playwright install --with-deps chromium`. A hit still runs `npx playwright install-deps chromium`. |
 | Build | `bash visual/build-web.sh` (bakes `visual/shop-now.txt` into the client bundle) |
 | Check | `npm run visual` (`playwright test`) |
 
@@ -146,7 +146,7 @@ Read the failed **job** first (`shop-api` vs `shop-web`), then the step.
 | `next build` fail | Compile / Next config / missing types after `tsc` | `npm run build`. Pages are `force-dynamic` — a build fail is **not** “API is down.” |
 | `shop-web layout-shift / screenshots` fail | Layout shift above 0.1, or a screenshot past the 1% pixel ratio | Reproduce with the visual commands below. Update a reference PNG only when the page change is intended. |
 | `npm ci` / pip install fail | Lockfile / PyPI / npm registry | Re-run once. If persistent, pin/lock in git. Still no secrets. |
-| Heavy steps **skipped** | Path filter | Expected when the PR does not touch `apps/project-car/**` or this workflow file. The job still finishes green. |
+| Heavy steps **skipped** | Path filter | Expected when that job's paths are absent (docs-only, brochure, finance, or the other app for api vs web). The job still finishes green. The check name is success, not skipped. |
 | Public `api.` / `ops.` 530 / 1033 | Doc lid-close | **Not this workflow.** `doc-lid-restore.md`. |
 
 Do **not**:

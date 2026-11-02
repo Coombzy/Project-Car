@@ -2,9 +2,10 @@
 # Plan / runbook: Docs/shop-os-ci.md
 # Does not SSH to Doc, does not deploy Worker projectcar-brochure,
 # does not use production / tunnel / Cloudflare secrets.
-# Heavy steps are gated inside each job. There is no workflow-level paths filter,
-# so a docs-only pull request still reports the required check names.
-# A push to main runs every step.
+# Heavy steps are gated inside each job. There is no workflow-level paths filter
+# and no job-level if, so a docs-only pull request still reports the required
+# check names as success. Each job's detect step chooses its own paths.
+# A push to main runs every step. Superseded pull-request runs cancel; main does not.
 name: Shop OS CI
 
 on:
@@ -16,13 +17,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: shop-os-ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   shop-api:
     name: shop-api pytest
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: apps/project-car/api
@@ -64,10 +66,10 @@ jobs:
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
             case "${path}" in
-              apps/project-car/*|.github/workflows/shop-os-ci.yml)
-                shop=true
-                break
-                ;;
+              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg) continue ;;
+              .github/workflows/shop-os-ci.yml|apps/project-car/api/*) shop=true; break ;;
+              apps/project-car/web/*) continue ;;
+              apps/project-car/*) shop=true; break ;;
             esac
           done <<< "${changed}"
           echo "shop=${shop}" >> "${GITHUB_OUTPUT}"
@@ -91,6 +93,7 @@ jobs:
   shop-web:
     name: shop-web lint / typecheck / build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: apps/project-car/web
@@ -132,10 +135,10 @@ jobs:
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
             case "${path}" in
-              apps/project-car/*|.github/workflows/shop-os-ci.yml)
-                shop=true
-                break
-                ;;
+              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg) continue ;;
+              .github/workflows/shop-os-ci.yml|apps/project-car/web/*) shop=true; break ;;
+              apps/project-car/api/*) continue ;;
+              apps/project-car/*) shop=true; break ;;
             esac
           done <<< "${changed}"
           echo "shop=${shop}" >> "${GITHUB_OUTPUT}"
@@ -211,10 +214,9 @@ jobs:
           while IFS= read -r path; do
             [ -n "${path}" ] || continue
             case "${path}" in
-              apps/project-car/*|.github/workflows/shop-os-ci.yml)
-                shop=true
-                break
-                ;;
+              apps/project-car/web/visual/*) shop=true; break ;;
+              *.md|*.txt|*.png|*.jpg|*.jpeg|*.svg) continue ;;
+              .github/workflows/shop-os-ci.yml|apps/project-car/*) shop=true; break ;;
             esac
           done <<< "${changed}"
           echo "shop=${shop}" >> "${GITHUB_OUTPUT}"
@@ -244,9 +246,27 @@ jobs:
         if: steps.shop_changes.outputs.shop == 'true'
         run: npm ci
 
+      - name: Read Playwright version
+        if: steps.shop_changes.outputs.shop == 'true'
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        if: steps.shop_changes.outputs.shop == 'true'
+        id: pw_cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}-chromium
+
       - name: Install Playwright Chromium
         if: steps.shop_changes.outputs.shop == 'true'
-        run: npx playwright install --with-deps chromium
+        run: |
+          if [ "${{ steps.pw_cache.outputs.cache-hit }}" = "true" ]; then
+            npx playwright install-deps chromium
+          else
+            npx playwright install --with-deps chromium
+          fi
 
       - name: Build shop-web at the frozen clock
         if: steps.shop_changes.outputs.shop == 'true'
