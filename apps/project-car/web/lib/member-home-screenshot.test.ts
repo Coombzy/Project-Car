@@ -48,23 +48,41 @@ describe("member home screenshot oracle", () => {
     assert.match(build, /npm run build/, "visual build must still build the shop web");
     assert.equal(existsSync(join(visual, "member-home-ref", "768.b64")), false);
     assert.equal(existsSync(join(visual, "member-home-ref", "1440.b64")), false);
+
+    // member-home.png is the shot pages.spec.ts compares. The next-visit files
+    // are not that oracle, so they must not sit beside it as a second baseline.
+    for (const width of ["390", "768", "1440"]) {
+      assert.equal(
+        existsSync(join(visual, "screenshots", width, "member-home-next-visit.png")),
+        false,
+        `${width}/member-home-next-visit.png is not the visual check; member-home.png is`,
+      );
+    }
   });
 
-  it("test_next_visit_card_sits_below_the_member_home_screenshot_fold", () => {
-    // 768×1024 cuts through the bay grid. 1440×900 cuts through the first to-do.
-    // A card above TodoPanel is inside those folds and moves member-home.png
-    // past the 1% cap (10383 px at 768, 18822 px at 1440). 390×844 already
-    // ends in the metrics, so the same slot stays under that fold too.
+  it("test_next_visit_card_sits_under_the_metrics_in_the_member_home_shot", () => {
+    // 768×1024 and 1440×900 include the metrics and the block directly under them.
+    // That is the Next visit slot, so member-home.png shows the card.
+    // 390×844 ends inside the metrics; the same slot is still directly under them.
     const page = readFileSync(pagePath, "utf8");
+    const metricsAt = page.indexOf('className="metrics"');
     const cardAt = page.indexOf("<NextVisitCard");
+    const bookAt = page.indexOf("Book a customer bay");
     const todoAt = page.indexOf("<TodoPanel");
     const openAt = page.indexOf("<h2>Open bookings</h2>");
+    assert.ok(metricsAt !== -1, "member home must still render the metrics");
     assert.ok(cardAt !== -1, "member home must render the Next visit card");
+    assert.ok(bookAt !== -1, "member home must still link to the schedule");
     assert.ok(todoAt !== -1, "member home must still render the to-do panel");
     assert.ok(openAt !== -1, "member home must still render open bookings");
+    assert.ok(cardAt > metricsAt, "Next visit must sit under the metrics");
     assert.ok(
-      cardAt > todoAt,
-      "Next visit must sit below the to-do panel so 768 and 1440 stay on member-home.png",
+      cardAt < bookAt,
+      "Next visit must sit directly under the metrics, above the schedule link",
+    );
+    assert.ok(
+      cardAt < todoAt,
+      "Next visit must sit above the to-do panel so the 768 and 1440 member-home shots include it",
     );
     assert.ok(cardAt < openAt, "Next visit stays above the open-bookings table");
     const tag = page.slice(cardAt, page.indexOf("/>", cardAt) + 2);
