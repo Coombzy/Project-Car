@@ -1,6 +1,11 @@
 import Link from "next/link";
 
 import { PlanOffer } from "../../../components/plan-offer";
+import {
+  demoMemberEmail,
+  demoMemberPassword,
+  showDemoLoginHints,
+} from "../../../lib/demo-login";
 import { listPublicPlans } from "../../../lib/shop-api";
 import { safeMemberNext } from "../../../lib/safe-next";
 import { MemberLoginForm } from "./login-form";
@@ -12,6 +17,7 @@ export default async function MemberLoginPage({
 }) {
   const params = await searchParams;
   const nextPath = safeMemberNext(params.next);
+  const hints = showDemoLoginHints();
   let plans: Awaited<ReturnType<typeof listPublicPlans>> = [];
   try {
     plans = await listPublicPlans();
@@ -30,21 +36,27 @@ export default async function MemberLoginPage({
           management host is ops.projectcar.ca. v1 session cookie — not OIDC.
           The shop is not open.
         </p>
-        <div className="banner demo">
-          <strong>Demo Member credentials</strong>
-          <div>
-            Email <code>ada.reyes@example.com</code>
+        {hints ? (
+          <div className="banner demo">
+            <strong>Demo Member credentials</strong>
+            <div>
+              Email <code>{demoMemberEmail()}</code>
+            </div>
+            <div>
+              Password <code>{demoMemberPassword()}</code>
+            </div>
+            Ada is Premium (1500 tokens). Customer bays only. No live Stripe.
+            Members do not get Nextcloud accounts.
           </div>
-          <div>
-            Password <code>changeme</code>
-          </div>
-          Ada is Premium (1500 tokens). Customer bays only. No live Stripe.
-          Members do not get Nextcloud accounts.
-        </div>
+        ) : null}
         {params.reason === "session" ? (
           <p className="banner error">Session expired. Sign in again.</p>
         ) : null}
-        <MemberLoginForm nextPath={nextPath} />
+        <MemberLoginForm
+          nextPath={nextPath}
+          defaultEmail={hints ? demoMemberEmail() : ""}
+          defaultPassword={hints ? demoMemberPassword() : ""}
+        />
         <p className="muted" style={{ marginTop: "1.2rem" }}>
           New member? <Link href="/signup">Sign up</Link>. Management Owner demo is on{" "}
           <Link href="/login">/login</Link>.

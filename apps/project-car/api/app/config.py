@@ -19,26 +19,40 @@ class Settings(BaseSettings):
         default="postgresql+psycopg://projectcar:projectcar@localhost:5432/projectcar",
         description="SQLAlchemy URL for shop Postgres (never Nextcloud MariaDB).",
     )
+    # Empty outside an env file. Startup refuses these unless SHOP_DEV_MODE=1.
+    # Loopback is not dev: the tunnel binds 127.0.0.1.
+    shop_dev_mode: bool = False
     owner_email: str = "owner@projectcar.ca"
-    owner_password: str = "changeme"
-    owner_api_secret: str = "dev-owner-secret"
-    ai_api_secret: str = "dev-ai-secret"
+    owner_password: str = ""
+    owner_api_secret: str = ""
+    ai_api_secret: str = ""
     ai_actor_id: str = "shop-ai"
-    session_secret: str = "dev-session-secret-change-me"
+    session_secret: str = ""
     session_ttl_seconds: int = 86_400
     cookie_name: str = "pc_owner_session"
     member_cookie_name: str = "pc_member_session"
     # Demo Member password stub. Email must match an existing member row.
     # Not OIDC. Staff OIDC can replace this later without rewriting shop tables.
-    member_demo_password: str = "changeme"
-    cookie_secure: bool = False
+    member_demo_password: str = ""
+    # None: Secure outside dev mode. False opts out (local HTTP). True forces Secure.
+    cookie_secure: bool | None = None
     # Header that carries the real client address for the login and waitlist caps.
-    # Empty: key on the TCP peer. No header name is hard-coded.
+    # Honoured only when the TCP peer is in trusted_proxies. Empty: key on the peer.
+    # The supported production value is CF-Connecting-IP. X-Forwarded-For is refused.
     client_ip_header: str = ""
-    # Explicit allowlist only. Never "*". Public waitlist POSTs need the brochure origins.
+    trusted_proxies: str = "127.0.0.1,::1"
+    # Shared with the shop UI. X-Shop-Client-IP is ignored unless this matches.
+    shop_proxy_secret: str = ""
+    # Legacy public list. Merged into the brochure (no-credential) origins.
+    # Explicit allowlist only. Never "*".
     cors_origins: str = (
         "http://localhost:3000,http://127.0.0.1:3000,"
         "https://projectcar.ca,https://www.projectcar.ca"
+    )
+    cors_public_origins: str = "https://projectcar.ca,https://www.projectcar.ca"
+    cors_credentialed_origins: str = (
+        "http://localhost:3000,http://127.0.0.1:3000,"
+        "https://ops.projectcar.ca,https://app.projectcar.ca"
     )
     pc_waitlist: bool = True
     # Name of the PaymentProcessor implementation. "stand-in" mints STANDIN- ids.
@@ -68,13 +82,37 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         """Comma-separated origins. `*` is dropped so the API is never wide open."""
-        origins: list[str] = []
-        for item in self.cors_origins.split(","):
-            origin = item.strip()
-            if not origin or origin == "*":
-                continue
-            origins.append(origin)
-        return origins
+        return _origin_list(self.cors_origins)
+
+    @property
+    def cors_public_origin_list(self) -> list[str]:
+        """Brochure origins. Waitlist only, and never with credentials."""
+        return _origin_list(self.cors_public_origins)
+
+    @property
+    def cors_credentialed_origin_list(self) -> list[str]:
+        """Shop UI origins that may send cookies."""
+        return _origin_list(self.cors_credentialed_origins)
+
+    def cors_origin_kind(self, origin: str) -> str | None:
+        """`credentialed` wins when an origin is on both lists."""
+        if origin in self.cors_credentialed_origin_list:
+            return "credentialed"
+        public = set(self.cors_public_origin_list)
+        public.update(self.cors_origin_list)
+        if origin in public:
+            return "public"
+        return None
+
+
+def _origin_list(raw: str) -> list[str]:
+    origins: list[str] = []
+    for item in raw.split(","):
+        origin = item.strip()
+        if not origin or origin == "*":
+            continue
+        origins.append(origin)
+    return origins
 
 
 @lru_cache

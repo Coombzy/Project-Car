@@ -18,7 +18,7 @@ from app.config import get_settings
 from tests.conftest import AUTH
 
 HEADER = "X-Test-Client-IP"
-WRONG_LOGIN = {"email": "owner@projectcar.ca", "password": "wrong-guess"}
+_LOGIN_SEQ = 0
 LOGIN_DENIED = {
     "code": "invalid_credentials",
     "message": "Email or password is incorrect.",
@@ -41,9 +41,17 @@ def client_ip_header():
     (``extra="ignore"``), so the header is not read and B stays on the peer.
     """
     previous = os.environ.get("CLIENT_IP_HEADER")
+    previous_proxies = os.environ.get("TRUSTED_PROXIES")
+    # These peers are the tunnel stand-in for this file. The header is ignored
+    # until the peer is listed.
+    trusted = (
+        "203.0.113.55,203.0.113.56,203.0.113.57,"
+        "203.0.113.70,203.0.113.71,203.0.113.72"
+    )
 
     def apply(name: str) -> None:
         os.environ["CLIENT_IP_HEADER"] = name
+        os.environ["TRUSTED_PROXIES"] = trusted
         get_settings.cache_clear()
 
     yield apply
@@ -51,6 +59,10 @@ def client_ip_header():
         os.environ.pop("CLIENT_IP_HEADER", None)
     else:
         os.environ["CLIENT_IP_HEADER"] = previous
+    if previous_proxies is None:
+        os.environ.pop("TRUSTED_PROXIES", None)
+    else:
+        os.environ["TRUSTED_PROXIES"] = previous_proxies
     get_settings.cache_clear()
 
 
@@ -66,8 +78,12 @@ def _peer(client: TestClient, host: str) -> Iterator[None]:
 
 
 def _login(client: TestClient, header: str | None):
+    """Each attempt is a different account so the IP bucket is what locks."""
+    global _LOGIN_SEQ
+    _LOGIN_SEQ += 1
     headers = {} if header is None else {HEADER: header}
-    return client.post("/auth/login", json=WRONG_LOGIN, headers=headers)
+    body = {"email": f"cap-{_LOGIN_SEQ}@example.com", "password": "wrong-guess"}
+    return client.post("/auth/login", json=body, headers=headers)
 
 
 def _join(client: TestClient, email: str, header: str | None):

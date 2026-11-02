@@ -49,7 +49,9 @@ def test_seed_main_refuses_public_host(monkeypatch) -> None:
 
 
 def test_default_api_secrets_refused_off_loopback(client: TestClient, monkeypatch) -> None:
-    monkeypatch.setenv("SHOP_HOST", "127.0.0.1")
+    """SHOP_DEV_MODE, not the bind address, is what allows the dev secrets."""
+    monkeypatch.setenv("SHOP_DEV_MODE", "1")
+    monkeypatch.setenv("SHOP_HOST", "projectcar.ca")
     loopback = client.get("/me", headers={"Authorization": "Bearer dev-owner-secret"})
     assert loopback.status_code == 200, loopback.text
 
@@ -64,6 +66,7 @@ def test_default_api_secrets_refused_off_loopback(client: TestClient, monkeypatc
         json={"name": "Ada Reyes", "email": "ada@example.com", "tier_name": "premium"},
     )
     assert created.status_code == 201, created.text
+    monkeypatch.setenv("SHOP_HOST", "127.0.0.1")
     member_loopback = client.post(
         "/auth/member/login",
         json={"email": "ada@example.com", "password": "changeme"},
@@ -74,7 +77,9 @@ def test_default_api_secrets_refused_off_loopback(client: TestClient, monkeypatc
     assert owner_cookie
     assert member_cookie
 
-    monkeypatch.setenv("SHOP_HOST", "projectcar.ca")
+    monkeypatch.delenv("SHOP_DEV_MODE", raising=False)
+    monkeypatch.setattr(get_settings(), "shop_dev_mode", False)
+    monkeypatch.setenv("SHOP_HOST", "127.0.0.1")
     client.cookies.clear()
     client.cookies.set("pc_owner_session", owner_cookie)
     replayed_owner = client.get("/me")
@@ -126,9 +131,18 @@ def test_default_api_secrets_refused_off_loopback(client: TestClient, monkeypatc
     assert ai_ok.status_code == 200, ai_ok.text
     assert ai_ok.json()["role"] == "ai"
 
-    signed_in = client.post(
+    monkeypatch.setenv("SHOP_HOST", "projectcar.ca")
+    refused_owner = client.post(
         "/auth/login",
         json={"email": "owner@projectcar.ca", "password": "changeme"},
+    )
+    assert refused_owner.status_code == 401, refused_owner.text
+    assert refused_owner.json()["error"]["code"] == "invalid_credentials"
+
+    monkeypatch.setattr(configured, "owner_password", "long-owner-password")
+    signed_in = client.post(
+        "/auth/login",
+        json={"email": "owner@projectcar.ca", "password": "long-owner-password"},
     )
     assert signed_in.status_code == 200, signed_in.text
 
@@ -151,36 +165,34 @@ def test_default_api_secrets_refused_off_loopback(client: TestClient, monkeypatc
 
 
 def test_login_locks_after_repeated_failures(client: TestClient) -> None:
-    owner = {"email": "owner@projectcar.ca", "password": "wrong-guess"}
-    member = {"email": "nobody@example.com", "password": "wrong-guess"}
-
-    for _ in range(4):
-        member_denied = client.post("/auth/member/login", json=member)
-        assert member_denied.status_code == 401, member_denied.text
-        assert member_denied.json()["error"]["code"] == "invalid_credentials"
-        owner_denied = client.post("/auth/login", json=owner)
+    """Eight owner failures lock the next owner attempt. A member login does not share it."""
+    for index in range(8):
+        owner_denied = client.post(
+            "/auth/login",
+            json={"email": f"who-{index}@example.com", "password": "wrong-guess"},
+        )
         assert owner_denied.status_code == 401, owner_denied.text
         assert owner_denied.json()["error"]["code"] == "invalid_credentials"
 
-    locked_owner = client.post("/auth/login", json=owner)
+    locked_owner = client.post(
+        "/auth/login",
+        json={"email": "who-else@example.com", "password": "wrong-guess"},
+    )
     assert locked_owner.status_code == 429, locked_owner.text
     assert locked_owner.json()["error"]["code"] == "rate_limited"
 
-    locked_member = client.post("/auth/member/login", json=member)
-    assert locked_member.status_code == 429, locked_member.text
-    assert locked_member.json()["error"]["code"] == "rate_limited"
-
-    still_locked = client.post(
-        "/auth/login",
-        json={"email": "owner@projectcar.ca", "password": "changeme"},
+    member_open = client.post(
+        "/auth/member/login",
+        json={"email": "nobody@example.com", "password": "wrong-guess"},
     )
-    assert still_locked.status_code == 429, still_locked.text
-    assert still_locked.json()["error"]["code"] == "rate_limited"
+    assert member_open.status_code == 401, member_open.text
+    assert member_open.json()["error"]["code"] == "invalid_credentials"
 
 
-def test_correct_password_after_seven_failures_logs_in(client: TestClient) -> None:
+def test_correct_password_after_four_failures_logs_in(client: TestClient) -> None:
+    """Five failures start the account backoff. Four still leave room to sign in."""
     wrong = {"email": "owner@projectcar.ca", "password": "wrong-guess"}
-    for _ in range(7):
+    for _ in range(4):
         denied = client.post("/auth/login", json=wrong)
         assert denied.status_code == 401, denied.text
         assert denied.json()["error"]["code"] == "invalid_credentials"

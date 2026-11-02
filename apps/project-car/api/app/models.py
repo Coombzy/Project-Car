@@ -1338,6 +1338,15 @@ class ShopSetting(Base):
     value: Mapped[str] = mapped_column(String(64), nullable=False)
 
 
+class OwnerSessionEpoch(Base):
+    """One row. Logout bumps it so every owner cookie stops working."""
+
+    __tablename__ = "owner_session_epoch"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    epoch: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+
+
 ALL_MODELS = [
     MembershipTier,
     PricingBand,
@@ -1364,6 +1373,7 @@ ALL_MODELS = [
     CalendarConnection,
     JobEvent,
     ShopSetting,
+    OwnerSessionEpoch,
 ]
 
 

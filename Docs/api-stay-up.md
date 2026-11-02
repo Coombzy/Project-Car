@@ -39,6 +39,12 @@ Mitigation already on Doc: Amphetamine + plugged-in no-sleep (`doc-software-base
 
 ---
 
+## Response headers
+
+The API sets `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, and `Strict-Transport-Security: max-age=31536000; includeSubDomains` on every response. Dev mode (`SHOP_DEV_MODE=1`) leaves CSP off `/docs` and `/redoc` only.
+
+Edge HSTS (one year, `includeSubDomains`) is **Zone's**. This process header does not change the Cloudflare zone setting.
+
 ## Health
 
 | Check | Expect |

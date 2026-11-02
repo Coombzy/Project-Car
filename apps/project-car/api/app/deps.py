@@ -11,6 +11,7 @@ from app.auth import (
     ai_bearer_matches,
     bearer_matches,
     member_password_fingerprint_matches,
+    owner_session_current,
     read_member_session_token,
     read_session_token,
     reject_dev_secret,
@@ -44,18 +45,23 @@ def _bearer_principal(settings: Settings, authorization: str | None) -> Principa
     return None
 
 
-def _owner_from_cookie(settings: Settings, session_cookie: str | None) -> Principal | None:
+def _owner_from_cookie(
+    settings: Settings, session: Session, session_cookie: str | None
+) -> Principal | None:
     if not session_cookie:
         return None
     payload = read_session_token(settings, session_cookie)
     if not payload:
         return None
     reject_dev_secret(settings.session_secret)
+    if not owner_session_current(settings, session, payload):
+        return None
     return Principal(role="owner", email=str(payload.get("email") or settings.owner_email))
 
 
 def require_owner(
     settings: Annotated[Settings, Depends(current_settings)],
+    session: Annotated[Session, Depends(get_db)],
     authorization: Annotated[str | None, Header()] = None,
     session_cookie: Annotated[str | None, Cookie(alias="pc_owner_session")] = None,
 ) -> Principal:
@@ -63,7 +69,7 @@ def require_owner(
     bearer = _bearer_principal(settings, authorization)
     if bearer is not None:
         return bearer
-    owner = _owner_from_cookie(settings, session_cookie)
+    owner = _owner_from_cookie(settings, session, session_cookie)
     if owner is not None:
         return owner
     raise _unauthorized()
@@ -114,7 +120,7 @@ def require_principal(
     if bearer is not None:
         return bearer
 
-    owner = _owner_from_cookie(settings, session_cookie)
+    owner = _owner_from_cookie(settings, session, session_cookie)
     if owner is not None:
         return owner
 

@@ -4,7 +4,15 @@ import { useActionState } from "react";
 
 import { loginAction, type LoginState } from "./actions";
 
-export function LoginForm({ nextPath }: { nextPath: string }) {
+export function LoginForm({
+  nextPath,
+  defaultEmail = "",
+  defaultPassword = "",
+}: {
+  nextPath: string;
+  defaultEmail?: string;
+  defaultPassword?: string;
+}) {
   const [state, action, pending] = useActionState<LoginState, FormData>(loginAction, null);
 
   return (
@@ -17,7 +25,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
         type="email"
         autoComplete="username"
         required
-        defaultValue="owner@projectcar.ca"
+        defaultValue={defaultEmail}
       />
       <label htmlFor="password">Password</label>
       <input
@@ -26,7 +34,7 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
         type="password"
         autoComplete="current-password"
         required
-        defaultValue="changeme"
+        defaultValue={defaultPassword}
       />
       {state?.message ? <p className="banner error">{state.message}</p> : null}
       <div className="actions">
