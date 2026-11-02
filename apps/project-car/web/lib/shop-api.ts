@@ -1,3 +1,4 @@
+import type { RateChartData } from "./rate-chart";
 import {
   MEMBER_SESSION_COOKIE,
   parseApiError,
@@ -219,6 +220,28 @@ export async function listTiers(): Promise<MembershipTier[]> {
   return shopJson<MembershipTier[]>("/tiers", "Could not load tiers.");
 }
 
+export async function getOwnerRateChart(): Promise<RateChartData> {
+  return shopJson<RateChartData>("/tiers/rate-chart", "Could not load the rate chart.");
+}
+
+export async function listPublicPlans(): Promise<MembershipTier[]> {
+  return shopJson<MembershipTier[]>("/plans", "Could not load plans.");
+}
+
+export type SignupModeName = "self_serve" | "waitlist";
+
+export async function getSignupMode(): Promise<{ mode: SignupModeName }> {
+  return shopJson<{ mode: SignupModeName }>("/signup-mode", "Could not load signup mode.");
+}
+
+export async function setSignupMode(mode: SignupModeName): Promise<{ mode: SignupModeName }> {
+  return shopJson<{ mode: SignupModeName }>("/signup-mode", "Could not save signup mode.", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mode }),
+  });
+}
+
 export async function patchTier(name: string, payload: Partial<MembershipTier>): Promise<MembershipTier> {
   return shopJson<MembershipTier>(`/tiers/${name}`, "Could not update the tier.", {
     method: "PATCH",
@@ -283,11 +306,46 @@ export async function listMemberTokens(id: string): Promise<TokenTransaction[]> 
   return shopJson<TokenTransaction[]>(`/members/${id}/tokens`, "Could not load the token ledger.");
 }
 
-export async function adjustMemberTokens(id: string, amount: string, note: string): Promise<TokenTransaction> {
+export async function setMemberPassword(id: string, password: string): Promise<Member> {
+  return shopJson<Member>(`/members/${id}/password`, "Could not set the sign-in password.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+}
+
+export async function buyMemberTokens(payload: {
+  payment_id: string;
+  tokens: string;
+  subtotal_cad: string;
+}): Promise<TokenTransaction> {
+  return memberJson<TokenTransaction>("/member/token-purchases", "Could not buy tokens.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      payment_id: payload.payment_id || null,
+      tokens: payload.tokens,
+      subtotal_cad: payload.subtotal_cad,
+    }),
+  });
+}
+
+export async function recordTokenPurchase(
+  id: string,
+  payload: { payment_id: string; tokens: string; subtotal_cad: string },
+): Promise<TokenTransaction> {
+  return shopJson<TokenTransaction>(`/members/${id}/token-purchases`, "Could not record the token purchase.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function adjustMemberTokens(id: string, amount: string, reason: string): Promise<TokenTransaction> {
   return shopJson<TokenTransaction>(`/members/${id}/tokens`, "Could not adjust tokens.", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ amount, note }),
+    body: JSON.stringify({ amount, reason }),
   });
 }
 
@@ -368,8 +426,12 @@ export async function completeBooking(id: string, unusedTokens = "0"): Promise<B
   });
 }
 
-export async function cancelBooking(id: string): Promise<Booking> {
-  return shopJson<Booking>(`/bookings/${id}/cancel`, "Could not cancel the booking.", { method: "POST" });
+export async function cancelBooking(id: string, reason: string): Promise<Booking> {
+  return shopJson<Booking>(`/bookings/${id}/cancel`, "Could not cancel the booking.", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reason }),
+  });
 }
 
 export async function listOwnerShopHoistRequests(
@@ -526,6 +588,51 @@ export async function loginMember(email: string, password: string): Promise<stri
   return token;
 }
 
+export async function signupAccount(payload: {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  tier_name: string;
+  notes: string;
+}): Promise<{ mode: SignupModeName; token: string | null }> {
+  let response: Response;
+  try {
+    response = await fetch(`${shopApiUrl()}/signup`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: payload.name,
+        email: payload.email,
+        phone: payload.phone || null,
+        password: payload.password || null,
+        tier_name: payload.tier_name || "basic",
+        notes: payload.notes || null,
+      }),
+      cache: "no-store",
+    });
+  } catch {
+    throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
+  }
+  const body = await readJson(response);
+  if (!response.ok) {
+    throw parseApiError(response.status, body, "Could not sign up.");
+  }
+  const modeValue =
+    body && typeof body === "object" && "mode" in body ? (body as { mode?: unknown }).mode : null;
+  if (modeValue !== "self_serve" && modeValue !== "waitlist") {
+    throw parseApiError(502, null, "Shop API returned an unknown signup mode.");
+  }
+  const token = extractMemberSessionValue(response.headers.getSetCookie());
+  if (modeValue === "self_serve" && !token) {
+    throw parseApiError(502, null, "Shop API did not return a member session cookie.");
+  }
+  return { mode: modeValue, token };
+}
+
 export async function logoutMember(): Promise<void> {
   try {
     await memberFetch("/auth/member/logout", { method: "POST" });
@@ -625,6 +732,10 @@ export async function listMemberHoists(): Promise<Hoist[]> {
 
 export async function getMemberFill(): Promise<FillPreview> {
   return memberJson<FillPreview>("/member/fill", "Could not load tomorrow's fill openings.");
+}
+
+export async function getMemberRates(): Promise<RateChartData> {
+  return memberJson<RateChartData>("/member/rates", "Could not load the rate chart.");
 }
 
 export async function getMemberSchedule(params?: {

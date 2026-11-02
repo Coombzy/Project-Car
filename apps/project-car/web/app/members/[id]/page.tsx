@@ -2,13 +2,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BookingCost } from "../../../components/booking-cost";
+import { LedgerDetail } from "../../../components/ledger-detail";
 import { OwnerShell } from "../../../components/owner-shell";
 import { StatusPill } from "../../../components/status-pill";
 import { ShopApiError } from "../../../lib/config";
 import { handlePageError } from "../../../lib/page";
 import { getMe, getMember, listMemberTokens, listTiers } from "../../../lib/shop-api";
 import { formatShopDateTime, tokensLabel } from "../../../lib/time";
-import { adjustTokensAction, patchMemberAction, rebuildTokensAction } from "../actions";
+import {
+  adjustTokensAction,
+  patchMemberAction,
+  rebuildTokensAction,
+  recordTokenPurchaseAction,
+  setMemberPasswordAction,
+} from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -125,6 +132,46 @@ export default async function MemberDetailPage({
         </section>
 
         <section className="card" style={{ marginTop: "1.2rem" }}>
+          <h2>Sign-in password</h2>
+          <p className="lede">A converted signup has no password until this is set. At least 12 characters.</p>
+          <form action={setMemberPasswordAction} className="form-grid">
+            <input type="hidden" name="id" value={member.id} />
+            <label>
+              Password
+              <input name="password" type="password" required minLength={12} autoComplete="new-password" />
+            </label>
+            <div className="actions" style={{ alignSelf: "end" }}>
+              <button type="submit">Set password</button>
+            </div>
+          </form>
+        </section>
+
+        <section className="card" style={{ marginTop: "1.2rem" }}>
+          <h2>Stand-in token purchase</h2>
+          <p className="lede">
+            GST is 5% of the before-tax amount. The payment id is a STANDIN until a processor is connected.
+          </p>
+          <form action={recordTokenPurchaseAction} className="form-grid">
+            <input type="hidden" name="id" value={member.id} />
+            <label>
+              Payment id
+              <input name="payment_id" required placeholder="STANDIN-PAYPAL-WALK" />
+            </label>
+            <label>
+              Tokens
+              <input name="tokens" required inputMode="decimal" placeholder="200.00" />
+            </label>
+            <label>
+              Before tax (CAD)
+              <input name="subtotal_cad" required inputMode="decimal" placeholder="40.00" />
+            </label>
+            <div className="actions" style={{ alignSelf: "end" }}>
+              <button type="submit">Record purchase</button>
+            </div>
+          </form>
+        </section>
+
+        <section className="card" style={{ marginTop: "1.2rem" }}>
           <h2>Admin token adjustment</h2>
           <p className="lede">Writes an append-only ledger row. Never edits history.</p>
           <form action={adjustTokensAction} className="form-grid">
@@ -144,8 +191,8 @@ export default async function MemberDetailPage({
               <div className="muted">Whole or cents, e.g. 100 or -1.50</div>
             </div>
             <label>
-              Note
-              <input name="note" defaultValue="Owner adjustment" />
+              Reason
+              <input name="reason" required minLength={3} maxLength={500} />
             </label>
             <div className="actions" style={{ alignSelf: "end" }}>
               <button type="submit">Post adjustment</button>
@@ -176,9 +223,7 @@ export default async function MemberDetailPage({
                     <td>{tokensLabel(row.amount)}</td>
                     <td className="notes">{row.note ?? "—"}</td>
                     <td className="notes">
-                      {row.meta?.pricing_rule
-                        ? `${row.meta.pricing_rule.hours}h × 100 × ${row.meta.pricing_rule.band_multiplier} × ${row.meta.pricing_rule.advance_multiplier} = ${tokensLabel(row.meta.pricing_rule.final_reserve_cost)} · ${row.meta.pricing_rule.band_label} · ${row.meta.pricing_rule.overlay_label}`
-                        : "—"}
+                      <LedgerDetail meta={row.meta} />
                     </td>
                   </tr>
                 ))}

@@ -15,7 +15,7 @@ export const OPEN_SHOP_HOURS = OPEN_HOUR_END - OPEN_HOUR_START;
 export const DAY_HOURS = 24;
 
 export type DensityLevel = "empty" | "light" | "medium" | "heavy" | "full";
-export type ScheduleView = "month" | "week";
+export type ScheduleView = "month" | "week" | "day";
 
 export type CalendarInterval = {
   hoist_id: string;
@@ -135,14 +135,11 @@ export function parseMonthParam(month?: string, today: string = calendarTodayIso
   return monthOf(today);
 }
 
-export function parseViewParam(view?: string, week?: string): ScheduleView {
-  if (view === "month") {
-    return "month";
+export function parseViewParam(view?: string, _week?: string): ScheduleView {
+  if (view === "month" || view === "week" || view === "day") {
+    return view;
   }
-  if (view === "week" || (Boolean(week) && !view)) {
-    return "week";
-  }
-  return "month";
+  return "week";
 }
 
 export function parseHoistParam(hoist?: string): string | undefined {

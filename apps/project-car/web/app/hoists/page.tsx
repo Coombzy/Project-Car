@@ -22,6 +22,8 @@ export default async function HoistsPage({
           Demo inventory is 6 bays — exactly one shop hoist. Members request it;
           a person or an AI approves before it is a booking. Occupied flips
           on check-in; complete frees the bay when nothing else is active.
+          Closing a bay (maintenance or locked) refunds future bookings and needs a reason.
+          A visit already under way stays until it is finished.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
 
@@ -58,6 +60,10 @@ export default async function HoistsPage({
                   <label className="checkbox-row">
                     <input type="checkbox" name="is_shop" defaultChecked={hoist.is_shop} />
                     Shop hoist (internal / business work)
+                  </label>
+                  <label>
+                    Reason for closing
+                    <input name="reason" minLength={3} maxLength={500} placeholder="Hydraulic leak on the lift ram" />
                   </label>
                   <div className="actions">
                     <button type="submit">Save bay</button>

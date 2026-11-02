@@ -129,6 +129,81 @@ export function fillApplies(multiplier: string | number | undefined): boolean {
   return Number(multiplier) !== 1;
 }
 
+const DAY_START_HOUR = 10;
+
+function shopParts(date: Date): { date: string; hour: number; minute: number; second: number } {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: SHOP_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const lookup = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return {
+    date: `${lookup.year}-${lookup.month}-${lookup.day}`,
+    hour: Number(lookup.hour),
+    minute: Number(lookup.minute),
+    second: Number(lookup.second),
+  };
+}
+
+function hourStamp(date: string, hour: number): string {
+  return `${date}T${String(hour).padStart(2, "0")}:00`;
+}
+
+export function defaultVisitWindow(now: Date = shopClock()): { start: string; end: string } {
+  const parts = shopParts(now);
+  let hour = parts.hour;
+  let date = parts.date;
+  if (parts.minute !== 0 || parts.second !== 0) {
+    hour += 1;
+  }
+  if (hour < DAY_START_HOUR) {
+    hour = DAY_START_HOUR;
+  }
+  if (hour >= 24) {
+    date = addDays(date, 1);
+    hour = DAY_START_HOUR;
+  }
+  const endHour = hour + 1;
+  const endDate = endHour >= 24 ? addDays(date, 1) : date;
+  return { start: hourStamp(date, hour), end: hourStamp(endDate, endHour % 24) };
+}
+
+function snapWholeHour(value: string): string {
+  const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/.exec(value);
+  if (!match) {
+    return value;
+  }
+  let date = match[1];
+  let hour = Number(match[2]);
+  const minute = Number(match[3]);
+  const second = Number(match[4] ?? "0");
+  if (minute === 0 && second === 0) {
+    return hourStamp(date, hour);
+  }
+  hour += 1;
+  if (hour >= 24) {
+    date = addDays(date, 1);
+    hour = 0;
+  }
+  return hourStamp(date, hour);
+}
+
+export function snapWholeHourWindow(start: string, end: string): { start: string; end: string } {
+  return { start: snapWholeHour(start), end: snapWholeHour(end) };
+}
+
+export function bayOptionLabel(hoist: { name: string; status: string; is_shop?: boolean }): string {
+  const status = hoist.status === "occupied" ? "available" : hoist.status;
+  const shop = hoist.is_shop ? " · shop hoist · request" : "";
+  return `${hoist.name}${shop} · ${status}`;
+}
+
 export function shopDateTimeLocal(date: Date = shopClock()): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: SHOP_TZ,

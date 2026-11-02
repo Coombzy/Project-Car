@@ -69,7 +69,7 @@ export default async function DashboardPage({
               <h2>Bays · next 24 hours</h2>
               <p className="muted">
                 Window {formatShopDateTime(dash.window_start)} – {formatShopDateTime(dash.window_end)}{" "}
-                ({dash.tz}).
+                · Mountain Time.
               </p>
             </div>
             {hoists.length === 0 ? (

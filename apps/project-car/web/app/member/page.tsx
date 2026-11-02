@@ -1,13 +1,15 @@
 import Link from "next/link";
 
 import { BookingCost } from "../../components/booking-cost";
+import { LedgerDetail } from "../../components/ledger-detail";
 import { HoistHourStrip } from "../../components/hoist-hour-strip";
 import { MemberShell } from "../../components/member-shell";
 import { StatusPill } from "../../components/status-pill";
 import { TodoPanel } from "../../components/todo-panel";
+import { memberBalanceCopy } from "../../lib/booking-calendar";
 import { handleMemberPageError } from "../../lib/page";
-import { getMemberDashboard, getMemberMe } from "../../lib/shop-api";
-import { formatShopDateTime, tokensLabel } from "../../lib/time";
+import { getMemberDashboard, getMemberMe, getMemberRates } from "../../lib/shop-api";
+import { formatShopDateTime, mondayOf, shopTodayIso, tokensLabel } from "../../lib/time";
 import {
   createMemberTodoAction,
   deleteMemberTodoAction,
@@ -23,10 +25,26 @@ export default async function MemberHomePage({
 }) {
   const query = searchParams ? await searchParams : {};
   try {
-    const [me, dash] = await Promise.all([getMemberMe(), getMemberDashboard()]);
+    const [me, dash, rates] = await Promise.all([
+      getMemberMe(),
+      getMemberDashboard(),
+      getMemberRates().catch(() => null),
+    ]);
     const open = me.bookings.filter(
       (booking) =>
         booking.status === "pending" || booking.status === "confirmed" || booking.status === "active",
+    );
+    const saved = rates ? { hours: rates.hours, peakCapHours: rates.peak_cap_hours } : undefined;
+    const piles = memberBalanceCopy(
+      me.allowance_balance,
+      me.purchased_balance,
+      me.bookings.map((booking) => ({
+        status: booking.status,
+        startAt: booking.start_at,
+        endAt: booking.end_at,
+      })),
+      mondayOf(shopTodayIso()),
+      saved,
     );
     return (
       <MemberShell email={me.email} current="home" wide>
@@ -43,6 +61,18 @@ export default async function MemberHomePage({
           <div className="metric">
             <span className="eyebrow">Balance</span>
             <b>{tokensLabel(me.token_balance)}</b>
+          </div>
+          <div className="metric">
+            <span className="eyebrow">Allowance</span>
+            <b>{piles.allowance}</b>
+          </div>
+          <div className="metric">
+            <span className="eyebrow">Purchased</span>
+            <b>{piles.purchased}</b>
+          </div>
+          <div className="metric">
+            <span className="eyebrow">Peak this week</span>
+            <b>{piles.peak}</b>
           </div>
           <div className="metric">
             <span className="eyebrow">Tier</span>
@@ -65,7 +95,7 @@ export default async function MemberHomePage({
         <h2>Your bays · next 24 hours</h2>
         <p className="muted">
           Window {formatShopDateTime(dash.window_start)} – {formatShopDateTime(dash.window_end)}{" "}
-          ({dash.tz}). Only bays with your bookings.
+          · Mountain Time. Only bays with your bookings.
         </p>
         {dash.hoists.length === 0 ? (
           <div className="banner empty">
@@ -155,9 +185,7 @@ export default async function MemberHomePage({
                     <td>{tokensLabel(row.amount)}</td>
                     <td className="notes">{row.note ?? "—"}</td>
                     <td className="notes">
-                      {row.meta?.pricing_rule
-                        ? `${row.meta.pricing_rule.hours}h × 100 × ${row.meta.pricing_rule.band_multiplier} × ${row.meta.pricing_rule.advance_multiplier} = ${tokensLabel(row.meta.pricing_rule.final_reserve_cost)} · ${row.meta.pricing_rule.band_label} · ${row.meta.pricing_rule.overlay_label}`
-                        : "—"}
+                      <LedgerDetail meta={row.meta} />
                     </td>
                   </tr>
                 ))}

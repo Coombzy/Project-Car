@@ -342,6 +342,7 @@ describe("customer host surface guard", () => {
     assert.equal(customerHostAllowsPath("/member"), true);
     assert.equal(customerHostAllowsPath("/member/schedule"), true);
     assert.equal(customerHostAllowsPath("/member/chat/room-1"), true);
+    assert.equal(customerHostAllowsPath("/signup"), true);
   });
 
   it("denies owner/ops routes on the customer host, including /members", () => {

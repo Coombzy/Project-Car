@@ -115,6 +115,9 @@ export function customerHostAllowsPath(pathname: string): boolean {
   if (pathname === "/member" || pathname.startsWith("/member/")) {
     return true;
   }
+  if (pathname === "/signup" || pathname.startsWith("/signup/")) {
+    return true;
+  }
   if (pathname === "/favicon.ico" || pathname.startsWith("/_next/")) {
     return true;
   }

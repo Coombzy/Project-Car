@@ -36,7 +36,7 @@ export default async function FillPage({
           </div>
           <p className="muted">
             Window {formatShopTime(preview.window_start)}–{formatShopTime(preview.window_end)}{" "}
-            {preview.tz}. Source: {preview.source}. {preview.bay_count} customer bay
+            Mountain Time. Source: {preview.source}. {preview.bay_count} customer bay
             {preview.bay_count === 1 ? "" : "s"}.
           </p>
           <dl className="fill-stats">

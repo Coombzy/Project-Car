@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { parseViewParam, scheduleHref } from "../../lib/calendar";
+import { snapWholeHourWindow } from "../../lib/time";
 import { ShopApiError } from "../../lib/config";
-import { scheduleHref, type ScheduleView } from "../../lib/calendar";
 import {
   approveShopHoistRequest,
   cancelBooking,
@@ -21,7 +22,7 @@ function scheduleTarget(formData: FormData): string {
   const month = String(formData.get("month") ?? "");
   const hoist = String(formData.get("hoist") ?? "");
   return scheduleHref("/schedule", {
-    view: view === "week" || view === "month" ? (view as ScheduleView) : undefined,
+    view: parseViewParam(view),
     week: week || undefined,
     month: month || undefined,
     hoist: hoist || undefined,
@@ -31,7 +32,7 @@ function scheduleTarget(formData: FormData): string {
 function fail(formData: FormData, error: unknown, fallback = "Booking action failed."): never {
   const message = error instanceof ShopApiError ? error.message : fallback;
   redirect(scheduleHref("/schedule", {
-    view: String(formData.get("view") ?? "") === "week" ? "week" : "month",
+    view: parseViewParam(String(formData.get("view") ?? "")),
     week: String(formData.get("week") ?? "") || undefined,
     month: String(formData.get("month") ?? "") || undefined,
     hoist: String(formData.get("hoist") ?? "") || undefined,
@@ -43,11 +44,15 @@ export async function createBookingAction(formData: FormData): Promise<void> {
   try {
     const kind = String(formData.get("kind") ?? "customer");
     const memberId = String(formData.get("member_id") ?? "").trim();
+    const window = snapWholeHourWindow(
+      String(formData.get("start_at") ?? ""),
+      String(formData.get("end_at") ?? ""),
+    );
     await createBooking({
       member_id: kind === "shop" ? memberId || null : memberId,
       hoist_id: String(formData.get("hoist_id") ?? ""),
-      start_at: String(formData.get("start_at") ?? ""),
-      end_at: String(formData.get("end_at") ?? ""),
+      start_at: window.start,
+      end_at: window.end,
       notes: String(formData.get("notes") ?? "") || null,
       kind,
     });
@@ -83,7 +88,7 @@ export async function checkInBookingAction(formData: FormData): Promise<void> {
 
 export async function completeBookingAction(formData: FormData): Promise<void> {
   try {
-    await completeBooking(String(formData.get("id") ?? ""), String(formData.get("unused_tokens") ?? "0"));
+    await completeBooking(String(formData.get("id") ?? ""));
   } catch (error) {
     fail(formData, error);
   }
@@ -116,7 +121,7 @@ export async function denyShopHoistRequestAction(formData: FormData): Promise<vo
 
 export async function cancelBookingAction(formData: FormData): Promise<void> {
   try {
-    await cancelBooking(String(formData.get("id") ?? ""));
+    await cancelBooking(String(formData.get("id") ?? ""), String(formData.get("reason") ?? ""));
   } catch (error) {
     fail(formData, error);
   }
