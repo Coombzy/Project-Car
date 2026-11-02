@@ -11,7 +11,7 @@ from app.models import Booking, BookingStatus, Hoist, HoistStatus, NotificationO
 from app.services.fill import detect_openings, select_discount_pct
 from app.services.pricing import quote_reserve
 from app.shop_time import PRICING_TZ, pricing_clock_window, pricing_next_day, pricing_now
-from tests.conftest import AUTH, create_hoist, create_member, login_member
+from tests.conftest import AUTH, create_hoist, create_member, freeze_shop_clock, login_member
 
 AI = {"Authorization": "Bearer dev-ai-secret"}
 
@@ -192,10 +192,35 @@ def test_booked_hours_lower_discount_and_quote_uses_fill(client: TestClient) -> 
     )
     assert quoted.status_code == 200, quoted.text
     rule = quoted.json()["pricing_rule"]
-    assert rule["fill_id"] == "next_day_open"
-    fill = Decimal(str(rule["fill_multiplier"]))
     bare = quote_reserve(slot_start, slot_end)
-    assert Decimal(str(quoted.json()["reserved_tokens"])) == (
+    # No fill_offers row yet. The live preview percent is not the price.
+    assert rule["fill_id"] == "none"
+    assert rule["fill_multiplier"] == "1"
+    assert Decimal(str(quoted.json()["reserved_tokens"])) == bare.final_reserve_cost
+
+    published = client.post(
+        "/fill/notify",
+        headers=AUTH,
+        json={"dry_run": False, "channels": ["email"]},
+    )
+    assert published.status_code == 200, published.text
+    assert published.json()["published"] is True
+    discount = Decimal(str(published.json()["preview"]["discount_pct"]))
+    assert discount == expected_discount
+    requoted = client.post(
+        "/bookings/quote",
+        headers=AUTH,
+        json={
+            "start_at": slot_start.isoformat(),
+            "end_at": slot_end.isoformat(),
+            "member_id": member["id"],
+        },
+    )
+    assert requoted.status_code == 200, requoted.text
+    published_rule = requoted.json()["pricing_rule"]
+    assert published_rule["fill_id"] == "next_day_open"
+    fill = Decimal(str(published_rule["fill_multiplier"]))
+    assert Decimal(str(requoted.json()["reserved_tokens"])) == (
         bare.final_reserve_cost * fill
     ).quantize(Decimal("0.01"))
 
@@ -219,8 +244,8 @@ def test_member_fill_and_next_day_quote(client: TestClient) -> None:
         json={"start_at": start.isoformat(), "end_at": end.isoformat()},
     )
     assert quoted.status_code == 200, quoted.text
-    assert quoted.json()["pricing_rule"]["fill_id"] == "next_day_open"
-    assert quoted.json()["pricing_rule"]["fill_discount_pct"] == "25"
+    assert quoted.json()["pricing_rule"]["fill_id"] == "none"
+    assert quoted.json()["pricing_rule"]["fill_multiplier"] == "1"
 
 
 def test_same_day_slot_does_not_take_fill(client: TestClient) -> None:
@@ -420,3 +445,113 @@ def test_real_fill_notify_on_the_next_regina_day_still_sends(client: TestClient,
     assert note["dry_run"] is False
     assert note["payload"]["target_date"] == expected
     assert _outbox_count(client) == after_first + 1
+
+
+# Tuesday noon. Tomorrow is Wednesday, a Normal / Evening / Off-peak day.
+_FILL_NOW = datetime(2026, 11, 3, 12, 0, tzinfo=PRICING_TZ)
+
+
+def _tomorrow_at(hour: int) -> datetime:
+    day = pricing_next_day()
+    return datetime.combine(day, time(hour, 0), tzinfo=PRICING_TZ)
+
+
+def _reserves(client: TestClient, member_id: str) -> list[dict]:
+    rows = client.get(f"/members/{member_id}/tokens", headers=AUTH)
+    assert rows.status_code == 200, rows.text
+    return [row for row in rows.json() if row["kind"] == "booking_reserve"]
+
+
+def test_unpublished_next_day_quote_and_booking_charge_the_plain_band(client: TestClient) -> None:
+    """A day with no fill_offers row charges the band. The live preview does not."""
+    freeze_shop_clock(_FILL_NOW)
+    member = create_member(client, email="fill-plain@example.com", tier_name="premium")
+    hoist = create_hoist(client, name="Bay 1")
+    preview = client.get("/fill/preview", headers=AUTH)
+    assert preview.status_code == 200, preview.text
+    assert preview.json()["source"] == "live"
+    assert preview.json()["offer_id"] is None
+    assert Decimal(str(preview.json()["discount_pct"])) == Decimal("25.00")
+
+    start = _tomorrow_at(10)
+    end = start + timedelta(hours=1)
+    quoted = client.post(
+        "/bookings/quote",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "start_at": start.isoformat(),
+            "end_at": end.isoformat(),
+        },
+    )
+    assert quoted.status_code == 200, quoted.text
+    rule = quoted.json()["pricing_rule"]
+    assert rule["fill_id"] == "none"
+    assert rule["fill_multiplier"] == "1"
+    assert Decimal(str(quoted.json()["reserved_tokens"])) == Decimal("100.00")
+
+    booked = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start.isoformat(),
+            "end_at": end.isoformat(),
+        },
+    )
+    assert booked.status_code == 201, booked.text
+    assert Decimal(str(booked.json()["reserved_tokens"])) == Decimal("100.00")
+    assert booked.json()["pricing_rule"]["fill_multiplier"] == "1"
+    reserves = _reserves(client, member["id"])
+    assert len(reserves) == 1
+    assert Decimal(str(reserves[0]["amount"])) == Decimal("-100.00")
+
+
+def test_published_fill_discounts_only_hours_inside_the_window(client: TestClient) -> None:
+    """A published deal discounts 08:00–21:00 only. The hour at 21:00 stays at the band."""
+    freeze_shop_clock(_FILL_NOW)
+    member = create_member(client, email="fill-window@example.com", tier_name="premium")
+    hoist = create_hoist(client, name="Bay 1")
+    published = client.post(
+        "/fill/notify",
+        headers=AUTH,
+        json={"dry_run": False, "discount_pct": "25", "channels": ["email"]},
+    )
+    assert published.status_code == 200, published.text
+    assert published.json()["published"] is True
+    locked = client.get("/fill/preview", headers=AUTH)
+    assert locked.status_code == 200, locked.text
+    assert locked.json()["source"] == "published"
+    assert locked.json()["offer_id"] is not None
+
+    start = _tomorrow_at(20)
+    end = _tomorrow_at(22)
+    quoted = client.post(
+        "/bookings/quote",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "start_at": start.isoformat(),
+            "end_at": end.isoformat(),
+        },
+    )
+    assert quoted.status_code == 200, quoted.text
+    # 20:00 Evening 125 × 0.75, 21:00 Off-peak 75 at the band. Not 150.
+    assert Decimal(str(quoted.json()["reserved_tokens"])) == Decimal("168.75")
+
+    booked = client.post(
+        "/bookings",
+        headers=AUTH,
+        json={
+            "member_id": member["id"],
+            "hoist_id": hoist["id"],
+            "start_at": start.isoformat(),
+            "end_at": end.isoformat(),
+        },
+    )
+    assert booked.status_code == 201, booked.text
+    assert Decimal(str(booked.json()["reserved_tokens"])) == Decimal("168.75")
+    reserves = _reserves(client, member["id"])
+    assert len(reserves) == 1
+    assert Decimal(str(reserves[0]["amount"])) == Decimal("-168.75")
