@@ -65,7 +65,8 @@ export default async function MemberSchedulePage({
       getMemberRates().catch(() => null),
     ]);
 
-    const ordered = sortHoists(shopHoist ? [...schedule.hoists, shopHoist] : schedule.hoists);
+    const customerBays = schedule.hoists.filter((hoist) => !hoist.is_shop);
+    const ordered = sortHoists(shopHoist ? [...customerBays, shopHoist] : customerBays);
     const returnTo = { view, week: weekStart, month, hoist: hoistId };
     const visitRows = me.bookings.map((booking) => ({
       status: booking.status,
