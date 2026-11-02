@@ -1,7 +1,5 @@
 """Project Car shop OS API."""
 
-# Probe: API-only diff after screenshot skip.
-
 from __future__ import annotations
 
 import os
@@ -10,6 +8,8 @@ from pathlib import Path
 from zoneinfo import ZoneInfo, reset_tzpath
 
 import tzdata
+
+# Probe: API-only diff after screenshot skip.
 
 __version__ = "0.1.0"
 
