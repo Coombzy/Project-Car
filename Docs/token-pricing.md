@@ -251,4 +251,6 @@ Same last-minute slot on **tomorrow** when customer bays are fully open (25% fil
 ---
 
 **Approved by:** Ben (2026-09-06 GO: bands primary, overlay on top, UI shows the math; Member balance + booking is a primary customer surface. 2026-09-06 recall: `base_tokens = hours × 100`. 2026-09-06 product lock: two tiers Basic **1000** / Premium **1500**; 6 hoists; shop hoist v1 = **(A) Owner-only**. 2026-09-06 host split: Member surface Next on projectcar.ca; ops management on **`ops.projectcar.ca`**; `app.` = temporary alias.)  
+2026-11: each held hour uses the band that contains that hour. Lead-time overlays are stored and price nothing. The 2026-09-06 "overlay on top" line is the earlier approval, not the charge.
+
 **Maintained with:** `Docs/` in `Coombzy/Project-Car`
