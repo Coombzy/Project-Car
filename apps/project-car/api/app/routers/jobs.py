@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from uuid import UUID
+
+from fastapi import APIRouter, HTTPException, Query
+from sqlalchemy import or_, select
 
 from app.deps import DbSession, MemberUser, Owner
-from app.schemas import JobClaimCreate, JobDoneCreate, JobEventOut
+from app.models import ShopJob, ShopJobStatus
+from app.schemas import JobClaimCreate, JobDoneCreate, JobEventOut, ShopJobOut
 from app.services import jobs as job_service
 
 router = APIRouter(tags=["jobs"])
@@ -63,3 +67,45 @@ def mark_job_done(
         note=body.note,
     )
     return JobEventOut.from_row(row)
+
+
+def _page_jobs(
+    session: DbSession,
+    *,
+    limit: int,
+    offset: int,
+    member_id: UUID | None = None,
+) -> list[ShopJobOut]:
+    """Newest first. A member sees open and sent_back jobs, plus any job they claimed."""
+    stmt = select(ShopJob)
+    if member_id is not None:
+        stmt = stmt.where(
+            or_(
+                ShopJob.status.in_((ShopJobStatus.OPEN, ShopJobStatus.SENT_BACK)),
+                ShopJob.claimed_by_member_id == member_id,
+            )
+        )
+    rows = session.scalars(
+        stmt.order_by(ShopJob.created_at.desc(), ShopJob.id.desc()).limit(limit).offset(offset)
+    ).all()
+    return [ShopJobOut.model_validate(row) for row in rows]
+
+
+@router.get("/jobs", response_model=list[ShopJobOut])
+def list_jobs(
+    session: DbSession,
+    _principal: Owner,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> list[ShopJobOut]:
+    return _page_jobs(session, limit=limit, offset=offset)
+
+
+@router.get("/member/jobs", response_model=list[ShopJobOut])
+def list_member_jobs(
+    session: DbSession,
+    principal: MemberUser,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> list[ShopJobOut]:
+    return _page_jobs(session, limit=limit, offset=offset, member_id=_require_member_id(principal))

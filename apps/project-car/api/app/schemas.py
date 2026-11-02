@@ -1096,6 +1096,8 @@ class ShopJobOut(BaseModel):
     token_bounty: Decimal
     status: ShopJobStatus
     claimed_by_member_id: UUID | None
+    created_at: datetime
+    updated_at: datetime
 
 
 class FillDraftCreate(BaseModel):
