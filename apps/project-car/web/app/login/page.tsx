@@ -42,7 +42,11 @@ export default async function LoginPage({
         {params.reason === "session" ? (
           <p className="banner error">Session expired. Sign in again.</p>
         ) : null}
-        <LoginForm nextPath={nextPath} hints={hints} />
+        <LoginForm
+          nextPath={nextPath}
+          defaultEmail={hints ? demoOwnerEmail() : ""}
+          defaultPassword={hints ? demoOwnerPassword() : ""}
+        />
         <p className="muted" style={{ marginTop: "1.2rem" }}>
           Temporary Member demo is still on{" "}
           <Link href="/member/login">/member/login</Link>{" "}

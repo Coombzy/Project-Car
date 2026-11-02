@@ -78,6 +78,7 @@ def test_default_api_secrets_refused_off_loopback(client: TestClient, monkeypatc
     assert member_cookie
 
     monkeypatch.delenv("SHOP_DEV_MODE", raising=False)
+    monkeypatch.setattr(get_settings(), "shop_dev_mode", False)
     monkeypatch.setenv("SHOP_HOST", "127.0.0.1")
     client.cookies.clear()
     client.cookies.set("pc_owner_session", owner_cookie)

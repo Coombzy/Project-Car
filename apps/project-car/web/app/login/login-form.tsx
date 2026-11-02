@@ -2,11 +2,17 @@
 
 import { useActionState } from "react";
 
-import { demoOwnerEmail, demoOwnerPassword, showDemoLoginHints } from "../../lib/demo-login";
 import { loginAction, type LoginState } from "./actions";
 
-export function LoginForm({ nextPath, hints }: { nextPath: string; hints?: boolean }) {
-  const showHints = hints ?? showDemoLoginHints();
+export function LoginForm({
+  nextPath,
+  defaultEmail = "",
+  defaultPassword = "",
+}: {
+  nextPath: string;
+  defaultEmail?: string;
+  defaultPassword?: string;
+}) {
   const [state, action, pending] = useActionState<LoginState, FormData>(loginAction, null);
 
   return (
@@ -19,7 +25,7 @@ export function LoginForm({ nextPath, hints }: { nextPath: string; hints?: boole
         type="email"
         autoComplete="username"
         required
-        defaultValue={showHints ? demoOwnerEmail() : ""}
+        defaultValue={defaultEmail}
       />
       <label htmlFor="password">Password</label>
       <input
@@ -28,7 +34,7 @@ export function LoginForm({ nextPath, hints }: { nextPath: string; hints?: boole
         type="password"
         autoComplete="current-password"
         required
-        defaultValue={showHints ? demoOwnerPassword() : ""}
+        defaultValue={defaultPassword}
       />
       {state?.message ? <p className="banner error">{state.message}</p> : null}
       <div className="actions">

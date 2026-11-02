@@ -15,7 +15,7 @@ from fastapi import HTTPException, Response
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from sqlalchemy.orm import Session
 
-from app.config import Settings
+from app.config import Settings, get_settings
 from app.models import OwnerSessionEpoch
 
 # Interactive scrypt (RFC 7914). N=2**14 stays under OpenSSL's default memory cap.
@@ -57,6 +57,8 @@ _LOGIN_FAILURE_WINDOW_SECONDS = 15 * 60
 # After this many failures of one account, from any IPs, wait 1, 2, 4… minutes.
 _ACCOUNT_FAILURE_LIMIT = 5
 _ACCOUNT_BACKOFF_CAP_SECONDS = 15 * 60
+# 60 * 2**4 is 960 seconds, already past the cap. A larger shift overflows float.
+_ACCOUNT_BACKOFF_MAX_SHIFT = 4
 
 
 class _LoginStamp:
@@ -372,9 +374,12 @@ def host_is_loopback(host: str | None = None) -> bool:
 
 
 def shop_dev_mode() -> bool:
-    """True only when SHOP_DEV_MODE is explicitly on. The bind address is ignored."""
-    raw = os.environ.get("SHOP_DEV_MODE", "")
-    return raw.strip().lower() in {"1", "true", "yes", "on"}
+    """True only when SHOP_DEV_MODE is explicitly on. The bind address is ignored.
+
+    Settings loads the flag from the process environment and from `.env`.
+    uvicorn does not export that file, so a copied `.env.example` still counts.
+    """
+    return bool(get_settings().shop_dev_mode)
 
 
 def default_secret_blocked(secret: str) -> bool:
@@ -552,8 +557,9 @@ def _fresh_bucket(
 def _account_backoff_seconds(failure_count: int) -> float:
     """1, 2, 4… minutes after five failures, capped at 15 minutes."""
     if failure_count < _ACCOUNT_FAILURE_LIMIT:
-        return 0
-    seconds = 60 * (2 ** (failure_count - _ACCOUNT_FAILURE_LIMIT))
+        return 0.0
+    shift = min(failure_count - _ACCOUNT_FAILURE_LIMIT, _ACCOUNT_BACKOFF_MAX_SHIFT)
+    seconds = 60 * (2 ** shift)
     return min(float(seconds), float(_ACCOUNT_BACKOFF_CAP_SECONDS))
 
 

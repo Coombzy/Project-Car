@@ -52,7 +52,11 @@ export default async function MemberLoginPage({
         {params.reason === "session" ? (
           <p className="banner error">Session expired. Sign in again.</p>
         ) : null}
-        <MemberLoginForm nextPath={nextPath} hints={hints} />
+        <MemberLoginForm
+          nextPath={nextPath}
+          defaultEmail={hints ? demoMemberEmail() : ""}
+          defaultPassword={hints ? demoMemberPassword() : ""}
+        />
         <p className="muted" style={{ marginTop: "1.2rem" }}>
           New member? <Link href="/signup">Sign up</Link>. Management Owner demo is on{" "}
           <Link href="/login">/login</Link>.

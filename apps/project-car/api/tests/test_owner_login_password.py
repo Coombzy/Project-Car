@@ -18,6 +18,7 @@ def test_login_rejects_default_owner_password_outside_dev(
     monkeypatch.setattr(settings, "owner_password", "changeme")
 
     monkeypatch.setenv("SHOP_DEV_MODE", "1")
+    monkeypatch.setattr(settings, "shop_dev_mode", True)
     allowed = client.post(
         "/auth/login",
         json={"email": settings.owner_email, "password": "changeme"},
@@ -25,6 +26,7 @@ def test_login_rejects_default_owner_password_outside_dev(
     assert allowed.status_code == 200, allowed.text
 
     monkeypatch.delenv("SHOP_DEV_MODE", raising=False)
+    monkeypatch.setattr(settings, "shop_dev_mode", False)
     refused = client.post(
         "/auth/login",
         json={"email": settings.owner_email, "password": "changeme"},
