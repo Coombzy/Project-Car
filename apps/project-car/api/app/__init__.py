@@ -1,5 +1,7 @@
 """Project Car shop OS API."""
 
+# Path-gate probe: an API source edit runs pytest and the visual job.
+
 from __future__ import annotations
 
 import os
