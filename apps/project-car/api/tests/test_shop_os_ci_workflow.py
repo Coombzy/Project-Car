@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -279,3 +280,77 @@ def test_shop_os_ci_path_filter_keeps_required_check_names() -> None:
             matched = [step for step in steps if step.get("run") == command]
             assert len(matched) == 1, command
             assert matched[0]["if"] == GATE_IF
+
+
+def _job_script(job_name: str) -> str:
+    workflow = parse_workflow_yaml(WORKFLOW.read_text(encoding="utf-8"))
+    for job in workflow["jobs"].values():
+        if job["name"] == job_name:
+            script = job["steps"][1]["run"]
+            assert isinstance(script, str)
+            return script
+    raise AssertionError(job_name)
+
+
+def _shop_flags(script: str, paths: list[str]) -> dict[str, str]:
+    """Run the detect loop the way the job does, one changed path at a time."""
+    start = script.index("shop=false\n")
+    end = script.index('echo "shop=${shop}"')
+    loop = script[start:end]
+    program = f"""
+set -eu
+shop_for() {{
+  changed="$1"
+{loop}
+  printf '%s\\n' "$shop"
+}}
+while IFS= read -r line; do
+  [ -n "$line" ] || continue
+  shop_for "$line"
+done
+"""
+    result = subprocess.run(
+        ["bash", "-c", program],
+        input="".join(f"{path}\n" for path in paths),
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    flags = result.stdout.splitlines()
+    assert len(flags) == len(paths), result.stdout
+    return dict(zip(paths, flags, strict=True))
+
+
+def test_shop_api_runs_for_booking_cancel_and_owner_booking_card() -> None:
+    """API tests read these web files, so a pull request that touches them runs pytest."""
+    script = _job_script("shop-api pytest")
+    web_root = ROOT / "apps" / "project-car" / "web"
+    paths = [
+        "apps/project-car/web/lib/booking-cancel.test.ts",
+        "apps/project-car/web/components/owner-booking-card.tsx",
+        "apps/project-car/web/components/member-booking-card.tsx",
+        "apps/project-car/web/visual/pages.spec.ts",
+        "apps/project-car/web/visual/active-visit-cancel.spec.ts",
+        "apps/project-car/web/playwright.config.ts",
+        "apps/project-car/web/package.json",
+    ]
+    paths.extend(
+        path.relative_to(ROOT).as_posix()
+        for path in web_root.rglob("*")
+        if path.is_file() and path.suffix.lower() in {".tsx", ".html"}
+    )
+    flags = _shop_flags(script, paths)
+    assert flags["apps/project-car/web/lib/booking-cancel.test.ts"] == "true"
+    assert flags["apps/project-car/web/components/owner-booking-card.tsx"] == "true"
+    missed = [path for path, flag in flags.items() if flag != "true"]
+    assert missed == []
+    skipped = _shop_flags(
+        script,
+        [
+            "apps/project-car/web/README.md",
+            "apps/project-car/api/README.md",
+            "apps/project-car/web/visual/screenshots/390/home.png",
+        ],
+    )
+    assert list(skipped.values()) == ["false", "false", "false"]
