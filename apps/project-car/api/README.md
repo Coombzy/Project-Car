@@ -185,3 +185,5 @@ pytest
 ## Out of scope (do not add here)
 
 Website / apex, Mission Control, Stripe live charges, NFC, cameras, Member/Staff OIDC, n8n, Disney/Pixar assets. Owner + Member UI lives in `../web`.
+
+<!-- Probe: markdown under apps/project-car skips heavy steps. -->
