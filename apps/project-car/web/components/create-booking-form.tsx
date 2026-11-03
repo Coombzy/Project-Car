@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { createBookingAction } from "../app/schedule/actions";
 import type { BookingQuote, Hoist, Member } from "../lib/config";
+import { reserveFactors } from "../lib/pricing-math";
 import { tokensLabel } from "../lib/time";
 import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
 
@@ -170,9 +171,7 @@ export function CreateBookingForm({
         <div className="quote-preview">
           <p className="eyebrow">Reserve quote · Mountain Time</p>
           <p className="quote-math">
-            {rule.hours}h × 100 × {rule.band_multiplier} × {rule.advance_multiplier}
-            {rule.fill_multiplier && rule.fill_multiplier !== "1" ? ` × ${rule.fill_multiplier}` : ""} ={" "}
-            <strong>{tokensLabel(rule.final_reserve_cost)}</strong>
+            {reserveFactors(rule)} = <strong>{tokensLabel(rule.final_reserve_cost)}</strong>
           </p>
           <p className="muted">
             {tokensLabel(rule.base_tokens)} base · {rule.band_label} · {rule.overlay_label}
