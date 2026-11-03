@@ -863,7 +863,7 @@ def test_inactive_member_and_insufficient_tokens(client: TestClient) -> None:
     client.post(
         f"/members/{broke['id']}/tokens",
         headers=AUTH,
-        json={"amount": "-1000", "note": "wipe", "reason": "wipe"},
+        json={"amount": "-1000", "note": "wipe"},
     )
     poor = client.post(
         "/bookings",
@@ -1264,7 +1264,7 @@ def test_second_one_hour_create_stops_at_one_base_hour(client: TestClient) -> No
     adjusted = client.post(
         f"/members/{member['id']}/tokens",
         headers=AUTH,
-        json={"amount": "-1400", "note": "leave one base hour", "reason": "leave one base hour"},
+        json={"amount": "-1400", "note": "leave one base hour"},
     )
     assert adjusted.status_code == 201, adjusted.text
     assert _balance(client, member["id"]) == Decimal("100")

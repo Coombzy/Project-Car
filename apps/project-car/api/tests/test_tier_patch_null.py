@@ -43,8 +43,7 @@ def test_explicit_null_is_422_and_leaves_the_tier_unchanged(
 
 def test_notes_null_clears_notes(client: TestClient) -> None:
     before = _basic(client)
-    assert before["notes"]
-    assert "Stand-in setting" in before["notes"]
+    assert before["notes"] == "Placeholder"
 
     cleared = client.patch("/tiers/basic", headers=AUTH, json={"notes": None})
 

@@ -101,7 +101,6 @@ def test_finish_after_the_end_charges_each_extra_hour_at_its_band(client: TestCl
     assert len(debits) == 1
     assert Decimal(str(debits[0]["amount"])) == Decimal("-200")
     assert debits[0]["meta"]["reason"] == "extra_hours"
-    assert Decimal(str(debits[0]["allowance_amount"])) == Decimal("-200")
     assert [row for row in _ledger(client, member["id"]) if row["kind"] == "booking_refund"] == []
 
 

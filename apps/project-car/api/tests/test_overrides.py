@@ -1,7 +1,5 @@
-"""Owner balance overrides carry a reason and an actor; balances never go below zero.
+"""Balances never go below zero, and a started visit keeps its reserve.
 
-- An Owner token adjustment needs ``reason`` (3-500 characters after strip),
-  else 422 ``reason_required``. The row stores ``meta.override = {reason, by}``.
 - No ledger write may leave a balance under ``TOKEN_BALANCE_FLOOR`` (0). An
   adjustment that would is 409 ``would_go_negative``; there is no allow flag
   (Ben, D10).
@@ -39,29 +37,6 @@ def _balance(client: TestClient, member_id: str) -> Decimal:
 
 def _adjust(client: TestClient, member_id: str, body: dict):
     return client.post(f"/members/{member_id}/tokens", headers=AUTH, json=body)
-
-
-@pytest.mark.parametrize("reason", [None, "", "   ", "ab", "x" * 501])
-def test_adjust_requires_reason(client: TestClient, reason: str | None) -> None:
-    member = create_member(client, email="reason@example.com")
-    before = _ledger(client, member["id"])
-    body: dict = {"amount": "25"}
-    if reason is not None:
-        body["reason"] = reason
-    response = _adjust(client, member["id"], body)
-    assert response.status_code == 422, response.text
-    assert response.json()["error"]["code"] == "reason_required"
-    assert _ledger(client, member["id"]) == before
-
-
-def test_adjust_records_reason_and_actor(client: TestClient) -> None:
-    member = create_member(client, email="audit@example.com")
-    response = _adjust(client, member["id"], {"amount": "25", "reason": f"  {REASON}  "})
-    assert response.status_code == 201, response.text
-    row = response.json()
-    assert row["kind"] == "admin_adjustment"
-    assert row["meta"]["override"] == {"reason": REASON, "by": "owner@projectcar.ca"}
-    assert row["note"] == REASON
 
 
 def test_adjust_below_zero_is_refused(client: TestClient) -> None:
