@@ -231,7 +231,7 @@ def test_same_day_slot_does_not_take_fill(client: TestClient) -> None:
     if start.astimezone(PRICING_TZ).date() != now.astimezone(PRICING_TZ).date():
         start = now.replace(hour=10, minute=0, second=0, microsecond=0)
         if start <= now:
-            start = now + timedelta(minutes=30)
+            start = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
     end = start + timedelta(hours=1)
     if start.astimezone(PRICING_TZ).date() != now.astimezone(PRICING_TZ).date():
         return

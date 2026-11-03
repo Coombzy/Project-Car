@@ -28,7 +28,7 @@ from app.models import (
 from app.services.fill import resolve_fill_for_slot
 from app.services.pricing import PricingError, quote_reserve
 from app.services.tokens import apply_ledger
-from app.shop_time import as_utc, iter_regina_hours, shop_now
+from app.shop_time import PRICING_TZ, as_utc, iter_regina_hours, shop_now
 
 OPEN_STATUSES = (BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.ACTIVE)
 # Overdue still occupies a tier slot until the Owner completes it. Cancel stays
@@ -49,6 +49,8 @@ BAY_HOUR_TAKEN = "That bay already has a booking on this hour."
 UNAVAILABLE_HOIST = (HoistStatus.MAINTENANCE, HoistStatus.LOCKED)
 # Stand-in until Ben sets how early check-in may open. Needs from Ben.
 CHECK_IN_EARLY_MINUTES = 15
+# Ben, D2: bookings start and end on the Regina hour and last at least an hour.
+BOOKING_MIN_HOURS = 1
 
 
 def _error(status: int, code: str, message: str) -> HTTPException:
@@ -63,6 +65,31 @@ def reject_start_in_past(start_at: datetime) -> None:
     """
     if as_utc(start_at) < as_utc(shop_now()):
         raise _error(400, "start_in_past", "Start is in the past.")
+
+
+def _on_the_hour(value: datetime) -> bool:
+    local = as_utc(value).astimezone(PRICING_TZ)
+    return local.minute == 0 and local.second == 0 and local.microsecond == 0
+
+
+def reject_off_grid(start_at: datetime, end_at: datetime) -> None:
+    """Refuse a new span that does not sit on whole Regina hours.
+
+    Every held hour is charged in full, so a span off the grid would pay for
+    and block hours the member did not ask for. Existing rows keep their
+    lifecycle; only quote and create use this. An end at or before the start
+    is left to the ``invalid_window`` checks.
+    """
+    if as_utc(end_at) <= as_utc(start_at):
+        return
+    if not (_on_the_hour(start_at) and _on_the_hour(end_at)):
+        raise _error(400, "not_on_the_hour", "Bookings start and end on the hour.")
+    if as_utc(end_at) - as_utc(start_at) < timedelta(hours=BOOKING_MIN_HOURS):
+        raise _error(
+            400,
+            "below_minimum_length",
+            f"A booking is at least {BOOKING_MIN_HOURS} hour long.",
+        )
 
 
 def get_booking(session: Session, booking_id: UUID) -> Booking:
@@ -317,6 +344,7 @@ def preview_reserve(
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
     reject_start_in_past(start_at)
+    reject_off_grid(start_at, end_at)
     fill = resolve_fill_for_slot(session, start_at, end_at)
     try:
         quote = quote_reserve(start_at, end_at, fill=fill, session=session)
@@ -344,6 +372,7 @@ def create_booking(
     start_at = as_utc(start_at)
     end_at = as_utc(end_at)
     reject_start_in_past(start_at)
+    reject_off_grid(start_at, end_at)
 
     hoist = session.get(Hoist, hoist_id)
     if hoist is None:
