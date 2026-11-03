@@ -1,5 +1,6 @@
 import { extraHoursLine, gstLine } from "../lib/booking-calendar";
 import type { TokenTransaction } from "../lib/config";
+import { reserveFactors } from "../lib/pricing-math";
 import { tokensLabel } from "../lib/time";
 
 export function LedgerDetail({ meta }: { meta: TokenTransaction["meta"] }) {
@@ -15,7 +16,7 @@ export function LedgerDetail({ meta }: { meta: TokenTransaction["meta"] }) {
     const rule = meta.pricing_rule;
     return (
       <span>
-        {rule.hours}h × 100 × {rule.band_multiplier} × {rule.advance_multiplier} = {tokensLabel(rule.final_reserve_cost)} · {rule.band_label}
+        {reserveFactors(rule)} = {tokensLabel(rule.final_reserve_cost)} · {rule.band_label} · {rule.overlay_label}
       </span>
     );
   }

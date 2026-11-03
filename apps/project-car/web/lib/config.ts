@@ -68,6 +68,15 @@ export type Member = {
   updated_at: string;
 };
 
+export type PricingSegment = {
+  start_at: string;
+  end_at: string;
+  band_id: string;
+  band_label: string;
+  band_multiplier: string;
+  band_tokens: string;
+};
+
 export type PricingRule = {
   band_id: string;
   band_label: string;
@@ -81,8 +90,10 @@ export type PricingRule = {
   fill_discount_pct?: string;
   hours: string;
   base_tokens: string;
+  banded_tokens?: string;
   final_reserve_cost: string;
   tz: string;
+  segments?: PricingSegment[];
 };
 
 export type FillGap = {
