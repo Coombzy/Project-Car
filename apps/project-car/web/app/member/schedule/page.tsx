@@ -86,7 +86,12 @@ export default async function MemberSchedulePage({
       name: slot.own ? "You" : "Booked",
     }));
     const yours = me.bookings.filter(
-      (booking) => booking.status === "pending" || booking.status === "confirmed" || booking.status === "no_show",
+      (booking) =>
+        booking.status === "pending" ||
+        booking.status === "confirmed" ||
+        booking.status === "no_show" ||
+        booking.status === "active" ||
+        booking.status === "overdue",
     );
 
     return (
