@@ -38,7 +38,7 @@ export default async function TiersPage({
           </div>
           <p className="muted">
             Grants each active member their tier included tokens once for this
-            calendar month (America/Regina). A second click this month inserts
+            calendar month (Mountain Time). A second click this month inserts
             nothing. This button is the trigger. There is no background job. No
             Stripe. The shop is not open.
           </p>

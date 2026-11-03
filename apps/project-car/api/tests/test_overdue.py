@@ -31,7 +31,7 @@ from app.services.bookings import _stored_utc
 from app.services.pricing import quote_reserve
 from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
-from tests.conftest import AUTH, create_hoist, create_member, login_member
+from tests.conftest import AUTH, create_hoist, create_member, freeze_shop_clock, login_member
 
 AI = {"Authorization": "Bearer dev-ai-secret"}
 
@@ -463,7 +463,8 @@ def test_only_an_active_booking_past_its_end_can_be_overdue(client: TestClient) 
     member = create_member(client, email="ada@example.com", tier_name="premium")
     bay = create_hoist(client, name="Bay 5")
     # Inside the check-in window. The end is still ahead, so overdue stays not_past_end.
-    future_start = shop_now() + timedelta(minutes=10)
+    future_start = shop_now().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    freeze_shop_clock(future_start - timedelta(minutes=10))
     future_end = future_start + timedelta(hours=1)
     future = _book(
         client,
@@ -566,7 +567,8 @@ def test_overdue_keeps_the_hoist_occupied_when_another_booking_ends(client: Test
     _assert_overdue_still_holds(client, overdue["id"], shop["id"], tokens, billing)
 
     # Inside the check-in window. This visit is not the overdue booking.
-    complete_at = shop_now() + timedelta(minutes=10)
+    complete_at = shop_now().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    freeze_shop_clock(complete_at - timedelta(minutes=10))
     finished = _shop_booking(client, shop["id"], complete_at, complete_at + timedelta(hours=1))
     _activate(client, finished["id"])
     completed = client.post(

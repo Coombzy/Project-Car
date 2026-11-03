@@ -169,7 +169,7 @@ export function CreateBookingForm({
         </p>
       ) : rule ? (
         <div className="quote-preview">
-          <p className="eyebrow">Reserve quote · America/Regina bands</p>
+          <p className="eyebrow">Reserve quote · Mountain Time</p>
           <p className="quote-math">
             {reserveFactors(rule)} = <strong>{tokensLabel(rule.final_reserve_cost)}</strong>
           </p>

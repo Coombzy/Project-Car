@@ -11,7 +11,14 @@ from sqlalchemy import select
 
 from app.models import Booking, RefundRequest, ShopJob, ShopJobStatus, StaffAction
 from app.shop_time import as_utc, shop_now
-from tests.conftest import AUTH, create_hoist, create_member, login_member
+from tests.conftest import (
+    AUTH,
+    align_booking_start,
+    create_hoist,
+    create_member,
+    freeze_shop_clock,
+    login_member,
+)
 
 AI = {"Authorization": "Bearer dev-ai-secret"}
 
@@ -40,7 +47,11 @@ def _owner_booking(
     *,
     minutes_from_now: int = 0,
 ) -> dict:
-    start_dt = shop_now() + timedelta(hours=hours_from_now, minutes=minutes_from_now)
+    if minutes_from_now:
+        start_dt = align_booking_start(1)
+        freeze_shop_clock(start_dt - timedelta(minutes=minutes_from_now))
+    else:
+        start_dt = align_booking_start(hours_from_now)
     end_dt = start_dt + timedelta(hours=1)
     start, end = start_dt.isoformat(), end_dt.isoformat()
     created = client.post(

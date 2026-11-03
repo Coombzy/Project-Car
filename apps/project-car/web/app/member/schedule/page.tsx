@@ -77,7 +77,7 @@ export default async function MemberSchedulePage({
     return (
       <MemberShell email={me.email} current="schedule" wide>
         <p className="eyebrow">
-          {view === "month" ? "Month heat-map" : "Week · per bay"} · America/Regina
+          {view === "month" ? "Month heat-map" : "Week · per bay"} · Mountain Time
         </p>
         <h1>Schedule</h1>
         <p className="lede">
@@ -91,7 +91,7 @@ export default async function MemberSchedulePage({
         {loadError ? <div className="banner error">{loadError}</div> : null}
         {fill?.applies ? (
           <div className="banner empty">
-            Tomorrow ({fill.target_date}, America/Regina) has {fill.open_hours} open
+            Tomorrow ({fill.target_date}, Mountain Time) has {fill.open_hours} open
             customer-bay hours. Next-day open slots take a {fill.discount_pct}% fill
             discount (× {fill.fill_multiplier}). Not a public price.
           </div>
