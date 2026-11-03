@@ -75,7 +75,7 @@ export function ScheduleToolbar({
             <Link className="button ghost" href={weekHref(addDays(weekStart, 7))}>
               Next →
             </Link>
-            <Link className="button ghost" href={scheduleHref(base, { view, week: weekStart, month })}>
+            <Link className="button ghost" href={scheduleHref(base, { view: "week", month })}>
               This week
             </Link>
           </>
