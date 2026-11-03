@@ -345,7 +345,7 @@ export async function adjustMemberTokens(id: string, amount: string, reason: str
   return shopJson<TokenTransaction>(`/members/${id}/tokens`, "Could not adjust tokens.", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ amount, reason }),
+    body: JSON.stringify({ amount, reason, note: reason }),
   });
 }
 
