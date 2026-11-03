@@ -25,11 +25,12 @@ export default async function MemberHomePage({
 }) {
   const query = searchParams ? await searchParams : {};
   try {
-    const [me, dash, rates] = await Promise.all([
-      getMemberMe(),
-      getMemberDashboard(),
-      getMemberRates().catch(() => null),
-    ]);
+    // The dashboard settles elapsed no-shows, which writes. A parallel read on
+    // the visual sqlite file returns "database is locked" and this page renders
+    // the error instead of the balance. Load one call at a time.
+    const me = await getMemberMe();
+    const dash = await getMemberDashboard();
+    const rates = await getMemberRates().catch(() => null);
     const open = me.bookings.filter(
       (booking) =>
         booking.status === "pending" || booking.status === "confirmed" || booking.status === "active",
