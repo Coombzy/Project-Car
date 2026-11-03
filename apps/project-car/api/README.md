@@ -186,4 +186,6 @@ pytest
 
 Website / apex, Mission Control, Stripe live charges, NFC, cameras, Member/Staff OIDC, n8n, Disney/Pixar assets. Owner + Member UI lives in `../web`.
 
+<!-- path-gate probe: markdown under apps/project-car skips heavy steps -->
+
 <!-- Probe: markdown under apps/project-car skips heavy steps. -->
