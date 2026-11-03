@@ -1657,3 +1657,53 @@ Source: Opus Project Car launch-readiness report (L-1 to L-5). R100–R155 live 
 - Depends on: R158 (`paid_through`, billing router), R159 (`config.py`). R71 (`routers/tiers.py`) not running at the same time. backlog rows R111, R148 and R150 on docs PR #221 for the Regina month helper if they change it.
 
 Rows R156–R160 order: R156 and R159 can start together (no shared files). R157 after R156. R158 after #221 merges and not beside R159 (`schemas.py`); R160 after R158 and R159. This order does not cancel the existing R71–R79 file locks. GitHub PRs #107–#111 stay untouched.
+
+### R167. Test the configured Google start, the callback, and calendar auth
+- Category: API / tests
+- Target: cover the calendar routes that no test reaches today. These are GET /calendar/google/start with GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_REDIRECT_URI set (`apps/project-car/api/app/routers/calendar.py:22-35`), GET /calendar/google/callback (`apps/project-car/api/app/routers/calendar.py:38-53`), and a 401 for /calendar/status with no token (`apps/project-car/api/app/deps.py:145`).
+- Proof (RED first): new `apps/project-car/api/tests/test_calendar_routes.py`. One test sets both env values and asserts 200 with `configured: true` and an `authorize_url` built by `apps/project-car/api/app/services/calendar_oauth.py:30-45`. One test asserts the callback returns 501 and does not change status. One asserts /calendar/status without AUTH is 401.
+- Acceptance: all three tests pass. The callback and apple stubs still need no principal, or the row changes them to need one and says so.
+- Baseline: `apps/project-car/api/tests/test_calendar_routes.py` does not exist. `apps/project-car/api/tests/test_dashboard_todos.py:193-201` checks only the unconfigured stub path (status, google/start 501, apple/start 501). `apps/project-car/api/tests/test_calendar_oauth_url.py` covers only the URL builder.
+- Must not get worse: `apps/project-car/api/tests/test_dashboard_todos.py:193-201` still passes.
+- Proof command: `cd apps/project-car/api && pytest tests/test_calendar_routes.py tests/test_dashboard_todos.py -q`
+- Size: 1 task
+- Files touched: new `apps/project-car/api/tests/test_calendar_routes.py`, maybe `apps/project-car/api/app/routers/calendar.py`
+- Depends on: none
+
+### R168. Cap GET /parts-requests and GET /parts-orders with limit and offset
+- Category: performance
+- Target: add `limit: int = Query(default=50, ge=1, le=200)` and `offset: int = Query(default=0, ge=0)` to `apps/project-car/api/app/routers/parts_requests.py:54-57` and `apps/project-car/api/app/routers/parts_requests.py:71-74`, and apply them in `apps/project-car/api/app/services/parts_requests.py:85-96`. Copy the pattern in `apps/project-car/api/app/routers/jobs.py:94-101`.
+- Proof (RED first): new `apps/project-car/api/tests/test_parts_list_limits.py`. Seed 3 rows and assert `?limit=2` returns 2. Assert `limit=0` and `limit=201` return 422.
+- Acceptance: the default returns up to 50 rows, offset shifts the page, and the order is unchanged under the cap.
+- Baseline: both list services select every row with no limit.
+- Must not get worse: `apps/project-car/api/tests/test_parts_requests.py` and `apps/project-car/api/tests/test_parts_request_dupes.py` still pass.
+- Proof command: `cd apps/project-car/api && pytest tests/test_parts_list_limits.py tests/test_parts_requests.py -q`
+- Size: 1 task
+- Files touched: `apps/project-car/api/app/routers/parts_requests.py`, `apps/project-car/api/app/services/parts_requests.py`, new `apps/project-car/api/tests/test_parts_list_limits.py`
+- Depends on: none
+
+### R169. Cap GET /tool-crib/events with limit and offset
+- Category: performance
+- Target: add `limit` and `offset` Query params to `apps/project-car/api/app/routers/tool_crib.py:14-17` and apply them in `apps/project-car/api/app/services/tool_crib.py:156-162`, using the same pattern as `apps/project-car/api/app/routers/jobs.py:94-101`.
+- Proof (RED first): new `apps/project-car/api/tests/test_tool_crib_limits.py`. Assert `?limit=1` returns one newest event. Assert `limit=0` returns 422.
+- Acceptance: the default returns up to 50 rows, the newest come first, and the endpoint stays owner-only.
+- Baseline: the service returns every event with no limit.
+- Must not get worse: `apps/project-car/api/tests/test_tool_crib.py:119-122` (list order and the 401 with no auth) still passes.
+- Proof command: `cd apps/project-car/api && pytest tests/test_tool_crib_limits.py tests/test_tool_crib.py -q`
+- Size: 1 task
+- Files touched: `apps/project-car/api/app/routers/tool_crib.py`, `apps/project-car/api/app/services/tool_crib.py`, new `apps/project-car/api/tests/test_tool_crib_limits.py`
+- Depends on: none
+
+### R170. Cap the owner waitlist list, since anyone can add to it
+- Category: performance / hardening
+- Target: add `limit` and `offset` to GET /waitlist at `apps/project-car/api/app/routers/waitlist.py:173-189`. The public POST at `apps/project-car/api/app/routers/waitlist.py:127` takes no principal, so the table can grow from outside the shop.
+- Proof (RED first): new `apps/project-car/api/tests/test_waitlist_limits.py`. Create 3 entries and assert `?limit=2` returns the 2 newest. Assert `limit=0` returns 422.
+- Acceptance: the default returns up to 50 rows, the newest come first, and the POST is unchanged.
+- Baseline: the GET selects every WaitlistEntry, newest first, with no limit.
+- Must not get worse: `apps/project-car/api/tests/test_waitlist.py:16-42` and `apps/project-car/api/tests/test_dashboard_waitlist.py` still pass.
+- Proof command: `cd apps/project-car/api && pytest tests/test_waitlist_limits.py tests/test_waitlist.py -q`
+- Size: 1 task
+- Files touched: `apps/project-car/api/app/routers/waitlist.py`, new `apps/project-car/api/tests/test_waitlist_limits.py`
+- Depends on: none
+
+Rows R167–R170 order: no two rows share a file. R168, R169, and R170 reuse the jobs.py limit and offset pattern, so do R168 first and copy it.
