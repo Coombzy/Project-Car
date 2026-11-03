@@ -1,6 +1,8 @@
 /** A posted bounty is 0 to 10,000 tokens, with at most two decimal places.
- * R75 accepts 0 and 10,000. `ShopJobCreate.token_bounty` on main is still
- * `ge=0` with no cap (`schemas.py`). This module does not change the API.
+ * R75 accepts 0 and 10,000. `ShopJobCreate.token_bounty` is `ge=0` with no
+ * schema cap (`schemas.py`). `create_job` stores 0 and refuses a negative or
+ * a bounty above 10,000 (`tests/test_job_bounty.py`). This module does not
+ * change the API.
  */
 export const JOB_BOUNTY_CAP = 10_000;
 
@@ -57,4 +59,15 @@ export function parseJobForm(input: {
   const notesRaw = text(input.notes);
   const notes = notesRaw === null ? null : notesRaw.trim() || null;
   return { ok: true, title: titleRaw.trim(), notes, token_bounty: tokenBounty };
+}
+
+export const JOB_POSTED_NOTICE = "Job posted.";
+export const JOB_POST_FAILURE = "Could not post the job.";
+
+export function jobPostedHref(): string {
+  return `/jobs?notice=${encodeURIComponent(JOB_POSTED_NOTICE)}`;
+}
+
+export function jobErrorHref(message: string): string {
+  return `/jobs?error=${encodeURIComponent(message)}`;
 }
