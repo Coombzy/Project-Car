@@ -5,11 +5,12 @@ from decimal import Decimal
 
 from fastapi.testclient import TestClient
 
-from tests.conftest import AUTH, create_hoist, create_member, login_member, next_hour
+from app.shop_time import shop_now
+from tests.conftest import AUTH, create_hoist, create_member, login_member
 
 
 def _window(hours_from_now: int, length_hours: float = 2) -> tuple[str, str]:
-    start = next_hour(hours_from_now)
+    start = shop_now() + timedelta(hours=hours_from_now)
     end = start + timedelta(hours=length_hours)
     return start.isoformat(), end.isoformat()
 
@@ -76,8 +77,7 @@ def test_member_cannot_use_owner_routes_or_other_member(client: TestClient) -> N
 def test_member_book_confirm_cancel_and_ledger(client: TestClient) -> None:
     member = create_member(client, email="ada@example.com", tier_name="premium")
     hoist = create_hoist(client, name="Bay 1")
-    # Past the 24-hour free-cancel window, so the cancel below refunds in full.
-    start, end = _window(30)
+    start, end = _window(5)
 
     login_member(client, "ada@example.com")
     quoted = client.post("/member/bookings/quote", json={"start_at": start, "end_at": end})
@@ -94,13 +94,13 @@ def test_member_book_confirm_cancel_and_ledger(client: TestClient) -> None:
             "hoist_id": hoist["id"],
             "start_at": start,
             "end_at": end,
-            "tokens": str(expected),
+            "tokens": "1",
             "notes": "Turbo mock-up",
         },
     )
     assert created.status_code == 201, created.text
     booking = created.json()
-    assert booking["status"] == "confirmed"
+    assert booking["status"] == "pending"
     assert booking["kind"] == "customer"
     assert booking["member_id"] == member["id"]
     assert _dec(booking["reserved_tokens"]) == expected
@@ -108,6 +108,10 @@ def test_member_book_confirm_cancel_and_ledger(client: TestClient) -> None:
 
     profile = client.get("/member/me")
     assert _dec(profile.json()["token_balance"]) == Decimal("1500") - expected
+
+    confirmed = client.post(f"/member/bookings/{booking['id']}/confirm")
+    assert confirmed.status_code == 200, confirmed.text
+    assert confirmed.json()["status"] == "confirmed"
 
     cancelled = client.post(f"/member/bookings/{booking['id']}/cancel")
     assert cancelled.status_code == 200, cancelled.text
@@ -165,7 +169,7 @@ def test_member_insufficient_tokens(client: TestClient) -> None:
     client.post(
         f"/members/{broke['id']}/tokens",
         headers=AUTH,
-        json={"amount": "-1000", "note": "wipe", "reason": "wipe"},
+        json={"amount": "-1000", "note": "wipe"},
     )
     start, end = _window(4)
     login_member(client, "morgan@example.com")

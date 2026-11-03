@@ -15,7 +15,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import BillingTransaction, Incident, IncidentKind, IncidentSeverity, TokenTransaction
-from tests.conftest import AUTH, create_hoist, create_member, login_member, next_hour
+from app.shop_time import shop_now
+from tests.conftest import AUTH, create_hoist, create_member, login_member
 
 
 def _session(client: TestClient) -> Session:
@@ -43,7 +44,7 @@ def _rewind(client: TestClient, incident_id: str) -> None:
 
 
 def _window(hours_from_now: int, length_hours: float = 2) -> tuple[str, str]:
-    start = next_hour(hours_from_now)
+    start = shop_now() + timedelta(hours=hours_from_now)
     end = start + timedelta(hours=length_hours)
     return start.isoformat(), end.isoformat()
 

@@ -11,7 +11,7 @@ from app.models import Booking, BookingStatus, Hoist, HoistStatus, NotificationO
 from app.services.fill import detect_openings, select_discount_pct
 from app.services.pricing import quote_reserve
 from app.shop_time import PRICING_TZ, pricing_clock_window, pricing_next_day, pricing_now
-from tests.conftest import AUTH, create_hoist, create_member, login_member, next_hour
+from tests.conftest import AUTH, create_hoist, create_member, login_member
 
 AI = {"Authorization": "Bearer dev-ai-secret"}
 
@@ -181,26 +181,6 @@ def test_booked_hours_lower_discount_and_quote_uses_fill(client: TestClient) -> 
 
     slot_start, _ = pricing_clock_window(target, time(16, 0), time(18, 0))
     slot_end = slot_start + timedelta(hours=1)
-    plain = client.post(
-        "/bookings/quote",
-        headers=AUTH,
-        json={
-            "start_at": slot_start.isoformat(),
-            "end_at": slot_end.isoformat(),
-            "member_id": member["id"],
-        },
-    )
-    assert plain.status_code == 200, plain.text
-    assert plain.json()["pricing_rule"]["fill_id"] == "none"
-    bare = quote_reserve(slot_start, slot_end)
-    assert Decimal(str(plain.json()["reserved_tokens"])) == bare.final_reserve_cost
-
-    published = client.post(
-        "/fill/notify",
-        headers=AUTH,
-        json={"dry_run": False, "discount_pct": str(expected_discount), "channels": ["email"]},
-    )
-    assert published.status_code == 200, published.text
     quoted = client.post(
         "/bookings/quote",
         headers=AUTH,
@@ -214,6 +194,7 @@ def test_booked_hours_lower_discount_and_quote_uses_fill(client: TestClient) -> 
     rule = quoted.json()["pricing_rule"]
     assert rule["fill_id"] == "next_day_open"
     fill = Decimal(str(rule["fill_multiplier"]))
+    bare = quote_reserve(slot_start, slot_end)
     assert Decimal(str(quoted.json()["reserved_tokens"])) == (
         bare.final_reserve_cost * fill
     ).quantize(Decimal("0.01"))
@@ -233,19 +214,6 @@ def test_member_fill_and_next_day_quote(client: TestClient) -> None:
     target = pricing_next_day()
     start, _ = pricing_clock_window(target, time(10, 0), time(12, 0))
     end = start + timedelta(hours=1)
-    plain = client.post(
-        "/member/bookings/quote",
-        json={"start_at": start.isoformat(), "end_at": end.isoformat()},
-    )
-    assert plain.status_code == 200, plain.text
-    assert plain.json()["pricing_rule"]["fill_id"] == "none"
-
-    published = client.post(
-        "/fill/notify",
-        headers=AUTH,
-        json={"dry_run": False, "discount_pct": "25", "channels": ["email"]},
-    )
-    assert published.status_code == 200, published.text
     quoted = client.post(
         "/member/bookings/quote",
         json={"start_at": start.isoformat(), "end_at": end.isoformat()},
@@ -259,7 +227,11 @@ def test_same_day_slot_does_not_take_fill(client: TestClient) -> None:
     create_member(client, email="ada@example.com")
     create_hoist(client, name="Bay 1")
     now = pricing_now()
-    start = next_hour(1).astimezone(PRICING_TZ)
+    start = now + timedelta(hours=2)
+    if start.astimezone(PRICING_TZ).date() != now.astimezone(PRICING_TZ).date():
+        start = now.replace(hour=10, minute=0, second=0, microsecond=0)
+        if start <= now:
+            start = now + timedelta(minutes=30)
     end = start + timedelta(hours=1)
     if start.astimezone(PRICING_TZ).date() != now.astimezone(PRICING_TZ).date():
         return

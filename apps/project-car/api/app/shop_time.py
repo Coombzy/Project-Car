@@ -1,9 +1,12 @@
 """Shop-local time helpers. The shop is Calgary / Northern Alberta.
 
-Typed times, bands, weeks, and months share one permanent UTC−6 clock
-(`America/Regina`). Screens, emails, and calendar files say Mountain Time.
-The zone database's own abbreviation becomes CST in winter, so it is not
-the label.
+Display and naive datetimes (Owner `datetime-local`, `as_utc`, week bounds)
+stay on `SHOP_TZ` = America/Edmonton so existing schedule labels stay honest.
+
+Token pricing bands and the advance overlay use `PRICING_TZ` = America/Regina
+(`Docs/token-pricing.md`). During Mountain Daylight both zones are UTC−6, so
+clock times match. In winter Edmonton is UTC−7 and Regina stays UTC−6 — band
+lookup uses the Regina wall clock of the stored UTC instant.
 """
 
 from __future__ import annotations
@@ -12,35 +15,14 @@ import os
 from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-SHOP_TZ = ZoneInfo("America/Regina")
-PRICING_TZ = SHOP_TZ
-MOUNTAIN_TIME_LABEL = "Mountain Time"
-
-
-def format_shop_time(value: datetime) -> str:
-    """Wall clock in words. Never the zone abbreviation (MDT or CST)."""
-    local = as_utc(value).astimezone(SHOP_TZ)
-    hour = local.hour % 12 or 12
-    suffix = "a.m." if local.hour < 12 else "p.m."
-    return f"{hour}:{local.minute:02d} {suffix} {MOUNTAIN_TIME_LABEL}"
+SHOP_TZ = ZoneInfo("America/Edmonton")
+PRICING_TZ = ZoneInfo("America/Regina")
 
 
 def as_utc(value: datetime) -> datetime:
     """Treat naive datetimes as shop-local, then return UTC."""
     if value.tzinfo is None:
         value = value.replace(tzinfo=SHOP_TZ)
-    return value.astimezone(timezone.utc)
-
-
-def stored_utc(value: datetime) -> datetime:
-    """UTC instant for a timestamp already stored on a booking.
-
-    Postgres returns timestamptz aware. SQLite returns the same UTC instant
-    with the offset removed. Naive values are that instant, not a shop wall
-    clock. ``as_utc`` would read the naive form as Regina and shift it.
-    """
-    if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
     return value.astimezone(timezone.utc)
 
 

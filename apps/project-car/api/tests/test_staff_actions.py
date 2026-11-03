@@ -11,13 +11,13 @@ from sqlalchemy import select
 
 from app.models import Booking, RefundRequest, ShopJob, ShopJobStatus, StaffAction
 from app.shop_time import as_utc, shop_now
-from tests.conftest import AUTH, check_in_open_start, create_hoist, create_member, login_member, next_hour
+from tests.conftest import AUTH, create_hoist, create_member, login_member
 
 AI = {"Authorization": "Bearer dev-ai-secret"}
 
 
 def _window(hours_from_now: int, length_hours: float = 1) -> tuple[str, str]:
-    start = next_hour(hours_from_now)
+    start = shop_now() + timedelta(hours=hours_from_now)
     end = start + timedelta(hours=length_hours)
     return start.isoformat(), end.isoformat()
 
@@ -40,8 +40,7 @@ def _owner_booking(
     *,
     minutes_from_now: int = 0,
 ) -> dict:
-    # A minutes offset asks for a start inside the open check-in window.
-    start_dt = check_in_open_start() if minutes_from_now else next_hour(hours_from_now)
+    start_dt = shop_now() + timedelta(hours=hours_from_now, minutes=minutes_from_now)
     end_dt = start_dt + timedelta(hours=1)
     start, end = start_dt.isoformat(), end_dt.isoformat()
     created = client.post(
@@ -463,7 +462,7 @@ def test_ai_cannot_refund_charge_or_say_the_shop_is_open(client: TestClient) -> 
     adjust = client.post(
         f"/members/{member['id']}/tokens",
         headers=AI,
-        json={"amount": "10", "note": "no", "reason": "AI tries a credit"},
+        json={"amount": "10", "note": "no"},
     )
     assert adjust.status_code == 403
     assert adjust.json()["error"]["code"] == "token_change_requires_human"
@@ -658,7 +657,7 @@ def test_refund_request_on_cancelled_booking_stores_nothing(client: TestClient) 
     member = create_member(client, email="ada@example.com")
     bay = create_hoist(client, name="Bay 1")
     booking = _owner_booking(client, member["id"], bay["id"], 5)
-    cancelled = client.post(f"/bookings/{booking['id']}/cancel", headers=AUTH, json={"reason": "Owner cancelled this visit"})
+    cancelled = client.post(f"/bookings/{booking['id']}/cancel", headers=AUTH)
     assert cancelled.status_code == 200, cancelled.text
     assert cancelled.json()["status"] == "cancelled"
 
@@ -863,16 +862,12 @@ def test_accept_refund_after_cancel_denies_the_request(client: TestClient) -> No
     # confirmed visit. Accept after that cancel still denies the request.
     member = create_member(client, email="ada@example.com")
     bay = create_hoist(client, name="Bay 1")
-    booking = _owner_booking(client, member["id"], bay["id"], hours_from_now=4)
+    booking = _owner_booking(client, member["id"], bay["id"], hours_from_now=6)
     assert client.post(f"/bookings/{booking['id']}/confirm", headers=AUTH).status_code == 200
     filed = client.post("/refund-requests", headers=AUTH, json={"booking_id": booking["id"]})
     assert filed.status_code == 201, filed.text
     request_id = filed.json()["id"]
-    cancelled = client.post(
-        f"/bookings/{booking['id']}/cancel",
-        headers=AUTH,
-        json={"reason": "Owner cancelled this visit"},
-    )
+    cancelled = client.post(f"/bookings/{booking['id']}/cancel", headers=AUTH)
     assert cancelled.status_code == 200, cancelled.text
     assert cancelled.json()["status"] == "cancelled"
     _assert_closed_visit_accept_denies(

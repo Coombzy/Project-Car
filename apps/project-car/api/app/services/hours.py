@@ -6,7 +6,7 @@ from datetime import datetime
 from uuid import UUID
 
 from app.models import Booking, BookingKind, BookingStatus
-from app.shop_time import as_utc, iter_regina_hours, stored_utc
+from app.shop_time import as_utc, iter_regina_hours
 
 NO_VEHICLE = "No vehicle on file"
 OPEN_HOUR_STATUSES = (
@@ -36,17 +36,17 @@ def booking_member_name(booking: Booking) -> str:
 
 
 def booking_overlaps_window(booking: Booking, window_start: datetime, window_end: datetime) -> bool:
-    """True when a booking overlaps [window_start, window_end).
+    """True when a booking overlaps [window_start, window_end) after tz normalize.
 
-    Booking instants are UTC. SQLite stores that instant with no offset, so
-    they go through ``stored_utc``. Window bounds may still be shop-local.
-    ``as_utc`` would read the bare clock as shop wall time and move the hour.
+    SQLite demo rows are often naive shop-local wall clocks; Postgres stores
+    aware UTC. Always compare through ``as_utc`` so afternoon Regina slots are
+    not dropped against a UTC SQL bound.
     """
     if booking.status not in OPEN_HOUR_STATUSES:
         return False
-    start_at = stored_utc(booking.start_at)
-    end_at = stored_utc(booking.end_at)
-    return start_at < as_utc(window_end) and end_at > as_utc(window_start)
+    return as_utc(booking.start_at) < as_utc(window_end) and as_utc(booking.end_at) > as_utc(
+        window_start
+    )
 
 
 def expand_booked_hours(
@@ -66,8 +66,8 @@ def expand_booked_hours(
             continue
         if member_id is not None and booking.member_id != member_id:
             continue
-        overlap_start = max(stored_utc(booking.start_at), as_utc(window_start))
-        overlap_end = min(stored_utc(booking.end_at), as_utc(window_end))
+        overlap_start = max(as_utc(booking.start_at), as_utc(window_start))
+        overlap_end = min(as_utc(booking.end_at), as_utc(window_end))
         if overlap_end <= overlap_start:
             continue
         hoist = getattr(booking, "hoist", None)

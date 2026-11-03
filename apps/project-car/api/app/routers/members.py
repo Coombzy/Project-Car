@@ -11,30 +11,20 @@ from sqlalchemy.orm import selectinload
 
 from app.auth import hash_password
 from app.deps import DbSession, Owner
-from app.models import (
-    BillingTransaction,
-    Booking,
-    Member,
-    MembershipTier,
-    TokenTransaction,
-    TokenTransactionKind,
-)
+from app.models import Booking, Member, MembershipTier, TokenTransaction, TokenTransactionKind
 from app.schemas import (
     BookingOut,
-    DepositCreate,
-    DollarChargeOut,
     MemberCreate,
     MemberDetailOut,
     MemberOut,
     MemberPasswordSet,
     MemberPatch,
     TokenAdjustment,
-    TokenPurchaseCreate,
     TokenTransactionOut,
 )
 from app.services.bookings import lock_member
 from app.services.staff import reject_ai
-from app.services.tokens import apply_ledger, rebuild_token_balance, record_deposit, record_token_purchase
+from app.services.tokens import apply_ledger, rebuild_token_balance
 
 router = APIRouter(tags=["members"])
 
@@ -43,9 +33,6 @@ MEMBER_PASSWORD_MIN_LENGTH = 12
 
 # Stand-in until Ben sets the real cap. Absolute value at or above this is refused.
 MAX_TOKEN_ADJUSTMENT = Decimal("1000000")
-# D11 default until Ben decides: every Owner balance override says why.
-OVERRIDE_REASON_MIN = 3
-OVERRIDE_REASON_MAX = 500
 
 
 def _member_or_404(session, member_id: UUID) -> Member:
@@ -215,18 +202,6 @@ def adjust_member_tokens(
         code="token_change_requires_human",
         message="An AI cannot change a token balance on its own.",
     )
-    reason = (body.reason or "").strip()
-    if not OVERRIDE_REASON_MIN <= len(reason) <= OVERRIDE_REASON_MAX:
-        raise HTTPException(
-            status_code=422,
-            detail={
-                "code": "reason_required",
-                "message": (
-                    f"An adjustment needs a reason of {OVERRIDE_REASON_MIN}-"
-                    f"{OVERRIDE_REASON_MAX} characters."
-                ),
-            },
-        )
     # Lock before apply_ledger reads token_balance. Two adjustments otherwise
     # both add to the same cached balance and the second write drops the first.
     member = lock_member(session, member_id)
@@ -259,111 +234,11 @@ def adjust_member_tokens(
         member,
         kind=TokenTransactionKind.ADMIN_ADJUSTMENT,
         amount=amount,
-        note=body.note or reason,
-        meta={"override": {"reason": reason, "by": owner.email}},
+        note=body.note or "Owner adjustment",
     )
     session.flush()
     session.refresh(row)
     return TokenTransactionOut.model_validate(row)
-
-
-@router.post(
-    "/members/{member_id}/token-purchases",
-    response_model=TokenTransactionOut,
-    status_code=201,
-)
-def record_member_token_purchase(
-    member_id: UUID,
-    body: TokenPurchaseCreate,
-    session: DbSession,
-    owner: Owner,
-) -> TokenTransactionOut:
-    """Credit tokens for one PayPal payment. The payment id credits once."""
-    reject_ai(
-        owner,
-        code="token_change_requires_human",
-        message="An AI cannot change a token balance on its own.",
-    )
-    if body.tokens >= MAX_TOKEN_ADJUSTMENT:
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "code": "invalid_tokens",
-                "message": "A purchase must be under 1,000,000 tokens.",
-            },
-        )
-    member = lock_member(session, member_id)
-    row = record_token_purchase(
-        session,
-        member,
-        payment_id=body.payment_id,
-        tokens=body.tokens,
-        subtotal_cad=body.subtotal_cad,
-        recorded_by=owner.email,
-        note=body.note,
-    )
-    session.refresh(row)
-    return TokenTransactionOut.model_validate(row)
-
-
-@router.get("/members/{member_id}/dollar-charges", response_model=list[DollarChargeOut])
-def list_dollar_charges(member_id: UUID, session: DbSession, _owner: Owner) -> list[DollarChargeOut]:
-    _member_or_404(session, member_id)
-    rows = session.scalars(
-        select(BillingTransaction)
-        .where(
-            BillingTransaction.member_id == member_id,
-            BillingTransaction.subtotal_cad.is_not(None),
-        )
-        .order_by(BillingTransaction.created_at, BillingTransaction.id)
-    ).all()
-    return [
-        DollarChargeOut(
-            id=row.id,
-            purpose=row.kind.value,
-            payment_id=row.payment_id,
-            subtotal_cad=Decimal(row.subtotal_cad or 0),
-            gst_cad=Decimal(row.gst_cad or 0),
-            total_cad=Decimal(row.total_cad or 0),
-            gst_rate=Decimal(row.gst_rate or 0),
-            created_at=row.created_at,
-        )
-        for row in rows
-    ]
-
-
-@router.post("/members/{member_id}/deposits", response_model=DollarChargeOut, status_code=201)
-def post_deposit(
-    member_id: UUID,
-    body: DepositCreate,
-    session: DbSession,
-    owner: Owner,
-) -> DollarChargeOut:
-    """Take, return, or keep a damage deposit. Stand-in payment id. No tokens."""
-    reject_ai(
-        owner,
-        code="deposit_requires_human",
-        message="An AI cannot move a deposit on its own.",
-    )
-    member = lock_member(session, member_id)
-    row = record_deposit(
-        session,
-        member,
-        action=body.action,
-        amount=body.amount,
-        payment_id=body.payment_id,
-        note=body.note,
-    )
-    return DollarChargeOut(
-        id=row.id,
-        purpose=row.kind.value,
-        payment_id=row.payment_id,
-        subtotal_cad=Decimal(row.subtotal_cad or 0),
-        gst_cad=Decimal(row.gst_cad or 0),
-        total_cad=Decimal(row.total_cad or 0),
-        gst_rate=Decimal(row.gst_rate or 0),
-        created_at=row.created_at,
-    )
 
 
 @router.post("/members/{member_id}/tokens/rebuild", response_model=MemberOut)

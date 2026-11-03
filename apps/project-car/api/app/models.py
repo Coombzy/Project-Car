@@ -32,7 +32,6 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
-    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -55,11 +54,6 @@ def _enum_column(enum_cls: type[enum.Enum], *, length: int = 32) -> SAEnum:
 JsonList = JSON().with_variant(JSONB(), "postgresql")
 JsonObject = JSON().with_variant(JSONB(), "postgresql")
 UuidPk = Uuid(as_uuid=True).with_variant(UUID(as_uuid=True), "postgresql")
-
-
-LEDGER_ONCE_PER_BOOKING_WHERE = (
-    "booking_id IS NOT NULL AND kind IN ('booking_reserve', 'booking_refund', 'booking_debit')"
-)
 
 
 def _utc_now() -> datetime:
@@ -87,7 +81,6 @@ class BookingStatus(str, enum.Enum):
     COMPLETED = "completed"
     OVERDUE = "overdue"
     CANCELLED = "cancelled"
-    NO_SHOW = "no_show"
 
 
 class BookingKind(str, enum.Enum):
@@ -142,9 +135,7 @@ class TokenTransactionKind(str, enum.Enum):
     BOOKING_DEBIT = "booking_debit"
     BOOKING_REFUND = "booking_refund"
     MONTHLY_ALLOCATION = "monthly_allocation"
-    ALLOWANCE_EXPIRY = "allowance_expiry"
     ADMIN_ADJUSTMENT = "admin_adjustment"
-    TOKEN_PURCHASE = "token_purchase"
 
 
 class IncidentSeverity(str, enum.Enum):
@@ -165,10 +156,6 @@ class BillingKind(str, enum.Enum):
     MANUAL = "manual"
     DEPOSIT = "deposit"
     REFUND = "refund"
-    PACK = "pack"
-    DEPOSIT_TAKEN = "deposit_taken"
-    DEPOSIT_RETURNED = "deposit_returned"
-    DEPOSIT_KEPT = "deposit_kept"
 
 
 class AccessEventType(str, enum.Enum):
@@ -314,14 +301,6 @@ class Member(Base):
     emergency_contact_name: Mapped[Optional[str]] = mapped_column(String(200))
     emergency_contact_phone: Mapped[Optional[str]] = mapped_column(String(40))
     token_balance: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2), nullable=False, default=Decimal("0")
-    )
-    # Spendable split. token_balance is the sum. The grant expires allowance
-    # only. Purchased tokens stay until a booking spends them.
-    allowance_balance: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2), nullable=False, default=Decimal("0")
-    )
-    purchased_balance: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), nullable=False, default=Decimal("0")
     )
     deposit_balance: Mapped[Decimal] = mapped_column(
@@ -745,20 +724,7 @@ class TokenTransaction(Base):
     """Append-only token ledger. member.token_balance is a cached sum."""
 
     __tablename__ = "token_transactions"
-    __table_args__ = (
-        Index("ix_token_transactions_member_created", "member_id", "created_at"),
-        Index("uq_token_transactions_payment_ref", "payment_ref", unique=True),
-        # One reserve, one refund and one debit per booking. A second refund
-        # for the same booking fails here even if a service check is skipped.
-        Index(
-            "uq_token_transactions_booking_kind",
-            "booking_id",
-            "kind",
-            unique=True,
-            sqlite_where=text(LEDGER_ONCE_PER_BOOKING_WHERE),
-            postgresql_where=text(LEDGER_ONCE_PER_BOOKING_WHERE),
-        ),
-    )
+    __table_args__ = (Index("ix_token_transactions_member_created", "member_id", "created_at"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
     member_id: Mapped[uuid.UUID] = mapped_column(
@@ -772,17 +738,8 @@ class TokenTransaction(Base):
         nullable=False,
     )
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
-    # The two piles that sum to amount. A booking reserve is negative on the
-    # pile it spent. A refund is positive on the pile it restores.
-    allowance_amount: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2), nullable=False, default=Decimal("0")
-    )
-    purchased_amount: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2), nullable=False, default=Decimal("0")
-    )
     note: Mapped[Optional[str]] = mapped_column(Text)
     meta: Mapped[Optional[dict]] = mapped_column(JsonObject)
-    payment_ref: Mapped[Optional[str]] = mapped_column(String(120))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -901,17 +858,10 @@ class Incident(Base):
 
 
 class BillingTransaction(Base):
-    """A dollar row: before tax, GST, total, and a stand-in payment id.
-
-    No payment processor is connected. The payment id is whatever the owner
-    typed from PayPal until Ben supplies the real one.
-    """
+    """Manual billing record only. No payment processor in v1."""
 
     __tablename__ = "billing_transactions"
-    __table_args__ = (
-        Index("ix_billing_transactions_member_created", "member_id", "created_at"),
-        Index("uq_billing_transactions_payment_id", "payment_id", unique=True),
-    )
+    __table_args__ = (Index("ix_billing_transactions_member_created", "member_id", "created_at"),)
 
     id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
     member_id: Mapped[uuid.UUID] = mapped_column(
@@ -926,11 +876,6 @@ class BillingTransaction(Base):
         default=BillingKind.MANUAL,
     )
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
-    subtotal_cad: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2))
-    gst_cad: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2))
-    total_cad: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2))
-    gst_rate: Mapped[Optional[Decimal]] = mapped_column(Numeric(6, 4))
-    payment_id: Mapped[Optional[str]] = mapped_column(String(120))
     note: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -1329,15 +1274,6 @@ class JobEvent(Base):
         return f"<JobEvent(id={self.id!r}, kind={self.kind!r}, job_key={self.job_key!r})>"
 
 
-class ShopSetting(Base):
-    """One shop-wide switch. Signup mode is self-serve or the waitlist fallback."""
-
-    __tablename__ = "shop_settings"
-
-    key: Mapped[str] = mapped_column(String(64), primary_key=True)
-    value: Mapped[str] = mapped_column(String(64), nullable=False)
-
-
 ALL_MODELS = [
     MembershipTier,
     PricingBand,
@@ -1363,7 +1299,6 @@ ALL_MODELS = [
     PartsRequest,
     CalendarConnection,
     JobEvent,
-    ShopSetting,
 ]
 
 

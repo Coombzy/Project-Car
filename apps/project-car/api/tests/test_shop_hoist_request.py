@@ -9,14 +9,15 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from app.config import get_settings
-from tests.conftest import AUTH, create_hoist, create_member, login_member, next_hour
+from app.shop_time import shop_now
+from tests.conftest import AUTH, create_hoist, create_member, login_member
 
 REPO = Path(__file__).resolve().parents[4]
 AI = {"Authorization": "Bearer dev-ai-secret"}
 
 
 def _window(hours_from_now: int, length_hours: float = 1) -> tuple[str, str]:
-    start = next_hour(hours_from_now)
+    start = shop_now() + timedelta(hours=hours_from_now)
     end = start + timedelta(hours=length_hours)
     return start.isoformat(), end.isoformat()
 
@@ -124,7 +125,7 @@ def test_bays_stay_a_direct_booking(client: TestClient) -> None:
     assert booked.status_code == 201, booked.text
     body = booked.json()
     assert body["kind"] == "customer"
-    assert body["status"] == "confirmed"
+    assert body["status"] == "pending"
     assert "record" not in body
     assert _dec(client.get("/member/me").json()["token_balance"]) == balance - _dec(body["reserved_tokens"])
     assert client.get("/member/bookings").json()[0]["id"] == body["id"]

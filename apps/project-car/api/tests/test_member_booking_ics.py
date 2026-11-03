@@ -7,12 +7,12 @@ from datetime import datetime, timedelta
 import pytest
 from fastapi.testclient import TestClient
 
-from app.shop_time import as_utc
-from tests.conftest import create_hoist, create_member, login_member, next_hour
+from app.shop_time import as_utc, shop_now
+from tests.conftest import create_hoist, create_member, login_member
 
 
 def _window(hours_from_now: int, length_hours: float = 2) -> tuple[str, str]:
-    start = next_hour(hours_from_now)
+    start = shop_now() + timedelta(hours=hours_from_now)
     end = start + timedelta(hours=length_hours)
     return start.isoformat(), end.isoformat()
 
@@ -87,8 +87,7 @@ def test_member_booking_ics_own_other_and_cancelled(client: TestClient) -> None:
     assert f"DTEND:{_ics_utc(booking['end_at'])}\r\n" in body
     assert f"UID:{booking['id']}\r\n" in body
     assert f"SUMMARY:{hoist['name']}\r\n" in body
-    assert "Mountain Time" in body
-    assert "America/Regina" not in body
+    assert "America/Regina" in body
     assert "DTSTART;TZID=" not in body
 
     login_member(client, "casey@example.com")

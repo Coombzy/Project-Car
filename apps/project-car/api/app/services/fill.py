@@ -26,7 +26,7 @@ from app.models import (
     HoistStatus,
 )
 from app.services.pricing import MONEY_QUANT, NO_FILL, FillFactor, duration_hours
-from app.shop_time import as_utc, pricing_clock_window, pricing_next_day, stored_utc
+from app.shop_time import as_utc, pricing_clock_window, pricing_next_day
 
 FILL_TZ_NAME = "America/Regina"
 HOURS_QUANT = Decimal("0.0001")
@@ -263,12 +263,7 @@ def detect_openings(
     for booking in bookings:
         if booking.hoist_id not in by_hoist:
             continue
-        clipped = clip_interval(
-            stored_utc(booking.start_at),
-            stored_utc(booking.end_at),
-            window_start,
-            window_end,
-        )
+        clipped = clip_interval(booking.start_at, booking.end_at, window_start, window_end)
         if clipped is None:
             continue
         by_hoist[booking.hoist_id].append(clipped)
@@ -425,29 +420,11 @@ def resolve_fill_for_slot(
     now: datetime | None = None,
     settings: Settings | None = None,
 ) -> FillFactor:
-    """A published deal discounts hours inside its window. A live percent does not.
-
-    No published offer means the plain band price, even when tomorrow has openings.
-    """
+    """Fill applies only to slots that overlap next-day customer-bay hours."""
     if not slot_overlaps_next_day_window(start_at, end_at, now=now, settings=settings):
         return NO_FILL
-    target = pricing_next_day(now)
-    offer = published_offer(session, target)
-    if offer is None:
-        return NO_FILL
-    multiplier = Decimal(offer.fill_multiplier)
-    if multiplier == Decimal("1") or multiplier == Decimal("1.00"):
-        return NO_FILL
-    start_clock, end_clock = fill_window_clocks(settings)
-    window_start, window_end = pricing_clock_window(offer.target_date, start_clock, end_clock)
-    return FillFactor(
-        id="next_day_open",
-        label=f"Fill the gaps {discount_label(Decimal(offer.discount_pct))}%",
-        multiplier=multiplier,
-        discount_pct=Decimal(offer.discount_pct),
-        window_start=window_start,
-        window_end=window_end,
-    )
+    snapshot = snapshot_next_day(session, now=now, settings=settings)
+    return snapshot.as_factor()
 
 
 def upsert_published_offer(session: Session, snapshot: FillSnapshot) -> FillOffer:

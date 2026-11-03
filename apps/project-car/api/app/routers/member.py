@@ -33,7 +33,6 @@ from app.schemas import (
     MemberBookingCreate,
     MemberBookingQuoteRequest,
     MemberDashboardOut,
-    MemberRateChartOut,
     MemberScheduleOut,
     MemberSelfOut,
     OccupancyOut,
@@ -42,24 +41,18 @@ from app.schemas import (
     ShopJobOut,
     ToolCribExceptionCreate,
     ToolCribExceptionOut,
-    MemberTokenPurchaseCreate,
     TokenTransactionOut,
 )
 from app.routers.dashboard import member_dashboard_payload
-from app.routers.members import MAX_TOKEN_ADJUSTMENT
 from app.services import bookings as booking_service
 from app.services.fill import snapshot_next_day
-from app.services.payments import get_payment_processor
-from app.services.peak_cap import PEAK_BAND_IDS, PEAK_HOURS_PER_WEEK
-from app.services.pricing import weekly_rate_chart
 from app.services.shop_hoist_requests import (
     create_shop_hoist_request,
     get_shop_hoist,
     list_shop_hoist_requests,
 )
 from app.services.staff import claim_job, create_tool_crib_exception
-from app.services.tokens import record_token_purchase
-from app.shop_time import as_utc, stored_utc
+from app.shop_time import as_utc
 
 router = APIRouter(prefix="/member", tags=["member"])
 
@@ -104,9 +97,7 @@ def _ics_escape(value: str) -> str:
 
 
 def _ics_utc(value: datetime) -> str:
-    # SQLite returns the stored UTC instant with no offset. as_utc() would
-    # read that bare clock as shop wall time and shift the calendar file.
-    return stored_utc(value).strftime("%Y%m%dT%H%M%SZ")
+    return as_utc(value).strftime("%Y%m%dT%H%M%SZ")
 
 
 def _ics_utf8_prefix(text: str, max_octets: int) -> str:
@@ -146,40 +137,29 @@ def _fold_ics_line(content: str) -> str:
 
 
 def _booking_ics(booking: Booking) -> str:
-    """One VEVENT. Start and end are UTC. The shop label is Mountain Time."""
+    """One VEVENT. Start and end are UTC. America/Regina is the shop clock."""
     lines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
         "PRODID:-//Project Car//Shop OS//EN",
         "CALSCALE:GREGORIAN",
         "METHOD:PUBLISH",
-        "X-WR-TIMEZONE:Mountain Time",
+        "X-WR-TIMEZONE:America/Regina",
         "BEGIN:VEVENT",
         f"UID:{booking.id}",
         f"DTSTAMP:{_ics_utc(datetime.now(timezone.utc))}",
         f"DTSTART:{_ics_utc(booking.start_at)}",
         f"DTEND:{_ics_utc(booking.end_at)}",
         f"SUMMARY:{_ics_escape(booking.hoist.name)}",
-        "COMMENT:Times are UTC. Shop local time is Mountain Time.",
+        "COMMENT:Times are UTC. Shop local time is America/Regina.",
         "END:VEVENT",
         "END:VCALENDAR",
     ]
     return "\r\n".join(_fold_ics_line(line) for line in lines) + "\r\n"
 
 
-@router.get("/rates", response_model=MemberRateChartOut)
-def member_rates(session: DbSession, _principal: MemberUser) -> MemberRateChartOut:
-    chart = weekly_rate_chart(
-        session,
-        peak_band_ids=PEAK_BAND_IDS,
-        peak_cap_hours=PEAK_HOURS_PER_WEEK,
-    )
-    return MemberRateChartOut.model_validate(chart)
-
-
 @router.get("/me", response_model=MemberSelfOut)
 def member_me(session: DbSession, principal: MemberUser) -> MemberSelfOut:
-    booking_service.settle_elapsed_no_shows(session)
     member = session.scalars(
         select(Member)
         .options(
@@ -209,8 +189,6 @@ def member_me(session: DbSession, principal: MemberUser) -> MemberSelfOut:
         emergency_contact_name=member.emergency_contact_name,
         emergency_contact_phone=member.emergency_contact_phone,
         token_balance=member.token_balance,
-        allowance_balance=member.allowance_balance,
-        purchased_balance=member.purchased_balance,
         deposit_balance=member.deposit_balance,
         created_at=member.created_at,
         updated_at=member.updated_at,
@@ -224,7 +202,6 @@ def member_me(session: DbSession, principal: MemberUser) -> MemberSelfOut:
 
 @router.get("/dashboard", response_model=MemberDashboardOut)
 def member_dashboard(session: DbSession, principal: MemberUser) -> MemberDashboardOut:
-    booking_service.settle_elapsed_no_shows(session)
     return member_dashboard_payload(session, principal)
 
 
@@ -257,7 +234,6 @@ def member_bookings(
     window_end: datetime | None = Query(default=None),
     limit: int = Query(default=200, ge=1, le=500),
 ) -> list[BookingOut]:
-    booking_service.settle_elapsed_no_shows(session)
     stmt = (
         select(Booking)
         .options(selectinload(Booking.member), selectinload(Booking.hoist))
@@ -282,7 +258,6 @@ def member_schedule(
     window_start: datetime | None = Query(default=None),
     window_end: datetime | None = Query(default=None),
 ) -> MemberScheduleOut:
-    booking_service.settle_elapsed_no_shows(session)
     hoists = _customer_hoists(session)
     hoist_ids = [row.id for row in hoists]
     stmt = (
@@ -367,11 +342,6 @@ def member_create_shop_hoist_request(
     session: DbSession,
     principal: MemberUser,
 ) -> ShopHoistRequestOut:
-    if body.hoist_id is None:
-        raise HTTPException(
-            status_code=400,
-            detail={"code": "hoist_required", "message": "A shop hoist request needs a bay."},
-        )
     row = create_shop_hoist_request(
         session,
         member_id=principal.member_id,
@@ -392,7 +362,7 @@ def member_create_booking(
     principal: MemberUser,
 ) -> BookingOut | ShopHoistRequestOut:
     _own_member(session, principal)
-    hoist = session.get(Hoist, body.hoist_id) if body.hoist_id is not None else None
+    hoist = session.get(Hoist, body.hoist_id)
     if hoist is not None and hoist.is_shop:
         row = create_shop_hoist_request(
             session,
@@ -413,8 +383,6 @@ def member_create_booking(
         end_at=body.end_at,
         notes=body.notes,
         kind=BookingKind.CUSTOMER,
-        shown_tokens=body.tokens,
-        confirm=True,
     )
     return BookingOut.from_booking(booking)
 
@@ -436,7 +404,7 @@ def member_cancel_booking(
     principal: MemberUser,
 ) -> BookingOut:
     _own_booking(session, principal, booking_id)
-    return BookingOut.from_booking(booking_service.cancel_booking(session, booking_id, by_member=True))
+    return BookingOut.from_booking(booking_service.cancel_booking(session, booking_id))
 
 
 @router.get("/bookings/{booking_id}/ics")
@@ -492,36 +460,3 @@ def member_create_tool_crib_exception(
 @router.post("/jobs/{job_id}/claim", response_model=ShopJobOut)
 def member_claim_job(job_id: UUID, session: DbSession, principal: MemberUser) -> ShopJobOut:
     return ShopJobOut.model_validate(claim_job(session, job_id, principal.member_id))
-
-
-@router.post("/token-purchases", response_model=TokenTransactionOut, status_code=201)
-def member_buy_tokens(
-    body: MemberTokenPurchaseCreate,
-    session: DbSession,
-    principal: MemberUser,
-) -> TokenTransactionOut:
-    """Collect through the payment adapter, then credit the purchased pile."""
-    if body.tokens >= MAX_TOKEN_ADJUSTMENT:
-        raise HTTPException(
-            status_code=400,
-            detail={"code": "invalid_tokens", "message": "A purchase must be under 1,000,000 tokens."},
-        )
-    processor = get_payment_processor()
-    receipt = processor.collect(
-        member_id=principal.member_id,
-        tokens=body.tokens,
-        subtotal_cad=body.subtotal_cad,
-        payment_id=body.payment_id,
-    )
-    member = booking_service.lock_member(session, principal.member_id)
-    row = record_token_purchase(
-        session,
-        member,
-        payment_id=receipt.payment_id,
-        tokens=body.tokens,
-        subtotal_cad=receipt.subtotal_cad,
-        recorded_by=member.email,
-        processor=receipt.processor,
-    )
-    session.refresh(row)
-    return TokenTransactionOut.model_validate(row)
