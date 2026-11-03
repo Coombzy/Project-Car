@@ -1,5 +1,7 @@
 """Project Car shop OS API."""
 
+# Path-gate probe: an API source edit runs pytest and the visual job.
+# Shop-web lint, typecheck, unit tests, and the next build stay off.
 # Probe: API-only diff on the fixed #290 gate.
 
 from __future__ import annotations

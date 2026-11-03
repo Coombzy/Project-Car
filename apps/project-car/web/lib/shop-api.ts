@@ -63,7 +63,7 @@ async function shopFetch(path: string, init: RequestInit = {}): Promise<Response
   });
 }
 
-async function shopJson<T>(path: string, fallback: string, init: RequestInit = {}): Promise<T> {
+export async function shopJson<T>(path: string, fallback: string, init: RequestInit = {}): Promise<T> {
   let response: Response;
   try {
     response = await shopFetch(path, init);
@@ -484,7 +484,7 @@ async function memberFetch(path: string, init: RequestInit = {}): Promise<Respon
   });
 }
 
-async function memberJson<T>(path: string, fallback: string, init: RequestInit = {}): Promise<T> {
+export async function memberJson<T>(path: string, fallback: string, init: RequestInit = {}): Promise<T> {
   let response: Response;
   try {
     response = await memberFetch(path, init);
