@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { createBookingAction } from "../app/schedule/actions";
 import type { BookingQuote, Hoist, Member } from "../lib/config";
 import { reserveFactors } from "../lib/pricing-math";
-import { tokensLabel } from "../lib/time";
+import { bayOptionLabel, snapWholeHourWindow, tokensLabel } from "../lib/time";
 import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
 
 type Props = {
@@ -131,8 +131,7 @@ export function CreateBookingForm({
           >
             {hoistChoices.map((hoist) => (
               <option key={hoist.id} value={hoist.id}>
-                {hoist.name}
-                {hoist.is_shop ? " · shop hoist · request" : ""} · {hoist.status}
+                {bayOptionLabel(hoist)}
               </option>
             ))}
           </select>
@@ -144,7 +143,11 @@ export function CreateBookingForm({
             name="start_at"
             required
             value={startAt}
-            onChange={(event) => setStartAt(event.target.value)}
+            onChange={(event) => {
+              const next = snapWholeHourWindow(event.target.value, endAt);
+              setStartAt(next.start);
+              setEndAt(next.end);
+            }}
           />
         </label>
         <label>
@@ -154,7 +157,11 @@ export function CreateBookingForm({
             name="end_at"
             required
             value={endAt}
-            onChange={(event) => setEndAt(event.target.value)}
+            onChange={(event) => {
+              const next = snapWholeHourWindow(startAt, event.target.value);
+              setStartAt(next.start);
+              setEndAt(next.end);
+            }}
           />
         </label>
         <label>

@@ -2,13 +2,12 @@ import Link from "next/link";
 
 import { CreateBookingForm } from "../../components/create-booking-form";
 import { MonthHeatmap } from "../../components/month-heatmap";
-import { OwnerBookingCard } from "../../components/owner-booking-card";
+import { OwnerLaneGrid } from "../../components/owner-lane-grid";
 import { OwnerShell } from "../../components/owner-shell";
 import { ScheduleToolbar } from "../../components/schedule-toolbar";
 import { ShopHoistRequestQueue } from "../../components/shop-hoist-request-queue";
-import { WeekHoistCalendars } from "../../components/week-hoist-calendars";
 import { handlePageError, shopErrorMessage } from "../../lib/page";
-import { getMe, listBookings, listHoists, listMembers, listOwnerShopHoistRequests } from "../../lib/shop-api";
+import { getMe, getOwnerRateChart, listBookings, listHoists, listMembers, listOwnerShopHoistRequests } from "../../lib/shop-api";
 import {
   addDays,
   calendarTodayIso,
@@ -21,14 +20,14 @@ import {
   slotEnd,
   sortHoists,
 } from "../../lib/calendar";
-import { parseWeekParam, shopClock, shopDateTimeLocal } from "../../lib/time";
+import { defaultVisitWindow, parseWeekParam, shopClock } from "../../lib/time";
 
 export const dynamic = "force-dynamic";
 
 export default async function SchedulePage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string; month?: string; view?: string; hoist?: string; slot?: string; error?: string }>;
+  searchParams: Promise<{ week?: string; month?: string; view?: string; hoist?: string; slot?: string; day?: string; error?: string }>;
 }) {
   try {
     const params = await searchParams;
@@ -59,7 +58,7 @@ export default async function SchedulePage({
     }
 
     let loadError: string | null = null;
-    const [hoists, members, bookings, shopHoistRequests] = await Promise.all([
+    const [hoists, members, bookings, shopHoistRequests, rates] = await Promise.all([
       listHoists().catch((error) => {
         loadError = shopErrorMessage(error, "Could not load hoists.");
         return [];
@@ -79,26 +78,27 @@ export default async function SchedulePage({
         loadError = shopErrorMessage(error, "Could not load shop hoist requests.");
         return [];
       }),
+      getOwnerRateChart().catch(() => null),
     ]);
 
     const ordered = sortHoists(hoists);
     const activeMembers = members.filter((member) => member.status === "active");
     const returnTo = { view, week: weekStart, month, hoist: hoistId };
-    const defaultStart = slot ?? shopDateTimeLocal(new Date(shopClock().getTime() + 72 * 3600 * 1000));
-    const defaultEnd = slot ? slotEnd(slot) : shopDateTimeLocal(new Date(shopClock().getTime() + 73 * 3600 * 1000));
+    const visit = defaultVisitWindow(shopClock());
+    const defaultStart = slot ?? visit.start;
+    const defaultEnd = slot ? slotEnd(slot) : visit.end;
 
     return (
       <OwnerShell email={me.email} current="schedule" wide>
         <p className="eyebrow">
-          {view === "month" ? "Month heat-map" : "Week · per hoist"} · America/Regina
+          {view === "month" ? "Month" : "Week"} · Mountain Time
         </p>
         <h1>Schedule</h1>
         <p className="lede">
-          Management calendar on the current app / Doc UI (intended host
-          ops.projectcar.ca). Month shows how booked each hoist is that day
-          (Bays 1–5 plus the shop hoist). Week is a separate hour
-          grid per hoist. Reserve is duration × 100 × band × overlay × fill.
-          Complete debits; cancel refunds the locked reserve.
+          Pending {bookings.filter((booking) => booking.status === "pending").length} · Overdue{" "}
+          {bookings.filter((booking) => booking.status === "overdue").length} · No-show{" "}
+          {bookings.filter((booking) => booking.status === "no_show").length}. Finish visit keeps the held tokens.
+          Time past the booked end is charged by the hour.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
         {loadError ? <div className="banner error">{loadError}</div> : null}
@@ -121,24 +121,16 @@ export default async function SchedulePage({
             today={today}
           />
         ) : (
-          <WeekHoistCalendars
-            base="/schedule"
+          <OwnerLaneGrid
+            days={days}
+            nowIso={shopClock().toISOString()}
+            focusDay={params.day && days.includes(params.day) ? params.day : days.includes(today) ? today : days[0]}
+            hoists={ordered}
+            bookings={bookings}
+            saved={rates?.hours}
+            returnTo={returnTo}
             weekStart={weekStart}
             month={month}
-            days={days}
-            today={today}
-            hoists={ordered}
-            focusHoistId={hoistId}
-            itemsForHoist={(hoist) =>
-              bookings
-                .filter((booking) => booking.hoist_id === hoist.id)
-                .map((booking) => ({
-                  id: booking.id,
-                  start_at: booking.start_at,
-                  end_at: booking.end_at,
-                  node: <OwnerBookingCard booking={booking} returnTo={returnTo} compact />,
-                }))
-            }
           />
         )}
 

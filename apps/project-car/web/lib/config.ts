@@ -35,6 +35,12 @@ export type MembershipTier = {
   name: string;
   display_name: string;
   price: string;
+  currency: string;
+  billing_period: string;
+  gst_rate: string;
+  gst_cad: string;
+  total_cad: string;
+  price_mark: string | null;
   included_tokens: number;
   booking_window_days: number;
   max_simultaneous_bookings: number;
@@ -55,6 +61,8 @@ export type Member = {
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
   token_balance: string;
+  allowance_balance: string;
+  purchased_balance: string;
   deposit_balance: string;
   created_at: string;
   updated_at: string;
@@ -149,7 +157,7 @@ export type Booking = {
   kind: "customer" | "shop";
   start_at: string;
   end_at: string;
-  status: "pending" | "confirmed" | "active" | "completed" | "overdue" | "cancelled";
+  status: "pending" | "confirmed" | "active" | "completed" | "overdue" | "cancelled" | "no_show";
   reserved_tokens: string;
   pricing_rule: PricingRule | null;
   notes: string | null;
@@ -175,7 +183,16 @@ export type TokenTransaction = {
   kind: string;
   amount: string;
   note: string | null;
-  meta: { pricing_rule?: PricingRule } | null;
+  meta: {
+    pricing_rule?: PricingRule;
+    purchase?: {
+      subtotal_cad?: string;
+      gst_cad?: string;
+      gst_rate?: string;
+      total_cad?: string;
+    };
+    pricing?: string;
+  } | null;
   created_at: string;
 };
 

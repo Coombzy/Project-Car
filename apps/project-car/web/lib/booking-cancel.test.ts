@@ -30,7 +30,7 @@ function cancelGuards(source: string, action: string): string[] {
 }
 
 function activeBranch(source: string): string {
-  const marker = 'booking.status === "active" ?';
+  const marker = 'booking.status === "active" || booking.status === "overdue"';
   const at = source.indexOf(marker);
   assert.notEqual(at, -1, "owner card has no active branch");
   const end = source.indexOf(") : null}", at);
@@ -42,11 +42,12 @@ describe("booking cancel on an active visit", () => {
   it("test_active_cards_do_not_offer_cancel", () => {
     const owner = readFileSync(ownerPath, "utf8");
     const member = readFileSync(memberPath, "utf8");
+    const offer = readFileSync(join(webRoot, "lib/booking-calendar.ts"), "utf8");
     const ownerGuards = cancelGuards(owner, "cancelBookingAction");
     const memberGuards = cancelGuards(member, "memberCancelBookingAction");
 
     assert.equal(ownerGuards.length, 1, "owner card should have one cancel form");
-    assert.equal(memberGuards.length, 2, "member card should cancel pending and confirmed separately");
+    assert.equal(memberGuards.length, 1, "member card should have one cancel form");
     for (const guard of [...ownerGuards, ...memberGuards]) {
       assert.equal(
         guard.includes('=== "active"'),
@@ -58,20 +59,16 @@ describe("booking cancel on an active visit", () => {
     const ownerGuard = ownerGuards[0];
     assert.equal(ownerGuard.includes('=== "pending"'), true, "owner cancel must stay on pending");
     assert.equal(ownerGuard.includes('=== "confirmed"'), true, "owner cancel must stay on confirmed");
-    assert.equal(
-      memberGuards.some((guard) => guard.includes('=== "pending"')),
-      true,
-      "member cancel must stay on pending",
-    );
-    assert.equal(
-      memberGuards.some((guard) => guard.includes('=== "confirmed"') && !guard.includes('=== "active"')),
-      true,
-      "member cancel must stay on confirmed",
+    assert.equal(memberGuards[0].includes("cancel?.visible"), true, "member cancel follows the cancel offer");
+    assert.match(
+      offer,
+      /status === "active"[\s\S]*return hidden/,
+      "an active visit hides the member cancel offer",
     );
 
     const active = activeBranch(owner);
     assert.match(active, /action=\{completeBookingAction\}/);
-    assert.match(active, />\s*Complete\s*</);
+    assert.match(active, />\s*Finish visit\s*</);
     assert.doesNotMatch(active, /Cancel/);
     assert.doesNotMatch(active, /cancelBookingAction/);
   });

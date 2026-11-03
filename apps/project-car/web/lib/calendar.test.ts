@@ -204,9 +204,10 @@ describe("month grid", () => {
 
 describe("param and label helpers", () => {
   it("parses view, month, hoist, and slot safely", () => {
-    assert.equal(parseViewParam(undefined), "month");
+    assert.equal(parseViewParam(undefined), "week");
     assert.equal(parseViewParam("week"), "week");
-    assert.equal(parseViewParam("nope"), "month");
+    assert.equal(parseViewParam("day"), "day");
+    assert.equal(parseViewParam("nope"), "week");
     assert.equal(parseViewParam(undefined, "2026-09-07"), "week");
     assert.equal(parseViewParam("month", "2026-09-07"), "month");
     assert.equal(parseMonthParam("2026-09"), "2026-09");

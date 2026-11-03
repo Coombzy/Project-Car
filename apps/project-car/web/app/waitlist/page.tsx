@@ -1,11 +1,12 @@
 import Link from "next/link";
 
 import { OwnerShell } from "../../components/owner-shell";
+import { PlanOffer } from "../../components/plan-offer";
 import type { MembershipTier, WaitlistEntry } from "../../lib/config";
 import { handlePageError } from "../../lib/page";
-import { getMe, listTiers, listWaitlist } from "../../lib/shop-api";
+import { getMe, getSignupMode, listTiers, listWaitlist } from "../../lib/shop-api";
 import { formatShopDateTime } from "../../lib/time";
-import { convertWaitlistAction, markContactedAction } from "./actions";
+import { convertWaitlistAction, markContactedAction, setSignupModeAction } from "./actions";
 
 function WaitlistMemberControl({
   entry,
@@ -40,6 +41,8 @@ function WaitlistMemberControl({
         {tiers.map((tier) => (
           <option key={tier.name} value={tier.name}>
             {tier.display_name}
+            {tier.price ? ` · $${tier.price} ${tier.currency}/${tier.billing_period} plus GST` : ""}
+            {tier.price_mark ? ` · ${tier.price_mark}` : ""}
           </option>
         ))}
       </select>
@@ -47,6 +50,35 @@ function WaitlistMemberControl({
         Convert
       </button>
     </form>
+  );
+}
+
+async function SignupModeForm() {
+  let mode: "self_serve" | "waitlist" = "self_serve";
+  try {
+    mode = (await getSignupMode()).mode;
+  } catch {
+    mode = "self_serve";
+  }
+  return (
+    <section className="card" style={{ marginBottom: "1.2rem" }}>
+      <h2>Waitlist fallback</h2>
+      <p className="muted">
+        Self-serve creates the account. Waitlist fallback holds the person here until you convert the row.
+      </p>
+      <form action={setSignupModeAction} className="form-grid">
+        <label>
+          Public signup
+          <select name="mode" defaultValue={mode}>
+            <option value="self_serve">Self-serve</option>
+            <option value="waitlist">Waitlist fallback</option>
+          </select>
+        </label>
+        <div className="actions">
+          <button type="submit">Save signup mode</button>
+        </div>
+      </form>
+    </section>
   );
 }
 
@@ -66,10 +98,27 @@ export default async function WaitlistPage({
         <p className="eyebrow">GET /waitlist</p>
         <h1>Waitlist</h1>
         <p className="lede">
-          Public signups land here. Pick a tier to convert one row into an active
-          member with that tier&apos;s starting tokens. You can still mark a row contacted.
+          Self-serve signup creates the member. Waitlist fallback is the switch
+          for when a new person should wait instead. Pick a tier to convert one
+          row into an active member with that tier&apos;s starting tokens.
         </p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
+        <SignupModeForm />
+        <section style={{ marginBottom: "1.2rem" }}>
+          <h2>Plans</h2>
+          <p className="muted">
+            Signup uses the saved monthly price plus GST. Edit the price on Tiers.
+          </p>
+          {tiers.length === 0 ? (
+            <div className="banner empty">No tiers. Run API migrations, then seed.</div>
+          ) : (
+            <div className="tier-list">
+              {tiers.map((tier) => (
+                <PlanOffer key={tier.name} plan={tier} />
+              ))}
+            </div>
+          )}
+        </section>
         {entries.length === 0 ? (
           <div className="banner empty">
             No one is on the waitlist yet. Seed demo rows or POST /waitlist.

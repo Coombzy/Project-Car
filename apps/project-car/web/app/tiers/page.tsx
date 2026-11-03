@@ -1,4 +1,5 @@
 import { OwnerShell } from "../../components/owner-shell";
+import { PlanOffer } from "../../components/plan-offer";
 import { handlePageError } from "../../lib/page";
 import { getMe, listTiers } from "../../lib/shop-api";
 import { tokensLabel } from "../../lib/time";
@@ -84,13 +85,14 @@ export default async function TiersPage({
                   <h2>{tier.display_name}</h2>
                   <span className="muted">{tier.name}</span>
                 </div>
+                <PlanOffer plan={tier} framed={false} />
                 <div className="form-grid">
                   <label>
                     Display name
                     <input name="display_name" defaultValue={tier.display_name} required />
                   </label>
                   <label>
-                    Placeholder price
+                    Price, CAD per month, before GST
                     <input name="price" defaultValue={tokensLabel(tier.price)} />
                   </label>
                   <label>

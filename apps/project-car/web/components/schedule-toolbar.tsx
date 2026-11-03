@@ -42,6 +42,13 @@ export function ScheduleToolbar({
         >
           Week
         </Link>
+        <Link
+          className={`button ghost${view === "day" ? " is-active" : ""}`}
+          href={scheduleHref(base, { view: "day", week: weekStart, month, hoist })}
+          aria-current={view === "day" ? "page" : undefined}
+        >
+          Day
+        </Link>
       </div>
       <div className="week-nav">
         {view === "month" ? (

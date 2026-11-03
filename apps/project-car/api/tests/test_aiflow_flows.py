@@ -6,8 +6,7 @@ from datetime import timedelta
 from aiflow.client import ApiClient
 from aiflow.flows import fill_draft_flow, shop_hoist_flow
 from aiflow.model import MockModel
-from app.shop_time import shop_now
-from tests.conftest import create_hoist, create_member
+from tests.conftest import create_hoist, create_member, next_hour
 
 AI_SECRET = "dev-ai-secret"
 OWNER_SECRET = "dev-owner-secret"
@@ -24,7 +23,7 @@ def _live_api(client) -> ApiClient:
 def _hoist_window(client) -> tuple[dict, dict, str, str]:
     member = create_member(client)
     shop = create_hoist(client, name="Shop", is_shop=True)
-    start = shop_now() + timedelta(hours=10)
+    start = next_hour(10)
     end = start + timedelta(hours=1)
     return member, shop, start.isoformat(), end.isoformat()
 
