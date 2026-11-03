@@ -38,5 +38,11 @@ describe("manual token change", () => {
       /note\s*:\s*reason\b/,
       "the ledger note must be the typed reason, not a separate unread field",
     );
+    const withoutNote = literal.replace(/note\s*:\s*reason\b/, "");
+    assert.match(
+      withoutNote,
+      /\breason\s*(?::|,|\})/,
+      "the body must also send reason; POST /members/{id}/tokens is 422 reason_required without it",
+    );
   });
 });

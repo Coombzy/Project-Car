@@ -348,4 +348,13 @@ describe("member schedule errors", () => {
     assert.ok(bannerAt < monthAt);
     assert.ok(bannerAt < emptyAt);
   });
+
+  it("lists a checked-in or overdue visit under Your bookings", () => {
+    const page = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../app/member/schedule/page.tsx"), "utf8");
+    const start = page.indexOf("const yours = me.bookings.filter(");
+    assert.notEqual(start, -1, "Your bookings must filter me.bookings");
+    const filter = page.slice(start, page.indexOf(");", start));
+    const statuses = [...filter.matchAll(/booking\.status === "([a-z_]+)"/g)].map((match) => match[1]).sort();
+    assert.deepEqual(statuses, ["active", "confirmed", "no_show", "overdue", "pending"]);
+  });
 });
