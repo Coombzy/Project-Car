@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -175,8 +175,10 @@ def list_waitlist_entries(
     session: DbSession,
     _owner: Owner,
     settings: AppSettings,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
 ) -> list[WaitlistEntryOut]:
-    """Owner list. Newest first."""
+    """Owner list. Newest first, capped by limit."""
     if not settings.pc_waitlist:
         raise HTTPException(
             status_code=404,
@@ -184,7 +186,10 @@ def list_waitlist_entries(
         )
 
     rows = session.scalars(
-        select(WaitlistEntry).order_by(WaitlistEntry.created_at.desc())
+        select(WaitlistEntry)
+        .order_by(WaitlistEntry.created_at.desc())
+        .limit(limit)
+        .offset(offset)
     ).all()
     return [WaitlistEntryOut.model_validate(row) for row in rows]
 
