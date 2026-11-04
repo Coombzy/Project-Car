@@ -153,10 +153,12 @@ def return_tool(session: Session, *, sku: str, note: str | None) -> ToolCribEven
     )
 
 
-def list_events(session: Session) -> list[ToolCribEvent]:
+def list_events(session: Session, *, limit: int = 50, offset: int = 0) -> list[ToolCribEvent]:
     stmt = (
         select(ToolCribEvent)
         .options(selectinload(ToolCribEvent.member))
         .order_by(ToolCribEvent.created_at.desc(), ToolCribEvent.sku)
+        .limit(limit)
+        .offset(offset)
     )
     return list(session.scalars(stmt).all())
