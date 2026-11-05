@@ -2,7 +2,7 @@
 
 Applies to Cortana, Master Chief, Madcat, local models (Doc, Lightning, Porsche), Grok Build, and any future agents.
 
-These practices come from recent research and production systems (Anthropic, OpenAI, AWS Strands, MAST failure study, token-efficiency papers). They are filtered to what is useful for this fleet.
+These practices come from recent research and production systems (Anthropic, OpenAI, AWS Strands, MAST failure study, token-efficiency papers, observability and security guides). They are filtered to what is useful for this fleet.
 
 ## 1. When to use multiple agents
 
@@ -67,7 +67,44 @@ Vague briefs cause duplicated work and gaps (MAST failure study).
 - Feed local models only the relevant files or diffs. Never the whole repo.
 - Track metrics separately for local vs cloud (as already planned in the agent-scripts repo).
 
-## 7. Failure modes to avoid
+## 7. Observability and metrics
+
+You need enough signal to answer “what happened, what did it cost, and was it correct?”
+
+Minimum for this fleet:
+- One trace / run ID per task.
+- Tokens (in/out), latency, and success/failure per agent.
+- Tool calls with arguments and results (not just the agent’s summary).
+- Outcome check against real state (tests passed, PR opened, file exists) rather than only the transcript.
+- Failures become regression cases or backlog rows.
+
+Alert or flag when:
+- Iteration or retry count exceeds a cap.
+- Token use on a single task is unusually high.
+- Repeated handoffs with no new progress.
+
+This aligns with the metrics already planned in the agent-scripts repo. Keep local and cloud numbers separate.
+
+## 8. Security and least privilege
+
+- Give each agent only the tools and permissions it needs for the current task.
+- Prefer read-only or scoped write (specific files or branches) over broad access.
+- Do not let agents push to `main`, edit `.github/workflows`, or access secrets unless explicitly required and approved.
+- Use sandboxing or worktrees where available so a bad change is contained.
+- High-impact actions (merge, deploy, delete data, change permissions) require human approval.
+
+Principle: least agency — only the autonomy needed for the task, for only as long as needed.
+
+## 9. Human-in-the-loop
+
+Three practical patterns:
+- **Approval gate**: agent prepares, human must approve before irreversible action (merge, deploy, token spend above a threshold).
+- **Review**: agent produces a PR or doc; human reviews before it is accepted.
+- **Escalation**: agent stops and hands off with context when it is uncertain, missing information, or hits a policy boundary. Define the triggers explicitly (large diff, failing tests after one fix attempt, missing acceptance criteria) rather than relying on the agent to judge its own confidence.
+
+For coding: agents open PRs. Humans (or Cortana after review) merge. Automated fix loops are capped at one pass; further issues escalate.
+
+## 10. Failure modes to avoid
 
 From research and this project:
 - Stacked large PRs and god files (already seen in Project Car).
@@ -76,13 +113,16 @@ From research and this project:
 - Pure peer swarms on sequential coding tasks.
 - Missing proofs for invariants.
 - Context rot from long shared conversations.
+- Agents with broad permissions or no escalation path.
 
-## 8. Practical rules for this fleet
+## 11. Practical rules for this fleet
 
 1. Cortana (or the lead) writes or updates the brief / slice doc.
 2. Local models or Grok Build implement the small RED/GREEN change.
 3. Results come back as a short summary + proof output, not a long transcript.
 4. Metrics (tokens, time, success) are recorded per agent.
 5. If a task cannot be split cleanly, keep it on one agent.
+6. High-impact actions require human approval.
+7. Failures and high-cost runs are reviewed and turned into better briefs or tests.
 
 These practices sit alongside the coding structure guidelines. Use both.
