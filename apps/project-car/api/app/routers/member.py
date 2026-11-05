@@ -8,10 +8,12 @@ a pending request until a person or an AI approves it.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from decimal import Decimal
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import Response
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
@@ -44,7 +46,10 @@ from app.schemas import (
     TokenTransactionOut,
 )
 from app.routers.dashboard import member_dashboard_payload
+from app.routers.members import MAX_TOKEN_ADJUSTMENT
 from app.services import bookings as booking_service
+from app.services.payments import get_payment_processor
+from app.services.tokens import record_token_purchase
 from app.services.fill import snapshot_next_day
 from app.services.shop_hoist_requests import (
     DEFAULT_LIST_LIMIT,
@@ -466,3 +471,63 @@ def member_create_tool_crib_exception(
 @router.post("/jobs/{job_id}/claim", response_model=ShopJobOut)
 def member_claim_job(job_id: UUID, session: DbSession, principal: MemberUser) -> ShopJobOut:
     return ShopJobOut.model_validate(claim_job(session, job_id, principal.member_id))
+
+
+class MemberTokenPurchaseCreate(BaseModel):
+    tokens: Decimal
+    amount_cad: Decimal
+    payment_id: str | None = Field(default=None, max_length=120)
+
+
+def _reject_bad_tokens(amount: Decimal) -> None:
+    exponent = amount.as_tuple().exponent
+    if not isinstance(exponent, int) or exponent < -2:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "invalid_tokens",
+                "message": "A purchase must have at most 2 decimal places.",
+            },
+        )
+    if amount >= MAX_TOKEN_ADJUSTMENT:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "invalid_tokens",
+                "message": "A purchase must be under 1,000,000 tokens.",
+            },
+        )
+    if amount <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "invalid_tokens", "message": "A purchase must be greater than zero."},
+        )
+
+
+@router.post("/token-purchases", response_model=TokenTransactionOut, status_code=201)
+def member_buy_tokens(
+    body: MemberTokenPurchaseCreate,
+    session: DbSession,
+    principal: MemberUser,
+) -> TokenTransactionOut:
+    """Collect through the stand-in, then credit the purchased pile."""
+    _reject_bad_tokens(body.tokens)
+    processor = get_payment_processor()
+    receipt = processor.collect(
+        member_id=principal.member_id,
+        tokens=body.tokens,
+        amount_cad=body.amount_cad,
+        payment_id=body.payment_id,
+    )
+    member = booking_service.lock_member(session, principal.member_id)
+    row = record_token_purchase(
+        session,
+        member,
+        payment_id=receipt.payment_id,
+        tokens=receipt.tokens,
+        amount_cad=receipt.amount_cad,
+        processor=receipt.processor,
+        fee_rate=receipt.fee_rate,
+    )
+    session.refresh(row)
+    return TokenTransactionOut.model_validate(row)

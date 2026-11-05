@@ -9,6 +9,7 @@ from __future__ import annotations
 import importlib.util
 from decimal import Decimal
 from pathlib import Path
+from uuid import UUID
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, func, select, text
@@ -31,6 +32,11 @@ def _session(client: TestClient) -> Session:
 
 
 def _signup(client: TestClient, **overrides: object):
+    # Own address so this file does not consume the shared waitlist cap.
+    # Other waitlist tests already fill the eight stored creates on testclient.
+    transport = client._transport
+    previous = transport.client
+    transport.client = ("203.0.113.51", 50000)
     body = {
         "name": "Self Serve",
         "email": EMAIL,
@@ -39,7 +45,10 @@ def _signup(client: TestClient, **overrides: object):
         "tier_name": "basic",
     }
     body.update(overrides)
-    return client.post("/signup", json=body)
+    try:
+        return client.post("/signup", json=body)
+    finally:
+        transport.client = previous
 
 
 def test_self_serve_signup_creates_a_basic_member(client: TestClient) -> None:
@@ -111,6 +120,19 @@ def test_unknown_signup_mode_reads_as_self_serve(client: TestClient) -> None:
     assert mode.json()["mode"] == "self_serve"
 
 
+def test_ai_cannot_switch_signup_mode(client: TestClient) -> None:
+    switched = client.patch(
+        "/signup-mode",
+        headers={"Authorization": "Bearer dev-ai-secret"},
+        json={"mode": "waitlist"},
+    )
+    assert switched.status_code == 403, switched.text
+    assert switched.json()["error"]["code"] == "signup_mode_requires_human"
+    mode = client.get("/signup-mode")
+    assert mode.status_code == 200, mode.text
+    assert mode.json()["mode"] == "self_serve"
+
+
 def test_unknown_processor_is_422(client: TestClient, monkeypatch) -> None:
     monkeypatch.setenv("PAYMENT_PROCESSOR", "not-a-processor")
     get_settings.cache_clear()
@@ -170,7 +192,7 @@ def test_stand_in_purchase_writes_one_billing_row_and_one_ledger_row(
         )
 
         session = _session(client)
-        member_id = member["id"]
+        member_id = UUID(member["id"])
         billing = session.scalars(
             select(BillingTransaction).where(BillingTransaction.member_id == member_id)
         ).all()

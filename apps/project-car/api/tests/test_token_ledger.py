@@ -389,7 +389,8 @@ def test_ledger_migrations_upgrade_downgrade_and_backfill() -> None:
     from alembic.script import ScriptDirectory
 
     script = ScriptDirectory.from_config(Config(str(ALEMBIC_INI)))
-    assert script.get_heads() == ["20261105_0018"]
+    # Signup revision 20261105_0019 is the chain head. 0017 and 0018 still downgrade.
+    assert script.get_heads() == ["20261105_0019"]
 
     engine = create_engine("sqlite://")
     with engine.begin() as connection:

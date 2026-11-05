@@ -159,6 +159,8 @@ class BillingKind(str, enum.Enum):
     MANUAL = "manual"
     DEPOSIT = "deposit"
     REFUND = "refund"
+    # Varchar kind. A token pack purchase. No enum migration.
+    PACK = "pack"
 
 
 class AccessEventType(str, enum.Enum):
@@ -896,7 +898,11 @@ class Incident(Base):
 
 
 class BillingTransaction(Base):
-    """Manual billing record only. No payment processor in v1."""
+    """Billing row in the shape this table already has: kind, amount, note.
+
+    A token purchase uses kind ``pack``. GST columns stay off this table.
+    The stand-in processor records the posted amount and does not add a fee.
+    """
 
     __tablename__ = "billing_transactions"
     __table_args__ = (Index("ix_billing_transactions_member_created", "member_id", "created_at"),)
@@ -1312,6 +1318,18 @@ class JobEvent(Base):
         return f"<JobEvent(id={self.id!r}, kind={self.kind!r}, job_key={self.job_key!r})>"
 
 
+class ShopSetting(Base):
+    """One shop-wide setting. signup_mode is self_serve or waitlist."""
+
+    __tablename__ = "shop_settings"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    value: Mapped[str] = mapped_column(String(64), nullable=False)
+
+    def __repr__(self) -> str:
+        return f"<ShopSetting(key={self.key!r}, value={self.value!r})>"
+
+
 ALL_MODELS = [
     MembershipTier,
     PricingBand,
@@ -1337,6 +1355,7 @@ ALL_MODELS = [
     PartsRequest,
     CalendarConnection,
     JobEvent,
+    ShopSetting,
 ]
 
 

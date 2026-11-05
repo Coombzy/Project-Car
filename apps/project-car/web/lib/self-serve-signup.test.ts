@@ -4,6 +4,8 @@ import { describe, it } from "node:test";
 
 const signup = readFileSync(new URL("../app/signup/page.tsx", import.meta.url), "utf8");
 const actions = readFileSync(new URL("../app/signup/actions.ts", import.meta.url), "utf8");
+const middleware = readFileSync(new URL("../middleware.ts", import.meta.url), "utf8");
+const origin = readFileSync(new URL("./request-origin.ts", import.meta.url), "utf8");
 
 describe("self-serve signup", () => {
   it("lets a new member set a password and pick Basic, with the waitlist as a fallback", () => {
@@ -17,5 +19,7 @@ describe("self-serve signup", () => {
     assert.match(actions, /\/signup/);
     assert.match(actions, /writeMemberSessionCookie/);
     assert.match(actions, /tier_name/);
+    assert.match(middleware, /path === "\/signup"/);
+    assert.match(origin, /pathname === "\/signup"/);
   });
 });
