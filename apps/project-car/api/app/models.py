@@ -32,6 +32,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -136,6 +137,8 @@ class TokenTransactionKind(str, enum.Enum):
     BOOKING_REFUND = "booking_refund"
     MONTHLY_ALLOCATION = "monthly_allocation"
     ADMIN_ADJUSTMENT = "admin_adjustment"
+    # Varchar kind. A purchase credits the purchased pile. No enum migration.
+    TOKEN_PURCHASE = "token_purchase"
 
 
 class IncidentSeverity(str, enum.Enum):
@@ -302,6 +305,12 @@ class Member(Base):
     emergency_contact_phone: Mapped[Optional[str]] = mapped_column(String(40))
     token_balance: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), nullable=False, default=Decimal("0")
+    )
+    allowance_balance: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2), nullable=False, default=Decimal("0"), server_default="0"
+    )
+    purchased_balance: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2), nullable=False, default=Decimal("0"), server_default="0"
     )
     deposit_balance: Mapped[Decimal] = mapped_column(
         Numeric(12, 2), nullable=False, default=Decimal("0")
@@ -720,11 +729,33 @@ class StaffAction(Base):
     )
 
 
+# One reserve, one refund, and one debit per booking. Other kinds may repeat.
+_BOOKING_KIND_ONCE = (
+    "booking_id IS NOT NULL AND kind IN "
+    "('booking_reserve', 'booking_refund', 'booking_debit')"
+)
+
+
 class TokenTransaction(Base):
-    """Append-only token ledger. member.token_balance is a cached sum."""
+    """Append-only token ledger.
+
+    member.token_balance is the cached sum of allowance_balance and
+    purchased_balance. allowance_amount and purchased_amount split this row.
+    """
 
     __tablename__ = "token_transactions"
-    __table_args__ = (Index("ix_token_transactions_member_created", "member_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_token_transactions_member_created", "member_id", "created_at"),
+        Index("uq_token_transactions_payment_ref", "payment_ref", unique=True),
+        Index(
+            "uq_token_transactions_booking_kind",
+            "booking_id",
+            "kind",
+            unique=True,
+            sqlite_where=text(_BOOKING_KIND_ONCE),
+            postgresql_where=text(_BOOKING_KIND_ONCE),
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UuidPk, primary_key=True, default=uuid.uuid4)
     member_id: Mapped[uuid.UUID] = mapped_column(
@@ -738,6 +769,13 @@ class TokenTransaction(Base):
         nullable=False,
     )
     amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    allowance_amount: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2), nullable=False, default=Decimal("0"), server_default="0"
+    )
+    purchased_amount: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2), nullable=False, default=Decimal("0"), server_default="0"
+    )
+    payment_ref: Mapped[Optional[str]] = mapped_column(String(120))
     note: Mapped[Optional[str]] = mapped_column(Text)
     meta: Mapped[Optional[dict]] = mapped_column(JsonObject)
     created_at: Mapped[datetime] = mapped_column(
