@@ -6,6 +6,19 @@ Reference: screenshots and UI checklist in #283. Do not merge #283.
 
 ---
 
+## Known issues from #283 that these slices must close
+
+These were found during review of the large PR. Each slice below includes the proof that prevents the issue from reappearing.
+
+1. **Stacked base / shared files** — #283 is based on the booking-rules branch and shares files with other work. All slices must be implemented against `main` (or a clean booking base once rules are on main). Do not branch from #283.
+2. **Book + confirm race** — Create-then-confirm is not atomic. A failure between the two calls can leave a pending visit. Slice 1 must prove that a refused book leaves no row.
+3. **Allowance / purchased balance drift** — New columns were added with the claim that `token_balance` is their sum, but service-layer sync is incomplete. When the balance split lands, require a test that every reserve/refund/purchase keeps `token_balance == allowance_balance + purchased_balance`.
+4. **Unique constraint on (booking_id, kind)** — Prevents double refunds but will fail hard on any legitimate second write. When the ledger slice lands, add a test that a second refund/debit for the same booking fails as expected, and that normal single refunds still succeed.
+5. **Signup migration dependency** — New revision depends on the prior chain that lives on the booking-rules branch. Slice 6 must land only after that chain is on `main`.
+6. **Hard-coded stand-in processor** — `payment_processor = "stand-in"` has no env override. Slice 6 must read it from config/env so it can be swapped without a code change.
+
+---
+
 ### Slice 5. "This week" returns to the current week
 - Category: schedule UI
 - Target: In `apps/project-car/web/components/schedule-toolbar.tsx`, the "This week" link must call `scheduleHref(base, { view: "week", month })`. Omitting the week param makes the parser use the current Monday and forces week view.
@@ -39,8 +52,10 @@ Reference: screenshots and UI checklist in #283. Do not merge #283.
 ### Slice 1. Book creates and confirms in one submit
 - Category: member booking
 - Target: In the member create-booking action (`apps/project-car/web/app/member/schedule/actions.ts`), after creating the visit, if `created.status` is not already `confirmed`, call `confirmMemberBooking(created.id)` in the same submit. A refused book leaves no pending hold.
-- Proof (RED first): New test (e.g. `lib/book-confirm.test.ts`) that a successful book returns a confirmed visit without a second Confirm step. A refused book leaves no row.
-- Acceptance: Member sees the booking as confirmed immediately. No extra Confirm button appears after a successful book.
+- Proof (RED first): New test (e.g. `lib/book-confirm.test.ts`) that:
+  - A successful book returns a confirmed visit without a second Confirm step.
+  - A refused book leaves no row (explicitly covers the race between create and confirm).
+- Acceptance: Member sees the booking as confirmed immediately. No extra Confirm button appears after a successful book. No orphaned pending visits on failure.
 - Must not get worse: Existing booking creation tests and the 24-hour cancel rule.
 - Files: `apps/project-car/web/app/member/schedule/actions.ts`, related shop-api helper, new test.
 - Depends on: basic member booking create existing on main.
@@ -68,12 +83,15 @@ Reference: screenshots and UI checklist in #283. Do not merge #283.
 
 ### Slice 6. Signup mode and stand-in token purchase
 - Category: signup / payments
-- Target: Shop setting for signup mode (default `self_serve`). New member can sign up and pick Basic. Token purchase goes through the stand-in payment adapter and records a billing row.
-- Proof (RED first): Test that self-serve signup creates a member on Basic. Token purchase with the stand-in adapter creates the expected ledger/billing row.
-- Acceptance: Signup works without a real payment processor. Purchase is recorded.
+- Target: Shop setting for signup mode (default `self_serve`). New member can sign up and pick Basic. Token purchase goes through the stand-in payment adapter and records a billing row. Processor name is read from config/env (not hard-coded).
+- Proof (RED first):
+  - Test that self-serve signup creates a member on Basic.
+  - Token purchase with the stand-in adapter creates the expected ledger/billing row.
+  - Processor can be overridden via env/config without a code change.
+- Acceptance: Signup works without a real payment processor. Purchase is recorded. Stand-in is not hard-coded.
 - Must not get worse: Existing waitlist and member creation.
 - Files: signup router, shop settings model/migration if needed, payment stand-in, related tests.
-- Depends on: none critical; can land after basic member create.
+- Depends on: prior revision chain on main; can land after basic member create.
 - Size: 1–2 tasks (signup mode, then purchase).
 
 ---
@@ -94,3 +112,4 @@ Reference: screenshots and UI checklist in #283. Do not merge #283.
 - Do not edit `.github/workflows`.
 - #283 stays open on hold as a reference. Do not merge it.
 - Once these land, the older PRs that #283 superseded can be closed.
+- When the ledger / balance-split work lands (from #283 or related PRs), add the balance-sum and unique-constraint proofs listed in the known issues section.
