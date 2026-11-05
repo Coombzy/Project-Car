@@ -5,6 +5,12 @@
 # Heavy steps are gated inside each job. There is no workflow-level paths filter
 # and no job-level if, so a docs-only pull request still reports the required
 # check names as success. Each job's detect step chooses its own paths.
+# shop-api runs for markdown that is not a repo-root file and not under docs/ or Docs/,
+# and for the shop-web sources pytest reads. Text and images stay skipped.
+# An API-only diff skips the web build. Screenshots still run, because the visual job
+# logs into this pull request's API.
+# Screenshot baselines are the pngs from main's latest green run, when that cache exists.
+# Storing them on main is skipped when this commit's cache key already exists.
 # A push to main runs every step. Superseded pull-request runs cancel; main does not.
 name: Shop OS CI
 
@@ -96,9 +102,24 @@ jobs:
           cache: pip
           cache-dependency-path: apps/project-car/api/pyproject.toml
 
+      - name: Cache shop-api environment
+        if: steps.shop_changes.outputs.shop == 'true'
+        uses: actions/cache@v4
+        with:
+          path: apps/project-car/api/.venv
+          key: shop-api-venv-${{ runner.os }}-py3.12-${{ hashFiles('apps/project-car/api/pyproject.toml') }}
+
       - name: Install shop-api (dev extras)
         if: steps.shop_changes.outputs.shop == 'true'
-        run: python -m pip install -e ".[dev]"
+        run: |
+          if [ -x .venv/bin/pytest ]; then
+            .venv/bin/python -c "import fastapi, pytest" || rm -rf .venv
+          fi
+          if [ ! -x .venv/bin/pytest ]; then
+            python -m venv .venv
+            .venv/bin/python -m pip install -e ".[dev]"
+          fi
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       - name: pytest
         if: steps.shop_changes.outputs.shop == 'true'
@@ -165,9 +186,19 @@ jobs:
           cache: npm
           cache-dependency-path: apps/project-car/web/package-lock.json
 
+      - name: Cache shop-web modules
+        if: steps.shop_changes.outputs.shop == 'true'
+        uses: actions/cache@v4
+        with:
+          path: apps/project-car/web/node_modules
+          key: shop-web-modules-${{ runner.os }}-${{ hashFiles('apps/project-car/web/package-lock.json', 'apps/project-car/web/package.json') }}
+
       - name: Install shop-web
         if: steps.shop_changes.outputs.shop == 'true'
-        run: npm ci
+        run: |
+          if [ ! -e node_modules/next/package.json ]; then
+            npm ci
+          fi
 
       - name: Lint / typecheck
         if: steps.shop_changes.outputs.shop == 'true'
@@ -253,14 +284,39 @@ jobs:
           cache: npm
           cache-dependency-path: apps/project-car/web/package-lock.json
 
+      - name: Cache shop-api environment
+        if: steps.shop_changes.outputs.shop == 'true'
+        uses: actions/cache@v4
+        with:
+          path: apps/project-car/api/.venv
+          key: shop-api-venv-${{ runner.os }}-py3.12-${{ hashFiles('apps/project-car/api/pyproject.toml') }}
+
+      - name: Cache shop-web modules
+        if: steps.shop_changes.outputs.shop == 'true'
+        uses: actions/cache@v4
+        with:
+          path: apps/project-car/web/node_modules
+          key: shop-web-modules-${{ runner.os }}-${{ hashFiles('apps/project-car/web/package-lock.json', 'apps/project-car/web/package.json') }}
+
       - name: Install shop-api (dev extras)
         if: steps.shop_changes.outputs.shop == 'true'
         working-directory: apps/project-car/api
-        run: python -m pip install -e ".[dev]"
+        run: |
+          if [ -x .venv/bin/pytest ]; then
+            .venv/bin/python -c "import fastapi, pytest" || rm -rf .venv
+          fi
+          if [ ! -x .venv/bin/pytest ]; then
+            python -m venv .venv
+            .venv/bin/python -m pip install -e ".[dev]"
+          fi
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Install shop-web
         if: steps.shop_changes.outputs.shop == 'true'
-        run: npm ci
+        run: |
+          if [ ! -e node_modules/next/package.json ]; then
+            npm ci
+          fi
 
       - name: Read Playwright version
         if: steps.shop_changes.outputs.shop == 'true'
@@ -288,6 +344,36 @@ jobs:
         if: steps.shop_changes.outputs.shop == 'true'
         run: bash visual/build-web.sh
 
+      - name: Restore screenshot baselines
+        id: screenshot_baselines
+        if: steps.shop_changes.outputs.shop == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/project-car/web/visual/screenshot-baselines
+          key: shop-web-screenshot-baselines-${{ github.sha }}
+          restore-keys: |
+            shop-web-screenshot-baselines-
+
+      - name: Apply screenshot baselines
+        if: steps.shop_changes.outputs.shop == 'true'
+        env:
+          SHOP_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: bash visual/apply-baselines.sh
+
       - name: Layout shift and screenshots
         if: steps.shop_changes.outputs.shop == 'true'
         run: npm run visual
+
+      - name: Prepare screenshot baselines
+        if: steps.shop_changes.outputs.shop == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          rm -rf visual/screenshot-baselines
+          mkdir -p visual/screenshot-baselines
+          cp -a visual/screenshots/. visual/screenshot-baselines/
+
+      - name: Store screenshot baselines
+        if: steps.shop_changes.outputs.shop == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.screenshot_baselines.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: apps/project-car/web/visual/screenshot-baselines
+          key: shop-web-screenshot-baselines-${{ github.sha }}

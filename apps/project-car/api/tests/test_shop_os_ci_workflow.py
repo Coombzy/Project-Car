@@ -24,6 +24,15 @@ HEAVY_COMMANDS = {
     "shop-web layout-shift / screenshots": ("npm run visual",),
 }
 GATE_IF = "steps.shop_changes.outputs.shop == 'true'"
+BASELINE_PREPARE_IF = (
+    "steps.shop_changes.outputs.shop == 'true' && "
+    "github.event_name == 'push' && github.ref == 'refs/heads/main'"
+)
+BASELINE_STORE_IF = (
+    "steps.shop_changes.outputs.shop == 'true' && "
+    "github.event_name == 'push' && github.ref == 'refs/heads/main' && "
+    "steps.screenshot_baselines.outputs.cache-hit != 'true'"
+)
 PUSH_GUARD = 'if [ "${GITHUB_EVENT_NAME}" = "push" ]; then'
 DIFF_COMMAND = 'git diff --name-only --no-renames "${base}" HEAD'
 
@@ -389,7 +398,24 @@ def test_shop_os_ci_path_filter_keeps_required_check_names() -> None:
         assert script.index(PUSH_GUARD) < script.index(DIFF_COMMAND)
         assert "shop=true" in script[: script.index(DIFF_COMMAND)]
         for step in steps[2:]:
-            assert step.get("if") == GATE_IF, step.get("name")
+            step_if = step.get("if")
+            name = step.get("name")
+            if name not in {"Prepare screenshot baselines", "Store screenshot baselines"}:
+                assert step_if == GATE_IF, name
+            if name == "Prepare screenshot baselines":
+                assert step_if == BASELINE_PREPARE_IF
+            if name == "Store screenshot baselines":
+                assert step_if == BASELINE_STORE_IF
+                assert step.get("uses") == "actions/cache/save@v4"
+        if job["name"] == VISUAL_CHECK_NAME:
+            restore = [step for step in steps if step.get("name") == "Restore screenshot baselines"]
+            store = [step for step in steps if step.get("name") == "Store screenshot baselines"]
+            assert len(restore) == 1 and len(store) == 1
+            assert restore[0].get("id") == "screenshot_baselines"
+            assert restore[0]["if"] == GATE_IF
+            baseline_key = "shop-web-screenshot-baselines-${{ github.sha }}"
+            assert restore[0]["with"]["key"] == baseline_key
+            assert store[0]["with"]["key"] == baseline_key
         for command in HEAVY_COMMANDS[job["name"]]:
             matched = [step for step in steps if step.get("run") == command]
             assert len(matched) == 1, command
@@ -461,15 +487,191 @@ def test_shop_api_runs_for_booking_cancel_and_owner_booking_card() -> None:
     assert flags["apps/project-car/web/components/owner-booking-card.tsx"] == "true"
     missed = [path for path, flag in flags.items() if flag != "true"]
     assert missed == []
-    skipped = _shop_flags(
+    readmes = _shop_flags(
         script,
         [
             "apps/project-car/web/README.md",
             "apps/project-car/api/README.md",
+            "apps/project-car/web/copy/hours.md",
             "apps/project-car/web/visual/screenshots/390/home.png",
+            "Docs/shop-os-ci.md",
+            "README.md",
         ],
     )
-    assert list(skipped.values()) == ["true", "true", "false"]
+    assert readmes["apps/project-car/web/README.md"] == "true"
+    assert readmes["apps/project-car/api/README.md"] == "true"
+    assert readmes["apps/project-car/web/copy/hours.md"] == "true"
+    assert readmes["apps/project-car/web/visual/screenshots/390/home.png"] == "false"
+    assert readmes["Docs/shop-os-ci.md"] == "false"
+    assert readmes["README.md"] == "false"
+
+
+def test_api_only_runs_screenshots_skips_web_build_and_reuses_baselines() -> None:
+    """API-only diffs skip the web build and still render screenshots. Baselines come from main."""
+    api_path = "apps/project-car/api/app/__init__.py"
+    web_paths = (
+        "apps/project-car/web/lib/booking-cancel.test.ts",
+        "apps/project-car/web/components/owner-booking-card.tsx",
+    )
+    shared_path = "apps/project-car/shared/contract.json"
+    workflow_path = ".github/workflows/shop-os-ci.yml"
+    doc_path = "apps/project-car/web/README.md"
+    jobs = (
+        "shop-api pytest",
+        "shop-web lint / typecheck / build",
+        "shop-web layout-shift / screenshots",
+    )
+    flags = {
+        name: _shop_flags(_job_script(name), [api_path, *web_paths, shared_path, workflow_path, doc_path])
+        for name in jobs
+    }
+    assert flags["shop-api pytest"][api_path] == "true"
+    assert flags["shop-web lint / typecheck / build"][api_path] == "false"
+    assert flags["shop-web layout-shift / screenshots"][api_path] == "true"
+    for path in web_paths:
+        assert flags["shop-api pytest"][path] == "true", path
+        assert flags["shop-web lint / typecheck / build"][path] == "true", path
+        assert flags["shop-web layout-shift / screenshots"][path] == "true", path
+    for path in (shared_path, workflow_path):
+        for name in jobs:
+            assert flags[name][path] == "true", (name, path)
+    assert flags["shop-api pytest"][doc_path] == "true"
+    assert flags["shop-web lint / typecheck / build"][doc_path] == "false"
+    assert flags["shop-web layout-shift / screenshots"][doc_path] == "false"
+
+    text = WORKFLOW.read_text(encoding="utf-8")
+    assert "cache: pip" in text
+    assert "cache: npm" in text
+    assert "shop-api-venv-" in text
+    assert "shop-web-modules-" in text
+    modules_key = (
+        "shop-web-modules-${{ runner.os }}-${{ hashFiles("
+        "'apps/project-car/web/package-lock.json', "
+        "'apps/project-car/web/package.json') }}"
+    )
+    assert text.count(modules_key) == 2
+    assert "shop-web-screenshot-baselines-" in text
+    assert "bash visual/apply-baselines.sh" in text
+    assert "actions/cache/restore@v4" in text
+    assert "actions/cache/save@v4" in text
+    apply = ROOT / "apps" / "project-car" / "web" / "visual" / "apply-baselines.sh"
+    script = apply.read_text(encoding="utf-8")
+    assert "git checkout" not in script
+    assert "npm run build" not in script
+    assert "no stored screenshot baseline" in script
+
+    with tempfile.TemporaryDirectory() as temporary:
+        visual = Path(temporary)
+        shots = visual / "screenshots" / "390"
+        shots.mkdir(parents=True)
+        committed = shots / "home.png"
+        committed.write_bytes(b"committed")
+        probe_env = os.environ.copy()
+        probe_env["VISUAL_DIR"] = str(visual)
+        probe_env["GITHUB_EVENT_NAME"] = "pull_request"
+        probe_env.pop("SHOP_BASE_SHA", None)
+        missing = subprocess.run(
+            ["sh", str(apply)],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=probe_env,
+        )
+        assert missing.returncode == 0, missing.stderr
+        assert "no stored screenshot baseline" in missing.stdout
+        assert committed.read_bytes() == b"committed"
+        baseline = visual / "screenshot-baselines" / "390"
+        baseline.mkdir(parents=True)
+        (baseline / "home.png").write_bytes(b"from-main")
+        applied = subprocess.run(
+            ["sh", str(apply)],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=probe_env,
+        )
+        assert applied.returncode == 0, applied.stderr
+        assert "stored screenshot baselines" in applied.stdout
+        assert committed.read_bytes() == b"from-main"
+
+        committed.write_bytes(b"checkout-on-push")
+        (baseline / "home.png").write_bytes(b"baseline-on-push")
+        push_env = probe_env.copy()
+        push_env["GITHUB_EVENT_NAME"] = "push"
+        push_env.pop("SHOP_BASE_SHA", None)
+        pushed = subprocess.run(
+            ["sh", str(apply)],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=push_env,
+        )
+        assert pushed.returncode == 0, pushed.stderr
+        assert "push compares against the screenshots in this checkout" in pushed.stdout
+        assert committed.read_bytes() == b"checkout-on-push"
+        assert (baseline / "home.png").read_bytes() == b"baseline-on-push"
+
+    screenshot = "apps/project-car/web/visual/screenshots/390/home.png"
+    with tempfile.TemporaryDirectory() as repo_dir:
+        repo = Path(repo_dir)
+        checkout = repo / screenshot
+        checkout.parent.mkdir(parents=True)
+        checkout.write_bytes(b"base-png")
+        git_env = os.environ.copy()
+        git_base = [
+            "git",
+            "-C",
+            str(repo),
+            "-c",
+            "user.name=Project Car",
+            "-c",
+            "user.email=project-car@example.com",
+            "-c",
+            "commit.gpgsign=false",
+        ]
+
+        def git(*args: str) -> subprocess.CompletedProcess[str]:
+            return subprocess.run(
+                [*git_base, *args],
+                check=False,
+                capture_output=True,
+                text=True,
+                env=git_env,
+            )
+
+        init = git("init")
+        assert init.returncode == 0, init.stderr
+        assert git("add", screenshot).returncode == 0
+        base_commit = git("commit", "-m", "base screenshot")
+        assert base_commit.returncode == 0, base_commit.stderr
+        base_sha = git("rev-parse", "HEAD")
+        assert base_sha.returncode == 0, base_sha.stderr
+        checkout.write_bytes(b"pr-png")
+        assert git("add", screenshot).returncode == 0
+        pr_commit = git("commit", "-m", "edit screenshot")
+        assert pr_commit.returncode == 0, pr_commit.stderr
+        changed = git("diff", "--name-only", "--no-renames", base_sha.stdout.strip(), "HEAD")
+        assert changed.returncode in {0, 1}, changed.stderr
+        assert screenshot in changed.stdout
+        visual_dir = repo / "apps" / "project-car" / "web" / "visual"
+        stored = visual_dir / "screenshot-baselines" / "390" / "home.png"
+        stored.parent.mkdir(parents=True)
+        stored.write_bytes(b"stored-baseline")
+        pr_env = os.environ.copy()
+        pr_env["VISUAL_DIR"] = str(visual_dir)
+        pr_env["GITHUB_EVENT_NAME"] = "pull_request"
+        pr_env["SHOP_BASE_SHA"] = base_sha.stdout.strip()
+        edited = subprocess.run(
+            ["sh", str(apply)],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=pr_env,
+        )
+        assert edited.returncode == 0, edited.stderr
+        assert "pull request edits screenshot baselines" in edited.stdout
+        assert checkout.read_bytes() == b"pr-png"
+        assert stored.read_bytes() == b"stored-baseline"
 
 
 def _detect_on_push(script: str) -> str:
