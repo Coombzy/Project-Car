@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -24,7 +24,14 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import Member, MemberStatus, TokenTransaction, TokenTransactionKind
+from app.models import (
+    BillingKind,
+    BillingTransaction,
+    Member,
+    MemberStatus,
+    TokenTransaction,
+    TokenTransactionKind,
+)
 from app.shop_time import PRICING_TZ, pricing_now
 
 PERIOD_TZ = "America/Regina"
@@ -127,6 +134,53 @@ def apply_ledger(
             f"This booking already has a {_kind_value(kind)} ledger row.",
         ) from None
     return row
+
+
+def record_token_purchase(
+    session: Session,
+    member: Member,
+    *,
+    payment_id: str,
+    tokens: Decimal,
+    amount_cad: Decimal,
+    processor: str,
+    fee_rate: str,
+    note: str | None = None,
+) -> TokenTransaction:
+    """Write one billing row and one token_purchase ledger row.
+
+    The billing row uses the columns this table already has. amount_cad is
+    stored as given. fee_rate is a label from the processor. The stand-in
+    passes stand-in-none and does not add a fee. The ledger row credits the
+    purchased pile. A repeated payment_id is 409 already_credited.
+    """
+    charged = Decimal(amount_cad).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    written = note or "Token purchase"
+    session.add(
+        BillingTransaction(
+            member_id=member.id,
+            kind=BillingKind.PACK,
+            amount=charged,
+            note=written,
+        )
+    )
+    session.flush()
+    return apply_ledger(
+        session,
+        member,
+        kind=TokenTransactionKind.TOKEN_PURCHASE,
+        amount=Decimal(tokens),
+        note=written,
+        meta={
+            "purchase": {
+                "processor": processor,
+                "payment_id": payment_id,
+                "amount_cad": format(charged, "f"),
+                "fee_rate": fee_rate,
+            }
+        },
+        payment_ref=payment_id,
+    )
 
 
 def ledger_sum(session: Session, member_id) -> Decimal:
