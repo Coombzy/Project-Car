@@ -155,7 +155,7 @@ def record_token_purchase(
     purchased pile. A repeated payment_id is 409 already_credited.
     """
     charged = Decimal(amount_cad).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-    written = note or f"Token purchase {payment_id}"
+    written = note or "Token purchase"
     session.add(
         BillingTransaction(
             member_id=member.id,

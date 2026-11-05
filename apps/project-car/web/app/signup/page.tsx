@@ -39,9 +39,9 @@ function heading(mode: SignupModeName): string {
 function lede(mode: SignupModeName): string {
   switch (mode) {
     case "self_serve":
-      return "Pick Basic and set a password. The account is ready without an owner converting a row. Waitlist is the fallback when the shop switches it on. The shop is not open.";
+      return "Choose Basic or Premium and set a password. Your account is ready to sign in.";
     case "waitlist":
-      return "Waitlist fallback is on. Leave your name and a person will convert the row. Self-serve is off until the shop switches it back. The shop is not open.";
+      return "Leave your name and email. We'll contact you when a place is available.";
     default: {
       const unexpected: never = mode;
       return unexpected;
@@ -61,12 +61,12 @@ export default async function SignupPage({
   return (
     <main>
       <section className="card" style={{ maxWidth: 520, margin: "8vh auto" }}>
-        <p className="eyebrow">{waitlist ? "Waitlist fallback" : "Sign up"}</p>
+        <p className="eyebrow">{waitlist ? "Waitlist" : "Sign up"}</p>
         <h1>{heading(mode)}</h1>
         <p className="lede">{lede(mode)}</p>
         {params.error ? <div className="banner error">{params.error}</div> : null}
         {params.joined ? (
-          <div className="banner">You are on the waitlist. A person will convert the row.</div>
+          <div className="banner">You're on the waitlist. We'll be in touch.</div>
         ) : null}
         <form action={signupAction}>
           <label htmlFor="name">Name</label>

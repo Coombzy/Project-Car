@@ -70,13 +70,13 @@ export async function signupAction(formData: FormData): Promise<void> {
 
   const mode = readMode(body);
   if (mode === null) {
-    redirect("/signup?error=Could%20not%20start%20the%20session.");
+    redirect("/signup?error=Could%20not%20sign%20you%20in.");
   }
   switch (mode) {
     case "self_serve": {
       const token = extractMemberSessionValue(response.headers.getSetCookie());
       if (!token) {
-        redirect("/signup?error=Could%20not%20start%20the%20session.");
+        redirect("/signup?error=Could%20not%20sign%20you%20in.");
       }
       await writeMemberSessionCookie(token);
       redirect("/member");

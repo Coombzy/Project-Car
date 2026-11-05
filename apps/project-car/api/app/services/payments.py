@@ -59,7 +59,7 @@ def _amount_cad(value: Decimal) -> Decimal:
         raise _http(
             422,
             "invalid_amount",
-            "The amount must be greater than zero, fit the billing column, and have at most 2 decimal places.",
+            "Enter an amount greater than zero with at most 2 decimal places.",
         )
     return amount.quantize(_CENTS, rounding=ROUND_HALF_UP)
 
@@ -87,7 +87,7 @@ class StandInPaymentProcessor:
             raise _http(
                 422,
                 "standin_only",
-                "The stand-in processor only accepts a STANDIN- payment id.",
+                "Enter a payment id that starts with STANDIN-.",
             )
         return PaymentReceipt(
             processor=self.name,

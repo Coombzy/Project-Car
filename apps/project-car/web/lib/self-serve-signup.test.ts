@@ -14,7 +14,7 @@ describe("self-serve signup", () => {
     assert.match(signup, /name="tier_name"/);
     assert.match(signup, /value="basic"/);
     assert.match(signup, /defaultChecked/);
-    assert.match(signup, /Waitlist/);
+    assert.match(signup, /You're on the waitlist\. We'll be in touch\./);
     assert.doesNotMatch(signup, /\$\d/);
     assert.match(actions, /\/signup/);
     assert.match(actions, /writeMemberSessionCookie/);
