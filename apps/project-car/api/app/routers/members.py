@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -180,12 +180,18 @@ def set_member_password(
 
 
 @router.get("/members/{member_id}/tokens", response_model=list[TokenTransactionOut])
-def list_member_tokens(member_id: UUID, session: DbSession, _owner: Owner) -> list[TokenTransactionOut]:
+def list_member_tokens(
+    member_id: UUID,
+    session: DbSession,
+    _owner: Owner,
+    limit: int = Query(default=200, ge=1, le=500),
+) -> list[TokenTransactionOut]:
     _member_or_404(session, member_id)
     rows = session.scalars(
         select(TokenTransaction)
         .where(TokenTransaction.member_id == member_id)
         .order_by(TokenTransaction.created_at.desc())
+        .limit(limit)
     ).all()
     return [TokenTransactionOut.model_validate(row) for row in rows]
 
