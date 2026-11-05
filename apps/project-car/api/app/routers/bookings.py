@@ -27,7 +27,12 @@ from app.schemas import (
     ShopHoistRequestOut,
 )
 from app.services import bookings as booking_service
-from app.services.shop_hoist_requests import create_shop_hoist_request, list_shop_hoist_requests
+from app.services.shop_hoist_requests import (
+    DEFAULT_LIST_LIMIT,
+    MAX_LIST_LIMIT,
+    create_shop_hoist_request,
+    list_shop_hoist_requests,
+)
 from app.services.staff import actor_of, record_action, reject_ai
 from app.shop_time import as_utc
 
@@ -109,8 +114,9 @@ def list_owner_shop_hoist_requests(
     session: DbSession,
     _owner: Owner,
     status: ShopHoistRequestStatus | None = None,
+    limit: int = Query(default=DEFAULT_LIST_LIMIT, ge=1, le=MAX_LIST_LIMIT),
 ) -> list[ShopHoistRequestOut]:
-    rows = list_shop_hoist_requests(session, status=status)
+    rows = list_shop_hoist_requests(session, status=status, limit=limit)
     return [ShopHoistRequestOut.from_row(row) for row in rows]
 
 

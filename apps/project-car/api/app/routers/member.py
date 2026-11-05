@@ -47,6 +47,8 @@ from app.routers.dashboard import member_dashboard_payload
 from app.services import bookings as booking_service
 from app.services.fill import snapshot_next_day
 from app.services.shop_hoist_requests import (
+    DEFAULT_LIST_LIMIT,
+    MAX_LIST_LIMIT,
     create_shop_hoist_request,
     get_shop_hoist,
     list_shop_hoist_requests,
@@ -330,9 +332,11 @@ def member_shop_hoist(session: DbSession, _principal: MemberUser) -> HoistOut:
 
 @router.get("/shop-hoist-requests", response_model=list[ShopHoistRequestOut])
 def member_shop_hoist_requests(
-    session: DbSession, principal: MemberUser
+    session: DbSession,
+    principal: MemberUser,
+    limit: int = Query(default=DEFAULT_LIST_LIMIT, ge=1, le=MAX_LIST_LIMIT),
 ) -> list[ShopHoistRequestOut]:
-    rows = list_shop_hoist_requests(session, member_id=principal.member_id)
+    rows = list_shop_hoist_requests(session, member_id=principal.member_id, limit=limit)
     return [ShopHoistRequestOut.from_row(row) for row in rows]
 
 
