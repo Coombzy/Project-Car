@@ -41,6 +41,8 @@ def _list_query(
     status: BookingStatus | None,
     window_start: datetime | None,
     window_end: datetime | None,
+    limit: int = 1000,
+    offset: int = 0,
 ):
     stmt = (
         select(Booking)
@@ -57,7 +59,7 @@ def _list_query(
         stmt = stmt.where(Booking.end_at > as_utc(window_start))
     if window_end is not None:
         stmt = stmt.where(Booking.start_at < as_utc(window_end))
-    return stmt
+    return stmt.offset(offset).limit(limit)
 
 
 @router.get("/bookings", response_model=list[BookingOut])
@@ -69,6 +71,8 @@ def list_bookings(
     status: BookingStatus | None = None,
     window_start: datetime | None = Query(default=None),
     window_end: datetime | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
 ) -> list[BookingOut]:
     rows = session.scalars(
         _list_query(
@@ -77,6 +81,8 @@ def list_bookings(
             status=status,
             window_start=window_start,
             window_end=window_end,
+            limit=limit,
+            offset=offset,
         )
     ).all()
     return [BookingOut.from_booking(row) for row in rows]
