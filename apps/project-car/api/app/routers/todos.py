@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import Response
 
 from app.deps import AnyPrincipal, DbSession
+from app.models import TodoStatus
 from app.schemas import TodoCreate, TodoOut, TodoPatch
 from app.services import todos as todo_service
 from app.services.ics import ics_filename, todo_ics
@@ -14,8 +15,20 @@ router = APIRouter(tags=["todos"])
 
 
 @router.get("/todos", response_model=list[TodoOut])
-def list_my_todos(session: DbSession, principal: AnyPrincipal) -> list[TodoOut]:
-    return [TodoOut.model_validate(row) for row in todo_service.list_todos(session, principal)]
+def list_my_todos(
+    session: DbSession,
+    principal: AnyPrincipal,
+    status: TodoStatus = Query(default=TodoStatus.OPEN),
+    limit: int = Query(
+        default=todo_service.TODO_LIST_DEFAULT_LIMIT,
+        ge=1,
+        le=todo_service.TODO_LIST_MAX_LIMIT,
+    ),
+) -> list[TodoOut]:
+    return [
+        TodoOut.model_validate(row)
+        for row in todo_service.list_todos(session, principal, status=status, limit=limit)
+    ]
 
 
 @router.get("/todos/{todo_id}", response_model=TodoOut)
