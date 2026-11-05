@@ -18,6 +18,8 @@ from app.models import (
     MemberStatus,
     PartsOrder,
     PartsOrderStatus,
+    Todo,
+    TodoStatus,
     WaitlistEntry,
 )
 from app.schemas import (
@@ -106,6 +108,14 @@ def _window_bookings(session, window_start, window_end) -> list[Booking]:
     return [row for row in rows if booking_overlaps_window(row, start, end)]
 
 
+def _panel_todos(session, principal) -> list[Todo]:
+    """Open list uses the default cap. Recent done stays so TodoPanel can still Reopen."""
+    return [
+        *list_todos(session, principal, status=TodoStatus.OPEN),
+        *list_todos(session, principal, status=TodoStatus.DONE),
+    ]
+
+
 def _current_parts_orders(session) -> list[PartsOrder]:
     open_rows = list(
         session.scalars(
@@ -184,7 +194,7 @@ def get_dashboard(session: DbSession, owner: Owner) -> DashboardOut:
             )
             for row in at_risk_rows
         ],
-        todos=[TodoOut.model_validate(row) for row in list_todos(session, owner)],
+        todos=[TodoOut.model_validate(row) for row in _panel_todos(session, owner)],
         parts_orders=[PartsOrderOut.model_validate(row) for row in _current_parts_orders(session)],
         calendar=calendar,
     )
@@ -210,7 +220,7 @@ def member_dashboard_payload(session, principal: AnyPrincipal) -> MemberDashboar
         window_start=window_start,
         window_end=window_end,
         hoists=_hoist_snapshots(hoists, hour_rows, {}),
-        todos=[TodoOut.model_validate(row) for row in list_todos(session, principal)],
+        todos=[TodoOut.model_validate(row) for row in _panel_todos(session, principal)],
         calendar=calendar,
     )
 
