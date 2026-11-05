@@ -1,12 +1,15 @@
 """Append-only token ledger.
 
 apply_ledger is the writer that inserts a token_transactions row and moves the
-cache by that amount. rebuild_token_balance only sets the cache from the ledger
-sum and inserts no row. grant_period_allocations calls apply_ledger for each
-active member who does not already have this America/Regina month's
-monthly_allocation. A row tagged with tz America/Regina and a period counts
-only for that period. A row with no such tag counts when created_at falls in
-the month. The owner request is the only caller.
+allowance and purchased piles. After every write, token_balance equals
+allowance_balance plus purchased_balance, including when those three numbers
+were already apart. rebuild_token_balance sets the piles from their column
+sums and sets token_balance to that sum. It inserts no row.
+grant_period_allocations calls apply_ledger for each active member who does
+not already have this America/Regina month's monthly_allocation. A row tagged
+with tz America/Regina and a period counts only for that period. A row with
+no such tag counts when created_at falls in the month. The owner request is
+the only caller.
 """
 
 from __future__ import annotations
@@ -16,13 +19,53 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import UUID
 
+from fastapi import HTTPException
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.models import Member, MemberStatus, TokenTransaction, TokenTransactionKind
 from app.shop_time import PRICING_TZ, pricing_now
 
 PERIOD_TZ = "America/Regina"
+_PURCHASE_KIND = "token_purchase"
+
+
+def _kind_value(kind: TokenTransactionKind) -> str:
+    if isinstance(kind, TokenTransactionKind):
+        return kind.value
+    return str(kind)
+
+
+def _default_piles(member: Member, kind: TokenTransactionKind, amount: Decimal) -> tuple[Decimal, Decimal]:
+    """Split a ledger amount when the caller does not name the piles.
+
+    A purchase credits the purchased pile. Any other credit, including a
+    grant, a refund, and a positive adjustment, credits allowance. A spend
+    takes allowance first, then purchased.
+    """
+    if _kind_value(kind) == _PURCHASE_KIND:
+        return Decimal("0"), amount
+    if amount >= 0:
+        return amount, Decimal("0")
+    take = -amount
+    allowance = Decimal(member.allowance_balance)
+    from_allowance = min(allowance, take) if allowance > 0 else Decimal("0")
+    return -from_allowance, -(take - from_allowance)
+
+
+def _conflict(code: str, message: str) -> HTTPException:
+    return HTTPException(status_code=409, detail={"code": code, "message": message})
+
+
+def _conflict_code(exc: IntegrityError) -> str:
+    orig = getattr(exc, "orig", None)
+    diag = getattr(orig, "diag", None)
+    constraint = getattr(diag, "constraint_name", None) or ""
+    message = " ".join(part for part in (str(constraint), str(orig) if orig is not None else str(exc)) if part)
+    if "payment_ref" in message or "uq_token_transactions_payment_ref" in message:
+        return "already_credited"
+    return "duplicate_ledger_entry"
 
 
 def apply_ledger(
@@ -34,20 +77,55 @@ def apply_ledger(
     booking_id=None,
     note: str | None = None,
     meta: dict | None = None,
+    payment_ref: str | None = None,
+    allowance_amount: Decimal | None = None,
+    purchased_amount: Decimal | None = None,
 ) -> TokenTransaction:
     amount = Decimal(amount)
+    if allowance_amount is None and purchased_amount is None:
+        allowance_amount, purchased_amount = _default_piles(member, kind, amount)
+    else:
+        allowance_amount = Decimal("0") if allowance_amount is None else Decimal(allowance_amount)
+        purchased_amount = Decimal("0") if purchased_amount is None else Decimal(purchased_amount)
+    if allowance_amount + purchased_amount != amount:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "pile_mismatch",
+                "message": "The allowance and purchased amounts must sum to the ledger amount.",
+            },
+        )
+    # Trust the piles. A cache that had drifted is pulled back onto the sum.
+    new_allowance = Decimal(member.allowance_balance) + allowance_amount
+    new_purchased = Decimal(member.purchased_balance) + purchased_amount
     row = TokenTransaction(
         member_id=member.id,
         booking_id=booking_id,
         kind=kind,
         amount=amount,
+        allowance_amount=allowance_amount,
+        purchased_amount=purchased_amount,
         note=note,
         meta=meta,
+        payment_ref=payment_ref,
     )
     session.add(row)
-    member.token_balance = Decimal(member.token_balance) + amount
+    member.allowance_balance = new_allowance
+    member.purchased_balance = new_purchased
+    member.token_balance = new_allowance + new_purchased
     session.add(member)
-    session.flush()
+    try:
+        session.flush()
+    except IntegrityError as exc:
+        # One reserve, refund, and debit per booking, and one credit per
+        # payment id. The rollback also undoes the pile move above.
+        session.rollback()
+        if _conflict_code(exc) == "already_credited":
+            raise _conflict("already_credited", "That payment has already been credited.") from None
+        raise _conflict(
+            "duplicate_ledger_entry",
+            f"This booking already has a {_kind_value(kind)} ledger row.",
+        ) from None
     return row
 
 
@@ -60,8 +138,17 @@ def ledger_sum(session: Session, member_id) -> Decimal:
     return Decimal(total)
 
 
+def _pile_sum(session: Session, member_id, column) -> Decimal:
+    total = session.scalar(
+        select(func.coalesce(func.sum(column), 0)).where(TokenTransaction.member_id == member_id)
+    )
+    return Decimal(total)
+
+
 def rebuild_token_balance(session: Session, member: Member) -> Decimal:
-    member.token_balance = ledger_sum(session, member.id)
+    member.allowance_balance = _pile_sum(session, member.id, TokenTransaction.allowance_amount)
+    member.purchased_balance = _pile_sum(session, member.id, TokenTransaction.purchased_amount)
+    member.token_balance = member.allowance_balance + member.purchased_balance
     session.add(member)
     return member.token_balance
 
