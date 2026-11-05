@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
 from app.deps import DbSession, MemberUser, Owner
 from app.schemas import (
@@ -52,8 +52,13 @@ def create_my_parts_request(
 
 
 @router.get("/parts-requests", response_model=list[PartsRequestOut])
-def list_parts_requests(session: DbSession, _principal: Owner) -> list[PartsRequestOut]:
-    rows = parts_request_service.list_parts_requests(session)
+def list_parts_requests(
+    session: DbSession,
+    _principal: Owner,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> list[PartsRequestOut]:
+    rows = parts_request_service.list_parts_requests(session, limit=limit, offset=offset)
     return [PartsRequestOut.from_row(row) for row in rows]
 
 
@@ -69,8 +74,13 @@ def patch_parts_request(
 
 
 @router.get("/parts-orders", response_model=list[PartsOrderOut])
-def list_parts_orders(session: DbSession, _principal: Owner) -> list[PartsOrderOut]:
-    rows = parts_request_service.list_parts_orders(session)
+def list_parts_orders(
+    session: DbSession,
+    _principal: Owner,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> list[PartsOrderOut]:
+    rows = parts_request_service.list_parts_orders(session, limit=limit, offset=offset)
     return [PartsOrderOut.model_validate(row) for row in rows]
 
 
