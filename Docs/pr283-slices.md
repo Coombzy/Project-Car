@@ -1,83 +1,65 @@
-# Slices extracted from PR #283 (member and owner booking screens)
+# Slices extracted from PR #283
 
-#283 is too large to review or merge as-is (153 files, stacked on booking-rules branch, on hold). These are the useful pieces broken into small, proof-driven slices that can be implemented against `main` (or a clean booking base once rules are on main).
+#283 is too large to review or merge (153 files, stacked on `cursor/booking-rules-8f47`, queue:hold). The pieces below are implemented against `main` (`1824a51`, alembic head `20261023_0016`). #283 is reference only. Do not branch from it and do not merge it.
 
-Use the screenshots, UI checklist, and RED/GREEN commits from #283 as reference. Do not merge #283.
+`Docs/pr283-slices-detailed.md` is the backlog copy. This page matches it. Revisions `20261031_0017` through `20261031_0022` are not on main; the queue uses `20261105_0017`, `20261105_0018`, and `20261105_0019`.
 
-## Slice 1: Book creates and confirms in one submit
-- **Category**: member booking
-- **Target**: In the member booking action, if the created visit is not already `confirmed`, call `confirmMemberBooking(created.id)` in the same submit. A refused book leaves no pending hold.
-- **Proof (RED first)**: New test that a successful book returns a confirmed visit without a second Confirm step. A refused book leaves no row.
-- **Acceptance**: Member sees the booking as confirmed immediately. No extra Confirm button appears for a successful book.
-- **Must not get worse**: Existing booking creation tests and the 24-hour cancel rule.
-- **Files**: `apps/project-car/web/app/member/schedule/actions.ts`, related shop-api helper, new test.
-- **Depends on**: basic booking create existing on main.
+## Landed — not in the queue
 
-## Slice 2: Member schedule shows active and overdue visits
-- **Category**: member UI
-- **Target**: "Your bookings" on `/member/schedule` includes visits with status `active` and `overdue` (in addition to pending, confirmed, no_show). Cancel control stays hidden on active/overdue.
-- **Proof (RED first)**: Test or assertion that a checked-in (active) visit appears as "In the bay" with no cancel. Overdue appears.
-- **Acceptance**: A member whose only visit is checked-in sees it; they do not see "No upcoming bookings."
-- **Must not get worse**: Home page already listing active visits.
-- **Files**: `apps/project-car/web/app/member/schedule/page.tsx`, related test.
-- **Depends on**: none beyond current schedule page.
+- **This week.** `apps/project-car/web/components/schedule-toolbar.tsx` already uses `scheduleHref(base, { view: "week", month })`. `parseWeekParam` uses the current Monday when `week` is omitted. `ScheduleView` is `"month" | "week"`.
+- **Shop-error helpers.** Landed in #271 (`af2e0fe`). `apps/project-car/web/lib/shop-error.ts`, `lib/page.ts`, and `lib/shop-error.test.ts` already cover the session redirects.
 
-## Slice 3: Manual token adjustment sends typed reason as ledger note
-- **Category**: owner / tokens
-- **Target**: `adjustMemberTokens` posts `{ amount, reason, note: reason }`. The tokens route still requires `reason` (3–500 chars). The typed text appears in the ledger note column.
-- **Proof (RED first)**: Test that the post includes both `reason` and `note`. Ledger shows the typed text.
-- **Acceptance**: Posting an adjustment with a reason writes that text on the ledger row. Missing or too-short reason is rejected.
-- **Must not get worse**: Existing token adjustment and ledger tests.
-- **Files**: `apps/project-car/web/lib/shop-api.ts`, adjustment form, related test.
-- **Depends on**: tokens route requiring reason.
+## Queue
 
-## Slice 4: Closing a bay requires a reason and refunds future bookings
-- **Category**: owner / bookings
-- **Target**: PATCH hoist to maintenance or locked with future bookings returns 409 unless `cancel_bookings` and a reason are sent. Future bookings are refunded in full; a visit that has already started stays.
-- **Proof (RED first)**: Test that closing without reason or cancel flag is 409. With both, future bookings are refunded and started visits remain.
-- **Acceptance**: Owner is prompted for a reason. Future holds are cleared with full refund; in-progress visits are untouched.
-- **Must not get worse**: Existing hoist and booking tests.
-- **Files**: hoist router/service, new test.
-- **Depends on**: booking cancel/refund path existing or landed first.
+### 1. Ledger piles and one reserve, refund, and debit per booking
+- **On main:** `token_balance` only. A second `booking_refund` for the same booking inserts.
+- **Adds:** `20261105_0017` (revises `20261023_0016`) — partial unique index `uq_token_transactions_booking_kind` on `(booking_id, kind)` where `booking_id` is not null and `kind` is `booking_reserve`, `booking_refund`, or `booking_debit`, plus `payment_ref`. `20261105_0018` (revises `20261105_0017`) — `allowance_balance`, `purchased_balance`, `allowance_amount`, `purchased_amount`. `apply_ledger` keeps `token_balance == allowance_balance + purchased_balance`. A second refund or debit is 409 `duplicate_ledger_entry`.
+- **RED:** `pytest apps/project-car/api/tests/test_token_ledger.py::test_balance_equals_allowance_plus_purchased` (and `test_second_booking_refund_is_409` in that commit).
+- **Files:** the two revisions, `apps/project-car/api/app/models.py`, `app/services/tokens.py`, `app/seed.py`, `app/schemas.py`, `app/routers/member.py`, `tests/test_token_ledger.py`.
+- **Depends on:** none.
 
-## Slice 5: "This week" returns to the current week
-- **Category**: schedule UI
-- **Target**: The "This week" control uses `scheduleHref(base, { view: "week", month })` so it always lands on the current Monday in week view (omitting the week param).
-- **Proof (RED first)**: Test that the href does not keep a stale week or day view.
-- **Acceptance**: Clicking "This week" from any week or day view returns to the current week.
-- **Must not get worse**: Other schedule navigation.
-- **Files**: `apps/project-car/web/components/schedule-toolbar.tsx`, related test.
-- **Depends on**: none.
+### 2. Signup mode and a stand-in token purchase
+- **On main:** no signup router, no `shop_settings`, no `payment_processor` field. `billing_transactions` already exists without GST columns.
+- **Adds:** `20261105_0019` (revises `20261105_0018`) creates `shop_settings` with `signup_mode=self_serve`. New `app/routers/signup.py` and `app/services/payments.py`. `Settings.payment_processor = "stand-in"` is a pydantic-settings field, so `PAYMENT_PROCESSOR` overrides it with no extra parsing. Only `"stand-in"` is registered; any other name is 422 `unknown_processor` (the #283 reference returns 500). Purchase writes one existing-shape billing row and one `token_purchase` ledger row.
+- **RED:** `pytest apps/project-car/api/tests/test_self_serve_signup.py::test_self_serve_signup_creates_a_basic_member` (`POST /signup` is not a route). Same commit: `test_unknown_processor_is_422`.
+- **Files:** `20261105_0019_signup_mode.py`, `app/routers/signup.py`, `app/services/signup_mode.py`, `app/services/payments.py`, `app/config.py`, `app/main.py`, `app/models.py`, `app/services/tokens.py`, `app/routers/member.py`, `web/app/signup/page.tsx`, `web/app/signup/actions.ts`, tests.
+- **Depends on:** slice 1. Initial allocation and purchase call `apply_ledger`, which writes the pile columns and `payment_ref`.
 
-## Slice 6: Signup mode (self-serve vs waitlist) and stand-in token purchase
-- **Category**: signup / payments
-- **Target**: Shop setting for signup mode (default self-serve). New member can sign up and pick Basic. Token purchase goes through the stand-in payment adapter and records a billing row.
-- **Proof (RED first)**: Test that self-serve signup creates a member on Basic. Token purchase with stand-in creates the expected ledger/billing row.
-- **Acceptance**: Signup works without waiting for a real processor. Purchase is recorded.
-- **Must not get worse**: Existing waitlist and member creation.
-- **Files**: signup router, shop settings, payment stand-in, related tests.
-- **Depends on**: none critical; can land after basic member create.
+### 3. Member book confirms inside the create transaction
+- **On main:** `memberCreateBookingAction` calls `createMemberBooking` then `confirmMemberBooking`. `create_booking` always inserts `PENDING`. `get_db` commits that request, so a refused confirm leaves the row.
+- **Adds:** `confirm: bool = False` on `create_booking`. `member_create_booking` passes `confirm=True` so the status change is in that same transaction. The web calls confirm only when `created.status !== "confirmed"`. Owner `POST /bookings` stays pending.
+- **RED:** `pytest apps/project-car/api/tests/test_member_book_confirm.py::test_refused_member_book_leaves_no_row`.
+- **Files:** `app/services/bookings.py`, `app/routers/member.py`, `web/app/member/schedule/actions.ts`, `tests/test_member_book_confirm.py`.
+- **Depends on:** none. No migration. Land after slice 1 so the reserve uses the pile-aware `apply_ledger`.
 
-## Slice 7: Restore pure shop-error helpers and session redirects
-- **Category**: error handling
-- **Target**: Pure helpers in `lib/shop-error.ts` are used by `page.ts`. 401 is an owner session error; 401/403 are member session errors. Redirects stay `/login?reason=session` and `/member/login?reason=session`. Non-session errors use the fallback message.
-- **Proof (RED first)**: Existing or restored test covering the cases above.
-- **Acceptance**: Session expiry redirects correctly. Other errors do not look like session errors.
-- **Must not get worse**: Current error display.
-- **Files**: `lib/shop-error.ts`, `lib/page.ts`, test.
-- **Depends on**: none.
+### 4. Member schedule lists active and overdue visits
+- **On main:** `me.bookings` exists. `/member/schedule` has no "Your bookings" filter. `booking-words.ts`, `booking-calendar.ts`, and `memberCancelOffer` do not exist. "In the bay" is not a label on main.
+- **Adds:** those two lib files, the list on `app/member/schedule/page.tsx` (pending, confirmed, no_show, active, overdue), and the card using `memberCancelOffer` so active and overdue have no cancel. `active` reads "In the bay".
+- **RED:** `node --test apps/project-car/web/lib/booking-calendar.test.ts` (checked-in visit under Your bookings, labelled "In the bay", no cancel).
+- **Files:** `web/app/member/schedule/page.tsx`, `web/lib/booking-words.ts`, `web/lib/booking-calendar.ts`, `web/lib/booking-calendar.test.ts`, `web/components/member-booking-card.tsx`.
+- **Depends on:** none.
 
-## Suggested order
-1. Slice 5 (This week) — tiny, no dependencies
-2. Slice 2 (active/overdue visibility) — small UI
-3. Slice 7 (shop-error) — restores helpers
-4. Slice 1 (book + confirm)
-5. Slice 3 (token note)
-6. Slice 4 (bay close) — may need cancel/refund path
-7. Slice 6 (signup + stand-in)
+### 5. Manual token adjustment requires a 3–500 character reason
+- **On main:** `TokenAdjustment` is `{ amount, note? }` with `note` optional, max 2000. `POST /members/{id}/tokens` with `{ "amount": "1" }` is 201 and the note becomes "Owner adjustment". The 3–500 `reason` and 422 `reason_required` exist only on #283.
+- **Adds:** `reason` on `TokenAdjustment`, the 422 in `adjust_member_tokens`, and a web post of `{ amount, reason, note: reason }`. The typed text is the ledger note.
+- **RED:** `pytest apps/project-car/api/tests/test_token_adjustment.py::test_short_or_missing_reason_is_422`.
+- **Files:** `app/schemas.py`, `app/routers/members.py`, `web/lib/shop-api.ts`, `web/app/members/actions.ts`, `web/app/members/[id]/page.tsx`, `tests/test_token_adjustment.py`, `web/lib/token-adjustment.test.ts`.
+- **Depends on:** none. No migration. Land after slice 1 so the adjustment uses the pile-aware `apply_ledger`.
 
-## Notes
-- Each slice should be its own small PR with a RED commit then GREEN commit.
-- Do not edit `.github/workflows`.
-- Prefer diffs and short prompts when implementing with local models.
-- #283 can stay open on hold as a reference until these land.
+### 6. Closing a bay requires a reason and refunds future bookings
+- **On main:** `PATCH /hoists/{id}` with `{ "status": "maintenance" }` returns 200 and leaves future bookings. `HoistPatch` has no `cancel_bookings` or `reason`. `cancel_booking` already refunds a pending or confirmed reserve in full and refuses `active` and `overdue`.
+- **Adds:** `cancel_bookings` and `reason` on `HoistPatch`, `future_bookings_on_hoist`, and the 409 `bay_has_bookings` gate. With both fields, future holds are refunded in full and a started visit stays. The owner form asks for the reason.
+- **RED:** `pytest apps/project-car/api/tests/test_bay_closure.py::test_close_without_reason_or_cancel_flag_is_409`.
+- **Files:** `app/schemas.py`, `app/routers/hoists.py`, `app/services/bookings.py`, `web/app/hoists/page.tsx`, `web/app/hoists/actions.ts`, `tests/test_bay_closure.py`.
+- **Depends on:** none. No migration. `cancel_booking` is already on main. Land after slice 1 so each refund uses the pile-aware `apply_ledger`.
+
+## Order
+
+1. Ledger (`20261105_0017`, `20261105_0018`)
+2. Signup and stand-in purchase (`20261105_0019` revises `20261105_0018`)
+3. Member book confirms in one transaction
+4. Your bookings (active and overdue)
+5. Token adjustment reason
+6. Bay close
+
+Each slice is its own PR with a RED commit then a GREEN commit. Do not edit `.github/workflows`.
