@@ -288,6 +288,16 @@ jobs:
         if: steps.shop_changes.outputs.shop == 'true'
         run: bash visual/build-web.sh
 
+      # CI=true makes Playwright skip its own browser download. A cache hit above
+      # only installs OS libraries, so the UI proof needs Chrome for Testing here.
+      - name: Install Chrome
+        if: steps.shop_changes.outputs.shop == 'true'
+        run: npx playwright install chromium
+        env:
+          CI: "true"
+
       - name: Layout shift and screenshots
         if: steps.shop_changes.outputs.shop == 'true'
         run: npm run visual
+        env:
+          CI: "true"
