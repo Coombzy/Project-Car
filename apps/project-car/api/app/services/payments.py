@@ -59,7 +59,7 @@ def _amount_cad(value: Decimal) -> Decimal:
         raise _http(
             422,
             "invalid_amount",
-            "Enter an amount greater than zero with at most 2 decimal places.",
+            "Enter an amount greater than zero and under 100,000,000, with at most 2 decimal places.",
         )
     return amount.quantize(_CENTS, rounding=ROUND_HALF_UP)
 
