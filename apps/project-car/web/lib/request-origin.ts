@@ -107,12 +107,15 @@ export function isCustomerShopHost(headers: Pick<Headers, "get">): boolean {
 }
 
 /**
- * On the customer host, shop-web may render Member routes only.
+ * On the customer host, shop-web may render Member routes and public signup.
  * `/members` (Owner list) and `/membership` are not Member UI.
  * `_next/*` and favicon are allowed so a matcher change cannot serve ops HTML for assets.
  */
 export function customerHostAllowsPath(pathname: string): boolean {
   if (pathname === "/member" || pathname.startsWith("/member/")) {
+    return true;
+  }
+  if (pathname === "/signup" || pathname.startsWith("/signup/")) {
     return true;
   }
   if (pathname === "/favicon.ico" || pathname.startsWith("/_next/")) {
