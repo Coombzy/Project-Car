@@ -8,6 +8,10 @@ The failing proof runs before the feature code. The red output is in the pass. T
 
 sample rows are marked sample and are not counted by the proof.
 
+Do not add a queue row that Ben has not asked for or that is not already in the docs. If fewer than three rows are open, copy the next planned local item from the shop docs. If none is left, ask Ben. Do not generate one.
+
+When a green check merges, the queue move happens in that same pass. A row is not done until it is off Now. A skipped gate is closed, not left open.
+
 Do not add a review note. Do not auto-apply review-bot comments. Do not add a review bot that merges its own suggestions.
 
 No open pull request is not idle. Read `Docs/queue.md` and start the next row. A status check does not ping. A missing token is a skip. An unwritten local case is built the safe way and named in `Docs/later.md`.
