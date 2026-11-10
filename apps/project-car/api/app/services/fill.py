@@ -35,7 +35,7 @@ DEFAULT_MAX_DISCOUNT = Decimal("25")
 DEFAULT_DAY_START = time(8, 0)
 DEFAULT_DAY_END = time(21, 0)
 UNAVAILABLE_HOIST = (HoistStatus.MAINTENANCE, HoistStatus.LOCKED)
-OCCUPYING = (BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.ACTIVE)
+OCCUPYING = (BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.ACTIVE, BookingStatus.OVERDUE)
 
 
 class FillError(ValueError):
