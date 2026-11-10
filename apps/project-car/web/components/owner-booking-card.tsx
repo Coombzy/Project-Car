@@ -1,3 +1,4 @@
+// Probe: non-doc web file still runs pytest and screenshots.
 import { BookingCost } from "./booking-cost";
 import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
 import { StatusPill } from "./status-pill";
