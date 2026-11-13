@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     fill_max_discount_pct: float = 25
     fill_day_start: str = "08:00"
     fill_day_end: str = "21:00"
+    # Only "stand-in" is registered. PAYMENT_PROCESSOR overrides this field.
+    # The stand-in does not call a processor and does not apply a fee rate.
+    payment_processor: str = "stand-in"
     # Email outbox. Empty SMTP_HOST uses the durable stub (records sent, no network).
     smtp_host: str = ""
     smtp_port: int = 587

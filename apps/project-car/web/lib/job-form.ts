@@ -1,10 +1,13 @@
 /** A posted bounty is 0 to 10,000 tokens, with at most two decimal places.
- * `ShopJobCreate.token_bounty` on origin/main is `ge=0`. `create_job` stores 0
- * and refuses a negative or a bounty above 10,000 (`tests/test_job_bounty.py`). */
+ * R75 accepts 0 and 10,000. `ShopJobCreate.token_bounty` is `ge=0` with no
+ * schema cap (`schemas.py`). `create_job` stores 0 and refuses a negative or
+ * a bounty above 10,000 (`tests/test_job_bounty.py`). This module does not
+ * change the API.
+ */
 export const JOB_BOUNTY_CAP = 10_000;
 
-const TITLE_ERROR = "Enter a title.";
-const BOUNTY_ERROR =
+export const TITLE_ERROR = "Enter a title.";
+export const BOUNTY_ERROR =
   "A job bounty is 0 to 10,000 tokens, with at most two decimal places.";
 
 const CAP_CENTS = JOB_BOUNTY_CAP * 100;

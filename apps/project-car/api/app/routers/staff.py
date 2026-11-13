@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
@@ -29,6 +30,7 @@ from app.schemas import (
     ToolCribExceptionOut,
 )
 from app.services.chat import ChatError
+from app.services.schedule_window import resolve_schedule_window
 from app.services.shop_hoist_requests import (
     approve_shop_hoist_request,
     create_shop_hoist_request,
@@ -49,9 +51,10 @@ from app.services.staff import (
     decide_tool_crib_exception,
     read_balance,
     read_open_requests,
-    read_schedule,
     send_back_job,
 )
+from app.services.staff_schedule import read_schedule_window
+from app.shop_time import pricing_today
 
 router = APIRouter(tags=["staff"])
 
@@ -262,8 +265,24 @@ def staff_accept_refund(request_id: UUID, session: DbSession, principal: Owner) 
 
 
 @router.get("/staff/schedule", response_model=list[BookingOut])
-def staff_schedule(session: DbSession, principal: Owner) -> list[BookingOut]:
-    return [BookingOut.from_booking(row) for row in read_schedule(session, principal)]
+def staff_schedule(
+    session: DbSession,
+    principal: Owner,
+    window_start: date | None = Query(default=None),
+    window_end: date | None = Query(default=None),
+    limit: int = Query(default=200, ge=1, le=500),
+) -> list[BookingOut]:
+    start, end = resolve_schedule_window(
+        window_start, window_end, today=pricing_today()
+    )
+    rows = read_schedule_window(
+        session,
+        principal,
+        window_start=start,
+        window_end=end,
+        limit=limit,
+    )
+    return [BookingOut.from_booking(row) for row in rows]
 
 
 @router.get("/staff/members/{member_id}/balance", response_model=StaffBalanceOut)
