@@ -174,7 +174,7 @@ One row per `(analysis_date, asset, horizon)`. Update in place. Do not duplicate
 | 2026-10-04 | ETH | 1w | 2480 | 2980 | 2580 | 2840 | 52 | digestion | 0.72 |  |  |  |  |  |  | open | clear Oct2 H 2774+1.5xATR |
 | 2026-10-04 | ETH | 1m | 2200 | 3450 | 2500 | 3100 | 48 | digestion | 0.72 |  |  |  |  |  |  | open | Daily insert |
 | 2026-10-04 | ETH | 3m | 1800 | 4100 | 2200 | 3500 | 42 | digestion | 0.72 |  |  |  |  |  |  | open | Daily insert |
-| 2026-10-08 | BTC | 1d | 79400 | 86480 | 81200 | 84800 | 56 | trend-down | -2.67 |  |  |  |  |  |  | open | low $600 under 80000 (79400); high prior close 83275.93+1.5xATR2092~86414 rounded to 86480; width 7080=3.39x; ETF 7 Oct -$484.9M |
+| 2026-10-08 | BTC | 1d | 79400 | 86480 | 81200 | 84800 | 56 | trend-down | -2.67 |  |  |  |  |  |  | open | low $600 under 80000 (79400); high published 86480 (prior close 83275.93+1.5xATR2092=86414); width 7080=3.39x; ETF 7 Oct -$484.9M |
 | 2026-10-08 | BTC | 1w | 74200 | 91250 | 78000 | 86800 | 52 | trend-down | -2.67 |  |  |  |  |  |  | open | 2-of-3 + CPI 14 Oct in-window |
 | 2026-10-08 | BTC | 1m | 68000 | 104000 | 74000 | 92000 | 46 | trend-down | -2.67 |  |  |  |  |  |  | open | Daily insert |
 | 2026-10-08 | BTC | 3m | 56000 | 120000 | 70000 | 104000 | 40 | trend-down | -2.67 |  |  |  |  |  |  | open | Daily insert |
