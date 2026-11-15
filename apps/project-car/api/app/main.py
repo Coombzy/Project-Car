@@ -20,6 +20,7 @@ from app.routers import (
     member_chat,
     members,
     parts_requests,
+    signup,
     staff,
     tiers,
     todos,
@@ -39,7 +40,8 @@ def create_app() -> FastAPI:
             "A crib checkout and a crib return each store a row. "
             "Auth is a v1 session stub (Owner cookie/bearer; Member cookie), "
             "not OIDC. Demo data only — the shop is not open and there is no "
-            "live payment processor."
+            "live payment processor. Public signup follows shop_settings "
+            "signup_mode. A token purchase uses the stand-in processor."
         ),
     )
     register_error_handlers(application)
@@ -56,6 +58,7 @@ def create_app() -> FastAPI:
 
     application.include_router(auth.router)
     application.include_router(member.router)
+    application.include_router(signup.router)
     application.include_router(waitlist.router)
     application.include_router(dashboard.router)
     application.include_router(tiers.router)

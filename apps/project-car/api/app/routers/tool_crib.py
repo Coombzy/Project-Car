@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from app.deps import DbSession, Owner
 from app.schemas import ToolCribCheckoutCreate, ToolCribEventOut, ToolCribReturnCreate
@@ -12,8 +12,13 @@ router = APIRouter(prefix="/tool-crib", tags=["tool-crib"])
 
 
 @router.get("/events", response_model=list[ToolCribEventOut])
-def list_tool_crib_events(session: DbSession, _principal: Owner) -> list[ToolCribEventOut]:
-    rows = tool_crib_service.list_events(session)
+def list_tool_crib_events(
+    session: DbSession,
+    _principal: Owner,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> list[ToolCribEventOut]:
+    rows = tool_crib_service.list_events(session, limit=limit, offset=offset)
     return [ToolCribEventOut.from_row(row) for row in rows]
 
 

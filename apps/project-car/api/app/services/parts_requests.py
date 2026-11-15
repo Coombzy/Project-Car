@@ -82,17 +82,24 @@ def list_member_parts_requests(session: Session, member_id: UUID) -> list[PartsR
     return list(session.scalars(stmt).all())
 
 
-def list_parts_requests(session: Session) -> list[PartsRequest]:
+def list_parts_requests(session: Session, *, limit: int = 50, offset: int = 0) -> list[PartsRequest]:
     stmt = (
         select(PartsRequest)
         .options(selectinload(PartsRequest.member))
         .order_by(PartsRequest.created_at.desc(), PartsRequest.sku)
+        .limit(limit)
+        .offset(offset)
     )
     return list(session.scalars(stmt).all())
 
 
-def list_parts_orders(session: Session) -> list[PartsOrder]:
-    stmt = select(PartsOrder).order_by(PartsOrder.ordered_at.desc(), PartsOrder.po_number)
+def list_parts_orders(session: Session, *, limit: int = 50, offset: int = 0) -> list[PartsOrder]:
+    stmt = (
+        select(PartsOrder)
+        .order_by(PartsOrder.ordered_at.desc(), PartsOrder.po_number)
+        .limit(limit)
+        .offset(offset)
+    )
     return list(session.scalars(stmt).all())
 
 

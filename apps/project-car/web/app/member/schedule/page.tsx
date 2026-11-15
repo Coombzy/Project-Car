@@ -71,6 +71,13 @@ export default async function MemberSchedulePage({
 
     const ordered = sortHoists(schedule.hoists.filter((hoist) => !hoist.is_shop));
     const returnTo = { view, week: weekStart, month, hoist: hoistId };
+    const yours = me.bookings.filter(
+      (booking) =>
+        booking.status === "pending" ||
+        booking.status === "confirmed" ||
+        booking.status === "active" ||
+        booking.status === "overdue",
+    );
     const defaultStart = slot ?? shopDateTimeLocal(new Date(shopClock().getTime() + 72 * 3600 * 1000));
     const defaultEnd = slot ? slotEnd(slot) : shopDateTimeLocal(new Date(shopClock().getTime() + 73 * 3600 * 1000));
 
@@ -141,6 +148,26 @@ export default async function MemberSchedulePage({
             }
           />
         )}
+
+        <section className="card" style={{ marginTop: "1.4rem" }}>
+          <h2>Your bookings</h2>
+          {yours.length === 0 ? (
+            <p className="muted">No upcoming bookings.</p>
+          ) : (
+            yours.map((booking) => {
+              const slot = {
+                booking_id: booking.id,
+                hoist_id: booking.hoist_id,
+                hoist_name: booking.hoist_name,
+                start_at: booking.start_at,
+                end_at: booking.end_at,
+                status: booking.status,
+                own: true,
+              };
+              return <MemberBookingCard key={booking.id} slot={slot} own={booking} returnTo={returnTo} />;
+            })
+          )}
+        </section>
 
         <section className="card" style={{ marginTop: "1.4rem" }}>
           <h2>Book a customer bay</h2>
