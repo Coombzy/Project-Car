@@ -1,6 +1,6 @@
 # v1 launch checklist
 
-**Status:** Checked 2026-11-02. [#225](https://github.com/Coombzy/Project-Car/pull/225) and [#233](https://github.com/Coombzy/Project-Car/pull/233) are merged. [#259](https://github.com/Coombzy/Project-Car/pull/259) is still open. [#222](https://github.com/Coombzy/Project-Car/pull/222) is closed (2026-10-31), not merged. Do not reopen it. Every other pull request in the `merge-order.md` tables is closed and was not merged.
+**Status:** Checked 2026-11-02. [#225](https://github.com/Coombzy/Project-Car/pull/225) and [#233](https://github.com/Coombzy/Project-Car/pull/233) are merged. [#259](https://github.com/Coombzy/Project-Car/pull/259) is still open. [#222](https://github.com/Coombzy/Project-Car/pull/222) is closed (2026-10-31), not merged. Do not reopen it. Every other pull request in the `merge-order.md` tables is closed and was not merged. [#264](https://github.com/Coombzy/Project-Car/pull/264) is open. It is not a table row.
 **Related:** `merge-order.md`, `token-pricing.md`
 
 **Merged** means that pull request is on `main`. **Closed** means it was closed and not merged. **Open** means it is still open. **Waiting on Ben** means the real value is not confirmed. The shop is not open. There is no Stripe. Do not merge a closed or already-merged pull request from this file.
@@ -29,7 +29,7 @@ A **Closed** row is not on `main`. Do not merge it from `merge-order.md`.
 | Weekly rate chart on the member booking screen | [#243](https://github.com/Coombzy/Project-Car/pull/243) | **Closed** |
 | Cancel 24 hours or more is free. Inside 24 hours keeps 50%. No refund once a visit starts. No-show keeps 100% when it is settled. | [#231](https://github.com/Coombzy/Project-Car/pull/231), [#239](https://github.com/Coombzy/Project-Car/pull/239), [#252](https://github.com/Coombzy/Project-Car/pull/252) are closed. Member home, dashboard, bookings, and schedule settle a missed hour on open [#259](https://github.com/Coombzy/Project-Car/pull/259). | **#259 open**. The cancel pull requests are **closed**. |
 | Allowance and purchased piles. Spend allowance first. Purchased tokens survive the grant. Home shows both piles and peak hours this week. | [#246](https://github.com/Coombzy/Project-Car/pull/246), [#249](https://github.com/Coombzy/Project-Car/pull/249), [#251](https://github.com/Coombzy/Project-Car/pull/251) | **Closed** |
-| Any bay is the lowest free member bay for the whole visit | [#248](https://github.com/Coombzy/Project-Car/pull/248). A Postgres race between two members is not proven. | **Closed** |
+| Any bay is the lowest free member bay for the whole visit | [#248](https://github.com/Coombzy/Project-Car/pull/248). Two members at once is the opt-in Postgres test in [#264](https://github.com/Coombzy/Project-Car/pull/264). CI runs the lost-insert retry and skips the live race. | **Closed** |
 | Owner week shows every hour. Phone is a day list. | [#235](https://github.com/Coombzy/Project-Car/pull/235), [#253](https://github.com/Coombzy/Project-Car/pull/253). Member calendar is week on desktop and day on a phone ([#234](https://github.com/Coombzy/Project-Car/pull/234)). | **Closed** |
 | Close a bay with a written reason and refund future bookings | API [#230](https://github.com/Coombzy/Project-Car/pull/230), form [#254](https://github.com/Coombzy/Project-Car/pull/254) | **Closed** |
 | Manual token change requires a written reason | API [#229](https://github.com/Coombzy/Project-Car/pull/229), form [#257](https://github.com/Coombzy/Project-Car/pull/257). Balance cannot go below zero. | **Closed** |
@@ -49,4 +49,4 @@ A **Closed** row is not on `main`. Do not merge it from `merge-order.md`.
 | Say whether a live unpublished fill percent should ever price a booking. Today only a published deal does. | **Waiting on Ben** |
 | Open the shop and turn on live billing | **Waiting on Ben**. No Stripe in this stack. |
 | Month view as bookable lanes | Not in this stack. Month stays the density heatmap. |
-| Prove two members cannot take the same any-bay hour on Postgres | Not proven. No workflow or CI change in this stack. |
+| Prove two members cannot take the same any-bay hour on Postgres | Proved by the opt-in test in [#264](https://github.com/Coombzy/Project-Car/pull/264) (`ANY_BAY_POSTGRES=1`). CI does not start Postgres. No workflow change. |
