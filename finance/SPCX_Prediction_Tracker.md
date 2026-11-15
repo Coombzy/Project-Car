@@ -46,7 +46,7 @@ Last official: **2026-10-08** O **$167.47** H **$167.60** L **$160.00** C **$160
 | 2026-09-03 | 3m | 100 | 230 | 130 | 200 | 25 | digestion | below-avg | -1.07 | 141.05 | 176.42 | 160.57 |  |  |  | open | path L141.05 H176.42 Last160.57; unlock 10/09 + 10/24; Q3 ~Nov + Dec-8 remainder; path refresh 10/08 |
 | 2026-09-04 | 1d | 140 | 160 | 148 | 158 | 55 | trend-up | elevated | 6.42 | 145.14 | 155.00 | 153.47 | yes | yes | 0.3% | closed | next 9/08 official inside |
 | 2026-09-04 | 1w | 135 | 170 | 145 | 165 | 45 | trend-up | elevated | 6.42 | 144.89 | 155.00 | 148.15 | yes | yes | 4.4% | closed | Day 5/5 after 9/14 official |
-| 2026-09-04 | 1m | 120 | 190 | 140 | 175 | 35 | trend-up | elevated | 6.42 | 142.87 | 176.42 | 171.92 | yes | yes | 8.4% | closed | Auditor 10/08: Day 21/21 clock 10/06 C171.92 inside 120-190 HIT; path L142.87 H176.42; dir yes; do not reopen |
+| 2026-09-04 | 1m | 120 | 190 | 140 | 175 | 35 | trend-up | elevated | 6.42 | 142.87 | 176.42 | 171.92 | yes | yes | 9.2% | closed | Auditor 10/08: Day 21/21 clock 10/06 C171.92 inside 120-190 HIT; path L142.87 H176.42; dir yes; do not reopen |
 | 2026-09-04 | 3m | 100 | 230 | 130 | 200 | 30 | trend-up | elevated | 6.42 | 142.87 | 176.42 | 160.57 |  |  |  | open | path L142.87 H176.42 Last160.57; unlock 10/09 + 10/24; Q3 ~Nov + Dec-8 remainder; path refresh 10/08 |
 | 2026-09-08 | 1d | 144 | 160 | 145 | 155 | 40 | digestion | below-avg | -1.20 | 145.55 | 153.00 | 147.55 | yes | yes | 1.6% | closed | next 9/09 official; extra-low held |
 | 2026-09-08 | 1w | 135 | 175 | 142 | 165 | 40 | digestion | below-avg | -1.20 | 142.87 | 155.00 | 143.49 | yes | no | 6.5% | closed | Day 5/5 after 9/15 official |
