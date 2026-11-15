@@ -6,7 +6,7 @@ One row per `(analysis_date, asset, horizon)`. Update in place. Do not duplicate
 **Status:** `open` · `preliminary` · `closed` · `expired`  
 **Hit:** path high/low and as-of close stayed inside **range** (not only bias). Crypto is 24/7 — grade on horizon window from analysis_date as-of, not NYSE close.
 
-**Last audit:** 2026-10-02T14:40Z (carried; Daily does not regrade). Inbound blob e3839c7 (160 rows). Daily 2026-10-08 insert only. Did not rewrite Oct 3 BTC 82800-87850 / ETH 2575-2765 or Oct 4 BTC 84200-89550 / ETH 2610-2855. Did not invent Oct 5/6 ETH rows. Wick-through high floor OFF (latest closed BTC 1d is 2026-10-01 MISS HIGH).
+**Last audit:** 2026-10-02T14:40Z (carried; Daily does not regrade). Inbound blob e3839c7 (160 rows). Daily 2026-10-08 insert only. Did not rewrite Oct 3 BTC 82800-87850 / ETH 2575-2765 or Oct 4 BTC 84200-89550 / ETH 2610-2855. Did not invent Oct 5/6 ETH rows. Wick-through high floor OFF (latest closed BTC 1d is 2026-10-01 MISS HIGH) except ETH 2026-10-08 1w high still uses the Oct2 wick cap 2773.52+1.5xATR57=2859.
 
 **Spot context:** ~13:17Z 8 Oct Yahoo BTC **$82401** Day Range H $83427.12 L $81981.66; ETH **$2527** H $2583.76 L $2513.67. Official UTC close pair Oct 7/Oct 6: BTC $83275.93 / $85557.56 (-2.67%); ETH $2573.53 / $2697.52 (-4.60%). Weekday-5 TR median ATR-proxy BTC $2092 ETH $57. Last completed ETF 7 Oct BTC -$484.9M / ETH -$160.9M (outflow, not mega). CPI 14 Oct inside 1w window; FOMC minutes 7 Oct 18:00Z is prior-24h not next-24h.
 
@@ -178,7 +178,7 @@ One row per `(analysis_date, asset, horizon)`. Update in place. Do not duplicate
 | 2026-10-08 | BTC | 1w | 74200 | 91250 | 78000 | 86800 | 52 | trend-down | -2.67 |  |  |  |  |  |  | open | 2-of-3 + CPI 14 Oct in-window |
 | 2026-10-08 | BTC | 1m | 68000 | 104000 | 74000 | 92000 | 46 | trend-down | -2.67 |  |  |  |  |  |  | open | Daily insert |
 | 2026-10-08 | BTC | 3m | 56000 | 120000 | 70000 | 104000 | 40 | trend-down | -2.67 |  |  |  |  |  |  | open | Daily insert |
-| 2026-10-08 | ETH | 1d | 2448 | 2665 | 2490 | 2600 | 56 | trend-down | -4.60 |  |  |  |  |  |  | open | post-up-low 1.0x ATR57; width 217=3.81x; ETF 7 Oct -$160.9M |
+| 2026-10-08 | ETH | 1d | 2470 | 2659 | 2490 | 2600 | 56 | trend-down | -4.60 |  |  |  |  |  |  | open | spot 2527-1.0xATR57=2470; high prior close 2573.53+1.5xATR57=2659; width 189=3.32x; ETF 7 Oct -$160.9M |
 | 2026-10-08 | ETH | 1w | 2260 | 2859 | 2400 | 2720 | 52 | trend-down | -4.60 |  |  |  |  |  |  | open | CPI in-window; Oct2 H 2773.52+1.5xATR |
 | 2026-10-08 | ETH | 1m | 2000 | 3400 | 2300 | 3000 | 46 | trend-down | -4.60 |  |  |  |  |  |  | open | Daily insert |
 | 2026-10-08 | ETH | 3m | 1650 | 4000 | 2100 | 3400 | 40 | trend-down | -4.60 |  |  |  |  |  |  | open | Daily insert |
