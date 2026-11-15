@@ -6,7 +6,7 @@ One row per `(analysis_date, horizon)`. Update in place. Do not duplicate.
 
 **Close clocks:** 1d = next RTH; **1w = 5th RTH after analysis_date**; 1m = 21st; 3m = 63rd.
 
-**Day N/5 after 2026-10-06 official (Wed 10/07 mid-session, not a close):** Auditor 10/06 closed 9/28 1w (HIT not upper-exceed, H172.47 vs 173 gap 0.53), and did not close 9/29 1w before the 10/06 print. 9/29 1w closed here on 10/06 clock MISS upper (H176.42>174). 9/30=4/5 (closes after 10/07 — do not close); 10/01=3/5 (closes 10/08); 10/02=2/5 (closes 10/09); 10/03 weekend Day 2/5 (closes 10/09); 10/04 weekend Day 2/5 (closes 10/09); 10/07=0/5 (closes 10/14). Widen-high OFF (9/26, 9/27, 9/28 all HIT, 9/28 not upper-exceed).
+**Day N/5 after 2026-10-06 official (Wed 10/07 mid-session, not a close):** Auditor 10/06 closed 9/28 1w (HIT not upper-exceed, H172.47 vs 173 gap 0.53), and did not close 9/29 1w before the 10/06 print. 9/29 1w closed here on 10/06 clock MISS upper (H176.42>174). 9/30=4/5 (closes after 10/07 — do not close); 10/01=3/5 (closes 10/08); 10/02=2/5 (closes 10/09); 10/03 weekend Day 2/5 (closes 10/09); 10/04 weekend Day 2/5 (closes 10/09); 10/07=0/5 (closes 10/15). Widen-high OFF (9/26, 9/27, 9/28 all HIT, 9/28 not upper-exceed).
 
 **1m Day 20/21:** Oldest open 1m **9/08 1m Day 20/21** (closes 10/07 — do not close mid-session). Auditor 10/06 closed 9/03 1m Day 21/21 (C171.09 HIT inside 120-185). Daily 10/07 closed 9/04 1m Day 21/21 clock 10/06 C171.92 HIT inside 120-190.
 
@@ -137,6 +137,6 @@ Last official: **2026-10-06** O **$172.00** H **$176.42** L **$171.39** C **$171
 | 2026-10-04 | 1m | 108 | 222 | 150 | 192 | 32 | trend-up | elevated | 7.35 | 149.34 | 176.42 | 171.92 |  |  |  | open | weekend as-of 10/02 L149.34 H176.42; unlock 10/09 + 10/24; path refresh 10/06 H176.42 C171.92 |
 | 2026-10-04 | 3m | 90 | 268 | 132 | 222 | 26 | trend-up | elevated | 7.35 | 149.34 | 176.42 | 171.92 |  |  |  | open | weekend as-of 10/02 L149.34 H176.42; Q3 ~Nov + Dec-8 remainder; path refresh 10/06 H176.42 C171.92 |
 | 2026-10-07 | 1d | 148 | 198 | 174 | 190 | 44 | trend-up | normal | 0.49 |  |  |  |  |  |  | open | next 10/08 RTH; impulse gate high>=195.80 (176.42+2.5x7.75) clears 191.85; low 148<=150.87; width 50>=3.0x ATR 7.75; bias mid 182>C171.09; not parked 166/168/170/172/175/180; unlock 10/09 extra; 10/07 mid not actual |
-| 2026-10-07 | 1w | 136 | 212 | 172 | 198 | 40 | trend-up | normal | 0.49 | 171.39 | 176.42 | 171.92 |  |  |  | open | Day 0/5; closes 10/14; width 76>=4.0x ATR after +7.63% close; high 212>=195.80; low 136<=150.87; bias mid 185>C171.09; known-event extra unlock 10/09; as-of L171.39 H176.42 C171.92 |
+| 2026-10-07 | 1w | 136 | 212 | 172 | 198 | 40 | trend-up | normal | 0.49 | 171.39 | 176.42 | 171.92 |  |  |  | open | Day 0/5; closes 10/15; width 76>=4.0x ATR after +7.63% close; high 212>=195.80; low 136<=150.87; bias mid 185>C171.09; known-event extra unlock 10/09; as-of L171.39 H176.42 C171.92 |
 | 2026-10-07 | 1m | 118 | 236 | 168 | 210 | 32 | trend-up | normal | 0.49 | 171.39 | 176.42 | 171.92 |  |  |  | open | session-as-of 10/06 L171.39 H176.42 C171.92; unlock 10/09 + 10/24; Q3 ~Nov |
 | 2026-10-07 | 3m | 95 | 280 | 155 | 230 | 26 | trend-up | normal | 0.49 | 171.39 | 176.42 | 171.92 |  |  |  | open | session path L171.39 H176.42 C171.92; unlock 10/09 + 10/24; Q3 ~Nov + Dec-8 remainder |
