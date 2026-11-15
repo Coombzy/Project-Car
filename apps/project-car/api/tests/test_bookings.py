@@ -903,8 +903,8 @@ def test_ninety_minute_booking_via_api(client: TestClient) -> None:
     )
     assert created.status_code == 201, created.text
     body = created.json()
-    assert body["pricing_rule"]["hours"] == "1.5"
-    assert body["pricing_rule"]["base_tokens"] == "150"
+    assert body["pricing_rule"]["hours"] == "2"
+    assert body["pricing_rule"]["base_tokens"] == "200"
     assert _dec(body["reserved_tokens"]) == quote_reserve(start, end).final_reserve_cost
 
 

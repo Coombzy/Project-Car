@@ -201,6 +201,8 @@ class MemberOut(BaseModel):
     emergency_contact_name: str | None
     emergency_contact_phone: str | None
     token_balance: Decimal
+    allowance_balance: Decimal
+    purchased_balance: Decimal
     deposit_balance: Decimal
     created_at: datetime
     updated_at: datetime
@@ -351,6 +353,15 @@ class HoistPatch(BaseModel):
         return value.strip()
 
 
+class PricingSegmentOut(BaseModel):
+    start_at: datetime
+    end_at: datetime
+    band_id: str
+    band_label: str
+    band_multiplier: str
+    band_tokens: str
+
+
 class PricingRuleOut(BaseModel):
     band_id: str
     band_label: str
@@ -364,8 +375,11 @@ class PricingRuleOut(BaseModel):
     fill_discount_pct: str = "0"
     hours: str
     base_tokens: str
+    # Older bookings were priced from the start band and carry no segments.
+    banded_tokens: str | None = None
     final_reserve_cost: str
     tz: str
+    segments: list[PricingSegmentOut] = []
 
 
 class BookingOut(BaseModel):

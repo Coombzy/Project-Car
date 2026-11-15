@@ -1657,3 +1657,16 @@ Source: Opus Project Car launch-readiness report (L-1 to L-5). R100–R155 live 
 - Depends on: R158 (`paid_through`, billing router), R159 (`config.py`). R71 (`routers/tiers.py`) not running at the same time. backlog rows R111, R148 and R150 on docs PR #221 for the Regina month helper if they change it.
 
 Rows R156–R160 order: R156 and R159 can start together (no shared files). R157 after R156. R158 after #221 merges and not beside R159 (`schemas.py`); R160 after R158 and R159. This order does not cancel the existing R71–R79 file locks. GitHub PRs #107–#111 stay untouched.
+
+## UI fix rows (R166+, added 2026-11-02)
+
+### R166. The owner /jobs page overflows to the right at 768px
+- Category: bug
+- Baseline: at 768x1024 the owner `/jobs` page scrolls sideways (`document.documentElement.scrollWidth > clientWidth`). `apps/project-car/web/app/jobs/page.tsx` renders `<OwnerShell ... wide>` around the job board, ledger and post-job form; the culprit is likely the `wide` shell layout or a fixed-width child, not yet pinned.
+- Target: no horizontal scroll on owner `/jobs` at 768px; content wraps or the table scrolls inside its own container.
+- Must not get worse: 390px and 1280px layouts of `/jobs` unchanged; other owner routes using `OwnerShell wide` keep their layout; existing `visual/pages.spec.ts` stays green.
+- Proof: failing-first Playwright test: viewport 768x1024, open `/jobs` as owner, assert `document.documentElement.scrollWidth <= document.documentElement.clientWidth` (red on main: scrollWidth > clientWidth); same assertion passes at 390 and 1280. RED commit first, then GREEN; shas in the PR body.
+- Size: 1 task
+- Difficulty: [D3 · S2 C3 R1 T2]
+- Likely files: `apps/project-car/web/app/jobs/page.tsx`, `apps/project-car/web/components/owner-shell.tsx`, the owner/shell CSS (verify which stylesheet), `apps/project-car/web/visual/pages.spec.ts` or a new spec beside it (per `apps/project-car/web/playwright.config.ts`)
+- Depends on: none

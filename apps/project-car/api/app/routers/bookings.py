@@ -27,7 +27,12 @@ from app.schemas import (
     ShopHoistRequestOut,
 )
 from app.services import bookings as booking_service
-from app.services.shop_hoist_requests import create_shop_hoist_request, list_shop_hoist_requests
+from app.services.shop_hoist_requests import (
+    DEFAULT_LIST_LIMIT,
+    MAX_LIST_LIMIT,
+    create_shop_hoist_request,
+    list_shop_hoist_requests,
+)
 from app.services.staff import actor_of, record_action, reject_ai
 from app.shop_time import as_utc
 
@@ -41,6 +46,8 @@ def _list_query(
     status: BookingStatus | None,
     window_start: datetime | None,
     window_end: datetime | None,
+    limit: int = 1000,
+    offset: int = 0,
 ):
     stmt = (
         select(Booking)
@@ -57,7 +64,7 @@ def _list_query(
         stmt = stmt.where(Booking.end_at > as_utc(window_start))
     if window_end is not None:
         stmt = stmt.where(Booking.start_at < as_utc(window_end))
-    return stmt
+    return stmt.offset(offset).limit(limit)
 
 
 @router.get("/bookings", response_model=list[BookingOut])
@@ -69,6 +76,8 @@ def list_bookings(
     status: BookingStatus | None = None,
     window_start: datetime | None = Query(default=None),
     window_end: datetime | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
 ) -> list[BookingOut]:
     rows = session.scalars(
         _list_query(
@@ -77,6 +86,8 @@ def list_bookings(
             status=status,
             window_start=window_start,
             window_end=window_end,
+            limit=limit,
+            offset=offset,
         )
     ).all()
     return [BookingOut.from_booking(row) for row in rows]
@@ -103,8 +114,9 @@ def list_owner_shop_hoist_requests(
     session: DbSession,
     _owner: Owner,
     status: ShopHoistRequestStatus | None = None,
+    limit: int = Query(default=DEFAULT_LIST_LIMIT, ge=1, le=MAX_LIST_LIMIT),
 ) -> list[ShopHoistRequestOut]:
-    rows = list_shop_hoist_requests(session, status=status)
+    rows = list_shop_hoist_requests(session, status=status, limit=limit)
     return [ShopHoistRequestOut.from_row(row) for row in rows]
 
 

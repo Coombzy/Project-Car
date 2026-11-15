@@ -31,10 +31,14 @@ def list_job_events(session: DbSession, _principal: Owner) -> list[JobEventOut]:
 
 
 @router.get("/member/jobs/events", response_model=list[JobEventOut])
-def list_my_job_events(session: DbSession, principal: MemberUser) -> list[JobEventOut]:
+def list_my_job_events(
+    session: DbSession,
+    principal: MemberUser,
+    limit: int = Query(default=200, ge=1, le=500),
+) -> list[JobEventOut]:
     member_id = _require_member_id(principal)
     rows = job_service.list_member_events(session, member_id)
-    return [JobEventOut.from_row(row) for row in rows]
+    return [JobEventOut.from_row(row) for row in rows[:limit]]
 
 
 @router.post("/member/jobs/claims", response_model=JobEventOut, status_code=201)
