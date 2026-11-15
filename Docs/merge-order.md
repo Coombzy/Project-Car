@@ -72,7 +72,7 @@ Finance trackers, backlog docs, and older `gb/` rows such as #206, #210, #212, #
 
 This review is the 2026-10-31 read. The status at the top is the 2026-11-02 GitHub state.
 
-Read bottom-up from #225 through #263. The tip's shop API, web lint, and layout checks were green. There were no open review threads. #222 is closed. No new feature row was added. Three defects were fixed on the pull request that owned them, and every child above that pull request was restacked.
+Read bottom-up from #225 through #262. The tip's shop API, web lint, and layout checks were green. There were no open review threads. #222 is closed. No new feature row was added. Three defects were fixed on the pull request that owned them, and every child above that pull request was restacked.
 
 | PR | What was wrong | What changed |
 |----|----------------|--------------|
