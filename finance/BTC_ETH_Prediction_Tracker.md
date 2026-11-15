@@ -179,6 +179,6 @@ One row per `(analysis_date, asset, horizon)`. Update in place. Do not duplicate
 | 2026-10-08 | BTC | 1m | 68000 | 104000 | 74000 | 92000 | 46 | trend-down | -2.67 |  |  |  |  |  |  | open | Daily insert |
 | 2026-10-08 | BTC | 3m | 56000 | 120000 | 70000 | 104000 | 40 | trend-down | -2.67 |  |  |  |  |  |  | open | Daily insert |
 | 2026-10-08 | ETH | 1d | 2448 | 2665 | 2490 | 2600 | 56 | trend-down | -4.60 |  |  |  |  |  |  | open | post-up-low 1.0x ATR57; width 217=3.81x; ETF 7 Oct -$160.9M |
-| 2026-10-08 | ETH | 1w | 2260 | 2885 | 2400 | 2720 | 52 | trend-down | -4.60 |  |  |  |  |  |  | open | CPI in-window; Oct2 H 2773.52+1.5xATR |
+| 2026-10-08 | ETH | 1w | 2260 | 2859 | 2400 | 2720 | 52 | trend-down | -4.60 |  |  |  |  |  |  | open | CPI in-window; Oct2 H 2773.52+1.5xATR |
 | 2026-10-08 | ETH | 1m | 2000 | 3400 | 2300 | 3000 | 46 | trend-down | -4.60 |  |  |  |  |  |  | open | Daily insert |
 | 2026-10-08 | ETH | 3m | 1650 | 4000 | 2100 | 3400 | 40 | trend-down | -4.60 |  |  |  |  |  |  | open | Daily insert |
