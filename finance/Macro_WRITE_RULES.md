@@ -7,7 +7,6 @@
 - owner: `Coombzy`
 - repo: `Project-Car`
 - branch: `main` (protected — see write path below)
-- prompt branch for this revision: `macro-prompt-v1.4` (open PR)
 
 ## Before every write
 

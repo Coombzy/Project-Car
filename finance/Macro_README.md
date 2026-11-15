@@ -17,7 +17,7 @@ If GitHub prompt and the Macro Alpha wrapper disagree, **GitHub v1.6+ wins** exc
 ## What v1.6 changed
 
 - Ad-hoc "what are the plays" answers use a short form (tell, one URL, 52-week and 12-month already-priced check, one horizon, one falsifier) and do not book unless asked.
-- A 52-week high on this tell fails already-priced even if the tracker has no row. "Not an open row" is not a screen. The 150% / 12-month rule is an extra cut, not the only one.
+- A 52-week high on this tell fails already-priced even if the tracker has no row. "Not an open row" is not a screen. The ~150% over 12 months rule is an extra cut, not the only one.
 - An inventory level needs the EIA weekly table URL. A portal draw is not a stock level.
 - Two clocks on one tell get one horizon per name. A 14-day cost relief and a 60-day residual long are not the same trade.
 - An inverse inside the parent horizon is one `overlay` row, parent ranges frozen, and it does not use a theme slot. A prose note with zero rows cannot be graded.
