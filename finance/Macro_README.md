@@ -33,7 +33,7 @@ If GitHub prompt and the Macro Alpha wrapper disagree, **GitHub v1.6+ wins** exc
 
 ## What v1.4 changed
 
-- Log integrity gate and protected-branch path: on 409, one branch, log and tracker both on that branch, then a PR.
+- Log integrity gate and protected-branch path: a concurrent-writer 409 is retry-once then stop; only a PR-required ruleset 409 uses one branch, log and tracker together, then a PR.
 - Same cash-flow line = one ticker. Fewer than 3 picks with an explicit fail is success.
 - Score is labeled expected upside points.
 - `spot_at_call` requires equity last print, tell print, source, and timestamp. Falsifier must be a number checkable before `due_date`.

@@ -45,6 +45,8 @@
 - An inverse still inside its horizon is **one overlay row**. It does not count toward the 3-theme cap. Parent ranges stay frozen. A prose note with zero rows cannot be graded.
 - Do not change `pct_low` / `pct_high` / `horizon_days` on already-open rows, including illegal frozen 45-day rows.
 - If `due_date` < analysis_date, set `status=expired-ungraded` in this file unless a closing print is in hand. A chat-only past-due list is a process miss.
+- Append `status=open` rows (`due_date`, `source_note`, up to 3 `pick` rows plus a distinct `basket`). Grade at `due_date` ±1 session into `actual_pct` / `hit_range` / `hit_dir` (range primary; `closed` or `falsified`). Keep `expired-ungraded` as written.
+- Falsifier is a number checkable before `due_date`. Same cash-flow line is one ticker. Fewer than 3 picks with an explicit fail is success.
 - After a row is `expired-ungraded` or `closed` and the tell has flipped, a new `theme_id` on that tell is allowed.
 - Ad-hoc play answers do not append rows unless the user asked to book.
 
