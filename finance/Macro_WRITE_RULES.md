@@ -11,7 +11,7 @@
 ## Before every write
 
 1. `github___get_file_contents` on the **exact file** you will change. Capture `sha`.
-2. **Log integrity check.** If the body is the literal `PLACEHOLDER`, under ~500 characters, or has no `###` date header, refetch the raw blob. If it is still `PLACEHOLDER`, **replace the stub once** with the new entry. Do not prepend onto a placeholder. Do not treat a placeholder as empty history.
+2. **Log integrity check** (`finance/Macro_Theme_Log.md` only). If that file's body is the literal `PLACEHOLDER`, under ~500 characters, or has no `###` date header, refetch the raw blob. If it is still `PLACEHOLDER`, **replace the stub once** with the new entry. Do not prepend onto a placeholder. Do not treat a placeholder as empty history. Do not run this check on the tracker or any other file.
 3. Write **immediately** after that read. Do not read other large files in between.
 4. On SHA mismatch / 409 from a concurrent writer: **re-read SHA and retry once**. Then stop. Never loop.
 5. A ruleset rejection (PR required, status checks) is **not** a SHA conflict. Do not retry `main`. Follow the protected-branch path once.
@@ -52,7 +52,7 @@
 
 ## Prompt / README
 
-If an audit recommends a prompt change, apply it to `finance/Macro_Theme_Analysis_Prompt.md` (bump version + date) and bump this file / README if the row contract changed.
+If an audit recommends a prompt change, or the user edits Macro Alpha, or gate language would otherwise live only in the wrapper, update `finance/Macro_Theme_Analysis_Prompt.md` in the same change (bump version + date) and bump this file and the README when load-order or the row contract changes.
 
 ## Single writer
 
