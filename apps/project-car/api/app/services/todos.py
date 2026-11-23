@@ -13,6 +13,9 @@ from app.auth import Principal
 from app.models import Todo, TodoStatus
 from app.shop_time import as_utc
 
+TODO_LIST_DEFAULT_LIMIT = 200
+TODO_LIST_MAX_LIMIT = 500
+
 
 def _error(status: int, code: str, message: str) -> HTTPException:
     return HTTPException(status_code=status, detail={"code": code, "message": message})
@@ -26,14 +29,35 @@ def _scope(stmt, principal: Principal):
     return stmt.where(Todo.member_id == principal.member_id)
 
 
-def list_todos(session: Session, principal: Principal) -> list[Todo]:
-    stmt = _scope(select(Todo), principal).order_by(
-        Todo.status,
-        Todo.due_at.is_(None),
-        Todo.due_at,
-        Todo.created_at,
-    )
-    return list(session.scalars(stmt).all())
+def list_todos(
+    session: Session,
+    principal: Principal,
+    *,
+    status: TodoStatus = TodoStatus.OPEN,
+    limit: int = TODO_LIST_DEFAULT_LIMIT,
+) -> list[Todo]:
+    """Open rows by default, capped at 200 (1–500). Pass status=done for finished rows."""
+    if limit < 1 or limit > TODO_LIST_MAX_LIMIT:
+        raise _error(422, "validation_error", "Limit must be from 1 to 500.")
+    if status == TodoStatus.OPEN:
+        chosen = TodoStatus.OPEN
+    elif status == TodoStatus.DONE:
+        chosen = TodoStatus.DONE
+    else:
+        raise _error(422, "validation_error", "Status must be open or done.")
+    stmt = _scope(select(Todo), principal).where(Todo.status == chosen)
+    if chosen == TodoStatus.DONE:
+        # Newest completion first so a cap still leaves Reopen targets.
+        stmt = stmt.order_by(Todo.updated_at.desc(), Todo.created_at.desc(), Todo.id.desc())
+    else:
+        stmt = stmt.order_by(
+            Todo.status,
+            Todo.due_at.is_(None),
+            Todo.due_at,
+            Todo.created_at,
+            Todo.id,
+        )
+    return list(session.scalars(stmt.limit(limit)).all())
 
 
 def get_todo(session: Session, principal: Principal, todo_id: UUID) -> Todo:

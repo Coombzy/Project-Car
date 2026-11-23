@@ -1,8 +1,8 @@
-"""Token purchases carry their payment id; one reserve, refund and debit per booking.
+"""One reserve, refund, and debit per booking, plus a payment id.
 
-Revision ID: 20261031_0017
+Revision ID: 20261105_0017
 Revises: 20261023_0016
-Create Date: 2026-10-31
+Create Date: 2026-11-05
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from typing import Sequence, Union
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "20261031_0017"
+revision: str = "20261105_0017"
 down_revision: Union[str, Sequence[str], None] = "20261023_0016"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,6 +27,7 @@ def upgrade() -> None:
         "token_transactions",
         sa.Column("payment_ref", sa.String(length=120), nullable=True),
     )
+    # Many nulls stay allowed. A repeated payment id does not.
     op.create_index(
         "uq_token_transactions_payment_ref",
         "token_transactions",
@@ -34,7 +35,8 @@ def upgrade() -> None:
         unique=True,
     )
     # Existing data writes at most one of each per booking. A duplicate fails
-    # the upgrade here, so it must be reconciled by hand first.
+    # the upgrade here, so it must be reconciled by hand first. Other kinds
+    # may repeat.
     op.create_index(
         "uq_token_transactions_booking_kind",
         "token_transactions",

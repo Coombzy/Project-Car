@@ -44,6 +44,9 @@ from app.services.staff import actor_of, record_action, reject_own_request
 from app.services.tokens import apply_ledger
 from app.shop_time import as_utc, shop_now
 
+DEFAULT_LIST_LIMIT = 200
+MAX_LIST_LIMIT = 500
+
 
 def _error(status: int, code: str, message: str) -> HTTPException:
     return HTTPException(status_code=status, detail={"code": code, "message": message})
@@ -86,16 +89,22 @@ def list_shop_hoist_requests(
     *,
     member_id: UUID | None = None,
     status: ShopHoistRequestStatus | None = None,
+    limit: int = DEFAULT_LIST_LIMIT,
 ) -> list[ShopHoistRequest]:
-    stmt = (
-        select(ShopHoistRequest)
-        .options(selectinload(ShopHoistRequest.member), selectinload(ShopHoistRequest.hoist))
-        .order_by(ShopHoistRequest.start_at)
+    """Newest requests first, at most `limit` rows.
+
+    `created_at` decides newest. `id` descending breaks ties so two rows
+    stored in the same instant stay in one order. Member and status filters
+    run before the cap.
+    """
+    stmt = select(ShopHoistRequest).options(
+        selectinload(ShopHoistRequest.member), selectinload(ShopHoistRequest.hoist)
     )
     if member_id is not None:
         stmt = stmt.where(ShopHoistRequest.member_id == member_id)
     if status is not None:
         stmt = stmt.where(ShopHoistRequest.status == status)
+    stmt = stmt.order_by(ShopHoistRequest.created_at.desc(), ShopHoistRequest.id.desc()).limit(limit)
     return list(session.scalars(stmt).all())
 
 

@@ -1,7 +1,7 @@
 """Rename the four band rows to Off-peak, Normal, Evening, and Peak.
 
 Revision ID: 20261031_0018
-Revises: 20261031_0017
+Revises: 20261105_0019
 Create Date: 2026-10-31
 
 Hours live in the pricing code. This only renames the owner-editable rows.
@@ -15,7 +15,7 @@ from typing import Sequence, Union
 from alembic import op
 
 revision: str = "20261031_0018"
-down_revision: Union[str, Sequence[str], None] = "20261031_0017"
+down_revision: Union[str, Sequence[str], None] = "20261105_0019"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

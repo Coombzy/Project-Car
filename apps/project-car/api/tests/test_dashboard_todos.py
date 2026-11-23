@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 
+from app.config import get_settings
 from app.db import get_db
 from app.main import app
 from app.models import Todo, TodoStatus
@@ -477,3 +478,149 @@ def test_ai_post_todo_is_403_and_stores_nothing(client: TestClient) -> None:
     owner_list = client.get("/todos", headers=AUTH)
     assert owner_list.status_code == 200, owner_list.text
     assert [row["title"] for row in owner_list.json()] == ["Call Priya"]
+
+
+_TODO_BASE = datetime(2026, 1, 1, tzinfo=timezone.utc)
+
+
+def _insert_scoped_todos(
+    client: TestClient,
+    *,
+    owner_email: str | None,
+    member_id: str | None,
+    open_count: int,
+    done_count: int,
+) -> None:
+    """Insert open-000.. and done-000.. directly. Higher indexes are more recent."""
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        member_uuid = UUID(member_id) if member_id is not None else None
+        for index in range(done_count):
+            stamp = _TODO_BASE + timedelta(minutes=index)
+            session.add(
+                Todo(
+                    owner_email=owner_email,
+                    member_id=member_uuid,
+                    title=f"done-{index:03d}",
+                    status=TodoStatus.DONE,
+                    created_at=stamp,
+                    updated_at=stamp,
+                )
+            )
+        for index in range(open_count):
+            stamp = _TODO_BASE + timedelta(minutes=done_count + index)
+            session.add(
+                Todo(
+                    owner_email=owner_email,
+                    member_id=member_uuid,
+                    title=f"open-{index:03d}",
+                    status=TodoStatus.OPEN,
+                    created_at=stamp,
+                    updated_at=stamp,
+                )
+            )
+        session.commit()
+    finally:
+        session.close()
+
+
+def _titles(response, status: str | None = None) -> list[str]:
+    assert response.status_code == 200, response.text
+    rows = response.json()
+    if status is not None:
+        rows = [row for row in rows if row["status"] == status]
+    return [row["title"] for row in rows]
+
+
+def test_todos_list_defaults_to_open_and_caps(client: TestClient) -> None:
+    """PC-new-5: 3 done and 205 open. Default is 200 open rows; status=done is the 3.
+
+    On main, before the cap, the default list is 208.
+    """
+    _insert_scoped_todos(
+        client,
+        owner_email=get_settings().owner_email,
+        member_id=None,
+        open_count=205,
+        done_count=3,
+    )
+
+    default = client.get("/todos", headers=AUTH)
+    assert default.status_code == 200, default.text
+    rows = default.json()
+    assert len(rows) == 200, len(rows)
+    assert all(row["status"] == "open" for row in rows)
+    assert [row["title"] for row in rows] == [f"open-{index:03d}" for index in range(200)]
+
+    explicit = client.get("/todos", headers=AUTH, params={"status": "open"})
+    assert [row["title"] for row in explicit.json()] == [row["title"] for row in rows]
+
+    done = client.get("/todos", headers=AUTH, params={"status": "done"})
+    assert done.status_code == 200, done.text
+    assert [row["status"] for row in done.json()] == ["done", "done", "done"]
+    assert sorted(row["title"] for row in done.json()) == [f"done-{index:03d}" for index in range(3)]
+
+    one = client.get("/todos", headers=AUTH, params={"limit": 1})
+    assert _titles(one) == ["open-000"]
+    wide = client.get("/todos", headers=AUTH, params={"limit": 500})
+    assert _titles(wide) == [f"open-{index:03d}" for index in range(205)]
+
+    for limit in (0, 501):
+        response = client.get("/todos", headers=AUTH, params={"limit": limit})
+        assert response.status_code == 422, response.text
+        body = response.json()
+        assert body["error"]["code"] == "validation_error"
+        locs = [tuple(item["loc"]) for item in body["error"]["details"]]
+        assert ("query", "limit") in locs, body
+
+    unknown = client.get("/todos", headers=AUTH, params={"status": "later"})
+    assert unknown.status_code == 422, unknown.text
+    assert unknown.json()["error"]["code"] == "validation_error"
+
+
+def test_dashboard_keeps_recent_done_for_reopen(client: TestClient) -> None:
+    """Home pages pass dash.todos into TodoPanel, which offers Reopen on done rows.
+
+    The open default must not drop those done rows. Each side stays capped:
+    200 open plus the done rows that still fit in the done cap.
+    """
+    _insert_scoped_todos(
+        client,
+        owner_email=get_settings().owner_email,
+        member_id=None,
+        open_count=205,
+        done_count=3,
+    )
+    dash = client.get("/dashboard", headers=AUTH)
+    assert dash.status_code == 200, dash.text
+    owner_todos = dash.json()["todos"]
+    assert len(owner_todos) == 203, len(owner_todos)
+    assert [row["title"] for row in owner_todos if row["status"] == "open"] == [
+        f"open-{index:03d}" for index in range(200)
+    ]
+    assert [row["title"] for row in owner_todos if row["status"] == "done"] == [
+        "done-002",
+        "done-001",
+        "done-000",
+    ]
+
+    member = create_member(client, email="ada-reopen@example.com")
+    login_member(client, "ada-reopen@example.com")
+    _insert_scoped_todos(
+        client,
+        owner_email=None,
+        member_id=member["id"],
+        open_count=1,
+        done_count=201,
+    )
+    listed = client.get("/todos")
+    assert _titles(listed) == ["open-000"]
+    recent_done = [f"done-{index:03d}" for index in range(200, 0, -1)]
+    assert _titles(client.get("/todos", params={"status": "done"})) == recent_done
+
+    member_dash = client.get("/member/dashboard")
+    assert member_dash.status_code == 200, member_dash.text
+    member_todos = member_dash.json()["todos"]
+    assert len(member_todos) == 201, len(member_todos)
+    assert [row["title"] for row in member_todos if row["status"] == "open"] == ["open-000"]
+    assert [row["title"] for row in member_todos if row["status"] == "done"] == recent_done

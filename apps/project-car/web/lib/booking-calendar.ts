@@ -20,8 +20,6 @@ const BAND_MULTIPLIER: Record<BandId, number> = {
 
 const BASE_TOKENS = 100;
 const PHONE_MAX_PX = 767;
-const FREE_CANCEL_MS = 24 * 60 * 60 * 1000;
-const LATE_KEEP_PCT = 50;
 const PEAK_BAND: BandId = "weekend_fri_eve";
 
 const OCCUPYING = new Set(["pending", "confirmed", "active", "overdue"]);
@@ -241,17 +239,22 @@ export function lowestFreeBay(
 }
 
 function cents(amount: string | number): number {
-  return Math.round(Number(amount) * 100);
+  const value = Number(amount);
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.round(value * 100);
 }
 
 function fromCents(value: number): number {
   return value / 100;
 }
 
-function keepCents(reservedCents: number, pct: number): number {
-  return Math.floor((reservedCents * pct + 50) / 100);
-}
-
+/**
+ * Pending and confirmed visits can be cancelled only before the start.
+ * The shop refunds the whole reserve; this does not keep a share inside 24 hours.
+ * Naive start times are America/Regina, which stays UTC−6 all year.
+ */
 export function memberCancelOffer(
   booking: { status: string; startAt: string; reservedTokens: string },
   now: Date,
@@ -266,27 +269,20 @@ export function memberCancelOffer(
     confirmText: "",
     note: AFTER_START_MESSAGE,
   };
-  if (booking.status === "active" || booking.status === "no_show" || booking.status === "completed" || booking.status === "cancelled" || booking.status === "overdue") {
-    return hidden;
-  }
   if (booking.status !== "pending" && booking.status !== "confirmed") {
     return hidden;
   }
-  if (now.getTime() >= start) {
+  if (!Number.isFinite(start) || now.getTime() >= start) {
     return hidden;
   }
-  const lead = start - now.getTime();
-  const reservedCents = cents(booking.reservedTokens);
-  const kept = lead >= FREE_CANCEL_MS ? 0 : fromCents(keepCents(reservedCents, LATE_KEEP_PCT));
-  const refund = fromCents(reservedCents - keepCents(reservedCents, lead >= FREE_CANCEL_MS ? 0 : LATE_KEEP_PCT));
-  const refundText = Number.isInteger(refund) ? String(refund) : refund.toFixed(2);
+  const refundText = Number.isInteger(reserved) ? String(reserved) : reserved.toFixed(2);
   return {
     visible: true,
-    refund,
-    kept,
-    label: `Cancel · get ${refundText} tokens back`,
+    refund: reserved,
+    kept: 0,
+    label: "Cancel",
     confirmText: `Cancel this visit? You get ${refundText} tokens back.`,
-    note: lead >= FREE_CANCEL_MS ? "Free to cancel until 24 hours before it starts." : "Late cancel keeps half.",
+    note: "You can cancel until it starts. The whole reserve comes back.",
   };
 }
 

@@ -201,6 +201,8 @@ class MemberOut(BaseModel):
     emergency_contact_name: str | None
     emergency_contact_phone: str | None
     token_balance: Decimal
+    allowance_balance: Decimal
+    purchased_balance: Decimal
     deposit_balance: Decimal
     created_at: datetime
     updated_at: datetime

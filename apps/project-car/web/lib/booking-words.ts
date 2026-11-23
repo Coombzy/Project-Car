@@ -32,7 +32,6 @@ const STATUS_LABEL = {
   completed: "Finished",
   overdue: "Late",
   cancelled: "Cancelled",
-  no_show: "No-show",
 } as const;
 
 export type BookingStatusWord = keyof typeof STATUS_LABEL;
@@ -45,7 +44,6 @@ export function bookingStatusLabel(status: string): string {
     case "completed":
     case "overdue":
     case "cancelled":
-    case "no_show":
       return STATUS_LABEL[status];
     default:
       return status.replaceAll("_", " ");

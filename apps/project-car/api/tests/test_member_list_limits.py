@@ -3,7 +3,7 @@
 `limit` defaults to 200 and must be 1..500 (422 outside that). `/member/tokens`
 returns that many newest rows, newest first. `/member/bookings` returns that
 many latest by start, oldest first, after any window filter. Under the cap the
-lists match the uncapped order. The owner ledger route is not capped here.
+lists match the uncapped order. The owner ledger route has the same cap (PC-new-4).
 """
 
 from __future__ import annotations
@@ -104,7 +104,7 @@ def test_no_limit_returns_newest_200_of_205(client: TestClient) -> None:
     assert _notes(bookings, "notes") == _booking_notes(HEAVY, DEFAULT_LIMIT)
 
     owner = client.get(f"/members/{member['id']}/tokens", headers=AUTH)
-    assert _notes(owner, "note") == _token_notes(HEAVY)
+    assert _notes(owner, "note") == _token_notes(HEAVY, DEFAULT_LIMIT)
 
 
 def test_limit_2_returns_the_two_newest_in_order(client: TestClient) -> None:

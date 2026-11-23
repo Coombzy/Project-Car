@@ -1,11 +1,17 @@
 """Track allowance and purchased tokens separately.
 
-Revision ID: 20261031_0021
-Revises: 20261031_0020
-Create Date: 2026-10-31
+Revision ID: 20261105_0018
+Revises: 20261105_0017
+Create Date: 2026-11-05
 
-Existing purchases are credited to the purchased pile. Every other ledger row
-is treated as allowance. A shop that is not open has not spent a real pack.
+Backfill rule: a token_purchase row copies amount onto purchased_amount and
+sets allowance_amount to 0. Every other kind copies amount onto
+allowance_amount and sets purchased_amount to 0. Each member's
+allowance_balance and purchased_balance are the sums of those columns.
+token_balance is left as stored. When that cache already equals the ledger
+sum, the two piles add up to it, because each row's amount lands in exactly
+one pile. A cache that had drifted stays drifted until the next ledger write
+or rebuild.
 """
 
 from __future__ import annotations
@@ -15,8 +21,8 @@ from typing import Sequence, Union
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "20261031_0021"
-down_revision: Union[str, Sequence[str], None] = "20261031_0020"
+revision: str = "20261105_0018"
+down_revision: Union[str, Sequence[str], None] = "20261105_0017"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

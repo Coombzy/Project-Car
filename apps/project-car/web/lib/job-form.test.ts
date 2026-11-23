@@ -4,13 +4,9 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { JOB_BOUNTY_CAP, parseJobForm } from "./job-form.ts";
+import { BOUNTY_ERROR, JOB_BOUNTY_CAP, TITLE_ERROR, parseJobForm } from "./job-form.ts";
 
 const jobsApiPath = join(dirname(fileURLToPath(import.meta.url)), "jobs-api.ts");
-
-const TITLE_ERROR = "Enter a title.";
-const BOUNTY_ERROR =
-  "A job bounty is 0 to 10,000 tokens, with at most two decimal places.";
 
 function pathStrings(source: string): string[] {
   const paths: string[] = [];
@@ -38,10 +34,15 @@ describe("parseJobForm", () => {
         error: TITLE_ERROR,
       });
     }
+    assert.deepEqual(parseJobForm({ title: null, bounty: "25" }), {
+      ok: false,
+      error: TITLE_ERROR,
+    });
   });
 
   it("refuses -1, 1.555 and 10000.01", () => {
-    for (const bounty of ["-1", "1.555", "10000.01", "abc"]) {
+    assert.match(BOUNTY_ERROR, /0 to 10,000/);
+    for (const bounty of ["-1", "1.555", "10000.01", "abc", ""]) {
       assert.deepEqual(parseJobForm({ title: "Sweep the bay", notes: "", bounty }), {
         ok: false,
         error: BOUNTY_ERROR,
@@ -56,6 +57,58 @@ describe("parseJobForm", () => {
         title: "Sweep the bay",
         notes: null,
         token_bounty: "0",
+      });
+    }
+  });
+
+  it("accepts 0, 1.5 and 10000 and refuses -1, 1.555 and 10000.01", () => {
+    assert.equal(JOB_BOUNTY_CAP, 10_000);
+    assert.match(BOUNTY_ERROR, /0 to 10,000/);
+
+    for (const bounty of ["0", "0.0", "0.00"]) {
+      assert.deepEqual(parseJobForm({ title: "Sweep the bay", notes: "", bounty }), {
+        ok: true,
+        title: "Sweep the bay",
+        notes: null,
+        token_bounty: "0",
+      });
+    }
+
+    assert.deepEqual(parseJobForm({ title: "Sweep the bay", bounty: "0.01" }), {
+      ok: true,
+      title: "Sweep the bay",
+      notes: null,
+      token_bounty: "0.01",
+    });
+    assert.deepEqual(parseJobForm({ title: "Sweep the bay", bounty: "0.10" }), {
+      ok: true,
+      title: "Sweep the bay",
+      notes: null,
+      token_bounty: "0.1",
+    });
+    assert.deepEqual(parseJobForm({ title: "Sweep the bay", bounty: "1.5" }), {
+      ok: true,
+      title: "Sweep the bay",
+      notes: null,
+      token_bounty: "1.5",
+    });
+    assert.deepEqual(parseJobForm({ title: "Sweep the bay", bounty: "2.50" }), {
+      ok: true,
+      title: "Sweep the bay",
+      notes: null,
+      token_bounty: "2.5",
+    });
+    assert.deepEqual(parseJobForm({ title: "Sweep the bay", bounty: "10000" }), {
+      ok: true,
+      title: "Sweep the bay",
+      notes: null,
+      token_bounty: "10000",
+    });
+
+    for (const bounty of ["-1", "1.555", "10000.01", "abc", ""]) {
+      assert.deepEqual(parseJobForm({ title: "Sweep the bay", notes: "", bounty }), {
+        ok: false,
+        error: BOUNTY_ERROR,
       });
     }
   });

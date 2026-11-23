@@ -809,6 +809,8 @@ def seed(session: Session, *, reset: bool = False) -> dict[str, int]:
     session.flush()
     for member in demo_members:
         member.token_balance = Decimal("0")
+        member.allowance_balance = Decimal("0")
+        member.purchased_balance = Decimal("0")
         session.add(member)
     session.flush()
 
