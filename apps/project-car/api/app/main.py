@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.config import get_settings
+from app.cors import ShopCorsMiddleware
 from app.errors import register_error_handlers
 from app.routers import (
     auth,
@@ -46,15 +46,12 @@ def create_app() -> FastAPI:
     )
     register_error_handlers(application)
 
-    origins = get_settings().cors_origin_list
-    if origins:
-        application.add_middleware(
-            CORSMiddleware,
-            allow_origins=origins,
-            allow_credentials=True,
-            allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS", "HEAD"],
-            allow_headers=["Accept", "Content-Type", "Authorization"],
-        )
+    settings = get_settings()
+    application.add_middleware(
+        ShopCorsMiddleware,
+        public_origins=settings.cors_public_origin_list,
+        credentialed_origins=settings.cors_credentialed_origin_list,
+    )
 
     application.include_router(auth.router)
     application.include_router(member.router)
