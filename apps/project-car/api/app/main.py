@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.config import get_settings
+from app.config import assert_runtime_secrets, get_settings
 from app.errors import register_error_handlers
 from app.routers import (
     auth,
@@ -30,9 +30,16 @@ from app.routers import (
 
 
 def create_app() -> FastAPI:
+    settings = get_settings()
+    assert_runtime_secrets(settings)
+    dev = settings.shop_dev_mode
     application = FastAPI(
         title="Project Car Shop API",
         version=__version__,
+        # Docs expose the whole route map, so they serve only under SHOP_DEV_MODE=1.
+        docs_url="/docs" if dev else None,
+        redoc_url="/redoc" if dev else None,
+        openapi_url="/openapi.json" if dev else None,
         description=(
             "Shop OS API. Owner dashboard plus Member self-serve (balance, "
             "book / cancel, schedule quote) and Chat v1 (human / polling). "
