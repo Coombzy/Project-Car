@@ -30,6 +30,11 @@ _NOTES = sa.text(
     "UPDATE membership_tiers SET notes = :notes "
     "WHERE name = :name AND notes LIKE 'Placeholder. Owner can edit.%'"
 )
+_PLACEHOLDER = "Placeholder. Owner can edit."
+_NOTES_REWIND = sa.text(
+    "UPDATE membership_tiers SET notes = :placeholder "
+    "WHERE name = :name AND notes = :notes"
+)
 
 
 def upgrade() -> None:
@@ -67,4 +72,20 @@ def downgrade() -> None:
     connection.execute(
         _PRICE,
         {"name": "premium", "price": "250.00", "previous": "750.00"},
+    )
+    connection.execute(
+        _NOTES_REWIND,
+        {
+            "name": "basic",
+            "placeholder": _PLACEHOLDER,
+            "notes": tier_notes(premium=False, included_tokens=1000, base_tokens_per_hour=100),
+        },
+    )
+    connection.execute(
+        _NOTES_REWIND,
+        {
+            "name": "premium",
+            "placeholder": _PLACEHOLDER,
+            "notes": tier_notes(premium=True, included_tokens=1500, base_tokens_per_hour=100),
+        },
     )
