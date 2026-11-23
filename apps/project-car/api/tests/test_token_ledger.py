@@ -7,7 +7,6 @@ for the same booking inserts another row.
 from __future__ import annotations
 
 import importlib.util
-from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 from uuid import UUID
@@ -23,8 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Member, TokenTransaction, TokenTransactionKind
 from app.services.tokens import apply_ledger
-from app.shop_time import shop_now
-from tests.conftest import AUTH, create_hoist, create_member
+from tests.conftest import AUTH, check_in_open_window, create_hoist, create_member
 
 API_ROOT = Path(__file__).resolve().parents[1]
 VERSIONS = API_ROOT / "alembic" / "versions"
@@ -32,9 +30,7 @@ ALEMBIC_INI = API_ROOT / "alembic.ini"
 
 
 def _window_inside_check_in() -> tuple[str, str]:
-    start = shop_now() + timedelta(minutes=10)
-    end = start + timedelta(hours=2)
-    return start.isoformat(), end.isoformat()
+    return check_in_open_window()
 
 
 def _session(client: TestClient) -> Session:
