@@ -114,10 +114,10 @@ export function bandAt(isoDate: string, hour: number, saved?: readonly RateHour[
   let id: BandId = "weekday_day";
   if (hour >= 21 || hour < 8) {
     id = "late_night";
+  } else if (weekday >= 5 || (weekday === 4 && hour >= 16)) {
+    id = "weekend_fri_eve";
   } else if (hour >= 16) {
     id = "weekday_eve";
-  } else if (weekday >= 5) {
-    id = "weekend_fri_eve";
   }
   const tokens = BASE_TOKENS * BAND_MULTIPLIER[id];
   const short = BAND_SHORT[id];

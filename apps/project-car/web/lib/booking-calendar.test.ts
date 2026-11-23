@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { lowestFreeBay, type BayChoice, type SpanInterval } from "./booking-calendar.ts";
+import { bandAt, lowestFreeBay, type BayChoice, type SpanInterval } from "./booking-calendar.ts";
 
 const bays: BayChoice[] = [
   { id: "bay-1", name: "Bay 1", number: 1, isShop: false, status: "available" },
@@ -25,6 +25,16 @@ describe("lowestFreeBay", () => {
     assert.equal(lowestFreeBay(bays, [span("pending")], start, end)?.id, "bay-2");
     assert.equal(lowestFreeBay(bays, [span("active")], start, end)?.id, "bay-2");
     assert.equal(lowestFreeBay(bays, [span("overdue")], start, end)?.id, "bay-2");
+  });
+});
+
+describe("bandAt fallback", () => {
+  it("uses peak on Friday evening and weekend before late night", () => {
+    assert.equal(bandAt("2026-11-27", 16).id, "weekend_fri_eve");
+    assert.equal(bandAt("2026-11-28", 18).id, "weekend_fri_eve");
+    assert.equal(bandAt("2026-11-23", 18).id, "weekday_eve");
+    assert.equal(bandAt("2026-11-27", 21).id, "late_night");
+    assert.equal(bandAt("2026-11-28", 7).id, "late_night");
   });
 });
 
