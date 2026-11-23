@@ -58,6 +58,9 @@ def login(
     settings: AppSettings,
 ) -> PrincipalOut:
     client_ip, stamp = _guard_login(request, settings)
+    # Default demo owner password is the same 401 as a wrong password outside dev mode.
+    if body.password == "changeme" and not settings.shop_dev_mode:
+        raise _invalid_credentials()
     if not credentials_match(settings, body.email, body.password):
         raise _invalid_credentials()
     token = create_session_token(settings, body.email)

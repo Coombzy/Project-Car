@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     )
     owner_email: str = "owner@projectcar.ca"
     owner_password: str = "changeme"
+    # SHOP_DEV_MODE. Owner login rejects the default demo password while this is off.
+    shop_dev_mode: bool = False
     owner_api_secret: str = "dev-owner-secret"
     ai_api_secret: str = "dev-ai-secret"
     ai_actor_id: str = "shop-ai"
