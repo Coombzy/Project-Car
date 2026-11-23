@@ -33,17 +33,21 @@ WAITLIST_LIMIT = {
 }
 
 
+_TEST_PEERS = (
+    "203.0.113.55,203.0.113.56,203.0.113.57,"
+    "203.0.113.70,203.0.113.71,203.0.113.72"
+)
+
+
 @pytest.fixture
 def client_ip_header():
-    """Set CLIENT_IP_HEADER for one test, then drop the cached Settings.
-
-    On main the field does not exist. Settings ignores that env
-    (``extra="ignore"``), so the header is not read and B stays on the peer.
-    """
+    """Set CLIENT_IP_HEADER, trust the test peers, then drop cached Settings."""
     previous = os.environ.get("CLIENT_IP_HEADER")
+    previous_proxies = os.environ.get("TRUSTED_PROXIES")
 
     def apply(name: str) -> None:
         os.environ["CLIENT_IP_HEADER"] = name
+        os.environ["TRUSTED_PROXIES"] = _TEST_PEERS
         get_settings.cache_clear()
 
     yield apply
@@ -51,6 +55,10 @@ def client_ip_header():
         os.environ.pop("CLIENT_IP_HEADER", None)
     else:
         os.environ["CLIENT_IP_HEADER"] = previous
+    if previous_proxies is None:
+        os.environ.pop("TRUSTED_PROXIES", None)
+    else:
+        os.environ["TRUSTED_PROXIES"] = previous_proxies
     get_settings.cache_clear()
 
 
@@ -65,9 +73,15 @@ def _peer(client: TestClient, host: str) -> Iterator[None]:
         transport.client = previous
 
 
+_login_n = 0
+
+
 def _login(client: TestClient, header: str | None):
+    global _login_n
+    _login_n += 1
     headers = {} if header is None else {HEADER: header}
-    return client.post("/auth/login", json=WRONG_LOGIN, headers=headers)
+    body = {"email": f"bucket-{_login_n}@projectcar.ca", "password": "wrong-guess"}
+    return client.post("/auth/login", json=body, headers=headers)
 
 
 def _join(client: TestClient, email: str, header: str | None):

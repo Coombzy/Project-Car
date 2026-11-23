@@ -45,22 +45,28 @@ DEFAULT_MEMBER_DEMO_PASSWORD = "changeme"
 # Keep in step with seed.LOOPBACK_HOSTS.
 LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
-# Eight failures inside this window lock the client IP.
+# Eight failures inside this window lock one realm and client IP.
 _LOGIN_FAILURE_LIMIT = 8
 _LOGIN_FAILURE_WINDOW_SECONDS = 15 * 60
+# Sixth failure starts backoff. Shift capped at 4 so 1024 cannot overflow.
+_BACKOFF_SHIFT_CAP = 4
+_BACKOFF_CAP_SECONDS = 15 * 60
 
 
 class _LoginStamp:
     """One reserved login attempt. Success removes this same object."""
 
-    __slots__ = ("at",)
+    __slots__ = ("at", "realm", "account")
 
-    def __init__(self, at: float) -> None:
+    def __init__(self, at: float, realm: str = "", account: str = "") -> None:
         self.at = at
+        self.realm = realm
+        self.account = account
 
 
 # Reserved attempts keyed by client IP. One bucket per process.
 _login_failures: dict[str, list[_LoginStamp]] = {}
+_account_failures: dict[tuple[str, str], tuple[int, float]] = {}
 _login_failures_lock = threading.Lock()
 
 
@@ -326,44 +332,79 @@ def rate_limited_error() -> HTTPException:
     )
 
 
-def reserve_login_failure(client_ip: str) -> _LoginStamp | None:
+def _ip_bucket(realm: str, client_ip: str) -> str:
+    return f"{realm}\0{client_ip}" if realm else client_ip
+
+
+def _account_key(realm: str, account: str) -> tuple[str, str]:
+    return realm, account.strip().lower()
+
+
+def _account_backoff_seconds(failures: int) -> int:
+    """Wait after more than five failures. Shift capped at 4; wait capped at 15 min."""
+    if failures <= 5:
+        return 0
+    shift = min(failures - 6, _BACKOFF_SHIFT_CAP)
+    return min(60 << shift, _BACKOFF_CAP_SECONDS)
+
+
+def reserve_login_failure(
+    client_ip: str, realm: str = "", account: str = ""
+) -> _LoginStamp | None:
     """Reserve one failure slot before the password check.
 
     The cap check and the reservation share one lock, so two overlapping
     attempts cannot both pass when this IP is one failure under the cap.
-    The bucket is in-process. Each API process keeps its own counts.
-    Returns the reserved stamp, or None when the IP is already at the cap.
+    The bucket is in-process, per realm and IP. Each API process keeps its
+    own counts. None when that bucket is at the cap or the account is backing off.
     """
     now = time.monotonic()
+    bucket = _ip_bucket(realm, client_ip)
+    key = _account_key(realm, account) if account else None
     with _login_failures_lock:
-        stamps = _fresh_failures(client_ip, now)
+        count = 0
+        if key is not None:
+            count, seen = _account_failures.get(key, (0, now))
+            wait = _account_backoff_seconds(count)
+            if wait and now - seen < wait:
+                return None
+        stamps = _fresh_failures(bucket, now)
         if len(stamps) >= _LOGIN_FAILURE_LIMIT:
             return None
-        stamp = _LoginStamp(now)
+        normalized = account.strip().lower() if account else ""
+        stamp = _LoginStamp(now, realm, normalized)
         stamps.append(stamp)
-        _login_failures[client_ip] = stamps
+        _login_failures[bucket] = stamps
+        if key is not None:
+            _account_failures[key] = (count + 1, now)
         return stamp
 
 
 def release_login_failure(client_ip: str, stamp: object) -> None:
     """Drop the stamp reserved for a login that succeeded."""
+    bucket = client_ip
+    if isinstance(stamp, _LoginStamp) and stamp.realm:
+        bucket = _ip_bucket(stamp.realm, client_ip)
     with _login_failures_lock:
-        current = _login_failures.get(client_ip)
+        if isinstance(stamp, _LoginStamp) and stamp.account:
+            _account_failures.pop(_account_key(stamp.realm, stamp.account), None)
+        current = _login_failures.get(bucket)
         if not current:
             return
         kept = [item for item in current if item is not stamp]
         if len(kept) == len(current):
             return
         if kept:
-            _login_failures[client_ip] = kept
+            _login_failures[bucket] = kept
         else:
-            _login_failures.pop(client_ip, None)
+            _login_failures.pop(bucket, None)
 
 
 def clear_login_failures() -> None:
-    """Drop every IP in this process's login-failure bucket."""
+    """Drop every IP and account bucket in this process."""
     with _login_failures_lock:
         _login_failures.clear()
+        _account_failures.clear()
 
 
 def _fresh_failures(client_ip: str, now: float) -> list[_LoginStamp]:

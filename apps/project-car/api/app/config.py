@@ -34,7 +34,11 @@ class Settings(BaseSettings):
     cookie_secure: bool = False
     # Header that carries the real client address for the login and waitlist caps.
     # Empty: key on the TCP peer. No header name is hard-coded.
+    # Honored only when the TCP peer is listed in trusted_proxies.
     client_ip_header: str = ""
+    trusted_proxies: str = ""
+    # X-Shop-Client-IP counts only when X-Shop-Proxy-Secret matches. Empty: never.
+    shop_proxy_secret: str = ""
     # Explicit allowlist only. Never "*". Public waitlist POSTs need the brochure origins.
     cors_origins: str = (
         "http://localhost:3000,http://127.0.0.1:3000,"
@@ -65,6 +69,14 @@ class Settings(BaseSettings):
     @classmethod
     def normalize_owner_email(cls, value: str) -> str:
         return str(value).strip().lower()
+
+    @field_validator("client_ip_header", mode="before")
+    @classmethod
+    def refuse_x_forwarded_for(cls, value: object) -> str:
+        name = str(value).strip()
+        if name.lower() == "x-forwarded-for":
+            raise ValueError("CLIENT_IP_HEADER must not be X-Forwarded-For")
+        return name
 
     @property
     def cors_origin_list(self) -> list[str]:
