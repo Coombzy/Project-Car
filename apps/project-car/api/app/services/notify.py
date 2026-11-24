@@ -271,6 +271,16 @@ def refuse_repeat_fill_campaign(
     )
 
 
+_LAST_ERROR_MAX = 500
+
+
+def _clip_last_error(detail: str | None) -> str | None:
+    """NotificationOutbox.last_error is String(500). None stays None."""
+    if detail is None:
+        return None
+    return detail[:_LAST_ERROR_MAX]
+
+
 def enqueue_fill_campaign(
     session: Session,
     snapshot: FillSnapshot,
@@ -315,7 +325,7 @@ def enqueue_fill_campaign(
             )
             if not dry_run and not to_address:
                 row.status = NotificationStatus.SKIPPED
-                row.last_error = "missing_recipient"
+                row.last_error = _clip_last_error("missing_recipient")
             session.add(row)
             rows.append(row)
     session.flush()
@@ -340,14 +350,14 @@ def _deliver_row(
     )
     row.attempts = int(row.attempts or 0) + 1
     row.status = result.status
-    row.last_error = None if result.ok else result.detail
+    row.last_error = _clip_last_error(None if result.ok else result.detail)
     if result.status == NotificationStatus.SENT:
         row.sent_at = pricing_now()
         extra = dict(row.payload or {})
         extra["adapter"] = result.detail
         row.payload = extra
     elif result.status == NotificationStatus.SKIPPED:
-        row.last_error = result.detail
+        row.last_error = _clip_last_error(result.detail)
     session.add(row)
     session.flush()
     return row
