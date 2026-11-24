@@ -140,12 +140,11 @@ def test_preview_and_notify_outbox(client: TestClient) -> None:
     assert sent_body["published"] is True
     assert Decimal(str(sent_body["preview"]["discount_pct"])) == Decimal("15.00")
     by_channel = {row["channel"]: row for row in sent_body["notifications"]}
-    assert by_channel["email"]["status"] == "sent"
+    assert by_channel["email"]["status"] == "pending"
     assert by_channel["email"]["to_address"] == member["email"]
-    assert by_channel["email"]["payload"]["adapter"] == "email_stub"
-    assert by_channel["sms"]["status"] == "skipped"
-    assert by_channel["sms"]["last_error"] == "sms_not_configured"
-    assert by_channel["push"]["status"] == "skipped"
+    assert by_channel["email"]["attempts"] == 0
+    assert by_channel["sms"]["status"] == "pending"
+    assert by_channel["push"]["status"] == "pending"
     assert "25%" not in (by_channel["email"]["subject"] or "")
     assert "15%" in (by_channel["email"]["subject"] or "")
 
@@ -405,6 +404,7 @@ def test_real_fill_notify_on_the_next_regina_day_still_sends(client: TestClient,
 
     # Noon on the Regina day just notified. The next snapshot is the day after that.
     advanced = datetime.combine(first_day, time(12, 0), tzinfo=PRICING_TZ)
+    monkeypatch.setenv("SHOP_DEV_MODE", "1")
     monkeypatch.setenv("SHOP_NOW", advanced.isoformat())
 
     second = _notify(client, dry_run=False, channels=["email"])

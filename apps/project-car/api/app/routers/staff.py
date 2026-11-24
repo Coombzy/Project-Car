@@ -115,6 +115,7 @@ def staff_deny_shop_hoist(
     return _decision(row, action, balance=row.member.token_balance)
 
 
+@router.post("/staff/parts-requests", response_model=StaffPartsRequestOut, status_code=201)
 @router.post("/parts-requests", response_model=StaffPartsRequestOut, status_code=201)
 def staff_create_parts_request(
     body: StaffPartsRequestCreate, session: DbSession, principal: Owner
@@ -133,12 +134,14 @@ def staff_create_parts_request(
     return StaffPartsRequestOut.model_validate(row)
 
 
+@router.post("/staff/parts-requests/{request_id}/approve", response_model=StaffDecisionOut)
 @router.post("/parts-requests/{request_id}/approve", response_model=StaffDecisionOut)
 def staff_approve_parts(request_id: UUID, session: DbSession, principal: Owner) -> StaffDecisionOut:
     row, action = decide_parts_request(session, request_id, principal, approve=True)
     return _decision(row, action)
 
 
+@router.post("/staff/parts-requests/{request_id}/deny", response_model=StaffDecisionOut)
 @router.post("/parts-requests/{request_id}/deny", response_model=StaffDecisionOut)
 def staff_deny_parts(request_id: UUID, session: DbSession, principal: Owner) -> StaffDecisionOut:
     row, action = decide_parts_request(session, request_id, principal, approve=False)

@@ -60,6 +60,7 @@ async function shopFetch(path: string, init: RequestInit = {}): Promise<Response
     ...init,
     headers,
     cache: "no-store",
+    signal: init.signal ?? AbortSignal.timeout(10_000),
   });
 }
 
@@ -77,7 +78,11 @@ export async function shopJson<T>(path: string, fallback: string, init: RequestI
   return body as T;
 }
 
-export async function loginOwner(email: string, password: string): Promise<string> {
+export async function loginOwner(
+  email: string,
+  password: string,
+  forwardHeaders: Record<string, string> = {},
+): Promise<string> {
   let response: Response;
   try {
     response = await fetch(`${shopApiUrl()}/auth/login`, {
@@ -85,9 +90,11 @@ export async function loginOwner(email: string, password: string): Promise<strin
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        ...forwardHeaders,
       },
       body: JSON.stringify({ email, password }),
       cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
   } catch {
     throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
@@ -481,6 +488,7 @@ async function memberFetch(path: string, init: RequestInit = {}): Promise<Respon
     ...init,
     headers,
     cache: "no-store",
+    signal: init.signal ?? AbortSignal.timeout(10_000),
   });
 }
 
@@ -498,7 +506,11 @@ export async function memberJson<T>(path: string, fallback: string, init: Reques
   return body as T;
 }
 
-export async function loginMember(email: string, password: string): Promise<string> {
+export async function loginMember(
+  email: string,
+  password: string,
+  forwardHeaders: Record<string, string> = {},
+): Promise<string> {
   let response: Response;
   try {
     response = await fetch(`${shopApiUrl()}/auth/member/login`, {
@@ -506,9 +518,11 @@ export async function loginMember(email: string, password: string): Promise<stri
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        ...forwardHeaders,
       },
       body: JSON.stringify({ email, password }),
       cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
   } catch {
     throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
