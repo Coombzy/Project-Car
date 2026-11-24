@@ -1,8 +1,9 @@
 import { BookingCost } from "./booking-cost";
 import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
 import { StatusPill } from "./status-pill";
-import type { Booking } from "../lib/config";
+import { offersCancel } from "../lib/booking-cancel";
 import { formatCalendarTime } from "../lib/calendar";
+import type { Booking } from "../lib/config";
 import { checkInButtonState } from "../lib/check-in-window";
 import { shopClock } from "../lib/time";
 import {
@@ -71,7 +72,7 @@ export function OwnerBookingCard({
             <button type="submit">Complete</button>
           </form>
         ) : null}
-        {booking.status === "pending" || booking.status === "confirmed" ? (
+        {offersCancel(booking.status, "owner") ? (
           <form action={cancelBookingAction}>
             <ScheduleReturnFields returnTo={returnTo} />
             <input type="hidden" name="id" value={booking.id} />
