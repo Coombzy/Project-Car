@@ -60,6 +60,7 @@ async function shopFetch(path: string, init: RequestInit = {}): Promise<Response
     ...init,
     headers,
     cache: "no-store",
+    signal: init.signal ?? AbortSignal.timeout(10_000),
   });
 }
 
@@ -93,6 +94,7 @@ export async function loginOwner(
       },
       body: JSON.stringify({ email, password }),
       cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
   } catch {
     throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
@@ -486,6 +488,7 @@ async function memberFetch(path: string, init: RequestInit = {}): Promise<Respon
     ...init,
     headers,
     cache: "no-store",
+    signal: init.signal ?? AbortSignal.timeout(10_000),
   });
 }
 
@@ -519,6 +522,7 @@ export async function loginMember(
       },
       body: JSON.stringify({ email, password }),
       cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
   } catch {
     throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
