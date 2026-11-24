@@ -1,8 +1,6 @@
-"use client";
-
-import { useActionState } from "react";
-
-import { loginAction, type LoginState } from "./actions";
+import { LoginShell } from "../../components/login-shell";
+import { showDemoLoginHints } from "../../lib/login-hints";
+import { loginAction } from "./actions";
 
 export function LoginForm({
   nextPath,
@@ -11,11 +9,10 @@ export function LoginForm({
   nextPath: string;
   defaultPassword?: string;
 }) {
-  const [state, action, pending] = useActionState<LoginState, FormData>(loginAction, null);
+  const hints = showDemoLoginHints();
 
   return (
-    <form action={action}>
-      <input type="hidden" name="next" value={nextPath} />
+    <LoginShell action={loginAction} nextPath={nextPath} idleLabel="Enter demo as Owner">
       <label htmlFor="email">Email</label>
       <input
         id="email"
@@ -23,7 +20,7 @@ export function LoginForm({
         type="email"
         autoComplete="username"
         required
-        defaultValue="owner@projectcar.ca"
+        defaultValue={hints ? "owner@projectcar.ca" : ""}
       />
       <label htmlFor="password">Password</label>
       <input
@@ -32,14 +29,8 @@ export function LoginForm({
         type="password"
         autoComplete="current-password"
         required
-        defaultValue={defaultPassword ?? ""}
+        defaultValue={hints ? (defaultPassword ?? "") : ""}
       />
-      {state?.message ? <p className="banner error">{state.message}</p> : null}
-      <div className="actions">
-        <button type="submit" disabled={pending}>
-          {pending ? "Signing in…" : "Enter demo as Owner"}
-        </button>
-      </div>
-    </form>
+    </LoginShell>
   );
 }

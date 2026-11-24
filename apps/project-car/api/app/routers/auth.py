@@ -91,6 +91,7 @@ def member_login(
     refused for that member. A member with no hash accepts the shared demo
     password on loopback, and off loopback only when that password is not the
     default. Off loopback the default is the same 401 as a wrong password.
+    An unset hash still runs the dummy scrypt before that compare.
 
     Unknown emails and members who are not active both return invalid
     credentials. The body does not say which case it was.

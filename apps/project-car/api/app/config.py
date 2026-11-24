@@ -140,3 +140,10 @@ def assert_runtime_secrets(settings: Settings) -> None:
                 f"Refusing to start: {name} is a placeholder or too short. "
                 "Set a real value, or SHOP_DEV_MODE=1 for local dev only."
             )
+    # Empty stays allowed: forwarding stays off. A set placeholder must not boot.
+    proxy = settings.shop_proxy_secret
+    if proxy and (proxy in _DEMO_SECRETS or proxy.startswith("CHANGE_ME")):
+        raise RuntimeError(
+            "Refusing to start: shop_proxy_secret (SHOP_PROXY_SECRET) is a placeholder. "
+            "Set a real value, or SHOP_DEV_MODE=1 for local dev only."
+        )

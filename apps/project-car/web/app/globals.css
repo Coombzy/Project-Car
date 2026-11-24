@@ -62,6 +62,37 @@ a:hover {
   text-decoration: underline;
 }
 
+/* Keyboard focus on every control. --focus is the orange token, already 3:1 on the dark surfaces. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  a,
+  button,
+  .button {
+    min-height: 44px;
+  }
+  .chip-actions :is(a, button, .button),
+  .todo-cal-actions :is(a, button, .button),
+  .nav :is(a, button, .button),
+  .nav-secondary :is(a, button, .button),
+  .view-toggle :is(a, button, .button),
+  .parts-status-form :is(a, button, .button),
+  .demo-banner-dismiss,
+  .hour-slot,
+  .density-chip {
+    min-height: auto;
+  }
+}
+
+.muted a {
+  /* Purple on muted text is ~1.07:1, so the cue is an underline (WCAG 1.4.1). */
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 .shell {
   min-height: 100vh;
   display: flex;
@@ -131,6 +162,12 @@ main {
   padding: 1.25rem 1.35rem;
 }
 
+/* Scroll the job board inside the card so /jobs does not scroll the page at 768px. */
+.job-board-table {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
 h1 {
   margin: 0.35rem 0 0.75rem;
   font-size: 1.6rem;
@@ -160,10 +197,6 @@ input {
   border-radius: 6px;
   padding: 0.7rem 0.75rem;
   font: inherit;
-}
-
-input:focus {
-  outline: 1px solid var(--focus);
 }
 
 .actions {
@@ -268,11 +301,6 @@ textarea {
   border-radius: 6px;
   padding: 0.7rem 0.75rem;
   font: inherit;
-}
-
-select:focus,
-textarea:focus {
-  outline: 1px solid var(--focus);
 }
 
 h2 {

@@ -98,3 +98,27 @@ def test_current_settings_placeholder_defaults_are_guarded():
     assert_placeholders_guarded(CONFIG.read_text(), str(CONFIG))
     with pytest.raises(RuntimeError):
         assert_runtime_secrets(Settings(shop_dev_mode=False, member_demo_password="changeme"))
+
+
+# Other required secrets stay strong so only shop_proxy_secret can trip the guard.
+_STRONG = {
+    "owner_api_secret": "y" * 32,
+    "ai_api_secret": "y" * 32,
+    "session_secret": "y" * 32,
+    "owner_password": "y" * 12,
+    "member_demo_password": "y" * 12,
+}
+
+
+def test_aud010_shop_proxy_secret_placeholder_refused_outside_dev():
+    """Empty SHOP_PROXY_SECRET starts. A placeholder or dummy secret does not, unless dev mode."""
+    for secret in (*_DEMO_SECRETS, "CHANGE_ME", "CHANGE_ME_shop_proxy"):
+        with pytest.raises(RuntimeError) as exc:
+            assert_runtime_secrets(Settings(shop_dev_mode=False, shop_proxy_secret=secret, **_STRONG))
+        message = str(exc.value)
+        assert "shop_proxy_secret" in message
+        assert "SHOP_PROXY_SECRET" in message
+        assert secret not in message
+    assert_runtime_secrets(Settings(shop_dev_mode=False, shop_proxy_secret="", **_STRONG))
+    assert_runtime_secrets(Settings(shop_dev_mode=False, shop_proxy_secret="y" * 32, **_STRONG))
+    assert_runtime_secrets(Settings(shop_dev_mode=True, shop_proxy_secret="changeme"))

@@ -1,8 +1,10 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { ShopApiError } from "../../lib/config";
+import { loginForwardHeaders } from "../../lib/login-forward";
 import { safeOwnerNext } from "../../lib/safe-next";
 import { writeSessionCookie } from "../../lib/session";
 import { loginOwner } from "../../lib/shop-api";
@@ -18,8 +20,10 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
     return { message: "Email and password are required." };
   }
 
+  const forward = loginForwardHeaders({ headers: await headers() }, process.env.SHOP_PROXY_SECRET ?? "");
+
   try {
-    const token = await loginOwner(email, password);
+    const token = await loginOwner(email, password, forward);
     await writeSessionCookie(token);
   } catch (error) {
     if (error instanceof ShopApiError) {
