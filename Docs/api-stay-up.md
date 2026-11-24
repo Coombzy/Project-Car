@@ -1,7 +1,7 @@
 # API stay-up — `api.projectcar.ca`
 
 **Status:** Living ops  
-**Updated:** 2026-09-07  
+**Updated:** 2026-11-24  
 **Public URL:** https://api.projectcar.ca  
 **Related:** `doc-lid-restore.md` (ordered wake), `cors-origins.md`, `brochure-worker-deploy.md`, `member-host-cutover.md`, `shop-web-stay-up.md`, `apps/project-car/api/README.md`, `doc-software-baseline.md`, `nextcloud-progress.md` §3.5
 
@@ -80,6 +80,12 @@ Morning lid-close / **530 / 1033** (ordered sequence): `doc-lid-restore.md`.
 CORS / waitlist preflight after an `.env` change: `cors-origins.md`.
 
 Public HTTPS session cookies: shop-web KeepAlive **`com.projectcar.shop-web`** runs **`next start`** (`NODE_ENV=production`), not `next dev`. Doc already uses `COOKIE_SECURE=true` (API) and `SHOP_COOKIE_SECURE=true` (shop UI) so Firefox will store cookies on `app.` / `ops.`. Local `http://127.0.0.1:3000` should leave those unset or false. See `shop-web-stay-up.md` and `apps/project-car/web/README.md`. Member-on-projectcar.ca cookie / CORS plan: `member-host-cutover.md` (not shipped).
+
+---
+
+## Login failure counts
+
+`reserve_login_failure` in `apps/project-car/api/app/auth.py` stores IP and account failure counts in the process (`_login_failures`, `_account_failures`). Each API process keeps its own maps. N worker processes allow N times the cap. A restart drops the counts. The next reserve sweeps keys outside the 15-minute window.
 
 ---
 
