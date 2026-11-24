@@ -351,6 +351,19 @@ def _account_backoff_seconds(failures: int) -> int:
     return min(60 << shift, _BACKOFF_CAP_SECONDS)
 
 
+def _expire_account_failure(key: tuple[str, str], now: float) -> tuple[int, float]:
+    """Drop a stale account key under the caller-held lock. Returns the live count."""
+    count, seen = _account_failures.get(key, (0, 0.0))
+    if not count:
+        return 0, now
+    wait = _account_backoff_seconds(count)
+    limit = wait if wait else _LOGIN_FAILURE_WINDOW_SECONDS
+    if now - seen >= limit:
+        _account_failures.pop(key, None)
+        return 0, now
+    return count, seen
+
+
 def reserve_login_failure(client_ip: str, realm: str = "", account: str = "") -> _LoginStamp | None:
     """Reserve one failure slot before the password check.
 
@@ -365,7 +378,8 @@ def reserve_login_failure(client_ip: str, realm: str = "", account: str = "") ->
     normalized = account.strip().lower() if account else ""
     with _login_failures_lock:
         if normalized:
-            count, seen = _account_failures.get(_account_key(realm, normalized), (0, 0.0))
+            key = _account_key(realm, normalized)
+            count, seen = _expire_account_failure(key, now)
             wait = _account_backoff_seconds(count)
             if wait and now - seen < wait:
                 return None

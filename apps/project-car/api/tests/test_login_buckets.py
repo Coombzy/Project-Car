@@ -2,7 +2,7 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
-from app.auth import _account_backoff_seconds
+from app.auth import _account_backoff_seconds, _account_failures, _account_key
 from app.config import Settings, get_settings
 from tests.test_client_ip import _peer
 OWNER = {"email": "owner@projectcar.ca", "password": "wrong-guess"}
@@ -89,3 +89,15 @@ def test_account_backoff(client: TestClient) -> None:
     assert [_hit(client, "/auth/login", ip, body=body) for _ in range(6)] == [401] * 6
     assert _hit(client, "/auth/login", ip, body=body) == 429
     assert _hit(client, "/auth/login", ip, body=other) == 401
+
+
+def test_account_backoff_expires(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    clock = {"now": 8000.0}
+    monkeypatch.setattr("app.auth.time.monotonic", lambda: clock["now"])
+    ip = "203.0.113.94"
+    body = {"email": "expire@example.com", "password": "wrong-guess"}
+    assert [_hit(client, "/auth/login", ip, body=body) for _ in range(6)] == [401] * 6
+    assert _hit(client, "/auth/login", ip, body=body) == 429
+    clock["now"] += 60 + 1
+    assert _hit(client, "/auth/login", ip, body=body) == 401
+    assert _account_key("owner", "expire@example.com") not in _account_failures or _account_failures[_account_key("owner", "expire@example.com")][0] == 1
