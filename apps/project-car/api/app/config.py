@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,9 +20,9 @@ class Settings(BaseSettings):
         description="SQLAlchemy URL for shop Postgres (never Nextcloud MariaDB).",
     )
     owner_email: str = "owner@projectcar.ca"
-    owner_password: str = "changeme"
-    # SHOP_DEV_MODE. Owner login rejects the default demo password while this is off.
+    # Local dev only: allows the placeholder secrets below and serves the docs routes.
     shop_dev_mode: bool = False
+    owner_password: str = "changeme"
     owner_api_secret: str = "dev-owner-secret"
     ai_api_secret: str = "dev-ai-secret"
     ai_actor_id: str = "shop-ai"
@@ -33,14 +33,23 @@ class Settings(BaseSettings):
     # Demo Member password stub. Email must match an existing member row.
     # Not OIDC. Staff OIDC can replace this later without rewriting shop tables.
     member_demo_password: str = "changeme"
-    cookie_secure: bool = False
+    cookie_secure: bool | None = None  # None: resolved from shop_dev_mode below
     # Header that carries the real client address for the login and waitlist caps.
     # Empty: key on the TCP peer. No header name is hard-coded.
     client_ip_header: str = ""
+    trusted_proxies: str = ""
+    shop_proxy_secret: str = ""
     # Explicit allowlist only. Never "*". Public waitlist POSTs need the brochure origins.
     cors_origins: str = (
         "http://localhost:3000,http://127.0.0.1:3000,"
         "https://projectcar.ca,https://www.projectcar.ca"
+    )
+    # Brochure origins: preflight and POST /waitlist only, never credentialed.
+    cors_public_origins: str = "https://projectcar.ca,https://www.projectcar.ca"
+    # Ops, app and local dev origins: full credentialed CORS.
+    cors_credentialed_origins: str = (
+        "http://localhost:3000,http://127.0.0.1:3000,"
+        "https://ops.projectcar.ca,https://app.projectcar.ca"
     )
     pc_waitlist: bool = True
     # Next-day fill-the-gaps defaults (America/Regina). Owner can override per send.
@@ -68,16 +77,41 @@ class Settings(BaseSettings):
     def normalize_owner_email(cls, value: str) -> str:
         return str(value).strip().lower()
 
+    @field_validator("client_ip_header", mode="before")
+    @classmethod
+    def reject_x_forwarded_for(cls, value: object) -> object:
+        if str(value).strip().lower() == "x-forwarded-for":
+            raise ValueError("CLIENT_IP_HEADER must not be X-Forwarded-For")
+        return value
+
+    @staticmethod
+    def _split_origins(value: str) -> list[str]:
+        """Comma-separated origins. `*` is dropped so the API is never wide open."""
+        return [origin for origin in (item.strip() for item in value.split(",")) if origin and origin != "*"]
+
+    @model_validator(mode="after")
+    def resolve_cookie_secure(self) -> "Settings":
+        if self.cookie_secure is None:
+            self.cookie_secure = not self.shop_dev_mode
+        return self
+
     @property
     def cors_origin_list(self) -> list[str]:
-        """Comma-separated origins. `*` is dropped so the API is never wide open."""
-        origins: list[str] = []
-        for item in self.cors_origins.split(","):
-            origin = item.strip()
-            if not origin or origin == "*":
-                continue
-            origins.append(origin)
-        return origins
+        return self._split_origins(self.cors_origins)
+
+    @property
+    def cors_public_origin_list(self) -> list[str]:
+        return self._split_origins(self.cors_public_origins) + self.cors_origin_list
+
+    @property
+    def cors_credentialed_origin_list(self) -> list[str]:
+        return self._split_origins(self.cors_credentialed_origins)
+
+    def cors_origin_kind(self, origin: str) -> str | None:
+        """Credentialed wins when an origin appears on both lists."""
+        if origin in self.cors_credentialed_origin_list:
+            return "credentialed"
+        return "public" if origin in self.cors_public_origin_list else None
 
 
 @lru_cache
@@ -86,3 +120,23 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+
+
+# Placeholder secrets that must never boot outside local dev.
+_DEMO_SECRETS = ("dev-owner-secret", "dev-ai-secret", "dev-session-secret-change-me", "changeme")
+
+
+def assert_runtime_secrets(settings: Settings) -> None:
+    """Refuse to start on placeholder secrets unless SHOP_DEV_MODE=1. Never names the value."""
+    if settings.shop_dev_mode:
+        return
+    for name, length in (
+        ("owner_api_secret", 32), ("ai_api_secret", 32),
+        ("session_secret", 32), ("owner_password", 12), ("member_demo_password", 12),
+    ):
+        value = getattr(settings, name)
+        if len(value) < length or value in _DEMO_SECRETS or value.startswith("CHANGE_ME"):
+            raise RuntimeError(
+                f"Refusing to start: {name} is a placeholder or too short. "
+                "Set a real value, or SHOP_DEV_MODE=1 for local dev only."
+            )

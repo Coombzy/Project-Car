@@ -31,6 +31,17 @@ class ApiClient:
         json: dict[str, Any] | list[Any] | None = None,
     ) -> tuple[int, Any]:
         headers = {"Authorization": "Bearer " + self.ai_bearer}
-        status, body = self.request(method, path, json=json, headers=headers)
+        try:
+            status, body = self.request(method, path, json=json, headers=headers)
+        except Exception as exc:
+            self.steps.append(
+                {
+                    "method": method,
+                    "path": path,
+                    "status": None,
+                    "error": type(exc).__name__,
+                }
+            )
+            raise
         self.steps.append({"method": method, "path": path, "status": status})
         return status, body

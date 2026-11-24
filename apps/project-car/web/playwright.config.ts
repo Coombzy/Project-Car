@@ -93,6 +93,7 @@ export default defineConfig({
         ...serverEnv,
         DATABASE_URL: "sqlite:////tmp/shop-visual.db",
         SHOP_HOST: "127.0.0.1",
+        SHOP_DEV_MODE: "1",
       },
     },
     {
