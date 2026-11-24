@@ -27,6 +27,7 @@ type RoomRow = {
 const PUBLIC_PAGES: Shot[] = [
   { name: "login", path: "/login" },
   { name: "member-login", path: "/member/login" },
+  { name: "signup", path: "/signup" },
 ];
 
 const OWNER_PAGES: Shot[] = [
