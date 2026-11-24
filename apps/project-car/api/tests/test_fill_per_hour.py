@@ -33,6 +33,7 @@ def _quote(client: TestClient, start: datetime, end: datetime, member_id: str) -
 
 
 def _five_empty_bays(client: TestClient, monkeypatch) -> dict:
+    monkeypatch.setenv("SHOP_DEV_MODE", "1")
     monkeypatch.setenv("SHOP_NOW", FROZEN)
     member = create_member(client, email="ada@example.com", tier_name="premium")
     for index in range(1, 6):

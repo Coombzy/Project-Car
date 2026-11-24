@@ -405,6 +405,7 @@ def test_real_fill_notify_on_the_next_regina_day_still_sends(client: TestClient,
 
     # Noon on the Regina day just notified. The next snapshot is the day after that.
     advanced = datetime.combine(first_day, time(12, 0), tzinfo=PRICING_TZ)
+    monkeypatch.setenv("SHOP_DEV_MODE", "1")
     monkeypatch.setenv("SHOP_NOW", advanced.isoformat())
 
     second = _notify(client, dry_run=False, channels=["email"])
