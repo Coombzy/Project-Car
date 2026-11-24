@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type UIEvent } from "react";
 
 import { shouldSkipChatPoll } from "../lib/chat-poll";
+import { shouldStickToChatBottom } from "../lib/chat-scroll";
 import type { ChatMessage, ChatRoom } from "../lib/config";
 import { formatShopDateTime } from "../lib/time";
+import { Banner } from "./banner";
 
 const POLL_MS = 4000;
 
@@ -28,15 +30,27 @@ export function ChatThread({
   const [sending, setSending] = useState(false);
   const cursorRef = useRef(initialCursor);
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const stickRef = useRef(true);
+
+  function syncStick(event: UIEvent<HTMLDivElement>) {
+    if (!event.isTrusted) {
+      return;
+    }
+    const node = scrollerRef.current;
+    if (node) {
+      stickRef.current = shouldStickToChatBottom(node);
+    }
+  }
 
   useEffect(() => {
     setMessages(initialMessages);
     cursorRef.current = initialCursor;
+    stickRef.current = true;
   }, [initialCursor, initialMessages, room.id]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const node = scrollerRef.current;
-    if (node) {
+    if (node && stickRef.current) {
       node.scrollTop = node.scrollHeight;
     }
   }, [messages]);
@@ -90,6 +104,7 @@ export function ChatThread({
     setSending(true);
     try {
       const message = await sendMessage(room.id, body);
+      stickRef.current = true;
       setMessages((prev) => (prev.some((row) => row.id === message.id) ? prev : [...prev, message]));
       cursorRef.current = message.id;
       form.reset();
@@ -103,7 +118,7 @@ export function ChatThread({
 
   return (
     <section className="chat-thread card">
-      <div className="chat-messages" ref={scrollerRef}>
+      <div className="chat-messages" ref={scrollerRef} onScroll={syncStick} aria-live="polite">
         {messages.length === 0 ? (
           <p className="muted">No messages yet. Owner started this room — say hello.</p>
         ) : (
@@ -121,7 +136,7 @@ export function ChatThread({
           ))
         )}
       </div>
-      {error ? <div className="banner error">{error}</div> : null}
+      {error ? <Banner tone="error">{error}</Banner> : null}
       {showComposer ? (
         <form onSubmit={onSubmit} className="chat-compose">
           <label htmlFor={`chat-body-${room.id}`}>
