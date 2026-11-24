@@ -27,6 +27,7 @@ from app.routers import (
     tool_crib,
     waitlist,
 )
+from app.security_headers import SecurityHeadersMiddleware
 
 
 def create_app() -> FastAPI:
@@ -52,6 +53,8 @@ def create_app() -> FastAPI:
         public_origins=settings.cors_public_origin_list,
         credentialed_origins=settings.cors_credentialed_origin_list,
     )
+
+    application.add_middleware(SecurityHeadersMiddleware)
 
     application.include_router(auth.router)
     application.include_router(member.router)
