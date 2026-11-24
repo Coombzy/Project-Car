@@ -154,7 +154,8 @@ def test_login_locks_after_repeated_failures(client: TestClient) -> None:
     owner = {"email": "owner@projectcar.ca", "password": "wrong-guess"}
     member = {"email": "nobody@example.com", "password": "wrong-guess"}
 
-    for _ in range(8):
+    # Account backoff starts after six failures. The IP cap stays at eight.
+    for _ in range(6):
         owner_denied = client.post("/auth/login", json=owner)
         assert owner_denied.status_code == 401, owner_denied.text
         assert owner_denied.json()["error"]["code"] == "invalid_credentials"
@@ -175,9 +176,10 @@ def test_login_locks_after_repeated_failures(client: TestClient) -> None:
     assert still_locked.json()["error"]["code"] == "rate_limited"
 
 
-def test_correct_password_after_seven_failures_logs_in(client: TestClient) -> None:
+def test_correct_password_after_five_failures_logs_in(client: TestClient) -> None:
     wrong = {"email": "owner@projectcar.ca", "password": "wrong-guess"}
-    for _ in range(7):
+    # The sixth attempt is still open. Success clears that account key.
+    for _ in range(5):
         denied = client.post("/auth/login", json=wrong)
         assert denied.status_code == 401, denied.text
         assert denied.json()["error"]["code"] == "invalid_credentials"
