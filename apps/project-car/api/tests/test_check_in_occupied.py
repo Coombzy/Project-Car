@@ -1,8 +1,4 @@
-"""Check-in is 409 hoist_occupied while another visit is active or overdue.
-
-A (10:00-11:00) and B (11:00-12:00) on one bay, both confirmed. At 10:50 both
-windows are open, so check-in must not put two members on the same hoist.
-"""
+"""Check-in is 409 hoist_occupied while another visit is active or overdue."""
 
 from __future__ import annotations
 
@@ -47,7 +43,6 @@ def _confirmed(client: TestClient, *, member: dict, hoist_id: str, hour: int) ->
 
 
 def _pair(client: TestClient, monkeypatch, bay: str) -> tuple[str, str, str]:
-    """Two confirmed back-to-back visits, created while the clock is still 09:00."""
     _clock(monkeypatch, "09:00")
     slug = bay.lower().replace(" ", "")
     ada = create_member(client, name="Ada Reyes", email=f"ada.{slug}@example.com")
@@ -78,11 +73,7 @@ def test_active_visit_blocks_check_in_until_complete(client: TestClient, monkeyp
     assert checked.status_code == 200, checked.text
     assert checked.json()["status"] == "active"
     _refused(client, second, hoist_id)
-    done = client.post(
-        f"/bookings/{first}/complete",
-        headers=AUTH,
-        json={"unused_tokens": "0"},
-    )
+    done = client.post(f"/bookings/{first}/complete", headers=AUTH, json={"unused_tokens": "0"})
     assert done.status_code == 200, done.text
     assert done.json()["status"] == "completed"
     followed = _check_in(client, second)
@@ -114,9 +105,7 @@ def test_free_bay_still_checks_in(client: TestClient, monkeypatch) -> None:
     assert _hoist_status(client, hoist["id"]) == "occupied"
 
 
-def test_second_check_in_of_the_same_booking_still_errors(
-    client: TestClient, monkeypatch
-) -> None:
+def test_second_check_in_of_the_same_booking_still_errors(client: TestClient, monkeypatch) -> None:
     hoist_id, first, _second = _pair(client, monkeypatch, "Bay 4")
     _clock(monkeypatch, "10:50")
     assert _check_in(client, first).status_code == 200
