@@ -9,10 +9,10 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${SHOP_POSTGRES_USER:-projectcar}
-      POSTGRES_PASSWORD: ${SHOP_POSTGRES_PASSWORD:-projectcar}
+      POSTGRES_PASSWORD: ${SHOP_POSTGRES_PASSWORD:?Set SHOP_POSTGRES_PASSWORD in an untracked .env}
       POSTGRES_DB: ${SHOP_POSTGRES_DB:-projectcar}
     ports:
-      - "${SHOP_POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${SHOP_POSTGRES_PORT:-5432}:5432"
     volumes:
       - shop_pgdata:/var/lib/postgresql/data
     healthcheck:

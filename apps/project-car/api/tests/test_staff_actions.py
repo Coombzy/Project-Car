@@ -9,7 +9,15 @@ from uuid import UUID, uuid4
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
-from app.models import Booking, RefundRequest, ShopJob, ShopJobStatus, StaffAction
+from app.models import (
+    Booking,
+    RefundRequest,
+    ShopJob,
+    ShopJobStatus,
+    StaffAction,
+    StaffPartsRequest,
+    ToolCribException,
+)
 from app.shop_time import as_utc, shop_now
 from tests.conftest import AUTH, create_hoist, create_member, login_member
 
@@ -249,6 +257,85 @@ def test_parts_and_tool_crib_use_the_same_decision_routes(client: TestClient) ->
     assert denied.json()["status"] == "denied"
     assert denied.json()["actor_kind"] == "ai"
     assert _balance(client, member["id"]) == before
+
+
+def _decision_actions(client: TestClient, request_id: str) -> list[str]:
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        rows = session.scalars(
+            select(StaffAction).where(StaffAction.request_id == UUID(request_id))
+        ).all()
+        return [row.action for row in rows]
+    finally:
+        session.close()
+
+
+def _assert_decision_lock(reads: list[tuple[str, bool]], table: str) -> None:
+    matches = [
+        (sql, locked)
+        for sql, locked in reads
+        if f"FROM {table}" in sql and f"{table}.id" in sql
+    ]
+    assert matches, f"decision did not select {table}"
+    sql, locked = matches[0]
+    assert locked and "FOR UPDATE" in sql, f"{table} select has no FOR UPDATE"
+
+
+def test_second_parts_and_tool_crib_decision_conflicts(client: TestClient, monkeypatch) -> None:
+    """Approve then deny is 409 request_already_decided, with one staff action.
+
+    The decision select uses FOR UPDATE and populate_existing. SQLite drops
+    FOR UPDATE at execution; the compiled Postgres statement still asks for it.
+    """
+    from sqlalchemy.dialects import postgresql
+    from sqlalchemy.orm import Session
+
+    reads: list[tuple[str, bool]] = []
+    original = Session.scalars
+
+    def spy(self, statement, *args, **kwargs):
+        sql = str(statement.compile(dialect=postgresql.dialect()))
+        locked = getattr(statement, "_for_update_arg", None) is not None
+        reads.append((sql, locked))
+        return original(self, statement, *args, **kwargs)
+
+    monkeypatch.setattr(Session, "scalars", spy)
+    member = create_member(client, email="ada.decide@example.com")
+    parts = client.post(
+        "/parts-requests",
+        headers=AI,
+        json={"member_id": member["id"], "sku": "PT-OIL-5W30-012", "note": "Need oil"},
+    )
+    assert parts.status_code == 201, parts.text
+    parts_id = parts.json()["id"]
+    reads.clear()
+    approved = client.post(f"/parts-requests/{parts_id}/approve", headers=AUTH)
+    assert approved.status_code == 200, approved.text
+    _assert_decision_lock(reads, StaffPartsRequest.__tablename__)
+    reads.clear()
+    denied = client.post(f"/parts-requests/{parts_id}/deny", headers=AUTH)
+    assert denied.status_code == 409, denied.text
+    assert denied.json()["error"]["code"] == "request_already_decided"
+    _assert_decision_lock(reads, StaffPartsRequest.__tablename__)
+    assert _decision_actions(client, parts_id) == ["approve"]
+
+    login_member(client, "ada.decide@example.com")
+    crib = client.post(
+        "/member/tool-crib-exceptions",
+        json={"tool_code": "TC-FL-001", "reason": "Need it off the wall"},
+    )
+    assert crib.status_code == 201, crib.text
+    crib_id = crib.json()["id"]
+    reads.clear()
+    crib_ok = client.post(f"/tool-crib-exceptions/{crib_id}/approve", headers=AUTH)
+    assert crib_ok.status_code == 200, crib_ok.text
+    _assert_decision_lock(reads, ToolCribException.__tablename__)
+    reads.clear()
+    crib_no = client.post(f"/tool-crib-exceptions/{crib_id}/deny", headers=AUTH)
+    assert crib_no.status_code == 409, crib_no.text
+    assert crib_no.json()["error"]["code"] == "request_already_decided"
+    _assert_decision_lock(reads, ToolCribException.__tablename__)
+    assert _decision_actions(client, crib_id) == ["approve"]
 
 
 def test_ai_can_finish_or_send_back_a_claimed_job(client: TestClient) -> None:
