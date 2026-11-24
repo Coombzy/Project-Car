@@ -25,14 +25,17 @@ def test_every_response_carries_the_five_headers() -> None:
 def test_dev_docs_keep_headers_but_drop_csp(monkeypatch) -> None:
     monkeypatch.setenv("SHOP_DEV_MODE", "1")
     get_settings.cache_clear()
-    with TestClient(create_app()) as client:
-        for path in ("/docs", "/redoc"):
-            response = client.get(path)
-            assert response.status_code == 200, path
-            assert "content-security-policy" not in response.headers, path
-            for name, value in EXPECTED.items():
-                if name != "content-security-policy":
-                    assert response.headers[name] == value, (path, name)
+    try:
+        with TestClient(create_app()) as client:
+            for path in ("/docs", "/redoc"):
+                response = client.get(path)
+                assert response.status_code == 200, path
+                assert "content-security-policy" not in response.headers, path
+                for name, value in EXPECTED.items():
+                    if name != "content-security-policy":
+                        assert response.headers[name] == value, (path, name)
+    finally:
+        get_settings.cache_clear()
 
 
 def test_docs_keep_csp_without_dev_mode(monkeypatch) -> None:
@@ -42,5 +45,8 @@ def test_docs_keep_csp_without_dev_mode(monkeypatch) -> None:
         monkeypatch.setenv(name, "y" * 32)
     monkeypatch.delenv("SHOP_DEV_MODE", raising=False)
     get_settings.cache_clear()
-    with TestClient(create_app()) as client:
-        assert "content-security-policy" in client.get("/docs").headers
+    try:
+        with TestClient(create_app()) as client:
+            assert "content-security-policy" in client.get("/docs").headers
+    finally:
+        get_settings.cache_clear()
