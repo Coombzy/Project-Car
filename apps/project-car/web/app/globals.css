@@ -62,6 +62,39 @@ a:hover {
   text-decoration: underline;
 }
 
+/* Keyboard focus on every control. --focus is the orange token, already 3:1 on the dark surfaces. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+a,
+button,
+.button {
+  position: relative;
+}
+
+/* At least 44px. The box covers the control and grows past it when the control is smaller. */
+a::before,
+button::before,
+.button::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  min-width: 44px;
+  min-height: 44px;
+  transform: translate(-50%, -50%);
+}
+
+/* Hour rows are 1.2rem and density chips tile the cell, so a 44px box would cover the next target. */
+.hour-slot::before,
+.density-chip::before {
+  content: none;
+}
+
 .muted a {
   /* Purple on muted text is ~1.07:1, so the cue is an underline (WCAG 1.4.1). */
   text-decoration: underline;
@@ -168,10 +201,6 @@ input {
   font: inherit;
 }
 
-input:focus {
-  outline: 1px solid var(--focus);
-}
-
 .actions {
   display: flex;
   gap: 0.75rem;
@@ -274,11 +303,6 @@ textarea {
   border-radius: 6px;
   padding: 0.7rem 0.75rem;
   font: inherit;
-}
-
-select:focus,
-textarea:focus {
-  outline: 1px solid var(--focus);
 }
 
 h2 {
