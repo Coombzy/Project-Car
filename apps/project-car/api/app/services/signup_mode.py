@@ -1,4 +1,8 @@
-"""Whether a public signup creates a member or a waitlist row."""
+"""Whether a public signup creates a member or a waitlist row.
+
+A missing or unrecognized signup_mode row reads as waitlist. An existing
+self_serve value is returned as stored; this module does not rewrite it.
+"""
 
 from __future__ import annotations
 
@@ -15,7 +19,7 @@ SIGNUP_MODE_KEY = "signup_mode"
 def get_signup_mode(session: Session) -> str:
     row = session.get(ShopSetting, SIGNUP_MODE_KEY)
     if row is None or row.value not in SIGNUP_MODES:
-        return SIGNUP_SELF_SERVE
+        return SIGNUP_WAITLIST
     return row.value
 
 
