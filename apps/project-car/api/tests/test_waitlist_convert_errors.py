@@ -21,12 +21,19 @@ from tests.conftest import AUTH
 
 
 def _entry(client: TestClient, email: str) -> str:
-    created = client.post(
-        "/waitlist",
-        json={"name": "Priya Shah", "email": email, "phone": "403-555-0188"},
-    )
-    assert created.status_code == 201, created.text
-    return created.json()["id"]
+    transport = client._transport
+    previous = transport.client
+    # Not 203.0.113.28; that address is already used by the ninth-create test.
+    transport.client = ("203.0.113.75", 50000)
+    try:
+        created = client.post(
+            "/waitlist",
+            json={"name": "Priya Shah", "email": email, "phone": "403-555-0188"},
+        )
+        assert created.status_code == 201, created.text
+        return created.json()["id"]
+    finally:
+        transport.client = previous
 
 
 def _waitlist_row(client: TestClient, entry_id: str) -> dict:
