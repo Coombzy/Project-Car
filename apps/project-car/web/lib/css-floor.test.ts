@@ -11,6 +11,18 @@ const css = readFileSync(
 
 type Rule = { selector: string; body: string };
 
+const DENSE = [
+  ".chip-actions",
+  ".todo-cal-actions",
+  ".nav",
+  ".nav-secondary",
+  ".view-toggle",
+  ".parts-status-form",
+  ".demo-banner-dismiss",
+  ".hour-slot",
+  ".density-chip",
+];
+
 function rules(source: string): Rule[] {
   return [...source.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(
     (match) => ({ selector: match[1].replace(/\s+/g, " ").trim(), body: match[2] }),
@@ -31,10 +43,16 @@ function reachesPastFields(selector: string): boolean {
   });
 }
 
+function mentions(selector: string, dense: string): boolean {
+  return new RegExp(`\\.${dense.slice(1)}(?![\\w-])`).test(selector);
+}
+
+/** The control's own box. min-height on an empty ::before is not a target. */
 function targetPx(list: Rule[], names: string[]): number {
   let floor = 0;
   for (const rule of list) {
-    if (!names.some((name) => parts(rule.selector).includes(name))) {
+    const selected = parts(rule.selector).filter((part) => !part.includes("::"));
+    if (!names.some((name) => selected.includes(name))) {
       continue;
     }
     for (const prop of ["min-height", "min-block-size", "height"]) {
@@ -45,6 +63,20 @@ function targetPx(list: Rule[], names: string[]): number {
     }
   }
   return floor;
+}
+
+function optsOut(list: Rule[], dense: string): boolean {
+  return list.some((rule) => {
+    if (!mentions(rule.selector, dense)) {
+      return false;
+    }
+    const pseudo = parts(rule.selector).some((part) => part.includes("::before") || part.includes("::after"));
+    if (pseudo && /content\s*:\s*none/.test(rule.body)) {
+      return true;
+    }
+    const minH = rule.body.match(/min-height\s*:\s*([^;]+)/);
+    return minH !== null && /^(?:0|0px|auto|unset|min-content|max-content)$/.test(minH[1].trim());
+  });
 }
 
 describe("AUD-043 focus and target floor", () => {
@@ -59,16 +91,14 @@ describe("AUD-043 focus and target floor", () => {
   });
 
   it("test_aud_043_button_and_link_targets_are_at_least_44px", () => {
-    const button = targetPx(parsed, [
-      "button",
-      ".button",
-      "button::before",
-      ".button::before",
-      "button::after",
-      ".button::after",
-    ]);
-    const link = targetPx(parsed, ["a", "a::before", "a::after"]);
+    const button = targetPx(parsed, ["button", ".button"]);
+    const link = targetPx(parsed, ["a"]);
     assert.ok(button >= 44, `button target is ${button}px`);
     assert.ok(link >= 44, `link target is ${link}px`);
+  });
+
+  it("test_aud_043_dense_groups_opt_out_of_the_44px_floor", () => {
+    const missed = DENSE.filter((dense) => !optsOut(parsed, dense));
+    assert.deepEqual(missed, []);
   });
 });
