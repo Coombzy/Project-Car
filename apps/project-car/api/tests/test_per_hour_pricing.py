@@ -83,6 +83,7 @@ def test_lead_time_does_not_change_the_price(ahead: timedelta) -> None:
 
 @pytest.fixture
 def frozen(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SHOP_DEV_MODE", "1")
     monkeypatch.setenv("SHOP_NOW", FROZEN_NOW)
 
 

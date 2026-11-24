@@ -25,8 +25,12 @@ def _require_member_id(principal: MemberUser):
 
 
 @router.get("/jobs/events", response_model=list[JobEventOut])
-def list_job_events(session: DbSession, _principal: Owner) -> list[JobEventOut]:
-    rows = job_service.list_events(session)
+def list_job_events(
+    session: DbSession,
+    _principal: Owner,
+    limit: int = Query(default=200, ge=1, le=500),
+) -> list[JobEventOut]:
+    rows = job_service.list_events(session, limit=limit)
     return [JobEventOut.from_row(row) for row in rows]
 
 
@@ -35,10 +39,11 @@ def list_my_job_events(
     session: DbSession,
     principal: MemberUser,
     limit: int = Query(default=200, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
 ) -> list[JobEventOut]:
     member_id = _require_member_id(principal)
-    rows = job_service.list_member_events(session, member_id)
-    return [JobEventOut.from_row(row) for row in rows[:limit]]
+    rows = job_service.list_member_events(session, member_id, limit=limit, offset=offset)
+    return [JobEventOut.from_row(row) for row in rows]
 
 
 @router.post("/member/jobs/claims", response_model=JobEventOut, status_code=201)
