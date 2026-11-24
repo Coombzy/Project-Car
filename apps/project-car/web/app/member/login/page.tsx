@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { demoPassword, showDemoLoginHints } from "../../../lib/demo-login";
 import { safeMemberNext } from "../../../lib/safe-next";
 import { MemberLoginForm } from "./login-form";
 
@@ -10,6 +11,7 @@ export default async function MemberLoginPage({
 }) {
   const params = await searchParams;
   const nextPath = safeMemberNext(params.next);
+  const hints = showDemoLoginHints();
 
   return (
     <main>
@@ -27,16 +29,21 @@ export default async function MemberLoginPage({
           <div>
             Email <code>ada.reyes@example.com</code>
           </div>
-          <div>
-            Password <code>changeme</code>
-          </div>
+          {hints ? (
+            <div>
+              Password <code>{demoPassword}</code>
+            </div>
+          ) : null}
           Ada is Premium (1500 tokens). Customer bays only. No live Stripe.
           Members do not get Nextcloud accounts.
         </div>
         {params.reason === "session" ? (
           <p className="banner error">Session expired. Sign in again.</p>
         ) : null}
-        <MemberLoginForm nextPath={nextPath} />
+        <MemberLoginForm
+          nextPath={nextPath}
+          {...(hints ? { defaultPassword: demoPassword } : {})}
+        />
         <p className="muted" style={{ marginTop: "1.2rem" }}>
           Management Owner demo is on <Link href="/login">/login</Link>.
         </p>

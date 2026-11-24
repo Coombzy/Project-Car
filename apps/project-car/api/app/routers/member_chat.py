@@ -11,6 +11,7 @@ from app.schemas import ChatMessageCreate, ChatMessageOut, ChatMessagePage, Chat
 from app.services.chat import (
     ChatError,
     last_message_for,
+    last_messages_for,
     list_messages,
     list_rooms,
     post_message,
@@ -30,9 +31,15 @@ def _room_out(session, room) -> ChatRoomOut:
 
 
 @router.get("/rooms", response_model=list[ChatRoomOut])
-def member_list_rooms(session: DbSession, principal: MemberUser) -> list[ChatRoomOut]:
+def member_list_rooms(
+    session: DbSession,
+    principal: MemberUser,
+    limit: int = Query(default=100, ge=1, le=200),
+) -> list[ChatRoomOut]:
     assert principal.member_id is not None
-    return [_room_out(session, room) for room in list_rooms(session, member_id=principal.member_id)]
+    rooms = list_rooms(session, member_id=principal.member_id, limit=limit)
+    last = last_messages_for(session, [room.id for room in rooms])
+    return [ChatRoomOut.from_room(room, last.get(room.id)) for room in rooms]
 
 
 @router.get("/rooms/{room_id}", response_model=ChatRoomOut)

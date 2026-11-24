@@ -3,14 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { ShopApiError } from "../../lib/config";
-import { JOB_POST_FAILURE, jobErrorHref, jobPostedHref, parseJobForm } from "../../lib/job-form";
+import { parseJobForm } from "../../lib/job-form";
+import { jobPostDecision } from "../../lib/job-post";
 import { createShopJob } from "../../lib/jobs-api";
-
-function bounce(error: unknown): never {
-  const message = error instanceof ShopApiError ? error.message : JOB_POST_FAILURE;
-  redirect(jobErrorHref(message));
-}
 
 export async function postJobAction(formData: FormData): Promise<void> {
   const parsed = parseJobForm({
@@ -18,18 +13,16 @@ export async function postJobAction(formData: FormData): Promise<void> {
     notes: formData.get("notes"),
     bounty: formData.get("bounty"),
   });
-  if (!parsed.ok) {
-    redirect(jobErrorHref(parsed.error));
+  const planned = jobPostDecision({ type: "parsed", parsed });
+  if (planned.kind === "redirect") {
+    redirect(planned.href);
   }
   try {
-    await createShopJob({
-      title: parsed.title,
-      notes: parsed.notes,
-      token_bounty: parsed.token_bounty,
-    });
+    await createShopJob(planned.body);
   } catch (error) {
-    bounce(error);
+    redirect(jobPostDecision({ type: "rejected", error }).href);
   }
-  revalidatePath("/jobs");
-  redirect(jobPostedHref());
+  const posted = jobPostDecision({ type: "created" });
+  revalidatePath(posted.revalidate);
+  redirect(posted.href);
 }

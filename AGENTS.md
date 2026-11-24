@@ -32,6 +32,7 @@ Run the related tests while you work and the full check once before you open the
 - `IF:` lines state checkable conditions for merging, one per line, e.g. `IF: CI green on head` or `IF: only apps/x/y.ts and its test changed`.
 
 ## Where things are
+- Glossary and decision log: `Docs/GLOSSARY.md`, `Docs/decisions/` (accepted one-way doors).
 - Rules: `Docs/build-rules.md`, `Docs/shop-os-ci.md`, `Docs/token-pricing.md` (locked rates).
 - Queue and backlog: `Docs/queue.md`, `Docs/backlog.md`, `Docs/later.md`.
 - Shop OS: `apps/project-car/api` (FastAPI), `apps/project-car/web` (Next.js). Brochure site `apps/website` belongs to another agent; leave it alone unless the brief says otherwise.

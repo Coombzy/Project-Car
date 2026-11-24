@@ -4,7 +4,13 @@ import { useActionState } from "react";
 
 import { memberLoginAction, type MemberLoginState } from "./actions";
 
-export function MemberLoginForm({ nextPath }: { nextPath: string }) {
+export function MemberLoginForm({
+  nextPath,
+  defaultPassword,
+}: {
+  nextPath: string;
+  defaultPassword?: string;
+}) {
   const [state, action, pending] = useActionState<MemberLoginState, FormData>(
     memberLoginAction,
     null,
@@ -29,7 +35,7 @@ export function MemberLoginForm({ nextPath }: { nextPath: string }) {
         type="password"
         autoComplete="current-password"
         required
-        defaultValue="changeme"
+        defaultValue={defaultPassword ?? ""}
       />
       {state?.message ? <p className="banner error">{state.message}</p> : null}
       <div className="actions">

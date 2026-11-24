@@ -23,7 +23,9 @@ run_in() {
 }
 
 echo "Cursor install: Shop OS CI dependencies"
-run_in apps/project-car/api python -m pip install -e ".[dev]"
+# Cloud image provides python3 only. Venv lives at apps/project-car/api/.venv.
+run_in apps/project-car/api python3 -m venv .venv
+run_in apps/project-car/api .venv/bin/pip install -e ".[dev]"
 
 if [[ "${BROWSERS}" == "1" ]]; then
   run_in apps/project-car/web npm ci
@@ -34,7 +36,7 @@ else
 fi
 
 echo "Cursor install done."
-echo "  api: apps/project-car/api (python -m pip install -e \".[dev]\")"
+echo "  api: apps/project-car/api/.venv (python3 -m venv .venv && .venv/bin/pip install -e \".[dev]\")"
 echo "  web: apps/project-car/web (npm ci)"
 if [[ "${BROWSERS}" == "1" ]]; then
   echo "  browsers: chromium (npx playwright install --with-deps chromium)"

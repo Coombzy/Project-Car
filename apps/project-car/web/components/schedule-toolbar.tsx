@@ -27,7 +27,7 @@ export function ScheduleToolbar({
 
   return (
     <div className="schedule-toolbar">
-      <div className="view-toggle" role="tablist" aria-label="Schedule view">
+      <nav className="view-toggle" aria-label="Schedule view">
         <Link
           className={`button ghost${view === "month" ? " is-active" : ""}`}
           href={monthHref(month)}
@@ -42,7 +42,7 @@ export function ScheduleToolbar({
         >
           Week
         </Link>
-      </div>
+      </nav>
       <div className="week-nav">
         {view === "month" ? (
           <>

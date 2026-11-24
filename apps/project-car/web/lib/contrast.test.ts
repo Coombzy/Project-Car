@@ -150,6 +150,31 @@ describe("shop theme tokens", () => {
     assert.deepEqual(literals, [], "colour literals outside :root");
   });
 
+  it("test_aud_038_in_text_links_are_underlined", () => {
+    const ratio = contrast(resolve("link"), resolve("text-muted"));
+    assert.ok(
+      ratio < NON_TEXT,
+      `link on muted text is ${ratio.toFixed(2)}:1, already at the ${NON_TEXT}:1 cue`,
+    );
+
+    const pages: { file: string; href: string }[] = [
+      { file: "app/login/page.tsx", href: "/member/login" },
+      { file: "app/member/login/page.tsx", href: "/login" },
+      { file: "app/signup/page.tsx", href: "/member/login" },
+    ];
+    for (const { file, href } of pages) {
+      const source = readFileSync(join(webRoot, file), "utf8");
+      const paragraphs = source.match(/<p className="muted"[^>]*>[\s\S]*?<\/p>/g) ?? [];
+      const hit = paragraphs.find((block) => block.includes(`<Link href="${href}">`));
+      assert.ok(hit, `${file} muted text is missing <Link href="${href}">`);
+    }
+
+    const underlined = css.match(/(?:^|})\s*\.muted\s+a\s*\{([^}]*)\}/);
+    assert.ok(underlined, "AUD-038: muted text links have no underline rule");
+    assert.match(underlined[1], /text-decoration:\s*underline\b/);
+    assert.doesNotMatch(underlined[1], /text-decoration:\s*none\b/);
+  });
+
   it("test_old_tan_accent_is_gone", () => {
     const hits: string[] = [];
     const walk = (dir: string) => {

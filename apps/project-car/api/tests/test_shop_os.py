@@ -189,6 +189,7 @@ def test_seeded_waitlist_joined_at_follows_the_frozen_shop_clock(client: TestCli
     from app.seed import seed
     from app.shop_time import as_utc, shop_now
 
+    monkeypatch.setenv("SHOP_DEV_MODE", "1")
     monkeypatch.setenv("SHOP_NOW", "2026-10-06T15:00:00-06:00")
     session_gen = app_session(client)
     session = next(session_gen)
