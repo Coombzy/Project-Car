@@ -251,5 +251,9 @@ test.describe("member pages", () => {
     await expect(page.getByText("This page could not be found.")).toHaveCount(0);
     await expect(page.locator("main").getByRole("heading", { name: "That page is not here." })).toBeVisible();
     await expect(page.locator("main").getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/member");
+    // member-nav-visible, owner-nav-absent
+    await expect(page.getByRole("link", { name: "Balance" })).toBeVisible();
+    await expect(page.getByText("Owner · demo")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Members" })).toHaveCount(0);
   });
 });
