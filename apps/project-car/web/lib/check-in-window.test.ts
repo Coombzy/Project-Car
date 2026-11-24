@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   CHECK_IN_EARLY_HINT,
   CHECK_IN_EARLY_MINUTES,
@@ -7,8 +10,35 @@ import {
   checkInButtonState,
 } from "./check-in-window.ts";
 
+const libDir = dirname(fileURLToPath(import.meta.url));
+const cardPath = join(libDir, "../components/owner-booking-card.tsx");
+
+function confirmedCheckInForm(source: string): string {
+  const action = source.indexOf("action={checkInBookingAction}");
+  assert.notEqual(action, -1, "check-in action is missing");
+  const formStart = source.lastIndexOf("<form", action);
+  assert.notEqual(formStart, -1, "confirmed booking has no check-in form");
+  const formEnd = source.indexOf("</form>", action);
+  assert.notEqual(formEnd, -1, "confirmed check-in form is unclosed");
+  return source.slice(formStart, formEnd + "</form>".length);
+}
+
 describe("owner check-in window", () => {
   it("test_check_in_button_stays_closed_until_the_window", () => {
+    const card = readFileSync(cardPath, "utf8");
+    const form = confirmedCheckInForm(card);
+    assert.match(
+      form,
+      /disabled=\{checkIn\.disabled\}/,
+      "confirmed Check in must be disabled until the window opens",
+    );
+    assert.match(form, /\{checkIn\.hint\}/, "confirmed Check in must show the early hint");
+    assert.match(
+      card,
+      /checkInButtonState\(booking\.start_at,\s*shopClock\(\),\s*booking\.end_at\)/,
+      "confirmed Check in must close from the visit end",
+    );
+
     assert.equal(CHECK_IN_EARLY_MINUTES, 15);
     assert.equal(CHECK_IN_EARLY_HINT, "Opens 15 min before start");
     assert.equal(CHECK_IN_ENDED_HINT, "Window ended");
@@ -39,6 +69,7 @@ describe("owner check-in window", () => {
   });
 
   it("test_check_in_button_closes_when_the_window_has_ended", () => {
+    const card = readFileSync(cardPath, "utf8");
     const now = new Date("2026-10-20T18:00:00.000Z");
     const at = (ms: number) => new Date(now.getTime() + ms).toISOString();
     const minute = 60 * 1000;
@@ -62,5 +93,11 @@ describe("owner check-in window", () => {
     const justOver = checkInButtonState(at(15 * minute + 1), now, at(75 * minute));
     assert.equal(justOver.disabled, true);
     assert.equal(justOver.hint, "Opens 15 min before start");
+
+    assert.match(
+      card,
+      /checkInButtonState\(booking\.start_at,\s*shopClock\(\),\s*booking\.end_at\)/,
+      "owner card must pass the visit end into the check-in window",
+    );
   });
 });
