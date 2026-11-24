@@ -42,6 +42,13 @@ class Settings(BaseSettings):
         "http://localhost:3000,http://127.0.0.1:3000,"
         "https://projectcar.ca,https://www.projectcar.ca"
     )
+    # Brochure origins: preflight and POST /waitlist only, never credentialed.
+    cors_public_origins: str = "https://projectcar.ca,https://www.projectcar.ca"
+    # Ops, app and local dev origins: full credentialed CORS.
+    cors_credentialed_origins: str = (
+        "http://localhost:3000,http://127.0.0.1:3000,"
+        "https://ops.projectcar.ca,https://app.projectcar.ca"
+    )
     pc_waitlist: bool = True
     # Next-day fill-the-gaps defaults (America/Regina). Owner can override per send.
     fill_min_discount_pct: float = 10
@@ -68,6 +75,11 @@ class Settings(BaseSettings):
     def normalize_owner_email(cls, value: str) -> str:
         return str(value).strip().lower()
 
+    @staticmethod
+    def _split_origins(value: str) -> list[str]:
+        """Comma-separated origins. `*` is dropped so the API is never wide open."""
+        return [origin for origin in (item.strip() for item in value.split(",")) if origin and origin != "*"]
+
     @model_validator(mode="after")
     def resolve_cookie_secure(self) -> "Settings":
         if self.cookie_secure is None:
@@ -76,14 +88,21 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> list[str]:
-        """Comma-separated origins. `*` is dropped so the API is never wide open."""
-        origins: list[str] = []
-        for item in self.cors_origins.split(","):
-            origin = item.strip()
-            if not origin or origin == "*":
-                continue
-            origins.append(origin)
-        return origins
+        return self._split_origins(self.cors_origins)
+
+    @property
+    def cors_public_origin_list(self) -> list[str]:
+        return self._split_origins(self.cors_public_origins) + self.cors_origin_list
+
+    @property
+    def cors_credentialed_origin_list(self) -> list[str]:
+        return self._split_origins(self.cors_credentialed_origins)
+
+    def cors_origin_kind(self, origin: str) -> str | None:
+        """Credentialed wins when an origin appears on both lists."""
+        if origin in self.cors_credentialed_origin_list:
+            return "credentialed"
+        return "public" if origin in self.cors_public_origin_list else None
 
 
 @lru_cache
