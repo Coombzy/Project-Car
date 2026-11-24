@@ -54,6 +54,8 @@ def calendar_payload(session: Session, principal: Principal, settings: Settings)
 def google_authorize_url(settings: Settings, *, state: str) -> str | None:
     if not settings.google_oauth_client_id or not settings.google_oauth_redirect_uri:
         return None
+    if not state or not state.strip():
+        return None
     query = urlencode(
         {
             "client_id": settings.google_oauth_client_id,
