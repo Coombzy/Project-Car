@@ -51,7 +51,10 @@ def _owner_from_cookie(settings: Settings, session_cookie: str | None) -> Princi
     if not payload:
         return None
     reject_dev_secret(settings.session_secret)
-    return Principal(role="owner", email=str(payload.get("email") or settings.owner_email))
+    email = payload.get("email")
+    if not isinstance(email, str) or not email or email != settings.owner_email:
+        return None
+    return Principal(role="owner", email=settings.owner_email)
 
 
 def require_owner(
