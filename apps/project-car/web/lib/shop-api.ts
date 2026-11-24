@@ -77,7 +77,11 @@ export async function shopJson<T>(path: string, fallback: string, init: RequestI
   return body as T;
 }
 
-export async function loginOwner(email: string, password: string): Promise<string> {
+export async function loginOwner(
+  email: string,
+  password: string,
+  forwardHeaders: Record<string, string> = {},
+): Promise<string> {
   let response: Response;
   try {
     response = await fetch(`${shopApiUrl()}/auth/login`, {
@@ -85,6 +89,7 @@ export async function loginOwner(email: string, password: string): Promise<strin
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        ...forwardHeaders,
       },
       body: JSON.stringify({ email, password }),
       cache: "no-store",
@@ -498,7 +503,11 @@ export async function memberJson<T>(path: string, fallback: string, init: Reques
   return body as T;
 }
 
-export async function loginMember(email: string, password: string): Promise<string> {
+export async function loginMember(
+  email: string,
+  password: string,
+  forwardHeaders: Record<string, string> = {},
+): Promise<string> {
   let response: Response;
   try {
     response = await fetch(`${shopApiUrl()}/auth/member/login`, {
@@ -506,6 +515,7 @@ export async function loginMember(email: string, password: string): Promise<stri
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        ...forwardHeaders,
       },
       body: JSON.stringify({ email, password }),
       cache: "no-store",
