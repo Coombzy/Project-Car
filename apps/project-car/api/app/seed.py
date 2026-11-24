@@ -7,7 +7,8 @@ Usage (from apps/project-car/api, venv active, after `alembic upgrade head`):
 
 `--reset` deletes members, hoists, bookings, token ledger rows, waitlist
 entries, job claims, crib checkouts, and related operational rows, then
-inserts the demo set. Rows whose foreign keys are ON DELETE RESTRICT are
+inserts the demo set. It runs only when SHOP_DEV_MODE strips to exactly `1`.
+Rows whose foreign keys are ON DELETE RESTRICT are
 removed first: job claims and crib checkouts (including their self-links),
 shop hoist requests, staff parts requests, tool crib exceptions, and refund
 requests. Tiers are refreshed to the two
@@ -1165,6 +1166,10 @@ def main(argv: list[str] | None = None) -> int:
         help="Wipe members/hoists/bookings/ledger/waitlist, then insert the demo set.",
     )
     args = parser.parse_args(argv)
+    # Wipe only when SHOP_DEV_MODE strips to exactly "1". Not settings.shop_dev_mode.
+    if args.reset and os.environ.get("SHOP_DEV_MODE", "").strip() != "1":
+        print("refusing --reset unless SHOP_DEV_MODE is 1", file=sys.stderr)
+        return 1
     from app.config import settings
 
     host = seed_host()
@@ -1191,12 +1196,12 @@ def main(argv: list[str] | None = None) -> int:
         "{chat_rooms} chat rooms, {waitlist} waitlist entries, {tiers} tiers "
         "(Basic 1000 / Premium 1500).".format(**summary)
     )
-    print("  Owner login (localhost demo): owner@projectcar.ca / changeme")
-    print(f"  Member login (localhost demo): ada.reyes@example.com / {settings.member_demo_password}")
+    print("  Owner login (localhost demo): owner@projectcar.ca / OWNER_PASSWORD")
+    print("  Member login (localhost demo): ada.reyes@example.com / MEMBER_DEMO_PASSWORD")
     print(
         "  Demo member passwords (localhost): "
         + ", ".join(DEMO_MEMBER_EMAILS)
-        + f" / {settings.member_demo_password}"
+        + " / MEMBER_DEMO_PASSWORD"
     )
     print("  The shop is not open. This is sample data for walkthroughs.")
     return 0
