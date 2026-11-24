@@ -20,6 +20,8 @@ class Settings(BaseSettings):
         description="SQLAlchemy URL for shop Postgres (never Nextcloud MariaDB).",
     )
     owner_email: str = "owner@projectcar.ca"
+    # Local dev only: allows the placeholder secrets below and serves the docs routes.
+    shop_dev_mode: bool = False
     owner_password: str = "changeme"
     owner_api_secret: str = "dev-owner-secret"
     ai_api_secret: str = "dev-ai-secret"
@@ -84,3 +86,23 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+
+
+# Placeholder secrets that must never boot outside local dev.
+_DEMO_SECRETS = ("dev-owner-secret", "dev-ai-secret", "dev-session-secret-change-me", "changeme")
+
+
+def assert_runtime_secrets(settings: Settings) -> None:
+    """Refuse to start on placeholder secrets unless SHOP_DEV_MODE=1. Never names the value."""
+    if settings.shop_dev_mode:
+        return
+    for name, length in (
+        ("owner_api_secret", 32), ("ai_api_secret", 32),
+        ("session_secret", 32), ("owner_password", 12), ("member_demo_password", 12),
+    ):
+        value = getattr(settings, name)
+        if len(value) < length or value in _DEMO_SECRETS or value.startswith("CHANGE_ME"):
+            raise RuntimeError(
+                f"Refusing to start: {name} is a placeholder or too short. "
+                "Set a real value, or SHOP_DEV_MODE=1 for local dev only."
+            )
