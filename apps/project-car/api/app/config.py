@@ -33,8 +33,6 @@ class Settings(BaseSettings):
     # Demo Member password stub. Email must match an existing member row.
     # Not OIDC. Staff OIDC can replace this later without rewriting shop tables.
     member_demo_password: str = "changeme"
-    # Local dev only. Clears cookie_secure below; no other behavior lives here.
-    shop_dev_mode: bool = False
     cookie_secure: bool | None = None  # None: resolved from shop_dev_mode below
     # Header that carries the real client address for the login and waitlist caps.
     # Empty: key on the TCP peer. No header name is hard-coded.
