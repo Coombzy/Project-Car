@@ -49,7 +49,9 @@ def test_seed_main_refuses_public_host(monkeypatch) -> None:
 
 
 def test_default_api_secrets_refused_off_loopback(client: TestClient, monkeypatch) -> None:
+    monkeypatch.setattr(get_settings(), "shop_dev_mode", True)
     monkeypatch.setenv("SHOP_HOST", "127.0.0.1")
+    monkeypatch.setenv("SHOP_DEV_MODE", "1")
     loopback = client.get("/me", headers={"Authorization": "Bearer dev-owner-secret"})
     assert loopback.status_code == 200, loopback.text
 
@@ -176,7 +178,11 @@ def test_login_locks_after_repeated_failures(client: TestClient) -> None:
     assert still_locked.json()["error"]["code"] == "rate_limited"
 
 
-def test_correct_password_after_five_failures_logs_in(client: TestClient) -> None:
+def test_correct_password_after_five_failures_logs_in(
+    client: TestClient, monkeypatch
+) -> None:
+    monkeypatch.setattr(get_settings(), "shop_dev_mode", True)
+    monkeypatch.setenv("SHOP_DEV_MODE", "1")
     wrong = {"email": "owner@projectcar.ca", "password": "wrong-guess"}
     # The sixth attempt is still open. Success clears that account key.
     for _ in range(5):
