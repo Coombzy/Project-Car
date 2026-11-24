@@ -26,9 +26,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         response = await call_next(request)
-        # Settings is cached. Tests (and a flipped env) must be visible here,
-        # including SHOP_DEV_MODE that exists only in .env.
-        get_settings.cache_clear()
         dev_docs = get_settings().shop_dev_mode and request.url.path in DEV_DOCS_PATHS
         for name, value in SECURITY_HEADERS.items():
             if dev_docs and name == "Content-Security-Policy":
