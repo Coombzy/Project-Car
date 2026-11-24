@@ -71,28 +71,20 @@ a:hover {
 a,
 button,
 .button {
-  position: relative;
-}
-
-/* At least 44px. The box covers the control and grows past it when the control is smaller. */
-a::before,
-button::before,
-.button::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: max(100%, 44px);
-  height: max(100%, 44px);
-  min-width: 44px;
   min-height: 44px;
-  transform: translate(-50%, -50%);
 }
 
-/* Hour rows are 1.2rem and density chips tile the cell, so a 44px box would cover the next target. */
-.hour-slot::before,
-.density-chip::before {
-  content: none;
+/* Packed rows stay at their own size. A 44px floor here covers the next control. */
+.chip-actions :is(a, button, .button),
+.todo-cal-actions :is(a, button, .button),
+.nav :is(a, button, .button),
+.nav-secondary :is(a, button, .button),
+.view-toggle :is(a, button, .button),
+.parts-status-form :is(a, button, .button),
+.demo-banner-dismiss,
+.hour-slot,
+.density-chip {
+  min-height: auto;
 }
 
 .muted a {
