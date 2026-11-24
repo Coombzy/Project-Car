@@ -27,6 +27,7 @@ type RoomRow = {
 const PUBLIC_PAGES: Shot[] = [
   { name: "login", path: "/login" },
   { name: "member-login", path: "/member/login" },
+  { name: "signup", path: "/signup" },
 ];
 
 const OWNER_PAGES: Shot[] = [
@@ -219,6 +220,33 @@ test.describe("owner pages", () => {
   test("chat-room", async ({ page }) => {
     await shoot(page, `/chat/${ownerRoomId}`, "chat-room", "owner");
   });
+
+  test("R173 owner jobs does not scroll sideways", async ({ page }) => {
+    const viewports = [
+      { width: 768, height: 1024 },
+      { width: 390, height: 1024 },
+      { width: 1280, height: 720 },
+    ] as const;
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      const response = await page.goto("/jobs", { waitUntil: "load" });
+      expect(response, "/jobs").not.toBeNull();
+      expect(response?.status(), "/jobs").toBeLessThan(400);
+      assertAuth("owner", page.url());
+      await page.evaluate(() => document.fonts.ready);
+      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(SETTLE_MS);
+      await expect(page.getByText("Cannot reach shop API")).toHaveCount(0);
+      const fit = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }));
+      expect(
+        fit.scrollWidth,
+        `${viewport.width}x${viewport.height} documentElement.scrollWidth ${fit.scrollWidth} <= clientWidth ${fit.clientWidth}`,
+      ).toBeLessThanOrEqual(fit.clientWidth);
+    }
+  });
 });
 
 test.describe("member pages", () => {
@@ -250,5 +278,9 @@ test.describe("member pages", () => {
     await expect(page.getByText("This page could not be found.")).toHaveCount(0);
     await expect(page.locator("main").getByRole("heading", { name: "That page is not here." })).toBeVisible();
     await expect(page.locator("main").getByRole("link", { name: "Dashboard" })).toHaveAttribute("href", "/member");
+    // member-nav-visible, owner-nav-absent
+    await expect(page.getByRole("link", { name: "Balance" })).toBeVisible();
+    await expect(page.getByText("Owner · demo")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Members" })).toHaveCount(0);
   });
 });

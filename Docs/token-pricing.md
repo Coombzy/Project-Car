@@ -163,7 +163,7 @@ fill_multiplier = 1 − discount_pct / 100
 
 Owner can override the discount in that 10–25% band when previewing / sending. Publishing a campaign **locks** that day's factor onto a `fill_offers` row; quotes then reuse the published number until the day rolls. Without a published offer, quotes use the live opening math.
 
-**When fill applies:** the booking window overlaps tomorrow's fill window **and** there are openings (or a published offer). Same-day and later-week slots stay `fill_multiplier = 1`. Shop work never takes fill (no tokens).
+**When fill applies:** the booking window overlaps tomorrow's fill window **and** there are openings (or a published offer). Each held hour inside that window takes the fill factor; a held hour outside it stays at 1. Same-day and later-week slots stay `fill_multiplier = 1`. Shop work never takes fill (no tokens).
 
 Notify **active members** over a durable **notification outbox** (not the public brochure). v1 email path: SMTP when `SMTP_HOST` is set, otherwise an in-process stub that records `sent`. SMS and push are stub adapters (`sms_not_configured` / `push_not_configured`) so Twilio / Inbox can plug in later. Dry-run / send stays on **management** (`ops.` intended; `app.` temporary alias; Doc Shop OS `/fill` today). No DNS cut here. Do not ship fill UI or live prices on `projectcar.ca` Pages.
 
