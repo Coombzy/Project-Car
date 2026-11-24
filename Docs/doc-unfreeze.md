@@ -61,6 +61,32 @@ No edge flip. No CF ↔ GitHub re-ask. No Member GO. No `app.` cut. No OAuth imp
 
 ---
 
+## Before pulling 0015
+
+Still needs an explicit Ben **GO**. This section is not that GO, and green Shop OS CI is not that GO. Do not pull from this file.
+
+`20261016_0015_booking_hours` backfills `booking_hours` for holding statuses (`pending`, `confirmed`, `active`, `overdue`) and unique-locks `(hoist_id, hour_start)`. Holding bookings on one hoist whose half-open ranges `[start_at, end_at)` intersect make `alembic upgrade head` fail.
+
+Read-only printer (no writes): `apps/project-car/api/scripts/find_overlaps.py`. From `apps/project-car/api`: `python scripts/find_overlaps.py`. No overlaps prints `no overlaps` and exits 0.
+
+```sql
+SELECT a.hoist_id, a.id, b.id
+FROM bookings AS a
+JOIN bookings AS b
+  ON a.hoist_id = b.hoist_id
+ AND a.id::text < b.id::text
+ AND a.start_at < b.end_at
+ AND b.start_at < a.end_at
+WHERE a.status IN ('pending', 'confirmed', 'active', 'overdue')
+  AND b.status IN ('pending', 'confirmed', 'active', 'overdue');
+```
+
+Clear each row, then re-run the script until it prints `no overlaps`. Cancel (releases the hour): `UPDATE bookings SET status = 'cancelled' WHERE id = '<uuid>';`. Or shift so ranges only meet at an endpoint: `UPDATE bookings SET start_at = '<utc start>', end_at = '<utc end>' WHERE id = '<uuid>';`.
+
+After Ben’s GO, from `apps/project-car/api`: `alembic upgrade head`. Do not downgrade. Do not re-seed unless Ben asked.
+
+---
+
 ## Ordered pull (record of the completed GO)
 
 The steps below are the record of the unfreeze that landed Doc at `795f301` / `BUILD_ID` `vQRsAOI0JtWYZ_ogRUjgG` (2026-10-01 ~19:48 MDT; Host-header smoke 2026-10-02). Do **not** re-run them to chase finance tip `6366d62`. A further checkout move needs a new explicit Ben GO. This docs change is not that GO.

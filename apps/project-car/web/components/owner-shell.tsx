@@ -1,7 +1,10 @@
+"use client";
+
 import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { logoutAction } from "../app/logout-action";
+import { handleNavMoreKeydown } from "../lib/nav-more-escape";
 import { OwnerDemoBanner } from "./owner-demo-banner";
 
 const PRIMARY_NAV = [
@@ -117,7 +120,10 @@ export function OwnerShell({
                 section={item.current}
               />
             ))}
-            <details className={`nav-more${moreCurrent ? " is-current" : ""}`}>
+            <details
+              className={`nav-more${moreCurrent ? " is-current" : ""}`}
+              onKeyDown={(event) => handleNavMoreKeydown(event, event.currentTarget)}
+            >
               <summary>
                 More
                 {moreCurrent ? <span className="sr-only"> (current section)</span> : null}
