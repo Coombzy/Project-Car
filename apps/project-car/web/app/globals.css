@@ -68,23 +68,23 @@ a:hover {
   outline-offset: 2px;
 }
 
-a,
-button,
-.button {
-  min-height: 44px;
-}
-
-/* Packed rows stay at their own size. A 44px floor here covers the next control. */
-.chip-actions :is(a, button, .button),
-.todo-cal-actions :is(a, button, .button),
-.nav :is(a, button, .button),
-.nav-secondary :is(a, button, .button),
-.view-toggle :is(a, button, .button),
-.parts-status-form :is(a, button, .button),
-.demo-banner-dismiss,
-.hour-slot,
-.density-chip {
-  min-height: auto;
+@media (pointer: coarse) {
+  a,
+  button,
+  .button {
+    min-height: 44px;
+  }
+  .chip-actions :is(a, button, .button),
+  .todo-cal-actions :is(a, button, .button),
+  .nav :is(a, button, .button),
+  .nav-secondary :is(a, button, .button),
+  .view-toggle :is(a, button, .button),
+  .parts-status-form :is(a, button, .button),
+  .demo-banner-dismiss,
+  .hour-slot,
+  .density-chip {
+    min-height: auto;
+  }
 }
 
 .muted a {
