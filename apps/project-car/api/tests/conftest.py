@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.auth import clear_login_failures
+from app.routers.waitlist import clear_waitlist_creates
 from app.db import get_db
 from app.main import app
 from app.models import Base, MembershipTier
@@ -49,6 +50,14 @@ def _clear_login_failures():
     clear_login_failures()
     yield
     clear_login_failures()
+
+
+@pytest.fixture(autouse=True)
+def _clear_waitlist_creates():
+    """Waitlist creates share one in-process bucket per client IP."""
+    clear_waitlist_creates()
+    yield
+    clear_waitlist_creates()
 
 
 @pytest.fixture
