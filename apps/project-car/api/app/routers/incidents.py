@@ -64,6 +64,12 @@ def _not_found(message: str) -> HTTPException:
     return HTTPException(status_code=404, detail={"code": "not_found", "message": message})
 
 
+def _mismatch() -> HTTPException:
+    code = "booking_member_mismatch"
+    message = "Booking belongs to a different member."
+    return HTTPException(status_code=422, detail={"code": code, "message": message})
+
+
 def _owner_only(principal: Principal) -> None:
     # require_owner's staff stub: human Owner or the AI bearer. A member is 403.
     if principal.role not in {"owner", "ai"}:
@@ -77,8 +83,12 @@ def create_incident(
     _owner_only(principal)
     if body.member_id is not None and session.get(Member, body.member_id) is None:
         raise _not_found("Member not found.")
-    if body.booking_id is not None and session.get(Booking, body.booking_id) is None:
-        raise _not_found("Booking not found.")
+    if body.booking_id is not None:
+        booking = session.get(Booking, body.booking_id)
+        if booking is None:
+            raise _not_found("Booking not found.")
+        if body.member_id is not None and str(booking.member_id) != str(body.member_id):
+            raise _mismatch()
     row = Incident(
         member_id=body.member_id,
         booking_id=body.booking_id,
