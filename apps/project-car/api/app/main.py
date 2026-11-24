@@ -27,6 +27,7 @@ from app.routers import (
     tool_crib,
     waitlist,
 )
+from app.security_headers import SecurityHeadersMiddleware
 
 
 def create_app() -> FastAPI:
@@ -62,6 +63,8 @@ def create_app() -> FastAPI:
             allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS", "HEAD"],
             allow_headers=["Accept", "Content-Type", "Authorization"],
         )
+
+    application.add_middleware(SecurityHeadersMiddleware)
 
     application.include_router(auth.router)
     application.include_router(member.router)
