@@ -13,12 +13,14 @@ DEMO = {
     "ai_api_secret": "dev-ai-secret",
     "session_secret": "dev-session-secret-change-me",
     "owner_password": "changeme",
+    "member_demo_password": "changeme",
 }
 WEAK = list(DEMO.items()) + [
     ("owner_api_secret", "z" * 31),
     ("ai_api_secret", "z" * 31),
     ("session_secret", "z" * 31),
     ("owner_password", "z" * 11),
+    ("member_demo_password", "z" * 11),
     ("session_secret", "CHANGE_ME" + "a" * 40),
 ]
 

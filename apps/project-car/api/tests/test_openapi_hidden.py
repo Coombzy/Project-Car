@@ -13,7 +13,7 @@ PATHS = ("/docs", "/redoc", "/openapi.json")
 @pytest.fixture
 def prod_env(monkeypatch):
     """Strong secrets so only the docs flag is under test."""
-    for name in ("OWNER_API_SECRET", "AI_API_SECRET", "SESSION_SECRET", "OWNER_PASSWORD"):
+    for name in ("OWNER_API_SECRET", "AI_API_SECRET", "SESSION_SECRET", "OWNER_PASSWORD", "MEMBER_DEMO_PASSWORD"):
         monkeypatch.setenv(name, LONG)
     monkeypatch.delenv("SHOP_DEV_MODE", raising=False)
     get_settings.cache_clear()

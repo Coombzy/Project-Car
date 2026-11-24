@@ -98,7 +98,7 @@ def assert_runtime_secrets(settings: Settings) -> None:
         return
     for name, length in (
         ("owner_api_secret", 32), ("ai_api_secret", 32),
-        ("session_secret", 32), ("owner_password", 12),
+        ("session_secret", 32), ("owner_password", 12), ("member_demo_password", 12),
     ):
         value = getattr(settings, name)
         if len(value) < length or value in _DEMO_SECRETS or value.startswith("CHANGE_ME"):
