@@ -32,6 +32,7 @@ from app.models import (
     TokenTransaction,
     TokenTransactionKind,
 )
+from app.services.payments import purchase_pack
 from app.shop_time import PRICING_TZ, pricing_now
 
 PERIOD_TZ = "America/Regina"
@@ -150,12 +151,13 @@ def record_token_purchase(
     """Write one billing row and one token_purchase ledger row.
 
     The billing row uses the columns this table already has. amount_cad is
-    stored as given. fee_rate is a label from the processor. The stand-in
+    the stand-in pack price. fee_rate is a label from the processor. The stand-in
     passes stand-in-none and does not add a fee. The ledger row credits the
     purchased pile. A repeated payment_id is 409 already_credited.
     """
-    charged = Decimal(amount_cad).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-    written = note or "Token purchase"
+    pack = purchase_pack(tokens, amount_cad)
+    charged = pack.amount_cad.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    written = note or pack.label
     session.add(
         BillingTransaction(
             member_id=member.id,
@@ -169,7 +171,7 @@ def record_token_purchase(
         session,
         member,
         kind=TokenTransactionKind.TOKEN_PURCHASE,
-        amount=Decimal(tokens),
+        amount=pack.tokens,
         note=written,
         meta={
             "purchase": {

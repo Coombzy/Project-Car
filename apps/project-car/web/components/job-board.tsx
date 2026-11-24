@@ -18,7 +18,7 @@ export function JobBoard({ audience }: { audience: "member" | "ops" }) {
           ? "Sample rows. They are not stored claims. The shop is not open."
           : "Sample rows. Claim and done use the forms above. The shop is not open."}
       </p>
-      <div className="card">
+      <div className="card job-board-table">
         <table>
           <thead>
             <tr>

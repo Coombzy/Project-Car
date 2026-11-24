@@ -7,7 +7,7 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.auth import Principal
 from app.models import (
@@ -68,13 +68,41 @@ def last_message_for(session: Session, room_id: UUID) -> ChatMessage | None:
     ).first()
 
 
-def list_rooms(session: Session, *, member_id: UUID | None = None) -> list[ChatRoom]:
+def last_messages_for(session: Session, room_ids: list[UUID]) -> dict[UUID, ChatMessage]:
+    if not room_ids:
+        return {}
+    latest = (
+        select(
+            ChatMessage.room_id.label("room_id"),
+            func.max(ChatMessage.seq).label("max_seq"),
+        )
+        .where(ChatMessage.room_id.in_(room_ids))
+        .group_by(ChatMessage.room_id)
+        .subquery()
+    )
+    rows = session.scalars(
+        select(ChatMessage).join(
+            latest,
+            (ChatMessage.room_id == latest.c.room_id) & (ChatMessage.seq == latest.c.max_seq),
+        )
+    ).all()
+    return {row.room_id: row for row in rows}
+
+
+def list_rooms(
+    session: Session,
+    *,
+    member_id: UUID | None = None,
+    limit: int = 100,
+) -> list[ChatRoom]:
     stmt = select(ChatRoom).options(
-        selectinload(ChatRoom.participants).selectinload(ChatParticipant.member)
+        selectinload(ChatRoom.participants).joinedload(ChatParticipant.member)
     )
     if member_id is not None:
         stmt = stmt.join(ChatParticipant).where(ChatParticipant.member_id == member_id)
-    return list(session.scalars(stmt.order_by(ChatRoom.updated_at.desc()).distinct()).all())
+    return list(
+        session.scalars(stmt.order_by(ChatRoom.updated_at.desc()).distinct().limit(limit)).all()
+    )
 
 
 def create_room(
