@@ -48,7 +48,7 @@ from app.schemas import (
 from app.routers.dashboard import member_dashboard_payload
 from app.routers.members import MAX_TOKEN_ADJUSTMENT
 from app.services import bookings as booking_service
-from app.services.payments import get_payment_processor, purchase_pack
+from app.services.payments import get_payment_processor
 from app.services.tokens import record_token_purchase
 from app.services.fill import snapshot_next_day
 from app.services.shop_hoist_requests import (
@@ -510,14 +510,13 @@ def member_buy_tokens(
     session: DbSession,
     principal: MemberUser,
 ) -> TokenTransactionOut:
-    """Credit the stand-in pack. A client amount that differs is refused."""
+    """Collect through the stand-in, then credit the purchased pile."""
     _reject_bad_tokens(body.tokens)
-    pack = purchase_pack(body.tokens, body.amount_cad)
     processor = get_payment_processor()
     receipt = processor.collect(
         member_id=principal.member_id,
-        tokens=pack.tokens,
-        amount_cad=pack.amount_cad,
+        tokens=body.tokens,
+        amount_cad=body.amount_cad,
         payment_id=body.payment_id,
     )
     member = booking_service.lock_member(session, principal.member_id)
@@ -525,8 +524,8 @@ def member_buy_tokens(
         session,
         member,
         payment_id=receipt.payment_id,
-        tokens=pack.tokens,
-        amount_cad=pack.amount_cad,
+        tokens=receipt.tokens,
+        amount_cad=receipt.amount_cad,
         processor=receipt.processor,
         fee_rate=receipt.fee_rate,
     )

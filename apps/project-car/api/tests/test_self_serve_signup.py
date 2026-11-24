@@ -17,7 +17,6 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.models import BillingTransaction, TokenTransaction, TokenTransactionKind
-from app.services.payments import STAND_IN_PACKS
 from tests.conftest import AUTH, create_member, login_member
 
 API_ROOT = Path(__file__).resolve().parents[1]
@@ -29,11 +28,11 @@ PASSWORD = "walkthrough-pass"
 
 
 def _pack_purchase(payment_id: str) -> dict[str, str]:
-    pack = STAND_IN_PACKS[0]
+    """Stand-in pack figures: 10 tokens for 1.00 CAD. Not a real price."""
     return {
         "payment_id": payment_id,
-        "tokens": format(pack.tokens, "f"),
-        "amount_cad": format(pack.amount_cad, "f"),
+        "tokens": "10.00",
+        "amount_cad": "1.00",
     }
 
 
@@ -173,15 +172,14 @@ def test_stand_in_purchase_writes_one_billing_row_and_one_ledger_row(
             "/member/token-purchases",
             json=_pack_purchase("STANDIN-PACK-1"),
         )
-        pack = STAND_IN_PACKS[0]
         assert bought.status_code == 201, bought.text
         purchase = bought.json()
         assert purchase["kind"] == "token_purchase"
-        assert Decimal(str(purchase["amount"])) == pack.tokens
+        assert Decimal(str(purchase["amount"])) == Decimal("10.00")
         meta = purchase["meta"]["purchase"]
         assert meta["processor"] == "stand-in"
         assert meta["payment_id"] == "STANDIN-PACK-1"
-        assert Decimal(meta["amount_cad"]) == pack.amount_cad
+        assert Decimal(meta["amount_cad"]) == Decimal("1.00")
         assert meta["fee_rate"] == "stand-in-none"
         assert "gst" not in meta
 
@@ -189,7 +187,7 @@ def test_stand_in_purchase_writes_one_billing_row_and_one_ledger_row(
         assert me.status_code == 200, me.text
         profile = me.json()
         assert Decimal(str(profile["allowance_balance"])) == Decimal("1000")
-        assert Decimal(str(profile["purchased_balance"])) == pack.tokens
+        assert Decimal(str(profile["purchased_balance"])) == Decimal("10.00")
         assert Decimal(str(profile["token_balance"])) == (
             Decimal(str(profile["allowance_balance"])) + Decimal(str(profile["purchased_balance"]))
         )
@@ -201,7 +199,7 @@ def test_stand_in_purchase_writes_one_billing_row_and_one_ledger_row(
         ).all()
         assert len(billing) == 1
         assert billing[0].kind.value == "pack"
-        assert Decimal(str(billing[0].amount)) == pack.amount_cad
+        assert Decimal(str(billing[0].amount)) == Decimal("1.00")
         assert billing[0].note
         ledger = session.scalars(
             select(TokenTransaction).where(
@@ -211,7 +209,7 @@ def test_stand_in_purchase_writes_one_billing_row_and_one_ledger_row(
         ).all()
         assert len(ledger) == 1
         assert ledger[0].payment_ref == "STANDIN-PACK-1"
-        assert Decimal(str(ledger[0].purchased_amount)) == pack.tokens
+        assert Decimal(str(ledger[0].purchased_amount)) == Decimal("10.00")
         assert Decimal(str(ledger[0].allowance_amount)) == Decimal("0")
         session.close()
 

@@ -2,7 +2,7 @@
 
 The stand-in does not call a network, does not use an API key or a merchant
 account, and does not apply a fee rate. Payment ids it accepts or mints start
-with STANDIN-. The CAD amount is the stand-in pack price, not a client total.
+with STANDIN-. The CAD amount posted by the caller is the amount recorded.
 STAND_IN_FEE_RATE is the label for that missing rate. It is not a number.
 """
 
@@ -23,29 +23,6 @@ _CENTS = Decimal("0.01")
 _MAX_AMOUNT = Decimal("100000000")
 _STAND_IN_NAME = "stand-in"
 _STAND_IN_PREFIX = "STANDIN-"
-
-
-@dataclass(frozen=True)
-class TokenPack:
-    id: str
-    tokens: Decimal
-    amount_cad: Decimal
-    label: str
-
-
-# Stand-in until Ben sets real pack prices.
-STAND_IN_PACKS: tuple[TokenPack, ...] = (
-    TokenPack(id="stand-in", tokens=Decimal("10"), amount_cad=Decimal("1.00"), label="not a real price"),
-)
-
-
-def purchase_pack(tokens: Decimal, amount_cad: Decimal) -> TokenPack:
-    if not get_settings().shop_dev_mode:
-        raise _http(503, "purchase_not_configured", "Token purchase is not configured.")
-    pack = STAND_IN_PACKS[0]
-    if Decimal(tokens) != pack.tokens or Decimal(amount_cad) != pack.amount_cad:
-        raise _http(422, "amount_mismatch", "The purchase amount does not match the pack.")
-    return pack
 
 
 @dataclass(frozen=True)
@@ -102,8 +79,7 @@ class StandInPaymentProcessor:
     ) -> PaymentReceipt:
         # The member id is not sent anywhere. There is no account to attach it to.
         del member_id
-        pack = purchase_pack(tokens, amount_cad)
-        charged = _amount_cad(pack.amount_cad)
+        charged = _amount_cad(amount_cad)
         chosen = (payment_id or "").strip()
         if not chosen:
             chosen = f"{_STAND_IN_PREFIX}{uuid4().hex[:12].upper()}"
@@ -117,7 +93,7 @@ class StandInPaymentProcessor:
             processor=self.name,
             payment_id=chosen,
             amount_cad=charged,
-            tokens=pack.tokens,
+            tokens=Decimal(tokens),
             fee_rate=STAND_IN_FEE_RATE,
         )
 
