@@ -40,11 +40,13 @@ def _client_ip(request: Request) -> str:
     return client_ip(request, get_settings().client_ip_header)
 
 
-def _guard_login(request: Request, settings: AppSettings) -> tuple[str, object]:
+def _guard_login(
+    request: Request, settings: AppSettings, realm: str, account: str
+) -> tuple[str, object]:
     """Refuse a dev session secret, then reserve one in-process failure slot."""
     reject_dev_secret(settings.session_secret)
     client_ip = _client_ip(request)
-    stamp = reserve_login_failure(client_ip)
+    stamp = reserve_login_failure(client_ip, realm, account)
     if stamp is None:
         raise rate_limited_error()
     return client_ip, stamp
@@ -57,7 +59,7 @@ def login(
     response: Response,
     settings: AppSettings,
 ) -> PrincipalOut:
-    client_ip, stamp = _guard_login(request, settings)
+    client_ip, stamp = _guard_login(request, settings, "owner", str(body.email))
     if not credentials_match(settings, body.email, body.password):
         raise _invalid_credentials()
     token = create_session_token(settings, body.email)
@@ -95,7 +97,7 @@ def member_login(
 
     Not OIDC. Staff / Member OIDC can replace this later without rewriting shop tables.
     """
-    client_ip, stamp = _guard_login(request, settings)
+    client_ip, stamp = _guard_login(request, settings, "member", str(body.email))
     member = session.scalars(
         select(Member).options(selectinload(Member.tier)).where(Member.email == str(body.email))
     ).first()

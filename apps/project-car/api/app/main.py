@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.config import get_settings
+from app.config import assert_runtime_secrets, get_settings
+from app.cors import ShopCorsMiddleware
 from app.errors import register_error_handlers
 from app.routers import (
     auth,
@@ -31,9 +31,16 @@ from app.security_headers import SecurityHeadersMiddleware
 
 
 def create_app() -> FastAPI:
+    settings = get_settings()
+    assert_runtime_secrets(settings)
+    dev = settings.shop_dev_mode
     application = FastAPI(
         title="Project Car Shop API",
         version=__version__,
+        # Docs expose the whole route map, so they serve only under SHOP_DEV_MODE=1.
+        docs_url="/docs" if dev else None,
+        redoc_url="/redoc" if dev else None,
+        openapi_url="/openapi.json" if dev else None,
         description=(
             "Shop OS API. Owner dashboard plus Member self-serve (balance, "
             "book / cancel, schedule quote) and Chat v1 (human / polling). "
@@ -47,15 +54,12 @@ def create_app() -> FastAPI:
     )
     register_error_handlers(application)
 
-    origins = get_settings().cors_origin_list
-    if origins:
-        application.add_middleware(
-            CORSMiddleware,
-            allow_origins=origins,
-            allow_credentials=True,
-            allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS", "HEAD"],
-            allow_headers=["Accept", "Content-Type", "Authorization"],
-        )
+    settings = get_settings()
+    application.add_middleware(
+        ShopCorsMiddleware,
+        public_origins=settings.cors_public_origin_list,
+        credentialed_origins=settings.cors_credentialed_origin_list,
+    )
 
     application.add_middleware(SecurityHeadersMiddleware)
 
