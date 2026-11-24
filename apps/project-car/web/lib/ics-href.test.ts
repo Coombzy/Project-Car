@@ -39,6 +39,8 @@ describe("safeIcsHref", () => {
     assert.equal(safeIcsHref("/login", ORIGIN), null);
     assert.equal(safeIcsHref("/todos/1", ORIGIN), null);
     assert.equal(safeIcsHref("/todos/%2e%2e/ics", ORIGIN), null);
+    assert.equal(safeIcsHref("/%2e%2e/todos/1/ics", ORIGIN), null);
+    assert.equal(safeIcsHref(`${ORIGIN}/./todos/1/ics`, ORIGIN), null);
     assert.equal(safeIcsHref("/%2f%2fevil.example/todos/1/ics", ORIGIN), null);
   });
 });

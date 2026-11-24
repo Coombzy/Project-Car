@@ -24,7 +24,14 @@ function httpOrigin(value: string): string | null {
 
 export function safeIcsHref(href: string, origin: string): string | null {
   const base = httpOrigin(origin);
-  if (!base || href !== href.trim() || UNSAFE.test(href) || href.includes("..")) {
+  if (
+    !base ||
+    href !== href.trim() ||
+    UNSAFE.test(href) ||
+    href.includes("..") ||
+    href.includes("/./") ||
+    href.includes("%")
+  ) {
     return null;
   }
   let url: URL;
