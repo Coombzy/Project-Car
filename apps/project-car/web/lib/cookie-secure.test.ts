@@ -183,9 +183,9 @@ describe("cookieSecure", () => {
     assert.equal(cookieSecure({}), false);
   });
 
-  it("is false when SHOP_COOKIE_SECURE is not the string true", () => {
+  it("is false when SHOP_COOKIE_SECURE is not a truthy value", () => {
     assert.equal(cookieSecure({ SHOP_COOKIE_SECURE: "false" }), false);
-    assert.equal(cookieSecure({ SHOP_COOKIE_SECURE: "1" }), false);
+    assert.equal(cookieSecure({ SHOP_COOKIE_SECURE: "0" }), false);
   });
 });
 
