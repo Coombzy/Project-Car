@@ -81,6 +81,8 @@ class FillSnapshot:
             label=f"Fill the gaps {discount_label(self.discount_pct)}%",
             multiplier=self.fill_multiplier,
             discount_pct=self.discount_pct,
+            window_start=self.window_start,
+            window_end=self.window_end,
         )
 
 
