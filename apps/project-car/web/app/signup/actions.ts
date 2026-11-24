@@ -1,8 +1,10 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { parseApiError, shopApiUrl } from "../../lib/config";
+import { loginForwardHeaders } from "../../lib/login-forward";
 import { extractMemberSessionValue } from "../../lib/session-cookie";
 import { writeMemberSessionCookie } from "../../lib/session";
 
@@ -40,6 +42,7 @@ function blank(value: FormDataEntryValue | null): string {
 
 export async function signupAction(formData: FormData): Promise<void> {
   const tierName = blank(formData.get("tier_name")) || "basic";
+  const forward = loginForwardHeaders({ headers: await headers() }, process.env.SHOP_PROXY_SECRET ?? "");
   let response: Response;
   try {
     response = await fetch(`${shopApiUrl()}/signup`, {
@@ -47,6 +50,7 @@ export async function signupAction(formData: FormData): Promise<void> {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
+        ...forward,
       },
       body: JSON.stringify({
         name: blank(formData.get("name")),
