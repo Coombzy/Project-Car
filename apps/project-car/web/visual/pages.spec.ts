@@ -220,6 +220,33 @@ test.describe("owner pages", () => {
   test("chat-room", async ({ page }) => {
     await shoot(page, `/chat/${ownerRoomId}`, "chat-room", "owner");
   });
+
+  test("R173 owner jobs does not scroll sideways", async ({ page }) => {
+    const viewports = [
+      { width: 768, height: 1024 },
+      { width: 390, height: 1024 },
+      { width: 1280, height: 720 },
+    ] as const;
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      const response = await page.goto("/jobs", { waitUntil: "load" });
+      expect(response, "/jobs").not.toBeNull();
+      expect(response?.status(), "/jobs").toBeLessThan(400);
+      assertAuth("owner", page.url());
+      await page.evaluate(() => document.fonts.ready);
+      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(SETTLE_MS);
+      await expect(page.getByText("Cannot reach shop API")).toHaveCount(0);
+      const fit = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }));
+      expect(
+        fit.scrollWidth,
+        `${viewport.width}x${viewport.height} documentElement.scrollWidth ${fit.scrollWidth} <= clientWidth ${fit.clientWidth}`,
+      ).toBeLessThanOrEqual(fit.clientWidth);
+    }
+  });
 });
 
 test.describe("member pages", () => {
