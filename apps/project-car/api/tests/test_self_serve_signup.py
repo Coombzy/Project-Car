@@ -52,6 +52,10 @@ def _signup(client: TestClient, **overrides: object):
 
 
 def test_self_serve_signup_creates_a_basic_member(client: TestClient) -> None:
+    switched = client.patch("/signup-mode", headers=AUTH, json={"mode": "self_serve"})
+    assert switched.status_code == 200, switched.text
+    assert switched.json()["mode"] == "self_serve"
+
     mode = client.get("/signup-mode")
     assert mode.status_code == 200, mode.text
     assert mode.json()["mode"] == "self_serve"
@@ -107,7 +111,7 @@ def test_waitlist_mode_creates_a_waitlist_row(client: TestClient) -> None:
     assert restored.json()["mode"] == "self_serve"
 
 
-def test_unknown_signup_mode_reads_as_self_serve(client: TestClient) -> None:
+def test_unknown_signup_mode_reads_as_waitlist(client: TestClient) -> None:
     from app.models import ShopSetting
 
     session = _session(client)
@@ -117,7 +121,7 @@ def test_unknown_signup_mode_reads_as_self_serve(client: TestClient) -> None:
 
     mode = client.get("/signup-mode")
     assert mode.status_code == 200, mode.text
-    assert mode.json()["mode"] == "self_serve"
+    assert mode.json()["mode"] == "waitlist"
 
 
 def test_ai_cannot_switch_signup_mode(client: TestClient) -> None:
@@ -130,7 +134,7 @@ def test_ai_cannot_switch_signup_mode(client: TestClient) -> None:
     assert switched.json()["error"]["code"] == "signup_mode_requires_human"
     mode = client.get("/signup-mode")
     assert mode.status_code == 200, mode.text
-    assert mode.json()["mode"] == "self_serve"
+    assert mode.json()["mode"] == "waitlist"
 
 
 def test_unknown_processor_is_422(client: TestClient, monkeypatch) -> None:
