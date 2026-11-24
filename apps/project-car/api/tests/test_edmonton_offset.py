@@ -40,6 +40,7 @@ def test_booking_typed_at_10_local_on_2026_11_02_stores_as_16_utc(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """10:00 typed on the shop clock is 16:00 UTC while Edmonton is UTC-6."""
+    monkeypatch.setenv("SHOP_DEV_MODE", "1")
     monkeypatch.setenv("SHOP_NOW", "2026-10-31T09:00:00")
     member = create_member(client)
     hoist = create_hoist(client)
