@@ -1,6 +1,6 @@
 # Project Car Application Specification
 
-**Last Updated:** 2026-09-07  
+**Last Updated:** 2026-11-24  
 **Status:** Living spec (v1)  
 **Owner:** Ben (decisions) / Doc + Porsche (maintenance)  
 **Audience:** Anyone implementing the Project Car product  
@@ -88,7 +88,7 @@ Identity rules:
 
 ### Out (explicit)
 
-- Public self-serve signup or payment.
+- **Live** public self-serve signup or payment. Signup and the payment stand-in already ship; the live signup mode is **AUD-011**, still a Ben decision (today: stand-in waitlist + `SELF_SERVE_TIERS={"basic"}`).
 - Stripe live charges (billing *records* may exist as rows; no processor).
 - NFC / FOB / ESPHome readers.
 - Tool checkout **hardware** and QR scanning in the UI (Tools **sections** are build-breadth placeholders; hardware is not this lock).
@@ -116,16 +116,17 @@ These rules are the product, not an implementation detail.
 
 Dollar prices and tier **names** stay Owner-editable. Slot cost is **not** an arbitrary Owner-entered reserve amount — see §5.1. Seed allotment placeholders: Basic **1000** / Premium **1500** per period (`token-pricing.md`). Two tiers, not three. No Pro. No Weekly.
 
-### 5.1 Token rate (duration × bands + overlay)
+### 5.1 Token rate (per held hour — `token-pricing.md` is the lock)
 
-How many tokens a slot **costs** is locked separately (Ben GO / recall 2026-09-06): **100 tokens per hour** of hoist time, then time-of-day / day-of-week **bands** in `America/Regina`, plus an advance / last-minute **overlay** at reserve time.
+How many tokens a slot **costs** is locked in **`token-pricing.md`** (Ben GO / recall 2026-09-06; per-hour band rule 2026-11): **100 tokens per hour** of hoist time, then time-of-day / day-of-week **bands** in `America/Regina`. **Each held hour uses the band that contains that hour.** A visit that crosses bands is the sum of those hours, not the band at the start. **Lead-time overlays are stored and price nothing. Every reserve uses the standard row (×1).** Fill is an explicit extra multiplier on the hour it applies to.
 
 ```
+hours = count of America/Regina clock hours the visit touches
 base_tokens = hours × 100
-final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier
+final_reserve_cost = Σ (100 × that hour's band_multiplier × advance_multiplier × that hour's fill)
 ```
 
-Show band + overlay + total before confirm. Store `pricing_rule` on ledger meta. Cancel refunds the reserved amount — do not reprice. Owner `POST /bookings` computes this in the API.
+Show each held hour at its band, the standard overlay, fill when it applies, and the total before confirm. Store `pricing_rule` on ledger meta. Cancel refunds the reserved amount — do not reprice. Owner `POST /bookings` computes this in the API.
 
 Defaults, two-tier allotment placeholders (Basic 1000 / Premium 1500), 6-hoist seed with one shop-priority hoist, UX must-haves, and the Fri-eve default: **`token-pricing.md`**. Multipliers and allotments are Owner-editable placeholders. Not public brochure prices. No Stripe. Owner API computes reserve from duration.
 
@@ -264,7 +265,7 @@ Staff-on-shift / ops shell. **LIVE** host **`ops.projectcar.ca`**. Temporary ali
 1. **Dashboard** — Bays 1–6 next-24h hour strips (member + vehicle/notes), personal to-dos + ICS, current parts POs, waitlist count, token-at-risk. **No “Today’s bookings” list.** Bay 6 is the Owner-only shop hoist.
 2. **Schedule (on `main`, PR #18; harden PR #24)** — month heat-map (per-hoist density vs 08:00–21:00) that drills into a weekly hour grid per hoist (`America/Regina`). Owner sees Bays 1–5 plus the Owner-only shop hoist; Member sees customer bays only. Fill chips / quote math from #20 stay. Fail-soft if bookings list 500s; windows as Regina UTC ISO. **LIVE** host `ops.`; temporary `app.` alias still up.
 3. **Members** — table + detail (tier, tokens, waiver, bookings).
-4. **Waitlist** — convert-to-member is a later button; v1 can be “mark contacted”.
+4. **Waitlist** — convert-to-member ships as `POST /waitlist/{id}/convert`; “mark contacted” (`POST /waitlist/{id}/contacted`) stays the manual step.
 5. **Tiers / settings** — edit allowances.
 6. **Parts (ops placeholder)** — **PT** stock list (qty / reorder) plus POs / incoming / vendor. Distinct from the member request desk. Not live purchasing.
 7. **Tools (ops placeholder)** — **B1–B6** bay-resident kit lists + **TC** crib checkout stub, plus orders / member requests / planned purchases. IA only. Not on Member nav. **B6** = shop hoist bay (not `SH`).
