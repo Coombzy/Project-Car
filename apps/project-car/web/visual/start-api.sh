@@ -8,6 +8,8 @@ SHOP_NOW="$(tr -d '[:space:]' < "$VISUAL/shop-now.txt")"
 export SHOP_NOW
 export DATABASE_URL="${DATABASE_URL:-sqlite:////tmp/shop-visual.db}"
 export SHOP_HOST="${SHOP_HOST:-127.0.0.1}"
+# Visual sqlite is local demo only. Keep an explicit incoming value.
+export SHOP_DEV_MODE="${SHOP_DEV_MODE:-1}"
 cd "$API"
 rm -f /tmp/shop-visual.db /tmp/shop-visual.db-journal /tmp/shop-visual.db-wal /tmp/shop-visual.db-shm
 PYTHONPATH="$API${PYTHONPATH:+:$PYTHONPATH}" python3 - <<'PY'
