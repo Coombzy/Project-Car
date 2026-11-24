@@ -11,7 +11,7 @@ import {
 export function InventoryKitNav({ current }: { current: ToolPrefix }) {
   return (
     <div className="inventory-toolbar">
-      <div className="view-toggle" role="tablist" aria-label="Tool inventory">
+      <nav className="view-toggle" aria-label="Tool inventory">
         <Link
           className={`button ghost${current !== CRIB_PREFIX ? " is-active" : ""}`}
           href={kitHref("B1")}
@@ -26,9 +26,9 @@ export function InventoryKitNav({ current }: { current: ToolPrefix }) {
         >
           Tool crib
         </Link>
-      </div>
+      </nav>
       {current === CRIB_PREFIX ? null : (
-        <div className="view-toggle kit-bay-toggle" role="tablist" aria-label="Bay kit">
+        <nav className="view-toggle kit-bay-toggle" aria-label="Bay kit">
           {BAY_PREFIXES.map((bay) => (
             <Link
               key={bay}
@@ -40,7 +40,7 @@ export function InventoryKitNav({ current }: { current: ToolPrefix }) {
               {BAY_KITS[bay].shopHoist ? " · shop" : ""}
             </Link>
           ))}
-        </div>
+        </nav>
       )}
     </div>
   );
