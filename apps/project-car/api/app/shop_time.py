@@ -27,10 +27,17 @@ def as_utc(value: datetime) -> datetime:
 
 
 def _frozen(zone: ZoneInfo) -> datetime | None:
-    """SHOP_NOW freezes both clocks for the visual check. Unset means the real clock."""
+    """Honor SHOP_NOW only when SHOP_DEV_MODE strips to exactly '1'.
+
+    Blank SHOP_NOW is the real clock. Any other value outside that flag
+    raises RuntimeError naming SHOP_NOW and omitting the configured instant.
+    A naive value still takes the requested zone when the freeze is allowed.
+    """
     raw = os.environ.get("SHOP_NOW", "").strip()
     if not raw:
         return None
+    if os.environ.get("SHOP_DEV_MODE", "").strip() != "1":
+        raise RuntimeError("SHOP_NOW is set without SHOP_DEV_MODE=1; refusing to start.")
     parsed = datetime.fromisoformat(raw)
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=zone)
