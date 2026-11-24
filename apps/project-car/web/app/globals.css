@@ -162,6 +162,12 @@ main {
   padding: 1.25rem 1.35rem;
 }
 
+/* Scroll the job board inside the card so /jobs does not scroll the page at 768px. */
+.job-board-table {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
 h1 {
   margin: 0.35rem 0 0.75rem;
   font-size: 1.6rem;
