@@ -159,20 +159,26 @@ def mark_job_done(
     return _store(session, row)
 
 
-def list_events(session: Session) -> list[JobEvent]:
+def list_events(session: Session, *, limit: int, offset: int = 0) -> list[JobEvent]:
     stmt = (
         select(JobEvent)
         .options(selectinload(JobEvent.member))
         .order_by(JobEvent.created_at.desc(), JobEvent.job_key)
+        .limit(limit)
+        .offset(offset)
     )
     return list(session.scalars(stmt).all())
 
 
-def list_member_events(session: Session, member_id: UUID) -> list[JobEvent]:
+def list_member_events(
+    session: Session, member_id: UUID, *, limit: int, offset: int = 0
+) -> list[JobEvent]:
     stmt = (
         select(JobEvent)
         .options(selectinload(JobEvent.member))
         .where(JobEvent.member_id == member_id)
         .order_by(JobEvent.created_at.desc(), JobEvent.job_key)
+        .limit(limit)
+        .offset(offset)
     )
     return list(session.scalars(stmt).all())

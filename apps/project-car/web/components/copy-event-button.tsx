@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { Todo } from "../lib/config";
+import { safeIcsHref } from "../lib/ics-href";
 import { googleTemplateUrl } from "../lib/todo-calendar";
 
 export function CopyEventButton({
@@ -13,11 +14,21 @@ export function CopyEventButton({
   icsHref: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const [origin, setOrigin] = useState("https://shop.invalid");
   const google = googleTemplateUrl(todo);
+  const safeHref = safeIcsHref(icsHref, origin);
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   async function copyEvent() {
+    const href = safeIcsHref(icsHref, window.location.origin);
+    if (!href) {
+      return;
+    }
     try {
-      const response = await fetch(icsHref, { cache: "no-store" });
+      const response = await fetch(href, { cache: "no-store" });
       if (!response.ok) {
         return;
       }
@@ -36,14 +47,16 @@ export function CopyEventButton({
 
   return (
     <span className="todo-cal-actions">
-      <a className="button ghost" href={icsHref}>
-        ICS
-      </a>
+      {safeHref ? (
+        <a className="button ghost" href={safeHref}>
+          ICS
+        </a>
+      ) : null}
       <button className="ghost" type="button" onClick={copyEvent}>
         {copied ? "Copied" : "Copy event"}
       </button>
       {google ? (
-        <a className="button ghost" href={google} target="_blank" rel="noreferrer">
+        <a className="button ghost" href={google} target="_blank" rel="noopener noreferrer">
           Google
         </a>
       ) : null}
