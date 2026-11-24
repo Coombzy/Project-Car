@@ -51,4 +51,35 @@ describe("AUD-039 live regions", () => {
     assert.equal(stick(box(0)), false);
     assert.equal(stick({ scrollTop: 0, scrollHeight: 200, clientHeight: 400 }), true);
   });
+
+  it("test_aud039_own_send_sticks_when_scrolled_up", async () => {
+    const thread = read("components/chat-thread.tsx");
+    const helper = await import(pathToFileURL(join(webRoot, "lib/chat-scroll.ts")).href);
+    const nearBottom = helper.shouldStickToChatBottom as (node: {
+      scrollTop: number;
+      scrollHeight: number;
+      clientHeight: number;
+    }) => boolean;
+
+    const scroller = { scrollTop: 0, scrollHeight: 1000, clientHeight: 400 };
+    assert.equal(nearBottom(scroller), false);
+
+    const tickStart = thread.indexOf("const tick = async");
+    const tickEnd = thread.indexOf("const timer = window.setInterval");
+    assert.ok(tickStart !== -1 && tickEnd > tickStart);
+    assert.doesNotMatch(thread.slice(tickStart, tickEnd), /stickRef\.current\s*=/);
+
+    const start = thread.indexOf("async function onSubmit");
+    const end = thread.indexOf("\n  return (", start);
+    assert.ok(start !== -1 && end > start);
+    const submit = thread.slice(start, end);
+    const sent = submit.indexOf("await sendMessage");
+    const paint = submit.indexOf("setMessages(", sent);
+    assert.ok(sent !== -1 && paint > sent);
+    const beforePaint = submit.slice(sent, paint);
+    if (/stickRef\.current\s*=\s*true/.test(beforePaint)) {
+      scroller.scrollTop = scroller.scrollHeight;
+    }
+    assert.equal(nearBottom(scroller), true);
+  });
 });
