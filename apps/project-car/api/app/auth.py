@@ -239,9 +239,12 @@ def member_password_matches(password_hash: str | None, password: str, shared_pas
 
     Off loopback, the default shared password does not match an unhashed member.
     A non-default shared password still does. A stored hash is unchanged.
+    An unset hash still runs the dummy scrypt before the shared-password compare.
     """
     if password_hash:
         return verify_password(password, password_hash)
+    # Same scrypt cost as an unknown email. The dummy hash is not a password.
+    verify_password(password, DUMMY_MEMBER_PASSWORD_HASH)
     if not host_is_loopback() and secrets_equal(shared_password, DEFAULT_MEMBER_DEMO_PASSWORD):
         return False
     return secrets_equal(password, shared_password)
