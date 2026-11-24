@@ -47,7 +47,6 @@ function mentions(selector: string, dense: string): boolean {
   return new RegExp(`\\.${dense.slice(1)}(?![\\w-])`).test(selector);
 }
 
-/** The control's own box. min-height on an empty ::before is not a target. */
 function targetPx(list: Rule[], names: string[]): number {
   let floor = 0;
   for (const rule of list) {
@@ -100,5 +99,18 @@ describe("AUD-043 focus and target floor", () => {
   it("test_aud_043_dense_groups_opt_out_of_the_44px_floor", () => {
     const missed = DENSE.filter((dense) => !optsOut(parsed, dense));
     assert.deepEqual(missed, []);
+  });
+
+  it("test_aud_043_44px_floor_is_coarse_pointer_only", () => {
+    const src = css.replace(/\/\*[\s\S]*?\*\//g, "");
+    const at = src.search(/@media\s*\(\s*pointer\s*:\s*coarse\s*\)\s*\{/);
+    assert.ok(at >= 0, "44px floor is not under @media (pointer: coarse)");
+    let depth = 1, i = src.indexOf("{", at) + 1;
+    for (; depth > 0; i++) depth += src[i] === "{" ? 1 : src[i] === "}" ? -1 : 0;
+    const block = src.slice(src.indexOf("{", at) + 1, i - 1);
+    assert.match(block, /a\s*,\s*button\s*,\s*\.button\s*\{[^}]*min-height\s*:\s*44px/);
+    assert.match(block, /min-height\s*:\s*auto/);
+    assert.deepEqual(DENSE.filter((dense) => !mentions(block, dense)), []);
+    assert.doesNotMatch(`${src.slice(0, at)}${src.slice(i)}`, /min-height\s*:\s*44px/);
   });
 });
