@@ -11,7 +11,8 @@ import { handlePageError } from "../lib/page";
 import { sortHoists } from "../lib/calendar";
 import { formatShopDateTime, tokensLabel } from "../lib/time";
 
-export const metadata: Metadata = { title: "Shop dashboard" };
+// Same segment as the root layout, so title.template does not apply here.
+export const metadata: Metadata = { title: "Shop dashboard · Project Car" };
 
 export const dynamic = "force-dynamic";
 

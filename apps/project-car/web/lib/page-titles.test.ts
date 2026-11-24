@@ -8,7 +8,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 // AUD-040 part 1. Login pages are #337 and are not in this list.
 const pages: Record<string, string> = {
-  "app/page.tsx": "Shop dashboard",
+  "app/page.tsx": "Shop dashboard · Project Car",
   "app/schedule/page.tsx": "Schedule",
   "app/chat/page.tsx": "Shop chat",
   "app/chat/[id]/page.tsx": "Shop chat",
