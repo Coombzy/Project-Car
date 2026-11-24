@@ -270,6 +270,16 @@ def _decision_actions(client: TestClient, request_id: str) -> list[str]:
         session.close()
 
 
+def _job_status(client: TestClient, job_id: str) -> str:
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        row = session.get(ShopJob, UUID(job_id))
+        assert row is not None
+        return row.status.value
+    finally:
+        session.close()
+
+
 def _assert_decision_lock(reads: list[tuple[str, bool]], table: str) -> None:
     matches = [
         (sql, locked)
@@ -444,6 +454,57 @@ def test_claim_job_locks_the_job_row(client: TestClient, monkeypatch) -> None:
     assert first_locked and "FOR UPDATE" in first_sql, (
         "claim job select has no FOR UPDATE on the postgresql dialect"
     )
+
+
+def test_aud_004_second_job_decision_is_409(client: TestClient, monkeypatch) -> None:
+    """AUD-004 part 2: done then send-back, and the reverse, conflict.
+
+    The second decision is 409 job_already_decided and leaves one
+    staff_actions row, from the first decision. The job select uses
+    FOR UPDATE. SQLite drops that clause; the compiled Postgres statement
+    still asks for it. Red on main: the second call is 400 job_not_claimed
+    and that select has no FOR UPDATE.
+    """
+    reads: list[tuple[str, bool]] = []
+    _record_scalars(monkeypatch, reads)
+
+    def claimed(email: str, title: str) -> str:
+        create_member(client, email=email)
+        created = client.post(
+            "/jobs", headers=AUTH, json={"title": title, "token_bounty": "25"}
+        )
+        assert created.status_code == 201, created.text
+        job_id = created.json()["id"]
+        login_member(client, email)
+        held = client.post(f"/member/jobs/{job_id}/claim")
+        assert held.status_code == 200, held.text
+        return job_id
+
+    def decide(job_id: str, path: str):
+        reads.clear()
+        response = client.post(f"/jobs/{job_id}/{path}", headers=AUTH)
+        _assert_decision_lock(reads, ShopJob.__tablename__)
+        return response
+
+    done_id = claimed("ada.job-lock@example.com", "Sweep the bay")
+    done = decide(done_id, "done")
+    assert done.status_code == 200, done.text
+    assert done.json()["status"] == "done"
+    blocked = decide(done_id, "send-back")
+    assert blocked.status_code == 409, blocked.text
+    assert blocked.json()["error"]["code"] == "job_already_decided"
+    assert _decision_actions(client, done_id) == ["job_done"]
+    assert _job_status(client, done_id) == "done"
+
+    back_id = claimed("ben.job-lock@example.com", "Empty the drum")
+    sent = decide(back_id, "send-back")
+    assert sent.status_code == 200, sent.text
+    assert sent.json()["status"] == "sent_back"
+    blocked = decide(back_id, "done")
+    assert blocked.status_code == 409, blocked.text
+    assert blocked.json()["error"]["code"] == "job_already_decided"
+    assert _decision_actions(client, back_id) == ["job_send_back"]
+    assert _job_status(client, back_id) == "sent_back"
 
 
 def test_drafts_wait_for_accept(client: TestClient) -> None:
