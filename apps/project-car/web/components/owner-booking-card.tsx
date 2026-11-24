@@ -2,6 +2,7 @@ import { BookingCost } from "./booking-cost";
 import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
 import { StatusPill } from "./status-pill";
 import { offersCancel } from "../lib/booking-cancel";
+import { completeUnusedField } from "../lib/booking-complete";
 import { formatCalendarTime } from "../lib/calendar";
 import type { Booking } from "../lib/config";
 import { checkInButtonState } from "../lib/check-in-window";
@@ -24,6 +25,7 @@ export function OwnerBookingCard({
 }) {
   const checkIn =
     booking.status === "confirmed" ? checkInButtonState(booking.start_at, shopClock(), booking.end_at) : null;
+  const unused = completeUnusedField(booking.status, booking.reserved_tokens);
   return (
     <article
       className={`booking-chip status-${booking.status}${booking.kind === "shop" ? " booking-chip-shop" : ""}${compact ? " booking-chip-hour" : ""}`}
@@ -53,21 +55,13 @@ export function OwnerBookingCard({
             {checkIn.hint ? <span className="check-in-hint">{checkIn.hint}</span> : null}
           </form>
         ) : null}
-        {booking.status === "active" ? (
+        {unused ? (
           <form className="complete-booking" action={completeBookingAction}>
             <ScheduleReturnFields returnTo={returnTo} />
             <input type="hidden" name="id" value={booking.id} />
             <label className="unused-tokens">
               Unused
-              <input
-                type="number"
-                name="unused_tokens"
-                defaultValue={0}
-                min={0}
-                max={booking.reserved_tokens}
-                step="0.01"
-                inputMode="decimal"
-              />
+              <input {...unused} inputMode="decimal" />
             </label>
             <button type="submit">Complete</button>
           </form>
