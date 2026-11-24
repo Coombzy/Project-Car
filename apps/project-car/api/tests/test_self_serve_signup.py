@@ -28,6 +28,15 @@ EMAIL = "self.serve@example.com"
 PASSWORD = "walkthrough-pass"
 
 
+def _pack_purchase(payment_id: str) -> dict[str, str]:
+    pack = STAND_IN_PACKS[0]
+    return {
+        "payment_id": payment_id,
+        "tokens": format(pack.tokens, "f"),
+        "amount_cad": format(pack.amount_cad, "f"),
+    }
+
+
 def _session(client: TestClient) -> Session:
     return client.session_factory()  # type: ignore[attr-defined]
 
@@ -142,11 +151,7 @@ def test_unknown_processor_is_422(client: TestClient, monkeypatch) -> None:
         login_member(client, member["email"])
         bought = client.post(
             "/member/token-purchases",
-            json={
-                "payment_id": "STANDIN-SHOULD-NOT-RUN",
-                "tokens": "10.00",
-                "amount_cad": "5.00",
-            },
+            json=_pack_purchase("STANDIN-SHOULD-NOT-RUN"),
         )
         assert bought.status_code == 422, bought.text
         error = bought.json()["error"]
@@ -166,11 +171,7 @@ def test_stand_in_purchase_writes_one_billing_row_and_one_ledger_row(
         login_member(client, member["email"])
         bought = client.post(
             "/member/token-purchases",
-            json={
-                "payment_id": "STANDIN-PACK-1",
-                "tokens": "200.00",
-                "amount_cad": "40.00",
-            },
+            json=_pack_purchase("STANDIN-PACK-1"),
         )
         pack = STAND_IN_PACKS[0]
         assert bought.status_code == 201, bought.text
@@ -216,18 +217,14 @@ def test_stand_in_purchase_writes_one_billing_row_and_one_ledger_row(
 
         refused = client.post(
             "/member/token-purchases",
-            json={"payment_id": "PAYPAL-LIVE-1", "tokens": "10.00", "amount_cad": "5.00"},
+            json=_pack_purchase("PAYPAL-LIVE-1"),
         )
         assert refused.status_code == 422, refused.text
         assert refused.json()["error"]["code"] == "standin_only"
 
         again = client.post(
             "/member/token-purchases",
-            json={
-                "payment_id": "STANDIN-PACK-1",
-                "tokens": "200.00",
-                "amount_cad": "40.00",
-            },
+            json=_pack_purchase("STANDIN-PACK-1"),
         )
         assert again.status_code == 409, again.text
         assert again.json()["error"]["code"] == "already_credited"
