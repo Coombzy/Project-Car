@@ -141,12 +141,36 @@ def get_parts_request(session: Session, request_id: UUID) -> StaffPartsRequest:
     return row
 
 
+def _locked_pending(session: Session, model: type, request_id: UUID, *, missing: str):
+    """Lock the row, then require it still be pending.
+
+    On Postgres, FOR UPDATE holds until commit, so a second decision waits
+    and then sees the status the first one stored. SQLite drops the clause.
+    ``populate_existing`` refreshes a row this session already loaded so the
+    status check is not the pre-lock copy.
+    """
+    row = session.scalars(
+        select(model)
+        .where(model.id == request_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).first()
+    if row is None:
+        raise _error(404, "not_found", missing)
+    if row.status != ShopHoistRequestStatus.PENDING:
+        raise _error(409, "request_already_decided", "This request was already decided.")
+    return row
+
+
 def decide_parts_request(
     session: Session, request_id: UUID, principal: Principal, *, approve: bool
 ) -> tuple[StaffPartsRequest, StaffAction]:
-    row = get_parts_request(session, request_id)
-    if row.status != ShopHoistRequestStatus.PENDING:
-        raise _error(400, "invalid_transition", "Only a pending parts request can be decided.")
+    row = _locked_pending(
+        session,
+        StaffPartsRequest,
+        request_id,
+        missing="Parts request not found.",
+    )
     if approve:
         reject_own_request(principal, row.created_by_kind, row.created_by_id)
     _stamp_decision(
@@ -198,9 +222,12 @@ def get_tool_crib_exception(session: Session, request_id: UUID) -> ToolCribExcep
 def decide_tool_crib_exception(
     session: Session, request_id: UUID, principal: Principal, *, approve: bool
 ) -> tuple[ToolCribException, StaffAction]:
-    row = get_tool_crib_exception(session, request_id)
-    if row.status != ShopHoistRequestStatus.PENDING:
-        raise _error(400, "invalid_transition", "Only a pending tool crib exception can be decided.")
+    row = _locked_pending(
+        session,
+        ToolCribException,
+        request_id,
+        missing="Tool crib exception not found.",
+    )
     if approve:
         reject_own_request(principal, row.created_by_kind, row.created_by_id)
     _stamp_decision(
