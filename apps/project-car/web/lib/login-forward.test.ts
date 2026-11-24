@@ -65,4 +65,18 @@ describe("AUD-010", () => {
       assert.equal(read(rel).includes(DUMMY_SECRET), false, rel);
     }
   });
+
+  it("signupAction calls loginForwardHeaders and sends both headers", () => {
+    const source = read("app/signup/actions.ts");
+    const body = functionBody(source, "signupAction");
+    const helper = read("lib/login-forward.ts");
+    assert.match(helper, /"X-Shop-Client-IP"/);
+    assert.match(helper, /"X-Shop-Proxy-Secret"/);
+    assert.match(
+      body,
+      /const forward = loginForwardHeaders\(\{ headers: await headers\(\) \}, process\.env\.SHOP_PROXY_SECRET \?\? ""\);/,
+    );
+    assert.match(body, /headers:\s*\{[^}]*\.\.\.forward,/);
+    assert.equal(source.includes(DUMMY_SECRET), false, "app/signup/actions.ts");
+  });
 });
