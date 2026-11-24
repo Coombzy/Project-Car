@@ -73,6 +73,7 @@ class EmailAdapter:
         subject: str,
         body: str,
         payload: dict,
+        smtp: smtplib.SMTP | None = None,
     ) -> AdapterResult:
         host = (self.settings.smtp_host or "").strip()
         if not host:
@@ -87,6 +88,12 @@ class EmailAdapter:
         message["To"] = to_address
         message["Subject"] = subject
         message.set_content(body)
+        if smtp is not None:
+            try:
+                smtp.send_message(message)
+            except (OSError, smtplib.SMTPException) as exc:
+                return AdapterResult(ok=False, status=NotificationStatus.FAILED, detail=f"smtp_error: {exc}")
+            return AdapterResult(ok=True, status=NotificationStatus.SENT, detail="smtp")
         try:
             with smtplib.SMTP(host, self.settings.smtp_port, timeout=15) as smtp:
                 if self.settings.smtp_use_tls:
@@ -271,7 +278,6 @@ def enqueue_fill_campaign(
     channels: list[NotificationChannel],
     dry_run: bool,
     offer: FillOffer | None,
-    settings: Settings | None = None,
 ) -> list[NotificationOutbox]:
     if not snapshot.applies:
         raise NotifyError("no_openings", "No next-day customer-bay openings to notify about.")
@@ -280,7 +286,6 @@ def enqueue_fill_campaign(
         raise NotifyError("no_members", "No active members to notify.")
     if not dry_run:
         refuse_repeat_fill_campaign(session, snapshot.target_date, channels)
-    cfg = settings or get_settings()
     rows: list[NotificationOutbox] = []
     for member in members:
         subject, body = campaign_copy(member, snapshot)
@@ -314,11 +319,6 @@ def enqueue_fill_campaign(
             session.add(row)
             rows.append(row)
     session.flush()
-    if not dry_run:
-        for row in rows:
-            if row.status != NotificationStatus.PENDING:
-                continue
-            _deliver_row(session, row, settings=cfg)
     return rows
 
 
@@ -327,13 +327,16 @@ def _deliver_row(
     row: NotificationOutbox,
     *,
     settings: Settings | None = None,
+    smtp: smtplib.SMTP | None = None,
 ) -> NotificationOutbox:
     adapter = adapter_for(row.channel, settings)
+    shared = {"smtp": smtp} if smtp is not None else {}
     result = adapter.deliver(
         to_address=row.to_address or "",
         subject=row.subject or "",
         body=row.body or "",
         payload=row.payload or {},
+        **shared,
     )
     row.attempts = int(row.attempts or 0) + 1
     row.status = result.status
