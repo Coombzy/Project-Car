@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { dirname, join, sep } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { ShopApiError } from "./config.ts";
 import {
   JOB_BOUNTY_CAP,
   JOB_POST_FAILURE,
@@ -12,8 +13,8 @@ import {
   jobPostedHref,
   parseJobForm,
 } from "./job-form.ts";
+import { jobPostDecision } from "./job-post.ts";
 
-const actionsPath = join(dirname(fileURLToPath(import.meta.url)), "../app/jobs/actions.ts");
 const BOUNTY_ERROR =
   "A job bounty is 0 to 10,000 tokens, with at most two decimal places.";
 
@@ -56,15 +57,43 @@ describe("postJobAction redirect", () => {
     assert.equal(jobErrorHref("a&b=c"), "/jobs?error=a%26b%3Dc");
     assert.equal(jobPostedHref(), "/jobs?notice=Job%20posted.");
 
-    const source = readFileSync(actionsPath, "utf8");
-    assert.equal(source.includes("redirect(jobErrorHref(parsed.error))"), true);
-    assert.equal(
-      source.includes("error instanceof ShopApiError ? error.message : JOB_POST_FAILURE"),
-      true,
-    );
-    assert.equal(source.includes("redirect(jobErrorHref(message))"), true);
-    assert.match(source, /revalidatePath\("\/jobs"\);\s*redirect\(jobPostedHref\(\)\);/);
-    assert.equal(source.includes("token_bounty: parsed.token_bounty"), true);
+    const rejected = { ok: false as const, error: "a&b=c" };
+    assert.deepEqual(jobPostDecision({ type: "parsed", parsed: rejected }), {
+      kind: "redirect",
+      href: jobErrorHref(rejected.error),
+    });
+
+    const parsed = parseJobForm({ title: "Sweep the bay", notes: "  bay  ", bounty: "1.50" });
+    assert.equal(parsed.ok, true);
+    if (parsed.ok) {
+      assert.equal(parsed.token_bounty, "1.5");
+      assert.deepEqual(jobPostDecision({ type: "parsed", parsed }), {
+        kind: "create",
+        body: {
+          title: "Sweep the bay",
+          notes: "bay",
+          token_bounty: parsed.token_bounty,
+        },
+      });
+    }
+
+    const apiError = new ShopApiError(400, "invalid", "Bounty is closed.");
+    assert.deepEqual(jobPostDecision({ type: "rejected", error: apiError }), {
+      kind: "redirect",
+      href: jobErrorHref(apiError.message),
+    });
+    for (const error of [new Error("down"), "nope", { message: "secret" }]) {
+      assert.deepEqual(jobPostDecision({ type: "rejected", error }), {
+        kind: "redirect",
+        href: jobErrorHref(JOB_POST_FAILURE),
+      });
+    }
+
+    assert.deepEqual(jobPostDecision({ type: "created" }), {
+      kind: "posted",
+      revalidate: "/jobs",
+      href: jobPostedHref(),
+    });
   });
 
   it("removes the visual scope lock without refusing bounty 1.5 or 10000", () => {
