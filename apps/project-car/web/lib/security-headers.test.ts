@@ -28,11 +28,16 @@ const { modifyRouteRegex } = require("next/dist/lib/redirect-status") as {
   modifyRouteRegex: (regex: string) => string;
 };
 
+const HSTS = "max-age=31536000; includeSubDomains";
+const STARTER_CSP = "frame-ancestors 'none'; object-src 'none'; base-uri 'self'";
+
 const REQUIRED_SECURITY_HEADERS = [
   ["X-Content-Type-Options", "nosniff"],
   ["Referrer-Policy", "strict-origin-when-cross-origin"],
   ["X-Frame-Options", "DENY"],
   ["Permissions-Policy", "camera=(), microphone=(), geolocation=()"],
+  ["Strict-Transport-Security", HSTS],
+  ["Content-Security-Policy", STARTER_CSP],
 ] as const;
 
 const COVERED_PATHS = ["/", "/login", "/schedule", "/member/schedule", "/manifest.webmanifest"];
@@ -107,6 +112,14 @@ function request(url: string, host: string): NextRequest {
 }
 
 describe("shop web security headers", () => {
+  it("test_aud_018_hsts_and_starter_csp", () => {
+    const byName = new Map(SECURITY_HEADERS.map((header) => [header.key, header.value]));
+    assert.equal(byName.get("Strict-Transport-Security"), HSTS);
+    const csp = byName.get("Content-Security-Policy");
+    assert.equal(csp, STARTER_CSP);
+    assert.equal(csp.includes("script-src"), false);
+  });
+
   it("test_shop_web_security_headers", async () => {
     assert.deepEqual(
       SECURITY_HEADERS.map((header) => [header.key, header.value]),
