@@ -368,6 +368,18 @@ def _expire_account_failure(key: tuple[str, str], now: float) -> tuple[int, floa
     return count, seen
 
 
+def _sweep_expired_failures(now: float) -> None:
+    """Drop keys the failure window has expired. Caller holds the lock.
+
+    Account keys already in backoff stay. `_expire_account_failure` keeps
+    that count until a successful login; clearing it would reset the lockout.
+    """
+    for bucket in list(_login_failures):
+        _fresh_failures(bucket, now)
+    for key in list(_account_failures):
+        _expire_account_failure(key, now)
+
+
 def reserve_login_failure(client_ip: str, realm: str = "", account: str = "") -> _LoginStamp | None:
     """Reserve one failure slot before the password check.
 
@@ -381,6 +393,7 @@ def reserve_login_failure(client_ip: str, realm: str = "", account: str = "") ->
     bucket = _ip_bucket(realm, client_ip)
     normalized = account.strip().lower() if account else ""
     with _login_failures_lock:
+        _sweep_expired_failures(now)
         if normalized:
             key = _account_key(realm, normalized)
             count, seen = _expire_account_failure(key, now)
