@@ -53,10 +53,11 @@ _LOGIN_FAILURE_WINDOW_SECONDS = 15 * 60
 class _LoginStamp:
     """One reserved login attempt. Success removes this same object."""
 
-    __slots__ = ("at",)
+    __slots__ = ("at", "realm")
 
-    def __init__(self, at: float) -> None:
+    def __init__(self, at: float, realm: str = "") -> None:
         self.at = at
+        self.realm = realm
 
 
 # Reserved attempts keyed by client IP. One bucket per process.
@@ -326,7 +327,11 @@ def rate_limited_error() -> HTTPException:
     )
 
 
-def reserve_login_failure(client_ip: str) -> _LoginStamp | None:
+def _ip_bucket(realm: str, client_ip: str) -> str:
+    return f"{realm}\0{client_ip}" if realm else client_ip
+
+
+def reserve_login_failure(client_ip: str, realm: str = "") -> _LoginStamp | None:
     """Reserve one failure slot before the password check.
 
     The cap check and the reservation share one lock, so two overlapping
@@ -335,29 +340,31 @@ def reserve_login_failure(client_ip: str) -> _LoginStamp | None:
     Returns the reserved stamp, or None when the IP is already at the cap.
     """
     now = time.monotonic()
+    bucket = _ip_bucket(realm, client_ip)
     with _login_failures_lock:
-        stamps = _fresh_failures(client_ip, now)
+        stamps = _fresh_failures(bucket, now)
         if len(stamps) >= _LOGIN_FAILURE_LIMIT:
             return None
-        stamp = _LoginStamp(now)
+        stamp = _LoginStamp(now, realm)
         stamps.append(stamp)
-        _login_failures[client_ip] = stamps
+        _login_failures[bucket] = stamps
         return stamp
 
 
 def release_login_failure(client_ip: str, stamp: object) -> None:
     """Drop the stamp reserved for a login that succeeded."""
+    bucket = _ip_bucket(getattr(stamp, "realm", ""), client_ip)
     with _login_failures_lock:
-        current = _login_failures.get(client_ip)
+        current = _login_failures.get(bucket)
         if not current:
             return
         kept = [item for item in current if item is not stamp]
         if len(kept) == len(current):
             return
         if kept:
-            _login_failures[client_ip] = kept
+            _login_failures[bucket] = kept
         else:
-            _login_failures.pop(client_ip, None)
+            _login_failures.pop(bucket, None)
 
 
 def clear_login_failures() -> None:

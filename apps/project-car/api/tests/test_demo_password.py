@@ -154,10 +154,7 @@ def test_login_locks_after_repeated_failures(client: TestClient) -> None:
     owner = {"email": "owner@projectcar.ca", "password": "wrong-guess"}
     member = {"email": "nobody@example.com", "password": "wrong-guess"}
 
-    for _ in range(4):
-        member_denied = client.post("/auth/member/login", json=member)
-        assert member_denied.status_code == 401, member_denied.text
-        assert member_denied.json()["error"]["code"] == "invalid_credentials"
+    for _ in range(8):
         owner_denied = client.post("/auth/login", json=owner)
         assert owner_denied.status_code == 401, owner_denied.text
         assert owner_denied.json()["error"]["code"] == "invalid_credentials"
@@ -167,8 +164,8 @@ def test_login_locks_after_repeated_failures(client: TestClient) -> None:
     assert locked_owner.json()["error"]["code"] == "rate_limited"
 
     locked_member = client.post("/auth/member/login", json=member)
-    assert locked_member.status_code == 429, locked_member.text
-    assert locked_member.json()["error"]["code"] == "rate_limited"
+    assert locked_member.status_code == 401, locked_member.text
+    assert locked_member.json()["error"]["code"] == "invalid_credentials"
 
     still_locked = client.post(
         "/auth/login",
