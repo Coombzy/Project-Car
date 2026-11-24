@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,6 +20,8 @@ class Settings(BaseSettings):
         description="SQLAlchemy URL for shop Postgres (never Nextcloud MariaDB).",
     )
     owner_email: str = "owner@projectcar.ca"
+    # Local dev only: allows the placeholder secrets below and serves the docs routes.
+    shop_dev_mode: bool = False
     owner_password: str = "changeme"
     owner_api_secret: str = "dev-owner-secret"
     ai_api_secret: str = "dev-ai-secret"
@@ -31,7 +33,7 @@ class Settings(BaseSettings):
     # Demo Member password stub. Email must match an existing member row.
     # Not OIDC. Staff OIDC can replace this later without rewriting shop tables.
     member_demo_password: str = "changeme"
-    cookie_secure: bool = False
+    cookie_secure: bool | None = None  # None: resolved from shop_dev_mode below
     # Header that carries the real client address for the login and waitlist caps.
     # Empty: key on the TCP peer. No header name is hard-coded.
     client_ip_header: str = ""
@@ -78,6 +80,12 @@ class Settings(BaseSettings):
         """Comma-separated origins. `*` is dropped so the API is never wide open."""
         return [origin for origin in (item.strip() for item in value.split(",")) if origin and origin != "*"]
 
+    @model_validator(mode="after")
+    def resolve_cookie_secure(self) -> "Settings":
+        if self.cookie_secure is None:
+            self.cookie_secure = not self.shop_dev_mode
+        return self
+
     @property
     def cors_origin_list(self) -> list[str]:
         return self._split_origins(self.cors_origins)
@@ -103,3 +111,23 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+
+
+# Placeholder secrets that must never boot outside local dev.
+_DEMO_SECRETS = ("dev-owner-secret", "dev-ai-secret", "dev-session-secret-change-me", "changeme")
+
+
+def assert_runtime_secrets(settings: Settings) -> None:
+    """Refuse to start on placeholder secrets unless SHOP_DEV_MODE=1. Never names the value."""
+    if settings.shop_dev_mode:
+        return
+    for name, length in (
+        ("owner_api_secret", 32), ("ai_api_secret", 32),
+        ("session_secret", 32), ("owner_password", 12), ("member_demo_password", 12),
+    ):
+        value = getattr(settings, name)
+        if len(value) < length or value in _DEMO_SECRETS or value.startswith("CHANGE_ME"):
+            raise RuntimeError(
+                f"Refusing to start: {name} is a placeholder or too short. "
+                "Set a real value, or SHOP_DEV_MODE=1 for local dev only."
+            )
