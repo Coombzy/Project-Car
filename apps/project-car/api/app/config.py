@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     # Demo Member password stub. Email must match an existing member row.
     # Not OIDC. Staff OIDC can replace this later without rewriting shop tables.
     member_demo_password: str = "changeme"
-    cookie_secure: bool = False
+    cookie_secure: bool | None = None  # None: resolved from shop_dev_mode below
     # Header that carries the real client address for the login and waitlist caps.
     # Empty: key on the TCP peer. No header name is hard-coded.
     client_ip_header: str = ""
@@ -67,6 +67,12 @@ class Settings(BaseSettings):
     @classmethod
     def normalize_owner_email(cls, value: str) -> str:
         return str(value).strip().lower()
+
+    @model_validator(mode="after")
+    def resolve_cookie_secure(self) -> "Settings":
+        if self.cookie_secure is None:
+            self.cookie_secure = not self.shop_dev_mode
+        return self
 
     @property
     def cors_origin_list(self) -> list[str]:
