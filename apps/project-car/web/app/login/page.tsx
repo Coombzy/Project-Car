@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { demoPassword, showDemoLoginHints } from "../../lib/demo-login";
 import { safeOwnerNext } from "../../lib/safe-next";
 import { LoginForm } from "./login-form";
 
@@ -10,6 +11,7 @@ export default async function LoginPage({
 }) {
   const params = await searchParams;
   const nextPath = safeOwnerNext(params.next);
+  const hints = showDemoLoginHints();
 
   return (
     <main>
@@ -26,15 +28,20 @@ export default async function LoginPage({
           <div>
             Email <code>owner@projectcar.ca</code>
           </div>
-          <div>
-            Password <code>changeme</code>
-          </div>
+          {hints ? (
+            <div>
+              Password <code>{demoPassword}</code>
+            </div>
+          ) : null}
           Sample data only. No live Stripe. Members do not get Nextcloud accounts.
         </div>
         {params.reason === "session" ? (
           <p className="banner error">Session expired. Sign in again.</p>
         ) : null}
-        <LoginForm nextPath={nextPath} />
+        <LoginForm
+          nextPath={nextPath}
+          {...(hints ? { defaultPassword: demoPassword } : {})}
+        />
         <p className="muted" style={{ marginTop: "1.2rem" }}>
           Temporary Member demo is still on{" "}
           <Link href="/member/login">/member/login</Link>{" "}
