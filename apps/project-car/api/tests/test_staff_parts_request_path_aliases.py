@@ -4,7 +4,8 @@ POST, approve, and deny on /parts-requests stay aliases of the same handlers.
 GET and PATCH /parts-requests stay the member desk.
 """
 
-from fastapi.routing import APIRoute
+from collections.abc import Iterable
+
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -16,12 +17,26 @@ SKU = "PT-OIL-5W30-012"
 
 
 def _endpoints() -> dict[tuple[str, str], object]:
+    """Mounted routes. FastAPI 0.165 nests included routers; older builds do not."""
     found: dict[tuple[str, str], object] = {}
-    for route in app.routes:
-        if isinstance(route, APIRoute):
-            for method in route.methods or ():
-                if method != "HEAD":
-                    found[(method, route.path)] = route.endpoint
+
+    def walk(routes: Iterable[object]) -> None:
+        for route in routes:
+            methods = getattr(route, "methods", None)
+            path = getattr(route, "path", None)
+            endpoint = getattr(route, "endpoint", None)
+            if methods and path and endpoint is not None:
+                for method in methods:
+                    if method != "HEAD":
+                        found[(method, path)] = endpoint
+            nested = getattr(route, "routes", None)
+            if nested:
+                walk(nested)
+            original = getattr(route, "original_router", None)
+            if original is not None:
+                walk(original.routes)
+
+    walk(app.routes)
     return found
 
 
