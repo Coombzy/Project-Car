@@ -1,8 +1,12 @@
+import type { Metadata } from "next";
+
 import { OwnerShell } from "../../components/owner-shell";
 import { handlePageError } from "../../lib/page";
 import { getMe, listFillOutbox, previewFill } from "../../lib/shop-api";
 import { formatShopDateTime, formatShopTime, tokensLabel } from "../../lib/time";
 import { notifyFillAction } from "./actions";
+
+export const metadata: Metadata = { title: "Fill the gaps" };
 
 export const dynamic = "force-dynamic";
 

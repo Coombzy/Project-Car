@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ChatThread } from "../../../components/chat-thread";
@@ -5,6 +6,8 @@ import { OwnerShell } from "../../../components/owner-shell";
 import { handlePageError } from "../../../lib/page";
 import { getChatRoom, getMe, listChatMessages } from "../../../lib/shop-api";
 import { muteRoomAction, pollOwnerMessages, sendOwnerMessage } from "../actions";
+
+export const metadata: Metadata = { title: "Shop chat" };
 
 export const dynamic = "force-dynamic";
 

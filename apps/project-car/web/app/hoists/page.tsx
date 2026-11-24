@@ -1,8 +1,12 @@
+import type { Metadata } from "next";
+
 import { OwnerShell } from "../../components/owner-shell";
 import { StatusPill } from "../../components/status-pill";
 import { handlePageError } from "../../lib/page";
 import { getMe, listHoists } from "../../lib/shop-api";
 import { createHoistAction, patchHoistAction } from "./actions";
+
+export const metadata: Metadata = { title: "Hoists" };
 
 export const dynamic = "force-dynamic";
 

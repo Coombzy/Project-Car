@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { MemberRequestDesk } from "../../../components/member-request-desk";
 import { MemberShell } from "../../../components/member-shell";
 import { PlaceholderNote } from "../../../components/placeholder-note";
@@ -5,6 +7,8 @@ import type { PartsRequest } from "../../../lib/config";
 import { handleMemberPageError } from "../../../lib/page";
 import { getMemberMe, listMemberPartsRequests } from "../../../lib/shop-api";
 import { createMemberPartsRequestAction } from "./actions";
+
+export const metadata: Metadata = { title: "Parts requests" };
 
 export const dynamic = "force-dynamic";
 

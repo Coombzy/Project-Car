@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { InventoryKitNav } from "../../components/inventory-kit-nav";
 import { OwnerShell } from "../../components/owner-shell";
 import { PlaceholderNote } from "../../components/placeholder-note";
@@ -16,6 +18,8 @@ import {
   parseKitParam,
 } from "../../lib/inventory";
 import { getMe, listMembers, listToolCribEvents } from "../../lib/shop-api";
+
+export const metadata: Metadata = { title: "Tools" };
 
 export const dynamic = "force-dynamic";
 

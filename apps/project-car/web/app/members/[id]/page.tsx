@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -10,6 +11,8 @@ import { getMe, getMember, listMemberTokens, listTiers } from "../../../lib/shop
 import { reserveFactors } from "../../../lib/pricing-math";
 import { formatShopDateTime, tokensLabel } from "../../../lib/time";
 import { adjustTokensAction, patchMemberAction, rebuildTokensAction } from "../actions";
+
+export const metadata: Metadata = { title: "Member" };
 
 export const dynamic = "force-dynamic";
 

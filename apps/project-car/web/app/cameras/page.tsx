@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { CameraTile } from "../../components/camera-tile";
 import { OwnerShell } from "../../components/owner-shell";
 import { PlaceholderNote } from "../../components/placeholder-note";
@@ -8,6 +10,8 @@ import {
   SAMPLE_DOOR_LOGS,
 } from "../../lib/placeholders";
 import { getMe } from "../../lib/shop-api";
+
+export const metadata: Metadata = { title: "Cameras" };
 
 export const dynamic = "force-dynamic";
 
