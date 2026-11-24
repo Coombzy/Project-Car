@@ -100,4 +100,7 @@ def test_account_backoff_expires(client: TestClient, monkeypatch: pytest.MonkeyP
     assert _hit(client, "/auth/login", ip, body=body) == 429
     clock["now"] += 60 + 1
     assert _hit(client, "/auth/login", ip, body=body) == 401
-    assert _account_key("owner", "expire@example.com") not in _account_failures or _account_failures[_account_key("owner", "expire@example.com")][0] == 1
+    assert _account_failures[_account_key("owner", "expire@example.com")][0] == 7
+    assert _hit(client, "/auth/login", ip, body=body) == 429
+    clock["now"] += 120
+    assert _hit(client, "/auth/login", ip, body=body) == 401

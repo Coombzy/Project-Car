@@ -352,13 +352,14 @@ def _account_backoff_seconds(failures: int) -> int:
 
 
 def _expire_account_failure(key: tuple[str, str], now: float) -> tuple[int, float]:
-    """Drop a stale account key under the caller-held lock. Returns the live count."""
+    """Drop a stale pre-backoff account key under the caller-held lock. Returns the live count."""
     count, seen = _account_failures.get(key, (0, 0.0))
     if not count:
         return 0, now
     wait = _account_backoff_seconds(count)
-    limit = wait if wait else _LOGIN_FAILURE_WINDOW_SECONDS
-    if now - seen >= limit:
+    if wait:
+        return count, seen
+    if now - seen >= _LOGIN_FAILURE_WINDOW_SECONDS:
         _account_failures.pop(key, None)
         return 0, now
     return count, seen
