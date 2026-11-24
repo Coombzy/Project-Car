@@ -141,12 +141,36 @@ def get_parts_request(session: Session, request_id: UUID) -> StaffPartsRequest:
     return row
 
 
+def _locked_pending(session: Session, model: type, request_id: UUID, *, missing: str):
+    """Lock the row, then require it still be pending.
+
+    On Postgres, FOR UPDATE holds until commit, so a second decision waits
+    and then sees the status the first one stored. SQLite drops the clause.
+    ``populate_existing`` refreshes a row this session already loaded so the
+    status check is not the pre-lock copy.
+    """
+    row = session.scalars(
+        select(model)
+        .where(model.id == request_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).first()
+    if row is None:
+        raise _error(404, "not_found", missing)
+    if row.status != ShopHoistRequestStatus.PENDING:
+        raise _error(409, "request_already_decided", "This request was already decided.")
+    return row
+
+
 def decide_parts_request(
     session: Session, request_id: UUID, principal: Principal, *, approve: bool
 ) -> tuple[StaffPartsRequest, StaffAction]:
-    row = get_parts_request(session, request_id)
-    if row.status != ShopHoistRequestStatus.PENDING:
-        raise _error(400, "invalid_transition", "Only a pending parts request can be decided.")
+    row = _locked_pending(
+        session,
+        StaffPartsRequest,
+        request_id,
+        missing="Parts request not found.",
+    )
     if approve:
         reject_own_request(principal, row.created_by_kind, row.created_by_id)
     _stamp_decision(
@@ -198,9 +222,12 @@ def get_tool_crib_exception(session: Session, request_id: UUID) -> ToolCribExcep
 def decide_tool_crib_exception(
     session: Session, request_id: UUID, principal: Principal, *, approve: bool
 ) -> tuple[ToolCribException, StaffAction]:
-    row = get_tool_crib_exception(session, request_id)
-    if row.status != ShopHoistRequestStatus.PENDING:
-        raise _error(400, "invalid_transition", "Only a pending tool crib exception can be decided.")
+    row = _locked_pending(
+        session,
+        ToolCribException,
+        request_id,
+        missing="Tool crib exception not found.",
+    )
     if approve:
         reject_own_request(principal, row.created_by_kind, row.created_by_id)
     _stamp_decision(
@@ -233,19 +260,12 @@ def create_job(session: Session, *, title: str, notes: str | None, token_bounty)
     return row
 
 
-def get_job(session: Session, job_id: UUID) -> ShopJob:
-    row = session.get(ShopJob, job_id)
-    if row is None:
-        raise _error(404, "not_found", "Job not found.")
-    return row
-
-
 def claim_job(session: Session, job_id: UUID, member_id: UUID) -> ShopJob:
     """Lock the job row, then claim it if it is open or sent back.
 
     On Postgres, ``FOR UPDATE`` holds until commit, so a second claim waits
     and then sees the status the first claim stored. SQLite drops the clause.
-    ``get_job`` stays unlocked for complete and send-back. ``populate_existing``
+    Complete and send-back take the same lock. ``populate_existing``
     refreshes a job this session already loaded so the status check is not
     the pre-lock copy.
     """
@@ -267,14 +287,32 @@ def claim_job(session: Session, job_id: UUID, member_id: UUID) -> ShopJob:
     return job
 
 
-def _require_claimed(job: ShopJob) -> None:
+def _locked_claimed_job(session: Session, job_id: UUID) -> ShopJob:
+    """Lock the job, then refuse a second done or send-back.
+
+    On Postgres, FOR UPDATE holds until commit, so a second decision waits
+    and then sees the status the first one stored. SQLite drops the clause.
+    ``populate_existing`` refreshes a job this session already loaded so the
+    status check is not the pre-lock copy. Done or sent back is 409
+    ``job_already_decided``. An open job stays 400 ``job_not_claimed``.
+    """
+    job = session.scalars(
+        select(ShopJob)
+        .where(ShopJob.id == job_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).first()
+    if job is None:
+        raise _error(404, "not_found", "Job not found.")
+    if job.status in (ShopJobStatus.DONE, ShopJobStatus.SENT_BACK):
+        raise _error(409, "job_already_decided", "This job was already decided.")
     if job.status != ShopJobStatus.CLAIMED:
         raise _error(400, "job_not_claimed", "Only a claimed job can be finished or sent back.")
+    return job
 
 
 def complete_job(session: Session, job_id: UUID, principal: Principal) -> tuple[ShopJob, StaffAction]:
-    job = get_job(session, job_id)
-    _require_claimed(job)
+    job = _locked_claimed_job(session, job_id)
     job.status = ShopJobStatus.DONE
     session.add(job)
     action = record_action(
@@ -288,8 +326,7 @@ def complete_job(session: Session, job_id: UUID, principal: Principal) -> tuple[
 
 
 def send_back_job(session: Session, job_id: UUID, principal: Principal) -> tuple[ShopJob, StaffAction]:
-    job = get_job(session, job_id)
-    _require_claimed(job)
+    job = _locked_claimed_job(session, job_id)
     job.status = ShopJobStatus.SENT_BACK
     session.add(job)
     action = record_action(
