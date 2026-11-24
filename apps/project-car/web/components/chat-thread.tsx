@@ -104,6 +104,7 @@ export function ChatThread({
     setSending(true);
     try {
       const message = await sendMessage(room.id, body);
+      stickRef.current = true;
       setMessages((prev) => (prev.some((row) => row.id === message.id) ? prev : [...prev, message]));
       cursorRef.current = message.id;
       form.reset();
