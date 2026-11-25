@@ -20,4 +20,4 @@ Operators should run the restore drill monthly with `scripts/restore-drill.sh`.
 
 The drill dumps `DATABASE_URL` to a temp file, then restores into the throwaway database `projectcar_restore_check` only. It drops and creates that literal name. The source database is never dropped.
 
-Before any client connection, the script exits 2 with `refusing: source database would not be dropped` when the source name is `projectcar_restore_check`, when `RESTORE_TARGET_DB` is set to the source name, or when the throwaway URL would still name the source. Same-name refusal is what keeps the source from being dropped.
+Before any client connection, the script exits 2 with `refusing: source database would be dropped` when the source name is `projectcar_restore_check`, when `RESTORE_TARGET_DB` is set to the source name, or when the throwaway URL would still name the source. Same-name refusal is what keeps the source from being dropped.

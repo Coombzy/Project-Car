@@ -12,11 +12,11 @@ source_db=${source_db%%\?*}
 target=projectcar_restore_check
 
 if [ "$source_db" = "$target" ]; then
-  echo "refusing: source database would not be dropped" >&2
+  echo "refusing: source database would be dropped" >&2
   exit 2
 fi
 if [ -n "${RESTORE_TARGET_DB:-}" ] && [ "$RESTORE_TARGET_DB" = "$source_db" ]; then
-  echo "refusing: source database would not be dropped" >&2
+  echo "refusing: source database would be dropped" >&2
   exit 2
 fi
 
@@ -28,7 +28,7 @@ esac
 target_url="${pathless%/*}/${target}${query}"
 case $target_url in
   */"$source_db"|*/"$source_db"\?*)
-    echo "refusing: source database would not be dropped" >&2
+    echo "refusing: source database would be dropped" >&2
     exit 2
     ;;
 esac

@@ -64,7 +64,7 @@ def run_restore(env):
     out = proc.stdout + proc.stderr
     if proc.returncode != 2:
         fail("restore-drill exit %s, want 2: %s" % (proc.returncode, out))
-    if "would not be dropped" not in out:
+    if "would be dropped" not in out:
         fail("missing source refusal: " + out)
     if re.search(r"(?i)(drop database|pg_dump|pg_restore|successfully dropped)", out):
         fail("printed a successful drop of the source: " + out)
