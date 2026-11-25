@@ -34,6 +34,7 @@ const OWNER_PAGES: Shot[] = [
   { name: "home", path: "/" },
   { name: "cameras", path: "/cameras" },
   { name: "chat", path: "/chat" },
+  { name: "drafts", path: "/drafts" },
   { name: "fill", path: "/fill" },
   { name: "hoists", path: "/hoists" },
   { name: "jobs", path: "/jobs" },
