@@ -40,8 +40,8 @@ def main() -> int:
     if "uvicorn" not in api.lower() or "alembic" not in api.lower():
         print("api Dockerfile must mention uvicorn and alembic", file=sys.stderr)
         return 1
-    if "next" not in web.lower():
-        print("web Dockerfile must mention next", file=sys.stderr)
+    if "next" not in web.lower() or "0.0.0.0" not in web:
+        print("web Dockerfile must mention next and bind 0.0.0.0", file=sys.stderr)
         return 1
     print("ok")
     return 0
