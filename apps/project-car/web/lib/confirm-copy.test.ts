@@ -12,6 +12,14 @@ describe("R125 confirm copy", () => {
     assert.equal(grantConfirmText(1, 100), "Grant 100 tokens to 1 active member?");
   });
 
+  it("uses token when the grant amount is one", () => {
+    assert.equal(grantConfirmText(23, 1), "Grant 1 token to 23 active members?");
+  });
+
+  it("uses token and member when both counts are one", () => {
+    assert.equal(grantConfirmText(1, 1), "Grant 1 token to 1 active member?");
+  });
+
   it("names both multiplier values before the change", () => {
     assert.equal(multiplierConfirmText(1, 1.2), "Change the multiplier from 1 to 1.2?");
   });
