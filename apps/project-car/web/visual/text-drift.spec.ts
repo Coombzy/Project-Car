@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { SESSION_COOKIE } from "../lib/config";
 import { tokensLabel } from "../lib/time";
-import { OFFICIAL_1440_BODY } from "../lib/visual-text-drift";
+import { OFFICIAL_1440_BODY, officialStaleHits } from "../lib/visual-text-drift";
 
 const API = "http://127.0.0.1:8000";
 const WEB = "http://127.0.0.1:3000";
@@ -38,6 +38,7 @@ async function open(page: Page, path: string): Promise<void> {
   expect(response, path).not.toBeNull();
   expect(response?.status(), path).toBeLessThan(400);
   expect(page.url(), path).not.toContain("/login");
+  expect(officialStaleHits(await page.locator("body").innerText()), path).toEqual([]);
 }
 
 test("1440 owner body matches the frozen clock", async ({ page, context }, testInfo) => {

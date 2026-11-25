@@ -21,10 +21,14 @@ describe("officialBodyDrift", () => {
     assert.deepEqual(officialBodyDrift(body), []);
   });
 
-  it("does not let a longer label satisfy a shorter band", () => {
-    assert.ok(officialBodyDrift("Tokens at risk 1\nAda 375.00\nOFF-PEAK\nNORMAL\nEVENING").includes("PEAK"));
+  it("does not let a known longer label satisfy a shorter band", () => {
+    const official = "Tokens at risk 1\nAda 375.00\nOFF-PEAK\nNORMAL\nEVENING\nPEAK";
+    assert.ok(!officialBodyDrift(official.replace("EVENING", "Band EVENING")).includes("EVENING"));
+    assert.ok(officialBodyDrift(`${official}\nx WEEKEND`).includes("WEEKEND"));
+    const weekday = officialBodyDrift("WEEKDAY EVENING");
+    assert.ok(weekday.includes("EVENING") && weekday.includes("WEEKDAY EVENING"));
     assert.ok(officialBodyDrift("OFF-PEAK").includes("PEAK"));
-    assert.ok(officialBodyDrift("WEEKDAY EVENING").includes("EVENING"));
+    assert.ok(officialBodyDrift("Tokens at risk 1\nAda 375.00\nOFF-PEAK\nNORMAL\nEVENING").includes("PEAK"));
   });
 
   it("counts 156.25, Tokens at risk 3, and the long band names as drift", () => {
