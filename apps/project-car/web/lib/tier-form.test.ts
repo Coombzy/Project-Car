@@ -22,21 +22,12 @@ describe("parseTierForm", () => {
 
   it("refuses a blank display name, pricing, 10000, and bad integers", () => {
     const refused = [
-      { display_name: "" },
-      { display_name: "   " },
-      { name: "pricing" },
-      { name: " Pricing " },
-      { name: "PRICING" },
+      { display_name: "" }, { display_name: "   " }, { display_name: "x".repeat(121) },
+      { name: "pricing" }, { name: " Pricing " }, { name: "PRICING" }, { name: "a".repeat(65) }, { name: "-x" },
       { price: "10000" },
-      { included_tokens: "" },
-      { included_tokens: null },
-      { included_tokens: "100001" },
-      { included_tokens: "-1" },
-      { booking_window_days: "0" },
-      { booking_window_days: "366" },
-      { booking_window_days: "14.5" },
-      { max_simultaneous_bookings: "" },
-      { max_simultaneous_bookings: "21" },
+      { included_tokens: "" }, { included_tokens: null }, { included_tokens: "100001" }, { included_tokens: "-1" },
+      { booking_window_days: "0" }, { booking_window_days: "366" }, { booking_window_days: "14.5" },
+      { max_simultaneous_bookings: "" }, { max_simultaneous_bookings: "21" },
     ];
     for (const patch of refused) {
       assert.equal(parseTierForm({ ...good, ...patch }).ok, false);
@@ -65,21 +56,12 @@ describe("parseTierForm", () => {
         notes: "bay 2",
       },
     );
-    const bare = parseTierForm(good);
+    const bare = parseTierForm({ ...good, notes: "   " });
     assert.equal(bare.ok, true);
-    if (bare.ok) {
-      assert.equal(bare.notes, null);
-    }
-    assert.equal(
-      parseTierForm({
-        ...good,
-        price: "9999.99",
-        included_tokens: "0",
-        booking_window_days: "365",
-        max_simultaneous_bookings: "20",
-        notes: "   ",
-      }).ok,
-      true,
-    );
+    if (bare.ok) assert.equal(bare.notes, null);
+    assert.equal(parseTierForm({ ...good, price: "0", included_tokens: "0", booking_window_days: "1", max_simultaneous_bookings: "1" }).ok, true);
+    assert.equal(parseTierForm({
+      ...good, price: "9999.99", included_tokens: "100000", booking_window_days: "365", max_simultaneous_bookings: "20",
+    }).ok, true);
   });
 });
