@@ -46,8 +46,8 @@ describe("expired session leaves the Server Component", () => {
     const middleware = read("../middleware.ts");
     assert.doesNotMatch(middleware, /session-expired/);
     assert.match(middleware, /function cookieLooksPlausible\(/);
-    assert.match(middleware, /"\/logout\/expired"/);
-    assert.match(middleware, /"\/member\/logout\/expired"/);
+    assert.match(middleware, /isMemberArea && path !== memberExpired && memberSession && !cookieLooksPlausible\(memberSession\)/);
+    assert.match(middleware, /!isMemberArea && !isSignup && path !== ownerExpired && ownerSession && !cookieLooksPlausible\(ownerSession\)/);
   });
 
   it("handlers clear the matching cookie and do not catch redirect", () => {

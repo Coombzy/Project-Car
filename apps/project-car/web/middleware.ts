@@ -52,14 +52,12 @@ export function middleware(request: NextRequest) {
   const isMemberArea = path === "/member" || path.startsWith("/member/");
   const ownerExpired = "/logout/expired";
   const memberExpired = "/member/logout/expired";
-  // The handler must run to clear the cookie. Signup stays as it is.
-  if (!isSignup && path !== ownerExpired && path !== memberExpired) {
-    if (ownerSession && !cookieLooksPlausible(ownerSession)) {
-      return redirect(redirectTo(request, ownerExpired));
-    }
-    if (memberSession && !cookieLooksPlausible(memberSession)) {
-      return redirect(redirectTo(request, memberExpired));
-    }
+  // Only this audience. A bad cookie for the other audience stays until its own path.
+  if (isMemberArea && path !== memberExpired && memberSession && !cookieLooksPlausible(memberSession)) {
+    return redirect(redirectTo(request, memberExpired));
+  }
+  if (!isMemberArea && !isSignup && path !== ownerExpired && ownerSession && !cookieLooksPlausible(ownerSession)) {
+    return redirect(redirectTo(request, ownerExpired));
   }
 
   if (isMemberLogin) {
