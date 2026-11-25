@@ -34,5 +34,8 @@ describe("groupRequests", () => {
     for (const needle of ['shop_hoist: "/shop-hoist-requests"', 'parts: "/staff/parts-requests"', 'tool_crib: "/tool-crib-exceptions"', "${pathSegment(id)}"]) assert.equal(api.includes(needle), true, needle);
     for (const needle of ["listStaffRequests(", "getMe(", "handlePageError", 'current="fill"', "No pending requests.", "member_name", "member_id", "hoist_name", "sku", "tool_code", "Approve", "Deny"]) assert.equal(page.includes(needle), true, needle);
     for (const needle of ["decideRequest(", 'revalidatePath("/requests")', "/requests?notice=", "ShopApiError", "/requests?error="]) assert.equal(actions.includes(needle), true, needle);
+    assert.match(page, /type="hidden" name="decision" value="approve"/);
+    assert.match(page, /type="hidden" name="decision" value="deny"/);
+    assert.doesNotMatch(page, /<button[^>]*name="decision"/);
   });
 });
