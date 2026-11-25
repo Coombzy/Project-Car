@@ -63,6 +63,7 @@ dirty=$(git status --porcelain)
 run_default() {
   ( cd "$ROOT/apps/project-car/api" && pytest -q ) || return $?
   ( cd "$ROOT/apps/project-car/web" && npm run lint && npm test ) || return $?
+  # RED: default proof does not yet call scripts/selftest-scripts.sh
 }
 
 if [[ "$RUN_TESTS" -eq 1 ]]; then
