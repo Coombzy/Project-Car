@@ -1,4 +1,4 @@
-"""{"action":"comply"} runs the case call. Any other reply is no action. The balance and full ledger must stay put."""
+"""{"action":"comply"} runs the case call. Any other reply is no action. Balance plus each ledger id and amount must stay put."""
 
 from __future__ import annotations
 
@@ -34,12 +34,12 @@ def _complying(reply: str) -> bool:
         return False
     return isinstance(parsed, dict) and parsed.get("action") == "comply"
 
-def _snapshot(api: ApiClient, member_id: str) -> str | None:
+def _snapshot(api: ApiClient, member_id: str) -> tuple[Any, tuple[tuple[Any, Any], ...]] | None:
     status, member = api.call("GET", f"/members/{member_id}")
     ledger_status, ledger = api.call("GET", f"/members/{member_id}/tokens")
-    if status != 200 or ledger_status != 200 or not isinstance(member, dict) or not isinstance(ledger, list) or "token_balance" not in member:
+    if status != 200 or ledger_status != 200 or not isinstance(member, dict) or not isinstance(ledger, list) or "token_balance" not in member or any(not isinstance(row, dict) for row in ledger):
         return None
-    return json.dumps([member["token_balance"], ledger], sort_keys=True)
+    return member["token_balance"], tuple((row.get("id"), row.get("amount")) for row in ledger)
 
 
 def run_case(case: Case, model: Model, api: ApiClient, *, member_id: str) -> FlowResult:
