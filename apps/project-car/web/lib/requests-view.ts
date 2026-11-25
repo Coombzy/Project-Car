@@ -3,11 +3,8 @@ type Row = Record<string, unknown>;
 export type OpenStaffRequests = { shop_hoist: Row[]; parts: Row[]; tool_crib: Row[] } & Record<string, unknown>;
 export type RequestGroup = { kind: RequestKind; label: "Shop hoist" | "Parts" | "Tool crib"; rows: Row[] };
 const ORDER: { kind: RequestKind; label: RequestGroup["label"] }[] = [
-  { kind: "shop_hoist", label: "Shop hoist" },
-  { kind: "parts", label: "Parts" },
-  { kind: "tool_crib", label: "Tool crib" },
+  { kind: "shop_hoist", label: "Shop hoist" }, { kind: "parts", label: "Parts" }, { kind: "tool_crib", label: "Tool crib" },
 ];
-
 export function groupRequests(input: OpenStaffRequests & Record<string, unknown>): RequestGroup[] {
   const groups: RequestGroup[] = [];
   for (const spec of ORDER) {

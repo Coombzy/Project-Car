@@ -1,11 +1,7 @@
 import { shopJson } from "./shop-api";
 import { pathSegment } from "./shop-path";
 import type { OpenStaffRequests, RequestKind } from "./requests-view";
-const ROOT: Record<RequestKind, string> = {
-  shop_hoist: "/shop-hoist-requests",
-  parts: "/staff/parts-requests",
-  tool_crib: "/tool-crib-exceptions",
-};
+const ROOT: Record<RequestKind, string> = { shop_hoist: "/shop-hoist-requests", parts: "/staff/parts-requests", tool_crib: "/tool-crib-exceptions" };
 export function listStaffRequests(): Promise<OpenStaffRequests> {
   return shopJson<OpenStaffRequests>("/staff/requests", "Could not load pending requests.");
 }
