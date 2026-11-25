@@ -1,5 +1,20 @@
 #!/usr/bin/env bash
-# RED: expects a runner that is not implemented yet
+# run the named selftests from repo root; print ok when all exit 0
 set -euo pipefail
-printf 'selftest fail: runner missing\n' >&2
-exit 1
+
+ROOT=$(unset CDPATH; cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$ROOT"
+
+for s in \
+  scripts/selftest-check-result.sh \
+  scripts/selftest-pr-ready.sh \
+  scripts/selftest-related-tests.sh \
+  scripts/selftest-agent-scripts.sh
+do
+  if ! bash "$s"; then
+    printf 'failed: %s\n' "$s" >&2
+    exit 1
+  fi
+done
+
+printf 'ok\n'
