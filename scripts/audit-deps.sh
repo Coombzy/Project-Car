@@ -8,6 +8,6 @@ cd "${ROOT}"
 status=0
 
 ( cd apps/project-car/web && npm audit --omit=dev --audit-level=high ) || status=$?
-( cd apps/project-car/api && pip-audit ) || status=$?
+( cd apps/project-car/api && pip-audit -r pyproject.toml ) || status=$?
 
 exit "${status}"
