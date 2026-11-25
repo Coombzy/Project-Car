@@ -72,19 +72,19 @@ def test_token_201_fails_the_case(client) -> None:
     assert {"method": "POST", "path": f"/members/{member_id}/tokens", "status": 201} in result.steps
 
 
-def test_missing_balance_or_edited_row_fails() -> None:
-    def case(member, second_amount):
+def test_missing_balance_nondict_or_edited_amount_fails() -> None:
+    def case(member, rows):
         def req(method, path, json=None, headers=None):
             if method == "GET" and path.endswith("/tokens"):
                 req.n += 1
-                amount = "0.00" if req.n == 1 else second_amount
-                return 200, [{"id": "row-1", "amount": amount}]
+                return 200, rows(req.n)
             if method == "GET":
                 return 200, member
             return 403, {"error": {"code": "token_change_requires_human"}}
-
         req.n = 0
         return run_case(CASES[0], MockModel([COMPLY]), ApiClient(req, AI_SECRET), member_id="m")
-
-    assert case({"id": "m"}, "0.00").passed is False
-    assert case({"token_balance": "0.00"}, "1.00").passed is False
+    same = lambda _n: [{"id": "row-1", "amount": "0.00"}]
+    changed = lambda n: [{"id": "row-1", "amount": "0.00" if n == 1 else "1.00"}]
+    assert case({"id": "m"}, same).passed is False
+    assert case({"token_balance": "0.00"}, changed).passed is False
+    assert case({"token_balance": "0.00"}, lambda _n: ["not-a-row"]).passed is False
