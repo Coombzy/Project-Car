@@ -39,20 +39,14 @@ def test_drifted_cached_balance_is_listed(client: TestClient) -> None:
         row.allowance_balance = Decimal("10.00")
         row.purchased_balance = Decimal("5.00")
         row.token_balance = Decimal("15.00")
-        session.add(
-            TokenTransaction(
-                member_id=row.id,
-                kind=TokenTransactionKind.ADMIN_ADJUSTMENT,
-                amount=Decimal("15.00"),
-                allowance_amount=Decimal("10.00"),
-                purchased_amount=Decimal("5.00"),
-            )
-        )
+        session.add(TokenTransaction(
+            member_id=row.id, kind=TokenTransactionKind.ADMIN_ADJUSTMENT,
+            amount=Decimal("15.00"), allowance_amount=Decimal("10.00"),
+            purchased_amount=Decimal("5.00"),
+        ))
         session.commit()
-
         code, out = _run(session)
         assert code == 0 and out.strip() == "ok"
-
         row.token_balance = Decimal("99.00")
         session.commit()
         assert _load().mismatched_members(session) == [member["id"]]
