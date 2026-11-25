@@ -60,6 +60,8 @@ def login(
     settings: AppSettings,
 ) -> PrincipalOut:
     client_ip, stamp = _guard_login(request, settings, "owner", str(body.email))
+    # Same scrypt cost on every owner outcome. The dummy hash is not a password.
+    verify_password(body.password, DUMMY_MEMBER_PASSWORD_HASH)
     # Default demo owner password is the same 401 as a wrong password outside dev mode.
     if body.password == "changeme" and not settings.shop_dev_mode:
         raise _invalid_credentials()
