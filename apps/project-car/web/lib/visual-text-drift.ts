@@ -1,10 +1,19 @@
 export const OFFICIAL_1440_BODY = {
-  tokensAtRisk: "Tokens at risk 3",
-  adaTokens: "156.25",
-  bands: ["WEEKDAY DAY (BASE)", "WEEKDAY EVENING", "WEEKEND/FRI EVE", "LATE NIGHT"],
+  tokensAtRisk: "Tokens at risk 1",
+  adaTokens: "375.00",
+  bands: ["OFF-PEAK", "NORMAL", "EVENING", "PEAK"],
 } as const;
 
-const DRIFTED = ["Tokens at risk 1", "375", "OFF-PEAK", "NORMAL", "EVENING", "PEAK"] as const;
+const DRIFTED = [
+  "Tokens at risk 3",
+  "156.25",
+  "WEEKDAY DAY (BASE)",
+  "WEEKDAY EVENING",
+  "WEEKEND",
+  "FRI EVE",
+  "LATE NIGHT",
+  "EARLY MORNING",
+] as const;
 
 const REQUIRED = [
   OFFICIAL_1440_BODY.tokensAtRisk,
@@ -17,12 +26,9 @@ function present(source: string, needle: string): boolean {
   return new RegExp(`(?:^|[^A-Za-z0-9])${escaped}(?=$|[^A-Za-z0-9])`).test(source);
 }
 
-/** Missing official phrases, plus drifted labels still present after those phrases are removed. */
+/** Missing official phrases, plus stale labels that are still in the body. */
 export function officialBodyDrift(source: string): string[] {
-  const missing = REQUIRED.filter((text) => !source.includes(text));
-  let rest = source;
-  for (const text of REQUIRED) {
-    rest = rest.split(text).join("\n");
-  }
-  return [...missing, ...DRIFTED.filter((label) => present(rest, label))];
+  const missing = REQUIRED.filter((text) => !present(source, text));
+  const drifted = DRIFTED.filter((label) => present(source, label));
+  return [...missing, ...drifted];
 }

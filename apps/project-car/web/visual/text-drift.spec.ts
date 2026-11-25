@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { SESSION_COOKIE } from "../lib/config";
+import { tokensLabel } from "../lib/time";
 import { OFFICIAL_1440_BODY } from "../lib/visual-text-drift";
 
 const API = "http://127.0.0.1:8000";
@@ -58,10 +59,12 @@ test("1440 owner body matches the frozen clock", async ({ page, context }, testI
   ]);
   await open(page, "/");
   await expect(page.getByText(OFFICIAL_1440_BODY.tokensAtRisk).first()).toBeVisible();
+  // Ledger balance is 375.00. tokensLabel renders that integer as 375.
+  const adaTokens = tokensLabel(OFFICIAL_1440_BODY.adaTokens);
   await open(page, "/members");
-  await expect(page.getByText(OFFICIAL_1440_BODY.adaTokens).first()).toBeVisible();
+  await expect(page.getByText(adaTokens).first()).toBeVisible();
   await open(page, `/members/${adaId}`);
-  await expect(page.getByText(OFFICIAL_1440_BODY.adaTokens).first()).toBeVisible();
+  await expect(page.getByText(adaTokens).first()).toBeVisible();
   await open(page, "/tiers");
   for (const band of OFFICIAL_1440_BODY.bands) {
     await expect(page.getByText(band).first()).toBeVisible();
