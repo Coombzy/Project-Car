@@ -42,10 +42,12 @@ describe("expired session leaves the Server Component", () => {
     assert.doesNotMatch(page, /from ["']\.\/session["']/);
   });
 
-  it("middleware.ts uses cookieLooksPlausible", () => {
+  it("middleware.ts inlines the shape check and does not import session-expired", () => {
     const middleware = read("../middleware.ts");
-    assert.match(middleware, /cookieLooksPlausible\(/);
-    assert.match(middleware, /sessionExpiredTarget\(/);
+    assert.doesNotMatch(middleware, /session-expired/);
+    assert.match(middleware, /function cookieLooksPlausible\(/);
+    assert.match(middleware, /"\/logout\/expired"/);
+    assert.match(middleware, /"\/member\/logout\/expired"/);
   });
 
   it("handlers clear the matching cookie and do not catch redirect", () => {

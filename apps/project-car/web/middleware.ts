@@ -9,10 +9,19 @@ import {
   publicUrl,
 } from "./lib/request-origin";
 import { applySecurityHeaders } from "./lib/security-headers";
-import { cookieLooksPlausible, sessionExpiredTarget } from "./lib/session-expired";
 
 function redirectTo(request: NextRequest, path: string): URL {
   return publicUrl(request.headers, request.url, path);
+}
+
+/** Shape only. Empty, whitespace, spaces, and ASCII controls fail. Not a signature check. */
+function cookieLooksPlausible(value: string): boolean {
+  if (value.trim() === "") return false;
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code <= 0x20 || code === 0x7f) return false;
+  }
+  return true;
 }
 
 function redirect(url: string | URL): NextResponse {
@@ -41,8 +50,8 @@ export function middleware(request: NextRequest) {
   const isMemberLogin = path.startsWith("/member/login");
   const isSignup = path === "/signup" || path.startsWith("/signup/");
   const isMemberArea = path === "/member" || path.startsWith("/member/");
-  const ownerExpired = sessionExpiredTarget("owner");
-  const memberExpired = sessionExpiredTarget("member");
+  const ownerExpired = "/logout/expired";
+  const memberExpired = "/member/logout/expired";
   // The handler must run to clear the cookie. Signup stays as it is.
   if (!isSignup && path !== ownerExpired && path !== memberExpired) {
     if (ownerSession && !cookieLooksPlausible(ownerSession)) {
