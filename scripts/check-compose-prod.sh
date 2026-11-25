@@ -69,6 +69,13 @@ check_ports() {
   '
 }
 
+# --self-test reads compose-config text on stdin and runs check_ports. No docker.
+if [[ "${1:-}" == "--self-test" ]]; then
+  set +e
+  check_ports "$(cat)"
+  exit $?
+fi
+
 cfg=$(render "$dev" SHOP_POSTGRES_PASSWORD=stand-in-pw)
 check_ports "$cfg" || die "loopback check failed: compose.yaml"
 cfg=$(render "$prod" SHOP_POSTGRES_PASSWORD=stand-in-pw)
