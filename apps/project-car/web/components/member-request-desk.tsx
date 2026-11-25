@@ -1,5 +1,6 @@
 import type { PartsRequest } from "../lib/config";
 import { SAMPLE_INVENTORY_REQUESTS, SAMPLE_PARTS_STOCK } from "../lib/inventory";
+import { showDemoPlaceholders } from "../lib/placeholders";
 import { formatShopDateTime } from "../lib/time";
 
 function requestStatusLabel(status: PartsRequest["status"]): string {
@@ -39,6 +40,7 @@ export function MemberRequestDesk({
   requests: PartsRequest[];
   create: (formData: FormData) => Promise<void>;
 }) {
+  const showSamples = showDemoPlaceholders();
   return (
     <>
       <h2>Your parts requests</h2>
@@ -84,6 +86,7 @@ export function MemberRequestDesk({
           from this desk.
         </p>
         <label htmlFor="member-request-sku">SKU</label>
+        {showSamples ? (
         <select id="member-request-sku" name="sku" defaultValue="PT-OIL-5W30-012">
           {SAMPLE_PARTS_STOCK.map((row) => (
             <option key={row.sku} value={row.sku}>
@@ -91,6 +94,10 @@ export function MemberRequestDesk({
             </option>
           ))}
         </select>
+        ) : null}
+        {showSamples ? null : (
+          <input id="member-request-sku" name="sku" required placeholder="PT-OIL-5W30-012" />
+        )}
         <label htmlFor="member-request-note">Note</label>
         <textarea
           id="member-request-note"
@@ -103,6 +110,8 @@ export function MemberRequestDesk({
         </div>
       </form>
 
+      {showSamples ? (
+      <>
       <h2>Sample requests (not stored)</h2>
       <p className="muted">
         Placeholder rows, including crib-tool asks. They are not parts-request
@@ -130,6 +139,8 @@ export function MemberRequestDesk({
           </tbody>
         </table>
       </div>
+      </>
+      ) : null}
     </>
   );
 }
