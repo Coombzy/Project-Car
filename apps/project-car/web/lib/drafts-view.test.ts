@@ -48,7 +48,7 @@ describe("draftRows", () => {
     assert.match(page, /listStaffDrafts\(/);
     assert.match(page, /getMe\(/);
     assert.match(page, /handlePageError/);
-    assert.match(page, /current="fill"/);
+    assert.match(page, /current="drafts"/);
     assert.match(page, /No pending drafts\./);
     assert.match(page, /roomHref/);
     assert.match(actions, /acceptFillDraft/);

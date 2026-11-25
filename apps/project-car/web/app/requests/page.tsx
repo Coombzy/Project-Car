@@ -27,7 +27,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
     const me = await getMe();
     const groups = groupRequests(await listStaffRequests());
     return (
-      <OwnerShell email={me.email} current="fill">
+      <OwnerShell email={me.email} current="requests">
         <p className="eyebrow">GET /staff/requests</p>
         <h1>Requests</h1>
         <p className="lede">Pending shop-hoist, parts, and tool-crib requests. Approve or deny one. The shop is not open.</p>
@@ -51,6 +51,6 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
     );
   } catch (error) {
     const message = await handlePageError(error);
-    return <OwnerShell current="fill"><h1>Requests</h1><div className="banner error">{message}</div></OwnerShell>;
+    return <OwnerShell current="requests"><h1>Requests</h1><div className="banner error">{message}</div></OwnerShell>;
   }
 }
