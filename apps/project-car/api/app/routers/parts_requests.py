@@ -7,6 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Query
 
 from app.deps import DbSession, MemberUser, Owner
+from app.models import PartsRequestStatus
 from app.schemas import (
     PartsOrderOut,
     PartsOrderPatch,
@@ -57,8 +58,12 @@ def list_parts_requests(
     _principal: Owner,
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
+    q: str | None = Query(default=None),
+    status: PartsRequestStatus | None = Query(default=None),
 ) -> list[PartsRequestOut]:
-    rows = parts_request_service.list_parts_requests(session, limit=limit, offset=offset)
+    rows = parts_request_service.list_parts_requests(
+        session, limit=limit, offset=offset, q=q, status=status
+    )
     return [PartsRequestOut.from_row(row) for row in rows]
 
 
