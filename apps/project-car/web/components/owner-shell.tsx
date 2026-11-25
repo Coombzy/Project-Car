@@ -37,6 +37,7 @@ const SECONDARY_GROUPS = [
     label: "Admin",
     items: [
       { href: "/payments", current: "payments", label: "Payments" },
+      { href: "/refund-requests", current: "refund-requests", label: "Refunds" },
       { href: "/tiers", current: "tiers", label: "Tiers" },
       { href: "/fill", current: "fill", label: "Fill" },
       { href: "/drafts", current: "drafts", label: "Drafts" },

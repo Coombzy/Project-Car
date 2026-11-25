@@ -38,7 +38,7 @@ describe("refundRows", () => {
     const shell = src("components/owner-shell.tsx");
     assert.match(api, /import \{ shopJson \} from "\.\/shop-api"/);
     assert.match(api, /import \{ pathSegment \} from "\.\/shop-path"/);
-    assert.match(api, /shopJson\("\/refund-requests", "Could not load refund requests\."\)/);
+    assert.match(api, /shopJson(?:<RefundRequestRow\[\]>)?\("\/refund-requests", "Could not load refund requests\."\)/);
     assert.match(api, /`\/refund-requests\/\$\{pathSegment\(id\)\}\/accept`/);
     assert.match(api, /method: "POST"/);
     assert.equal(api.includes("${id}"), false);
