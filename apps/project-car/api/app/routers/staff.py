@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import select
 
 from app.deps import DbSession, Owner
-from app.models import DraftKind, DraftStatus, StaffDraft
+from app.models import DraftKind, DraftStatus, RefundRequest, ShopHoistRequestStatus, StaffDraft
 from app.schemas import (
     BookingOut,
     ChatDraftCreate,
@@ -267,6 +267,22 @@ def staff_create_refund(
 def staff_accept_refund(request_id: UUID, session: DbSession, principal: Owner) -> StaffDecisionOut:
     row, action = accept_refund_request(session, request_id, principal)
     return _decision(row, action)
+
+
+@router.get("/refund-requests", response_model=list[RefundRequestOut])
+def staff_list_refunds(
+    session: DbSession,
+    _principal: Owner,
+    limit: int = Query(default=50, ge=1, le=200),
+) -> list[RefundRequestOut]:
+    """Pending refund requests, newest first. Accepted rows stay stored and are omitted."""
+    rows = session.scalars(
+        select(RefundRequest)
+        .where(RefundRequest.status == ShopHoistRequestStatus.PENDING)
+        .order_by(RefundRequest.created_at.desc(), RefundRequest.id.desc())
+        .limit(limit)
+    ).all()
+    return [RefundRequestOut.model_validate(row) for row in rows]
 
 
 @router.get("/staff/schedule", response_model=list[BookingOut])
