@@ -93,12 +93,19 @@ def list_parts_requests(
     stmt = select(PartsRequest).options(selectinload(PartsRequest.member))
     needle = (q or "").strip()
     if needle:
-        # Bound LIKE pattern. lower() is valid on SQLite and Postgres.
-        pattern = f"%{needle.lower()}%"
+        # Escape \ then % then _ so LIKE is a literal substring. lower() works on SQLite and Postgres.
+        escape = "\\"
+        literal = (
+            needle.lower()
+            .replace(escape, escape * 2)
+            .replace("%", escape + "%")
+            .replace("_", escape + "_")
+        )
+        pattern = f"%{literal}%"
         stmt = stmt.join(Member, PartsRequest.member_id == Member.id).where(
             or_(
-                func.lower(Member.name).like(pattern),
-                func.lower(Member.email).like(pattern),
+                func.lower(Member.name).like(pattern, escape=escape),
+                func.lower(Member.email).like(pattern, escape=escape),
             )
         )
     if status is not None:
