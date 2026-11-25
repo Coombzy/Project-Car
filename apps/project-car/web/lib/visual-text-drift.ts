@@ -17,7 +17,13 @@ const DRIFTED_1440 = [
 
 function present(source: string, needle: string): boolean {
   const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`(?:^|[^A-Za-z0-9])${escaped}(?=$|[^A-Za-z0-9])`).test(source);
+  const re = new RegExp(`(?<![A-Za-z0-9-])${escaped}(?![A-Za-z0-9-])`, "g");
+  for (const match of source.matchAll(re)) {
+    const at = match.index ?? 0;
+    const wordTail = /^[A-Za-z]+$/.test(needle) && /[A-Za-z] $/.test(source.slice(Math.max(0, at - 2), at));
+    if (!wordTail) return true;
+  }
+  return false;
 }
 
 /** Missing official phrases, plus stale labels still present in the body. */

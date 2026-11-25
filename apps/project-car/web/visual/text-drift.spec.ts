@@ -46,11 +46,13 @@ test("1440 owner body matches the frozen clock", async ({ page, context }, testI
   await context.addCookies([{ name: SESSION_COOKIE, value: token, url: WEB, httpOnly: true, sameSite: "Lax" }]);
   const ada = tokensLabel(OFFICIAL_1440_BODY.adaTokens);
   await open(page, "/");
-  await expect(page.getByText(OFFICIAL_1440_BODY.tokensAtRisk).first()).toBeVisible();
+  await expect(page.getByText(OFFICIAL_1440_BODY.tokensAtRisk, { exact: true }).first()).toBeVisible();
   for (const path of ["/members", `/members/${adaId}`]) {
     await open(page, path);
-    await expect(page.getByText(ada).first()).toBeVisible();
+    await expect(page.getByText(ada, { exact: true }).first()).toBeVisible();
   }
   await open(page, "/tiers");
-  for (const band of OFFICIAL_1440_BODY.bands) await expect(page.getByText(band).first()).toBeVisible();
+  for (const band of ["Off-peak", "Normal", "Evening", "Peak"]) {
+    await expect(page.getByText(band, { exact: true }).first()).toBeVisible();
+  }
 });
