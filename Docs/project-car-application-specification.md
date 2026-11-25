@@ -1,6 +1,6 @@
 # Project Car Application Specification
 
-**Last Updated:** 2026-11-24  
+**Last Updated:** 2026-11-25  
 **Status:** Living spec (v1)  
 **Owner:** Ben (decisions) / Doc + Porsche (maintenance)  
 **Audience:** Anyone implementing the Project Car product  
@@ -81,7 +81,7 @@ Identity rules:
    - Token ledger: append-only credits and debits. Booking reserve, debit, refund, monthly allocation, admin adjustment.
    - Owner dashboard: Bays 1–6 next-24h booked hours (member + vehicle/notes), personal to-dos, current parts POs, token-at-risk, waitlist count. No “Today’s bookings” list. Bay 6 is the shop hoist.
    - **Parts** and **Tools** sections (locked IA; **placeholders now**): prefixes **B1–B6** (bay-resident kits; B6 = shop hoist, not SH), **TC** (crib checkout stub), **PT** (stock / PO / member requests). Member parts = **request desk** now; **full purchasing Later**. **CM** consumables later.
-   - **Job board** (locked IA; **placeholder now**): shop chores; pays **tokens** on completion (**ledger**, not Stripe). Ops posts; members claim.
+   - **Job board** (locked IA; **placeholder now**): shop chores; **no payout** — completing a claimed job does not credit the token ledger. Ops posts; members claim.
    - **Cameras** (locked IA; **placeholder now**): members = **one primary shop cam**. Ops = **all cams** + door entry logs + Frigate / AI collection. Not a claim that Frigate is wired on `main`.
 
 3. **Optional Mission Control hooks (nice, not blocking)**
@@ -96,7 +96,7 @@ Identity rules:
 - Tool checkout **hardware** and QR scanning in the UI (Tools **sections** are build-breadth placeholders; hardware is not this lock).
 - Claiming Frigate / camera **feeds are shipped**. Camera **IA** is locked above as a placeholder. Live pages are stubs (ops: every camera + door logs + AI; members: one primary). Flag `pc.cameras` stays off.
 - eBay marketplace, estate-sale app, welding / turbo calculators. Member Parts **placeholder** is in; `pc.marketplace` stays off.
-- Job-board assign. A `claim` row and a `done` row are on `main` at `4488dab` (hardened `#116` `aedc8a6`); done does not credit the token ledger. **Placeholder** board with sample token-paid chores is in.
+- Job-board assign. A `claim` row and a `done` row are on `main` at `4488dab` (hardened `#116` `aedc8a6`); done does not credit the token ledger. **Placeholder** board with sample chores is in; any amounts shown are UI placeholders, not token-ledger credits.
 - Fitness, Matrix, n8n.
 - Offline-first mobile client. v1 is a mobile-friendly PWA in the browser.
 - Full member parts purchasing (request desk now; **full Later**). Do not invent member commerce.
@@ -274,12 +274,12 @@ Staff-on-shift / ops shell. **LIVE** host **`ops.projectcar.ca`**. Temporary ali
 5. **Tiers / settings** — edit allowances.
 6. **Parts (ops placeholder)** — **PT** stock list (qty / reorder) plus POs / incoming / vendor. Distinct from the member request desk. Not live purchasing.
 7. **Tools (ops placeholder)** — **B1–B6** bay-resident kit lists + **TC** crib checkout stub, plus orders / member requests / planned purchases. IA only. Not on Member nav. **B6** = shop hoist bay (not `SH`).
-8. **Job board (placeholder)** — sample shop upkeep with **token bounties**. Claim / assign / complete Later.
+8. **Job board (placeholder)** — sample shop upkeep. **No payout**: completing a claimed job does not credit the token ledger. Claim / assign / complete Later.
 9. **Cameras (placeholder)** — every camera tile, door entry logs, AI collection stubs. Not live Frigate.
 10. **Payments (ops placeholder)** — membership + parts billing stubs. AI tracks by default; humans on exceptions. Not Stripe.
 11. **Chat v1 (human / polling demo)** — `/chat` on the ops/app management host. Owner starts rooms and picks member(s). Ops/Owner see every thread and can mute. Polling while a thread is open. **Not** live Matrix, **not** Apex, **not** Grok.
 
-**Build-breadth placeholders (locked IA, not shipped):** **Parts** (PT qty / reorder + POs), **Tools** (B1–B6 bay kits + TC crib + orders / requests / planned), **job board** (shop chores; tokens on completion via ledger; Ops posts; members claim), **cameras** (members = one primary shop cam; ops = all cams + door entry logs + Frigate / AI collection), **Payments** (membership + parts; AI default, human on exceptions). Member parts = request desk now; full purchasing Later. **CM** later.
+**Build-breadth placeholders (locked IA, not shipped):** **Parts** (PT qty / reorder + POs), **Tools** (B1–B6 bay kits + TC crib + orders / requests / planned), **job board** (shop chores; **no payout** — completing a claimed job does not credit the ledger; Ops posts; members claim), **cameras** (members = one primary shop cam; ops = all cams + door entry logs + Frigate / AI collection), **Payments** (membership + parts; AI default, human on exceptions). Member parts = request desk now; full purchasing Later. **CM** later.
 
 Ops screens exist under `apps/project-car/web` (dashboard, schedule, members, hoists, waitlist, tiers, Chat v1, plus Parts / Tools / Job board / Cameras / Payments placeholders). Member self-serve is **still** `/member` on the same Next.js app (balance + ledger) and `/member/schedule` (Bays 1–5, quote, book/cancel), plus customer-facing placeholders at `/member/parts`, `/member/jobs`, `/member/cameras` and Chat v1 at `/member/chat` — reachable today at `https://ops.projectcar.ca/member` and `https://app.projectcar.ca/member` (temporary alias). Demo seed only — the shop is not open. Moving that customer surface to **projectcar.ca** is **Next** (§15). Do not claim it is shipped. See §16.
 
@@ -488,9 +488,9 @@ Bay-resident vs crib vs parts: B-prefix tools do **not** check out through the c
 
 `/tools` — **Bay kits (B1–B6 lists)** + **Tool crib (TC checkout state stub)**, plus the existing **orders / customer-member requests / planned purchases** stubs. Breadth-first IA. Not live QR / hardware. Not on the Member nav. Members may request a crib tool from `/member/parts` only.
 
-### Job board (token pay)
+### Job board (no payout)
 
-Members perform shop upkeep (cleaning, tool maintenance, random tasks). **Ops posts** a job with a **token bounty**. On complete, tokens credit the member’s account on the **append-only token ledger** — same token system as hoist booking, **not Stripe**. Full claim / complete / assign is **Later**. Placeholder board **must show sample token amounts** (`/jobs` ops, `/member/jobs` customer-facing).
+Members perform shop upkeep (cleaning, tool maintenance, random tasks). **Ops posts** a job. **No payout**: completing a claimed job does not credit the member’s account and does not add a row to the **append-only token ledger**. Full claim / complete / assign is **Later**. Any amounts shown on the placeholder board are UI placeholders only; they are not credited (`/jobs` ops, `/member/jobs` customer-facing).
 
 ### Security cameras
 
@@ -502,7 +502,7 @@ Members perform shop upkeep (cleaning, tool maintenance, random tasks). **Ops po
 
 ### Payments / billing (ops)
 
-`/payments` — track **membership payments** and **parts payments**. **AI tracks almost all of that by default**; humans are alerted when there are **issues (exceptions)**, not for every normal payment. Placeholder + Docs model. Full Stripe stays Later (`pc.payments` off). Token job bounties are the job-board ledger, not this Stripe-shaped table.
+`/payments` — track **membership payments** and **parts payments**. **AI tracks almost all of that by default**; humans are alerted when there are **issues (exceptions)**, not for every normal payment. Placeholder + Docs model. Full Stripe stays Later (`pc.payments` off). There are no token job bounties; the job board has no payout and does not touch the token ledger.
 
 ---
 
@@ -529,5 +529,5 @@ Locks:
 
 ---
 
-**Approved by:** Ben (2026-08-12 direction: site + waitlist, and shop membership / hoist booking; customers + employees later). 2026-09-06 host split: customer = projectcar.ca; management = **ops.projectcar.ca** (LIVE at edge ~12:55); `app.` = temporary alias (not removed). 2026-09-06 breadth-first placeholders: parts (member + ops), tools, job board (token bounty), cameras, payments (AI-exception). Full purchase, claim/complete, live NVR, and Stripe stay Later. Ship-MVP cut is a later gate. 2026-09-06 inventory lock: B1–B6 / TC / PT prefixes; B6 = shop hoist (not SH); CM later; member Parts = requests only. 2026-09-06 ~16:16: Chat v1 human/polling/Owner-starts-rooms **LIVE on Doc** (§17 / #27); Dashboard 24h + todos **LIVE on Doc** (#28 / `afb37f9`).
+**Approved by:** Ben (2026-08-12 direction: site + waitlist, and shop membership / hoist booking; customers + employees later). 2026-09-06 host split: customer = projectcar.ca; management = **ops.projectcar.ca** (LIVE at edge ~12:55); `app.` = temporary alias (not removed). 2026-09-06 breadth-first placeholders: parts (member + ops), tools, job board (no payout), cameras, payments (AI-exception). Full purchase, claim/complete, live NVR, and Stripe stay Later. Ship-MVP cut is a later gate. 2026-09-06 inventory lock: B1–B6 / TC / PT prefixes; B6 = shop hoist (not SH); CM later; member Parts = requests only. 2026-09-06 ~16:16: Chat v1 human/polling/Owner-starts-rooms **LIVE on Doc** (§17 / #27); Dashboard 24h + todos **LIVE on Doc** (#28 / `afb37f9`).
 **Maintained with:** `Docs/` in `Coombzy/Project-Car`
