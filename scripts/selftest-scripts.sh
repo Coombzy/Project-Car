@@ -10,8 +10,8 @@ for s in \
   scripts/selftest-pr-ready.sh \
   scripts/selftest-related-tests.sh \
   scripts/selftest-agent-scripts.sh \
-  scripts/selftest-check-compose-prod.sh
-  # RED: runner does not call scripts/selftest-proof-shots.sh
+  scripts/selftest-check-compose-prod.sh \
+  scripts/selftest-proof-shots.sh
 do
   if ! bash "$s"; then
     printf 'failed: %s\n' "$s" >&2
