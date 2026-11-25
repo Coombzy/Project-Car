@@ -15,7 +15,7 @@ export default async function DraftsPage({ searchParams }: { searchParams: Promi
     const me = await getMe();
     const rows = draftRows(await listStaffDrafts());
     return (
-      <OwnerShell email={me.email} current="fill">
+      <OwnerShell email={me.email} current="drafts">
         <p className="eyebrow">GET /staff/drafts</p>
         <h1>Drafts</h1>
         <p className="lede">Pending fill notices and chat replies. Accept posts the draft. The shop is not open.</p>
@@ -36,6 +36,6 @@ export default async function DraftsPage({ searchParams }: { searchParams: Promi
     );
   } catch (error) {
     const message = await handlePageError(error);
-    return <OwnerShell current="fill"><h1>Drafts</h1><div className="banner error">{message}</div></OwnerShell>;
+    return <OwnerShell current="drafts"><h1>Drafts</h1><div className="banner error">{message}</div></OwnerShell>;
   }
 }

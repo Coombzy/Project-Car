@@ -39,6 +39,8 @@ const SECONDARY_GROUPS = [
       { href: "/payments", current: "payments", label: "Payments" },
       { href: "/tiers", current: "tiers", label: "Tiers" },
       { href: "/fill", current: "fill", label: "Fill" },
+      { href: "/drafts", current: "drafts", label: "Drafts" },
+      { href: "/requests", current: "requests", label: "Requests" },
       { href: "/waitlist", current: "waitlist", label: "Waitlist" },
     ],
   },
