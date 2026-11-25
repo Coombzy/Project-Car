@@ -1,7 +1,8 @@
-import { SAMPLE_JOBS } from "../lib/placeholders";
+import { SAMPLE_JOBS, showDemoPlaceholders } from "../lib/placeholders";
 import { tokensLabel } from "../lib/time";
 
 export function JobBoard({ audience }: { audience: "member" | "ops" }) {
+  const showSamples = showDemoPlaceholders();
   return (
     <>
       <div className="card" style={{ marginBottom: "1rem" }}>
@@ -13,6 +14,8 @@ export function JobBoard({ audience }: { audience: "member" | "ops" }) {
           not a Stripe charge. The shop is not open.
         </p>
       </div>
+      {showSamples ? (
+        <>
       <p className="muted">
         {audience === "ops"
           ? "Sample rows. They are not stored claims. The shop is not open."
@@ -60,6 +63,10 @@ export function JobBoard({ audience }: { audience: "member" | "ops" }) {
           </tbody>
         </table>
       </div>
+        </>
+      ) : (
+        <div className="banner empty">No sample jobs are listed. The shop is not open.</div>
+      )}
     </>
   );
 }
