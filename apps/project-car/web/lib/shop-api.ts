@@ -696,6 +696,22 @@ export async function cancelMemberBooking(id: string): Promise<Booking> {
   });
 }
 
+export async function downloadMemberBookingIcs(id: string): Promise<{ filename: string; body: string }> {
+  let response: Response;
+  try {
+    response = await memberFetch(`/member/bookings/${pathSegment(id)}/ics`);
+  } catch {
+    throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
+  }
+  if (!response.ok) {
+    const body = await readJson(response);
+    throw parseApiError(response.status, body, "Could not download the calendar file.");
+  }
+  const disposition = response.headers.get("content-disposition") ?? "";
+  const match = disposition.match(/filename="([^"]+)"/);
+  return { filename: match?.[1] ?? `booking-${id}.ics`, body: await response.text() };
+}
+
 export async function listMemberJobEvents(): Promise<JobEvent[]> {
   return memberJson<JobEvent[]>("/member/jobs/events", "Could not load job rows.");
 }
