@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("DATABASE_URL"),
-    reason="skipped without DATABASE_URL",
+    not (os.environ.get("DATABASE_URL") or "").startswith(("postgres://", "postgresql://")),
+    reason="skipped without a postgres DATABASE_URL",
 )
 ROOT = Path(__file__).resolve().parents[4]
 SCRIPT = ROOT / "scripts" / "restore-drill.sh"
@@ -23,12 +23,17 @@ def _run(extra):
 
 def test_equal_counts_exit_0():
     proc = _run({})
-    assert proc.returncode == 0, proc.stderr
+    blob = proc.stdout + proc.stderr
+    assert proc.returncode == 0, blob
+    assert "members source=" in proc.stdout
 
 
 def test_tamper_exit_1():
     proc = _run({"RESTORE_DRILL_TAMPER_SQL": "TRUNCATE members CASCADE;"})
-    assert proc.returncode == 1, proc.stderr
+    blob = proc.stdout + proc.stderr
+    assert proc.returncode == 1, blob
+    assert "members source=" in proc.stdout
+    assert "throwaway=" in proc.stdout
 
 
 def test_same_name_exit_2_source_untouched():
