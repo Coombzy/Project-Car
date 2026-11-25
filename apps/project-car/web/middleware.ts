@@ -52,13 +52,13 @@ export function middleware(request: NextRequest) {
   const isMemberArea = path === "/member" || path.startsWith("/member/");
   const ownerExpired = "/logout/expired";
   const memberExpired = "/member/logout/expired";
-  // Only this audience. A bad cookie for the other audience stays until its own path.
   if (isMemberArea && path !== memberExpired && memberSession && !cookieLooksPlausible(memberSession)) {
     return redirect(redirectTo(request, memberExpired));
   }
   if (!isMemberArea && !isSignup && path !== ownerExpired && ownerSession && !cookieLooksPlausible(ownerSession)) {
     return redirect(redirectTo(request, ownerExpired));
   }
+  if (path === ownerExpired || path === memberExpired) return NextResponse.next();
 
   if (isMemberLogin) {
     if (memberSession) {

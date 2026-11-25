@@ -13,7 +13,6 @@ describe("sessionExpiredTarget", () => {
     assert.equal(sessionExpiredTarget("member"), "/member/logout/expired");
   });
 });
-
 describe("cookieLooksPlausible", () => {
   it("accepts a normal URL-safe timed session token", () => {
     assert.equal(cookieLooksPlausible(TOKEN), true);
@@ -26,7 +25,6 @@ describe("cookieLooksPlausible", () => {
     }
   });
 });
-
 describe("expired session leaves the Server Component", () => {
   it("page.ts redirects and does not import the cookie writers", () => {
     const page = read("./page.ts");
@@ -44,14 +42,16 @@ describe("expired session leaves the Server Component", () => {
     const source = read("../middleware.ts");
     const memberAt = source.indexOf("if (isMemberArea && path !== memberExpired");
     const ownerAt = source.indexOf("if (!isMemberArea && !isSignup");
+    const passAt = source.indexOf("if (path === ownerExpired || path === memberExpired) return NextResponse.next()");
     const memberGate = source.slice(memberAt, ownerAt);
-    const ownerGate = source.slice(ownerAt, source.indexOf("if (isMemberLogin)"));
+    const ownerGate = source.slice(ownerAt, passAt);
     assert.doesNotMatch(source, /session-expired/);
     assert.match(source, /function cookieLooksPlausible\(/);
     assert.match(memberGate, /cookieLooksPlausible\(memberSession\)/);
     assert.doesNotMatch(memberGate, /ownerExpired/);
     assert.match(ownerGate, /cookieLooksPlausible\(ownerSession\)/);
     assert.doesNotMatch(ownerGate, /memberExpired/);
+    assert.ok(passAt >= 0 && passAt < source.indexOf('searchParams.set("next"'));
   });
 
   it("handlers clear the matching cookie and do not catch redirect", () => {
