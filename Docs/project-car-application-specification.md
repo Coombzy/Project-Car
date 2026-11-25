@@ -1,6 +1,6 @@
 # Project Car Application Specification
 
-**Last Updated:** 2026-09-07  
+**Last Updated:** 2026-11-24  
 **Status:** Living spec (v1)  
 **Owner:** Ben (decisions) / Doc + Porsche (maintenance)  
 **Audience:** Anyone implementing the Project Car product  
@@ -35,7 +35,7 @@ It is **not** Mission Control. Mission Control is Ben’s private cockpit over N
 
 Private Mission Control stays off the marketing domain (Tailscale / Access / a private hostname). Vaultwarden and Nextcloud stay off `projectcar.ca` apex.
 
-**Today (2026-09-06 ~16:16 America/Edmonton, `main` `afb37f9`):** the public site is a multi-page brochure plus a real waitlist form (**e2e PASS** brochure → api). **`https://ops.projectcar.ca` is LIVE at the edge** (same Doc shop UI as `app.`; some clients still have local DNS cache). Ops booking (duration × band × overlay × fill), calendar heat-map / weekly per-hoist grids (#18), next-day fill (#20), breadth placeholders (#21), schedule fail-soft (#24), inventory prefixes (#26), **Chat v1** (#27), and **Dashboard** 24h strips + todos + parts POs (#28) are on `main` **and live on Doc** (`:3000` / `:8000`, shop-web `next start` `BUILD_ID` `5swmVz-T2CqKEQzTk1ifU`) **and reachable via `https://ops.projectcar.ca` and the temporary alias `https://app.projectcar.ca`**. Member demo is still shop-UI `/member` — the move to projectcar.ca is **Next**, not shipped. Demo session cookies — not OIDC. HTTPS ops/app demo requires **Secure** cookies (`COOKIE_SECURE` / `SHOP_COOKIE_SECURE`). The shop is not open. Apex sidecar is deferred. **Chat v1** (human / polling / Owner-starts-rooms) is **LIVE on Doc** (§17). See §4 for **build-breadth (now)** vs **ship-MVP cut (later)**, §13 for shipped vs remaining, and §15 for remaining Next locks (Member host migration; Ben cuts `app.`; MC cockpit still needs Ben GO).
+**Today (2026-09-06 ~16:16 America/Edmonton, `main` `afb37f9`):** the public site is a multi-page brochure plus a real waitlist form (**e2e PASS** brochure → api). **`https://ops.projectcar.ca` is LIVE at the edge** (same Doc shop UI as `app.`; some clients still have local DNS cache). Ops booking (per held hour: band × fill, standard overlay ×1), calendar heat-map / weekly per-hoist grids (#18), next-day fill (#20), breadth placeholders (#21), schedule fail-soft (#24), inventory prefixes (#26), **Chat v1** (#27), and **Dashboard** 24h strips + todos + parts POs (#28) are on `main` **and live on Doc** (`:3000` / `:8000`, shop-web `next start` `BUILD_ID` `5swmVz-T2CqKEQzTk1ifU`) **and reachable via `https://ops.projectcar.ca` and the temporary alias `https://app.projectcar.ca`**. Member demo is still shop-UI `/member` — the move to projectcar.ca is **Next**, not shipped. Demo session cookies — not OIDC. HTTPS ops/app demo requires **Secure** cookies (`COOKIE_SECURE` / `SHOP_COOKIE_SECURE`). The shop is not open. Apex sidecar is deferred. **Chat v1** (human / polling / Owner-starts-rooms) is **LIVE on Doc** (§17). See §4 for **build-breadth (now)** vs **ship-MVP cut (later)**, §13 for shipped vs remaining, and §15 for remaining Next locks (Member host migration; Ben cuts `app.`; MC cockpit still needs Ben GO).
 
 ---
 
@@ -69,6 +69,8 @@ Identity rules:
 1. **Public site**
    - Keep the existing brochure pages.
    - **Waitlist (shipped):** name, email, optional phone, optional notes, timestamp. Persist in the app database. Do not pretend the contact form is a CRM.
+   - **Signup stand-in (shipped):** waitlist signup stand-in and `SELF_SERVE_TIERS={"basic"}`. Live signup mode stays Out (**AUD-011**, Ben decision). Not a live self-serve mode.
+   - **Payment stand-in (shipped):** billing stand-in records. Live charges stay Out. Not live Stripe.
    - Public Apex sidecar is **deferred** (Ben). Brochure stays Worker / Pages. **Chat v1** is human/polling on Shop OS (`/chat`, `/member/chat`) — not the brochure Chat page, not Apex, not Grok. If a public chat lane ships later, it must not become an admin console.
 
 2. **Shop OS (ops management UI)**
@@ -88,7 +90,7 @@ Identity rules:
 
 ### Out (explicit)
 
-- Public self-serve signup or payment.
+- **Live** public self-serve signup or payment. Signup and the payment stand-in already ship; the live signup mode is **AUD-011**, still a Ben decision (today: stand-in waitlist + `SELF_SERVE_TIERS={"basic"}`).
 - Stripe live charges (billing *records* may exist as rows; no processor).
 - NFC / FOB / ESPHome readers.
 - Tool checkout **hardware** and QR scanning in the UI (Tools **sections** are build-breadth placeholders; hardware is not this lock).
@@ -116,18 +118,20 @@ These rules are the product, not an implementation detail.
 
 Dollar prices and tier **names** stay Owner-editable. Slot cost is **not** an arbitrary Owner-entered reserve amount — see §5.1. Seed allotment placeholders: Basic **1000** / Premium **1500** per period (`token-pricing.md`). Two tiers, not three. No Pro. No Weekly.
 
-### 5.1 Token rate (duration × bands + overlay)
+### 5.1 Token rate (per held hour — `token-pricing.md` is the lock)
 
-How many tokens a slot **costs** is locked separately (Ben GO / recall 2026-09-06): **100 tokens per hour** of hoist time, then time-of-day / day-of-week **bands** in `America/Regina`, plus an advance / last-minute **overlay** at reserve time.
+How many tokens a slot **costs** is locked in **`token-pricing.md`** (Ben GO / recall 2026-09-06; per-hour band rule 2026-11): **100 tokens per hour** of hoist time, then time-of-day / day-of-week **bands** in `America/Regina`. **Each held hour uses the band that contains that hour.** A visit that crosses bands is the sum of those hours, not the band at the start. **Lead-time overlays are stored and price nothing. Every reserve uses the standard row (×1).** Fill is an explicit extra multiplier on the hour it applies to.
 
 ```
+hours = count of end-exclusive America/Regina hoist hours (one band per held hour)
 base_tokens = hours × 100
-final_reserve_cost = (hours × 100) × band_multiplier × advance_multiplier
+standard_overlay = 1
+final_reserve_cost = Σ (100 × that hour's band_multiplier × standard_overlay × that hour's fill)
 ```
 
-Show band + overlay + total before confirm. Store `pricing_rule` on ledger meta. Cancel refunds the reserved amount — do not reprice. Owner `POST /bookings` computes this in the API.
+Show each held hour at its band, the standard overlay, fill when it applies, and the total before confirm. Store `pricing_rule` on ledger meta. Cancel refunds the reserved amount — do not reprice. Owner `POST /bookings` computes this in the API.
 
-Defaults, two-tier allotment placeholders (Basic 1000 / Premium 1500), 6-hoist seed with one shop-priority hoist, UX must-haves, and the Fri-eve default: **`token-pricing.md`**. Multipliers and allotments are Owner-editable placeholders. Not public brochure prices. No Stripe. Owner API computes reserve from duration.
+Defaults, two-tier allotment placeholders (Basic 1000 / Premium 1500), 6-hoist seed with one shop-priority hoist, UX must-haves, and the Fri-eve default: **`token-pricing.md`**. Multipliers and allotments are Owner-editable placeholders. Not public brochure prices. No Stripe. Owner API computes the reserve from those end-exclusive held hours.
 
 ---
 
@@ -208,6 +212,8 @@ Authenticated routes are role-aware: Owner session/bearer for admin; Member sess
 | `GET` | `/me` | Current principal (Owner or Member) |
 | `POST` | `/waitlist` | **Public** (CORS). Create waitlist entry. No Owner cookie / bearer. |
 | `GET` | `/waitlist` | Owner list (auth required) |
+| `POST` | `/waitlist/{id}/convert` | Owner: convert waitlist entry to a member (shipped) |
+| `POST` | `/waitlist/{id}/contacted` | Owner: mark waitlist entry contacted (shipped) |
 | `GET/POST` | `/tiers` | List / create tiers |
 | `PATCH` | `/tiers/{name}` | Edit price, tokens, window |
 | `GET/POST` | `/members` | List / create |
@@ -232,7 +238,7 @@ Authenticated routes are role-aware: Owner session/bearer for admin; Member sess
 | `GET` | `/member/hoists` | Customer bays only (no shop hoist) |
 | `GET` | `/member/bookings` | Own bookings |
 | `GET` | `/member/schedule` | Customer-bay occupancy + own bookings |
-| `POST` | `/member/bookings/quote` | Duration × band × overlay × fill for self |
+| `POST` | `/member/bookings/quote` | Per held hour: band × fill, standard overlay ×1 only |
 | `POST` | `/member/bookings` | Create own customer booking (same reserve rules) |
 | `POST` | `/member/bookings/{id}/confirm` | Confirm own pending booking |
 | `POST` | `/member/bookings/{id}/cancel` | Cancel own booking, refund reserve |
@@ -264,7 +270,7 @@ Staff-on-shift / ops shell. **LIVE** host **`ops.projectcar.ca`**. Temporary ali
 1. **Dashboard** — Bays 1–6 next-24h hour strips (member + vehicle/notes), personal to-dos + ICS, current parts POs, waitlist count, token-at-risk. **No “Today’s bookings” list.** Bay 6 is the Owner-only shop hoist.
 2. **Schedule (on `main`, PR #18; harden PR #24)** — month heat-map (per-hoist density vs 08:00–21:00) that drills into a weekly hour grid per hoist (`America/Regina`). Owner sees Bays 1–5 plus the Owner-only shop hoist; Member sees customer bays only. Fill chips / quote math from #20 stay. Fail-soft if bookings list 500s; windows as Regina UTC ISO. **LIVE** host `ops.`; temporary `app.` alias still up.
 3. **Members** — table + detail (tier, tokens, waiver, bookings).
-4. **Waitlist** — convert-to-member is a later button; v1 can be “mark contacted”.
+4. **Waitlist** — convert-to-member ships as `POST /waitlist/{id}/convert`; “mark contacted” (`POST /waitlist/{id}/contacted`) stays the manual step.
 5. **Tiers / settings** — edit allowances.
 6. **Parts (ops placeholder)** — **PT** stock list (qty / reorder) plus POs / incoming / vendor. Distinct from the member request desk. Not live purchasing.
 7. **Tools (ops placeholder)** — **B1–B6** bay-resident kit lists + **TC** crib checkout stub, plus orders / member requests / planned purchases. IA only. Not on Member nav. **B6** = shop hoist bay (not `SH`).
@@ -357,7 +363,8 @@ Reality as of 2026-09-06 ~16:16 America/Edmonton (`main` `afb37f9`). Do not inve
 ### Shipped on `main` (PR #2 + #3)
 
 - **Public waitlist:** `POST /waitlist` on the shop API; Membership / Contact form posts to `https://api.projectcar.ca/waitlist` (`apps/website/html/waitlist.js`). CORS allowlist includes brochure origins (`projectcar.ca` / `www`), localhost, **`https://ops.projectcar.ca`**, and the temporary alias **`https://app.projectcar.ca`**. See `cors-origins.md`.
-- **Ops API** (`apps/project-car/api`): auth session, tiers, members, hoists, bookings (create / confirm / check-in / complete / cancel), append-only token ledger, dashboard snapshot, waitlist list + mark contacted.
+- **Signup and payment stand-ins (shipped):** signup stand-in (`SELF_SERVE_TIERS={"basic"}`) and the payment stand-in. Live signup mode remains **AUD-011** (Ben decision). No live Stripe and no live self-serve mode.
+- **Ops API** (`apps/project-car/api`): auth session, tiers, members, hoists, bookings (create / confirm / check-in / complete / cancel), append-only token ledger, dashboard snapshot, waitlist list, `POST /waitlist/{id}/convert`, and `POST /waitlist/{id}/contacted`.
 - **Ops web** (`apps/project-car/web`): dashboard (24h bay strips + todos + parts POs — #28), schedule (month heat-map + weekly per-hoist hours — #18; fail-soft + Regina ISO — #24), members, hoists, waitlist, tiers, fill (#20), Chat v1 (#27), plus Parts / Tools / Job board / Cameras / Payments **placeholders** (#21; Tools / Parts deepened in #26 with locked SKU prefixes). Demo seed only. **LIVE** on `ops.`; temporary `app.` alias still up. Placeholders are not live purchasing, QR checkout, Frigate, or Stripe.
 - **Member self-serve** (`/member/me`, `/member/hoists`, `/member/schedule`, `/member/chat`): session cookie, own balance + ledger, quote + book/confirm/cancel on customer bays, Chat v1 (own rooms; Owner starts them), personal todos + booked-bay 24h strips. **Live on Doc demo, `https://ops.projectcar.ca`, and the temporary alias `https://app.projectcar.ca`.** Demo seed: `ada.reyes@example.com`. Shop hoist bay stays Owner-only. Customer-facing placeholders: `/member/parts` (request desk — PT / TC, not commerce), `/member/jobs`, `/member/cameras` (primary camera only). No member Tools nav.
 - **Shop Postgres** in `infra/compose` (API is not a compose service).
@@ -369,7 +376,7 @@ Reality as of 2026-09-06 ~16:16 America/Edmonton (`main` `afb37f9`). Do not inve
 | Surface | Auth | Who |
 |---------|------|-----|
 | `POST /waitlist` | **None.** Browser CORS. | Public brochure |
-| `GET /waitlist`, `/dashboard`, `/tiers`, `/members`, `/hoists`, `/bookings`, `/auth/login` | Owner session or bearer | Ben / Owner UI |
+| `GET /waitlist`, `POST /waitlist/{id}/convert`, `POST /waitlist/{id}/contacted`, `/dashboard`, `/tiers`, `/members`, `/hoists`, `/bookings`, `/auth/login` | Owner session or bearer | Ben / Owner UI |
 | `POST /auth/member/login`, `GET /me` (Member cookie), `/member/*` | Member session (`pc_member_session`) | Seeded Member demo |
 
 Do not put Owner cookies on the brochure. Do not require auth for the public waitlist POST.
@@ -383,7 +390,7 @@ Do not put Owner cookies on the brochure. Do not require auth for the public wai
 - Ben cuts the **`app.`** alias — `ops.` is already LIVE at the edge; alias stays until Ben cuts that DNS. **Not this docs PR.**
 - Member customer surface on **projectcar.ca** — Next; not shipped.
 - Full Stripe later (v3). Payments **placeholder** is on `main` (#21). No live Stripe now.
-- Token pricing: **spec-locked** (`token-pricing.md`) — `base_tokens = hours × 100`, then bands + overlay + fill. Owner and Member booking use the same engine.
+- Token pricing: **spec-locked** (`token-pricing.md`) — per held hour: band × fill, standard overlay ×1 only (`hours` = end-exclusive America/Regina hoist hours; `base_tokens = hours × 100`). Owner and Member booking use the same engine.
 - Mission Control cockpit still needs **Ben GO** before start. Ops + Member booking are already live on Doc demo **and** `ops.` / `app.`. Do not start the cockpit from a docs PR.
 - Calendar heat-map / weekly per-hoist — **on `main` (PR #18)**. Next-day fill — **on `main` (PR #20)**. Schedule fail-soft / Regina ISO — **on `main` (PR #24)**. Breadth placeholders — **on `main` (PR #21)**.
 
