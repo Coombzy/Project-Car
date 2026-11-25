@@ -14,7 +14,6 @@ from app.schemas import (
     BookingOut,
     ChatDraftCreate,
     FillDraftCreate,
-    OpenRequestsOut,
     StaffPartsRequestCreate,
     StaffPartsRequestOut,
     RefundRequestCreate,
@@ -52,6 +51,9 @@ from app.services.staff import (
     read_balance,
     read_open_requests,
     send_back_job,
+)
+from app.services.staff_request_payload import (
+    NamedStaffPartsRequestOut, NamedToolCribExceptionOut, OpenNamedRequestsOut,
 )
 from app.services.staff_schedule import read_schedule_window
 from app.shop_time import pricing_today
@@ -299,13 +301,13 @@ def staff_balance(member_id: UUID, session: DbSession, principal: Owner) -> Staf
     )
 
 
-@router.get("/staff/requests", response_model=OpenRequestsOut)
-def staff_open_requests(session: DbSession, principal: Owner) -> OpenRequestsOut:
+@router.get("/staff/requests", response_model=OpenNamedRequestsOut)
+def staff_open_requests(session: DbSession, principal: Owner) -> OpenNamedRequestsOut:
     hoist, parts, tools, action = read_open_requests(session, principal)
-    return OpenRequestsOut(
+    return OpenNamedRequestsOut(
         shop_hoist=[ShopHoistRequestOut.from_row(row) for row in hoist],
-        parts=[StaffPartsRequestOut.model_validate(row) for row in parts],
-        tool_crib=[ToolCribExceptionOut.model_validate(row) for row in tools],
+        parts=[NamedStaffPartsRequestOut.from_row(row) for row in parts],
+        tool_crib=[NamedToolCribExceptionOut.from_row(row) for row in tools],
         actor_kind=action.actor_kind,
         action_id=action.id,
     )
