@@ -95,3 +95,47 @@ describe("job sample rows", () => {
     assert.ok(ledger.indexOf("events.map") > close);
   });
 });
+
+describe("inventory sample rows", () => {
+  it("ToolCribLedger and MemberRequestDesk render SAMPLE_* only when the flag is on", () => {
+    const rows = [
+      ["components/tool-crib-ledger.tsx", "SAMPLE_CRIB_TOOLS"],
+      ["components/member-request-desk.tsx", "SAMPLE_PARTS_STOCK"],
+      ["components/member-request-desk.tsx", "SAMPLE_INVENTORY_REQUESTS"],
+    ];
+    for (const [rel, name] of rows) {
+      assert.match(
+        read(rel),
+        /import \{[^}]*showDemoPlaceholders[^}]*\} from ["']\.\.\/lib\/placeholders["']/,
+        rel,
+      );
+      const source = body(rel);
+      const call = source.indexOf("const showSamples = showDemoPlaceholders()");
+      const hits = [...source.matchAll(new RegExp(`${name}(\\[|\\.)`, "g"))];
+      assert.ok(call !== -1 && hits.length > 0, `${rel} ${name}`);
+      for (const hit of hits) {
+        const at = hit.index ?? -1;
+        const open = source.lastIndexOf("{showSamples ? (", at);
+        const close = source.indexOf(") : null}", open);
+        assert.ok(at > call && open !== -1 && at < close, `${rel} ${name}`);
+      }
+    }
+
+    const desk = body("components/member-request-desk.tsx");
+    const heading = desk.indexOf("Sample requests (not stored)");
+    const open = desk.lastIndexOf("{showSamples ? (", heading);
+    const close = desk.indexOf(") : null}", heading);
+    assert.ok(heading > open && close > heading);
+    assert.equal(desk.slice(close).includes("Sample requests (not stored)"), false);
+
+    const rest = (rel: string) => body(rel).replace(/\{showSamples \? \([\s\S]*?\) : null\}/g, "");
+    const crib = rest("components/tool-crib-ledger.tsx");
+    assert.match(crib, /<input name="sku"/);
+    assert.match(crib, /events\.map/);
+    const ask = rest("components/member-request-desk.tsx");
+    assert.match(ask, /<h2>Ask for a part<\/h2>/);
+    assert.match(ask, /<form className="card request-form"/);
+    assert.match(ask, /<input id="member-request-sku" name="sku" required/);
+    assert.match(ask, /requests\.map/);
+  });
+});
