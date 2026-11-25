@@ -21,6 +21,12 @@ describe("officialBodyDrift", () => {
     assert.deepEqual(officialBodyDrift(body), []);
   });
 
+  it("does not let a longer label satisfy a shorter band", () => {
+    assert.ok(officialBodyDrift("Tokens at risk 1\nAda 375.00\nOFF-PEAK\nNORMAL\nEVENING").includes("PEAK"));
+    assert.ok(officialBodyDrift("OFF-PEAK").includes("PEAK"));
+    assert.ok(officialBodyDrift("WEEKDAY EVENING").includes("EVENING"));
+  });
+
   it("counts 156.25, Tokens at risk 3, and the long band names as drift", () => {
     const drift = officialBodyDrift(STALE);
     for (const label of [
