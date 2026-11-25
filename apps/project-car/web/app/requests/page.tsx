@@ -39,7 +39,10 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
             {group.rows.map((row) => (
               <article className="booking-chip" key={field(row, "id")}>
                 <strong>{field(row, "member_name") || field(row, "member_id")}</strong><div>{asked(group.kind, row)}</div>
-                <form action={decideRequestAction} className="chip-actions"><input type="hidden" name="kind" value={group.kind} /><input type="hidden" name="id" value={field(row, "id")} /><button type="submit" name="decision" value="approve">Approve</button><button className="ghost" type="submit" name="decision" value="deny">Deny</button></form>
+                <div className="chip-actions">
+                  <form action={decideRequestAction}><input type="hidden" name="kind" value={group.kind} /><input type="hidden" name="id" value={field(row, "id")} /><input type="hidden" name="decision" value="approve" /><button type="submit">Approve</button></form>
+                  <form action={decideRequestAction}><input type="hidden" name="kind" value={group.kind} /><input type="hidden" name="id" value={field(row, "id")} /><input type="hidden" name="decision" value="deny" /><button className="ghost" type="submit">Deny</button></form>
+                </div>
               </article>
             ))}
           </section>
