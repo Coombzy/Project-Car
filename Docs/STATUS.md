@@ -1,4 +1,4 @@
-# Status — 2026-11-25
+# Status — 2026-10-06
 
 Living one-pager: what’s live, what’s next, locks. Product detail stays in the start-here specs. This file is not a runbook.
 
