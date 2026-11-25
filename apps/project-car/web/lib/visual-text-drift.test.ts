@@ -1,22 +1,54 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { officialBodyDrift, OFFICIAL_1440_BODY } from "./visual-text-drift.ts";
+import { OFFICIAL_1440_BODY, officialBodyDrift } from "./visual-text-drift.ts";
+
+/** Live frozen-clock copy. Ada's ledger balance is 375.00. */
+const OFFICIAL_BODY = [
+  "Tokens at risk 1",
+  "Ada 375.00",
+  "OFF-PEAK",
+  "NORMAL",
+  "EVENING",
+  "PEAK",
+].join("\n");
+
+/** Pre-#284 seed copy. These phrases are drift under the frozen clock. */
+const STALE_BODY = [
+  "Tokens at risk 3",
+  "Ada 156.25",
+  "WEEKDAY DAY (BASE)",
+  "WEEKDAY EVENING",
+  "WEEKEND / FRI EVE",
+  "LATE NIGHT / EARLY MORNING",
+].join("\n");
+
+const STALE_HITS = [
+  "Tokens at risk 3",
+  "156.25",
+  "WEEKDAY DAY (BASE)",
+  "WEEKDAY EVENING",
+  "WEEKEND",
+  "FRI EVE",
+  "LATE NIGHT",
+  "EARLY MORNING",
+] as const;
 
 describe("officialBodyDrift", () => {
-  it("accepts the official frozen-clock body strings", () => {
-    const source = [
-      OFFICIAL_1440_BODY.tokensAtRisk,
-      `Ada ${OFFICIAL_1440_BODY.adaTokens}`,
-      ...OFFICIAL_1440_BODY.bands,
-    ].join("\n");
-    assert.deepEqual(officialBodyDrift(source), []);
+  it("locks the official frozen-clock strings", () => {
+    assert.equal(OFFICIAL_1440_BODY.tokensAtRisk, "Tokens at risk 1");
+    assert.equal(OFFICIAL_1440_BODY.adaTokens, "375.00");
+    assert.deepEqual([...OFFICIAL_1440_BODY.bands], ["OFF-PEAK", "NORMAL", "EVENING", "PEAK"]);
   });
 
-  it("rejects a #430-style drift that would sit under the 1% pixel cap", () => {
-    assert.notEqual(
-      officialBodyDrift("Tokens at risk 1\nAda 375\nOFF-PEAK\nNORMAL\nEVENING\nPEAK").length,
-      0,
-    );
+  it("accepts the official frozen-clock body strings", () => {
+    assert.deepEqual(officialBodyDrift(OFFICIAL_BODY), []);
+  });
+
+  it("counts pre-#284 seed strings as drift", () => {
+    const drift = officialBodyDrift(STALE_BODY);
+    for (const label of STALE_HITS) {
+      assert.ok(drift.includes(label), label);
+    }
   });
 });
