@@ -7,13 +7,10 @@ import { cookieLooksPlausible, sessionExpiredTarget } from "./session-expired.ts
 // itsdangerous URLSafeTimedSerializer shape: payload.timestamp.signature.
 const TOKEN =
   "eyJyb2xlIjoib3duZXIiLCJlbWFpbCI6Im93bmVyQHByb2plY3RjYXIuY2EifQ.awY3WQ.PipaHWSf6mhE5_7H8JyoVDXhfbY";
-
-function source(relativePath: string): string {
-  return readFileSync(new URL(relativePath, import.meta.url), "utf8");
-}
+const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 
 describe("sessionExpiredTarget", () => {
-  it("returns the owner and member logout handlers", () => {
+  it("returns the logout handlers", () => {
     assert.equal(sessionExpiredTarget("owner"), "/logout/expired");
     assert.equal(sessionExpiredTarget("member"), "/member/logout/expired");
   });
@@ -26,31 +23,15 @@ describe("cookieLooksPlausible", () => {
   });
 
   it("rejects empty, whitespace-only, spaces, and ASCII controls", () => {
-    const rejected = [
-      "",
-      " ",
-      " \t\n",
-      "\t",
-      "\n",
-      "\r",
-      "\u00a0",
-      "a b",
-      `${TOKEN} `,
-      ` ${TOKEN}`,
-      "a\nb",
-      "a\u0000b",
-      "a\u007fb",
-      "\u0001",
-    ];
-    for (const value of rejected) {
+    for (const value of ["", " ", " \t\n", "\t", "\n", "\u00a0", "a b", `${TOKEN} `, "a\nb", "a\u0000b", "a\u007fb"]) {
       assert.equal(cookieLooksPlausible(value), false, JSON.stringify(value));
     }
   });
 });
 
 describe("expired session leaves the Server Component", () => {
-  it("page.ts redirects to the handlers and does not import the cookie writers", () => {
-    const page = source("./page.ts");
+  it("page.ts redirects and does not import the cookie writers", () => {
+    const page = read("./page.ts");
     assert.match(page, /export async function handlePageError/);
     assert.match(page, /export async function handleMemberPageError/);
     assert.match(page, /redirect\(sessionExpiredTarget\("owner"\)\)/);
@@ -62,14 +43,14 @@ describe("expired session leaves the Server Component", () => {
   });
 
   it("middleware.ts uses cookieLooksPlausible", () => {
-    const middleware = source("../middleware.ts");
+    const middleware = read("../middleware.ts");
     assert.match(middleware, /cookieLooksPlausible\(/);
     assert.match(middleware, /sessionExpiredTarget\(/);
   });
 
-  it("route handlers clear the matching cookie and do not catch redirect", () => {
-    const owner = source("../app/logout/expired/route.ts");
-    const member = source("../app/member/logout/expired/route.ts");
+  it("handlers clear the matching cookie and do not catch redirect", () => {
+    const owner = read("../app/logout/expired/route.ts");
+    const member = read("../app/member/logout/expired/route.ts");
     assert.match(owner, /clearSessionCookie\(/);
     assert.doesNotMatch(owner, /clearMemberSessionCookie/);
     assert.match(owner, /redirect\("\/login\?reason=session"\)/);

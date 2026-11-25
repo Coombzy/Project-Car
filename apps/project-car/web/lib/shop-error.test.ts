@@ -51,17 +51,17 @@ describe("session errors", () => {
   });
 });
 
-describe("page.ts session redirect stays on the login URL", () => {
+describe("page.ts session redirect leaves cookie writes to the route handler", () => {
   const pageSource = readFileSync(join(webRoot, "lib/page.ts"), "utf8");
 
-  it("re-exports the helpers and still clears the cookie on the way to login", () => {
+  it("re-exports the helpers and redirects to the expired-session handlers", () => {
     assert.match(pageSource, /export\s*\{[^}]*\bshopErrorMessage\b/);
     assert.match(pageSource, /export\s*\{[^}]*\bisOwnerSessionError\b/);
     assert.match(pageSource, /export\s*\{[^}]*\bisMemberSessionError\b/);
-    assert.match(pageSource, /clearSessionCookie\(/);
-    assert.match(pageSource, /clearMemberSessionCookie\(/);
-    assert.match(pageSource, /redirect\("\/login\?reason=session"\)/);
-    assert.match(pageSource, /redirect\("\/member\/login\?reason=session"\)/);
+    assert.doesNotMatch(pageSource, /clearSessionCookie/);
+    assert.doesNotMatch(pageSource, /clearMemberSessionCookie/);
+    assert.match(pageSource, /redirect\(sessionExpiredTarget\("owner"\)\)/);
+    assert.match(pageSource, /redirect\(sessionExpiredTarget\("member"\)\)/);
     assert.equal(pageSource.includes("/session/expired"), false);
     assert.equal(existsSync(join(webRoot, "app/session/expired/route.ts")), false);
     assert.equal(existsSync(join(webRoot, "app/member/session/expired/route.ts")), false);
