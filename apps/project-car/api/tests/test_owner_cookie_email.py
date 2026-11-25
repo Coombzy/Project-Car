@@ -1,13 +1,17 @@
 from __future__ import annotations
 
-from app.auth import OWNER_SALT, Principal, _serializer
+from app.auth import OWNER_SALT, Principal, _serializer, password_fingerprint
 from app.config import get_settings
 from app.deps import _owner_from_cookie
 
 
 def _token(payload: dict) -> str:
     settings = get_settings()
-    return _serializer(settings, salt=OWNER_SALT).dumps(payload)
+    body = {
+        **payload,
+        "pwd_fp": password_fingerprint(settings, settings.owner_password),
+    }
+    return _serializer(settings, salt=OWNER_SALT).dumps(body)
 
 
 def test_owner_cookie_without_email_is_rejected() -> None:
