@@ -4,11 +4,9 @@ import { describe, it } from "node:test";
 
 import { cookieLooksPlausible, sessionExpiredTarget } from "./session-expired.ts";
 
-// itsdangerous URLSafeTimedSerializer shape: payload.timestamp.signature.
 const TOKEN =
   "eyJyb2xlIjoib3duZXIiLCJlbWFpbCI6Im93bmVyQHByb2plY3RjYXIuY2EifQ.awY3WQ.PipaHWSf6mhE5_7H8JyoVDXhfbY";
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
-
 describe("sessionExpiredTarget", () => {
   it("returns the logout handlers", () => {
     assert.equal(sessionExpiredTarget("owner"), "/logout/expired");
@@ -42,12 +40,18 @@ describe("expired session leaves the Server Component", () => {
     assert.doesNotMatch(page, /from ["']\.\/session["']/);
   });
 
-  it("middleware.ts inlines the shape check and does not import session-expired", () => {
-    const middleware = read("../middleware.ts");
-    assert.doesNotMatch(middleware, /session-expired/);
-    assert.match(middleware, /function cookieLooksPlausible\(/);
-    assert.match(middleware, /isMemberArea && path !== memberExpired && memberSession && !cookieLooksPlausible\(memberSession\)/);
-    assert.match(middleware, /!isMemberArea && !isSignup && path !== ownerExpired && ownerSession && !cookieLooksPlausible\(ownerSession\)/);
+  it("a bad cookie does not redirect the other audience", () => {
+    const source = read("../middleware.ts");
+    const memberAt = source.indexOf("if (isMemberArea && path !== memberExpired");
+    const ownerAt = source.indexOf("if (!isMemberArea && !isSignup");
+    const memberGate = source.slice(memberAt, ownerAt);
+    const ownerGate = source.slice(ownerAt, source.indexOf("if (isMemberLogin)"));
+    assert.doesNotMatch(source, /session-expired/);
+    assert.match(source, /function cookieLooksPlausible\(/);
+    assert.match(memberGate, /cookieLooksPlausible\(memberSession\)/);
+    assert.doesNotMatch(memberGate, /ownerExpired/);
+    assert.match(ownerGate, /cookieLooksPlausible\(ownerSession\)/);
+    assert.doesNotMatch(ownerGate, /memberExpired/);
   });
 
   it("handlers clear the matching cookie and do not catch redirect", () => {
