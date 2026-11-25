@@ -9,7 +9,8 @@ for s in \
   scripts/selftest-check-result.sh \
   scripts/selftest-pr-ready.sh \
   scripts/selftest-related-tests.sh \
-  scripts/selftest-agent-scripts.sh
+  scripts/selftest-agent-scripts.sh \
+  scripts/selftest-check-compose-prod.sh
 do
   if ! bash "$s"; then
     printf 'failed: %s\n' "$s" >&2
