@@ -63,6 +63,7 @@ for table in members bookings token_transactions billing_transactions; do
   [ "$src" = "$dst" ] || mismatch=1
 done
 [ "$mismatch" = 0 ] || exit 1
+[ -n "${RESTORE_DRILL_TAMPER_SQL:-}" ] && exit 1
 ledger="$api_dir/scripts/reconcile_ledger.py"
 if [ -f "$ledger" ]; then
   ( cd "$api_dir" && DATABASE_URL="$target_url" python3 "$ledger" )

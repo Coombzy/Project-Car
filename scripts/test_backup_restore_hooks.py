@@ -42,6 +42,10 @@ if not re.search(r"skipif\([^)]*DATABASE_URL", text):
 for needle in ("equal counts", "exit 0", "tamper", "exit 1", "same-name", "exit 2", "untouched"):
     if needle not in text:
         fail("pytest missing " + needle)
+
+if '[ -n "${RESTORE_DRILL_TAMPER_SQL:-}" ] && exit 1' not in restore:
+    fail("tamper mode does not exit 1 when counts still match")
+
 guard = subprocess.run(
     [sys.executable, "scripts/test_backup_script_guards.py"],
     cwd=root,
