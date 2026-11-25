@@ -51,7 +51,10 @@ def _owner_from_cookie(settings: Settings, session_cookie: str | None) -> Princi
     if not payload:
         return None
     reject_dev_secret(settings.session_secret)
-    return Principal(role="owner", email=str(payload.get("email") or settings.owner_email))
+    email = payload.get("email")
+    if not isinstance(email, str) or not email or email != settings.owner_email:
+        return None
+    return Principal(role="owner", email=settings.owner_email)
 
 
 def require_owner(
@@ -69,9 +72,12 @@ def require_owner(
     raise _unauthorized()
 
 
+# scope="function": get_db commits before the response is sent (PC-AUD-002).
+DbSession = Annotated[Session, Depends(get_db, scope="function")]
+
 def require_member(
     settings: Annotated[Settings, Depends(current_settings)],
-    session: Annotated[Session, Depends(get_db)],
+    session: DbSession,
     member_session_cookie: Annotated[str | None, Cookie(alias="pc_member_session")] = None,
 ) -> Principal:
     """Member session cookie. Parallel to Owner. Not OIDC — Staff OIDC can follow."""
@@ -104,7 +110,7 @@ def require_member(
 
 def require_principal(
     settings: Annotated[Settings, Depends(current_settings)],
-    session: Annotated[Session, Depends(get_db)],
+    session: DbSession,
     authorization: Annotated[str | None, Header()] = None,
     session_cookie: Annotated[str | None, Cookie(alias="pc_owner_session")] = None,
     member_session_cookie: Annotated[str | None, Cookie(alias="pc_member_session")] = None,
@@ -139,7 +145,6 @@ def require_principal(
     raise _unauthorized("Authentication required.")
 
 
-DbSession = Annotated[Session, Depends(get_db)]
 Owner = Annotated[Principal, Depends(require_owner)]
 MemberUser = Annotated[Principal, Depends(require_member)]
 AnyPrincipal = Annotated[Principal, Depends(require_principal)]

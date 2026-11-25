@@ -81,7 +81,13 @@ def _serializer(settings: Settings, *, salt: str) -> URLSafeTimedSerializer:
 
 
 def create_session_token(settings: Settings, email: str) -> str:
-    return _serializer(settings, salt=OWNER_SALT).dumps({"role": "owner", "email": email})
+    return _serializer(settings, salt=OWNER_SALT).dumps(
+        {
+            "role": "owner",
+            "email": email,
+            "pwd_fp": password_fingerprint(settings, settings.owner_password),
+        }
+    )
 
 
 # Truncated HMAC hex. Long enough to change when the hash changes, short
@@ -144,6 +150,10 @@ def _load_payload(settings: Settings, token: str, *, salt: str) -> dict[str, Any
 def read_session_token(settings: Settings, token: str) -> dict[str, Any] | None:
     payload = _load_payload(settings, token, salt=OWNER_SALT)
     if payload is None or payload.get("role") != "owner":
+        return None
+    if not member_password_fingerprint_matches(
+        settings, payload.get("pwd_fp"), settings.owner_password
+    ):
         return None
     return payload
 
