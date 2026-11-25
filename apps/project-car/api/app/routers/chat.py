@@ -20,6 +20,7 @@ from app.services.chat import (
     create_room,
     get_room,
     last_message_for,
+    last_messages_for,
     list_messages,
     list_rooms,
     post_message,
@@ -39,9 +40,18 @@ def _room_out(session, room) -> ChatRoomOut:
     return ChatRoomOut.from_room(room, last)
 
 
+def _rooms_out(session, rooms) -> list[ChatRoomOut]:
+    last = last_messages_for(session, [room.id for room in rooms])
+    return [ChatRoomOut.from_room(room, last.get(room.id)) for room in rooms]
+
+
 @router.get("/rooms", response_model=list[ChatRoomOut])
-def owner_list_rooms(session: DbSession, _owner: Owner) -> list[ChatRoomOut]:
-    return [_room_out(session, room) for room in list_rooms(session)]
+def owner_list_rooms(
+    session: DbSession,
+    _owner: Owner,
+    limit: int = Query(default=100, ge=1, le=200),
+) -> list[ChatRoomOut]:
+    return _rooms_out(session, list_rooms(session, limit=limit))
 
 
 @router.post("/rooms", response_model=ChatRoomOut, status_code=201)

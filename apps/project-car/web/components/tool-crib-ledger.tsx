@@ -1,6 +1,7 @@
 import { checkoutCribToolAction, returnCribToolAction } from "../app/tools/actions";
 import type { Member, ToolCribEvent } from "../lib/config";
 import { SAMPLE_CRIB_TOOLS } from "../lib/inventory";
+import { showDemoPlaceholders } from "../lib/placeholders";
 import { formatShopDateTime } from "../lib/time";
 
 function eventKindLabel(kind: ToolCribEvent["kind"]): string {
@@ -25,6 +26,7 @@ export function ToolCribLedger({
   events: ToolCribEvent[];
   error?: string;
 }) {
+  const showSamples = showDemoPlaceholders();
   const activeMembers = members.filter((member) => member.status === "active");
 
   return (
@@ -54,8 +56,9 @@ export function ToolCribLedger({
             </label>
             <label>
               SKU
-              <input name="sku" list="crib-checkout-skus" required placeholder="TC-FL-001" />
+              <input name="sku" list={showSamples ? "crib-checkout-skus" : undefined} required placeholder="TC-FL-001" />
             </label>
+            {showSamples ? (
             <datalist id="crib-checkout-skus">
               {SAMPLE_CRIB_TOOLS.map((row) => (
                 <option key={row.sku} value={row.sku}>
@@ -63,6 +66,7 @@ export function ToolCribLedger({
                 </option>
               ))}
             </datalist>
+            ) : null}
             <label>
               Note
               <input name="note" placeholder="Optional" />
@@ -79,8 +83,9 @@ export function ToolCribLedger({
         <form action={returnCribToolAction} className="form-grid">
           <label>
             SKU
-            <input name="sku" list="crib-return-skus" required placeholder="TC-FL-001" />
+            <input name="sku" list={showSamples ? "crib-return-skus" : undefined} required placeholder="TC-FL-001" />
           </label>
+          {showSamples ? (
           <datalist id="crib-return-skus">
             {SAMPLE_CRIB_TOOLS.map((row) => (
               <option key={row.sku} value={row.sku}>
@@ -88,6 +93,7 @@ export function ToolCribLedger({
               </option>
             ))}
           </datalist>
+          ) : null}
           <label>
             Note
             <input name="note" placeholder="Optional" />

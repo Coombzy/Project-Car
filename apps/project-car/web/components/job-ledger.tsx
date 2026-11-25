@@ -1,6 +1,6 @@
 import { claimJobAction, markJobDoneAction } from "../app/member/jobs/actions";
 import type { JobEvent } from "../lib/config";
-import { SAMPLE_JOBS } from "../lib/placeholders";
+import { SAMPLE_JOBS, showDemoPlaceholders } from "../lib/placeholders";
 import { formatShopDateTime } from "../lib/time";
 
 function eventKindLabel(kind: JobEvent["kind"]): string {
@@ -25,6 +25,7 @@ export function JobLedger({
   events: JobEvent[];
   error?: string;
 }) {
+  const showSamples = showDemoPlaceholders();
   return (
     <>
       <h2>Stored claim and done</h2>
@@ -34,7 +35,7 @@ export function JobLedger({
       </p>
       {error ? <div className="banner error">{error}</div> : null}
 
-      {audience === "member" ? (
+      {showSamples && audience === "member" ? (
         <>
           <div className="card">
             <h3>Claim a job</h3>

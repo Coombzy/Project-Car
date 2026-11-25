@@ -703,6 +703,7 @@ def test_check_in_at_or_after_end_is_refused(client: TestClient, monkeypatch: py
     hoist_before = _hoist_status(client, hoist_id)
 
     # Past the end first, so the red failure is the ended window, then exactly end_at.
+    monkeypatch.setenv("SHOP_DEV_MODE", "1")
     for clock in (end_at + timedelta(minutes=1), end_at):
         monkeypatch.setenv("SHOP_NOW", clock.isoformat())
         checked = client.post(f"/bookings/{booking['id']}/check-in", headers=AUTH)

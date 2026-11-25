@@ -27,6 +27,15 @@ EMAIL = "self.serve@example.com"
 PASSWORD = "walkthrough-pass"
 
 
+def _pack_purchase(payment_id: str) -> dict[str, str]:
+    """Stand-in pack figures: 10 tokens for 1.00 CAD. Not a real price."""
+    return {
+        "payment_id": payment_id,
+        "tokens": "10.00",
+        "amount_cad": "1.00",
+    }
+
+
 def _session(client: TestClient) -> Session:
     return client.session_factory()  # type: ignore[attr-defined]
 
@@ -52,6 +61,10 @@ def _signup(client: TestClient, **overrides: object):
 
 
 def test_self_serve_signup_creates_a_basic_member(client: TestClient) -> None:
+    switched = client.patch("/signup-mode", headers=AUTH, json={"mode": "self_serve"})
+    assert switched.status_code == 200, switched.text
+    assert switched.json()["mode"] == "self_serve"
+
     mode = client.get("/signup-mode")
     assert mode.status_code == 200, mode.text
     assert mode.json()["mode"] == "self_serve"
@@ -107,7 +120,7 @@ def test_waitlist_mode_creates_a_waitlist_row(client: TestClient) -> None:
     assert restored.json()["mode"] == "self_serve"
 
 
-def test_unknown_signup_mode_reads_as_self_serve(client: TestClient) -> None:
+def test_unknown_signup_mode_reads_as_waitlist(client: TestClient) -> None:
     from app.models import ShopSetting
 
     session = _session(client)
@@ -117,7 +130,7 @@ def test_unknown_signup_mode_reads_as_self_serve(client: TestClient) -> None:
 
     mode = client.get("/signup-mode")
     assert mode.status_code == 200, mode.text
-    assert mode.json()["mode"] == "self_serve"
+    assert mode.json()["mode"] == "waitlist"
 
 
 def test_ai_cannot_switch_signup_mode(client: TestClient) -> None:
@@ -130,7 +143,7 @@ def test_ai_cannot_switch_signup_mode(client: TestClient) -> None:
     assert switched.json()["error"]["code"] == "signup_mode_requires_human"
     mode = client.get("/signup-mode")
     assert mode.status_code == 200, mode.text
-    assert mode.json()["mode"] == "self_serve"
+    assert mode.json()["mode"] == "waitlist"
 
 
 def test_unknown_processor_is_422(client: TestClient, monkeypatch) -> None:
@@ -141,11 +154,7 @@ def test_unknown_processor_is_422(client: TestClient, monkeypatch) -> None:
         login_member(client, member["email"])
         bought = client.post(
             "/member/token-purchases",
-            json={
-                "payment_id": "STANDIN-SHOULD-NOT-RUN",
-                "tokens": "10.00",
-                "amount_cad": "5.00",
-            },
+            json=_pack_purchase("STANDIN-SHOULD-NOT-RUN"),
         )
         assert bought.status_code == 422, bought.text
         error = bought.json()["error"]
@@ -165,20 +174,16 @@ def test_stand_in_purchase_writes_one_billing_row_and_one_ledger_row(
         login_member(client, member["email"])
         bought = client.post(
             "/member/token-purchases",
-            json={
-                "payment_id": "STANDIN-PACK-1",
-                "tokens": "200.00",
-                "amount_cad": "40.00",
-            },
+            json=_pack_purchase("STANDIN-PACK-1"),
         )
         assert bought.status_code == 201, bought.text
         purchase = bought.json()
         assert purchase["kind"] == "token_purchase"
-        assert Decimal(str(purchase["amount"])) == Decimal("200.00")
+        assert Decimal(str(purchase["amount"])) == Decimal("10.00")
         meta = purchase["meta"]["purchase"]
         assert meta["processor"] == "stand-in"
         assert meta["payment_id"] == "STANDIN-PACK-1"
-        assert Decimal(meta["amount_cad"]) == Decimal("40.00")
+        assert Decimal(meta["amount_cad"]) == Decimal("1.00")
         assert meta["fee_rate"] == "stand-in-none"
         assert "gst" not in meta
 
@@ -186,7 +191,7 @@ def test_stand_in_purchase_writes_one_billing_row_and_one_ledger_row(
         assert me.status_code == 200, me.text
         profile = me.json()
         assert Decimal(str(profile["allowance_balance"])) == Decimal("1000")
-        assert Decimal(str(profile["purchased_balance"])) == Decimal("200.00")
+        assert Decimal(str(profile["purchased_balance"])) == Decimal("10.00")
         assert Decimal(str(profile["token_balance"])) == (
             Decimal(str(profile["allowance_balance"])) + Decimal(str(profile["purchased_balance"]))
         )
@@ -198,7 +203,7 @@ def test_stand_in_purchase_writes_one_billing_row_and_one_ledger_row(
         ).all()
         assert len(billing) == 1
         assert billing[0].kind.value == "pack"
-        assert Decimal(str(billing[0].amount)) == Decimal("40.00")
+        assert Decimal(str(billing[0].amount)) == Decimal("1.00")
         assert billing[0].note
         ledger = session.scalars(
             select(TokenTransaction).where(
@@ -208,24 +213,20 @@ def test_stand_in_purchase_writes_one_billing_row_and_one_ledger_row(
         ).all()
         assert len(ledger) == 1
         assert ledger[0].payment_ref == "STANDIN-PACK-1"
-        assert Decimal(str(ledger[0].purchased_amount)) == Decimal("200.00")
+        assert Decimal(str(ledger[0].purchased_amount)) == Decimal("10.00")
         assert Decimal(str(ledger[0].allowance_amount)) == Decimal("0")
         session.close()
 
         refused = client.post(
             "/member/token-purchases",
-            json={"payment_id": "PAYPAL-LIVE-1", "tokens": "10.00", "amount_cad": "5.00"},
+            json=_pack_purchase("PAYPAL-LIVE-1"),
         )
         assert refused.status_code == 422, refused.text
         assert refused.json()["error"]["code"] == "standin_only"
 
         again = client.post(
             "/member/token-purchases",
-            json={
-                "payment_id": "STANDIN-PACK-1",
-                "tokens": "200.00",
-                "amount_cad": "40.00",
-            },
+            json=_pack_purchase("STANDIN-PACK-1"),
         )
         assert again.status_code == 409, again.text
         assert again.json()["error"]["code"] == "already_credited"

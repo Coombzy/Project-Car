@@ -9,7 +9,15 @@ from uuid import UUID, uuid4
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
-from app.models import Booking, RefundRequest, ShopJob, ShopJobStatus, StaffAction
+from app.models import (
+    Booking,
+    RefundRequest,
+    ShopJob,
+    ShopJobStatus,
+    StaffAction,
+    StaffPartsRequest,
+    ToolCribException,
+)
 from app.shop_time import as_utc, shop_now
 from tests.conftest import (
     AUTH,
@@ -262,6 +270,95 @@ def test_parts_and_tool_crib_use_the_same_decision_routes(client: TestClient) ->
     assert _balance(client, member["id"]) == before
 
 
+def _decision_actions(client: TestClient, request_id: str) -> list[str]:
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        rows = session.scalars(
+            select(StaffAction).where(StaffAction.request_id == UUID(request_id))
+        ).all()
+        return [row.action for row in rows]
+    finally:
+        session.close()
+
+
+def _job_status(client: TestClient, job_id: str) -> str:
+    session = client.session_factory()  # type: ignore[attr-defined]
+    try:
+        row = session.get(ShopJob, UUID(job_id))
+        assert row is not None
+        return row.status.value
+    finally:
+        session.close()
+
+
+def _assert_decision_lock(reads: list[tuple[str, bool]], table: str) -> None:
+    matches = [
+        (sql, locked)
+        for sql, locked in reads
+        if f"FROM {table}" in sql and f"{table}.id" in sql
+    ]
+    assert matches, f"decision did not select {table}"
+    sql, locked = matches[0]
+    assert locked and "FOR UPDATE" in sql, f"{table} select has no FOR UPDATE"
+
+
+def test_second_parts_and_tool_crib_decision_conflicts(client: TestClient, monkeypatch) -> None:
+    """Approve then deny is 409 request_already_decided, with one staff action.
+
+    The decision select uses FOR UPDATE and populate_existing. SQLite drops
+    FOR UPDATE at execution; the compiled Postgres statement still asks for it.
+    """
+    from sqlalchemy.dialects import postgresql
+    from sqlalchemy.orm import Session
+
+    reads: list[tuple[str, bool]] = []
+    original = Session.scalars
+
+    def spy(self, statement, *args, **kwargs):
+        sql = str(statement.compile(dialect=postgresql.dialect()))
+        locked = getattr(statement, "_for_update_arg", None) is not None
+        reads.append((sql, locked))
+        return original(self, statement, *args, **kwargs)
+
+    monkeypatch.setattr(Session, "scalars", spy)
+    member = create_member(client, email="ada.decide@example.com")
+    parts = client.post(
+        "/parts-requests",
+        headers=AI,
+        json={"member_id": member["id"], "sku": "PT-OIL-5W30-012", "note": "Need oil"},
+    )
+    assert parts.status_code == 201, parts.text
+    parts_id = parts.json()["id"]
+    reads.clear()
+    approved = client.post(f"/parts-requests/{parts_id}/approve", headers=AUTH)
+    assert approved.status_code == 200, approved.text
+    _assert_decision_lock(reads, StaffPartsRequest.__tablename__)
+    reads.clear()
+    denied = client.post(f"/parts-requests/{parts_id}/deny", headers=AUTH)
+    assert denied.status_code == 409, denied.text
+    assert denied.json()["error"]["code"] == "request_already_decided"
+    _assert_decision_lock(reads, StaffPartsRequest.__tablename__)
+    assert _decision_actions(client, parts_id) == ["approve"]
+
+    login_member(client, "ada.decide@example.com")
+    crib = client.post(
+        "/member/tool-crib-exceptions",
+        json={"tool_code": "TC-FL-001", "reason": "Need it off the wall"},
+    )
+    assert crib.status_code == 201, crib.text
+    crib_id = crib.json()["id"]
+    reads.clear()
+    crib_ok = client.post(f"/tool-crib-exceptions/{crib_id}/approve", headers=AUTH)
+    assert crib_ok.status_code == 200, crib_ok.text
+    _assert_decision_lock(reads, ToolCribException.__tablename__)
+    reads.clear()
+    crib_no = client.post(f"/tool-crib-exceptions/{crib_id}/deny", headers=AUTH)
+    assert crib_no.status_code == 409, crib_no.text
+    assert crib_no.json()["error"]["code"] == "request_already_decided"
+    _assert_decision_lock(reads, ToolCribException.__tablename__)
+    assert _decision_actions(client, crib_id) == ["approve"]
+
+
 def test_ai_can_finish_or_send_back_a_claimed_job(client: TestClient) -> None:
     member = create_member(client, email="ada@example.com")
     before = _balance(client, member["id"])
@@ -368,6 +465,57 @@ def test_claim_job_locks_the_job_row(client: TestClient, monkeypatch) -> None:
     assert first_locked and "FOR UPDATE" in first_sql, (
         "claim job select has no FOR UPDATE on the postgresql dialect"
     )
+
+
+def test_aud_004_second_job_decision_is_409(client: TestClient, monkeypatch) -> None:
+    """AUD-004 part 2: done then send-back, and the reverse, conflict.
+
+    The second decision is 409 job_already_decided and leaves one
+    staff_actions row, from the first decision. The job select uses
+    FOR UPDATE. SQLite drops that clause; the compiled Postgres statement
+    still asks for it. Red on main: the second call is 400 job_not_claimed
+    and that select has no FOR UPDATE.
+    """
+    reads: list[tuple[str, bool]] = []
+    _record_scalars(monkeypatch, reads)
+
+    def claimed(email: str, title: str) -> str:
+        create_member(client, email=email)
+        created = client.post(
+            "/jobs", headers=AUTH, json={"title": title, "token_bounty": "25"}
+        )
+        assert created.status_code == 201, created.text
+        job_id = created.json()["id"]
+        login_member(client, email)
+        held = client.post(f"/member/jobs/{job_id}/claim")
+        assert held.status_code == 200, held.text
+        return job_id
+
+    def decide(job_id: str, path: str):
+        reads.clear()
+        response = client.post(f"/jobs/{job_id}/{path}", headers=AUTH)
+        _assert_decision_lock(reads, ShopJob.__tablename__)
+        return response
+
+    done_id = claimed("ada.job-lock@example.com", "Sweep the bay")
+    done = decide(done_id, "done")
+    assert done.status_code == 200, done.text
+    assert done.json()["status"] == "done"
+    blocked = decide(done_id, "send-back")
+    assert blocked.status_code == 409, blocked.text
+    assert blocked.json()["error"]["code"] == "job_already_decided"
+    assert _decision_actions(client, done_id) == ["job_done"]
+    assert _job_status(client, done_id) == "done"
+
+    back_id = claimed("ben.job-lock@example.com", "Empty the drum")
+    sent = decide(back_id, "send-back")
+    assert sent.status_code == 200, sent.text
+    assert sent.json()["status"] == "sent_back"
+    blocked = decide(back_id, "done")
+    assert blocked.status_code == 409, blocked.text
+    assert blocked.json()["error"]["code"] == "job_already_decided"
+    assert _decision_actions(client, back_id) == ["job_send_back"]
+    assert _job_status(client, back_id) == "sent_back"
 
 
 def test_drafts_wait_for_accept(client: TestClient) -> None:

@@ -1,0 +1,8 @@
+[Unit]
+Description=Project Car shop database backup
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/backup-db.sh
+# DATABASE_URL is required and must come from a drop-in, not this file.
+# Do not set BACKUP_REMOTE here. When it is unset, backup-db.sh skips the off-site rclone copy.

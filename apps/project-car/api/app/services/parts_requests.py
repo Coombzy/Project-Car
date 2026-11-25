@@ -6,10 +6,10 @@ import re
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import PartsOrder, PartsOrderStatus, PartsRequest, PartsRequestStatus
+from app.models import Member, PartsOrder, PartsOrderStatus, PartsRequest, PartsRequestStatus
 from app.shop_time import shop_now
 
 PARTS_SKU = re.compile(r"^PT-[A-Z0-9]+(?:-[A-Z0-9]+)*-\d{3}$")
@@ -82,14 +82,35 @@ def list_member_parts_requests(session: Session, member_id: UUID) -> list[PartsR
     return list(session.scalars(stmt).all())
 
 
-def list_parts_requests(session: Session, *, limit: int = 50, offset: int = 0) -> list[PartsRequest]:
-    stmt = (
-        select(PartsRequest)
-        .options(selectinload(PartsRequest.member))
-        .order_by(PartsRequest.created_at.desc(), PartsRequest.sku)
-        .limit(limit)
-        .offset(offset)
-    )
+def list_parts_requests(
+    session: Session,
+    *,
+    limit: int = 50,
+    offset: int = 0,
+    q: str | None = None,
+    status: PartsRequestStatus | None = None,
+) -> list[PartsRequest]:
+    stmt = select(PartsRequest).options(selectinload(PartsRequest.member))
+    needle = (q or "").strip()
+    if needle:
+        # Escape \ then % then _ so LIKE is a literal substring. lower() works on SQLite and Postgres.
+        escape = "\\"
+        literal = (
+            needle.lower()
+            .replace(escape, escape * 2)
+            .replace("%", escape + "%")
+            .replace("_", escape + "_")
+        )
+        pattern = f"%{literal}%"
+        stmt = stmt.join(Member, PartsRequest.member_id == Member.id).where(
+            or_(
+                func.lower(Member.name).like(pattern, escape=escape),
+                func.lower(Member.email).like(pattern, escape=escape),
+            )
+        )
+    if status is not None:
+        stmt = stmt.where(PartsRequest.status == status)
+    stmt = stmt.order_by(PartsRequest.created_at.desc(), PartsRequest.sku).limit(limit).offset(offset)
     return list(session.scalars(stmt).all())
 
 

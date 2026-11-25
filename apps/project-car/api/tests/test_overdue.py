@@ -566,11 +566,20 @@ def test_overdue_keeps_the_hoist_occupied_when_another_booking_ends(client: Test
     assert cancelled.json()["status"] == "cancelled"
     _assert_overdue_still_holds(client, overdue["id"], shop["id"], tokens, billing)
 
+    # Already active: check-in is 409 while the overdue visit is still on this bay.
     # Inside the check-in window. This visit is not the overdue booking.
     complete_at = shop_now().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
     freeze_shop_clock(complete_at - timedelta(minutes=10))
     finished = _shop_booking(client, shop["id"], complete_at, complete_at + timedelta(hours=1))
-    _activate(client, finished["id"])
+    assert client.post(f"/bookings/{finished['id']}/confirm", headers=AUTH).status_code == 200
+    session = _session(client)
+    try:
+        row = session.get(Booking, UUID(finished["id"]))
+        assert row is not None
+        row.status = BookingStatus.ACTIVE
+        session.commit()
+    finally:
+        session.close()
     completed = client.post(
         f"/bookings/{finished['id']}/complete",
         headers=AUTH,

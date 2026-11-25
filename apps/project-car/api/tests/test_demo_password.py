@@ -49,7 +49,9 @@ def test_seed_main_refuses_public_host(monkeypatch) -> None:
 
 
 def test_default_api_secrets_refused_off_loopback(client: TestClient, monkeypatch) -> None:
+    monkeypatch.setattr(get_settings(), "shop_dev_mode", True)
     monkeypatch.setenv("SHOP_HOST", "127.0.0.1")
+    monkeypatch.setenv("SHOP_DEV_MODE", "1")
     loopback = client.get("/me", headers={"Authorization": "Bearer dev-owner-secret"})
     assert loopback.status_code == 200, loopback.text
 
@@ -154,10 +156,8 @@ def test_login_locks_after_repeated_failures(client: TestClient) -> None:
     owner = {"email": "owner@projectcar.ca", "password": "wrong-guess"}
     member = {"email": "nobody@example.com", "password": "wrong-guess"}
 
-    for _ in range(4):
-        member_denied = client.post("/auth/member/login", json=member)
-        assert member_denied.status_code == 401, member_denied.text
-        assert member_denied.json()["error"]["code"] == "invalid_credentials"
+    # Account backoff starts after six failures. The IP cap stays at eight.
+    for _ in range(6):
         owner_denied = client.post("/auth/login", json=owner)
         assert owner_denied.status_code == 401, owner_denied.text
         assert owner_denied.json()["error"]["code"] == "invalid_credentials"
@@ -167,8 +167,8 @@ def test_login_locks_after_repeated_failures(client: TestClient) -> None:
     assert locked_owner.json()["error"]["code"] == "rate_limited"
 
     locked_member = client.post("/auth/member/login", json=member)
-    assert locked_member.status_code == 429, locked_member.text
-    assert locked_member.json()["error"]["code"] == "rate_limited"
+    assert locked_member.status_code == 401, locked_member.text
+    assert locked_member.json()["error"]["code"] == "invalid_credentials"
 
     still_locked = client.post(
         "/auth/login",
@@ -178,9 +178,14 @@ def test_login_locks_after_repeated_failures(client: TestClient) -> None:
     assert still_locked.json()["error"]["code"] == "rate_limited"
 
 
-def test_correct_password_after_seven_failures_logs_in(client: TestClient) -> None:
+def test_correct_password_after_five_failures_logs_in(
+    client: TestClient, monkeypatch
+) -> None:
+    monkeypatch.setattr(get_settings(), "shop_dev_mode", True)
+    monkeypatch.setenv("SHOP_DEV_MODE", "1")
     wrong = {"email": "owner@projectcar.ca", "password": "wrong-guess"}
-    for _ in range(7):
+    # The sixth attempt is still open. Success clears that account key.
+    for _ in range(5):
         denied = client.post("/auth/login", json=wrong)
         assert denied.status_code == 401, denied.text
         assert denied.json()["error"]["code"] == "invalid_credentials"

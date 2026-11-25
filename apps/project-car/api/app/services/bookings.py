@@ -547,6 +547,28 @@ def check_in_booking(session: Session, booking_id: UUID) -> Booking:
             "check_in_too_late",
             "Check-in closes when the visit ends.",
         )
+    # Lock the bay. Postgres holds FOR UPDATE until commit; SQLite drops it.
+    hoist = session.scalars(
+        select(Hoist)
+        .where(Hoist.id == booking.hoist_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).first()
+    if hoist is None:
+        raise _error(404, "not_found", "Hoist not found.")
+    occupied = session.scalars(
+        select(Booking.id).where(
+            Booking.hoist_id == hoist.id,
+            Booking.id != booking.id,
+            Booking.status.in_((BookingStatus.ACTIVE, BookingStatus.OVERDUE)),
+        )
+    ).first()
+    if occupied is not None:
+        raise _error(
+            409,
+            "hoist_occupied",
+            "Another visit is still on this bay. Complete it first.",
+        )
     booking.status = BookingStatus.ACTIVE
     booking.hoist.status = HoistStatus.OCCUPIED
     session.add(booking)

@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 from collections.abc import Iterator
 from contextlib import contextmanager
+from itertools import count
 
 import pytest
 from fastapi.testclient import TestClient
@@ -18,7 +19,7 @@ from app.config import get_settings
 from tests.conftest import AUTH
 
 HEADER = "X-Test-Client-IP"
-WRONG_LOGIN = {"email": "owner@projectcar.ca", "password": "wrong-guess"}
+_LOGIN_N = count(1)
 LOGIN_DENIED = {
     "code": "invalid_credentials",
     "message": "Email or password is incorrect.",
@@ -41,9 +42,11 @@ def client_ip_header():
     (``extra="ignore"``), so the header is not read and B stays on the peer.
     """
     previous = os.environ.get("CLIENT_IP_HEADER")
+    previous_trusted = os.environ.get("TRUSTED_PROXIES")
 
     def apply(name: str) -> None:
         os.environ["CLIENT_IP_HEADER"] = name
+        os.environ["TRUSTED_PROXIES"] = "203.0.113.55,203.0.113.56,203.0.113.57,203.0.113.70,203.0.113.71,203.0.113.72"
         get_settings.cache_clear()
 
     yield apply
@@ -51,6 +54,10 @@ def client_ip_header():
         os.environ.pop("CLIENT_IP_HEADER", None)
     else:
         os.environ["CLIENT_IP_HEADER"] = previous
+    if previous_trusted is None:
+        os.environ.pop("TRUSTED_PROXIES", None)
+    else:
+        os.environ["TRUSTED_PROXIES"] = previous_trusted
     get_settings.cache_clear()
 
 
@@ -67,7 +74,8 @@ def _peer(client: TestClient, host: str) -> Iterator[None]:
 
 def _login(client: TestClient, header: str | None):
     headers = {} if header is None else {HEADER: header}
-    return client.post("/auth/login", json=WRONG_LOGIN, headers=headers)
+    email = f"miss-{next(_LOGIN_N)}@projectcar.ca"
+    return client.post("/auth/login", json={"email": email, "password": "wrong-guess"}, headers=headers)
 
 
 def _join(client: TestClient, email: str, header: str | None):
