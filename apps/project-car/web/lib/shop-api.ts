@@ -36,6 +36,7 @@ import {
   readMemberSessionToken,
   readSessionToken,
 } from "./session";
+import { pathSegment } from "./shop-path";
 
 async function readJson(response: Response): Promise<unknown> {
   const text = await response.text();
@@ -136,7 +137,7 @@ export async function patchPartsRequest(
   id: string,
   status: "fulfilled" | "declined",
 ): Promise<PartsRequest> {
-  return shopJson<PartsRequest>(`/parts-requests/${id}`, "Could not update the parts request.", {
+  return shopJson<PartsRequest>(`/parts-requests/${pathSegment(id)}`, "Could not update the parts request.", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
@@ -151,7 +152,7 @@ export async function patchPartsOrder(
   id: string,
   status: PartsOrder["status"],
 ): Promise<PartsOrder> {
-  return shopJson<PartsOrder>(`/parts-orders/${id}`, "Could not update the parts order.", {
+  return shopJson<PartsOrder>(`/parts-orders/${pathSegment(id)}`, "Could not update the parts order.", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
@@ -171,7 +172,7 @@ export async function createTodo(payload: Record<string, unknown>): Promise<Todo
 }
 
 export async function patchTodo(id: string, payload: Record<string, unknown>): Promise<Todo> {
-  return shopJson<Todo>(`/todos/${id}`, "Could not update the to-do.", {
+  return shopJson<Todo>(`/todos/${pathSegment(id)}`, "Could not update the to-do.", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -181,7 +182,7 @@ export async function patchTodo(id: string, payload: Record<string, unknown>): P
 export async function deleteTodo(id: string): Promise<void> {
   let response: Response;
   try {
-    response = await shopFetch(`/todos/${id}`, { method: "DELETE" });
+    response = await shopFetch(`/todos/${pathSegment(id)}`, { method: "DELETE" });
   } catch {
     throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
   }
@@ -195,7 +196,7 @@ export async function deleteTodo(id: string): Promise<void> {
 export async function downloadTodoIcs(id: string): Promise<{ filename: string; body: string }> {
   let response: Response;
   try {
-    response = await shopFetch(`/todos/${id}/ics`);
+    response = await shopFetch(`/todos/${pathSegment(id)}/ics`);
   } catch {
     throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
   }
@@ -217,7 +218,7 @@ export async function listWaitlist(): Promise<WaitlistEntry[]> {
 }
 
 export async function markWaitlistContacted(id: string): Promise<WaitlistEntry> {
-  return shopJson<WaitlistEntry>(`/waitlist/${id}/contacted`, "Could not mark the entry contacted.", {
+  return shopJson<WaitlistEntry>(`/waitlist/${pathSegment(id)}/contacted`, "Could not mark the entry contacted.", {
     method: "POST",
   });
 }
@@ -227,7 +228,7 @@ export async function listTiers(): Promise<MembershipTier[]> {
 }
 
 export async function patchTier(name: string, payload: Partial<MembershipTier>): Promise<MembershipTier> {
-  return shopJson<MembershipTier>(`/tiers/${name}`, "Could not update the tier.", {
+  return shopJson<MembershipTier>(`/tiers/${pathSegment(name)}`, "Could not update the tier.", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -267,7 +268,7 @@ export async function returnCribTool(payload: { sku: string; note?: string }): P
 }
 
 export async function getMember(id: string): Promise<MemberDetail> {
-  return shopJson<MemberDetail>(`/members/${id}`, "Could not load that member.");
+  return shopJson<MemberDetail>(`/members/${pathSegment(id)}`, "Could not load that member.");
 }
 
 export async function createMember(payload: Record<string, unknown>): Promise<Member> {
@@ -279,7 +280,7 @@ export async function createMember(payload: Record<string, unknown>): Promise<Me
 }
 
 export async function patchMember(id: string, payload: Record<string, unknown>): Promise<Member> {
-  return shopJson<Member>(`/members/${id}`, "Could not update the member.", {
+  return shopJson<Member>(`/members/${pathSegment(id)}`, "Could not update the member.", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -287,11 +288,11 @@ export async function patchMember(id: string, payload: Record<string, unknown>):
 }
 
 export async function listMemberTokens(id: string): Promise<TokenTransaction[]> {
-  return shopJson<TokenTransaction[]>(`/members/${id}/tokens`, "Could not load the token ledger.");
+  return shopJson<TokenTransaction[]>(`/members/${pathSegment(id)}/tokens`, "Could not load the token ledger.");
 }
 
 export async function adjustMemberTokens(id: string, amount: string, note: string): Promise<TokenTransaction> {
-  return shopJson<TokenTransaction>(`/members/${id}/tokens`, "Could not adjust tokens.", {
+  return shopJson<TokenTransaction>(`/members/${pathSegment(id)}/tokens`, "Could not adjust tokens.", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ amount, note }),
@@ -299,7 +300,7 @@ export async function adjustMemberTokens(id: string, amount: string, note: strin
 }
 
 export async function rebuildMemberTokens(id: string): Promise<Member> {
-  return shopJson<Member>(`/members/${id}/tokens/rebuild`, "Could not rebuild the token balance.", {
+  return shopJson<Member>(`/members/${pathSegment(id)}/tokens/rebuild`, "Could not rebuild the token balance.", {
     method: "POST",
   });
 }
@@ -317,7 +318,7 @@ export async function createHoist(payload: Record<string, unknown>): Promise<Hoi
 }
 
 export async function patchHoist(id: string, payload: Record<string, unknown>): Promise<Hoist> {
-  return shopJson<Hoist>(`/hoists/${id}`, "Could not update the hoist.", {
+  return shopJson<Hoist>(`/hoists/${pathSegment(id)}`, "Could not update the hoist.", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -360,15 +361,15 @@ export async function createBooking(payload: Record<string, unknown>): Promise<B
 }
 
 export async function confirmBooking(id: string): Promise<Booking> {
-  return shopJson<Booking>(`/bookings/${id}/confirm`, "Could not confirm the booking.", { method: "POST" });
+  return shopJson<Booking>(`/bookings/${pathSegment(id)}/confirm`, "Could not confirm the booking.", { method: "POST" });
 }
 
 export async function checkInBooking(id: string): Promise<Booking> {
-  return shopJson<Booking>(`/bookings/${id}/check-in`, "Could not check in the booking.", { method: "POST" });
+  return shopJson<Booking>(`/bookings/${pathSegment(id)}/check-in`, "Could not check in the booking.", { method: "POST" });
 }
 
 export async function completeBooking(id: string, unusedTokens = "0"): Promise<Booking> {
-  return shopJson<Booking>(`/bookings/${id}/complete`, "Could not complete the booking.", {
+  return shopJson<Booking>(`/bookings/${pathSegment(id)}/complete`, "Could not complete the booking.", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ unused_tokens: unusedTokens }),
@@ -376,7 +377,7 @@ export async function completeBooking(id: string, unusedTokens = "0"): Promise<B
 }
 
 export async function cancelBooking(id: string): Promise<Booking> {
-  return shopJson<Booking>(`/bookings/${id}/cancel`, "Could not cancel the booking.", { method: "POST" });
+  return shopJson<Booking>(`/bookings/${pathSegment(id)}/cancel`, "Could not cancel the booking.", { method: "POST" });
 }
 
 export async function listOwnerShopHoistRequests(
@@ -401,7 +402,7 @@ type ShopHoistDecision = {
 
 export async function approveShopHoistRequest(id: string): Promise<ShopHoistDecision> {
   return shopJson<ShopHoistDecision>(
-    `/shop-hoist-requests/${id}/approve`,
+    `/shop-hoist-requests/${pathSegment(id)}/approve`,
     "Could not approve the shop hoist request.",
     { method: "POST" },
   );
@@ -409,7 +410,7 @@ export async function approveShopHoistRequest(id: string): Promise<ShopHoistDeci
 
 export async function denyShopHoistRequest(id: string): Promise<ShopHoistDecision> {
   return shopJson<ShopHoistDecision>(
-    `/shop-hoist-requests/${id}/deny`,
+    `/shop-hoist-requests/${pathSegment(id)}/deny`,
     "Could not deny the shop hoist request.",
     { method: "POST" },
   );
@@ -443,7 +444,7 @@ export async function listChatRooms(): Promise<ChatRoom[]> {
 }
 
 export async function getChatRoom(id: string): Promise<ChatRoom> {
-  return shopJson<ChatRoom>(`/chat/rooms/${id}`, "Could not load that chat room.");
+  return shopJson<ChatRoom>(`/chat/rooms/${pathSegment(id)}`, "Could not load that chat room.");
 }
 
 export async function createChatRoom(payload: { title: string; member_ids: string[] }): Promise<ChatRoom> {
@@ -455,7 +456,7 @@ export async function createChatRoom(payload: { title: string; member_ids: strin
 }
 
 export async function muteChatRoom(id: string, muted: boolean): Promise<ChatRoom> {
-  return shopJson<ChatRoom>(`/chat/rooms/${id}/mute`, "Could not update mute.", {
+  return shopJson<ChatRoom>(`/chat/rooms/${pathSegment(id)}/mute`, "Could not update mute.", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ muted }),
@@ -466,11 +467,11 @@ export async function listChatMessages(id: string, afterId?: string): Promise<Ch
   const query = new URLSearchParams();
   if (afterId) query.set("after_id", afterId);
   const suffix = query.size ? `?${query.toString()}` : "";
-  return shopJson<ChatMessagePage>(`/chat/rooms/${id}/messages${suffix}`, "Could not load chat messages.");
+  return shopJson<ChatMessagePage>(`/chat/rooms/${pathSegment(id)}/messages${suffix}`, "Could not load chat messages.");
 }
 
 export async function postChatMessage(id: string, body: string): Promise<ChatMessage> {
-  return shopJson<ChatMessage>(`/chat/rooms/${id}/messages`, "Could not send the message.", {
+  return shopJson<ChatMessage>(`/chat/rooms/${pathSegment(id)}/messages`, "Could not send the message.", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ body }),
@@ -591,7 +592,7 @@ export async function createMemberTodo(payload: Record<string, unknown>): Promis
 }
 
 export async function patchMemberTodo(id: string, payload: Record<string, unknown>): Promise<Todo> {
-  return memberJson<Todo>(`/todos/${id}`, "Could not update the to-do.", {
+  return memberJson<Todo>(`/todos/${pathSegment(id)}`, "Could not update the to-do.", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -601,7 +602,7 @@ export async function patchMemberTodo(id: string, payload: Record<string, unknow
 export async function deleteMemberTodo(id: string): Promise<void> {
   let response: Response;
   try {
-    response = await memberFetch(`/todos/${id}`, { method: "DELETE" });
+    response = await memberFetch(`/todos/${pathSegment(id)}`, { method: "DELETE" });
   } catch {
     throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
   }
@@ -615,7 +616,7 @@ export async function deleteMemberTodo(id: string): Promise<void> {
 export async function downloadMemberTodoIcs(id: string): Promise<{ filename: string; body: string }> {
   let response: Response;
   try {
-    response = await memberFetch(`/todos/${id}/ics`);
+    response = await memberFetch(`/todos/${pathSegment(id)}/ics`);
   } catch {
     throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
   }
@@ -684,13 +685,13 @@ export async function createMemberBooking(payload: Record<string, unknown>): Pro
 }
 
 export async function confirmMemberBooking(id: string): Promise<Booking> {
-  return memberJson<Booking>(`/member/bookings/${id}/confirm`, "Could not confirm the booking.", {
+  return memberJson<Booking>(`/member/bookings/${pathSegment(id)}/confirm`, "Could not confirm the booking.", {
     method: "POST",
   });
 }
 
 export async function cancelMemberBooking(id: string): Promise<Booking> {
-  return memberJson<Booking>(`/member/bookings/${id}/cancel`, "Could not cancel the booking.", {
+  return memberJson<Booking>(`/member/bookings/${pathSegment(id)}/cancel`, "Could not cancel the booking.", {
     method: "POST",
   });
 }
@@ -720,7 +721,7 @@ export async function listMemberChatRooms(): Promise<ChatRoom[]> {
 }
 
 export async function getMemberChatRoom(id: string): Promise<ChatRoom> {
-  return memberJson<ChatRoom>(`/member/chat/rooms/${id}`, "Could not load that chat room.");
+  return memberJson<ChatRoom>(`/member/chat/rooms/${pathSegment(id)}`, "Could not load that chat room.");
 }
 
 export async function listMemberChatMessages(id: string, afterId?: string): Promise<ChatMessagePage> {
@@ -728,13 +729,13 @@ export async function listMemberChatMessages(id: string, afterId?: string): Prom
   if (afterId) query.set("after_id", afterId);
   const suffix = query.size ? `?${query.toString()}` : "";
   return memberJson<ChatMessagePage>(
-    `/member/chat/rooms/${id}/messages${suffix}`,
+    `/member/chat/rooms/${pathSegment(id)}/messages${suffix}`,
     "Could not load chat messages.",
   );
 }
 
 export async function postMemberChatMessage(id: string, body: string): Promise<ChatMessage> {
-  return memberJson<ChatMessage>(`/member/chat/rooms/${id}/messages`, "Could not send the message.", {
+  return memberJson<ChatMessage>(`/member/chat/rooms/${pathSegment(id)}/messages`, "Could not send the message.", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ body }),
