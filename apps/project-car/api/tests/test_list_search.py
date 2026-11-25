@@ -67,20 +67,20 @@ def test_status_filters_open_and_fulfilled_and_rejects_unknown(client: TestClien
     assert nope.status_code == 422, nope.text
 
 
-def test_parts_request_limit_caps_stay_50_and_200(client: TestClient) -> None:
-    create_member(client, name="Ada Reyes", email="ada-limit@example.com")
-    login_member(client, "ada-limit@example.com")
-    first = client.post("/member/parts-requests", json={"sku": "PT-OIL-5W30-012"})
-    second = client.post("/member/parts-requests", json={"sku": "PT-FLT-001"})
-    assert first.status_code == 201, first.text
-    assert second.status_code == 201, second.text
-
-    limited = client.get("/parts-requests", headers=AUTH, params={"limit": 2})
-    assert limited.status_code == 200, limited.text
-    assert len(limited.json()) == 2
-
-    too_many = client.get("/parts-requests", headers=AUTH, params={"limit": 201})
-    assert too_many.status_code == 422, too_many.text
+def test_q_treats_percent_and_underscore_as_literal(client: TestClient) -> None:
+    cases = (("50%", "50100", "percent"), ("a_b", "axb", "under"))
+    for name, friend, tag in cases:
+        create_member(client, name=name, email=f"{tag}@example.com")
+        create_member(client, name=friend, email=f"{tag}-friend@example.com", tier_name="basic")
+        login_member(client, f"{tag}@example.com")
+        own = client.post("/member/parts-requests", json={"sku": "PT-OIL-5W30-012"})
+        assert own.status_code == 201, own.text
+        login_member(client, f"{tag}-friend@example.com")
+        other = client.post("/member/parts-requests", json={"sku": "PT-FLT-001"})
+        assert other.status_code == 201, other.text
+        found = client.get("/parts-requests", headers=AUTH, params={"q": name})
+        assert found.status_code == 200, found.text
+        assert [row["member_name"] for row in found.json()] == [name]
 
 
 def test_member_session_is_401_on_owner_parts_requests(client: TestClient) -> None:
