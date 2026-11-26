@@ -29,7 +29,7 @@ else
   alembic_bin=alembic
 fi
 
-export DATABASE_URL=${TEST_DATABASE_URL}
+export DATABASE_URL="${TEST_DATABASE_URL}"
 cd "${api}"
 "${alembic_bin}" upgrade head
 "${alembic_bin}" downgrade base
