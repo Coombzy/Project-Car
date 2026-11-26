@@ -48,6 +48,12 @@ LAST_MINUTE = ("last_minute", "Last-minute", Decimal("1.25"))
 # `last_minute` rows stay stored and editable but price nothing.
 LEAD_TIME_OVERLAYS_ENABLED = False
 
+# STAND-IN until Ben sets booking caps
+MAX_SHOP_BOOKING_HOURS = 24
+MAX_MEMBER_BOOKING_HOURS = 12
+MAX_BOOKING_DAYS_AHEAD = 60
+_KIND_HOUR_CAP = {"member": MAX_MEMBER_BOOKING_HOURS, "shop": MAX_SHOP_BOOKING_HOURS}
+
 MIXED_BAND_ID = "mixed"
 MIXED_BAND_LABEL = "Mixed bands (per hour)"
 
@@ -272,10 +278,24 @@ def quote_reserve(
     reserved_at: datetime | None = None,
     fill: FillFactor | None = None,
     session: Session | None = None,
+    kind: str | None = None,
 ) -> ReserveQuote:
     if session is not None:
         ensure_pricing_settings(session)
-    duration_hours(start_at, end_at)
+    span = duration_hours(start_at, end_at)
+    cap = _KIND_HOUR_CAP.get(kind) if kind else None
+    if cap is not None:
+        if span > cap:
+            raise PricingError(
+                "booking_too_long",
+                f"A {kind} booking cannot be longer than {cap} hours.",
+            )
+        anchor = as_utc(reserved_at or shop_now())
+        if as_utc(start_at) - anchor > timedelta(days=MAX_BOOKING_DAYS_AHEAD):
+            raise PricingError(
+                "booking_too_far_ahead",
+                f"A booking cannot start more than {MAX_BOOKING_DAYS_AHEAD} days ahead.",
+            )
     segments = tuple(
         HourSegment(start_at=hour_start, end_at=hour_end, band=resolve_band(hour_start, session=session))
         for hour_start, hour_end in iter_regina_hours(start_at, end_at)
