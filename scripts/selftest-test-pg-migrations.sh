@@ -101,7 +101,7 @@ do
   : >"$calls"
   invoke TEST_DATABASE_URL="$url" ALEMBIC="$recorder" ALEMBIC_LOG="$calls"
   [[ $invoke_ec -eq 0 ]] || fail "run path exit $invoke_ec stderr=$(cat "$guard/err") stdout=$(cat "$guard/out")"
-  [[ $(cat "$guard/out") != *'skip: TEST_DATABASE_URL is unset'* ]] || fail 'run path took the skip branch'
+  [[ $(cat "$guard/out") != *skip:\ TEST_DATABASE_URL\ is\ unset* ]] || fail 'run path took the skip branch'
   assert_no_cli 'run path'
   expected=$guard/expected
   cat >"$expected" <<EOF
