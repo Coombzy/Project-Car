@@ -4,21 +4,21 @@ Review aid for [PR #503](https://github.com/Coombzy/Project-Car/pull/503). The p
 
 ## Green render on the reviewed head
 
-- Reviewed head: `c2f3a7e99433b3e790d7b6434f5c23a7ce0a7649` (GitHub update-branch merge of `0629cf16` with main `b18a9fb7`).
-- Official CI on that sha was 3/3 green. `shop-web layout-shift / screenshots`: run [46034191533](https://github.com/Coombzy/Project-Car/actions/runs/46034191533), job 140625334907, success, completed 2026-11-27 10:34:26 America/Edmonton (16:34:26 UTC).
+- Png bytes were recaptured in `61ed23a6` and are the same at reviewed head `b7f51070d6ea0736939303d78b9ce52427553f36`. A later commit that only edits this file does not change them. Check: `git diff b7f51070 HEAD -- apps/project-car/web/visual/screenshots` is empty.
+- Official CI on `b7f51070` was 3/3 green. `shop-web layout-shift / screenshots`: run [46035617670](https://github.com/Coombzy/Project-Car/actions/runs/46035617670), job 140630260712, success, completed 2026-11-27 10:45:04 America/Edmonton (16:45:04 UTC).
 - That job runs `apply-baselines.sh`, then `npm run visual`. This PR edits `visual/screenshots/**`, so the script does not copy main's stored baselines over the checkout. It leaves the PR pngs in place and compares the fresh render to them. That is the intended CI path for a baseline recapture. Rendering against main's old goldens would fail by design, because the recapture exists to replace them.
-- A pass means the fresh render of this head matches the committed pngs. It is not a pixel proof against main. The evidence against main is the table below.
-- The png bytes are the recapture in `61ed23a6`. Merges after that did not change them. `r62-error.png` is committed and no test compares it.
+- A pass means the fresh render matches those png bytes. It is not a pixel proof against main. The evidence against main is the table below. `git diff` of a png is only `Binary files differ` and does not contain the crop notes, so the diff text cannot support that column.
+- `r62-error.png` is committed and no test compares it.
 
 ## Pixel diff against main
 
 The table compares each changed png to the golden on main before this PR. 12 at 390, 14 at 768, 23 at 1440 (49). Owner `schedule.png` and `schedule-week.png` at 390, 768, and 1440 are byte-identical to main and are correctly left out of the 49. #500 (`6f787f60`) already recaptured all six with the Mountain Time eyebrow, and its 1440 shots already have the Refunds nav. Pixel cap 1% and layout-shift cap 0.1 are unchanged.
 
-Paths are under `apps/project-car/web/visual/screenshots/`. No png changed size. "Exact" counts pixels where any RGB channel differs. "Visible" counts pixels where a channel differs by more than 3.
+Paths are under `apps/project-car/web/visual/screenshots/`. No png changed size. "Exact" counts pixels where any RGB channel differs. "Visible" counts pixels where a channel differs by more than 3. The last column is a crop note, not text from the binary diff.
 
 ## Changed pngs
 
-| PNG | Old = new size | Exact px (%) | Visible px | What visibly changed |
+| PNG | Old = new size | Exact px (%) | Visible px | Crop note (not in the git diff) |
 | --- | --- | --- | --- | --- |
 | 390/fill.png | 390x844 | 590 (0.179%) | 564 | Eyebrow `AMERICA/REGINA` → `MOUNTAIN TIME`. |
 | 390/home.png | 390x844 | 3715 (1.129%) | 3639 | Intro "Times are America/Regina" → "Times are Mountain Time" (reflows). Tokens at risk 3 → 1. |
@@ -72,7 +72,7 @@ Paths are under `apps/project-car/web/visual/screenshots/`. No png changed size.
 
 ## Trimmed log
 
-This is the earlier local run on `563d74af` (PR head `61ed23a6` merged with main `af09273e`), using the same CI path and the same png bytes. Full stdout and stderr were 123 lines. Removed: four uvicorn startup lines, repeated `NO_COLOR` warnings, and the 390 and 768 pass lines, which have the same 33 test titles as 1440.
+This trimmed log is the earlier local run on `563d74af` (PR head `61ed23a6` merged with main `af09273e`). It is not the CI attestation. That attestation is run 46035617670 on `b7f51070`, above. The png bytes are the same. Full stdout and stderr were 123 lines. Removed: four uvicorn startup lines, repeated `NO_COLOR` warnings, and the 390 and 768 pass lines, which have the same 33 test titles as 1440.
 
 ```text
 > project-car-web@0.1.0 visual
