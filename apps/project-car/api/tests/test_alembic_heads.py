@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import importlib.util
 from pathlib import Path
 
 from alembic.config import Config
+from alembic.operations import Operations
+from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, text
+
+from app.services.plan_price import tier_notes
 
 ALEMBIC_INI = Path(__file__).resolve().parents[1] / "alembic.ini"
 HEAD = "20261031_0019"
@@ -33,12 +38,6 @@ def test_upgrade_runs_from_an_empty_db() -> None:
 
 def test_downgrade_rewinds_placeholder_notes(tmp_path: Path) -> None:
     """Stand-in notes return to the placeholder; a custom note and an edited price stay."""
-    import importlib.util
-
-    from alembic.operations import Operations
-    from alembic.runtime.migration import MigrationContext
-    from app.services.plan_price import tier_notes
-
     path = ALEMBIC_INI.parent / "alembic/versions/20261031_0019_plan_price_stand_in.py"
     spec = importlib.util.spec_from_file_location("rev_20261031_0019", path)
     revision = importlib.util.module_from_spec(spec)
