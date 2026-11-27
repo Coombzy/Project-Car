@@ -902,11 +902,8 @@ def test_ninety_minute_booking_via_api(client: TestClient) -> None:
             "end_at": end.isoformat(),
         },
     )
-    assert created.status_code == 201, created.text
-    body = created.json()
-    assert body["pricing_rule"]["hours"] == "2"
-    assert body["pricing_rule"]["base_tokens"] == "200"
-    assert _dec(body["reserved_tokens"]) == quote_reserve(start, end).final_reserve_cost
+    assert created.status_code == 400, created.text
+    assert created.json()["error"]["code"] == "not_on_the_hour"
 
 
 def test_shop_hoist_is_owner_only(client: TestClient) -> None:
