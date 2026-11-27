@@ -1,18 +1,12 @@
 import { memberCancelBookingAction, memberConfirmBookingAction } from "../app/member/schedule/actions";
 import { memberCancelOffer } from "../lib/booking-calendar";
+import { shownCancel } from "../lib/member-booking-card-copy";
 import { bookingStatusLabel } from "../lib/booking-words";
 import { formatCalendarTime } from "../lib/calendar";
 import type { Booking, Occupancy } from "../lib/config";
 import { shopClock } from "../lib/time";
 import { BookingCost } from "./booking-cost";
 import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
-
-function shownCancel(offer: { visible: boolean; label: string }) {
-  const confirmText =
-    "confirmText" in offer && typeof offer.confirmText === "string" ? offer.confirmText : "";
-  const note = "note" in offer && typeof offer.note === "string" ? offer.note : "";
-  return { visible: offer.visible, label: offer.label, confirmText, note };
-}
 
 export function MemberBookingCard({
   slot,
@@ -43,7 +37,7 @@ export function MemberBookingCard({
       </div>
       {own ? <BookingCost reservedTokens={own.reserved_tokens} pricingRule={own.pricing_rule} /> : null}
       <span className={`pill pill-${slot.status}`}>{bookingStatusLabel(slot.status)}</span>
-      {cancel?.visible ? (
+      {cancel?.visible && (cancel.confirmText || cancel.note) ? (
         <p className="muted">
           {cancel.confirmText} {cancel.note}
         </p>
