@@ -1,6 +1,6 @@
 import { memberCancelBookingAction, memberConfirmBookingAction } from "../app/member/schedule/actions";
-import { offersCancel } from "../lib/booking-cancel";
 import { memberCancelOffer } from "../lib/booking-calendar";
+import { shownCancel } from "../lib/member-booking-card-copy";
 import { bookingStatusLabel } from "../lib/booking-words";
 import { formatCalendarTime } from "../lib/calendar";
 import type { Booking, Occupancy } from "../lib/config";
@@ -20,9 +20,11 @@ export function MemberBookingCard({
   compact?: boolean;
 }) {
   const cancel = own
-    ? memberCancelOffer(
-        { status: own.status, startAt: own.start_at, reservedTokens: own.reserved_tokens },
-        shopClock(),
+    ? shownCancel(
+        memberCancelOffer(
+          { status: own.status, startAt: own.start_at, reservedTokens: own.reserved_tokens },
+          shopClock(),
+        ),
       )
     : null;
   return (
@@ -32,10 +34,15 @@ export function MemberBookingCard({
       <strong>{slot.own ? "You" : "Booked"}</strong>
       <div>
         {compact ? null : <>{slot.hoist_name} · </>}
-        {formatCalendarTime(slot.start_at)}–{formatCalendarTime(slot.end_at)}
+        {formatCalendarTime(slot.start_at)}–{formatCalendarTime(slot.end_at)} · Mountain Time
       </div>
       {own ? <BookingCost reservedTokens={own.reserved_tokens} pricingRule={own.pricing_rule} /> : null}
       <span className={`pill pill-${slot.status}`}>{bookingStatusLabel(slot.status)}</span>
+      {cancel?.visible && (cancel.confirmText || cancel.note) ? (
+        <p className="muted">
+          {cancel.confirmText} {cancel.note}
+        </p>
+      ) : null}
       {own && own.status === "pending" ? (
         <div className="chip-actions">
           <form action={memberConfirmBookingAction}>
@@ -43,22 +50,16 @@ export function MemberBookingCard({
             <input type="hidden" name="id" value={own.id} />
             <button type="submit">Confirm</button>
           </form>
-          {offersCancel(own.status, "member-pending") && cancel !== null && cancel.visible ? (
-            <form action={memberCancelBookingAction}>
-              <ScheduleReturnFields returnTo={returnTo} />
-              <input type="hidden" name="id" value={own.id} />
-              <button className="ghost" type="submit">
-                {cancel.label}
-              </button>
-            </form>
-          ) : null}
         </div>
       ) : null}
-      {own && offersCancel(own.status, "member-confirmed") && cancel !== null && cancel.visible ? (
+      {cancel?.visible && own ? (
         <div className="chip-actions">
           <form action={memberCancelBookingAction}>
             <ScheduleReturnFields returnTo={returnTo} />
             <input type="hidden" name="id" value={own.id} />
+            <label>
+              <input type="checkbox" name="confirm" value="yes" required /> Yes, cancel
+            </label>
             <button className="ghost" type="submit">
               {cancel.label}
             </button>
