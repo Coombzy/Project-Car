@@ -5,6 +5,7 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { bandAt, lowestFreeBay, type BayChoice, type SpanInterval } from "./booking-calendar.ts";
+import { balanceWouldGoNegative, bookingErrorCopy, calendarViewForWidth, extraHoursLine, gstLine } from "./booking-calendar.ts";
 
 const bays: BayChoice[] = [
   { id: "bay-1", name: "Bay 1", number: 1, isShop: false, status: "available" },
@@ -283,5 +284,38 @@ describe("peak week and member balance", () => {
     assert.equal(copy.purchased, tokensLabel(1.25));
     assert.equal(copy.total, tokensLabel(11.75));
     assert.equal(copy.peak, capped.line);
+  });
+});
+
+describe("copy, GST, view, and balance", () => {
+  it("formats extra hours, GST, errors, the phone view, and a negative balance", () => {
+    assert.equal(extraHoursLine({ pricing: "2 extra hours" }), "2 extra hours");
+    assert.equal(extraHoursLine({ pricing: "2 extra hours", purchase: { total_cad: "1.00" } }), null);
+    assert.equal(extraHoursLine({}), null);
+    assert.equal(extraHoursLine(null), null);
+
+    const purchase = { subtotal_cad: "10.00", gst_cad: "0.50", total_cad: "10.50", gst_rate: "0.05" };
+    assert.equal(gstLine({ purchase }), "Subtotal $10.00 · GST $0.50 · total $10.50");
+    assert.equal(gstLine({ purchase: { ...purchase, gst_cad: undefined } }), null);
+    assert.equal(gstLine({ purchase: { ...purchase, subtotal_cad: undefined } }), null);
+    assert.equal(gstLine({ purchase: { ...purchase, total_cad: undefined } }), null);
+    assert.equal(gstLine(null), null);
+
+    const fallback = "Try again.";
+    assert.equal(bookingErrorCopy("hoist_overlap", fallback), "That hour was just taken. Pick another time.");
+    assert.equal(bookingErrorCopy("would_go_negative", fallback), "That would take your balance below zero.");
+    assert.equal(
+      bookingErrorCopy("cancel_after_start", fallback),
+      "This visit has started, so it can't be cancelled here.",
+    );
+    assert.equal(bookingErrorCopy("peak_cap", fallback), fallback);
+    assert.equal(bookingErrorCopy("price_changed", fallback), "The price changed. Nothing was booked.");
+    assert.equal(bookingErrorCopy("no_such_code", fallback), fallback);
+
+    assert.equal(calendarViewForWidth(767), "day");
+    assert.equal(calendarViewForWidth(768), "week");
+    assert.equal(balanceWouldGoNegative("10", 10.01), true);
+    assert.equal(balanceWouldGoNegative(10, 10), false);
+    assert.equal(balanceWouldGoNegative("10.5", 10), false);
   });
 });
