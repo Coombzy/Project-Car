@@ -121,11 +121,10 @@ Determinism: Liberation Sans and Liberation Mono are vendored and forced through
 
 ## Missing jobs (owner adds to `.github/workflows/shop-os-ci.yml`)
 
-The required checks today cover SQLite `pytest`, `tsc`, unit tests, the build, and screenshots. Three gates are not in the workflow. The owner adds them to `.github/workflows/shop-os-ci.yml`; this row only records them here.
+The required checks today cover SQLite `pytest`, `tsc`, unit tests, the build, and screenshots. `shop-api postgres migrations` runs `bash scripts/test-pg-migrations.sh` against `postgres:16` when the shop path filter is true, and the shop-api pip cache key includes `apps/project-car/api/requirements.lock` plus `pyproject.toml`. Dependency audit and axe are still missing. The owner adds those two to `.github/workflows/shop-os-ci.yml`.
 
 | Job | What it runs | Why |
 |-----|--------------|-----|
-| **Postgres migrations and tests** | Alembic migrations against a Postgres service container, then `pytest` on that database | PC-AUD-021. `shop-api pytest` runs on SQLite in-memory only, so migrations and Postgres-only behaviour never run in CI. |
 | **Dependency audit** | `bash scripts/audit-deps.sh`, which runs `npm audit --omit=dev --audit-level=high` in `apps/project-car/web` and `pip-audit` in `apps/project-car/api` | PC-AUD-012 sat unnoticed. The job fails on a high or critical advisory in the runtime dependency trees. |
 | **axe pass** | axe-core against the same loopback pages the visual job shoots | Backlog R146. Accessibility violations are not gated anywhere today. |
 
