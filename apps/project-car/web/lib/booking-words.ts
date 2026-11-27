@@ -59,10 +59,13 @@ export const BAND_SHORT = {
 
 export type BandId = keyof typeof BAND_SHORT;
 
-/** Runs only when `node --test` loads this file. Importing the module does not. */
+/** Runs only when `node --test` loads this file. A client bundle has no Node argv, so import returns. */
 function proveBookingWords(): void {
+  if (typeof process === "undefined" || !Array.isArray(process.argv)) {
+    return;
+  }
   const entry = process.argv[1];
-  if (entry === undefined || !import.meta.url.endsWith(entry)) {
+  if (typeof entry !== "string" || !import.meta.url.endsWith(entry)) {
     return;
   }
   const problems: string[] = [];
