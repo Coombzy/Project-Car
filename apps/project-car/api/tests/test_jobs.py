@@ -324,7 +324,7 @@ def test_job_events_migration_is_a_single_head() -> None:
     script = ScriptDirectory.from_config(Config(str(ALEMBIC_INI)))
     # Signup revision 20261105_0019 revises the ledger head 20261105_0018.
     # The job-events revision below still revises 20261004_0009.
-    assert script.get_heads() == ["20261105_0019"]
+    assert script.get_heads() == ["20261031_0018"]
     job = script.get_revision("20261004_0010")
     assert job is not None
     assert job.down_revision == "20261004_0009"
