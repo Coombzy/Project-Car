@@ -18,10 +18,14 @@ REQUIRED_CHECK_NAMES = (
     "shop-web lint / typecheck / build",
 )
 VISUAL_CHECK_NAME = "shop-web layout-shift / screenshots"
+PG_CHECK_NAME = "shop-api postgres migrations"
+LOCKFILE = "apps/project-car/api/requirements.lock"
+PYPROJECT = "apps/project-car/api/pyproject.toml"
 HEAVY_COMMANDS = {
     "shop-api pytest": ("pytest",),
     "shop-web lint / typecheck / build": ("npm run typecheck", "npm test", "npm run build"),
     "shop-web layout-shift / screenshots": ("npm run visual",),
+    PG_CHECK_NAME: ("bash scripts/test-pg-migrations.sh",),
 }
 GATE_IF = "steps.shop_changes.outputs.shop == 'true'"
 BASELINE_PREPARE_IF = (
@@ -352,7 +356,7 @@ def test_shop_os_ci_path_filter_keeps_required_check_names() -> None:
 
     jobs = workflow["jobs"]
     names = [job["name"] for job in jobs.values()]
-    assert names == [*REQUIRED_CHECK_NAMES, VISUAL_CHECK_NAME]
+    assert names == [*REQUIRED_CHECK_NAMES, VISUAL_CHECK_NAME, PG_CHECK_NAME]
 
     # 0.1 layout shift and 1% pixel ratio (maxDiffPixelRatio 0.01).
     pages = PAGES.read_text(encoding="utf-8")
@@ -764,3 +768,38 @@ def test_visual_markdown_and_other_images_skip_heavy_steps() -> None:
         assert _detect_shop(shop_api, (path,)) == "false", path
         assert _detect_shop(shop_web, (path,)) == "false", path
         assert _detect_shop(visual, (path,)) == "false", path
+
+
+def test_lockfile_cache_key_and_postgres_migration_job() -> None:
+    """AUD-059 keys the shop-api pip cache on the lock. AUD-021 runs migrations on Postgres."""
+    text = WORKFLOW.read_text(encoding="utf-8")
+    workflow = parse_workflow_yaml(text)
+    keys: list[str] = []
+    deps: list[str] = []
+    for job in workflow["jobs"].values():
+        for step in job["steps"]:
+            payload = step.get("with") or {}
+            key = payload.get("key")
+            if isinstance(key, str) and "shop-api-venv-" in key:
+                keys.append(key)
+            dep = payload.get("cache-dependency-path")
+            uses = step.get("uses") or ""
+            if isinstance(dep, str) and uses.startswith("actions/setup-python"):
+                deps.append(dep)
+    assert len(keys) == 2 and len(deps) == 2
+    for value in (*keys, *deps):
+        assert LOCKFILE in value, value
+        assert PYPROJECT in value, value
+
+    job = next(item for item in workflow["jobs"].values() if item["name"] == PG_CHECK_NAME)
+    assert "if" not in job
+    assert job["services"]["postgres"]["image"] == "postgres:16"
+    script = _detect_script(workflow, PG_CHECK_NAME)
+    assert _detect_shop(script, ("apps/project-car/api/alembic/env.py",)) == "true"
+    assert _detect_shop(script, ("Docs/shop-os-ci.md",)) == "false"
+    step = next(
+        item for item in job["steps"] if item.get("run") == "bash scripts/test-pg-migrations.sh"
+    )
+    assert step["if"] == GATE_IF
+    assert step["env"]["TEST_DATABASE_URL"].startswith("postgresql://")
+    assert all(item.get("run") != "pytest" for item in job["steps"])
