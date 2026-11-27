@@ -180,33 +180,11 @@ export async function patchTodo(id: string, payload: Record<string, unknown>): P
 }
 
 export async function deleteTodo(id: string): Promise<void> {
-  let response: Response;
-  try {
-    response = await shopFetch(`/todos/${pathSegment(id)}`, { method: "DELETE" });
-  } catch {
-    throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
-  }
-  if (response.status === 204) {
-    return;
-  }
-  const body = await readJson(response);
-  throw parseApiError(response.status, body, "Could not delete the to-do.");
+  await apiClient("owner").del(`/todos/${pathSegment(id)}`, "Could not delete the to-do.");
 }
 
 export async function downloadTodoIcs(id: string): Promise<{ filename: string; body: string }> {
-  let response: Response;
-  try {
-    response = await shopFetch(`/todos/${pathSegment(id)}/ics`);
-  } catch {
-    throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
-  }
-  if (!response.ok) {
-    const body = await readJson(response);
-    throw parseApiError(response.status, body, "Could not download the calendar file.");
-  }
-  const disposition = response.headers.get("content-disposition") ?? "";
-  const match = disposition.match(/filename="([^"]+)"/);
-  return { filename: match?.[1] ?? `todo-${id}.ics`, body: await response.text() };
+  return apiClient("owner").download(`/todos/${pathSegment(id)}/ics`, "Could not download the calendar file.", `todo-${id}.ics`);
 }
 
 export async function getCalendarStatus(): Promise<CalendarStatus> {
@@ -507,6 +485,39 @@ export async function memberJson<T>(path: string, fallback: string, init: Reques
   return body as T;
 }
 
+type ShopRealm = "owner" | "member";
+
+async function realmCall(realm: ShopRealm, path: string, init?: RequestInit): Promise<Response> {
+  const call = ({ owner: shopFetch, member: memberFetch } satisfies Record<ShopRealm, typeof shopFetch>)[realm];
+  try {
+    return await call(path, init);
+  } catch {
+    throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
+  }
+}
+
+export function apiClient(realm: ShopRealm) {
+  const json = ({ owner: shopJson, member: memberJson } satisfies Record<ShopRealm, typeof shopJson>)[realm];
+  const send = (method: "POST" | "PATCH", body?: unknown): RequestInit =>
+    body === undefined ? { method } : { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+  return {
+    get: <T>(path: string, fallback: string) => json<T>(path, fallback),
+    post: <T>(path: string, fallback: string, body?: unknown) => json<T>(path, fallback, send("POST", body)),
+    patch: <T>(path: string, fallback: string, body?: unknown) => json<T>(path, fallback, send("PATCH", body)),
+    async del(path: string, fallback: string): Promise<void> {
+      const response = await realmCall(realm, path, { method: "DELETE" });
+      if (response.status === 204) return;
+      throw parseApiError(response.status, await readJson(response), fallback);
+    },
+    async download(path: string, fallback: string, filename: string) {
+      const response = await realmCall(realm, path);
+      if (!response.ok) throw parseApiError(response.status, await readJson(response), fallback);
+      const match = (response.headers.get("content-disposition") ?? "").match(/filename="([^"]+)"/);
+      return { filename: match?.[1] ?? filename, body: await response.text() };
+    },
+  };
+}
+
 export async function loginMember(
   email: string,
   password: string,
@@ -600,33 +611,11 @@ export async function patchMemberTodo(id: string, payload: Record<string, unknow
 }
 
 export async function deleteMemberTodo(id: string): Promise<void> {
-  let response: Response;
-  try {
-    response = await memberFetch(`/todos/${pathSegment(id)}`, { method: "DELETE" });
-  } catch {
-    throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
-  }
-  if (response.status === 204) {
-    return;
-  }
-  const body = await readJson(response);
-  throw parseApiError(response.status, body, "Could not delete the to-do.");
+  await apiClient("member").del(`/todos/${pathSegment(id)}`, "Could not delete the to-do.");
 }
 
 export async function downloadMemberTodoIcs(id: string): Promise<{ filename: string; body: string }> {
-  let response: Response;
-  try {
-    response = await memberFetch(`/todos/${pathSegment(id)}/ics`);
-  } catch {
-    throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
-  }
-  if (!response.ok) {
-    const body = await readJson(response);
-    throw parseApiError(response.status, body, "Could not download the calendar file.");
-  }
-  const disposition = response.headers.get("content-disposition") ?? "";
-  const match = disposition.match(/filename="([^"]+)"/);
-  return { filename: match?.[1] ?? `todo-${id}.ics`, body: await response.text() };
+  return apiClient("member").download(`/todos/${pathSegment(id)}/ics`, "Could not download the calendar file.", `todo-${id}.ics`);
 }
 
 export async function getMemberPrincipal(): Promise<Principal> {
@@ -694,6 +683,22 @@ export async function cancelMemberBooking(id: string): Promise<Booking> {
   return memberJson<Booking>(`/member/bookings/${pathSegment(id)}/cancel`, "Could not cancel the booking.", {
     method: "POST",
   });
+}
+
+export async function downloadMemberBookingIcs(id: string): Promise<{ filename: string; body: string }> {
+  let response: Response;
+  try {
+    response = await memberFetch(`/member/bookings/${pathSegment(id)}/ics`);
+  } catch {
+    throw parseApiError(503, null, `Cannot reach shop API at ${shopApiUrl()}.`);
+  }
+  if (!response.ok) {
+    const body = await readJson(response);
+    throw parseApiError(response.status, body, "Could not download the calendar file.");
+  }
+  const disposition = response.headers.get("content-disposition") ?? "";
+  const match = disposition.match(/filename="([^"]+)"/);
+  return { filename: match?.[1] ?? `booking-${id}.ics`, body: await response.text() };
 }
 
 export async function listMemberJobEvents(): Promise<JobEvent[]> {
