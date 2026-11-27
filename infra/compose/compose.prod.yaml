@@ -1,0 +1,41 @@
+# Prod shop stack. Postgres is internal-only (no published ports).
+# R122 overlap check must run before migration 0015 on any copy of Doc's DB.
+name: project-car-shop
+services:
+  shop-postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${SHOP_POSTGRES_USER:-projectcar}
+      POSTGRES_PASSWORD: ${SHOP_POSTGRES_PASSWORD:?Set SHOP_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${SHOP_POSTGRES_DB:-projectcar}
+    volumes: ["shop_pgdata:/var/lib/postgresql/data"]
+    networks: [shop]
+  migrate:
+    image: project-car-api:placeholder
+    restart: "no"
+    command: ["alembic", "upgrade", "head"]
+    depends_on: [shop-postgres]
+    networks: [shop]
+  api:
+    image: project-car-api:placeholder
+    restart: unless-stopped
+    depends_on: [migrate]
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST:-ops.example.test}
+    networks: [shop]
+  web:
+    image: project-car-web:placeholder
+    restart: unless-stopped
+    depends_on: [api]
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST:-ops.example.test}
+    networks: [shop]
+  cloudflared:
+    image: cloudflare/cloudflared:placeholder
+    restart: unless-stopped
+    networks: [shop]
+volumes:
+  shop_pgdata: {name: project-car-shop-prod-pgdata}
+networks:
+  shop: {name: project-car-shop-prod}

@@ -9,12 +9,11 @@ from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import select
 
 from app.deps import DbSession, Owner
-from app.models import DraftKind, DraftStatus, StaffDraft
+from app.models import DraftKind, DraftStatus, RefundRequest, ShopHoistRequestStatus, StaffDraft
 from app.schemas import (
     BookingOut,
     ChatDraftCreate,
     FillDraftCreate,
-    OpenRequestsOut,
     StaffPartsRequestCreate,
     StaffPartsRequestOut,
     RefundRequestCreate,
@@ -52,6 +51,9 @@ from app.services.staff import (
     read_balance,
     read_open_requests,
     send_back_job,
+)
+from app.services.staff_request_payload import (
+    NamedStaffPartsRequestOut, NamedToolCribExceptionOut, OpenNamedRequestsOut,
 )
 from app.services.staff_schedule import read_schedule_window
 from app.shop_time import pricing_today
@@ -115,6 +117,7 @@ def staff_deny_shop_hoist(
     return _decision(row, action, balance=row.member.token_balance)
 
 
+@router.post("/staff/parts-requests", response_model=StaffPartsRequestOut, status_code=201)
 @router.post("/parts-requests", response_model=StaffPartsRequestOut, status_code=201)
 def staff_create_parts_request(
     body: StaffPartsRequestCreate, session: DbSession, principal: Owner
@@ -133,12 +136,14 @@ def staff_create_parts_request(
     return StaffPartsRequestOut.model_validate(row)
 
 
+@router.post("/staff/parts-requests/{request_id}/approve", response_model=StaffDecisionOut)
 @router.post("/parts-requests/{request_id}/approve", response_model=StaffDecisionOut)
 def staff_approve_parts(request_id: UUID, session: DbSession, principal: Owner) -> StaffDecisionOut:
     row, action = decide_parts_request(session, request_id, principal, approve=True)
     return _decision(row, action)
 
 
+@router.post("/staff/parts-requests/{request_id}/deny", response_model=StaffDecisionOut)
 @router.post("/parts-requests/{request_id}/deny", response_model=StaffDecisionOut)
 def staff_deny_parts(request_id: UUID, session: DbSession, principal: Owner) -> StaffDecisionOut:
     row, action = decide_parts_request(session, request_id, principal, approve=False)
@@ -264,6 +269,22 @@ def staff_accept_refund(request_id: UUID, session: DbSession, principal: Owner) 
     return _decision(row, action)
 
 
+@router.get("/refund-requests", response_model=list[RefundRequestOut])
+def staff_list_refunds(
+    session: DbSession,
+    _principal: Owner,
+    limit: int = Query(default=50, ge=1, le=200),
+) -> list[RefundRequestOut]:
+    """Pending refund requests, newest first. Accepted rows stay stored and are omitted."""
+    rows = session.scalars(
+        select(RefundRequest)
+        .where(RefundRequest.status == ShopHoistRequestStatus.PENDING)
+        .order_by(RefundRequest.created_at.desc(), RefundRequest.id.desc())
+        .limit(limit)
+    ).all()
+    return [RefundRequestOut.model_validate(row) for row in rows]
+
+
 @router.get("/staff/schedule", response_model=list[BookingOut])
 def staff_schedule(
     session: DbSession,
@@ -296,13 +317,13 @@ def staff_balance(member_id: UUID, session: DbSession, principal: Owner) -> Staf
     )
 
 
-@router.get("/staff/requests", response_model=OpenRequestsOut)
-def staff_open_requests(session: DbSession, principal: Owner) -> OpenRequestsOut:
+@router.get("/staff/requests", response_model=OpenNamedRequestsOut)
+def staff_open_requests(session: DbSession, principal: Owner) -> OpenNamedRequestsOut:
     hoist, parts, tools, action = read_open_requests(session, principal)
-    return OpenRequestsOut(
+    return OpenNamedRequestsOut(
         shop_hoist=[ShopHoistRequestOut.from_row(row) for row in hoist],
-        parts=[StaffPartsRequestOut.model_validate(row) for row in parts],
-        tool_crib=[ToolCribExceptionOut.model_validate(row) for row in tools],
+        parts=[NamedStaffPartsRequestOut.from_row(row) for row in parts],
+        tool_crib=[NamedToolCribExceptionOut.from_row(row) for row in tools],
         actor_kind=action.actor_kind,
         action_id=action.id,
     )

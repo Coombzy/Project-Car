@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Cookie, Depends, Header, HTTPException
+from fastapi import Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.auth import (
@@ -51,15 +51,19 @@ def _owner_from_cookie(settings: Settings, session_cookie: str | None) -> Princi
     if not payload:
         return None
     reject_dev_secret(settings.session_secret)
-    return Principal(role="owner", email=str(payload.get("email") or settings.owner_email))
+    email = payload.get("email")
+    if not isinstance(email, str) or not email or email != settings.owner_email:
+        return None
+    return Principal(role="owner", email=settings.owner_email)
 
 
 def require_owner(
+    request: Request,
     settings: Annotated[Settings, Depends(current_settings)],
     authorization: Annotated[str | None, Header()] = None,
-    session_cookie: Annotated[str | None, Cookie(alias="pc_owner_session")] = None,
 ) -> Principal:
     """Staff stub: human Owner cookie/bearer, or the same routes with the AI bearer."""
+    session_cookie = request.cookies.get(settings.cookie_name)
     bearer = _bearer_principal(settings, authorization)
     if bearer is not None:
         return bearer
@@ -69,12 +73,16 @@ def require_owner(
     raise _unauthorized()
 
 
+# scope="function": get_db commits before the response is sent (PC-AUD-002).
+DbSession = Annotated[Session, Depends(get_db, scope="function")]
+
 def require_member(
+    request: Request,
     settings: Annotated[Settings, Depends(current_settings)],
-    session: Annotated[Session, Depends(get_db)],
-    member_session_cookie: Annotated[str | None, Cookie(alias="pc_member_session")] = None,
+    session: DbSession,
 ) -> Principal:
     """Member session cookie. Parallel to Owner. Not OIDC — Staff OIDC can follow."""
+    member_session_cookie = request.cookies.get(settings.member_cookie_name)
     payload = (
         read_member_session_token(settings, member_session_cookie) if member_session_cookie else None
     )
@@ -103,13 +111,14 @@ def require_member(
 
 
 def require_principal(
+    request: Request,
     settings: Annotated[Settings, Depends(current_settings)],
-    session: Annotated[Session, Depends(get_db)],
+    session: DbSession,
     authorization: Annotated[str | None, Header()] = None,
-    session_cookie: Annotated[str | None, Cookie(alias="pc_owner_session")] = None,
-    member_session_cookie: Annotated[str | None, Cookie(alias="pc_member_session")] = None,
 ) -> Principal:
     """Owner cookie/bearer or Member cookie. Used by GET /me."""
+    session_cookie = request.cookies.get(settings.cookie_name)
+    member_session_cookie = request.cookies.get(settings.member_cookie_name)
     bearer = _bearer_principal(settings, authorization)
     if bearer is not None:
         return bearer
@@ -139,7 +148,6 @@ def require_principal(
     raise _unauthorized("Authentication required.")
 
 
-DbSession = Annotated[Session, Depends(get_db)]
 Owner = Annotated[Principal, Depends(require_owner)]
 MemberUser = Annotated[Principal, Depends(require_member)]
 AnyPrincipal = Annotated[Principal, Depends(require_principal)]

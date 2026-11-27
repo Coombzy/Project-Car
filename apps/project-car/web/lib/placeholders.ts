@@ -1,5 +1,13 @@
 /** Demo-only copy for Job board / Cameras / Payments. Inventory SKUs live in inventory.ts. */
 
+/** True unless NEXT_PUBLIC_SHOW_DEMO_PLACEHOLDERS is "0" or "false". Default on. */
+export function showDemoPlaceholders(): boolean {
+  const raw = process.env["NEXT_PUBLIC_SHOW_DEMO_PLACEHOLDERS"];
+  if (raw === undefined) return true;
+  const value = raw.trim().toLowerCase();
+  return value !== "0" && value !== "false";
+}
+
 export const PRIMARY_CAMERA_ID = "cam-shop-main";
 
 export const SAMPLE_JOBS = [

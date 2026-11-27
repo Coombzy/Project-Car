@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { ShopApiError } from "../../../../lib/config";
+import { contentDispositionForIcs } from "../../../../lib/ics-filename";
 import { downloadTodoIcs } from "../../../../lib/shop-api";
 
 export async function GET(
@@ -13,7 +14,7 @@ export async function GET(
     return new NextResponse(file.body, {
       headers: {
         "Content-Type": "text/calendar; charset=utf-8",
-        "Content-Disposition": `attachment; filename="${file.filename}"`,
+        "Content-Disposition": contentDispositionForIcs(file.filename),
         "Cache-Control": "no-store",
       },
     });

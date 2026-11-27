@@ -28,7 +28,9 @@ describe("shop error pages", () => {
     const pages = readSource("visual/pages.spec.ts");
 
     assert.match(notFound, /That page is not here\./);
-    assert.match(notFound, /OwnerShell/);
+    // Member pathnames use MemberShell. Owner pathnames stay on OwnerShell.
+    assert.match(notFound, /<MemberShell/);
+    assert.match(notFound, /<OwnerShell/);
     assert.match(notFound, /window\.location\.pathname/);
     assert.match(notFound, /<Link href=\{dashboardHref\(pathname\)\}>Dashboard<\/Link>/);
     // Server HTML and the first client render must not ship the link. useState("")
@@ -122,5 +124,51 @@ describe("shop error pages", () => {
     // swallow lets a hung shop request pass the API-error count.
     assert.match(pages, /await page\.waitForLoadState\("networkidle"\);/);
     assert.doesNotMatch(pages, /\/Timeout\/i\.test/);
+  });
+
+  it("test_not_found_shell_follows_the_dashboard_href", () => {
+    const notFound = readSource("app/not-found.tsx");
+    const href = dashboardHrefFrom(readSource("lib/error-pages.ts"));
+
+    assert.match(
+      notFound,
+      /import \{ MemberShell, type MemberSection \} from "\.\.\/components\/member-shell"/,
+    );
+    assert.match(
+      notFound,
+      /if \(typeof pathname === "string" && dashboardHref\(pathname\) === "\/member"\) \{\s*return \(?\s*<MemberShell[\s\S]*return \(?\s*<OwnerShell/,
+      "MemberShell when dashboardHref is /member; OwnerShell for /",
+    );
+
+    const shell = (pathname: string) =>
+      href(pathname) === "/member" ? "MemberShell" : "OwnerShell";
+    assert.equal(href("/member/nope"), "/member");
+    assert.equal(shell("/member/nope"), "MemberShell");
+    assert.equal(shell("/member"), "MemberShell");
+    assert.equal(href("/no-such-page"), "/");
+    assert.equal(shell("/no-such-page"), "OwnerShell");
+    assert.equal(shell("/"), "OwnerShell");
+  });
+
+  it("test_member_error_page_uses_the_member_shell", () => {
+    const memberError = readSource("app/member/error.tsx");
+
+    assert.equal(
+      memberError.trimStart().startsWith('"use client"'),
+      true,
+      'app/member/error.tsx must start with "use client"',
+    );
+    assert.match(memberError, /MemberShell/);
+    assert.doesNotMatch(memberError, /OwnerShell/);
+    assert.match(memberError, /Something went wrong\. Try again\./);
+    assert.match(memberError, /reset:\s*\(\)\s*=>\s*void/);
+    assert.match(
+      memberError,
+      /<button type="button" onClick=\{\(\) => reset\(\)\}>Try again<\/button>/,
+    );
+    assert.equal(memberError.includes("error.message"), false, "member error.tsx renders error.message");
+    assert.equal(memberError.includes("error.stack"), false, "member error.tsx renders error.stack");
+    assert.doesNotMatch(memberError, /error\??\.(message|stack|digest)/);
+    assert.doesNotMatch(memberError, /\{error\}/);
   });
 });
