@@ -5,6 +5,7 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { bandAt, lowestFreeBay, type BayChoice, type SpanInterval } from "./booking-calendar.ts";
+import { balanceWouldGoNegative, bookingErrorCopy, calendarViewForWidth, extraHoursLine, gstLine } from "./booking-calendar.ts";
 
 const bays: BayChoice[] = [
   { id: "bay-1", name: "Bay 1", number: 1, isShop: false, status: "available" },
@@ -253,5 +254,68 @@ describe("selection quote", () => {
       note: null,
       total: 180,
     });
+  });
+});
+
+describe("peak week and member balance", () => {
+  const week = "2026-11-23";
+  const friday = {
+    status: "confirmed",
+    startAt: "2026-11-27T16:00:00",
+    endAt: "2026-11-27T18:00:00",
+  };
+
+  it("counts Friday peak hours, skips cancelled and Monday, and labels the balance", async () => {
+    const { memberBalanceCopy, peakWeek } = await import("./booking-calendar.ts");
+    const { tokensLabel } = await import("./time.ts");
+    const peak = peakWeek([friday], week);
+    assert.equal(peak.cap, 4);
+    assert.equal(peak.used, 2);
+    assert.equal(peak.remaining, 2);
+    assert.equal(peak.line, "Peak hours this week: 2 used · 2 left");
+    assert.equal(peakWeek([{ ...friday, status: "cancelled" }], week).used, 0);
+    const monday = { status: "confirmed", startAt: "2026-11-23T16:00:00", endAt: "2026-11-23T18:00:00" };
+    assert.equal(peakWeek([monday], week).used, 0);
+    const saved = { hours: [], peakCapHours: 2 };
+    const capped = peakWeek([friday], week, saved);
+    assert.equal(capped.remaining, 0);
+    const copy = memberBalanceCopy("10.5", "1.25", [friday], week, saved);
+    assert.equal(copy.allowance, tokensLabel(10.5));
+    assert.equal(copy.purchased, tokensLabel(1.25));
+    assert.equal(copy.total, tokensLabel(11.75));
+    assert.equal(copy.peak, capped.line);
+  });
+});
+
+describe("copy, GST, view, and balance", () => {
+  it("formats extra hours, GST, errors, the phone view, and a negative balance", () => {
+    assert.equal(extraHoursLine({ pricing: "2 extra hours" }), "2 extra hours");
+    assert.equal(extraHoursLine({ pricing: "2 extra hours", purchase: { total_cad: "1.00" } }), null);
+    assert.equal(extraHoursLine({}), null);
+    assert.equal(extraHoursLine(null), null);
+
+    const purchase = { subtotal_cad: "10.00", gst_cad: "0.50", total_cad: "10.50", gst_rate: "0.05" };
+    assert.equal(gstLine({ purchase }), "Subtotal $10.00 · GST $0.50 · total $10.50");
+    assert.equal(gstLine({ purchase: { ...purchase, gst_cad: undefined } }), null);
+    assert.equal(gstLine({ purchase: { ...purchase, subtotal_cad: undefined } }), null);
+    assert.equal(gstLine({ purchase: { ...purchase, total_cad: undefined } }), null);
+    assert.equal(gstLine(null), null);
+
+    const fallback = "Try again.";
+    assert.equal(bookingErrorCopy("hoist_overlap", fallback), "That hour was just taken. Pick another time.");
+    assert.equal(bookingErrorCopy("would_go_negative", fallback), "That would take your balance below zero.");
+    assert.equal(
+      bookingErrorCopy("cancel_after_start", fallback),
+      "This visit has started, so it can't be cancelled here.",
+    );
+    assert.equal(bookingErrorCopy("peak_cap", fallback), fallback);
+    assert.equal(bookingErrorCopy("price_changed", fallback), "The price changed. Nothing was booked.");
+    assert.equal(bookingErrorCopy("no_such_code", fallback), fallback);
+
+    assert.equal(calendarViewForWidth(767), "day");
+    assert.equal(calendarViewForWidth(768), "week");
+    assert.equal(balanceWouldGoNegative("10", 10.01), true);
+    assert.equal(balanceWouldGoNegative(10, 10), false);
+    assert.equal(balanceWouldGoNegative("10.5", 10), false);
   });
 });

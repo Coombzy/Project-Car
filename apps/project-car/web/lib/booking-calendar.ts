@@ -1,5 +1,14 @@
+import { addDays, calendarDate, parseShopInstant, zonedDateTime } from "./calendar";
 import type { RateHour } from "./rate-chart";
-import { BAND_SHORT, type BandId } from "./booking-words";
+import { tokensLabel } from "./time";
+import {
+  AFTER_START_MESSAGE,
+  BAND_SHORT,
+  BELOW_ZERO_MESSAGE,
+  PEAK_HOURS_PER_WEEK,
+  TAKEN_MESSAGE,
+  type BandId,
+} from "./booking-words";
 
 const BAND_MULTIPLIER: Record<BandId, number> = {
   weekday_day: 1,
@@ -9,6 +18,7 @@ const BAND_MULTIPLIER: Record<BandId, number> = {
 };
 
 const BASE_TOKENS = 100;
+const PHONE_MAX_PX = 767;
 const PEAK_BAND: BandId = "weekend_fri_eve";
 
 export type BandAt = {
@@ -259,4 +269,122 @@ export function lowestFreeBay(
     }
   }
   return null;
+}
+
+export type SavedBands = { hours: readonly RateHour[]; peakCapHours: number };
+
+export type PeakUsage = { cap: number; used: number; remaining: number; line: string };
+
+function hourInZone(instant: Date): number {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Regina",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(instant);
+  const hour = parts.find((part) => part.type === "hour")?.value ?? "0";
+  return Number(hour);
+}
+
+export function peakWeek(
+  bookings: { status: string; startAt: string; endAt: string }[],
+  weekStart: string,
+  saved?: SavedBands,
+): PeakUsage {
+  const cap = saved?.peakCapHours ?? PEAK_HOURS_PER_WEEK;
+  const weekBegin = zonedDateTime(weekStart, 0).getTime();
+  const weekEnd = zonedDateTime(addDays(weekStart, 7), 0).getTime();
+  let used = 0;
+  for (const booking of bookings) {
+    if (booking.status === "cancelled") {
+      continue;
+    }
+    let cursor = parseShopInstant(booking.startAt).getTime();
+    const end = parseShopInstant(booking.endAt).getTime();
+    while (cursor < end) {
+      if (cursor >= weekBegin && cursor < weekEnd) {
+        const instant = new Date(cursor);
+        const band = bandAt(calendarDate(instant.toISOString()), hourInZone(instant), saved?.hours);
+        if (band.countsTowardPeakCap) {
+          used += 1;
+        }
+      }
+      cursor += 3_600_000;
+    }
+  }
+  const remaining = Math.max(0, cap - used);
+  return {
+    cap,
+    used,
+    remaining,
+    line: `Peak hours this week: ${used} used · ${remaining} left`,
+  };
+}
+
+export function memberBalanceCopy(
+  allowance: string,
+  purchased: string,
+  bookings: { status: string; startAt: string; endAt: string }[],
+  weekStart: string,
+  saved?: SavedBands,
+): { allowance: string; purchased: string; total: string; peak: string } {
+  const allowanceAmount = Number(allowance);
+  const purchasedAmount = Number(purchased);
+  return {
+    allowance: tokensLabel(allowanceAmount),
+    purchased: tokensLabel(purchasedAmount),
+    total: tokensLabel(allowanceAmount + purchasedAmount),
+    peak: peakWeek(bookings, weekStart, saved).line,
+  };
+}
+
+export type PurchaseMeta = {
+  subtotal_cad?: string;
+  gst_rate?: string;
+  gst_cad?: string;
+  total_cad?: string;
+};
+
+export function extraHoursLine(
+  meta: { pricing?: unknown; purchase?: PurchaseMeta } | null | undefined,
+): string | null {
+  if (!meta || meta.purchase) {
+    return null;
+  }
+  if (typeof meta.pricing === "string" && meta.pricing.length > 0) {
+    return meta.pricing;
+  }
+  return null;
+}
+
+export function gstLine(meta: { purchase?: PurchaseMeta; pricing_rule?: unknown } | null | undefined): string | null {
+  const purchase = meta?.purchase;
+  if (!purchase?.gst_cad || !purchase.subtotal_cad || !purchase.total_cad) {
+    return null;
+  }
+  return `Subtotal $${purchase.subtotal_cad} · GST $${purchase.gst_cad} · total $${purchase.total_cad}`;
+}
+
+export function bookingErrorCopy(code: string, fallback: string): string {
+  switch (code) {
+    case "hoist_overlap":
+      return TAKEN_MESSAGE;
+    case "would_go_negative":
+      return BELOW_ZERO_MESSAGE;
+    case "cancel_after_start":
+      return AFTER_START_MESSAGE;
+    case "peak_cap":
+      return fallback;
+    case "price_changed":
+      return "The price changed. Nothing was booked.";
+    default:
+      return fallback;
+  }
+}
+
+export function calendarViewForWidth(width: number): "day" | "week" {
+  return width <= PHONE_MAX_PX ? "day" : "week";
+}
+
+export function balanceWouldGoNegative(balance: string | number, cost: number): boolean {
+  return Number(balance) - cost < 0;
 }
