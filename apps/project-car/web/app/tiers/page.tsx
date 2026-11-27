@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { OwnerShell } from "../../components/owner-shell";
 import { handlePageError } from "../../lib/page";
 import { getMe, listTiers } from "../../lib/shop-api";
@@ -9,6 +11,8 @@ import {
   patchTierAction,
   type PricingMultiplier,
 } from "./actions";
+
+export const metadata: Metadata = { title: "Tiers" };
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +42,7 @@ export default async function TiersPage({
           </div>
           <p className="muted">
             Grants each active member their tier included tokens once for this
-            calendar month (America/Regina). A second click this month inserts
+            calendar month (Mountain Time). A second click this month inserts
             nothing. This button is the trigger. There is no background job. No
             Stripe. The shop is not open.
           </p>

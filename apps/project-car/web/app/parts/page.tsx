@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { OwnerShell } from "../../components/owner-shell";
 import { PlaceholderNote } from "../../components/placeholder-note";
 import type { PartsOrder, PartsRequest } from "../../lib/config";
@@ -7,6 +9,8 @@ import { getMe, listPartsOrders, listPartsRequests } from "../../lib/shop-api";
 import { formatShopDateTime } from "../../lib/time";
 import { partsStatusLabel } from "../../lib/todo-calendar";
 import { decidePartsRequestAction, patchPartsOrderAction } from "./actions";
+
+export const metadata: Metadata = { title: "Parts" };
 
 export const dynamic = "force-dynamic";
 

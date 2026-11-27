@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { MemberShell } from "../../../components/member-shell";
 import { handleMemberPageError } from "../../../lib/page";
 import { profileRows } from "../../../lib/profile-view";
 import { getMemberMe } from "../../../lib/shop-api";
+
+export const metadata: Metadata = { title: "Profile" };
 
 export const dynamic = "force-dynamic";
 
