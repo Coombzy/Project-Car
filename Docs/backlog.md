@@ -4,6 +4,7 @@ _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-
 
 ### R1. Token-at-risk stand-in is a balance below 100 (one base hour)
 - Category: bug
+<!-- RED: official R1 check fails while Baseline still claims the API floor is already one base hour. -->
 - Baseline: At-risk stand-in is a token balance below 100 (one base hour): `TOKEN_AT_RISK_BELOW` equals `BASE_TOKENS_PER_HOUR` in `get_dashboard` (`apps/project-car/api/app/routers/dashboard.py`). The locked rate is 100 tokens per hour (`Docs/token-pricing.md`, `BASE_TOKENS_PER_HOUR` in `apps/project-car/api/app/services/pricing.py`). Empty copy still says "No active members under 2 tokens." (`apps/project-car/web/app/page.tsx`) and the adjustment placeholder is still "2 or -1" (`apps/project-car/web/app/members/[id]/page.tsx`); both must match the 100-token stand-in. A member with 99 tokens is below one base hour and is token-at-risk. Seed puts Morgan at 0 so `test_seed_demo_data_on_sqlite` still sees at least one row (`apps/project-car/api/app/seed.py`, `apps/project-car/api/tests/test_shop_os.py`).
 - Target: Active members whose balance is below one base hour (mock: 100) are listed. The empty copy and the adjustment example use that same scale. Morgan at 0 stays on the list. A member at exactly one base hour stays off it.
 - Must not get worse: `test_seed_demo_data_on_sqlite` and `test_dashboard_next_24h_hours_and_parts_orders` still pass. The ledger stays append-only.
