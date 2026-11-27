@@ -1730,3 +1730,12 @@ Rows R167–R170 order: no two rows share a file. R168, R169, and R170 reuse the
 - Size: 1 task
 - Likely files: `apps/project-car/web/app/schedule/page.tsx` (eyebrow only). Held #283 lists this file; this row is the follow-up, not that form or screen work.
 - Depends on: #491 merged.
+
+### R172. Full golden recapture after #484 and the R171 eyebrow fix
+- Category: UX
+- Baseline: Official reviewers cannot see binary PNG pixels. #436 (17 golden PNGs from #284) was NEEDS-CONTEXT twice and closed unmerged as superseded (comment 7218942226). Those goldens were already stale after #433 (Refunds) and #491 (Mountain Time). #484 (week-chip work) and the R171 eyebrow fix (#500) have landed. Owner schedule month and week goldens on main now say Mountain Time, and the 1440 month shot picked up the Refunds nav item. Other visual goldens can still be stale after #433, #491, and the #484 week-chip work.
+- Target: One later PR recaptures the visual goldens those landed changes require. That PR body includes a text pixel-diff table the official review can read: what changed on each screen, at which widths.
+- Must not get worse: this docs row does not recapture goldens and does not edit product code or `visual/screenshots/**`.
+- Proof: this row names that full golden recapture and the pixel-diff table. Red on main: `### R172.` is absent.
+- Size: 1 task
+- Depends on: #484 and #500 (both merged).
