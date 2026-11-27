@@ -4,12 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import type { ChatMessage, ChatMessagePage } from "../../lib/config";
-import { ShopApiError } from "../../lib/config";
 import { createChatRoom, listChatMessages, muteChatRoom, postChatMessage } from "../../lib/shop-api";
 
-function bounce(path: string, error: unknown): never {
-  const message = error instanceof ShopApiError ? error.message : "Chat update failed.";
-  redirect(`${path}${path.includes("?") ? "&" : "?"}error=${encodeURIComponent(message)}`);
+function bounce(path: string, _error: unknown): never {
+  redirect(`${path}${path.includes("?") ? "&" : "?"}error=chat_update_failed`);
 }
 
 export async function createRoomAction(formData: FormData): Promise<void> {

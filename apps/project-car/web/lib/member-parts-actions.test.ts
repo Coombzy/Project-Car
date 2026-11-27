@@ -42,7 +42,7 @@ test("a blank sku never reaches the API", async () => {
     reset();
     await assert.rejects(() => createMemberPartsRequestAction(form(sku)));
     assert.deepEqual(mocks.calls, [], `sku ${JSON.stringify(sku)} reached the API`);
-    assert.ok(mocks.redirects[0]?.startsWith("/member/parts?error="), mocks.redirects[0]);
+    assert.equal(mocks.redirects[0], "/member/parts?error=missing_sku");
   }
 });
 
@@ -50,7 +50,7 @@ test("the API error text never reaches the query string", async () => {
   reset();
   mocks.failure = new ShopApiError("internal secret");
   await assert.rejects(() => createMemberPartsRequestAction(form("PT-OIL-5W30-012")));
-  assert.equal(mocks.redirects[0], "/member/parts?error=Parts%20request%20failed.");
+  assert.equal(mocks.redirects[0], "/member/parts?error=parts_request_failed");
 });
 
 test("a real sku reaches the API trimmed, then redirects to the list", async () => {
