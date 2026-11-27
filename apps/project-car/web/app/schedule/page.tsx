@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { CreateBookingForm } from "../../components/create-booking-form";
@@ -22,6 +23,8 @@ import {
   sortHoists,
 } from "../../lib/calendar";
 import { parseWeekParam, shopClock, shopDateTimeLocal } from "../../lib/time";
+
+export const metadata: Metadata = { title: "Schedule" };
 
 export const dynamic = "force-dynamic";
 

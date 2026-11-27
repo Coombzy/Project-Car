@@ -1,9 +1,13 @@
+import type { Metadata } from "next";
+
 import { CameraTile } from "../../../components/camera-tile";
 import { MemberShell } from "../../../components/member-shell";
 import { PlaceholderNote } from "../../../components/placeholder-note";
 import { handleMemberPageError } from "../../../lib/page";
 import { primaryCamera } from "../../../lib/placeholders";
 import { getMemberMe } from "../../../lib/shop-api";
+
+export const metadata: Metadata = { title: "Shop camera" };
 
 export const dynamic = "force-dynamic";
 

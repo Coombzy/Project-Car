@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { shopApiUrl } from "../../lib/config";
 import { signupAction } from "./actions";
+
+export const metadata: Metadata = { title: "Sign up" };
 
 export const dynamic = "force-dynamic";
 

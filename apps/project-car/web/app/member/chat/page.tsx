@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { MemberShell } from "../../../components/member-shell";
 import { handleMemberPageError } from "../../../lib/page";
 import { getMemberMe, listMemberChatRooms } from "../../../lib/shop-api";
 import { formatShopDateTime } from "../../../lib/time";
+
+export const metadata: Metadata = { title: "Shop chat" };
 
 export const dynamic = "force-dynamic";
 
