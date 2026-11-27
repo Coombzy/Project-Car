@@ -164,6 +164,8 @@ export type CancelOffer = {
   refund: number;
   kept: number;
   label: string;
+  confirmText: string;
+  note: string;
 };
 
 const SHOP_OFFSET = "-06:00";
@@ -202,6 +204,8 @@ export function memberCancelOffer(
     refund: 0,
     kept: reserved,
     label: "",
+    confirmText: "",
+    note: AFTER_START_MESSAGE,
   };
   if (booking.status !== "pending" && booking.status !== "confirmed") {
     return hidden;
@@ -210,11 +214,14 @@ export function memberCancelOffer(
   if (!Number.isFinite(start) || now.getTime() >= start) {
     return hidden;
   }
+  const refundText = Number.isInteger(reserved) ? String(reserved) : reserved.toFixed(2);
   return {
     visible: true,
     refund: reserved,
     kept: 0,
     label: "Cancel",
+    confirmText: `Cancel this visit? You get ${refundText} tokens back.`,
+    note: "You can cancel until it starts. The whole reserve comes back.",
   };
 }
 
