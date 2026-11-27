@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { OwnerShell } from "../../components/owner-shell";
+import { bannerMessage } from "../../lib/error-banner";
 import { handlePageError } from "../../lib/page";
 import { getMe, listChatRooms, listMembers } from "../../lib/shop-api";
 import { formatShopDateTime } from "../../lib/time";
@@ -18,6 +19,7 @@ export default async function OwnerChatPage({
 }) {
   try {
     const params = await searchParams;
+    const banner = bannerMessage(params.error);
     const [me, rooms, members] = await Promise.all([getMe(), listChatRooms(), listMembers()]);
     const activeMembers = members.filter((member) => member.status === "active");
     return (
@@ -33,7 +35,7 @@ export default async function OwnerChatPage({
           Not live Matrix / demo. Human shop chat with a few-second poll while a
           thread is open. The shop is not open.
         </div>
-        {params.error ? <div className="banner error">{params.error}</div> : null}
+        {banner ? <div className="banner error">{banner}</div> : null}
 
         {rooms.length === 0 ? (
           <div className="banner empty">No rooms yet. Create one below, or seed the demo.</div>
