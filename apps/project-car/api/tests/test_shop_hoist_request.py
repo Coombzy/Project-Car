@@ -397,6 +397,7 @@ def test_approve_after_the_start_has_passed_does_not_book(client: TestClient, mo
     staff can still decline it. A request whose start is still ahead still
     approves. Red on main: that approve returns 200 and writes a booking.
     """
+    monkeypatch.setenv("SHOP_DEV_MODE", "1")
     monkeypatch.setenv("SHOP_NOW", "2026-10-06T15:00:00-06:00")
     member = create_member(client, email="ada.past-window@example.com")
     shop = create_hoist(client, name="Shop", is_shop=True)

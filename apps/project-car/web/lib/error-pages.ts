@@ -25,6 +25,13 @@ export function dashboardHref(pathname: string): "/" | "/member" {
   } catch {
     path = "/";
   }
+  // Percent-encoded controls survive the parse, so the raw-control guard above
+  // never sees them. window.location.pathname never carries a C0 or DEL byte,
+  // encoded or not, so a resolved path that still has one is not a browser
+  // pathname. `/member/%00nope` would otherwise look like a member path.
+  if (/%(?:0[0-9A-F]|1[0-9A-F]|7F)/i.test(path)) {
+    return "/";
+  }
   if (path === "/member" || path.startsWith("/member/")) {
     return "/member";
   }

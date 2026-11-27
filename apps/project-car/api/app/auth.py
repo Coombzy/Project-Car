@@ -81,7 +81,13 @@ def _serializer(settings: Settings, *, salt: str) -> URLSafeTimedSerializer:
 
 
 def create_session_token(settings: Settings, email: str) -> str:
-    return _serializer(settings, salt=OWNER_SALT).dumps({"role": "owner", "email": email})
+    return _serializer(settings, salt=OWNER_SALT).dumps(
+        {
+            "role": "owner",
+            "email": email,
+            "pwd_fp": password_fingerprint(settings, settings.owner_password),
+        }
+    )
 
 
 # Truncated HMAC hex. Long enough to change when the hash changes, short
@@ -144,6 +150,10 @@ def _load_payload(settings: Settings, token: str, *, salt: str) -> dict[str, Any
 def read_session_token(settings: Settings, token: str) -> dict[str, Any] | None:
     payload = _load_payload(settings, token, salt=OWNER_SALT)
     if payload is None or payload.get("role") != "owner":
+        return None
+    if not member_password_fingerprint_matches(
+        settings, payload.get("pwd_fp"), settings.owner_password
+    ):
         return None
     return payload
 
@@ -239,9 +249,12 @@ def member_password_matches(password_hash: str | None, password: str, shared_pas
 
     Off loopback, the default shared password does not match an unhashed member.
     A non-default shared password still does. A stored hash is unchanged.
+    An unset hash still runs the dummy scrypt before the shared-password compare.
     """
     if password_hash:
         return verify_password(password, password_hash)
+    # Same scrypt cost as an unknown email. The dummy hash is not a password.
+    verify_password(password, DUMMY_MEMBER_PASSWORD_HASH)
     if not host_is_loopback() and secrets_equal(shared_password, DEFAULT_MEMBER_DEMO_PASSWORD):
         return False
     return secrets_equal(password, shared_password)
@@ -365,6 +378,18 @@ def _expire_account_failure(key: tuple[str, str], now: float) -> tuple[int, floa
     return count, seen
 
 
+def _sweep_expired_failures(now: float) -> None:
+    """Drop keys the failure window has expired. Caller holds the lock.
+
+    Account keys already in backoff stay. `_expire_account_failure` keeps
+    that count until a successful login; clearing it would reset the lockout.
+    """
+    for bucket in list(_login_failures):
+        _fresh_failures(bucket, now)
+    for key in list(_account_failures):
+        _expire_account_failure(key, now)
+
+
 def reserve_login_failure(client_ip: str, realm: str = "", account: str = "") -> _LoginStamp | None:
     """Reserve one failure slot before the password check.
 
@@ -378,6 +403,7 @@ def reserve_login_failure(client_ip: str, realm: str = "", account: str = "") ->
     bucket = _ip_bucket(realm, client_ip)
     normalized = account.strip().lower() if account else ""
     with _login_failures_lock:
+        _sweep_expired_failures(now)
         if normalized:
             key = _account_key(realm, normalized)
             count, seen = _expire_account_failure(key, now)

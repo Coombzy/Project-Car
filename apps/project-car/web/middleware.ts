@@ -14,6 +14,16 @@ function redirectTo(request: NextRequest, path: string): URL {
   return publicUrl(request.headers, request.url, path);
 }
 
+/** Shape only. Empty, whitespace, spaces, and ASCII controls fail. Not a signature check. */
+function cookieLooksPlausible(value: string): boolean {
+  if (value.trim() === "") return false;
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code <= 0x20 || code === 0x7f) return false;
+  }
+  return true;
+}
+
 function redirect(url: string | URL): NextResponse {
   return applySecurityHeaders(NextResponse.redirect(url));
 }
@@ -40,6 +50,15 @@ export function middleware(request: NextRequest) {
   const isMemberLogin = path.startsWith("/member/login");
   const isSignup = path === "/signup" || path.startsWith("/signup/");
   const isMemberArea = path === "/member" || path.startsWith("/member/");
+  const ownerExpired = "/logout/expired";
+  const memberExpired = "/member/logout/expired";
+  if (isMemberArea && path !== memberExpired && memberSession && !cookieLooksPlausible(memberSession)) {
+    return redirect(redirectTo(request, memberExpired));
+  }
+  if (!isMemberArea && !isSignup && path !== ownerExpired && ownerSession && !cookieLooksPlausible(ownerSession)) {
+    return redirect(redirectTo(request, ownerExpired));
+  }
+  if (path === ownerExpired || path === memberExpired) return NextResponse.next();
 
   if (isMemberLogin) {
     if (memberSession) {

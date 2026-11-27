@@ -1,8 +1,6 @@
-"use client";
-
-import { useActionState } from "react";
-
-import { memberLoginAction, type MemberLoginState } from "./actions";
+import { LoginShell } from "../../../components/login-shell";
+import { showDemoLoginHints } from "../../../lib/login-hints";
+import { memberLoginAction } from "./actions";
 
 export function MemberLoginForm({
   nextPath,
@@ -11,14 +9,10 @@ export function MemberLoginForm({
   nextPath: string;
   defaultPassword?: string;
 }) {
-  const [state, action, pending] = useActionState<MemberLoginState, FormData>(
-    memberLoginAction,
-    null,
-  );
+  const hints = showDemoLoginHints();
 
   return (
-    <form action={action}>
-      <input type="hidden" name="next" value={nextPath} />
+    <LoginShell action={memberLoginAction} nextPath={nextPath} idleLabel="Enter demo as Member">
       <label htmlFor="email">Email</label>
       <input
         id="email"
@@ -26,7 +20,7 @@ export function MemberLoginForm({
         type="email"
         autoComplete="username"
         required
-        defaultValue="ada.reyes@example.com"
+        defaultValue={hints ? "ada.reyes@example.com" : ""}
       />
       <label htmlFor="password">Password</label>
       <input
@@ -35,14 +29,8 @@ export function MemberLoginForm({
         type="password"
         autoComplete="current-password"
         required
-        defaultValue={defaultPassword ?? ""}
+        defaultValue={hints ? (defaultPassword ?? "") : ""}
       />
-      {state?.message ? <p className="banner error">{state.message}</p> : null}
-      <div className="actions">
-        <button type="submit" disabled={pending}>
-          {pending ? "Signing in…" : "Enter demo as Member"}
-        </button>
-      </div>
-    </form>
+    </LoginShell>
   );
 }

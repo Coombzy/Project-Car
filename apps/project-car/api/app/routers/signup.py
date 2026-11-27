@@ -1,4 +1,4 @@
-"""Public signup. Self-serve creates the member. Waitlist is the fallback."""
+"""Public signup. Self-serve creates the member on the stand-in tiers. Waitlist is the fallback."""
 
 from __future__ import annotations
 
@@ -30,6 +30,9 @@ from app.services.staff import reject_ai
 from app.services.tokens import apply_ledger
 
 router = APIRouter(tags=["signup"])
+
+# Stand-in until Ben names which tiers may self-serve.
+SELF_SERVE_TIERS = {"basic"}
 
 _SIGNUP_CREATE_LIMIT = 8
 _SIGNUP_CREATE_WINDOW_SECONDS = 15 * 60
@@ -190,6 +193,12 @@ def signup(
     tier = session.get(MembershipTier, body.tier_name)
     if tier is None:
         raise _http(400, "unknown_tier", "Unknown membership tier.")
+    if tier.name not in SELF_SERVE_TIERS:
+        raise _http(
+            400,
+            "tier_not_self_serve",
+            "That tier is not available for self-serve signup.",
+        )
 
     email = str(body.email)
     existing = session.scalar(select(Member).where(Member.email == email))

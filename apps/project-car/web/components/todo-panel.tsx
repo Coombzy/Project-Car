@@ -1,6 +1,7 @@
 import type { CalendarStatus, Todo } from "../lib/config";
 import { formatShopDateTime, shopDateTimeLocal } from "../lib/time";
 import { CalendarConnect } from "./calendar-connect";
+import { ConfirmButton } from "./confirm-button";
 import { CopyEventButton } from "./copy-event-button";
 
 type TodoActions = {
@@ -55,9 +56,7 @@ export function TodoPanel({
                 <CopyEventButton todo={todo} icsHref={icsPath(todo.id)} />
                 <form action={actions.remove}>
                   <input type="hidden" name="id" value={todo.id} />
-                  <button className="ghost" type="submit">
-                    Delete
-                  </button>
+                  <ConfirmButton className="ghost" />
                 </form>
               </li>
             ))}
