@@ -4,7 +4,29 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { bandAt } from "./booking-calendar.ts";
+import { bandAt, lowestFreeBay, type BayChoice, type SpanInterval } from "./booking-calendar.ts";
+
+const bays: BayChoice[] = [
+  { id: "bay-1", name: "Bay 1", number: 1, isShop: false, status: "available" },
+  { id: "bay-2", name: "Bay 2", number: 2, isShop: false, status: "available" },
+];
+
+const windowStart = "2026-06-18T14:00:00";
+const windowEnd = "2026-06-18T16:00:00";
+
+function span(status: string): SpanInterval {
+  return { hoistId: "bay-1", startAt: windowStart, endAt: windowEnd, status };
+}
+
+describe("lowestFreeBay", () => {
+  it("test_completed_visit_leaves_that_bay_free", () => {
+    assert.equal(lowestFreeBay(bays, [span("completed")], windowStart, windowEnd)?.id, "bay-1");
+    assert.equal(lowestFreeBay(bays, [span("confirmed")], windowStart, windowEnd)?.id, "bay-2");
+    assert.equal(lowestFreeBay(bays, [span("pending")], windowStart, windowEnd)?.id, "bay-2");
+    assert.equal(lowestFreeBay(bays, [span("active")], windowStart, windowEnd)?.id, "bay-2");
+    assert.equal(lowestFreeBay(bays, [span("overdue")], windowStart, windowEnd)?.id, "bay-2");
+  });
+});
 
 const webRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const pagePath = join(webRoot, "app/member/schedule/page.tsx");
