@@ -203,7 +203,7 @@ Every `booking_reserve` (and the matching debit / refund rows) stores the math. 
 
 1. **Create booking.** Show each held hour at its band, then the standard overlay and that hour's fill, and the total. Balance **before** and **after**, plus **band label**, **overlay label**, and **fill label** when fill ≠ 1.0, before confirm / reserve.
 2. **Weekly hour-slot cells.** Band color + token-cost badge on the booking in the hour grid. Overlay chip when overlay ≠ 1.0. Fill chip when fill ≠ 1.0. Month view is density-only (booked hours vs 08:00–21:00), not a second price surface.
-3. **Member detail.** Balance + recent ledger. **At-risk** when the token balance is below 100 (one base hour, `BASE_TOKENS_PER_HOUR`); stand-in until Owner sets the real floor (backlog R1).
+3. **Member detail.** Balance + recent ledger. **At-risk** when open reserved tokens **>** remaining (cached) free balance.
 4. **Cancel / complete.** Show refund or debit **inline** (the locked reserved amount).
 5. **Never hide math.** `pricing_rule` (band id + multipliers + factors + total) on ledger meta; surface it on the ledger, not only in a tooltip.
 

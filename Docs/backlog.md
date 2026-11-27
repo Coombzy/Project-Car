@@ -2,7 +2,7 @@
 
 _Drafted by Grok Build CLI (session 5b1014aa-1360-4b86-91ff-2bd86d55d0f5); spot-checked by Cortana against the code for R1–R7, R10, R12–R17, R19, R20. R15 baseline corrected. Not yet in the repo; nothing pushed._
 
-### R1. Token-at-risk stand-in is a balance below 100 (one base hour)
+### R1. Token-at-risk uses a 2-token floor
 - Category: bug
 - Baseline: `TOKEN_AT_RISK_BELOW` is `Decimal("2")` in `get_dashboard` (`apps/project-car/api/app/routers/dashboard.py`). The empty state says "No active members under 2 tokens." (`apps/project-car/web/app/page.tsx`). The adjustment box placeholder is "2 or -1" (`apps/project-car/web/app/members/[id]/page.tsx`). The locked rate is 100 tokens per hour (`Docs/token-pricing.md`, `BASE_TOKENS_PER_HOUR` in `apps/project-car/api/app/services/pricing.py`). A member with 99 tokens cannot reserve a one-hour weekday-day slot and does not appear in `token_at_risk`. Seed puts Morgan at 0 so `test_seed_demo_data_on_sqlite` still sees at least one row (`apps/project-car/api/app/seed.py`, `apps/project-car/api/tests/test_shop_os.py`).
 - Target: Active members whose balance is below one base hour (mock: 100) are listed. The empty copy and the adjustment example use that same scale. Morgan at 0 stays on the list. A member at exactly one base hour stays off the list.
