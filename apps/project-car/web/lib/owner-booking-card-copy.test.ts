@@ -40,4 +40,19 @@ describe("owner booking card copy", () => {
     assert.match(card, /action=\{checkInBookingAction\}/);
     assert.match(card, /checkInButtonState\(booking\.start_at, shopClock\(\), booking\.end_at\)/);
   });
+
+  it("keeps hour-chip actions in the scrollable booking", () => {
+    const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../app/globals.css"), "utf8");
+    const hour = css.slice(css.indexOf(".hour-booking {"), css.indexOf(".booking-chip-hour {"));
+    assert.match(hour, /overflow:\s*auto/);
+    assert.equal(hour.includes("overflow: hidden"), false);
+    const actions = css.slice(
+      css.indexOf(".booking-chip-hour .chip-actions {"),
+      css.indexOf(".booking-chip-hour .check-in-hint"),
+    );
+    assert.match(actions, /flex-wrap:\s*wrap/);
+    assert.equal(actions.includes("display: none"), false);
+    assert.equal(actions.includes("overflow: hidden"), false);
+    assert.equal(css.includes("@container"), false);
+  });
 });

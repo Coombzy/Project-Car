@@ -945,9 +945,8 @@ main.wide {
   left: 3px;
   right: 3px;
   z-index: 2;
-  overflow: hidden;
+  overflow: auto;
   min-width: 0;
-  container-type: size;
 }
 
 .booking-chip-hour {
@@ -955,7 +954,7 @@ main.wide {
   height: 100%;
   min-width: 0;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-flow: row wrap;
   align-content: flex-start;
@@ -1005,10 +1004,9 @@ main.wide {
 
 .booking-chip-hour .chip-actions {
   margin-top: 0;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   min-width: 0;
   max-width: 100%;
-  overflow: hidden;
 }
 
 .booking-chip-hour .check-in-hint { display: none; }
@@ -1017,25 +1015,6 @@ main.wide {
   padding: 0 0.28rem;
   font-size: 0.58rem;
   line-height: 1.2;
-}
-
-@container (max-height: 4rem) {
-  .booking-chip-hour .chip-actions {
-    display: none;
-  }
-}
-
-@container (max-height: 3rem) {
-  .booking-chip-hour .booking-cost,
-  .booking-chip-hour > .pill:not(.pill-shop) {
-    display: none;
-  }
-}
-
-@container (max-height: 1.8rem) {
-  .booking-chip-hour > div {
-    display: none;
-  }
 }
 
 .booking-chip-hour .unused-tokens input {
