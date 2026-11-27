@@ -11,6 +11,7 @@ const screens = [
   "app/fill/page.tsx",
   "app/member/schedule/page.tsx",
   "app/page.tsx",
+  "app/schedule/page.tsx",
   "app/tiers/page.tsx",
   "components/create-booking-form.tsx",
   "components/member-booking-form.tsx",
