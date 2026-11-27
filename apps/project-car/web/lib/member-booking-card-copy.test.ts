@@ -21,6 +21,7 @@ describe("member booking card copy", () => {
     assert.equal(card.includes('from "../lib/booking-calendar"'), true);
     assert.equal(card.includes("memberCancelOffer"), true);
     assert.equal(card.includes("offersCancel"), false);
+    assert.match(card, /slot\.hoist_name/);
   });
 
   it("cancel offer without confirmText/note has no empty note and labels Yes, cancel", async () => {
