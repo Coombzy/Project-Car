@@ -57,6 +57,43 @@ def _owner_from_cookie(settings: Settings, session_cookie: str | None) -> Princi
     return Principal(role="owner", email=settings.owner_email)
 
 
+# AUD-009 part 1. These three writes only; not the R101 allowlist.
+_AI_REFUSALS: dict[str, tuple[str, str]] = {
+    "/members/{member_id}/password": (
+        "ai_cannot_set_password",
+        "An AI cannot set a member's password on its own.",
+    ),
+    "/members": ("ai_not_allowed", "An AI cannot create a member on its own."),
+    "/waitlist/{entry_id}/convert": (
+        "ai_not_allowed",
+        "An AI cannot convert a waitlist row on its own.",
+    ),
+}
+
+
+def _owner_route_path(request: Request) -> str:
+    route = request.scope.get("route")
+    template = getattr(route, "path", None)
+    if isinstance(template, str):
+        return template
+    parts = [part for part in request.url.path.split("/") if part]
+    if len(parts) == 3 and parts[0] == "members" and parts[2] == "password":
+        return "/members/{member_id}/password"
+    if len(parts) == 3 and parts[0] == "waitlist" and parts[2] == "convert":
+        return "/waitlist/{entry_id}/convert"
+    return request.url.path
+
+
+def _refuse_ai_owner_route(request: Request) -> None:
+    if request.method != "POST":
+        return
+    refusal = _AI_REFUSALS.get(_owner_route_path(request))
+    if refusal is None:
+        return
+    code, message = refusal
+    raise HTTPException(status_code=403, detail={"code": code, "message": message})
+
+
 def require_owner(
     request: Request,
     settings: Annotated[Settings, Depends(current_settings)],
@@ -66,6 +103,8 @@ def require_owner(
     session_cookie = request.cookies.get(settings.cookie_name)
     bearer = _bearer_principal(settings, authorization)
     if bearer is not None:
+        if bearer.role == "ai":
+            _refuse_ai_owner_route(request)
         return bearer
     owner = _owner_from_cookie(settings, session_cookie)
     if owner is not None:
