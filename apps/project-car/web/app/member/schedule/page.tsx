@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { MemberBookingCard } from "../../../components/member-booking-card";
 import { MemberBookingForm } from "../../../components/member-booking-form";
 import { MemberShell } from "../../../components/member-shell";
@@ -20,6 +22,8 @@ import {
   sortHoists,
 } from "../../../lib/calendar";
 import { parseWeekParam, shopClock, shopDateTimeLocal } from "../../../lib/time";
+
+export const metadata: Metadata = { title: "Schedule" };
 
 export const dynamic = "force-dynamic";
 

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { OwnerShell } from "../../components/owner-shell";
@@ -6,6 +7,8 @@ import { handlePageError } from "../../lib/page";
 import { getMe, listMembers, listTiers } from "../../lib/shop-api";
 import { tokensLabel } from "../../lib/time";
 import { createMemberAction } from "./actions";
+
+export const metadata: Metadata = { title: "Members" };
 
 export const dynamic = "force-dynamic";
 

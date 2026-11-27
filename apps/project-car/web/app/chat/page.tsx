@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { OwnerShell } from "../../components/owner-shell";
@@ -5,6 +6,8 @@ import { handlePageError } from "../../lib/page";
 import { getMe, listChatRooms, listMembers } from "../../lib/shop-api";
 import { formatShopDateTime } from "../../lib/time";
 import { createRoomAction } from "./actions";
+
+export const metadata: Metadata = { title: "Shop chat" };
 
 export const dynamic = "force-dynamic";
 

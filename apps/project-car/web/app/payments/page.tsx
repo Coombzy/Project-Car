@@ -1,8 +1,12 @@
+import type { Metadata } from "next";
+
 import { OwnerShell } from "../../components/owner-shell";
 import { PlaceholderNote } from "../../components/placeholder-note";
 import { handlePageError } from "../../lib/page";
 import { SAMPLE_MEMBERSHIP_PAYMENTS, SAMPLE_PARTS_PAYMENTS } from "../../lib/placeholders";
 import { getMe } from "../../lib/shop-api";
+
+export const metadata: Metadata = { title: "Payments" };
 
 export const dynamic = "force-dynamic";
 

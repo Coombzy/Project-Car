@@ -30,7 +30,7 @@ describe("shop web manifest", () => {
     assert.equal(manifest.background_color, background[1]);
 
     const layout = readFileSync(join(webRoot, "app", "layout.tsx"), "utf8");
-    assert.match(layout, /title:\s*"Project Car · Shop OS"/);
+    assert.match(layout, /default:\s*"Project Car · Shop OS"/);
     assert.match(layout, /manifest:\s*"\/manifest\.webmanifest"/);
     assert.match(layout, /<body>\{children\}<\/body>/);
     assert.doesNotMatch(layout, /serviceWorker|service-worker/);
