@@ -12,6 +12,6 @@ const MESSAGES: Record<string, string> = {
 };
 
 export function bannerMessage(error: string | undefined | null): string | null {
-  if (!error) return null;
-  return MESSAGES[error] ?? null;
+  if (!error || !Object.hasOwn(MESSAGES, error)) return null;
+  return MESSAGES[error];
 }
