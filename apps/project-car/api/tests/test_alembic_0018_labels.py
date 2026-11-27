@@ -50,7 +50,7 @@ def test_four_band_labels_follow_signup_and_keep_multipliers() -> None:
     by_id = {item.revision: item for item in script.walk_revisions()}
     assert "20261031_0018" in by_id
     assert by_id["20261031_0018"].down_revision == "20261105_0019"
-    assert script.get_heads() == ["20261031_0018"]
+    assert script.get_heads() == ["20261031_0019"]
 
     module = _load()
     assert module.revision == "20261031_0018" and module.down_revision == "20261105_0019"

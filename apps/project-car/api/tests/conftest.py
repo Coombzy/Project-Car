@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -12,6 +14,7 @@ from app.auth import clear_login_failures
 from app.db import get_db
 from app.main import app
 from app.models import Base, MembershipTier
+from app.shop_time import SHOP_TZ, shop_now
 
 AUTH = {"Authorization": "Bearer dev-owner-secret"}
 
@@ -41,6 +44,38 @@ def seed_placeholder_tiers(session) -> None:
     ):
         session.add(row)
     session.commit()
+
+
+@pytest.fixture(autouse=True)
+def _shop_clock_on_the_hour(monkeypatch: pytest.MonkeyPatch) -> None:
+    """New bookings sit on the hour. Freeze there so ``shop_now() + N hours`` does too."""
+    top = datetime.now(SHOP_TZ).replace(minute=0, second=0, microsecond=0)
+    monkeypatch.setenv("SHOP_NOW", top.isoformat())
+
+
+def freeze_shop_clock(at: datetime) -> None:
+    os.environ["SHOP_NOW"] = at.isoformat()
+
+
+def align_booking_start(hours: float = 0) -> datetime:
+    """Whole shop hour at least ``hours`` ahead. Still on the hour if the clock is not."""
+    now = shop_now()
+    start = (now + timedelta(hours=hours)).replace(minute=0, second=0, microsecond=0)
+    if start <= now:
+        start += timedelta(hours=1)
+    return start
+
+
+def next_grid_start(hours: int = 1) -> datetime:
+    return align_booking_start(hours)
+
+
+def check_in_open_window(length_hours: float = 2) -> tuple[str, str]:
+    """An on-the-hour start whose 15-minute check-in window is already open."""
+    start = align_booking_start(1)
+    freeze_shop_clock(start - timedelta(minutes=10))
+    end = start + timedelta(hours=length_hours)
+    return start.isoformat(), end.isoformat()
 
 
 @pytest.fixture(autouse=True)

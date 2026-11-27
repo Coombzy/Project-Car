@@ -4,6 +4,8 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
+import { bandAt } from "./booking-calendar.ts";
+
 const webRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const pagePath = join(webRoot, "app/member/schedule/page.tsx");
 const cardPath = join(webRoot, "components/member-booking-card.tsx");
@@ -16,6 +18,16 @@ const YOUR_BOOKINGS = ["active", "confirmed", "overdue", "pending"];
 function statusesIn(source: string): string[] {
   return [...source.matchAll(/booking\.status === "([a-z_]+)"/g)].map((match) => match[1]).sort();
 }
+
+describe("bandAt fallback", () => {
+  it("uses peak on Friday evening and weekend before late night", () => {
+    assert.equal(bandAt("2026-11-27", 16).id, "weekend_fri_eve");
+    assert.equal(bandAt("2026-11-28", 18).id, "weekend_fri_eve");
+    assert.equal(bandAt("2026-11-23", 18).id, "weekday_eve");
+    assert.equal(bandAt("2026-11-27", 21).id, "late_night");
+    assert.equal(bandAt("2026-11-28", 7).id, "late_night");
+  });
+});
 
 describe("Your bookings", () => {
   it("lists a checked-in visit under Your bookings", async () => {
