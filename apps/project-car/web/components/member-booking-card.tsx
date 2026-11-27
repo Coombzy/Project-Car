@@ -1,4 +1,5 @@
 import { memberCancelBookingAction, memberConfirmBookingAction } from "../app/member/schedule/actions";
+import { offersCancel } from "../lib/booking-cancel";
 import { memberCancelOffer } from "../lib/booking-calendar";
 import { bookingStatusLabel } from "../lib/booking-words";
 import { formatCalendarTime } from "../lib/calendar";
@@ -42,7 +43,7 @@ export function MemberBookingCard({
             <input type="hidden" name="id" value={own.id} />
             <button type="submit">Confirm</button>
           </form>
-          {own.status === "pending" && cancel !== null && cancel.visible ? (
+          {offersCancel(own.status, "member-pending") && cancel !== null && cancel.visible ? (
             <form action={memberCancelBookingAction}>
               <ScheduleReturnFields returnTo={returnTo} />
               <input type="hidden" name="id" value={own.id} />
@@ -53,7 +54,7 @@ export function MemberBookingCard({
           ) : null}
         </div>
       ) : null}
-      {own && own.status === "confirmed" && cancel !== null && cancel.visible ? (
+      {own && offersCancel(own.status, "member-confirmed") && cancel !== null && cancel.visible ? (
         <div className="chip-actions">
           <form action={memberCancelBookingAction}>
             <ScheduleReturnFields returnTo={returnTo} />

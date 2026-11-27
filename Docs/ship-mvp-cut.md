@@ -1,7 +1,7 @@
 # Ship-MVP cut — proposed keep vs cut (draft)
 
 **Status:** Draft planning doc — **not** a Ben decision lock  
-**Updated:** 2026-09-07  
+**Updated:** 2026-11-25  
 **Related:** `STATUS.md` (Ship-MVP cut later gate; Next #1), `member-host-cutover.md`, `member-zone-edge.md`, `brochure-pages-cutover.md`, `project-car-application-specification.md` §11 / §15 / §16, `platform-architecture.md` §5, `token-pricing.md`
 
 Propose a **cut-vs-keep** table for the **public MVP gate** (`STATUS.md` “Ship-MVP cut (later gate)”). Purpose: **stop polishing cut-candidates** before STATUS Next #1 — Member UI on **projectcar.ca** (`member-host-cutover.md`; **Ben GO** for execution).
@@ -47,10 +47,10 @@ Explicit table for STATUS Later + build-breadth placeholders that are easy to ov
 | Feature | Status today | MVP proposal | Why | Notes |
 |---------|--------------|--------------|-----|-------|
 | **Full member Parts commerce** | Member `/member/parts` = **request desk** (PT / TC). Ops `/parts` = PT qty / reorder + POs. Not a cart. | **DEFER** | STATUS Later. `pc.marketplace` **off**. Request desk is enough for IA. | Placeholder **KEEP-thin**. Do not invent member checkout or eBay. Marketplace / eBay specs are Later — do not implement from those files. |
-| **Job board claim / complete / assign** | Placeholder boards with **sample token bounties** (`/jobs`, `/member/jobs`). No workflow. | **DEFER** | STATUS Later. Tokens are the hoist ledger, **not Stripe**. | Board **KEEP-thin** (amounts must stay visible). Do not build claim/complete/assign before cutover. |
+| **Job board claim / complete / assign** | Placeholder boards (`/jobs`, `/member/jobs`). Amounts shown are **UI placeholders** — **no payout**. No workflow. | **DEFER** | STATUS Later. Tokens are the hoist ledger, **not Stripe**. | Board **KEEP-thin** (amounts may stay visible as UI placeholders). Completing a claimed job **does not credit** the token ledger. Do not build claim/complete/assign before cutover. |
 | **Live Frigate / NVR / door logs wired** | Cameras **placeholder**. Members = one primary cam. Ops = all cams + door-log + AI stubs. | **DEFER** | STATUS Later. `pc.cameras` **off**. Occupancy is a hint, not source of truth. | Pages **KEEP-thin**. Do not wire Frigate / NVR / live door hardware. Calendar still owns the bay. |
 | **Staff OIDC** | Demo session cookies (`pc_member_session` / Owner cookie). Secure cookies on HTTPS ops/app. | **DEFER** | STATUS Next/Later. Identity v1 is cookies. | Do not swap demo auth for Pocket ID / Authelia before Member host. `pc.member_login` stays **off**. |
-| **Stripe / live billing** | Ops `/payments` placeholder (membership + parts; AI default, human on exceptions). | **DEFER** | STATUS Later. `pc.payments` **off**. No live processor. | Placeholder **KEEP-thin**. Do not claim Stripe is live. Token job bounties are not this table. Shop is not open. |
+| **Stripe / live billing** | Ops `/payments` placeholder (membership + parts; AI default, human on exceptions). | **DEFER** | STATUS Later. `pc.payments` **off**. No live processor. | Placeholder **KEEP-thin**. Do not claim Stripe is live. Token job bounties are **no payout** and do not credit the token ledger, so they never reach this table. Shop is not open. |
 | **Chat AI / Grok / Matrix bridge** | Chat v1 human/polling LIVE. Brochure Chat page stripped. | **DEFER** | Do not elevate Chat v1. Matrix retired. Apex **deferred**. Not a public-MVP build. | Grok on projectcar.ca, assign / staff notes / escalate, websockets = Later. Member booking assistant = Later. Do not revive Matrix or Apex. |
 | **CM consumables full desk** | Prefix **CM** reserved. Trivial stub note only. | **DEFER** | Inventory lock: do not build a full CM UI now. | Leave the prefix. No consumables desk before cutover (or at public MVP unless Ben later says so). |
 | **QR tool hardware / live checkout readers** | Ops `/tools` = B1–B6 + TC crib **demo lists**. Prefixes locked (#26). | **DEFER** | STATUS Later. `pc.access_readers` **off**. | Lists **KEEP-thin**. No QR, NFC/FOB, return-mail, overdue workflow, or readers. No member Tools nav. |

@@ -60,6 +60,8 @@ def login(
     settings: AppSettings,
 ) -> PrincipalOut:
     client_ip, stamp = _guard_login(request, settings, "owner", str(body.email))
+    # Same scrypt cost on every owner outcome. The dummy hash is not a password.
+    verify_password(body.password, DUMMY_MEMBER_PASSWORD_HASH)
     # Default demo owner password is the same 401 as a wrong password outside dev mode.
     if body.password == "changeme" and not settings.shop_dev_mode:
         raise _invalid_credentials()
@@ -91,6 +93,7 @@ def member_login(
     refused for that member. A member with no hash accepts the shared demo
     password on loopback, and off loopback only when that password is not the
     default. Off loopback the default is the same 401 as a wrong password.
+    An unset hash still runs the dummy scrypt before that compare.
 
     Unknown emails and members who are not active both return invalid
     credentials. The body does not say which case it was.

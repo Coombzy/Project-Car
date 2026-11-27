@@ -1,7 +1,7 @@
 # Shop OS CI — GitHub Actions quality gate
 
 **Status:** Living ops (git-only quality gate)  
-**Updated:** 2026-11-02  
+**Updated:** 2026-11-24  
 **Related:** `STATUS.md`, `deployment-guide.md`, `doc-lid-restore.md` (process wake only), `doc-unfreeze.md` (Ben GO pull — **not** this file), `api-stay-up.md`, `shop-web-stay-up.md`, `ai-agents-constitution.md`, `.github/workflows/shop-os-ci.yml`, `apps/project-car/api/README.md`, `apps/project-car/web/README.md`
 
 Plan + runbook for GitHub Actions on **`apps/project-car`**. Merging this file (and the workflow) is a **git-only** quality gate. It is **not** a Doc deploy, **not** a tunnel/live-secret change, **not** a Cloudflare Worker upload, and **not** a license to `git pull` or rebuild shop-web on Doc.
@@ -116,6 +116,20 @@ Separate job. The check name is `shop-web layout-shift / screenshots`. `shop-api
 The check covers every shop-web page that exists today, at 390, 768, and 1440 px wide. Reference PNGs live in `apps/project-car/web/visual/screenshots/`. It fails when layout shift goes above 0.1, or when a screenshot differs from its reference by more than 1% of pixels.
 
 Determinism: Liberation Sans and Liberation Mono are vendored and forced through fontconfig. Animations are off. `SHOP_NOW` is `2026-10-06T15:00:00-06:00`. The API is sqlite seeded with `python -m app.seed --reset` on loopback. Quote and ICS download routes are not pages and are not shot.
+
+---
+
+## Missing jobs (owner adds to `.github/workflows/shop-os-ci.yml`)
+
+The required checks today cover SQLite `pytest`, `tsc`, unit tests, the build, and screenshots. Three gates are not in the workflow. The owner adds them to `.github/workflows/shop-os-ci.yml`; this row only records them here.
+
+| Job | What it runs | Why |
+|-----|--------------|-----|
+| **Postgres migrations and tests** | Alembic migrations against a Postgres service container, then `pytest` on that database | PC-AUD-021. `shop-api pytest` runs on SQLite in-memory only, so migrations and Postgres-only behaviour never run in CI. |
+| **Dependency audit** | `bash scripts/audit-deps.sh`, which runs `npm audit --omit=dev --audit-level=high` in `apps/project-car/web` and `pip-audit` in `apps/project-car/api` | PC-AUD-012 sat unnoticed. The job fails on a high or critical advisory in the runtime dependency trees. |
+| **axe pass** | axe-core against the same loopback pages the visual job shoots | Backlog R146. Accessibility violations are not gated anywhere today. |
+
+`scripts/audit-deps.sh` is the agent script the owner hooks up. Its acceptance target: non-zero on today's lockfiles, zero after PC-AUD-012 lands. The script is a separate Build part (`pc-aud-060-audit-deps`) and is not added here. `.github/workflows/**` stays owner-only.
 
 ---
 

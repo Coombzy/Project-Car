@@ -1,0 +1,10 @@
+[Unit]
+Description=Project Car shop database backup at 03:15 America/Regina
+
+[Timer]
+OnCalendar=*-*-* 03:15:00 America/Regina
+Persistent=true
+Unit=project-car-backup.service
+
+[Install]
+WantedBy=timers.target

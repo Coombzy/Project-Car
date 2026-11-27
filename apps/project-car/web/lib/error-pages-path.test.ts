@@ -85,6 +85,14 @@ describe("dashboard href path normalization", () => {
     assert.equal(dashboardHref("/member/nope\u0000"), "/");
     assert.equal(dashboardHref("/member/nope\u007f"), "/");
 
+    // Percent-encoded controls survive the parse, so the raw-control guard
+    // above never sees them and the resolved path still looks like /member/...
+    assert.equal(dashboardHref("/member/%00nope"), "/");
+    assert.equal(dashboardHref("/member/%09nope"), "/");
+    assert.equal(dashboardHref("/member/%0A/nope"), "/");
+    assert.equal(dashboardHref("/member/%1fnope"), "/");
+    assert.equal(dashboardHref("/member/%7Fnope"), "/");
+
     assert.equal(dashboardHref("/member/nope"), "/member");
     assert.equal(dashboardHref("/member/schedule"), "/member");
     assert.equal(dashboardHref("/member/../schedule"), "/");
