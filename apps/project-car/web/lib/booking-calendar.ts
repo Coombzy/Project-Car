@@ -1,5 +1,7 @@
+import { addDays, calendarDate, parseShopInstant, zonedDateTime } from "./calendar";
 import type { RateHour } from "./rate-chart";
-import { BAND_SHORT, type BandId } from "./booking-words";
+import { tokensLabel } from "./time";
+import { BAND_SHORT, PEAK_HOURS_PER_WEEK, type BandId } from "./booking-words";
 
 const BAND_MULTIPLIER: Record<BandId, number> = {
   weekday_day: 1,
@@ -259,4 +261,70 @@ export function lowestFreeBay(
     }
   }
   return null;
+}
+
+export type SavedBands = { hours: readonly RateHour[]; peakCapHours: number };
+
+export type PeakUsage = { cap: number; used: number; remaining: number; line: string };
+
+function hourInZone(instant: Date): number {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Regina",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(instant);
+  const hour = parts.find((part) => part.type === "hour")?.value ?? "0";
+  return Number(hour);
+}
+
+export function peakWeek(
+  bookings: { status: string; startAt: string; endAt: string }[],
+  weekStart: string,
+  saved?: SavedBands,
+): PeakUsage {
+  const cap = saved?.peakCapHours ?? PEAK_HOURS_PER_WEEK;
+  const weekBegin = zonedDateTime(weekStart, 0).getTime();
+  const weekEnd = zonedDateTime(addDays(weekStart, 7), 0).getTime();
+  let used = 0;
+  for (const booking of bookings) {
+    if (booking.status === "cancelled") {
+      continue;
+    }
+    let cursor = parseShopInstant(booking.startAt).getTime();
+    const end = parseShopInstant(booking.endAt).getTime();
+    while (cursor < end) {
+      if (cursor >= weekBegin && cursor < weekEnd) {
+        const instant = new Date(cursor);
+        const band = bandAt(calendarDate(instant.toISOString()), hourInZone(instant), saved?.hours);
+        if (band.countsTowardPeakCap) {
+          used += 1;
+        }
+      }
+      cursor += 3_600_000;
+    }
+  }
+  const remaining = Math.max(0, cap - used);
+  return {
+    cap,
+    used,
+    remaining,
+    line: `Peak hours this week: ${used} used · ${remaining} left`,
+  };
+}
+
+export function memberBalanceCopy(
+  allowance: string,
+  purchased: string,
+  bookings: { status: string; startAt: string; endAt: string }[],
+  weekStart: string,
+  saved?: SavedBands,
+): { allowance: string; purchased: string; total: string; peak: string } {
+  const allowanceAmount = Number(allowance);
+  const purchasedAmount = Number(purchased);
+  return {
+    allowance: tokensLabel(allowanceAmount),
+    purchased: tokensLabel(purchasedAmount),
+    total: tokensLabel(allowanceAmount + purchasedAmount),
+    peak: peakWeek(bookings, weekStart, saved).line,
+  };
 }
