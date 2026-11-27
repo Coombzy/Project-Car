@@ -60,10 +60,10 @@ export const BAND_SHORT = {
 export type BandId = keyof typeof BAND_SHORT;
 
 function argvEntry(scope: { process?: { argv?: string[] } }): string | undefined {
-  return scope.process.argv[1];
+  return scope.process?.argv?.[1];
 }
 
-/** Word checks run only when this file is the node entry. */
+/** Word checks run only when this file is the node entry. A missing process returns immediately. */
 function proveBookingWords(): void {
   const entry = argvEntry(globalThis);
   if (typeof entry !== "string" || !import.meta.url.endsWith(entry)) {
