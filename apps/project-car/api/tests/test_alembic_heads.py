@@ -23,10 +23,11 @@ def test_alembic_has_a_single_head() -> None:
 
 
 def test_upgrade_runs_from_an_empty_db() -> None:
-    """One chain from base to head. Import each revision; do not run DDL on sqlite."""
+    """Linear chain to head. The base upgrade creates tables in an empty database."""
     script = ScriptDirectory.from_config(Config(str(ALEMBIC_INI)))
     chain = list(script.walk_revisions("base", HEAD))
-    assert script.get_bases() == [chain[-1].revision]
+    base = chain[-1]
+    assert script.get_bases() == [base.revision]
     previous = None
     for revision in reversed(chain):
         assert revision.down_revision == previous
@@ -34,6 +35,25 @@ def test_upgrade_runs_from_an_empty_db() -> None:
         assert callable(revision.module.downgrade)
         previous = revision.revision
     assert previous == HEAD
+
+    engine = create_engine("sqlite://")
+    try:
+        with engine.begin() as connection:
+            empty = connection.execute(
+                text("SELECT name FROM sqlite_master WHERE type = 'table'")
+            ).all()
+            assert empty == []
+            with Operations.context(MigrationContext.configure(connection)):
+                base.module.upgrade()
+            names = {
+                row[0]
+                for row in connection.execute(
+                    text("SELECT name FROM sqlite_master WHERE type = 'table'")
+                )
+            }
+    finally:
+        engine.dispose()
+    assert {"membership_tiers", "members"} <= names
 
 
 def test_downgrade_rewinds_placeholder_notes(tmp_path: Path) -> None:
