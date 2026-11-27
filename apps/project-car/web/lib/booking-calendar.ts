@@ -61,6 +61,85 @@ export function bandAt(isoDate: string, hour: number, saved?: readonly RateHour[
   return { id, short, tokens, gutter: `${short} ${tokens}`, countsTowardPeakCap: id === PEAK_BAND };
 }
 
+export type SelectionSummary = {
+  hours: number[];
+  line: string;
+  note: string | null;
+  total: number;
+};
+
+export type QuotedHour = {
+  band_label: string;
+  band_tokens: string;
+};
+
+export function quotedSelectionLine(
+  rule:
+    | {
+        segments?: QuotedHour[];
+        final_reserve_cost?: string;
+        fill_multiplier?: string;
+        fill_label?: string;
+      }
+    | null
+    | undefined,
+): string | null {
+  if (!rule?.final_reserve_cost || !rule.segments || rule.segments.length === 0) {
+    return null;
+  }
+  const groups: { label: string; tokens: string; count: number }[] = [];
+  for (const segment of rule.segments) {
+    const last = groups[groups.length - 1];
+    if (last && last.label === segment.band_label && last.tokens === segment.band_tokens) {
+      last.count += 1;
+    } else {
+      groups.push({ label: segment.band_label, tokens: segment.band_tokens, count: 1 });
+    }
+  }
+  const parts = groups.map((group) => {
+    const subtotal = Number(group.tokens) * group.count;
+    const shown = Number.isInteger(subtotal) ? String(subtotal) : subtotal.toFixed(2);
+    return `${group.label} ${group.tokens} × ${group.count} = ${shown}`;
+  });
+  const fill =
+    rule.fill_multiplier && Number(rule.fill_multiplier) !== 1 && rule.fill_label ? ` · ${rule.fill_label}` : "";
+  return `${parts.join(" · ")}${fill} · Total ${rule.final_reserve_cost}`;
+}
+
+export function selectionSummary(
+  isoDate: string,
+  startHour: number,
+  endHour: number,
+  blocked: ReadonlySet<number> = new Set(),
+  saved?: readonly RateHour[],
+): SelectionSummary {
+  const hours: number[] = [];
+  let note: string | null = null;
+  const lo = Math.min(startHour, endHour);
+  const hi = Math.max(startHour, endHour);
+  for (let hour = lo; hour < hi; hour += 1) {
+    if (blocked.has(hour)) {
+      note = `${pad(hour)}:00 is booked; selection ends at ${pad(hour)}:00`;
+      break;
+    }
+    hours.push(hour);
+  }
+  const groups: { short: string; tokens: number; count: number }[] = [];
+  for (const hour of hours) {
+    const band = bandAt(isoDate, hour, saved);
+    const last = groups[groups.length - 1];
+    if (last && last.short === band.short && last.tokens === band.tokens) {
+      last.count += 1;
+    } else {
+      groups.push({ short: band.short, tokens: band.tokens, count: 1 });
+    }
+  }
+  const total = groups.reduce((sum, group) => sum + group.tokens * group.count, 0);
+  const parts = groups.map((group) => `${group.short} ${group.tokens} × ${group.count} = ${group.tokens * group.count}`);
+  const line = parts.length === 0 ? "" : `${parts.join(" · ")} · Total ${total}`;
+  return { hours, line, note, total };
+}
+
 /**
  * Member cancel on the schedule list.
  *
