@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { demoPassword, showDemoLoginHints } from "../../../lib/demo-login";
 import { safeMemberNext } from "../../../lib/safe-next";
 import { MemberLoginForm } from "./login-form";
+
+export const metadata: Metadata = { title: "Sign in to your bay" };
 
 export default async function MemberLoginPage({
   searchParams,
