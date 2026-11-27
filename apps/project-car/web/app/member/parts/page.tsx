@@ -4,6 +4,7 @@ import { MemberRequestDesk } from "../../../components/member-request-desk";
 import { MemberShell } from "../../../components/member-shell";
 import { PlaceholderNote } from "../../../components/placeholder-note";
 import type { PartsRequest } from "../../../lib/config";
+import { bannerMessage } from "../../../lib/error-banner";
 import { handleMemberPageError } from "../../../lib/page";
 import { getMemberMe, listMemberPartsRequests } from "../../../lib/shop-api";
 import { createMemberPartsRequestAction } from "./actions";
@@ -44,6 +45,7 @@ function MemberPartsBody({
   requests: PartsRequest[];
   error?: string;
 }) {
+  const banner = bannerMessage(error);
   return (
     <>
       <p className="eyebrow">Customer-facing</p>
@@ -54,7 +56,7 @@ function MemberPartsBody({
         not eBay. Crib tools (<code>TC-…</code>) and bay kits (B1–B6) do not
         check out here. No Stripe. The shop is not open.
       </p>
-      {error ? <div className="banner error">{error}</div> : null}
+      {banner ? <div className="banner error">{banner}</div> : null}
       <PlaceholderNote>
         Customer-facing request desk on temporary <code>app.</code>{" "}
         <code>/member</code> — migrates to projectcar.ca later. A stored parts

@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { ChatThread } from "../../../components/chat-thread";
 import { OwnerShell } from "../../../components/owner-shell";
+import { bannerMessage } from "../../../lib/error-banner";
 import { handlePageError } from "../../../lib/page";
 import { getChatRoom, getMe, listChatMessages } from "../../../lib/shop-api";
 import { muteRoomAction, pollOwnerMessages, sendOwnerMessage } from "../actions";
@@ -20,6 +21,7 @@ export default async function OwnerChatRoomPage({
 }) {
   try {
     const [{ id }, query] = await Promise.all([params, searchParams]);
+    const banner = bannerMessage(query.error);
     const [me, room, page] = await Promise.all([getMe(), getChatRoom(id), listChatMessages(id)]);
     return (
       <OwnerShell email={me.email} current="chat">
@@ -40,7 +42,7 @@ export default async function OwnerChatRoomPage({
           Not live Matrix / demo. Owner/ops can mute this thread. Members cannot
           start rooms.
         </div>
-        {query.error ? <div className="banner error">{query.error}</div> : null}
+        {banner ? <div className="banner error">{banner}</div> : null}
         <form action={muteRoomAction} className="chat-mute">
           <input type="hidden" name="id" value={room.id} />
           <input type="hidden" name="muted" value={room.muted ? "false" : "true"} />
