@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { bandAt, lowestFreeBay, type BayChoice, type SpanInterval } from "./booking-calendar.ts";
 import { balanceWouldGoNegative, bookingErrorCopy, calendarViewForWidth, extraHoursLine, gstLine } from "./booking-calendar.ts";
+import { AFTER_START_MESSAGE } from "./booking-words.ts";
 
 const bays: BayChoice[] = [
   { id: "bay-1", name: "Bay 1", number: 1, isShop: false, status: "available" },
@@ -138,6 +139,8 @@ describe("Your bookings", () => {
     assert.equal(soon.refund, 337.51);
     assert.equal(soon.kept, 0);
     assert.equal(soon.label, "Cancel");
+    assert.equal(soon.confirmText, "Cancel this visit? You get 337.51 tokens back.");
+    assert.equal(soon.note, "You can cancel until it starts. The whole reserve comes back.");
 
     const early = memberCancelOffer(
       { status: "pending", startAt: "2026-11-07T16:00:00", reservedTokens: "200" },
@@ -146,12 +149,15 @@ describe("Your bookings", () => {
     assert.equal(early.visible, true);
     assert.equal(early.refund, 200);
     assert.equal(early.kept, 0);
+    assert.equal(early.confirmText, "Cancel this visit? You get 200 tokens back.");
 
     const started = memberCancelOffer(
       { status: "confirmed", startAt: "2026-11-05T15:00:00", reservedTokens: "100" },
       now,
     );
     assert.equal(started.visible, false);
+    assert.equal(started.confirmText, "");
+    assert.equal(started.note, AFTER_START_MESSAGE);
 
     for (const status of ["completed", "cancelled", "active", "overdue"]) {
       const offer = memberCancelOffer(
@@ -159,6 +165,8 @@ describe("Your bookings", () => {
         now,
       );
       assert.equal(offer.visible, false, status);
+      assert.equal(offer.confirmText, "", status);
+      assert.equal(offer.note, AFTER_START_MESSAGE, status);
     }
   });
 

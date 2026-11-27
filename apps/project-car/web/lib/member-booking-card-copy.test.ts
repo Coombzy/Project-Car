@@ -24,24 +24,20 @@ describe("member booking card copy", () => {
     assert.match(card, /slot\.hoist_name/);
   });
 
-  it("cancel offer without confirmText/note has no empty note and labels Yes, cancel", async () => {
+  it("shownCancel passes confirm copy and labels the button Cancel", async () => {
     const offer = memberCancelOffer(
       { status: "confirmed", startAt: "2026-11-07T16:00:00", reservedTokens: "80" },
       new Date("2026-11-05T22:00:00.000Z"),
     );
-    const problems: string[] = [];
-    if (!offer.visible) problems.push("offer not visible");
-    if ("confirmText" in offer || "note" in offer) problems.push("offer already has confirm copy");
-    if (/\{cancel\?\.visible \? \(\s*<p className="muted">/.test(card)) problems.push("empty muted note");
-    try {
-      const { shownCancel } = await import("./member-booking-card-copy.ts");
-      const view = shownCancel(offer);
-      if (view.confirmText !== "") problems.push("confirmText is present");
-      if (view.note !== "") problems.push("note is present");
-      if (view.label !== "Yes, cancel") problems.push(`label is ${view.label}`);
-    } catch {
-      problems.push("no shownCancel");
-    }
-    assert.deepEqual(problems, [], problems.join("; "));
+    assert.equal(offer.visible, true);
+    assert.equal(offer.confirmText, "Cancel this visit? You get 80 tokens back.");
+    assert.equal(offer.note, "You can cancel until it starts. The whole reserve comes back.");
+    const { shownCancel } = await import("./member-booking-card-copy.ts");
+    const view = shownCancel(offer);
+    assert.equal(view.visible, true);
+    assert.equal(view.confirmText, offer.confirmText);
+    assert.equal(view.note, offer.note);
+    assert.equal(view.label, "Cancel");
+    assert.equal(/\{cancel\?\.visible \? \(\s*<p className="muted">/.test(card), false);
   });
 });
