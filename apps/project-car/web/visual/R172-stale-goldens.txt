@@ -1,6 +1,0 @@
-R172 RED: committed visual goldens are stale after #433, #491, and #500.
-
-fill, home, tiers, and member-schedule at 390, 768, and 1440 still show America/Regina.
-1440 owner-shell pages other than schedule and schedule-week still lack Refunds between Payments and Tiers.
-Source already says Mountain Time and already includes the Refunds admin nav item.
-This note is the failing check. The recapture commit removes it and replaces the stale pngs.
