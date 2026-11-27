@@ -44,6 +44,7 @@ const OWNER_PAGES: Shot[] = [
   { name: "parts", path: "/parts" },
   { name: "payments", path: "/payments" },
   { name: "schedule", path: "/schedule" },
+  { name: "schedule-week", path: "/schedule?view=week" },
   { name: "tiers", path: "/tiers" },
   { name: "tools", path: "/tools" },
   { name: "waitlist", path: "/waitlist" },
