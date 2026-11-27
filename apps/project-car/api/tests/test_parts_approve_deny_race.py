@@ -8,14 +8,18 @@ import uuid
 from collections.abc import Iterator
 
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, func, select, text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import NullPool
 
+from app.auth import Principal
+from app.config import settings
 from app.db import get_db
 from app.main import app
 from app.models import Base, StaffAction
+from app.routers.staff import staff_approve_parts, staff_deny_parts
 from tests.conftest import AUTH, create_member, seed_placeholder_tiers
 from tests.race import race
 
@@ -43,6 +47,7 @@ def pg_client() -> Iterator[TestClient]:
         setup = factory()
         try:
             seed_placeholder_tiers(setup)
+            setup.commit()
         finally:
             setup.close()
 
@@ -77,32 +82,34 @@ def test_parts_approve_deny_has_one_winner(pg_client: TestClient) -> None:
         json={"member_id": member["id"], "sku": "PT-OIL-5W30-012", "note": "race"},
     )
     assert created.status_code == 201, created.text
-    request_id = created.json()["id"]
-    paths = (
-        f"/parts-requests/{request_id}/approve",
-        f"/parts-requests/{request_id}/deny",
-    )
-    ticket = {"n": 0}
+    request_id = uuid.UUID(created.json()["id"])
+    principal = Principal(role="owner", email=settings.owner_email)
+    handlers = [staff_approve_parts, staff_deny_parts]
     lock = threading.Lock()
 
-    def call(_session: object) -> object:
+    def call(session: Session) -> tuple[int, str | None]:
         with lock:
-            index = ticket["n"]
-            ticket["n"] += 1
-        return pg_client.post(paths[index], headers=AUTH)
+            handler = handlers.pop()
+        try:
+            handler(request_id, session, principal)
+            session.commit()
+            return 200, None
+        except HTTPException as exc:
+            session.rollback()
+            detail = exc.detail if isinstance(exc.detail, dict) else {}
+            return exc.status_code, detail.get("code")
 
     results, errors = race(2, call, pg_client.session_factory)
     assert errors == [None, None], errors
-    codes = sorted(response.status_code for response in results)
-    assert codes == [200, 409], [(response.status_code, response.text) for response in results]
-    loser = next(response for response in results if response.status_code == 409)
-    assert loser.json()["error"]["code"] == "request_already_decided"
+    codes = sorted(status for status, _code in results)
+    assert codes == [200, 409], results
+    assert any(code == "request_already_decided" for _status, code in results)
     session = pg_client.session_factory()
     try:
         count = session.scalar(
             select(func.count())
             .select_from(StaffAction)
-            .where(StaffAction.request_id == uuid.UUID(request_id))
+            .where(StaffAction.request_id == request_id)
         )
     finally:
         session.close()
