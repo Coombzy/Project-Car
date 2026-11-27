@@ -19,6 +19,8 @@ describe("refundRows", () => {
       { status: "pending" },
       { id: "" },
       { id: 1 },
+      { id: "obj", booking_id: { id: "x" }, status: "pending", created_by_kind: "ai", created_by_id: "a" },
+      { id: "num", booking_id: "b", status: 1, created_by_kind: "ai", created_by_id: "a" },
       { id: "old", booking_id: "b1", status: "pending", created_by_kind: "owner", created_by_id: "o" },
     ]);
     assert.deepEqual(
