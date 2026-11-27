@@ -946,18 +946,76 @@ main.wide {
   right: 3px;
   z-index: 2;
   overflow: auto;
+  min-width: 0;
 }
 
 .booking-chip-hour {
   margin: 0;
   height: 100%;
-  font-size: 0.74rem;
-  padding: 0.25rem 0.35rem;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: visible;
+  display: flex;
+  flex-flow: row wrap;
+  align-content: flex-start;
+  align-items: center;
+  column-gap: 0.28rem;
+  font-size: 0.64rem;
+  line-height: 1.05;
+  padding: 0 0.28rem;
 }
 
+.booking-chip-hour strong,
+.booking-chip-hour > div:not(.booking-cost):not(.chip-actions) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.booking-chip-hour strong { flex: 1 1 auto; }
+.booking-chip-hour > div { flex: 1 1 100%; }
+.booking-chip-hour > div:not(.chip-actions) { order: 1; }
+
+.booking-chip-hour :is(.pill, .token-badge, .band-chip, .overlay-chip, .fill-chip) {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 0.28rem;
+  font-size: 0.58rem;
+  line-height: 1.2;
+}
+
+.booking-chip-hour .booking-cost {
+  flex-wrap: nowrap;
+  margin: 0;
+  gap: 0.15rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.booking-chip-hour .token-badge { flex: 0 0 auto; }
+
+.booking-chip-hour .booking-cost > :not(.token-badge) {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.booking-chip-hour .chip-actions {
+  margin-top: 0;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.booking-chip-hour .check-in-hint { display: none; }
+
 .booking-chip-hour .chip-actions button {
-  padding: 0.18rem 0.35rem;
-  font-size: 0.68rem;
+  padding: 0 0.28rem;
+  font-size: 0.58rem;
+  line-height: 1.2;
 }
 
 .booking-chip-hour .unused-tokens input {

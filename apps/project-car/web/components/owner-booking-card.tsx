@@ -1,8 +1,8 @@
 import { BookingCost } from "./booking-cost";
 import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
-import { StatusPill } from "./status-pill";
 import { offersCancel } from "../lib/booking-cancel";
 import { completeUnusedField } from "../lib/booking-complete";
+import { bookingStatusLabel } from "../lib/booking-words";
 import { formatCalendarTime } from "../lib/calendar";
 import type { Booking } from "../lib/config";
 import { checkInButtonState } from "../lib/check-in-window";
@@ -31,12 +31,12 @@ export function OwnerBookingCard({
       className={`booking-chip status-${booking.status}${booking.kind === "shop" ? " booking-chip-shop" : ""}${compact ? " booking-chip-hour" : ""}`}
     >
       <strong>{booking.member_name}</strong>
-      {booking.kind === "shop" ? <StatusPill value="shop" /> : null}
+      {booking.kind === "shop" ? <span className="pill pill-shop">Shop</span> : null}
       <div>
-        {formatCalendarTime(booking.start_at)}–{formatCalendarTime(booking.end_at)}
+        {formatCalendarTime(booking.start_at)}–{formatCalendarTime(booking.end_at)} · Mountain Time
       </div>
       <BookingCost reservedTokens={booking.reserved_tokens} pricingRule={booking.pricing_rule} />
-      <StatusPill value={booking.status} />
+      <span className={`pill pill-${booking.status}`}>{bookingStatusLabel(booking.status)}</span>
       <div className="chip-actions">
         {booking.status === "pending" ? (
           <form action={confirmBookingAction}>
