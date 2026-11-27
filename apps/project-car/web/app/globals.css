@@ -975,6 +975,7 @@ main.wide {
 
 .booking-chip-hour strong { flex: 1 1 auto; }
 .booking-chip-hour > div { flex: 1 1 100%; }
+.booking-chip-hour > div:not(.chip-actions) { order: 1; }
 
 .booking-chip-hour :is(.pill, .token-badge, .band-chip, .overlay-chip, .fill-chip) {
   max-width: 100%;
