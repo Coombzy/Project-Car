@@ -14,18 +14,19 @@ export default async function MemberJobsPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const params = await searchParams;
+  let email: string | undefined;
   try {
-    const me = await getMemberMe();
+    email = (await getMemberMe()).email;
     const events = await listMemberJobEvents();
     return (
-      <MemberShell email={me.email} current="jobs" wide>
+      <MemberShell email={email} current="jobs" wide>
         <MemberJobsBody events={events} error={params.error} />
       </MemberShell>
     );
   } catch (error) {
     const message = await handleMemberPageError(error);
     return (
-      <MemberShell current="jobs" wide>
+      <MemberShell email={email} current="jobs" wide>
         <MemberJobsBody events={[]} error={params.error} />
         <div className="banner error">{message}</div>
       </MemberShell>
