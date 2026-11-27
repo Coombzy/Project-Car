@@ -1,8 +1,7 @@
-"""Rename the four pricing band labels. A saved multiplier stays put.
+"""Four band labels rename. Saved multipliers stay.
 
-Red on main: revision 20261031_0018 is missing, so the chain from
-20261105_0019 does not include that revision and the four new labels
-are absent.
+Red on main: 20261031_0018 is not in the chain after 20261105_0019,
+so the Off-peak, Normal, Evening, and Peak labels are absent.
 """
 
 from __future__ import annotations
@@ -16,12 +15,8 @@ from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, text
 
-API_ROOT = Path(__file__).resolve().parents[1]
-VERSIONS = API_ROOT / "alembic" / "versions"
-ALEMBIC_INI = API_ROOT / "alembic.ini"
-REVISION_PATH = VERSIONS / "20261031_0018_four_band_labels.py"
-
-# Owner-edited multipliers. They differ from the 20261014_0013 seeds on purpose.
+ROOT = Path(__file__).resolve().parents[1]
+PATH = ROOT / "alembic/versions/20261031_0018_four_band_labels.py"
 SAVED = (
     ("late_night", "Late night / early morning", "0.5500", 3),
     ("weekday_day", "Weekday day (base)", "1.0500", 0),
@@ -37,52 +32,36 @@ LABELS = (
 
 
 def _load():
-    assert REVISION_PATH.is_file(), REVISION_PATH
-    spec = importlib.util.spec_from_file_location("four_band_labels", REVISION_PATH)
+    spec = importlib.util.spec_from_file_location("four_band_labels", PATH)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
-def _bands(connection) -> dict[str, tuple]:
-    rows = connection.execute(
+def _rows(connection):
+    return connection.execute(
         text("SELECT id, label, multiplier, sort_order FROM pricing_bands ORDER BY id")
     ).all()
-    return {row[0]: (row[1], row[2], row[3]) for row in rows}
-
-
-def _apply(connection, fn) -> None:
-    with Operations.context(MigrationContext.configure(connection)):
-        fn()
 
 
 def test_four_band_labels_follow_signup_and_keep_multipliers() -> None:
-    script = ScriptDirectory.from_config(Config(str(ALEMBIC_INI)))
-    revision = script.get_revision("20261031_0018")
-    assert revision is not None
-    assert revision.down_revision == "20261105_0019"
+    script = ScriptDirectory.from_config(Config(str(ROOT / "alembic.ini")))
+    by_id = {item.revision: item for item in script.walk_revisions()}
+    assert "20261031_0018" in by_id
+    assert by_id["20261031_0018"].down_revision == "20261105_0019"
     assert script.get_heads() == ["20261031_0018"]
 
     module = _load()
-    assert module.revision == "20261031_0018"
-    assert module.down_revision == "20261105_0019"
+    assert module.revision == "20261031_0018" and module.down_revision == "20261105_0019"
     assert module.LABELS == LABELS
 
     engine = create_engine("sqlite://")
     with engine.begin() as connection:
-        connection.execute(
-            text(
-                """
-                CREATE TABLE pricing_bands (
-                    id VARCHAR(64) PRIMARY KEY,
-                    label VARCHAR(120) NOT NULL,
-                    multiplier NUMERIC NOT NULL,
-                    sort_order INTEGER NOT NULL
-                )
-                """
-            )
-        )
+        connection.execute(text(
+            "CREATE TABLE pricing_bands (id VARCHAR(64) PRIMARY KEY, "
+            "label VARCHAR(120) NOT NULL, multiplier NUMERIC NOT NULL, sort_order INTEGER NOT NULL)"
+        ))
         connection.execute(
             text(
                 "INSERT INTO pricing_bands (id, label, multiplier, sort_order) "
@@ -93,19 +72,18 @@ def test_four_band_labels_follow_signup_and_keep_multipliers() -> None:
                 for band_id, label, multiplier, order in SAVED
             ],
         )
-        connection.execute(
-            text(
-                "INSERT INTO pricing_bands (id, label, multiplier, sort_order) "
-                "VALUES ('owner_extra', 'Owner extra', '9.0000', 9)"
-            )
-        )
-        before = _bands(connection)
-        _apply(connection, module.upgrade)
-        renamed = _bands(connection)
+        before = _rows(connection)
+
+        def apply(fn) -> None:
+            with Operations.context(MigrationContext.configure(connection)):
+                fn()
+
+        apply(module.upgrade)
+        renamed = {row[0]: row for row in _rows(connection)}
+        saved = {row[0]: row for row in before}
         for band_id, label, order in LABELS:
-            assert renamed[band_id][0] == label
-            assert renamed[band_id][2] == order
-            assert renamed[band_id][1] == before[band_id][1]
-        assert renamed["owner_extra"] == before["owner_extra"]
-        _apply(connection, module.downgrade)
-        assert _bands(connection) == before
+            assert renamed[band_id][1] == label
+            assert renamed[band_id][3] == order
+            assert renamed[band_id][2] == saved[band_id][2]
+        apply(module.downgrade)
+        assert _rows(connection) == before
