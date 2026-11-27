@@ -1,26 +1,22 @@
 # R172 visual recapture: text proof for PR #503
 
-Review aid for [PR #503](https://github.com/Coombzy/Project-Car/pull/503). The png diff only says "Binary files differ", so this file has the run log and a per-png description.
+Review aid for [PR #503](https://github.com/Coombzy/Project-Car/pull/503). The png diff only says "Binary files differ". The green render and the pixel table are different checks.
 
-- Commit: `563d74af770c3cd7ad1b9662d243a44158e5ca6e` (PR head `61ed23a6` merged with `origin/main` `af09273e`; main only touched `apps/project-car/api`).
-- Date: 2026-11-27T16:11:58Z. Linux, Node 22.23.4, Python 3.12.3, Playwright Chromium headless shell.
-- Command, in `apps/project-car/web`, in the same order as the `shop-web layout-shift / screenshots` CI job:
-  `bash visual/build-web.sh`, then `GITHUB_EVENT_NAME=pull_request SHOP_BASE_SHA=<origin/main> bash visual/apply-baselines.sh`, then `CI=true npm run visual`.
-- `apply-baselines.sh` printed `pull request edits screenshot baselines; comparing against the screenshots in this checkout`, so the run compared against the pngs in this PR.
+## Green render on the reviewed head
 
-## Result
+- Reviewed head: `c2f3a7e99433b3e790d7b6434f5c23a7ce0a7649`.
+- CI run on that sha: https://github.com/Coombzy/Project-Car/actions/runs/46034191533 (`shop-web layout-shift / screenshots` passed, pull_request, 2026-11-27).
+- That job runs `apply-baselines.sh`, then `npm run visual`. This PR edits `visual/screenshots/**`, so the script does not copy main's stored baselines over the checkout. It leaves the PR pngs in place and compares the fresh render to them.
+- A pass means the fresh render of this head matches the committed pngs. It does not diff those pngs against the goldens on main.
+- The png bytes are the recapture in `61ed23a6`. Merges after that did not change them. `r62-error.png` is committed and no test compares it.
 
-Exit 0. **102 tests: 100 passed, 2 skipped, 0 failed** (2.8 min, 1 worker). Pixel cap 1% and layout-shift cap 0.1 are unchanged.
+## Pixel diff against main
 
-- `visual/pages.spec.ts`: 33 tests per width (390, 768, 1440), all passed.
-  Public: login, member-login, signup. Owner: home, cameras, chat, drafts, requests, fill, hoists, jobs, members, not-found, parts, payments, schedule, schedule-week, tiers, tools, waitlist, member-detail, chat-room, "2-hour chip actions", "R173 owner jobs does not scroll sideways". Member: member-home, member-cameras, member-chat, member-jobs, member-parts, member-profile, member-schedule, member-chat-room, member-not-found.
-- `visual/text-drift.spec.ts`: "1440 owner body matches the frozen clock" passed at 1440 and was skipped at 390 and 768 (`test.skip(... !== "1440", "1440 only")`).
-- Snapshots compared at each width (30): cameras, chat, chat-room, drafts, fill, hoists, home, jobs, login, member-cameras, member-chat, member-chat-room, member-detail, member-home, member-jobs, member-login, member-parts, member-profile, member-schedule, members, not-found, parts, payments, requests, schedule, schedule-week, signup, tiers, tools, waitlist. `r62-error.png` is committed but no test compares it.
-- Changed in this PR: 12 at 390, 14 at 768, 23 at 1440 (49 total). The rest are byte-identical to main.
+The table compares each changed png to the golden on main before this PR. 12 at 390, 14 at 768, 23 at 1440 (49). schedule.png and schedule-week.png at all three widths are byte-identical to main and are not listed. Pixel cap 1% and layout-shift cap 0.1 are unchanged.
+
+Paths are under `apps/project-car/web/visual/screenshots/`. No png changed size. "Exact" counts pixels where any RGB channel differs. "Visible" counts pixels where a channel differs by more than 3.
 
 ## Changed pngs
-
-Compared against `origin/main`. All paths are under `apps/project-car/web/visual/screenshots/`. No png changed size, so the size column is both old and new. "Exact" counts pixels where any RGB channel differs. "Visible" counts pixels where a channel differs by more than 3, which drops faint antialiasing drift. Each description comes from looking at the old and new crops side by side.
 
 | PNG | Old = new size | Exact px (%) | Visible px | What visibly changed |
 | --- | --- | --- | --- | --- |
