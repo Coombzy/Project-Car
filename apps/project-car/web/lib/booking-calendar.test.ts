@@ -255,3 +255,33 @@ describe("selection quote", () => {
     });
   });
 });
+
+describe("peak week and member balance", () => {
+  const week = "2026-11-23";
+  const friday = {
+    status: "confirmed",
+    startAt: "2026-11-27T16:00:00",
+    endAt: "2026-11-27T18:00:00",
+  };
+
+  it("counts Friday peak hours, skips cancelled and Monday, and labels the balance", async () => {
+    const { memberBalanceCopy, peakWeek } = await import("./booking-calendar.ts");
+    const { tokensLabel } = await import("./time.ts");
+    const peak = peakWeek([friday], week);
+    assert.equal(peak.cap, 4);
+    assert.equal(peak.used, 2);
+    assert.equal(peak.remaining, 2);
+    assert.equal(peak.line, "Peak hours this week: 2 used · 2 left");
+    assert.equal(peakWeek([{ ...friday, status: "cancelled" }], week).used, 0);
+    const monday = { status: "confirmed", startAt: "2026-11-23T16:00:00", endAt: "2026-11-23T18:00:00" };
+    assert.equal(peakWeek([monday], week).used, 0);
+    const saved = { hours: [], peakCapHours: 2 };
+    const capped = peakWeek([friday], week, saved);
+    assert.equal(capped.remaining, 0);
+    const copy = memberBalanceCopy("10.5", "1.25", [friday], week, saved);
+    assert.equal(copy.allowance, tokensLabel(10.5));
+    assert.equal(copy.purchased, tokensLabel(1.25));
+    assert.equal(copy.total, tokensLabel(11.75));
+    assert.equal(copy.peak, capped.line);
+  });
+});
