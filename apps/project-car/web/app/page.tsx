@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { OwnerShell } from "../components/owner-shell";
@@ -9,6 +10,8 @@ import { getDashboard, getMe } from "../lib/shop-api";
 import { handlePageError } from "../lib/page";
 import { sortHoists } from "../lib/calendar";
 import { formatShopDateTime, tokensLabel } from "../lib/time";
+
+export const metadata: Metadata = { title: { absolute: "Shop dashboard · Project Car" } };
 
 export const dynamic = "force-dynamic";
 

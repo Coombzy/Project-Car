@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { OwnerShell } from "../../components/owner-shell";
 import { handlePageError } from "../../lib/page";
 import { getMe, listTiers } from "../../lib/shop-api";
@@ -9,6 +11,8 @@ import {
   patchTierAction,
   type PricingMultiplier,
 } from "./actions";
+
+export const metadata: Metadata = { title: "Tiers" };
 
 export const dynamic = "force-dynamic";
 
