@@ -20,6 +20,9 @@ test("parts failure code and the current sentence map to the same banner", () =>
 test("unknown query text renders no banner", () => {
   assert.equal(bannerMessage("anything"), null);
   assert.equal(bannerMessage("Click here to reset your password"), null);
+  assert.equal(bannerMessage("toString"), null);
+  assert.equal(bannerMessage("constructor"), null);
+  assert.equal(bannerMessage("__proto__"), null);
   assert.equal(bannerMessage(undefined), null);
   assert.equal(bannerMessage(null), null);
 });
