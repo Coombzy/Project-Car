@@ -33,6 +33,7 @@ export function MemberBookingCard({
     >
       <strong>{slot.own ? "You" : "Booked"}</strong>
       <div>
+        {compact ? null : <>{slot.hoist_name} · </>}
         {formatCalendarTime(slot.start_at)}–{formatCalendarTime(slot.end_at)} · Mountain Time
       </div>
       {own ? <BookingCost reservedTokens={own.reserved_tokens} pricingRule={own.pricing_rule} /> : null}
