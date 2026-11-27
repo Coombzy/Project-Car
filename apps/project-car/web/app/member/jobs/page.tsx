@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { JobBoard } from "../../../components/job-board";
 import { JobLedger } from "../../../components/job-ledger";
 import { MemberShell } from "../../../components/member-shell";
@@ -5,6 +7,8 @@ import { PlaceholderNote } from "../../../components/placeholder-note";
 import type { JobEvent } from "../../../lib/config";
 import { handleMemberPageError } from "../../../lib/page";
 import { getMemberMe, listMemberJobEvents } from "../../../lib/shop-api";
+
+export const metadata: Metadata = { title: "Job board" };
 
 export const dynamic = "force-dynamic";
 

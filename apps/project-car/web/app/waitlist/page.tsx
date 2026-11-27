@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { OwnerShell } from "../../components/owner-shell";
@@ -49,6 +50,8 @@ function WaitlistMemberControl({
     </form>
   );
 }
+
+export const metadata: Metadata = { title: "Waitlist" };
 
 export const dynamic = "force-dynamic";
 

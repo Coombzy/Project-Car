@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { BookingCost } from "../../components/booking-cost";
@@ -14,6 +15,8 @@ import {
   deleteMemberTodoAction,
   toggleMemberTodoAction,
 } from "./todos/actions";
+
+export const metadata: Metadata = { title: "Your shop" };
 
 export const dynamic = "force-dynamic";
 

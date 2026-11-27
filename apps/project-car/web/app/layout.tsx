@@ -3,8 +3,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Project Car · Shop OS",
-  description: "Project Car management demo (app.projectcar.ca alias; intended ops.projectcar.ca). Member /member is a temporary park. Customer app is projectcar.ca.",
+  title: {
+    default: "Project Car · Shop OS",
+    template: "%s · Project Car",
+  },
+  description: "Bay time, parts, and jobs for your car. The shop is not open.",
   manifest: "/manifest.webmanifest",
 };
 
