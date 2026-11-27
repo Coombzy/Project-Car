@@ -1,16 +1,18 @@
+import { BookingCost } from "./booking-cost";
+import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
+import { offersCancel } from "../lib/booking-cancel";
+import { completeUnusedField } from "../lib/booking-complete";
+import { bookingStatusLabel } from "../lib/booking-words";
+import { formatCalendarTime } from "../lib/calendar";
+import type { Booking } from "../lib/config";
+import { checkInButtonState } from "../lib/check-in-window";
+import { shopClock } from "../lib/time";
 import {
   cancelBookingAction,
   checkInBookingAction,
   completeBookingAction,
   confirmBookingAction,
 } from "../app/schedule/actions";
-import { bookingStatusLabel } from "../lib/booking-words";
-import { formatCalendarTime } from "../lib/calendar";
-import { checkInButtonState } from "../lib/check-in-window";
-import type { Booking } from "../lib/config";
-import { shopClock } from "../lib/time";
-import { BookingCost } from "./booking-cost";
-import { ScheduleReturnFields, type ScheduleReturn } from "./schedule-return-fields";
 
 export function OwnerBookingCard({
   booking,
@@ -23,6 +25,7 @@ export function OwnerBookingCard({
 }) {
   const checkIn =
     booking.status === "confirmed" ? checkInButtonState(booking.start_at, shopClock(), booking.end_at) : null;
+  const unused = completeUnusedField(booking.status, booking.reserved_tokens);
   return (
     <article
       className={`booking-chip status-${booking.status}${booking.kind === "shop" ? " booking-chip-shop" : ""}${compact ? " booking-chip-hour" : ""}`}
@@ -52,22 +55,21 @@ export function OwnerBookingCard({
             {checkIn.hint ? <span className="check-in-hint">{checkIn.hint}</span> : null}
           </form>
         ) : null}
-        {booking.status === "active" || booking.status === "overdue" ? (
+        {unused ? (
           <form className="complete-booking" action={completeBookingAction}>
             <ScheduleReturnFields returnTo={returnTo} />
             <input type="hidden" name="id" value={booking.id} />
-            <button type="submit">Finish visit</button>
-            <span className="check-in-hint">Time past the booked end is charged by the hour.</span>
+            <label className="unused-tokens">
+              Unused
+              <input {...unused} inputMode="decimal" />
+            </label>
+            <button type="submit">Complete</button>
           </form>
         ) : null}
-        {booking.status === "pending" || booking.status === "confirmed" ? (
+        {offersCancel(booking.status, "owner") ? (
           <form action={cancelBookingAction}>
             <ScheduleReturnFields returnTo={returnTo} />
             <input type="hidden" name="id" value={booking.id} />
-            <label>
-              Reason
-              <input type="text" name="reason" required minLength={3} maxLength={500} />
-            </label>
             <button className="ghost" type="submit">
               Cancel
             </button>
