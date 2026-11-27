@@ -128,3 +128,56 @@ export function memberCancelOffer(
     label: "Cancel",
   };
 }
+
+const OCCUPYING = new Set(["pending", "confirmed", "active", "overdue"]);
+
+export type BayChoice = {
+  id: string;
+  name: string;
+  number: number;
+  isShop: boolean;
+  status: string;
+};
+
+export type SpanInterval = {
+  hoistId: string;
+  startAt: string;
+  endAt: string;
+  status: string;
+};
+
+function rangesOverlap(start: number, end: number, otherStart: number, otherEnd: number): boolean {
+  return start < otherEnd && otherStart < end;
+}
+
+export function submittedHoistId(laneHoistId: string, bayId: string): string {
+  if (laneHoistId === "any") {
+    return "";
+  }
+  return bayId;
+}
+
+export function lowestFreeBay(
+  bays: BayChoice[],
+  intervals: SpanInterval[],
+  startAt: string,
+  endAt: string,
+): BayChoice | null {
+  const start = shopInstant(startAt);
+  const end = shopInstant(endAt);
+  const ordered = [...bays]
+    .filter((bay) => !bay.isShop && bay.status !== "maintenance" && bay.status !== "locked")
+    .sort((a, b) => a.number - b.number);
+  for (const bay of ordered) {
+    const taken = intervals.some((interval) => {
+      if (interval.hoistId !== bay.id || !OCCUPYING.has(interval.status)) {
+        return false;
+      }
+      return rangesOverlap(start, end, shopInstant(interval.startAt), shopInstant(interval.endAt));
+    });
+    if (!taken) {
+      return bay;
+    }
+  }
+  return null;
+}
