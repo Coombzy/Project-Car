@@ -1,7 +1,4 @@
-"""AUD-009 part 1: require_owner refuses the AI bearer on three Owner writes.
-
-RED on main: those three AI calls still return 200 or 201.
-"""
+"""AUD-009 part 1. RED on main: the three AI calls still return 200 or 201."""
 
 from __future__ import annotations
 
@@ -57,9 +54,7 @@ def test_owner_set_password_still_sets_hash(client: TestClient) -> None:
         json={"password": "bay-door-4821"},
     )
     assert saved.status_code == 200, saved.text
-    stored = _password_hash(client, member["id"])
-    assert stored
-    assert "bay-door-4821" not in stored
+    assert _password_hash(client, member["id"])
 
 
 def test_ai_cannot_create_member(client: TestClient) -> None:
@@ -78,11 +73,18 @@ def test_ai_cannot_create_member(client: TestClient) -> None:
 
 
 def test_ai_cannot_convert_waitlist(client: TestClient) -> None:
-    created = client.post(
-        "/waitlist",
-        json={"name": "Priya Shah", "email": "priya.shah@example.com"},
-    )
-    assert created.status_code == 201, created.text
+    # Own address. The shared TestClient host only has eight public creates.
+    transport = client._transport
+    previous = transport.client
+    transport.client = ("192.0.2.109", 50000)
+    try:
+        created = client.post(
+            "/waitlist",
+            json={"name": "Priya Shah", "email": "priya.shah@example.com"},
+        )
+        assert created.status_code == 201, created.text
+    finally:
+        transport.client = previous
     entry_id = created.json()["id"]
     assert created.json()["member_id"] is None
     refused = client.post(

@@ -72,7 +72,6 @@ _AI_REFUSALS: dict[str, tuple[str, str]] = {
 
 
 def _owner_route_path(request: Request) -> str:
-    """Route template when the match is present, otherwise the URL path."""
     route = request.scope.get("route")
     template = getattr(route, "path", None)
     if isinstance(template, str):
