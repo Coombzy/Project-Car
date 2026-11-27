@@ -386,7 +386,7 @@ def test_ledger_migrations_upgrade_downgrade_and_backfill() -> None:
 
     script = ScriptDirectory.from_config(Config(str(ALEMBIC_INI)))
     # Band labels 20261031_0018 are the chain head. 20261105_0017 and 20261105_0018 still downgrade.
-    assert script.get_heads() == ["20261031_0018"]
+    assert script.get_heads() == ["20261031_0019"]
 
     engine = create_engine("sqlite://")
     with engine.begin() as connection:
