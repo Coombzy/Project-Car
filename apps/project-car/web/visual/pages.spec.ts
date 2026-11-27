@@ -224,6 +224,18 @@ test.describe("owner pages", () => {
     await shoot(page, `/chat/${ownerRoomId}`, "chat-room", "owner");
   });
 
+  test("2-hour chip actions", async ({ page }) => {
+    await page.goto("/schedule?view=week", { waitUntil: "load" });
+    const block = page.locator(".hour-booking").filter({ hasText: "Ada Reyes" }).filter({ hasText: /2:00\sp\.m\.–4:00/ });
+    await block.scrollIntoViewIfNeeded();
+    const box = (await block.boundingBox())!;
+    for (const name of ["Check in", "Cancel"]) {
+      const button = (await block.getByRole("button", { name }).boundingBox())!;
+      expect(button.y + button.height, `${name} inside the 2-hour chip`).toBeLessThanOrEqual(box.y + box.height + 1);
+      expect(button.x + button.width, `${name} inside the 2-hour chip`).toBeLessThanOrEqual(box.x + box.width + 1);
+    }
+  });
+
   test("R173 owner jobs does not scroll sideways", async ({ page }) => {
     const viewports = [
       { width: 768, height: 1024 },
