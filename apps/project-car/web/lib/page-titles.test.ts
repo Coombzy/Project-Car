@@ -8,7 +8,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 // AUD-040 part 1. Login pages are #337 and are not in this list.
 const pages: Record<string, string> = {
-  "app/page.tsx": "Shop dashboard · Project Car",
+  "app/page.tsx": "title: { absolute: \"Shop dashboard · Project Car\" }",
   "app/schedule/page.tsx": "Schedule",
   "app/chat/page.tsx": "Shop chat",
   "app/chat/[id]/page.tsx": "Shop chat",
@@ -49,7 +49,8 @@ describe("AUD-040 page titles", () => {
   it("test_listed_pages_export_a_title", () => {
     for (const [path, title] of Object.entries(pages)) {
       const source = readFileSync(join(root, path), "utf8");
-      assert.equal(source.includes(`title: "${title}"`), true, path);
+      const needle = path === "app/page.tsx" ? title : `title: "${title}"`;
+      assert.equal(source.includes(needle), true, path);
     }
   });
 });
