@@ -1720,3 +1720,13 @@ Rows R156–R160 order: R156 and R159 can start together (no shared files). R157
 - Depends on: none
 
 Rows R167–R170 order: no two rows share a file. R168, R169, and R170 reuse the jobs.py limit and offset pattern, so do R168 first and copy it.
+
+### R171. Owner schedule eyebrow still says America/Regina
+- Category: UX
+- Baseline: After #491, six screens say Mountain Time (fill, member schedule, owner dashboard, tiers, create-booking-form, member-booking-form). The owner schedule eyebrow in `apps/project-car/web/app/schedule/page.tsx:96` is still `{view === "month" ? "Month heat-map" : "Week · per hoist"} · America/Regina`. Week shows "Week · per hoist · America/Regina". Month shows "Month heat-map · America/Regina". `apps/project-car/web/lib/mountain-time-labels.test.ts` lists those six screens only.
+- Target: That eyebrow says Mountain Time, not the zone-database name, matching those six screens. Week: "Week · per hoist · Mountain Time". Month: "Month heat-map · Mountain Time".
+- Must not get worse: the six #491 screens stay on Mountain Time. Week and month behaviour, the hoist grid, and the shop-hoist queue stay as they are. No golden recapture.
+- Proof: read `apps/project-car/web/app/schedule/page.tsx` and assert the eyebrow contains `Mountain Time` (red on main: it still contains `America/Regina`).
+- Size: 1 task
+- Likely files: `apps/project-car/web/app/schedule/page.tsx` (eyebrow only). Held #283 lists this file; this row is the follow-up, not that form or screen work.
+- Depends on: #491 merged.
