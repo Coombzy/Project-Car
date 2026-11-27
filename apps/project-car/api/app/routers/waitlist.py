@@ -40,6 +40,12 @@ _waitlist_creates: dict[str, list[_CreateStamp]] = {}
 _waitlist_creates_lock = threading.Lock()
 
 
+def clear_waitlist_creates() -> None:
+    """Drop every IP in this process's waitlist-create bucket."""
+    with _waitlist_creates_lock:
+        _waitlist_creates.clear()
+
+
 class WaitlistConvert(BaseModel):
     tier_name: str = Field(min_length=1, max_length=64)
 
