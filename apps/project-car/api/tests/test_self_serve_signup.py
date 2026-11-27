@@ -269,7 +269,7 @@ def test_signup_mode_migration_inserts_self_serve() -> None:
     from alembic.script import ScriptDirectory
 
     script = ScriptDirectory.from_config(Config(str(ALEMBIC_INI)))
-    assert script.get_heads() == ["20261105_0019"]
+    assert script.get_heads() == ["20261031_0018"]
 
     engine = create_engine("sqlite://")
     with engine.begin() as connection:
