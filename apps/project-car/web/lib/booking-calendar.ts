@@ -1,3 +1,66 @@
+import type { RateHour } from "./rate-chart";
+import { BAND_SHORT, type BandId } from "./booking-words";
+
+const BAND_MULTIPLIER: Record<BandId, number> = {
+  weekday_day: 1,
+  weekday_eve: 1.25,
+  weekend_fri_eve: 1.5,
+  late_night: 0.75,
+};
+
+const BASE_TOKENS = 100;
+const PEAK_BAND: BandId = "weekend_fri_eve";
+
+export type BandAt = {
+  id: BandId;
+  short: string;
+  tokens: number;
+  gutter: string;
+  countsTowardPeakCap: boolean;
+};
+
+function pad(hour: number): string {
+  return String(hour).padStart(2, "0");
+}
+
+function weekdayIndex(isoDate: string): number {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  const utc = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  return utc === 0 ? 6 : utc - 1;
+}
+
+function isBandId(value: string): value is BandId {
+  return value in BAND_SHORT;
+}
+
+export function bandAt(isoDate: string, hour: number, saved?: readonly RateHour[]): BandAt {
+  const weekday = weekdayIndex(isoDate);
+  const row = saved?.find((item) => item.weekday === weekday && item.hour === hour);
+  if (row && isBandId(row.band_id)) {
+    const tokens = Number(row.tokens_per_hour);
+    const short = BAND_SHORT[row.band_id];
+    const shown = Number.isInteger(tokens) ? String(tokens) : row.tokens_per_hour;
+    return {
+      id: row.band_id,
+      short,
+      tokens,
+      gutter: `${short} ${shown}`,
+      countsTowardPeakCap: row.counts_toward_peak_cap,
+    };
+  }
+  let id: BandId = "weekday_day";
+  if (hour >= 21 || hour < 8) {
+    id = "late_night";
+  } else if (weekday >= 5 || (weekday === 4 && hour >= 16)) {
+    id = "weekend_fri_eve";
+  } else if (hour >= 16) {
+    id = "weekday_eve";
+  }
+  const tokens = BASE_TOKENS * BAND_MULTIPLIER[id];
+  const short = BAND_SHORT[id];
+  return { id, short, tokens, gutter: `${short} ${tokens}`, countsTowardPeakCap: id === PEAK_BAND };
+}
+
 /**
  * Member cancel on the schedule list.
  *
