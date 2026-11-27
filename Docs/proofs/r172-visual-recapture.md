@@ -22,7 +22,7 @@ Paths are under `apps/project-car/web/visual/screenshots/`. No png changed size.
 | --- | --- | --- | --- | --- |
 | 390/fill.png | 390x844 | 590 (0.179%) | 564 | Eyebrow `AMERICA/REGINA` → `MOUNTAIN TIME`. |
 | 390/home.png | 390x844 | 3715 (1.129%) | 3639 | Intro "Times are America/Regina" → "Times are Mountain Time" (reflows). Tokens at risk 3 → 1. |
-| 390/login.png | 390x844 | 969 (0.294%) | 960 | Email field no longer prefilled with owner@projectcar.ca. `/member/login` link is now underlined. |
+| 390/login.png | 390x844 | 969 (0.294%) | 960 | Email field no longer prefilled with the owner address. `/member/login` link is now underlined. |
 | 390/member-detail.png | 390x844 | 802 (0.244%) | 791 | Ada's token balance 156.25 → 375. |
 | 390/member-home.png | 390x844 | 800 (0.243%) | 782 | Token balance 156.25 → 375. |
 | 390/member-login.png | 390x844 | 1121 (0.341%) | 1095 | Email no longer prefilled with ada.reyes@example.com. `/login` link is now underlined. |
@@ -54,10 +54,10 @@ Paths are under `apps/project-car/web/visual/screenshots/`. No png changed size.
 | 1440/hoists.png | 1440x900 | 1706 (0.132%) | 1657 | Admin nav gains "Refunds". |
 | 1440/home.png | 1440x900 | 4118 (0.318%) | 4009 | Admin nav gains "Refunds". Intro America/Regina → Mountain Time. Tokens at risk 3 → 1. |
 | 1440/jobs.png | 1440x900 | 1706 (0.132%) | 1657 | Admin nav gains "Refunds". |
-| 1440/login.png | 1440x900 | 139842 (10.790%) | 77820 | Demo banner drops the "Password changeme" line, so the card is shorter. Email and password fields are empty. |
+| 1440/login.png | 1440x900 | 139842 (10.790%) | 77820 | Demo banner drops the seeded demo login line, so the card is shorter. Email and password fields are empty. |
 | 1440/member-detail.png | 1440x900 | 2508 (0.194%) | 2448 | Admin nav gains "Refunds". Token balance 156.25 → 375. |
 | 1440/member-home.png | 1440x900 | 3332 (0.257%) | 791 | Token balance 156.25 → 375. The rest is faint drift. |
-| 1440/member-login.png | 1440x900 | 136303 (10.517%) | 74178 | Banner drops "Password changeme". Email and password fields are empty. |
+| 1440/member-login.png | 1440x900 | 136303 (10.517%) | 74178 | Banner drops the seeded demo login. Email and password fields are empty. |
 | 1440/member-profile.png | 1440x900 | 1296000 (100%) | 150160 | Nav and link color gold → purple. Banner text beige → white. Token balance 156.25 → 375. |
 | 1440/member-schedule.png | 1440x900 | 42574 (3.285%) | 7611 | Eyebrow and tomorrow line America/Regina → Mountain Time. The rest is faint drift. |
 | 1440/members.png | 1440x900 | 7859 (0.606%) | 7569 | Admin nav gains "Refunds". Same token column changes as 768. |
