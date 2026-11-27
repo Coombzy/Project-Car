@@ -4,15 +4,15 @@ Review aid for [PR #503](https://github.com/Coombzy/Project-Car/pull/503). The p
 
 ## Green render on the reviewed head
 
-- Reviewed head: `c2f3a7e99433b3e790d7b6434f5c23a7ce0a7649`.
-- CI run on that sha: https://github.com/Coombzy/Project-Car/actions/runs/46034191533 (`shop-web layout-shift / screenshots` passed, pull_request, 2026-11-27).
-- That job runs `apply-baselines.sh`, then `npm run visual`. This PR edits `visual/screenshots/**`, so the script does not copy main's stored baselines over the checkout. It leaves the PR pngs in place and compares the fresh render to them.
-- A pass means the fresh render of this head matches the committed pngs. It does not diff those pngs against the goldens on main.
+- Reviewed head: `c2f3a7e99433b3e790d7b6434f5c23a7ce0a7649` (GitHub update-branch merge of `0629cf16` with main `b18a9fb7`).
+- Official CI on that sha was 3/3 green. `shop-web layout-shift / screenshots`: run [46034191533](https://github.com/Coombzy/Project-Car/actions/runs/46034191533), job 140625334907, success, completed 2026-11-27 10:34:26 America/Edmonton (16:34:26 UTC).
+- That job runs `apply-baselines.sh`, then `npm run visual`. This PR edits `visual/screenshots/**`, so the script does not copy main's stored baselines over the checkout. It leaves the PR pngs in place and compares the fresh render to them. That is the intended CI path for a baseline recapture. Rendering against main's old goldens would fail by design, because the recapture exists to replace them.
+- A pass means the fresh render of this head matches the committed pngs. It is not a pixel proof against main. The evidence against main is the table below.
 - The png bytes are the recapture in `61ed23a6`. Merges after that did not change them. `r62-error.png` is committed and no test compares it.
 
 ## Pixel diff against main
 
-The table compares each changed png to the golden on main before this PR. 12 at 390, 14 at 768, 23 at 1440 (49). schedule.png and schedule-week.png at all three widths are byte-identical to main and are not listed. Pixel cap 1% and layout-shift cap 0.1 are unchanged.
+The table compares each changed png to the golden on main before this PR. 12 at 390, 14 at 768, 23 at 1440 (49). Owner `schedule.png` and `schedule-week.png` at 390, 768, and 1440 are byte-identical to main and are correctly left out of the 49. #500 (`6f787f60`) already recaptured all six with the Mountain Time eyebrow, and its 1440 shots already have the Refunds nav. Pixel cap 1% and layout-shift cap 0.1 are unchanged.
 
 Paths are under `apps/project-car/web/visual/screenshots/`. No png changed size. "Exact" counts pixels where any RGB channel differs. "Visible" counts pixels where a channel differs by more than 3.
 
@@ -72,7 +72,7 @@ Paths are under `apps/project-car/web/visual/screenshots/`. No png changed size.
 
 ## Trimmed log
 
-Full stdout and stderr were 123 lines. Removed: four uvicorn startup lines, repeated `NO_COLOR` warnings, and the 390 and 768 pass lines, which have the same 33 test titles as 1440.
+This is the earlier local run on `563d74af` (PR head `61ed23a6` merged with main `af09273e`), using the same CI path and the same png bytes. Full stdout and stderr were 123 lines. Removed: four uvicorn startup lines, repeated `NO_COLOR` warnings, and the 390 and 768 pass lines, which have the same 33 test titles as 1440.
 
 ```text
 > project-car-web@0.1.0 visual
