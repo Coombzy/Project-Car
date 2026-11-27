@@ -59,14 +59,24 @@ export const BAND_SHORT = {
 
 export type BandId = keyof typeof BAND_SHORT;
 
-/** Runs only when `node --test` loads this file. A client bundle has no Node argv, so import returns. */
+function argvEntry(scope: { process?: { argv?: string[] } }): string | undefined {
+  return scope.process.argv[1];
+}
+
+/** Word checks run only when this file is the node entry. */
 function proveBookingWords(): void {
-  if (typeof process === "undefined" || !Array.isArray(process.argv)) {
-    return;
-  }
-  const entry = process.argv[1];
+  const entry = argvEntry(globalThis);
   if (typeof entry !== "string" || !import.meta.url.endsWith(entry)) {
     return;
+  }
+  let clientEntry: string | undefined;
+  try {
+    clientEntry = argvEntry({});
+  } catch {
+    throw new Error("process.argv is read even when process is missing");
+  }
+  if (clientEntry !== undefined) {
+    throw new Error("process.argv is read even when process is missing");
   }
   const problems: string[] = [];
   if (typeof TIME_LABEL === "undefined" || TIME_LABEL !== "Mountain Time") {
