@@ -93,7 +93,7 @@ export default async function SchedulePage({
     return (
       <OwnerShell email={me.email} current="schedule" wide>
         <p className="eyebrow">
-          {view === "month" ? "Month heat-map" : "Week · per hoist"} · America/Regina
+          {view === "month" ? "Month heat-map" : "Week · per hoist"} · Mountain Time
         </p>
         <h1>Schedule</h1>
         <p className="lede">
