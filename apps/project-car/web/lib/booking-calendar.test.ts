@@ -184,3 +184,74 @@ describe("Your bookings", () => {
     assert.deepEqual(statusesIn(filter), ["active", "confirmed", "pending"]);
   });
 });
+
+describe("selection quote", () => {
+  it("groups a server quote and skips a blank one", async () => {
+    const { quotedSelectionLine } = await import("./booking-calendar.ts");
+    assert.equal(quotedSelectionLine(null), null);
+    assert.equal(quotedSelectionLine({ final_reserve_cost: "10", segments: [] }), null);
+    assert.equal(
+      quotedSelectionLine({
+        final_reserve_cost: "450",
+        fill_multiplier: "1.5",
+        fill_label: "Short fill",
+        segments: [
+          { band_label: "Day", band_tokens: "100" },
+          { band_label: "Day", band_tokens: "100" },
+          { band_label: "Peak", band_tokens: "150" },
+          { band_label: "Night", band_tokens: "10.25" },
+          { band_label: "Night", band_tokens: "10.25" },
+        ],
+      }),
+      "Day 100 × 2 = 200 · Peak 150 × 1 = 150 · Night 10.25 × 2 = 20.50 · Short fill · Total 450",
+    );
+    assert.equal(
+      quotedSelectionLine({
+        final_reserve_cost: "100",
+        fill_multiplier: "1",
+        fill_label: "Ignored",
+        segments: [{ band_label: "Day", band_tokens: "100" }],
+      }),
+      "Day 100 × 1 = 100 · Total 100",
+    );
+  });
+
+  it("sums selected hours and stops at a booked hour", async () => {
+    const { selectionSummary } = await import("./booking-calendar.ts");
+    const saved = [
+      {
+        weekday: 0,
+        day_label: "Mon",
+        hour: 10,
+        band_id: "weekday_eve",
+        label: "Eve",
+        tokens_per_hour: "80",
+        counts_toward_peak_cap: false,
+      },
+    ];
+    assert.deepEqual(selectionSummary("2026-11-27", 18, 14), {
+      hours: [14, 15, 16, 17],
+      line: "Day 100 × 2 = 200 · Peak 150 × 2 = 300 · Total 500",
+      note: null,
+      total: 500,
+    });
+    assert.deepEqual(selectionSummary("2026-11-27", 14, 18, new Set([16])), {
+      hours: [14, 15],
+      line: "Day 100 × 2 = 200 · Total 200",
+      note: "16:00 is booked; selection ends at 16:00",
+      total: 200,
+    });
+    assert.deepEqual(selectionSummary("2026-11-23", 10, 10), {
+      hours: [],
+      line: "",
+      note: null,
+      total: 0,
+    });
+    assert.deepEqual(selectionSummary("2026-11-23", 10, 12, new Set(), saved), {
+      hours: [10, 11],
+      line: "Eve 80 × 1 = 80 · Day 100 × 1 = 100 · Total 180",
+      note: null,
+      total: 180,
+    });
+  });
+});
